@@ -70,14 +70,29 @@
     @apply border-border;
   }
   
+  html {
+    scroll-behavior: smooth;
+    height: 100%;
+    overflow: hidden; /* Prevent page-level scrolling on mobile */
+  }
+  
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     transition: background-color 0.3s ease, color 0.3s ease;
+    height: 100%;
+    overflow: hidden; /* Prevent page-level scrolling */
+    position: fixed;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
   }
   
-  html {
-    scroll-behavior: smooth;
+  /* iOS Safari viewport fix */
+  @supports (-webkit-touch-callout: none) {
+    body {
+      height: -webkit-fill-available;
+      height: var(--app-height, 100vh);
+    }
   }
 }
 
@@ -218,6 +233,53 @@
   
   .dark .custom-scrollbar {
     scrollbar-color: rgba(var(--muted-foreground), 0.4) transparent;
+  }
+  
+  /* Mobile-specific scrolling improvements */
+  @media (max-width: 768px) {
+    .custom-scrollbar {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      overscroll-behavior-y: contain;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 3px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      @apply bg-muted-foreground/30 rounded-full;
+    }
+  }
+  
+  /* iOS-specific fixes for viewport and scrolling */
+  @supports (-webkit-touch-callout: none) {
+    /* This targets iOS Safari specifically */
+    .mobile-container {
+      height: -webkit-fill-available;
+      height: var(--app-height, 100vh);
+    }
+    
+    /* Prevent elastic scrolling on iOS */
+    .prevent-bounce {
+      overscroll-behavior: none;
+      overscroll-behavior-y: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Fix for iOS keyboard viewport changes */
+    @media screen and (max-width: 768px) {
+      .mobile-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: var(--app-height, 100vh);
+        min-height: var(--app-height, 100vh);
+        max-height: var(--app-height, 100vh);
+      }
+    }
   }
   
   /* Gradient text */

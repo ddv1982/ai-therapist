@@ -52,6 +52,7 @@ export default function ChatPage() {
   const [maxTokens, setMaxTokens] = useState(40960);
   const [topP, setTopP] = useState(0.95);
   const [isMobile, setIsMobile] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState('100vh');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -158,26 +159,59 @@ export default function ChatPage() {
     }
   }, [model, maxTokens]);
 
-  // Mobile detection with dynamic resize handling
+  // Mobile detection with dynamic resize handling and iOS viewport fixes
   useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const updateViewport = () => {
+      const isMobileDevice = window.innerWidth < 768;
+      setIsMobile(isMobileDevice);
+      
+      if (isMobileDevice) {
+        // Use the smaller of window.innerHeight or screen.height for iOS
+        const actualHeight = Math.min(window.innerHeight, window.screen.height);
+        setViewportHeight(`${actualHeight}px`);
+        
+        // Set CSS custom properties for consistent viewport handling
+        document.documentElement.style.setProperty('--app-height', `${actualHeight}px`);
+        document.documentElement.style.setProperty('--vh', `${actualHeight * 0.01}px`);
+      } else {
+        setViewportHeight('100vh');
+        document.documentElement.style.removeProperty('--app-height');
+        document.documentElement.style.removeProperty('--vh');
+      }
     };
 
     // Initial check
-    checkIsMobile();
+    updateViewport();
 
-    // Add resize listener
-    window.addEventListener('resize', checkIsMobile);
-    
-    // Also listen for orientation changes on mobile
+    // Add resize listener with debounce for performance
+    let resizeTimeout: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(updateViewport, 150);
+    };
+
+    window.addEventListener('resize', debouncedResize);
     window.addEventListener('orientationchange', () => {
-      setTimeout(checkIsMobile, 100); // Small delay for orientation change
+      setTimeout(updateViewport, 300); // Longer delay for orientation change
     });
 
+    // iOS-specific viewport change detection
+    if (typeof window !== 'undefined' && 'visualViewport' in window) {
+      const visualViewport = window.visualViewport!;
+      visualViewport.addEventListener('resize', updateViewport);
+      
+      return () => {
+        window.removeEventListener('resize', debouncedResize);
+        window.removeEventListener('orientationchange', updateViewport);
+        visualViewport.removeEventListener('resize', updateViewport);
+        clearTimeout(resizeTimeout);
+      };
+    }
+
     return () => {
-      window.removeEventListener('resize', checkIsMobile);
-      window.removeEventListener('orientationchange', checkIsMobile);
+      window.removeEventListener('resize', debouncedResize);
+      window.removeEventListener('orientationchange', updateViewport);
+      clearTimeout(resizeTimeout);
     };
   }, []);
 
@@ -344,10 +378,16 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="h-screen flex bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20"
+    <div className="flex bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20"
       style={{
-        height: isMobile ? '100dvh' : '100vh', // Use dynamic viewport height on mobile
-        minHeight: isMobile ? '100dvh' : '100vh',
+        height: viewportHeight,
+        minHeight: viewportHeight,
+        maxHeight: viewportHeight,
+        overflow: 'hidden', // Prevent page-level scrolling
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
         backgroundImage: `
           radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
           radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.05) 0%, transparent 50%)
@@ -612,11 +652,11 @@ export default function ChatPage() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col relative">
+      <div className="flex-1 flex flex-col relative min-h-0">
         {/* Header */}
-        <div className="p-6 border-b border-border/30 bg-card/50 backdrop-blur-md relative">
+        <div className={`${isMobile ? 'p-3' : 'p-6'} border-b border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'}`}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -651,10 +691,14 @@ export default function ChatPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-6 custom-scrollbar">
+        <div className={`flex-1 overflow-y-auto custom-scrollbar ${isMobile ? 'p-3 pb-0 prevent-bounce' : 'p-3 sm:p-6'}`} style={{
+          minHeight: 0,
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain'
+        }}>
           {messages.length === 0 ? (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center max-w-2xl animate-fade-in px-4">
+            <div className={`${isMobile ? 'min-h-full' : 'h-full'} flex items-center justify-center`}>
+              <div className={`text-center max-w-2xl animate-fade-in ${isMobile ? 'px-3' : 'px-4'}`}>
                 <div className="mb-6 sm:mb-8">
                   <div className="h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
                     <Heart className="w-8 h-8 sm:w-12 sm:h-12 text-primary animate-pulse" />
@@ -696,7 +740,7 @@ export default function ChatPage() {
               </div>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className={`max-w-4xl mx-auto ${isMobile ? 'space-y-3 pb-3' : 'space-y-6'}`}>
               {messages.map((message, index) => (
                 <div
                   key={message.id}
@@ -823,11 +867,25 @@ export default function ChatPage() {
               ))}
               
               {isLoading && (
-                <div className="flex gap-4 justify-start animate-message-in">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center flex-shrink-0 shadow-lg">
-                    <Heart className="w-5 h-5 text-white animate-pulse" />
-                  </div>
-                  <div className="message-bubble message-bubble-assistant">
+                <div className={`${isMobile ? 'w-full mb-3' : 'flex gap-4 justify-start'} animate-message-in`}>
+                  {!isMobile && (
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center flex-shrink-0 shadow-lg">
+                      <Heart className="w-5 h-5 text-white animate-pulse" />
+                    </div>
+                  )}
+                  <div className={`${
+                    isMobile 
+                      ? 'w-full rounded-xl px-4 py-3 shadow-sm transition-all duration-300 hover:shadow-md bg-card border border-border/50 text-card-foreground backdrop-blur-sm'
+                      : 'message-bubble message-bubble-assistant'
+                  }`}>
+                    {isMobile && (
+                      <div className="flex items-center justify-between mb-2 pb-2 border-b border-current/10">
+                        <div className="flex items-center gap-2">
+                          <Heart className="w-4 h-4" />
+                          <span className="text-sm font-medium">AI Therapist</span>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex items-center gap-3">
                       <div className="flex space-x-1">
                         <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
@@ -845,7 +903,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input Area */}
-        <div className="p-3 sm:p-6 border-t border-border/30 bg-card/50 backdrop-blur-md relative">
+        <div className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} border-t border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`}>
           <div className="max-w-4xl mx-auto">
             <div className="flex gap-3 items-end">
               <div className="flex-1 relative">
