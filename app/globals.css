@@ -1,0 +1,250 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light theme - Vibrant, warm therapeutic colors with better contrast */
+    --background: 40 23% 97%; /* Warm off-white */
+    --foreground: 222 47% 11%; /* Deep blue-gray */
+    --card: 0 0% 100%; /* Pure white for cards */
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 211 96% 48%; /* Vibrant therapeutic blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 21% 94%; /* Warm beige */
+    --secondary-foreground: 222 47% 11%;
+    --muted: 40 14% 96%; /* Soft warm gray */
+    --muted-foreground: 215 20% 40%; /* Darker muted text */
+    --accent: 152 60% 42%; /* Rich therapeutic teal */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 90%; /* Subtle blue-tinted border */
+    --input: 220 13% 90%;
+    --ring: 211 96% 48%;
+    --radius: 0.75rem;
+    
+    /* Enhanced gradients for light mode */
+    --gradient-primary: linear-gradient(135deg, hsl(211 96% 48%) 0%, hsl(217 91% 54%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(152 60% 42%) 0%, hsl(162 63% 46%) 100%);
+    
+    /* Sidebar background */
+    --sidebar-background: hsl(210 25% 98%);
+  }
+
+  .dark {
+    /* Dark theme - Deep, comfortable colors for evening therapy */
+    --background: 222 25% 8%;
+    --foreground: 210 15% 92%;
+    --card: 222 25% 10%;
+    --card-foreground: 210 15% 92%;
+    --popover: 222 25% 10%;
+    --popover-foreground: 210 15% 92%;
+    --primary: 210 85% 60%; /* Brighter blue for dark mode */
+    --primary-foreground: 222 25% 8%;
+    --secondary: 217 25% 15%;
+    --secondary-foreground: 210 15% 92%;
+    --muted: 217 25% 12%;
+    --muted-foreground: 215 15% 65%;
+    --accent: 147 45% 55%; /* Brighter green for dark mode */
+    --accent-foreground: 222 25% 8%;
+    --destructive: 0 75% 65%;
+    --destructive-foreground: 222 25% 8%;
+    --border: 217 25% 18%;
+    --input: 217 25% 18%;
+    --ring: 210 85% 60%;
+    
+    /* Dark theme gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(210 85% 60%) 0%, hsl(220 85% 65%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(147 45% 55%) 0%, hsl(157 45% 60%) 100%);
+    
+    /* Sidebar background */
+    --sidebar-background: hsl(222 25% 10%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Therapeutic Typography System - 4 Sizes Only */
+  .text-therapy-xl {
+    @apply text-3xl font-semibold leading-tight;
+  }
+  
+  .text-therapy-lg {
+    @apply text-xl font-semibold leading-snug;
+  }
+  
+  .text-therapy-base {
+    @apply text-base font-normal leading-relaxed;
+  }
+  
+  .text-therapy-sm {
+    @apply text-sm font-normal leading-normal;
+  }
+
+  /* 8pt Grid System Components */
+  .spacing-xs {
+    @apply p-2; /* 8px */
+  }
+  
+  .spacing-sm {
+    @apply p-4; /* 16px */
+  }
+  
+  .spacing-md {
+    @apply p-6; /* 24px */
+  }
+  
+  .spacing-lg {
+    @apply p-8; /* 32px */
+  }
+  
+  .spacing-xl {
+    @apply p-12; /* 48px */
+  }
+
+  /* Therapeutic Color Variants */
+  .therapy-primary {
+    @apply bg-primary text-primary-foreground;
+  }
+  
+  .therapy-secondary {
+    @apply bg-secondary text-secondary-foreground;
+  }
+  
+  .therapy-accent {
+    @apply bg-accent text-accent-foreground;
+  }
+  
+  .therapy-muted {
+    @apply bg-muted text-muted-foreground;
+  }
+
+  /* Chat-specific styling */
+  .message-spacing {
+    @apply mb-4; /* 16px between messages */
+  }
+  
+  .message-padding {
+    @apply p-2; /* 8px internal padding */
+  }
+  
+  /* Beautiful message bubbles */
+  .message-bubble {
+    @apply rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-sm transition-all duration-300 hover:shadow-md;
+  }
+  
+  .message-bubble-user {
+    @apply bg-gradient-to-br from-primary to-primary/90 text-primary-foreground ml-auto max-w-[90%] sm:max-w-[80%];
+    background: var(--gradient-primary);
+  }
+  
+  .message-bubble-assistant {
+    @apply bg-card border border-border/50 text-card-foreground mr-auto max-w-[95%] sm:max-w-[85%] backdrop-blur-sm;
+  }
+  
+  /* Light mode specific enhancements */
+  :root:not(.dark) .message-bubble-assistant {
+    @apply bg-white border-border shadow-sm;
+  }
+  
+  :root:not(.dark) .message-bubble-user {
+    @apply shadow-md;
+  }
+  
+  /* Glassmorphism effects */
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-md border border-border/50 shadow-lg;
+  }
+  
+  /* Smooth animations */
+  .animate-message-in {
+    animation: fade-in 0.5s ease-out;
+  }
+  
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+  }
+  
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full transition-colors;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+  
+  /* Dark mode scrollbar - more visible */
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/40;
+  }
+  
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/60;
+  }
+  
+  /* Firefox scrollbar */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--muted-foreground), 0.2) transparent;
+  }
+  
+  .dark .custom-scrollbar {
+    scrollbar-color: rgba(var(--muted-foreground), 0.4) transparent;
+  }
+  
+  /* Gradient text */
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Consistent shimmer effect */
+  .shimmer-effect {
+    @apply absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 60%
+    );
+  }
+  
+  .dark .shimmer-effect {
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 60%
+    );
+  }
+}
