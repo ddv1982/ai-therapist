@@ -12,13 +12,14 @@ export const metadata: Metadata = {
   title: 'Therapist AI - Compassionate AI Therapy Support',
   description: 'A professional, judgment-free AI therapist application providing therapeutic support with session continuity and progress tracking.',
   keywords: ['therapy', 'mental health', 'AI therapist', 'counseling', 'support'],
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: 'cover',
-  },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
