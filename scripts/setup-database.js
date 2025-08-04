@@ -4,10 +4,8 @@ const path = require('path');
 
 const dbPath = path.join(__dirname, '..', 'prisma', 'dev.db');
 
-// Set default DATABASE_URL if not provided
-if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = `file:${dbPath}`;
-}
+// Always set DATABASE_URL programmatically
+process.env.DATABASE_URL = `file:${dbPath}`;
 
 // Check if database exists
 if (!fs.existsSync(dbPath)) {
