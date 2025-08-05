@@ -63,14 +63,27 @@ function formatReportAsHTML(report: string): string {
   marked.setOptions({
     breaks: true, // Convert line breaks to <br>
     gfm: true, // GitHub Flavored Markdown
-    sanitize: false, // We trust our AI-generated content
-    smartLists: true, // Better list handling
-    smartypants: true, // Smart quotes and dashes
-    tables: true, // Enable table parsing
-    pedantic: false, // Allow for more lenient parsing
+    // Note: sanitize option is deprecated in newer versions of marked
   });
 
+  // Test the markdown processing
+  console.log('Original report markdown:', report.substring(0, 200) + '...');
+  
   const htmlContent = marked(report);
+  
+  console.log('Converted HTML:', htmlContent.substring(0, 200) + '...');
+  
+  // Ensure proper markdown formatting is converted to HTML
+  // This is a fallback in case marked.js didn't process some markdown correctly
+  const cleanedHtml = htmlContent
+    // Handle bold text (**text**)
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    // Handle italic text (*text*) - but avoid conflicts with bold
+    .replace(/\*([^*\s][^*]*[^*\s])\*/g, '<em>$1</em>')
+    // Handle single word italics
+    .replace(/\*([^*\s]+)\*/g, '<em>$1</em>')
+    // Clean up any remaining double asterisks that might be literal
+    .replace(/\*\*/g, '');
   
   return `
     <!DOCTYPE html>
@@ -320,7 +333,7 @@ function formatReportAsHTML(report: string): string {
       </div>
       
       <div class="content">
-        ${htmlContent}
+        ${cleanedHtml}
         
         <div class="disclaimer">
           <div class="disclaimer-content">

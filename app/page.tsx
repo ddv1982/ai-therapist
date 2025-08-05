@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -24,6 +24,7 @@ import remarkGfm from 'remark-gfm';
 import type { ModelConfig } from '@/types/index';
 import { generateUUID } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
+import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
 
 interface Message {
   id: string;
@@ -364,7 +365,7 @@ export default function ChatPage() {
     }
   };
 
-  const sendMessage = async () => {
+  const sendMessage = useCallback(async () => {
     if (!input.trim() || isLoading) return;
     
     // Check if we have API key either from user input or environment
@@ -514,7 +515,24 @@ export default function ChatPage() {
         });
       }
     }
-  };
+  }, [input, isLoading, apiKey, hasEnvApiKey, model, messages, currentSession, showToast]);
+
+  // Memoized input handlers for better performance
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }, [sendMessage]);
+
+  const handleFormSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    sendMessage();
+  }, [sendMessage]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -989,6 +1007,15 @@ export default function ChatPage() {
               </div>
             </div>
           ) : (
+            <VirtualizedMessageList 
+              messages={messages}
+              isStreaming={isLoading}
+              isMobile={isMobile}
+            />
+          )}
+          
+          {/* Fallback to original rendering for complex cases */}
+          {false && (
             <div className={`max-w-4xl mx-auto ${isMobile ? 'space-y-3 pb-3' : 'space-y-6'}`}>
               {messages.map((message, index) => (
                 <div
@@ -1176,23 +1203,21 @@ export default function ChatPage() {
               <div ref={messagesEndRef} />
             </div>
           )}
+          
+          {/* Messages end ref for auto-scroll */}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
         <div className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} border-t border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`} role="form" aria-label="Send message">
           <div className="max-w-4xl mx-auto">
-            <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex gap-3 items-end">
+            <form onSubmit={handleFormSubmit} className="flex gap-3 items-end">
               <div className="flex-1 relative">
                 <Textarea
                   ref={textareaRef}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
                   placeholder="Share what's on your mind... 💙"
                   className="min-h-[52px] sm:min-h-[80px] max-h-[120px] sm:max-h-[200px] resize-none rounded-xl sm:rounded-2xl border-border/50 bg-background/80 backdrop-blur-sm px-3 sm:px-6 py-3 sm:py-4 text-base placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all duration-300 touch-manipulation"
                   disabled={isLoading}
