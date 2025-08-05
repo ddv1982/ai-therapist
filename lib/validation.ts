@@ -121,7 +121,11 @@ export const emailReportSchema = z.object({
     smtpHost: z.string().min(1, 'SMTP host is required').optional(),
     smtpUser: z.string().email('Invalid SMTP user email').optional(),
     smtpPass: z.string().min(1, 'SMTP password is required').optional(),
-    fromEmail: z.string().email('Invalid from email address').optional()
+    fromEmail: z.string()
+      .min(1, 'From email is required')
+      .regex(/^(?:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|.+<[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}>)$/, 
+        'Invalid from email format (use: email@domain.com or "Name <email@domain.com>")')
+      .optional()
   }).refine((data) => {
     if (data.service === 'smtp') {
       return data.smtpHost && data.smtpUser && data.smtpPass && data.fromEmail;
