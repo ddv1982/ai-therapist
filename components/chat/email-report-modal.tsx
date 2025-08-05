@@ -54,6 +54,13 @@ export function EmailReportModal({
         setSmtpUser(settings.smtpUser || '');
         setSmtpPass(settings.smtpPass || '');
         setFromEmail(settings.fromEmail || 'AI Therapist <noreply@therapist.ai>');
+        // Load saved email address and checkbox state
+        if (settings.emailAddress) {
+          setEmailAddress(settings.emailAddress);
+        }
+        if (settings.saveEmailSettings !== undefined) {
+          setSaveEmailSettings(settings.saveEmailSettings);
+        }
       } catch (error) {
         console.error('Failed to load email settings:', error);
       }
@@ -86,7 +93,9 @@ export function EmailReportModal({
         smtpHost,
         smtpUser,
         smtpPass,
-        fromEmail
+        fromEmail,
+        emailAddress: emailAddress.trim(),
+        saveEmailSettings: true
       };
       localStorage.setItem('emailSettings', JSON.stringify(emailSettingsToSave));
     }
