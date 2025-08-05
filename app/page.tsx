@@ -986,20 +986,6 @@ export default function ChatPage() {
                     <p className="text-therapy-sm text-muted-foreground">Your conversations are confidential and stored securely</p>
                   </div>
                 </div>
-                
-                <Button 
-                  onClick={() => {
-                    startNewSession();
-                    // Focus the input field after starting new session
-                    setTimeout(() => textareaRef.current?.focus(), 100);
-                  }} 
-                  size="lg"
-                  className="h-14 px-8 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
-                >
-                  <Heart className="w-5 h-5 mr-3 group-hover:scale-110 transition-transform" />
-                  <span className="text-therapy-base font-medium">Start New Session</span>
-                  <Sparkles className="w-5 h-5 ml-3 opacity-70 group-hover:opacity-100 transition-opacity" />
-                </Button>
               </div>
             </div>
           ) : (
