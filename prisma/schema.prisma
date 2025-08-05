@@ -18,6 +18,7 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   sessions Session[]
+  credentials SecureCredential[]
 
   @@map("users")
 }
@@ -74,4 +75,20 @@ model SessionReport {
   @@index([sessionId])
   @@index([createdAt])
   @@map("session_reports")
+}
+
+model SecureCredential {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  service     String   // 'gmail', 'smtp', etc.
+  encryptedData String @map("encrypted_data") // Encrypted JSON containing credentials
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, service])
+  @@index([userId])
+  @@index([service])
+  @@map("secure_credentials")
 }

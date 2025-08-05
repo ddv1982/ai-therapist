@@ -44,29 +44,49 @@ export function EmailReportModal({
   const [smtpPass, setSmtpPass] = useState('');
   const [fromEmail, setFromEmail] = useState('AI Therapist <noreply@therapist.ai>');
   const [saveEmailSettings, setSaveEmailSettings] = useState(false);
+  const [hasStoredCredentials, setHasStoredCredentials] = useState(false);
+  const [storedCredentialsInfo, setStoredCredentialsInfo] = useState<any>(null);
 
-  // Load saved email settings
+  // Load saved email settings and check for stored credentials
   useEffect(() => {
-    const savedEmailSettings = localStorage.getItem('emailSettings');
-    if (savedEmailSettings) {
-      try {
-        const settings = JSON.parse(savedEmailSettings);
-        setEmailService(settings.emailService || 'smtp');
-        setSmtpHost(settings.smtpHost || 'smtp.gmail.com');
-        setSmtpUser(settings.smtpUser || '');
-        setSmtpPass(settings.smtpPass || '');
-        setFromEmail(settings.fromEmail || 'AI Therapist <noreply@therapist.ai>');
-        // Load saved email address and checkbox state
-        if (settings.emailAddress) {
-          setEmailAddress(settings.emailAddress);
+    // Check for stored credentials first
+    fetch('/api/credentials/email')
+      .then(response => response.json())
+      .then(data => {
+        if (data.hasCredentials) {
+          setHasStoredCredentials(true);
+          setStoredCredentialsInfo(data);
+          // Use stored credentials as defaults
+          setEmailService(data.service || 'smtp');
+          setSmtpHost(data.smtpHost || 'smtp.gmail.com');
+          setSmtpUser(data.smtpUser || '');
+          setFromEmail(data.fromEmail || 'AI Therapist <noreply@therapist.ai>');
+          setSmtpPass('••••••••••••••••'); // Show masked password
         }
-        if (settings.saveEmailSettings !== undefined) {
-          setSaveEmailSettings(settings.saveEmailSettings);
+      })
+      .catch(() => {
+        // Fallback to localStorage if API fails
+        const savedEmailSettings = localStorage.getItem('emailSettings');
+        if (savedEmailSettings) {
+          try {
+            const settings = JSON.parse(savedEmailSettings);
+            setEmailService(settings.emailService || 'smtp');
+            setSmtpHost(settings.smtpHost || 'smtp.gmail.com');
+            setSmtpUser(settings.smtpUser || '');
+            setSmtpPass(settings.smtpPass || '');
+            setFromEmail(settings.fromEmail || 'AI Therapist <noreply@therapist.ai>');
+            // Load saved email address and checkbox state
+            if (settings.emailAddress) {
+              setEmailAddress(settings.emailAddress);
+            }
+            if (settings.saveEmailSettings !== undefined) {
+              setSaveEmailSettings(settings.saveEmailSettings);
+            }
+          } catch (error) {
+            console.error('Failed to load email settings:', error);
+          }
         }
-      } catch (error) {
-        console.error('Failed to load email settings:', error);
-      }
-    }
+      });
   }, []);
 
   const handleGenerateReport = async () => {
@@ -220,6 +240,11 @@ export function EmailReportModal({
                   <option value="console">Console Only (Testing)</option>
                   <option value="smtp">SMTP (Gmail, Outlook, etc.)</option>
                 </select>
+                {hasStoredCredentials && (
+                  <div className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-2 rounded border border-green-200 dark:border-green-800">
+                    ✓ Using securely stored Gmail credentials. Your App Password is safely encrypted in the database.
+                  </div>
+                )}
               </div>
 
               {emailService === 'smtp' && (

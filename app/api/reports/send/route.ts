@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { emailReportSchema, validateRequest } from '@/lib/validation';
 import { logger, createRequestLogger } from '@/lib/logger';
 import { marked } from 'marked';
+import { getEmailCredentials } from '@/lib/secure-credentials';
 import type { Message } from '@/types/index';
 
 // Email service - you'll need to configure this with your preferred email provider
@@ -377,10 +378,22 @@ export async function POST(request: NextRequest) {
     // Format the report as HTML email
     const htmlContent = formatReportAsHTML(completion);
     
+    // Get email configuration - use stored credentials if available, otherwise use provided config
+    let finalEmailConfig = emailConfig;
+    
+    if (!emailConfig || emailConfig.service === 'console' || !emailConfig.smtpPass) {
+      // Try to use stored credentials
+      const storedCredentials = await getEmailCredentials(request);
+      if (storedCredentials) {
+        finalEmailConfig = storedCredentials;
+        logger.info('Using stored email credentials for report', requestContext);
+      }
+    }
+
     // Send the email
     const subject = `Therapeutic Session Report - ${new Date().toLocaleDateString()}`;
     try {
-      await sendEmail(emailAddress, subject, htmlContent, emailConfig);
+      await sendEmail(emailAddress, subject, htmlContent, finalEmailConfig);
     } catch (emailError: any) {
       console.error('Email sending error:', emailError);
       
