@@ -14,9 +14,9 @@ export async function POST(request: NextRequest) {
     const { 
       messages, 
       apiKey, 
-      model = 'qwen/qwen3-32b', 
+      model = 'openai/gpt-oss-120b', 
       temperature = 0.6,
-      maxTokens = 40960,
+      maxTokens = 32000,
       topP = 0.95
     } = await request.json();
 

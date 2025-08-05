@@ -47,9 +47,9 @@ export default function ChatPage() {
   const [showSidebar, setShowSidebar] = useState(true);
   const [apiKey, setApiKey] = useState('');
   const [hasEnvApiKey, setHasEnvApiKey] = useState(false);
-  const [model, setModel] = useState('llama-3.1-8b-instant');
+  const [model, setModel] = useState('openai/gpt-oss-120b');
   const [temperature, setTemperature] = useState(0.6);
-  const [maxTokens, setMaxTokens] = useState(40960);
+  const [maxTokens, setMaxTokens] = useState(32000);
   const [topP, setTopP] = useState(0.95);
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState('100vh');
@@ -65,19 +65,8 @@ export default function ChatPage() {
       return modelInfo.maxTokens;
     }
     
-    // Fallback to hardcoded limits for common models
-    const limits: Record<string, number> = {
-      'moonshotai/kimi-k2-instruct': 32768,
-      'qwen/qwen3-32b': 40960,
-      'gemma2-9b-it': 8192,
-      'llama-3.1-8b-instant': 131072,
-      'llama-3.3-70b-versatile': 32768,
-      'meta-llama/llama-guard-4-12b': 8192,
-      'deepseek-r1-distill-llama-70b': 131072,
-      'llama3-8b-8192': 8192,
-      'llama3-70b-8192': 8192,
-    };
-    return limits[modelName] || 8192;
+    // Fallback to default limit if model not found in API data
+    return 8192;
   };
 
   // Load sessions from database on component mount
@@ -174,10 +163,18 @@ export default function ChatPage() {
             setModel(currentModel);
           }
           
-          // If current model is not available, switch to first available model
-          const currentModelExists = data.models.some((m: any) => m.id === currentModel);
-          if (!currentModelExists && data.models.length > 0) {
-            setModel(data.models[0].id);
+          // Check if current model exists and update maxTokens accordingly
+          const currentModelData = data.models.find((m: any) => m.id === currentModel);
+          if (currentModelData) {
+            // Model exists, ensure maxTokens doesn't exceed its limit
+            if (maxTokens > currentModelData.maxTokens) {
+              setMaxTokens(currentModelData.maxTokens);
+            }
+          } else if (data.models.length > 0) {
+            // Model doesn't exist, switch to first available model
+            const firstModel = data.models[0];
+            setModel(firstModel.id);
+            setMaxTokens(firstModel.maxTokens);
           }
         }
       })
@@ -185,19 +182,23 @@ export default function ChatPage() {
         console.error('Failed to fetch models:', error);
         // Fallback to basic models if API fails
         setAvailableModels([
-          { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant', maxTokens: 131072 },
-          { id: 'gemma2-9b-it', name: 'Gemma 2 9B', maxTokens: 8192 }
+          { id: 'openai/gpt-oss-120b', name: 'GPT OSS 120B', maxTokens: 32000 },
+          { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant', maxTokens: 32000 },
+          { id: 'gemma2-9b-it', name: 'Gemma 2 9B', maxTokens: 8192 },
+          { id: 'moonshotai/kimi-k2-instruct', name: 'Kimi K2 Instruct', maxTokens: 16000 }
         ]);
       });
   }, [model]);
 
-  // Update maxTokens when model changes
+  // Update maxTokens when model changes or available models data loads
   useEffect(() => {
-    const modelLimit = getModelMaxTokens(model);
-    if (maxTokens > modelLimit) {
-      setMaxTokens(modelLimit);
+    if (availableModels.length > 0) {
+      const modelLimit = getModelMaxTokens(model);
+      if (maxTokens > modelLimit) {
+        setMaxTokens(modelLimit);
+      }
     }
-  }, [model, maxTokens]);
+  }, [model, availableModels]);
 
   // Mobile detection with dynamic resize handling and iOS viewport fixes
   useEffect(() => {

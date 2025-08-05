@@ -15,16 +15,35 @@ export async function GET() {
     const groq = new Groq({ apiKey: groqApiKey });
     const models = await groq.models.list();
     
+    // Custom token limits: 32000 default, keep lower values, Kimi to 16000
+    const getCustomMaxTokens = (modelId: string, apiMaxTokens: number): number => {
+      // Special case for Kimi models
+      if (modelId.includes('kimi')) {
+        return 16000;
+      }
+      
+      // If API reports a value lower than 32000, keep the lower value
+      if (apiMaxTokens && apiMaxTokens < 32000) {
+        return apiMaxTokens;
+      }
+      
+      // Otherwise set to 32000
+      return 32000;
+    };
+
     // Filter and format models for the UI
     const availableModels = models.data
       .filter(model => model.active)
-      .map(model => ({
-        id: model.id,
-        name: model.id,
-        provider: model.owned_by || 'groq',
-        maxTokens: model.context_window || 4096,
-        active: model.active
-      }))
+      .map(model => {
+        const apiMaxTokens = model.context_window || 4096;
+        return {
+          id: model.id,
+          name: model.id,
+          provider: model.owned_by || 'groq',
+          maxTokens: getCustomMaxTokens(model.id, apiMaxTokens),
+          active: model.active
+        };
+      })
       .sort((a, b) => a.name.localeCompare(b.name));
 
     return NextResponse.json({
