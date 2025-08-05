@@ -97,15 +97,15 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
   const getBackgroundColor = () => {
     switch (toast.type) {
       case 'success':
-        return 'bg-green-50 border-green-200';
+        return 'bg-background border-border shadow-lg ring-1 ring-green-500/20';
       case 'error':
-        return 'bg-red-50 border-red-200';
+        return 'bg-background border-border shadow-lg ring-1 ring-red-500/20';
       case 'warning':
-        return 'bg-yellow-50 border-yellow-200';
+        return 'bg-background border-border shadow-lg ring-1 ring-yellow-500/20';
       case 'info':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-background border-border shadow-lg ring-1 ring-blue-500/20';
       default:
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-background border-border shadow-lg ring-1 ring-blue-500/20';
     }
   };
 
@@ -121,20 +121,20 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
         {getIcon()}
         <div className="flex-1 min-w-0">
           {toast.title && (
-            <h4 className="text-sm font-semibold text-gray-900 mb-1">
+            <h4 className="text-sm font-semibold text-foreground mb-1">
               {toast.title}
             </h4>
           )}
-          <p className="text-sm text-gray-700 leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             {toast.message}
           </p>
         </div>
         <button
           onClick={onClose}
-          className="flex-shrink-0 ml-2 p-1 rounded-full hover:bg-gray-200 transition-colors"
+          className="flex-shrink-0 ml-2 p-1 rounded-full hover:bg-muted transition-colors"
           aria-label="Close notification"
         >
-          <X className="h-4 w-4 text-gray-500" />
+          <X className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
     </div>
