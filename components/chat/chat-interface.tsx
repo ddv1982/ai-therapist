@@ -10,7 +10,7 @@ import { SessionControls } from './session-controls';
 import type { ChatInterfaceProps, Message } from '@/types/chat';
 import type { Session } from '@/types/session';
 import { Send } from 'lucide-react';
-import { generateSessionTitle } from '@/lib/utils';
+import { generateSessionTitle, generateUUID } from '@/lib/utils';
 
 export function ChatInterface({ sessionId, initialMessages = [] }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -95,7 +95,7 @@ export function ChatInterface({ sessionId, initialMessages = [] }: ChatInterface
     if (!input.trim() || !currentSession || isLoading) return;
 
     const userMessage: Message = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       sessionId: currentSession.id,
       role: 'user',
       content: input.trim(),
@@ -123,7 +123,7 @@ export function ChatInterface({ sessionId, initialMessages = [] }: ChatInterface
       if (!reader) throw new Error('No response body');
 
       const assistantMessage: Message = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         sessionId: currentSession.id,
         role: 'assistant',
         content: '',

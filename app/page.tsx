@@ -22,6 +22,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ModelConfig } from '@/types/index';
+import { generateUUID } from '@/lib/utils';
 
 interface Message {
   id: string;
@@ -367,7 +368,7 @@ export default function ChatPage() {
     }
 
     const userMessage: Message = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       role: 'user',
       content: input,
       timestamp: new Date()
@@ -407,7 +408,7 @@ export default function ChatPage() {
       if (!reader) throw new Error('No response body');
 
       const aiMessage: Message = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         role: 'assistant',
         content: '',
         timestamp: new Date()
