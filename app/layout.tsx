@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/lib/theme-context';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { ToastProvider } from '@/components/ui/toast';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -39,7 +40,9 @@ export default function RootLayout({
       <body className="bg-background font-sans antialiased">
         <ErrorBoundary>
           <ThemeProvider>
-            {children}
+            <ToastProvider>
+              {children}
+            </ToastProvider>
           </ThemeProvider>
         </ErrorBoundary>
       </body>

@@ -23,6 +23,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ModelConfig } from '@/types/index';
 import { generateUUID } from '@/lib/utils';
+import { useToast } from '@/components/ui/toast';
 
 interface Message {
   id: string;
@@ -42,6 +43,7 @@ interface Session {
 }
 
 export default function ChatPage() {
+  const { showToast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSession, setCurrentSession] = useState<string | null>(null);
@@ -367,7 +369,11 @@ export default function ChatPage() {
     
     // Check if we have API key either from user input or environment
     if (!apiKey && !hasEnvApiKey) {
-      alert('Please enter your Groq API key in the settings panel or set GROQ_API_KEY environment variable');
+      showToast({
+        type: 'warning',
+        title: 'API Key Required',
+        message: 'Please enter your Groq API key in the settings panel or set GROQ_API_KEY environment variable'
+      });
       return;
     }
 
@@ -489,11 +495,23 @@ export default function ChatPage() {
       // Check if it's a model-related error with proper type handling
       const errorMessage = error instanceof Error ? error.message : String(error);
       if (errorMessage.includes('model_not_found') || errorMessage.includes('404')) {
-        alert(`The selected model "${model}" is not available. Please choose a different model in the settings panel.`);
+        showToast({
+          type: 'error',
+          title: 'Model Not Available',
+          message: `The selected model "${model}" is not available. Please choose a different model in the settings panel.`
+        });
       } else if (errorMessage.includes('Failed to fetch')) {
-        alert('Network error. Please check your connection and try again.');
+        showToast({
+          type: 'error',
+          title: 'Network Error',
+          message: 'Please check your connection and try again.'
+        });
       } else {
-        alert('Failed to send message. Please check your API key and settings.');
+        showToast({
+          type: 'error',
+          title: 'Message Failed',
+          message: 'Failed to send message. Please check your API key and settings.'
+        });
       }
     }
   };
@@ -507,14 +525,22 @@ export default function ChatPage() {
 
   const generateAndSendReport = async () => {
     if (!emailAddress.trim() || !currentSession || messages.length === 0) {
-      alert('Please enter a valid email address and ensure you have messages in the current session.');
+      showToast({
+        type: 'warning',
+        title: 'Missing Information',
+        message: 'Please enter a valid email address and ensure you have messages in the current session.'
+      });
       return;
     }
 
     // Validate email configuration if not using console logging
     if (emailService === 'smtp') {
       if (!smtpHost.trim() || !smtpUser.trim() || !smtpPass.trim() || !fromEmail.trim()) {
-        alert('Please fill in all SMTP configuration fields or use console logging for testing.');
+        showToast({
+          type: 'warning',
+          title: 'SMTP Configuration Required',
+          message: 'Please fill in all SMTP configuration fields or use console logging for testing.'
+        });
         return;
       }
     }
@@ -556,23 +582,32 @@ export default function ChatPage() {
       });
 
       if (response.ok) {
-        alert('Report has been sent to your email address!');
+        showToast({
+          type: 'success',
+          title: 'Report Sent',
+          message: 'Report has been sent to your email address!'
+        });
         setShowEmailModal(false);
         setEmailAddress('');
       } else {
         const error = await response.json();
         let errorMessage = `Failed to send report: ${error.error || 'Unknown error'}`;
         if (error.details) {
-          errorMessage += `\n\nDetails: ${error.details}`;
+          errorMessage += ` Details: ${error.details}`;
         }
-        if (error.helpUrl) {
-          errorMessage += `\n\nFor help, visit: ${error.helpUrl}`;
-        }
-        alert(errorMessage);
+        showToast({
+          type: 'error', 
+          title: 'Email Failed',
+          message: errorMessage
+        });
       }
     } catch (error) {
       console.error('Error sending report:', error);
-      alert('Failed to send report. Please try again.');
+      showToast({
+        type: 'error',
+        title: 'Report Failed',
+        message: 'Failed to send report. Please try again.'
+      });
     } finally {
       setIsGeneratingReport(false);
     }

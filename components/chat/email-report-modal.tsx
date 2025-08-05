@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Mail, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ui/toast';
 
 interface Message {
   id: string;
@@ -34,6 +35,7 @@ export function EmailReportModal({
   messages,
   model
 }: EmailReportModalProps) {
+  const { showToast } = useToast();
   const [emailAddress, setEmailAddress] = useState('');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [emailService, setEmailService] = useState('smtp');
@@ -69,19 +71,31 @@ export function EmailReportModal({
 
   const handleGenerateReport = async () => {
     if (!sessionId || !messages.length) {
-      alert('No session data available to generate report.');
+      showToast({
+        type: 'warning',
+        title: 'No Session Data',
+        message: 'No session data available to generate report.'
+      });
       return;
     }
 
     if (!emailAddress.trim()) {
-      alert('Please enter an email address.');
+      showToast({
+        type: 'warning',
+        title: 'Email Required',
+        message: 'Please enter an email address.'
+      });
       return;
     }
 
     // Validate email configuration if not using console logging
     if (emailService === 'smtp') {
       if (!smtpHost.trim() || !smtpUser.trim() || !smtpPass.trim() || !fromEmail.trim()) {
-        alert('Please fill in all SMTP configuration fields or use console logging for testing.');
+        showToast({
+          type: 'warning',
+          title: 'SMTP Configuration Required',
+          message: 'Please fill in all SMTP configuration fields or use console logging for testing.'
+        });
         return;
       }
     }
@@ -123,23 +137,32 @@ export function EmailReportModal({
       });
 
       if (response.ok) {
-        alert('Report generated and sent successfully!');
+        showToast({
+          type: 'success',
+          title: 'Report Sent',
+          message: 'Report generated and sent successfully!'
+        });
         onClose();
         setEmailAddress('');
       } else {
         const error = await response.json();
         let errorMessage = `Failed to send report: ${error.error || 'Unknown error'}`;
         if (error.details) {
-          errorMessage += `\n\nDetails: ${error.details}`;
+          errorMessage += ` Details: ${error.details}`;
         }
-        if (error.helpUrl) {
-          errorMessage += `\n\nFor help, visit: ${error.helpUrl}`;
-        }
-        alert(errorMessage);
+        showToast({
+          type: 'error',
+          title: 'Email Failed',
+          message: errorMessage
+        });
       }
     } catch (error) {
       console.error('Error sending report:', error);
-      alert('Failed to send report. Please try again.');
+      showToast({
+        type: 'error',
+        title: 'Report Failed',
+        message: 'Failed to send report. Please try again.'
+      });
     } finally {
       setIsGeneratingReport(false);
     }
