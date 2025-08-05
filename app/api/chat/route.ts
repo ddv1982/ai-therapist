@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Groq } from 'groq-sdk';
-import { THERAPY_SYSTEM_PROMPT, CRISIS_INTERVENTION_KEYWORDS, CRISIS_RESPONSE } from '@/lib/therapy-prompts';
+import { THERAPY_SYSTEM_PROMPT } from '@/lib/therapy-prompts';
+import { chatRequestSchema, validateRequest } from '@/lib/validation';
+import { detectCrisis, CRISIS_RESPONSES } from '@/lib/crisis-detection';
+import { logger, createRequestLogger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
+  const requestContext = createRequestLogger(request);
+  
   try {
+    logger.info('Chat request received', requestContext);
+    
     const { 
       messages, 
       apiKey, 
@@ -13,7 +20,18 @@ export async function POST(request: NextRequest) {
       topP = 0.95
     } = await request.json();
 
+    // Log the actual settings being used
+    logger.info('Using chat settings', {
+      ...requestContext,
+      model,
+      temperature,
+      maxTokens,
+      topP,
+      hasApiKey: !!apiKey
+    });
+
     if (!messages) {
+      logger.validationError('/api/chat', 'Messages are required', requestContext);
       return NextResponse.json(
         { error: 'Messages are required' },
         { status: 400 }
@@ -33,19 +51,32 @@ export async function POST(request: NextRequest) {
     // Initialize Groq client with API key
     const groq = new Groq({ apiKey: groqApiKey });
 
-    // Check for crisis keywords in the latest user message
+    // Enhanced crisis detection with context awareness
     const latestMessage = messages[messages.length - 1];
-    const containsCrisisKeywords = CRISIS_INTERVENTION_KEYWORDS.some(keyword =>
-      latestMessage.content.toLowerCase().includes(keyword)
-    );
+    const conversationHistory = messages.slice(-5).map(m => m.content); // Last 5 messages for context
+    const crisisDetection = detectCrisis(latestMessage.content, conversationHistory);
 
-    if (containsCrisisKeywords) {
-      // Return crisis response immediately
+    if (crisisDetection.isCrisis) {
+      // Log crisis detection for monitoring
+      logger.crisisDetected(crisisDetection.severity, crisisDetection.confidence, {
+        ...requestContext,
+        keywords: crisisDetection.keywords,
+        suggestions: crisisDetection.suggestions
+      });
+      
+      // Return appropriate crisis response based on severity
+      const crisisResponse = CRISIS_RESPONSES[crisisDetection.severity];
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         start(controller) {
           const response = `data: ${JSON.stringify({
-            choices: [{ delta: { content: CRISIS_RESPONSE } }]
+            choices: [{ delta: { content: crisisResponse } }],
+            crisis_detection: {
+              severity: crisisDetection.severity,
+              confidence: crisisDetection.confidence,
+              suggestions: crisisDetection.suggestions
+            },
+            settings_used: { model, temperature, maxTokens, topP }
           })}\n\n`;
           controller.enqueue(encoder.encode(response));
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
@@ -126,7 +157,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Chat API error:', error);
+    logger.apiError('/api/chat', error as Error, requestContext);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

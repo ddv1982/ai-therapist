@@ -1,16 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { createSessionSchema, validateRequest } from '@/lib/validation';
+import { logger, createRequestLogger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
+  const requestContext = createRequestLogger(request);
+  
   try {
-    const { title } = await request.json();
-
-    if (!title) {
+    logger.info('Creating new session', requestContext);
+    
+    const body = await request.json();
+    
+    // Validate request body
+    const validation = validateRequest(createSessionSchema, body);
+    if (!validation.success) {
+      logger.validationError('/api/sessions', validation.error, requestContext);
       return NextResponse.json(
-        { error: 'Title is required' },
+        { error: `Validation failed: ${validation.error}` },
         { status: 400 }
       );
     }
+
+    const { title } = validation.data;
 
     // For now, we'll use a default user ID
     // In a real app, this would come from authentication
@@ -35,9 +46,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    logger.info('Session created successfully', {
+      ...requestContext,
+      sessionId: session.id,
+      userId: defaultUserId
+    });
+
     return NextResponse.json(session);
   } catch (error) {
-    console.error('Create session error:', error);
+    logger.databaseError('create session', error as Error, requestContext);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -45,8 +62,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const requestContext = createRequestLogger(request);
+  
   try {
+    logger.debug('Fetching sessions', requestContext);
+    
     const sessions = await prisma.session.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
@@ -56,9 +77,14 @@ export async function GET() {
       }
     });
 
+    logger.info('Sessions fetched successfully', {
+      ...requestContext,
+      sessionCount: sessions.length
+    });
+
     return NextResponse.json(sessions);
   } catch (error) {
-    console.error('Get sessions error:', error);
+    logger.databaseError('fetch sessions', error as Error, requestContext);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -1,12 +1,7 @@
-export interface Message {
-  id: string;
-  sessionId: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  createdAt: Date;
-}
+// Re-export types from centralized location
+export type { Message, ChatState, ChatSettings, ChatRequest, ChatResponse } from './index';
 
+// Component-specific prop types
 export interface ChatInterfaceProps {
   sessionId: string;
   initialMessages?: Message[];
