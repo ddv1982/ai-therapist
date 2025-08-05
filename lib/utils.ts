@@ -74,3 +74,61 @@ export function generateUUID(): string {
     return v.toString(16);
   });
 }
+
+/**
+ * Generate a cryptographically secure random password for network access protection
+ * Uses Node.js crypto module for maximum security
+ */
+export function generateNetworkPassword(length: number = 16): string {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  let password = '';
+  
+  // Check if we're in Node.js environment (server-side)
+  if (typeof require !== 'undefined') {
+    try {
+      const crypto = require('crypto');
+      for (let i = 0; i < length; i++) {
+        const randomIndex = crypto.randomInt(0, charset.length);
+        password += charset[randomIndex];
+      }
+      return password;
+    } catch (error) {
+      console.warn('Node.js crypto not available, falling back to browser crypto');
+    }
+  }
+  
+  // Browser fallback using crypto.getRandomValues
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    for (let i = 0; i < length; i++) {
+      password += charset[array[i] % charset.length];
+    }
+    return password;
+  }
+  
+  // Final fallback using Math.random (less secure)
+  for (let i = 0; i < length; i++) {
+    password += charset[Math.floor(Math.random() * charset.length)];
+  }
+  return password;
+}
+
+/**
+ * Detect if the request is coming from localhost or network access
+ */
+export function isLocalhost(host: string): boolean {
+  return host.includes('localhost') || 
+         host.includes('127.0.0.1') || 
+         host.includes('::1');
+}
+
+/**
+ * Detect if the request is coming from a private network IP
+ */
+export function isPrivateNetworkAccess(host: string): boolean {
+  // Match private IP ranges: 192.168.x.x, 10.x.x.x, 172.16-31.x.x
+  return host.match(/192\.168\.\d+\.\d+/) !== null ||
+         host.match(/10\.\d+\.\d+\.\d+/) !== null ||
+         host.match(/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+/) !== null;
+}
