@@ -47,27 +47,35 @@ export default function ChatPage() {
   const [showSidebar, setShowSidebar] = useState(true);
   const [apiKey, setApiKey] = useState('');
   const [hasEnvApiKey, setHasEnvApiKey] = useState(false);
-  const [model, setModel] = useState('qwen/qwen3-32b');
+  const [model, setModel] = useState('llama-3.1-8b-instant');
   const [temperature, setTemperature] = useState(0.6);
   const [maxTokens, setMaxTokens] = useState(40960);
   const [topP, setTopP] = useState(0.95);
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState('100vh');
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Model-specific token limits
   const getModelMaxTokens = (modelName: string): number => {
+    // First check if we have the model in our available models list
+    const modelInfo = availableModels.find(m => m.id === modelName);
+    if (modelInfo && modelInfo.maxTokens) {
+      return modelInfo.maxTokens;
+    }
+    
+    // Fallback to hardcoded limits for common models
     const limits: Record<string, number> = {
-      'kimi/kimi-k2-instruct': 32768,
+      'moonshotai/kimi-k2-instruct': 32768,
       'qwen/qwen3-32b': 40960,
       'gemma2-9b-it': 8192,
       'llama-3.1-8b-instant': 131072,
       'llama-3.3-70b-versatile': 32768,
       'meta-llama/llama-guard-4-12b': 8192,
       'deepseek-r1-distill-llama-70b': 131072,
-      'llama-3.1-70b-versatile': 131072,
-      'mixtral-8x7b-32768': 32768,
+      'llama3-8b-8192': 8192,
+      'llama3-70b-8192': 8192,
     };
     return limits[modelName] || 8192;
   };
@@ -150,6 +158,38 @@ export default function ChatPage() {
       .then(data => setHasEnvApiKey(data.hasGroqApiKey))
       .catch(() => setHasEnvApiKey(false));
   }, []);
+
+  // Fetch available models
+  useEffect(() => {
+    fetch('/api/models')
+      .then(res => res.json())
+      .then(data => {
+        if (data.models) {
+          setAvailableModels(data.models);
+          
+          // Migration: Fix old kimi model ID to new one
+          let currentModel = model;
+          if (currentModel === 'kimi/kimi-k2-instruct') {
+            currentModel = 'moonshotai/kimi-k2-instruct';
+            setModel(currentModel);
+          }
+          
+          // If current model is not available, switch to first available model
+          const currentModelExists = data.models.some((m: any) => m.id === currentModel);
+          if (!currentModelExists && data.models.length > 0) {
+            setModel(data.models[0].id);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Failed to fetch models:', error);
+        // Fallback to basic models if API fails
+        setAvailableModels([
+          { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant', maxTokens: 131072 },
+          { id: 'gemma2-9b-it', name: 'Gemma 2 9B', maxTokens: 8192 }
+        ]);
+      });
+  }, [model]);
 
   // Update maxTokens when model changes
   useEffect(() => {
@@ -366,7 +406,16 @@ export default function ChatPage() {
     } catch (error) {
       setIsLoading(false);
       console.error('Error sending message:', error);
-      alert('Failed to send message. Please check your API key and try again.');
+      
+      // Check if it's a model-related error
+      const errorString = error?.toString() || '';
+      if (errorString.includes('model_not_found') || errorString.includes('404')) {
+        alert(`The selected model "${model}" is not available. Please choose a different model in the settings panel.`);
+      } else if (errorString.includes('Failed to fetch')) {
+        alert('Network error. Please check your connection and try again.');
+      } else {
+        alert('Failed to send message. Please check your API key and settings.');
+      }
     }
   };
 
@@ -575,21 +624,15 @@ export default function ChatPage() {
                   onChange={(e) => setModel(e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background"
                 >
-                  <optgroup label="Featured Models">
-                    <option value="kimi/kimi-k2-instruct">Kimi K2 Instruct (~200 tps)</option>
-                    <option value="qwen/qwen3-32b">Qwen 3 32B (~400 tps, 40K tokens)</option>
-                  </optgroup>
-                  <optgroup label="Production Models">
-                    <option value="gemma2-9b-it">Gemma 2 9B (8K tokens)</option>
-                    <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant (131K tokens)</option>
-                    <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile (32K tokens)</option>
-                    <option value="meta-llama/llama-guard-4-12b">Llama Guard 4 12B</option>
-                  </optgroup>
-                  <optgroup label="Preview Models">
-                    <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 Distill (131K tokens)</option>
-                    <option value="llama-3.1-70b-versatile">Llama 3.1 70B Versatile</option>
-                    <option value="mixtral-8x7b-32768">Mixtral 8x7B (32K tokens)</option>
-                  </optgroup>
+                  {availableModels.length === 0 ? (
+                    <option disabled>Loading models...</option>
+                  ) : (
+                    availableModels.map((modelOption) => (
+                      <option key={modelOption.id} value={modelOption.id}>
+                        {modelOption.id} {modelOption.maxTokens ? `(${(modelOption.maxTokens / 1000).toFixed(0)}K tokens)` : ''}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
               

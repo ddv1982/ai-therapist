@@ -157,6 +157,42 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    // Handle specific Groq API errors
+    if (error instanceof Error && error.message.includes('model_not_found')) {
+      logger.warn('Model not found error', {
+        ...requestContext,
+        model,
+        errorMessage: error.message
+      });
+      
+      return NextResponse.json(
+        { 
+          error: 'Model not available',
+          details: `The model "${model}" is not available. Please select a different model from the settings.`,
+          suggestedAction: 'Change model in settings'
+        },
+        { status: 400 }
+      );
+    }
+    
+    // Handle other API errors
+    if (error instanceof Error && error.message.includes('404')) {
+      logger.warn('API resource not found', {
+        ...requestContext,
+        model,
+        errorMessage: error.message
+      });
+      
+      return NextResponse.json(
+        { 
+          error: 'Invalid request',
+          details: 'The requested resource was not found. Please check your model selection.',
+          suggestedAction: 'Verify model name in settings'
+        },
+        { status: 400 }
+      );
+    }
+
     logger.apiError('/api/chat', error as Error, requestContext);
     return NextResponse.json(
       { error: 'Internal server error' },
