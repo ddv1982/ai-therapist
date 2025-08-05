@@ -54,9 +54,27 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(session);
   } catch (error) {
-    logger.databaseError('create session', error as Error, requestContext);
+    const err = error as Error;
+    logger.databaseError('create session', err, requestContext);
+    
+    // Check for specific database errors
+    if (err.message.includes('UNIQUE constraint')) {
+      return NextResponse.json(
+        { 
+          error: 'Session creation failed',
+          details: 'A session with this identifier already exists',
+          code: 'DUPLICATE_SESSION'
+        },
+        { status: 409 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Failed to create session',
+        details: 'Unable to create a new therapy session. Please try again.',
+        code: 'SESSION_CREATE_ERROR'
+      },
       { status: 500 }
     );
   }
@@ -84,9 +102,15 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(sessions);
   } catch (error) {
-    logger.databaseError('fetch sessions', error as Error, requestContext);
+    const err = error as Error;
+    logger.databaseError('fetch sessions', err, requestContext);
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Failed to fetch sessions',
+        details: 'Unable to retrieve your therapy sessions. Please refresh the page.',
+        code: 'SESSION_FETCH_ERROR'
+      },
       { status: 500 }
     );
   }

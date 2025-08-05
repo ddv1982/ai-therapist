@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateSessionReport } from '@/lib/groq-client';
 import { REPORT_GENERATION_PROMPT } from '@/lib/therapy-prompts';
 import { prisma } from '@/lib/db';
+import { emailReportSchema, validateRequest } from '@/lib/validation';
+import { logger, createRequestLogger } from '@/lib/logger';
+import { marked } from 'marked';
 import type { Message } from '@/types/index';
 
 // Email service - you'll need to configure this with your preferred email provider
@@ -54,7 +57,6 @@ async function sendEmail(to: string, subject: string, content: string, config?: 
 
 function formatReportAsHTML(report: string): string {
   // Use marked library for robust Markdown-to-HTML conversion
-  const { marked } = require('marked');
   
   // Configure marked with therapeutic-friendly options
   marked.setOptions({
@@ -337,36 +339,28 @@ function formatReportAsHTML(report: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  const requestContext = createRequestLogger(request);
+  
   try {
-    const { sessionId, messages, emailAddress, model, emailConfig }: { 
-      sessionId: string; 
-      messages: Message[]; 
-      emailAddress: string;
-      model?: string;
-      emailConfig?: {
-        service: string;
-        smtpHost: string;
-        smtpUser: string;
-        smtpPass: string;
-        fromEmail: string;
-      };
-    } = await request.json();
-
-    if (!sessionId || !messages?.length || !emailAddress) {
+    logger.info('Email report request received', requestContext);
+    
+    const body = await request.json();
+    
+    // Validate request body
+    const validation = validateRequest(emailReportSchema, body);
+    if (!validation.success) {
+      logger.validationError('/api/reports/send', validation.error, requestContext);
       return NextResponse.json(
-        { error: 'Session ID, messages, and email address are required' },
+        { 
+          error: 'Invalid request data',
+          details: validation.error,
+          code: 'VALIDATION_ERROR'
+        },
         { status: 400 }
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailAddress)) {
-      return NextResponse.json(
-        { error: 'Invalid email address format' },
-        { status: 400 }
-      );
-    }
+    const { sessionId, messages, emailAddress, model, emailConfig } = validation.data;
 
     // Generate the session report using AI
     const modelToUse = model || 'openai/gpt-oss-120b'; // Use provided model or default

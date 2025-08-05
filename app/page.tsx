@@ -21,6 +21,7 @@ import {
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import type { ModelConfig } from '@/types/index';
 
 interface Message {
   id: string;
@@ -55,7 +56,7 @@ export default function ChatPage() {
   const [topP, setTopP] = useState(0.95);
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState('100vh');
-  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [availableModels, setAvailableModels] = useState<ModelConfig[]>([]);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailAddress, setEmailAddress] = useState('');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -153,10 +154,18 @@ export default function ChatPage() {
 
   // Check if environment variable is set
   useEffect(() => {
-    fetch('/api/env')
+    const abortController = new AbortController();
+    
+    fetch('/api/env', { signal: abortController.signal })
       .then(res => res.json())
       .then(data => setHasEnvApiKey(data.hasGroqApiKey))
-      .catch(() => setHasEnvApiKey(false));
+      .catch((error) => {
+        if (error.name !== 'AbortError') {
+          setHasEnvApiKey(false);
+        }
+      });
+
+    return () => abortController.abort();
   }, []);
 
   // Load saved email settings
@@ -177,8 +186,10 @@ export default function ChatPage() {
   }, []);
 
   // Fetch available models
-  useEffect(() => {
-    fetch('/api/models')
+  useEffect(() => {  
+    const abortController = new AbortController();
+    
+    fetch('/api/models', { signal: abortController.signal })
       .then(res => res.json())
       .then(data => {
         if (data.models) {
@@ -192,7 +203,7 @@ export default function ChatPage() {
           }
           
           // Check if current model exists and update maxTokens accordingly
-          const currentModelData = data.models.find((m: any) => m.id === currentModel);
+          const currentModelData = data.models.find((m: ModelConfig) => m.id === currentModel);
           if (currentModelData) {
             // Model exists, ensure maxTokens doesn't exceed its limit
             if (maxTokens > currentModelData.maxTokens) {
@@ -207,15 +218,19 @@ export default function ChatPage() {
         }
       })
       .catch(error => {
-        console.error('Failed to fetch models:', error);
-        // Fallback to basic models if API fails
-        setAvailableModels([
-          { id: 'openai/gpt-oss-120b', name: 'GPT OSS 120B', maxTokens: 32000 },
-          { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant', maxTokens: 32000 },
-          { id: 'gemma2-9b-it', name: 'Gemma 2 9B', maxTokens: 8192 },
-          { id: 'moonshotai/kimi-k2-instruct', name: 'Kimi K2 Instruct', maxTokens: 16000 }
-        ]);
+        if (error.name !== 'AbortError') {
+          console.error('Failed to fetch models:', error);
+          // Fallback to basic models if API fails
+          setAvailableModels([
+            { id: 'openai/gpt-oss-120b', name: 'GPT OSS 120B', provider: 'OpenAI', maxTokens: 32000, category: 'featured' },
+            { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant', provider: 'Meta', maxTokens: 32000, category: 'production' },
+            { id: 'gemma2-9b-it', name: 'Gemma 2 9B', provider: 'Google', maxTokens: 8192, category: 'production' },
+            { id: 'moonshotai/kimi-k2-instruct', name: 'Kimi K2 Instruct', provider: 'Moonshot', maxTokens: 16000, category: 'preview' }
+          ]);
+        }
       });
+
+    return () => abortController.abort();
   }, [model]);
 
   // Update maxTokens when model changes or available models data loads
@@ -352,7 +367,7 @@ export default function ChatPage() {
     }
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       role: 'user',
       content: input,
       timestamp: new Date()
@@ -392,7 +407,7 @@ export default function ChatPage() {
       if (!reader) throw new Error('No response body');
 
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: crypto.randomUUID(),
         role: 'assistant',
         content: '',
         timestamp: new Date()
@@ -436,11 +451,11 @@ export default function ChatPage() {
       setIsLoading(false);
       console.error('Error sending message:', error);
       
-      // Check if it's a model-related error
-      const errorString = error?.toString() || '';
-      if (errorString.includes('model_not_found') || errorString.includes('404')) {
+      // Check if it's a model-related error with proper type handling
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('model_not_found') || errorMessage.includes('404')) {
         alert(`The selected model "${model}" is not available. Please choose a different model in the settings panel.`);
-      } else if (errorString.includes('Failed to fetch')) {
+      } else if (errorMessage.includes('Failed to fetch')) {
         alert('Network error. Please check your connection and try again.');
       } else {
         alert('Failed to send message. Please check your API key and settings.');
@@ -527,7 +542,10 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20"
+    <div 
+      className="flex bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20"
+      role="application"
+      aria-label="AI Therapist Chat Application"
       style={{
         height: viewportHeight,
         minHeight: viewportHeight,
@@ -552,7 +570,12 @@ export default function ChatPage() {
       )}
       
       {/* Sidebar */}
-      <div className={`${showSidebar ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${showSidebar ? 'fixed md:relative' : ''} ${showSidebar ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} transition-all duration-500 ease-in-out overflow-hidden bg-card/80 dark:bg-card/80 backdrop-blur-md border-r border-border/50 flex flex-col shadow-xl animate-slide-in`}
+      <aside 
+        id="chat-sidebar"
+        className={`${showSidebar ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${showSidebar ? 'fixed md:relative' : ''} ${showSidebar ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} transition-all duration-500 ease-in-out overflow-hidden bg-card/80 dark:bg-card/80 backdrop-blur-md border-r border-border/50 flex flex-col shadow-xl animate-slide-in`}
+        role="navigation"
+        aria-label="Chat sessions"
+        aria-hidden={!showSidebar}
         style={{
           background: 'var(--sidebar-background)',
           backgroundImage: `
@@ -792,10 +815,10 @@ export default function ChatPage() {
             </div>
           )}
         </div>
-      </div>
+      </aside>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col relative min-h-0">
+      <main className="flex-1 flex flex-col relative min-h-0" role="main" aria-label="Chat conversation">
         {/* Header */}
         <div className={`${isMobile ? 'p-3' : 'p-6'} border-b border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`}>
           <div className="flex items-center justify-between">
@@ -809,6 +832,9 @@ export default function ChatPage() {
                 style={{
                   WebkitTapHighlightColor: 'transparent'
                 }}
+                aria-label="Toggle session sidebar"
+                aria-expanded={showSidebar}
+                aria-controls="chat-sidebar"
               >
                 <div className="shimmer-effect"></div>
                 <Menu className="w-5 h-5 relative z-10" />
@@ -849,11 +875,18 @@ export default function ChatPage() {
         </div>
 
         {/* Messages */}
-        <div className={`flex-1 overflow-y-auto custom-scrollbar ${isMobile ? 'p-3 pb-0 prevent-bounce' : 'p-3 sm:p-6'}`} style={{
-          minHeight: 0,
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'contain'
-        }}>
+        <div 
+          className={`flex-1 overflow-y-auto custom-scrollbar ${isMobile ? 'p-3 pb-0 prevent-bounce' : 'p-3 sm:p-6'}`} 
+          style={{
+            minHeight: 0,
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain'
+          }}
+          role="log"
+          aria-label="Chat messages"
+          aria-live="polite"
+          aria-atomic="false"
+        >
           {messages.length === 0 ? (
             <div className={`${isMobile ? 'min-h-full' : 'h-full'} flex items-center justify-center`}>
               <div className={`text-center max-w-2xl animate-fade-in ${isMobile ? 'px-3' : 'px-4'}`}>
@@ -867,7 +900,7 @@ export default function ChatPage() {
                   <p className="text-therapy-sm sm:text-therapy-base text-muted-foreground mb-6 sm:mb-8 leading-relaxed">
                     This is a safe, judgment-free environment where you can explore your thoughts 
                     and feelings with compassionate AI support. Take your time, breathe deeply, 
-                    and know that you're in a space designed for healing and growth.
+                    and know that you&apos;re in a space designed for healing and growth.
                   </p>
                 </div>
                 
@@ -982,7 +1015,7 @@ export default function ChatPage() {
                           li: ({node, ...props}) => <li className="text-foreground leading-relaxed pl-1" {...props} />,
                           blockquote: ({node, ...props}) => (
                             <blockquote className="border-l-4 border-primary bg-primary/5 pl-6 pr-4 py-3 my-4 rounded-r-lg italic text-foreground relative" {...props}>
-                              <div className="absolute top-2 left-2 text-primary/50 text-xl">"</div>
+                              <div className="absolute top-2 left-2 text-primary/50 text-xl">&quot;</div>
                             </blockquote>
                           ),
                           code: ({node, ...props}) => {
@@ -1088,9 +1121,9 @@ export default function ChatPage() {
         </div>
 
         {/* Input Area */}
-        <div className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} border-t border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`}>
+        <div className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} border-t border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`} role="form" aria-label="Send message">
           <div className="max-w-4xl mx-auto">
-            <div className="flex gap-3 items-end">
+            <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex gap-3 items-end">
               <div className="flex-1 relative">
                 <Textarea
                   ref={textareaRef}
@@ -1109,23 +1142,28 @@ export default function ChatPage() {
                     fontSize: isMobile ? '16px' : undefined, // Prevent zoom on iOS
                     WebkitTapHighlightColor: 'transparent'
                   }}
+                  aria-label="Type your message"
+                  aria-describedby="input-help"
                 />
               </div>
               <Button
-                onClick={sendMessage}
+                type="submit"
                 disabled={isLoading || !input.trim()}
                 className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 text-white shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex-shrink-0`}
                 style={{
                   WebkitTapHighlightColor: 'transparent'
                 }}
+                aria-label={isLoading ? 'Sending message...' : 'Send message'}
+                aria-disabled={isLoading || !input.trim()}
               >
                 {/* Shimmer effect */}
                 <div className="shimmer-effect"></div>
                 <Send className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
               </Button>
-            </div>
+            </form>
             
             <div className="mt-3 sm:mt-4 flex items-center justify-center gap-2 text-xs sm:text-therapy-sm text-muted-foreground">
+              <span id="input-help">Press Enter to send, Shift+Enter for new line</span>
               <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
               <span className="text-center">This AI provides support but is not a replacement for professional therapy</span>
               <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
@@ -1134,7 +1172,7 @@ export default function ChatPage() {
           {/* Decorative gradient line */}
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-accent/50 to-transparent"></div>
         </div>
-      </div>
+      </main>
 
       {/* Email Report Modal */}
       {showEmailModal && (

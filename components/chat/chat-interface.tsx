@@ -122,7 +122,7 @@ export function ChatInterface({ sessionId, initialMessages = [] }: ChatInterface
       const reader = response.body?.getReader();
       if (!reader) throw new Error('No response body');
 
-      let assistantMessage: Message = {
+      const assistantMessage: Message = {
         id: crypto.randomUUID(),
         sessionId: currentSession.id,
         role: 'assistant',

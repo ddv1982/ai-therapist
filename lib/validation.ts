@@ -60,7 +60,26 @@ export const messageSchema = z.object({
 });
 
 
-// Validation helper function
+/**
+ * Validates request data against a Zod schema with comprehensive error handling
+ * 
+ * @template T - The expected type after validation
+ * @param schema - Zod schema to validate against
+ * @param data - Input data to validate (typically from request body)
+ * @returns Validation result with either validated data or detailed error message
+ * 
+ * @example
+ * ```typescript
+ * const result = validateRequest(chatRequestSchema, requestBody);
+ * if (result.success) {
+ *   // Use result.data which is now type-safe
+ *   console.log(result.data.temperature);
+ * } else {
+ *   // Handle validation error
+ *   return NextResponse.json({ error: result.error }, { status: 400 });
+ * }
+ * ```
+ */
 export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): 
   { success: true; data: T } | { success: false; error: string } {
   try {
@@ -82,9 +101,41 @@ export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown):
   }
 }
 
+// Email report validation schema
+export const emailReportSchema = z.object({
+  sessionId: z.string()
+    .uuid('Invalid session ID format'),
+  messages: z.array(messageSchema)
+    .min(1, 'At least one message is required'),
+  emailAddress: z.string()
+    .email('Invalid email address format')
+    .max(254, 'Email address too long'),
+  model: z.string()
+    .min(1, 'Model name required')
+    .max(100, 'Model name too long')
+    .optional(),
+  emailConfig: z.object({
+    service: z.enum(['console', 'smtp'], {
+      errorMap: () => ({ message: 'Service must be either "console" or "smtp"' })
+    }),
+    smtpHost: z.string().min(1, 'SMTP host is required').optional(),
+    smtpUser: z.string().email('Invalid SMTP user email').optional(),
+    smtpPass: z.string().min(1, 'SMTP password is required').optional(),
+    fromEmail: z.string().email('Invalid from email address').optional()
+  }).refine((data) => {
+    if (data.service === 'smtp') {
+      return data.smtpHost && data.smtpUser && data.smtpPass && data.fromEmail;
+    }
+    return true;
+  }, {
+    message: 'SMTP configuration fields are required when using SMTP service'
+  }).optional()
+});
+
 // Type exports for validated data
 export type ChatRequestInput = z.infer<typeof chatRequestSchema>;
 export type ChatMessageInput = z.infer<typeof chatMessageSchema>;
 export type CreateSessionInput = z.infer<typeof createSessionSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
 export type SessionIdInput = z.infer<typeof sessionIdSchema>;
+export type EmailReportInput = z.infer<typeof emailReportSchema>;

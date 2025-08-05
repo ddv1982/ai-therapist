@@ -1,4 +1,13 @@
-// Structured logging utility for better error tracking and debugging
+/**
+ * Structured logging utility for better error tracking and debugging
+ * 
+ * Provides comprehensive logging capabilities with context tracking,
+ * error handling, and development-friendly formatting.
+ * 
+ * @fileoverview Logging system for AI Therapist application
+ * @author AI Therapist Team
+ * @version 1.0.0
+ */
 
 export enum LogLevel {
   ERROR = 'error',
@@ -49,6 +58,15 @@ class Logger {
     return JSON.stringify(logData, null, this.isDevelopment ? 2 : 0);
   }
 
+  /**
+   * Core logging method that formats and outputs log entries
+   * 
+   * @private
+   * @param level - Log severity level
+   * @param message - Human-readable log message
+   * @param context - Additional context information
+   * @param error - Optional error object for detailed error logging
+   */
   private log(level: LogLevel, message: string, context?: LogContext, error?: Error): void {
     const entry: LogEntry = {
       level,
@@ -82,18 +100,48 @@ class Logger {
     }
   }
 
+  /**
+   * Log an error message with optional context and error object
+   * 
+   * @param message - Error description
+   * @param context - Additional context information
+   * @param error - Optional Error object for stack trace
+   * 
+   * @example
+   * ```typescript
+   * logger.error('Database connection failed', { userId: '123' }, new Error('Connection timeout'));
+   * ```
+   */
   error(message: string, context?: LogContext, error?: Error): void {
     this.log(LogLevel.ERROR, message, context, error);
   }
 
+  /**
+   * Log a warning message with optional context
+   * 
+   * @param message - Warning description
+   * @param context - Additional context information
+   */
   warn(message: string, context?: LogContext): void {
     this.log(LogLevel.WARN, message, context);
   }
 
+  /**
+   * Log an informational message with optional context
+   * 
+   * @param message - Information to log
+   * @param context - Additional context information
+   */
   info(message: string, context?: LogContext): void {
     this.log(LogLevel.INFO, message, context);
   }
 
+  /**
+   * Log a debug message (only in development environment)
+   * 
+   * @param message - Debug information
+   * @param context - Additional context information
+   */
   debug(message: string, context?: LogContext): void {
     // Only log debug messages in development
     if (this.isDevelopment) {
@@ -101,7 +149,13 @@ class Logger {
     }
   }
 
-  // Specialized methods for common scenarios
+  /**
+   * Log API-specific errors with endpoint information
+   * 
+   * @param endpoint - API endpoint that failed
+   * @param error - Error object
+   * @param context - Additional request context
+   */
   apiError(endpoint: string, error: Error, context?: LogContext): void {
     this.error(`API Error: ${endpoint}`, {
       ...context,

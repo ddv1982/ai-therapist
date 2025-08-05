@@ -24,8 +24,8 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            // Restrict CORS in production, allow localhost in development
-            value: isDevelopment ? '*' : 'https://your-domain.com',
+            // Restrict CORS to specific development origins and production domain
+            value: isDevelopment ? 'http://localhost:3000' : 'https://your-domain.com',
           },
           {
             key: 'Access-Control-Allow-Methods',
