@@ -61,11 +61,6 @@ export interface ChatResponse {
       content: string;
     };
   }>;
-  crisis_detection?: {
-    severity: 'low' | 'medium' | 'high' | 'immediate';
-    confidence: number;
-    suggestions: string[];
-  };
 }
 
 export interface CreateSessionRequest {
@@ -76,14 +71,6 @@ export interface SessionsResponse {
   sessions: Session[];
 }
 
-// Crisis Detection Types
-export interface CrisisDetectionResult {
-  isCrisis: boolean;
-  severity: 'low' | 'medium' | 'high' | 'immediate';
-  keywords: string[];
-  confidence: number;
-  suggestions: string[];
-}
 
 // UI Component Types
 export interface ModelConfig {
@@ -190,7 +177,7 @@ export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
 // Event Types for custom hooks
 export interface ChatEvent {
-  type: 'message_sent' | 'message_received' | 'crisis_detected' | 'error_occurred';
+  type: 'message_sent' | 'message_received' | 'error_occurred';
   payload: any;
   timestamp: Date;
 }

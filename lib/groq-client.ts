@@ -34,7 +34,7 @@ export const createTherapyCompletion = async (messages: Message[], systemPrompt:
   return completion;
 };
 
-export const generateSessionReport = async (messages: Message[], systemPrompt: string) => {
+export const generateSessionReport = async (messages: Message[], systemPrompt: string, model: string = 'openai/gpt-oss-120b') => {
   const groqMessages: GroqMessage[] = [
     {
       role: 'system',
@@ -48,12 +48,12 @@ export const generateSessionReport = async (messages: Message[], systemPrompt: s
 
   const completion = await groq.chat.completions.create({
     messages: groqMessages,
-    model: 'qwen/qwen-2.5-72b-instruct',
+    model: model,
     temperature: 0.3,
     max_tokens: 2048,
     top_p: 0.9,
     stream: false,
   });
 
-  return completion;
+  return completion.choices[0]?.message?.content || null;
 };

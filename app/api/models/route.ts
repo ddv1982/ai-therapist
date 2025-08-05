@@ -33,8 +33,8 @@ export async function GET() {
 
     // Filter and format models for the UI
     const availableModels = models.data
-      .filter(model => model.active)
-      .map(model => {
+      .filter((model: any) => model.active)
+      .map((model: any) => {
         const apiMaxTokens = model.context_window || 4096;
         return {
           id: model.id,

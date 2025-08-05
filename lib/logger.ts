@@ -120,14 +120,6 @@ class Logger {
     }, error);
   }
 
-  crisisDetected(severity: string, confidence: number, context?: LogContext): void {
-    this.warn(`Crisis detected: ${severity} severity`, {
-      ...context,
-      crisisSeverity: severity,
-      confidence,
-      requiresAttention: severity === 'immediate' || severity === 'high'
-    });
-  }
 
   validationError(endpoint: string, validationErrors: string, context?: LogContext): void {
     this.warn(`Validation failed: ${endpoint}`, {

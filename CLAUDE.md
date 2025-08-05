@@ -41,18 +41,18 @@ This is a compassionate AI therapist application built with specific therapeutic
 
 **API Integration Pattern**
 - Chat API (`/api/chat`) streams responses from Groq API using qwen-2.5-72b-instruct model
-- Crisis intervention system detects harmful keywords and provides immediate safety resources
 - API key is passed from frontend settings rather than environment variables for user flexibility
 
 **Therapeutic System Design**
 - System prompts in `lib/therapy-prompts.ts` define AI personality and therapeutic approach
-- Crisis detection keywords trigger automatic safety responses
 - Session reports use AI to generate therapeutic insights and action items
+- Email report generation allows users to receive session summaries via email
 
 **Frontend State Management**
-- React Context + useState for chat state (no external state management)
+- React Context + useState for chat state (no external state management) 
 - Real-time streaming implemented with ReadableStream API
 - Session management integrated into main chat interface
+- Email report modal with mobile-responsive design
 
 ### Design System Constraints
 
@@ -86,7 +86,6 @@ This is a compassionate AI therapist application built with specific therapeutic
 
 **Groq API Integration**
 - Streaming chat completions with custom therapeutic system prompts
-- Crisis intervention overrides normal AI responses when triggered
 - Full model selection from Groq's catalog (Featured, Production, Preview)
 - Advanced settings: Temperature (0-2), Max Tokens (256-131K), Top P (0.1-1.0)
 - API key can be provided via UI settings or GROQ_API_KEY environment variable
@@ -96,9 +95,6 @@ This is a compassionate AI therapist application built with specific therapeutic
 
 ### Critical Safety Features
 
-**Crisis Intervention System**
-- Keywords in `CRISIS_INTERVENTION_KEYWORDS` array trigger safety responses
-- `CRISIS_RESPONSE` provides immediate professional resources
 - System bypasses normal AI processing for immediate safety intervention
 
 **Therapeutic Boundaries**
@@ -127,6 +123,10 @@ This is a compassionate AI therapist application built with specific therapeutic
 - `DATABASE_URL` - PostgreSQL connection string
 - `GROQ_API_KEY` - Groq API key (auto-detected by frontend, hides manual input when present)
 - `NEXTAUTH_SECRET` - For future authentication features
+
+**Optional Environment Variables (for Email Reports)**
+- Configure your preferred email service in `/app/api/reports/send/route.ts`
+- Examples: SendGrid, Nodemailer (SMTP), AWS SES, or any email service
 
 **API Key Behavior**
 - If `GROQ_API_KEY` is set in environment, the settings panel shows "✓ API Key Configured"

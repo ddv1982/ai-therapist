@@ -2,23 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Groq } from 'groq-sdk';
 import { THERAPY_SYSTEM_PROMPT } from '@/lib/therapy-prompts';
 import { chatRequestSchema, validateRequest } from '@/lib/validation';
-import { detectCrisis, CRISIS_RESPONSES } from '@/lib/crisis-detection';
 import { logger, createRequestLogger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   const requestContext = createRequestLogger(request);
+  let model = 'openai/gpt-oss-120b'; // Default model value accessible in catch block
   
   try {
     logger.info('Chat request received', requestContext);
     
+    const requestData = await request.json();
     const { 
       messages, 
       apiKey, 
-      model = 'openai/gpt-oss-120b', 
       temperature = 0.6,
       maxTokens = 32000,
       topP = 0.95
-    } = await request.json();
+    } = requestData;
+    
+    // Override default model if provided
+    model = requestData.model || model;
 
     // Log the actual settings being used
     logger.info('Using chat settings', {
@@ -51,47 +54,6 @@ export async function POST(request: NextRequest) {
     // Initialize Groq client with API key
     const groq = new Groq({ apiKey: groqApiKey });
 
-    // Enhanced crisis detection with context awareness
-    const latestMessage = messages[messages.length - 1];
-    const conversationHistory = messages.slice(-5).map(m => m.content); // Last 5 messages for context
-    const crisisDetection = detectCrisis(latestMessage.content, conversationHistory);
-
-    if (crisisDetection.isCrisis) {
-      // Log crisis detection for monitoring
-      logger.crisisDetected(crisisDetection.severity, crisisDetection.confidence, {
-        ...requestContext,
-        keywords: crisisDetection.keywords,
-        suggestions: crisisDetection.suggestions
-      });
-      
-      // Return appropriate crisis response based on severity
-      const crisisResponse = CRISIS_RESPONSES[crisisDetection.severity];
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream({
-        start(controller) {
-          const response = `data: ${JSON.stringify({
-            choices: [{ delta: { content: crisisResponse } }],
-            crisis_detection: {
-              severity: crisisDetection.severity,
-              confidence: crisisDetection.confidence,
-              suggestions: crisisDetection.suggestions
-            },
-            settings_used: { model, temperature, maxTokens, topP }
-          })}\n\n`;
-          controller.enqueue(encoder.encode(response));
-          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-          controller.close();
-        }
-      });
-
-      return new NextResponse(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      });
-    }
 
     // Get AI response from Groq
     const completion = await groq.chat.completions.create({

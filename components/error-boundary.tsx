@@ -40,11 +40,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     // Call optional error handler
     if (this.props.onError) {
-      this.props.onError(error, errorInfo.componentStack);
+      this.props.onError(error, errorInfo.componentStack || '');
     }
 
     this.setState({
-      errorInfo: errorInfo.componentStack,
+      errorInfo: errorInfo.componentStack || undefined,
     });
   }
 

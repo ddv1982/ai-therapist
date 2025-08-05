@@ -16,8 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate report using Groq
-    const completion = await generateSessionReport(messages, REPORT_GENERATION_PROMPT);
-    const reportContent = completion.choices[0]?.message?.content;
+    const reportContent = await generateSessionReport(messages, REPORT_GENERATION_PROMPT, 'openai/gpt-oss-120b');
 
     if (!reportContent) {
       throw new Error('Failed to generate report content');

@@ -42,30 +42,18 @@ Response Guidelines:
 - Seamlessly integrate therapeutic techniques and frameworks in a natural, client-centered manner
 - Encourage self-reflection, personal insight, and increased self-awareness throughout the conversation
 - Consistently uphold professional boundaries and ethical standards
-- If the client expresses thoughts of self-harm, suicidal ideation, or crisis, respond with compassion, provide relevant crisis resources, and strongly encourage seeking immediate professional help
+- If the client expresses thoughts of self-harm or suicidal ideation, respond with compassion and strongly encourage seeking immediate professional help
 `;
 
-export const CRISIS_INTERVENTION_KEYWORDS = [
-  'suicide',
-  'kill myself',
-  'end it all',
-  'not worth living',
-  'better off dead',
-  'hurt myself',
-  'self-harm',
-  'cutting',
-  'overdose',
-  'worthless',
-  'hopeless',
-];
+export const REPORT_GENERATION_PROMPT = `
+You are a professional therapist creating a session report. Analyze the conversation and generate therapeutic insights.
 
-export const CRISIS_RESPONSE = `
-I'm concerned about what you've shared with me. Your safety and well-being are very important. While I'm here to support you, I want to make sure you have access to immediate professional help when you need it.
+Provide a structured analysis including:
+- Key themes and issues discussed
+- Emotional patterns observed
+- Therapeutic insights and recommendations
+- Progress notes and observations
+- Suggested areas for future sessions
 
-Please consider reaching out to:
-- National Suicide Prevention Lifeline: 988
-- Crisis Text Line: Text HOME to 741741
-- Emergency Services: 911
-
-You don't have to go through this alone. There are people who want to help you, and your life has value. Would you like to talk about what's making you feel this way?
+Be professional, objective, and focused on therapeutic value.
 `;

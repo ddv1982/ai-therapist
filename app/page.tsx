@@ -15,10 +15,12 @@ import {
   X,
   Heart,
   Sparkles,
-  User
+  User,
+  Mail
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
@@ -54,6 +56,15 @@ export default function ChatPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState('100vh');
   const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailAddress, setEmailAddress] = useState('');
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [emailService, setEmailService] = useState('smtp');
+  const [smtpHost, setSmtpHost] = useState('smtp.gmail.com');
+  const [smtpUser, setSmtpUser] = useState('');
+  const [smtpPass, setSmtpPass] = useState('');
+  const [fromEmail, setFromEmail] = useState('AI Therapist <noreply@therapist.ai>');
+  const [saveEmailSettings, setSaveEmailSettings] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -146,6 +157,23 @@ export default function ChatPage() {
       .then(res => res.json())
       .then(data => setHasEnvApiKey(data.hasGroqApiKey))
       .catch(() => setHasEnvApiKey(false));
+  }, []);
+
+  // Load saved email settings
+  useEffect(() => {
+    const savedEmailSettings = localStorage.getItem('emailSettings');
+    if (savedEmailSettings) {
+      try {
+        const settings = JSON.parse(savedEmailSettings);
+        setEmailService(settings.emailService || 'smtp');
+        setSmtpHost(settings.smtpHost || 'smtp.gmail.com');
+        setSmtpUser(settings.smtpUser || '');
+        setSmtpPass(settings.smtpPass || '');
+        setFromEmail(settings.fromEmail || 'AI Therapist <noreply@therapist.ai>');
+      } catch (error) {
+        console.error('Failed to load email settings:', error);
+      }
+    }
   }, []);
 
   // Fetch available models
@@ -424,6 +452,77 @@ export default function ChatPage() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  const generateAndSendReport = async () => {
+    if (!emailAddress.trim() || !currentSession || messages.length === 0) {
+      alert('Please enter a valid email address and ensure you have messages in the current session.');
+      return;
+    }
+
+    // Validate email configuration if not using console logging
+    if (emailService === 'smtp') {
+      if (!smtpHost.trim() || !smtpUser.trim() || !smtpPass.trim() || !fromEmail.trim()) {
+        alert('Please fill in all SMTP configuration fields or use console logging for testing.');
+        return;
+      }
+    }
+
+    // Save email settings if requested
+    if (saveEmailSettings) {
+      const emailSettingsToSave = {
+        emailService,
+        smtpHost,
+        smtpUser,
+        smtpPass,
+        fromEmail
+      };
+      localStorage.setItem('emailSettings', JSON.stringify(emailSettingsToSave));
+    }
+
+    setIsGeneratingReport(true);
+    try {
+      const response = await fetch('/api/reports/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId: currentSession,
+          messages: messages,
+          emailAddress: emailAddress.trim(),
+          model: model,
+          emailConfig: {
+            service: emailService,
+            smtpHost: smtpHost.trim(),
+            smtpUser: smtpUser.trim(),
+            smtpPass: smtpPass.trim(),
+            fromEmail: fromEmail.trim()
+          }
+        }),
+      });
+
+      if (response.ok) {
+        alert('Report has been sent to your email address!');
+        setShowEmailModal(false);
+        setEmailAddress('');
+      } else {
+        const error = await response.json();
+        let errorMessage = `Failed to send report: ${error.error || 'Unknown error'}`;
+        if (error.details) {
+          errorMessage += `\n\nDetails: ${error.details}`;
+        }
+        if (error.helpUrl) {
+          errorMessage += `\n\nFor help, visit: ${error.helpUrl}`;
+        }
+        alert(errorMessage);
+      }
+    } catch (error) {
+      console.error('Error sending report:', error);
+      alert('Failed to send report. Please try again.');
+    } finally {
+      setIsGeneratingReport(false);
     }
   };
 
@@ -724,6 +823,21 @@ export default function ChatPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {currentSession && messages.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowEmailModal(true)}
+                  className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors relative overflow-hidden group touch-manipulation"
+                  style={{
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
+                  title="Generate session report"
+                >
+                  <div className="shimmer-effect"></div>
+                  <FileText className="w-5 h-5 relative z-10" />
+                </Button>
+              )}
               <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-accent/50 text-accent-foreground">
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
                 <span className="text-therapy-sm font-medium">Online</span>
@@ -854,18 +968,45 @@ export default function ChatPage() {
                     
                     <div className="text-therapy-sm sm:text-therapy-base leading-relaxed prose prose-sm max-w-none dark:prose-invert [&>*:last-child]:mb-0">
                       <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
                         components={{
-                          h1: ({node, ...props}) => <h1 className="text-lg sm:text-xl font-semibold mb-3 text-foreground" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="text-base sm:text-lg font-semibold mb-2 text-foreground" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="text-sm sm:text-base font-semibold mb-2 text-foreground" {...props} />,
-                          p: ({node, ...props}) => <p className="mb-3 text-foreground leading-relaxed" {...props} />,
-                          strong: ({node, ...props}) => <strong className="font-semibold text-foreground" {...props} />,
-                          em: ({node, ...props}) => <em className="italic text-foreground" {...props} />,
-                          ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-4 space-y-2 text-foreground pl-2" {...props} />,
-                          ul: ({node, ...props}) => <ul className="list-disc list-inside mb-4 space-y-2 text-foreground pl-2" {...props} />,
-                          li: ({node, ...props}) => <li className="text-foreground leading-relaxed" {...props} />,
-                          blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-primary/30 pl-4 italic text-muted-foreground my-4" {...props} />,
-                          code: ({node, ...props}) => <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm text-foreground font-mono" {...props} />,
+                          h1: ({node, ...props}) => <h1 className="text-xl sm:text-2xl font-bold mb-4 text-foreground border-b border-border/30 pb-2" {...props} />,
+                          h2: ({node, ...props}) => <h2 className="text-lg sm:text-xl font-semibold mb-3 text-foreground mt-6 first:mt-0" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="text-base sm:text-lg font-semibold mb-2 text-foreground mt-4 first:mt-0" {...props} />,
+                          h4: ({node, ...props}) => <h4 className="text-sm sm:text-base font-semibold mb-2 text-foreground mt-3 first:mt-0" {...props} />,
+                          p: ({node, ...props}) => <p className="mb-4 text-foreground leading-relaxed last:mb-0" {...props} />,
+                          strong: ({node, ...props}) => <strong className="font-bold text-foreground bg-primary/10 px-1 py-0.5 rounded" {...props} />,
+                          em: ({node, ...props}) => <em className="italic text-accent font-medium" {...props} />,
+                          ol: ({node, ...props}) => <ol className="list-decimal ml-6 mb-4 space-y-2 text-foreground" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc ml-6 mb-4 space-y-2 text-foreground" {...props} />,
+                          li: ({node, ...props}) => <li className="text-foreground leading-relaxed pl-1" {...props} />,
+                          blockquote: ({node, ...props}) => (
+                            <blockquote className="border-l-4 border-primary bg-primary/5 pl-6 pr-4 py-3 my-4 rounded-r-lg italic text-foreground relative" {...props}>
+                              <div className="absolute top-2 left-2 text-primary/50 text-xl">"</div>
+                            </blockquote>
+                          ),
+                          code: ({node, ...props}) => {
+                            // Check if code is inline by looking at parent node
+                            const isInline = node?.tagName !== 'pre';
+                            return isInline ? (
+                              <code className="bg-muted px-2 py-1 rounded text-sm text-foreground font-mono border border-border/30" {...props} />
+                            ) : (
+                              <code className="block bg-muted p-4 rounded-lg text-sm text-foreground font-mono border border-border/30 overflow-x-auto my-4" {...props} />
+                            );
+                          },
+                          pre: ({node, ...props}) => <pre className="bg-muted p-4 rounded-lg border border-border/30 overflow-x-auto my-4" {...props} />,
+                          a: ({node, ...props}) => <a className="text-primary hover:text-primary/80 underline underline-offset-2 font-medium" {...props} />,
+                          hr: ({node, ...props}) => <hr className="border-border/50 my-6" {...props} />,
+                          table: ({node, ...props}) => (
+                            <div className="overflow-x-auto my-6 rounded-lg border border-border/30 bg-card shadow-sm">
+                              <table className="w-full border-collapse" {...props} />
+                            </div>
+                          ),
+                          thead: ({node, ...props}) => <thead className="bg-primary/10 border-b border-border/30" {...props} />,
+                          tbody: ({node, ...props}) => <tbody {...props} />,
+                          tr: ({node, ...props}) => <tr className="border-b border-border/20 last:border-b-0 hover:bg-muted/20 transition-colors" {...props} />,
+                          th: ({node, ...props}) => <th className="px-4 py-3 text-left font-semibold text-foreground text-sm uppercase tracking-wide bg-primary/5" {...props} />,
+                          td: ({node, ...props}) => <td className="px-4 py-3 text-foreground border-r border-border/10 last:border-r-0" {...props} />,
                         }}
                       >
                         {message.content}
@@ -994,6 +1135,203 @@ export default function ChatPage() {
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-accent/50 to-transparent"></div>
         </div>
       </div>
+
+      {/* Email Report Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-xl shadow-xl max-w-lg w-full border border-border/50 animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-semibold">Send Session Report</h3>
+                    <p className="text-sm text-muted-foreground">Configure email and generate therapeutic session summary</p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowEmailModal(false);
+                    setEmailAddress('');
+                  }}
+                  className="rounded-full h-8 w-8 p-0 hover:bg-muted"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="text-sm font-medium block mb-2">
+                    Recipient Email Address
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={emailAddress}
+                    onChange={(e) => setEmailAddress(e.target.value)}
+                    placeholder="Enter recipient email address"
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
+                    disabled={isGeneratingReport}
+                    style={{
+                      fontSize: isMobile ? '16px' : undefined // Prevent zoom on iOS
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-2">
+                    Email Service
+                  </label>
+                  <select
+                    value={emailService}
+                    onChange={(e) => setEmailService(e.target.value)}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
+                    disabled={isGeneratingReport}
+                  >
+                    <option value="console">Console Log (Testing)</option>
+                    <option value="smtp">SMTP (Gmail, Outlook, etc.)</option>
+                  </select>
+                </div>
+
+                {emailService === 'smtp' && (
+                  <>
+                    <div>
+                      <label className="text-sm font-medium block mb-2">
+                        SMTP Host (pre-filled for Gmail)
+                      </label>
+                      <input
+                        type="text"
+                        value={smtpHost}
+                        onChange={(e) => setSmtpHost(e.target.value)}
+                        placeholder="Enter SMTP host"
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
+                        disabled={isGeneratingReport}
+                        style={{
+                          fontSize: isMobile ? '16px' : undefined
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium block mb-2">
+                        SMTP Username/Email
+                      </label>
+                      <input
+                        type="email"
+                        value={smtpUser}
+                        onChange={(e) => setSmtpUser(e.target.value)}
+                        placeholder="your-email@gmail.com"
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
+                        disabled={isGeneratingReport}
+                        style={{
+                          fontSize: isMobile ? '16px' : undefined
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium block mb-2">
+                        SMTP Password/App Password
+                      </label>
+                      <input
+                        type="password"
+                        value={smtpPass}
+                        onChange={(e) => setSmtpPass(e.target.value)}
+                        placeholder="Your app password"
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
+                        disabled={isGeneratingReport}
+                        style={{
+                          fontSize: isMobile ? '16px' : undefined
+                        }}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        For Gmail: Use an App Password, not your regular password. 
+                        <br />Go to Google Account → Security → App passwords
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium block mb-2">
+                        From Email Address (can be any address)
+                      </label>
+                      <input
+                        type="text"
+                        value={fromEmail}
+                        onChange={(e) => setFromEmail(e.target.value)}
+                        placeholder="Enter from email address"
+                        className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
+                        disabled={isGeneratingReport}
+                        style={{
+                          fontSize: isMobile ? '16px' : undefined
+                        }}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="saveSettings"
+                    checked={saveEmailSettings}
+                    onChange={(e) => setSaveEmailSettings(e.target.checked)}
+                    className="rounded border-border focus:ring-2 focus:ring-primary/30"
+                    disabled={isGeneratingReport}
+                  />
+                  <label htmlFor="saveSettings" className="text-sm text-muted-foreground">
+                    Save email configuration for future use
+                  </label>
+                </div>
+
+                <div className="bg-muted/30 p-3 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    {emailService === 'console' 
+                      ? "Email will be logged to console for testing. Check server logs to see the report content."
+                      : "The report will include key themes, insights, and recommendations from your current session."
+                    }
+                  </p>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowEmailModal(false);
+                      setEmailAddress('');
+                    }}
+                    disabled={isGeneratingReport}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={generateAndSendReport}
+                    disabled={isGeneratingReport || !emailAddress.trim()}
+                    className="flex-1 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white"
+                  >
+                    {isGeneratingReport ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Sending...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        {emailService === 'console' ? 'Generate Report' : 'Send Report'}
+                      </div>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

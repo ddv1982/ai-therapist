@@ -49,8 +49,8 @@ export const sessionIdSchema = z.object({
 
 // Message validation schema
 export const messageSchema = z.object({
-  role: z.enum(['user', 'assistant'], {
-    errorMap: () => ({ message: "Role must be 'user' or 'assistant'" })
+  role: z.enum(['user', 'assistant']).refine((val) => val === 'user' || val === 'assistant', {
+    message: "Role must be 'user' or 'assistant'"
   }),
   content: z.string()
     .min(1, 'Message content cannot be empty')
@@ -59,8 +59,6 @@ export const messageSchema = z.object({
     .uuid('Invalid session ID format'),
 });
 
-// Crisis detection keywords validation
-export const crisisKeywordsSchema = z.array(z.string().min(1)).min(1);
 
 // Validation helper function
 export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): 
@@ -70,8 +68,8 @@ export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown):
     return { success: true, data: validatedData };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errorMessage = error.errors && Array.isArray(error.errors)
-        ? error.errors.map(err => {
+      const errorMessage = error.issues && Array.isArray(error.issues)
+        ? error.issues.map(err => {
             const path = err.path.length > 0 ? err.path.join('.') : 'root';
             return `${path}: ${err.message}`;
           }).join(', ')
