@@ -2,33 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isLocalhost } from '@/lib/utils';
 import { getNetworkPassword } from '@/lib/network-auth';
 
-// Rate limiting store (in-memory for simplicity)
-interface RateLimitEntry {
-  count: number;
-  resetTime: number;
-}
-
-const rateLimitStore = new Map<string, RateLimitEntry>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000; // 15 minutes
-  const maxAttempts = 5;
-  
-  const entry = rateLimitStore.get(ip);
-  
-  if (!entry || now > entry.resetTime) {
-    rateLimitStore.set(ip, { count: 1, resetTime: now + windowMs });
-    return true;
-  }
-  
-  if (entry.count >= maxAttempts) {
-    return false;
-  }
-  
-  entry.count++;
-  return true;
-}
+// Import enhanced rate limiter
+import { getRateLimiter } from '@/lib/rate-limiter';
 
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
@@ -62,7 +37,9 @@ export function middleware(request: NextRequest) {
   }
   
   // Always allow localhost access without password
-  if (isLocalhost(host)) {
+  // Also validate against X-Forwarded-Host to prevent spoofing
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  if (isLocalhost(host) && (!forwardedHost || isLocalhost(forwardedHost))) {
     return NextResponse.next();
   }
   
@@ -84,13 +61,17 @@ export function middleware(request: NextRequest) {
     return response;
   }
   
-  // Check rate limiting
-  if (!checkRateLimit(clientIP)) {
+  // Check rate limiting with enhanced limiter
+  const rateLimiter = getRateLimiter();
+  const rateLimitResult = rateLimiter.checkRateLimit(clientIP);
+  
+  if (!rateLimitResult.allowed) {
+    const retryAfter = rateLimitResult.retryAfter || 900;
     return new Response('Too many authentication attempts. Please try again later.', {
       status: 429,
       headers: {
         'Content-Type': 'text/plain',
-        'Retry-After': '900' // 15 minutes
+        'Retry-After': retryAfter.toString()
       }
     });
   }

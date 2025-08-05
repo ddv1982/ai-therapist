@@ -76,7 +76,7 @@ export default function ReportsPage() {
                 <h4 className="text-therapy-base font-semibold mb-2">Therapeutic Insights</h4>
                 <ul className="text-therapy-sm text-muted-foreground space-y-1">
                   <li>• Strong self-awareness and emotional intelligence</li>
-                  <li>• Tendency to prioritize others' needs over own wellbeing</li>
+                  <li>• Tendency to prioritize others&apos; needs over own wellbeing</li>
                   <li>• Good progress in identifying triggers</li>
                 </ul>
               </div>

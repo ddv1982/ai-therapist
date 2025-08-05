@@ -8,9 +8,10 @@ export async function POST(request: NextRequest) {
     
     const networkPassword = getNetworkPassword();
     
-    console.log(`[DEBUG API] Received password: ${password?.substring(0, 4)}...`);
-    console.log(`[DEBUG API] Expected password: ${networkPassword?.substring(0, 4)}...`);
-    console.log(`[DEBUG API] Password match: ${password === networkPassword}`);
+    // Environment-controlled debug logging
+    if (process.env.NODE_ENV === 'development' || process.env.DEBUG_AUTH === 'true') {
+      console.log(`[AUTH] Network authentication attempt from IP: ${request.ip || 'unknown'}`);
+    }
     
     if (password === networkPassword) {
       const response = NextResponse.json({ success: true });

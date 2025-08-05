@@ -23,24 +23,24 @@ export async function POST(request: NextRequest) {
 
     const { title } = validation.data;
 
-    // For now, we'll use a default user ID
-    // In a real app, this would come from authentication
-    const defaultUserId = 'default-user-id';
+    // Get device-specific user ID for privacy isolation
+    const { getDeviceUserInfo } = await import('@/lib/user-session');
+    const deviceUser = getDeviceUserInfo(request);
 
-    // Create or get default user
+    // Create or get device-specific user
     await prisma.user.upsert({
-      where: { id: defaultUserId },
+      where: { id: deviceUser.userId },
       update: {},
       create: {
-        id: defaultUserId,
-        email: 'default@example.com',
-        name: 'Default User',
+        id: deviceUser.userId,
+        email: deviceUser.email,
+        name: deviceUser.name,
       },
     });
 
     const session = await prisma.session.create({
       data: {
-        userId: defaultUserId,
+        userId: deviceUser.userId,
         title,
         status: 'active',
       },
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     logger.info('Session created successfully', {
       ...requestContext,
       sessionId: session.id,
-      userId: defaultUserId
+      userId: deviceUser.userId
     });
 
     return NextResponse.json(session);
@@ -86,7 +86,12 @@ export async function GET(request: NextRequest) {
   try {
     logger.debug('Fetching sessions', requestContext);
     
+    // Get device-specific user ID for privacy isolation
+    const { getDeviceUserInfo } = await import('@/lib/user-session');
+    const deviceUser = getDeviceUserInfo(request);
+
     const sessions = await prisma.session.findMany({
+      where: { userId: deviceUser.userId },
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {

@@ -72,7 +72,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                   li: ({node, ...props}) => <li className="text-foreground leading-relaxed pl-1" {...props} />,
                   blockquote: ({node, ...props}) => (
                     <blockquote className="border-l-4 border-primary bg-primary/5 pl-6 pr-4 py-3 my-4 rounded-r-lg italic text-foreground relative" {...props}>
-                      <div className="absolute top-2 left-2 text-primary/50 text-xl">"</div>
+                      <div className="absolute top-2 left-2 text-primary/50 text-xl">&quot;</div>
                     </blockquote>
                   ),
                   code: ({node, ...props}) => {

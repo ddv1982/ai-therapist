@@ -87,7 +87,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 Something went wrong
               </h2>
               <p className="text-muted-foreground text-sm mb-6">
-                We're sorry, but there was an unexpected error. Your conversation data is safe.
+                We&apos;re sorry, but there was an unexpected error. Your conversation data is safe.
               </p>
             </div>
 

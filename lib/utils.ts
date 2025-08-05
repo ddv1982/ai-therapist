@@ -92,7 +92,7 @@ export function generateNetworkPassword(length: number = 16): string {
         password += charset[randomIndex];
       }
       return password;
-    } catch (error) {
+    } catch {
       console.warn('Node.js crypto not available, falling back to browser crypto');
     }
   }
@@ -116,11 +116,17 @@ export function generateNetworkPassword(length: number = 16): string {
 
 /**
  * Detect if the request is coming from localhost or network access
+ * Enhanced validation to prevent header spoofing
  */
 export function isLocalhost(host: string): boolean {
-  return host.includes('localhost') || 
-         host.includes('127.0.0.1') || 
-         host.includes('::1');
+  if (!host) return false;
+  
+  const cleanHost = host.toLowerCase().split(':')[0]; // Remove port
+  
+  return cleanHost === 'localhost' || 
+         cleanHost === '127.0.0.1' || 
+         cleanHost === '::1' ||
+         cleanHost === '0.0.0.0'; // Also allow binding address
 }
 
 /**

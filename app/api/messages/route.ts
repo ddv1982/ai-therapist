@@ -12,6 +12,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get device-specific user ID for privacy isolation
+    const { getDeviceUserInfo } = await import('@/lib/user-session');
+    const deviceUser = getDeviceUserInfo(request);
+
+    // Verify session belongs to this device user
+    const session = await prisma.session.findUnique({
+      where: { 
+        id: sessionId,
+        userId: deviceUser.userId 
+      }
+    });
+
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Session not found or access denied' },
+        { status: 404 }
+      );
+    }
+
     const message = await prisma.message.create({
       data: {
         sessionId,
@@ -40,6 +59,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'SessionId is required' },
         { status: 400 }
+      );
+    }
+
+    // Get device-specific user ID for privacy isolation
+    const { getDeviceUserInfo } = await import('@/lib/user-session');
+    const deviceUser = getDeviceUserInfo(request);
+
+    // Verify session belongs to this device user
+    const session = await prisma.session.findUnique({
+      where: { 
+        id: sessionId,
+        userId: deviceUser.userId 
+      }
+    });
+
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Session not found or access denied' },
+        { status: 404 }
       );
     }
 
