@@ -193,6 +193,22 @@ export default function ChatPage() {
     }
   }, []);
 
+  // Load saved model settings
+  useEffect(() => {
+    const savedModelSettings = localStorage.getItem('modelSettings');
+    if (savedModelSettings) {
+      try {
+        const settings = JSON.parse(savedModelSettings);
+        if (settings.model) setModel(settings.model);
+        if (settings.temperature !== undefined) setTemperature(settings.temperature);
+        if (settings.maxTokens !== undefined) setMaxTokens(settings.maxTokens);
+        if (settings.topP !== undefined) setTopP(settings.topP);
+      } catch (error) {
+        console.error('Failed to load model settings:', error);
+      }
+    }
+  }, []);
+
   // Fetch available models
   useEffect(() => {  
     const abortController = new AbortController();
@@ -306,6 +322,17 @@ export default function ChatPage() {
       clearTimeout(resizeTimeout);
     };
   }, []);
+
+  // Save model settings to localStorage whenever they change
+  useEffect(() => {
+    const modelSettings = {
+      model,
+      temperature,
+      maxTokens,
+      topP
+    };
+    localStorage.setItem('modelSettings', JSON.stringify(modelSettings));
+  }, [model, temperature, maxTokens, topP]);
 
   const startNewSession = () => {
     // Just clear current session and messages - don't create DB session yet
