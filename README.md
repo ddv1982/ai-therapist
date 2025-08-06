@@ -26,6 +26,8 @@ A modern, responsive therapeutic AI application built with Next.js 14, providing
 
 ### 🔧 Technical Features
 - **Zero Configuration** - SQLite database with automatic setup
+- **TOTP Authentication** - Secure two-factor authentication with device trust
+- **Cross-Device Sessions** - Unified session access across all devices
 - **Multiple AI Models** - Support for various Groq AI models
 - **API Key Flexibility** - Environment variable or UI-based API key configuration
 - **Dynamic Model Settings** - Adjustable temperature, max tokens, and top-p
@@ -76,26 +78,37 @@ A modern, responsive therapeutic AI application built with Next.js 14, providing
 
 6. **Open your browser**
    - Navigate to `http://localhost:3000`
+   - **First-time setup**: Scan the QR code with your authenticator app for secure access
    - Start your first therapeutic conversation!
 
 ## 📱 Usage
+
+### Authentication Setup
+1. **First Visit**: App will guide you through TOTP setup with QR code
+2. **Authenticator App**: Use Google Authenticator, Authy, or similar apps
+3. **Device Trust**: Each device gets 30-day authentication sessions
+4. **Backup Codes**: Save the backup codes for account recovery
+5. **Network Access**: Authentication required for network URLs (not localhost)
 
 ### Starting a Session
 1. Click "Start New Session" or begin typing in the input field
 2. Sessions are automatically created when you send your first message
 3. Switch between sessions using the sidebar
+4. **Cross-Device Access**: All sessions available on any authenticated device
 
 ### Mobile Experience  
 - Tap the menu button to open/close the sidebar
 - Messages are full-width for better readability
 - Touch-optimized input and send button
 - Sidebar auto-closes when selecting a chat on mobile
+- Mobile-optimized authentication flow
 
 ### Settings Configuration
 - **API Key**: Configure your Groq API key
 - **Model Selection**: Choose from available AI models
 - **Advanced Settings**: Adjust temperature, max tokens, and top-p values
 - **Theme Toggle**: Switch between light and dark modes
+- **Security Settings**: Manage trusted devices and backup codes
 
 ## 🛠 Development
 
@@ -124,19 +137,30 @@ A modern, responsive therapeutic AI application built with Next.js 14, providing
 ai-therapist/
 ├── app/                          # Next.js App Router
 │   ├── api/                     # API routes
+│   │   ├── auth/               # Authentication endpoints
 │   │   ├── chat/               # Chat streaming endpoint
 │   │   ├── sessions/           # Session management
-│   │   └── messages/           # Message handling
+│   │   ├── messages/           # Message handling
+│   │   └── errors/             # Error logging
+│   ├── auth/                   # Authentication pages
+│   │   ├── setup/              # TOTP setup page
+│   │   └── verify/             # TOTP verification page
 │   ├── globals.css             # Global styles and design system
 │   ├── layout.tsx              # Root layout component
 │   └── page.tsx                # Main chat interface
 ├── components/                  # Reusable UI components
+│   ├── auth/                   # Authentication components
 │   └── ui/                     # shadcn/ui components
 ├── lib/                        # Utility libraries
+│   ├── auth-middleware.ts      # Authentication middleware
+│   ├── totp-service.ts         # TOTP token management
+│   ├── device-fingerprint.ts   # Device trust management
 │   ├── db.ts                   # Database configuration
 │   ├── therapy-prompts.ts      # AI therapeutic prompts
 │   └── theme-context.tsx       # Theme management
 ├── prisma/                     # Database schema and SQLite file
+├── scripts/                    # Utility scripts
+│   └── migrate-to-single-user.js # Session consolidation script
 └── types/                      # TypeScript type definitions
 ```
 
@@ -168,7 +192,7 @@ Create a `.env.local` file with:
 DATABASE_URL="file:./dev.db"
 GROQ_API_KEY="your_groq_api_key_here"
 
-# Optional
+# Optional (for authentication features)
 NEXTAUTH_SECRET="your_nextauth_secret_here"
 ```
 
@@ -183,7 +207,7 @@ NEXTAUTH_SECRET="your_nextauth_secret_here"
 - **Token Limits**: Automatically enforced per model
 - **Settings**: Temperature (0-2), Max Tokens (256-131K), Top P (0.1-1.0)
 
-## 🛡️ Safety Features
+## 🛡️ Safety & Security Features
 
 ### Crisis Intervention
 - Automatic detection of crisis keywords
@@ -192,10 +216,40 @@ NEXTAUTH_SECRET="your_nextauth_secret_here"
 - No medical diagnosis or medication advice
 
 ### Privacy & Security
-- Local SQLite database
-- No data sent to external services except Groq API
-- Session data stored locally
-- API key can be configured in UI (not stored permanently)
+- **TOTP Authentication** - Time-based two-factor authentication
+- **Device Trust Management** - 30-day trusted device sessions
+- **Local SQLite Database** - All data stored locally
+- **No External Data Sharing** - Data only sent to Groq API for responses
+- **Backup Code Recovery** - Secure account recovery options
+- **Network Access Protection** - Authentication required for non-localhost access
+
+### Authentication Features
+- **QR Code Setup** - Easy authenticator app configuration
+- **Multiple Device Support** - Cross-device session access
+- **Session Management** - Automatic session expiration and renewal
+- **Mobile Optimized** - Touch-friendly authentication flows
+
+## 🔗 Cross-Device Session Management
+
+### Unified Sessions
+- **Single User System** - All sessions use unified user ID (`therapeutic-ai-user`)
+- **Cross-Device Access** - Sessions created on mobile, desktop, or any device are accessible everywhere
+- **Network URL Support** - Sessions work consistently whether accessing via localhost or network IP
+- **Session Continuity** - Start a conversation on your phone, continue on your computer
+
+### Session Migration
+If you have existing device-specific sessions from before this update:
+
+```bash
+# Consolidate all sessions to unified user
+node scripts/migrate-to-single-user.js
+```
+
+This script will:
+- Move all existing sessions to the unified user account
+- Preserve all messages and reports
+- Clean up old device-specific user accounts
+- Enable cross-device session access
 
 ## 🎨 Theming
 
@@ -261,6 +315,12 @@ If you encounter any issues:
 
 ### Troubleshooting
 
+**Authentication Issues**
+- **TOTP Setup**: Ensure time sync between device and server
+- **Device Trust**: Clear browser cookies to reset device authentication
+- **Backup Codes**: Use backup codes if authenticator app is unavailable
+- **Network Access**: Authentication only required for network URLs (not localhost)
+
 **API Key Issues**
 - Ensure your Groq API key is valid and has sufficient credits
 - Check if the key is properly set in environment or UI
@@ -268,10 +328,17 @@ If you encounter any issues:
 **Database Issues**  
 - Run `npm run db:generate && npm run db:push` to reset database
 - Check that SQLite file has write permissions
+- Use `scripts/migrate-to-single-user.js` to consolidate existing sessions
 
 **Build Issues**
 - Clear `.next` folder: `rm -rf .next`
 - Reinstall dependencies: `rm -rf node_modules && npm install`
+
+**Session Migration**
+- Run migration script to consolidate device-specific sessions:
+  ```bash
+  node scripts/migrate-to-single-user.js
+  ```
 
 ---
 
