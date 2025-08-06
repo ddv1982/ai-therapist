@@ -23,6 +23,7 @@ import remarkGfm from 'remark-gfm';
 import type { ModelConfig } from '@/types/index';
 import { generateUUID } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
+import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/memory-utils';
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
 import { SessionSidebar } from '@/components/chat/session-sidebar';
 import { SettingsPanel } from '@/components/chat/settings-panel';
@@ -63,6 +64,7 @@ export default function ChatPage() {
   const [viewportHeight, setViewportHeight] = useState('100vh');
   const [availableModels, setAvailableModels] = useState<ModelConfig[]>([]);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [memoryContext, setMemoryContext] = useState<MemoryContextInfo>({ hasMemory: false, reportCount: 0 });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -103,6 +105,10 @@ export default function ChatPage() {
           timestamp: new Date(msg.timestamp)
         }));
         setMessages(formattedMessages);
+        
+        // Check for memory context when loading session
+        const memoryInfo = await checkMemoryContext(sessionId);
+        setMemoryContext(memoryInfo);
       }
     } catch (error) {
       console.error('Failed to load messages:', error);
@@ -413,6 +419,7 @@ export default function ChatPage() {
             role: msg.role,
             content: msg.content
           })),
+          sessionId: sessionId,
           apiKey: apiKey,
           model: model,
           temperature: temperature,
@@ -942,6 +949,18 @@ export default function ChatPage() {
           aria-live="polite"
           aria-atomic="false"
         >
+          {/* Memory Context Indicator */}
+          {memoryContext.hasMemory && currentSession && (
+            <div className={`mb-4 ${isMobile ? 'mx-1' : 'mx-2'}`}>
+              <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 text-center">
+                <p className="text-xs text-primary/80 flex items-center justify-center gap-2">
+                  <Sparkles className="w-3 h-3" />
+                  {formatMemoryInfo(memoryContext)}
+                </p>
+              </div>
+            </div>
+          )}
+          
           {messages.length === 0 ? (
             <div className={`${isMobile ? 'min-h-full' : 'h-full'} flex items-center justify-center`}>
               <div className={`text-center max-w-2xl animate-fade-in ${isMobile ? 'px-3' : 'px-4'}`}>

@@ -61,6 +61,7 @@ model Message {
 model SessionReport {
   id                   String   @id @default(uuid())
   sessionId            String   @map("session_id")
+  reportContent        String   @map("report_content") // Full AI-generated report content for memory
   keyPoints            String   @map("key_points") // JSON string for SQLite compatibility
   therapeuticInsights  String   @map("therapeutic_insights") // JSON string
   patternsIdentified   String   @map("patterns_identified") // JSON string

@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
     const report = await prisma.sessionReport.create({
       data: {
         sessionId,
+        reportContent: 'Legacy report created via API', // Default content for legacy reports
         keyPoints: reportData.keyPoints || [],
         therapeuticInsights: reportData.therapeuticInsights || [],
         patternsIdentified: reportData.patternsIdentified || [],

@@ -45,6 +45,55 @@ Response Guidelines:
 - If the client expresses thoughts of self-harm or suicidal ideation, respond with compassion and strongly encourage seeking immediate professional help
 `;
 
+/**
+ * Interface for memory context from previous sessions
+ */
+export interface MemoryContext {
+  sessionTitle: string;
+  sessionDate: string;
+  reportDate: string;
+  content: string;
+  summary: string;
+}
+
+/**
+ * Builds a memory-enhanced system prompt that includes context from previous sessions
+ */
+export function buildMemoryEnhancedPrompt(memoryContext: MemoryContext[] = []): string {
+  let prompt = THERAPY_SYSTEM_PROMPT;
+  
+  if (memoryContext.length > 0) {
+    const memorySection = `
+
+THERAPEUTIC MEMORY CONTEXT:
+You have access to insights from previous therapy sessions to provide continuity of care. These reports contain professional therapeutic observations (no specific conversation details due to confidentiality):
+
+${memoryContext.map((memory, index) => `
+Previous Session ${index + 1} (${memory.sessionDate}): "${memory.sessionTitle}"
+Report Generated: ${memory.reportDate}
+Therapeutic Insights: ${memory.summary}
+`).join('')}
+
+Use this context to:
+- Acknowledge previous therapeutic work and progress made
+- Build upon insights and patterns identified in earlier sessions
+- Reference therapeutic goals and areas of focus previously established
+- Maintain continuity in your therapeutic approach
+- Track progress over time and celebrate growth
+
+IMPORTANT: Never reference specific conversation details from previous sessions. Only use the general therapeutic insights and patterns provided in these professional reports.
+
+`;
+    
+    prompt = prompt.replace(
+      'Remember: Your primary role is to listen deeply',
+      memorySection + '\nRemember: Your primary role is to listen deeply'
+    );
+  }
+  
+  return prompt;
+}
+
 export const REPORT_GENERATION_PROMPT = `
 You are a professional therapist creating a confidential session report. Based on the therapeutic conversation provided, generate professional insights while maintaining strict confidentiality.
 

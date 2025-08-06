@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Groq } from 'groq-sdk';
-import { THERAPY_SYSTEM_PROMPT } from '@/lib/therapy-prompts';
+import { buildMemoryEnhancedPrompt, type MemoryContext } from '@/lib/therapy-prompts';
 import { chatRequestSchema, validateRequest } from '@/lib/validation';
 import { logger, createRequestLogger } from '@/lib/logger';
 
@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
       apiKey, 
       temperature = 0.6,
       maxTokens = 32000,
-      topP = 0.95
+      topP = 0.95,
+      sessionId
     } = requestData;
     
     // Override default model if provided
@@ -54,13 +55,48 @@ export async function POST(request: NextRequest) {
     // Initialize Groq client with API key
     const groq = new Groq({ apiKey: groqApiKey });
 
+    // Fetch memory context from previous sessions for therapeutic continuity
+    let memoryContext: MemoryContext[] = [];
+    if (sessionId) {
+      try {
+        const memoryResponse = await fetch(`${request.nextUrl.origin}/api/reports/memory?excludeSessionId=${sessionId}&limit=3`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (memoryResponse.ok) {
+          const memoryData = await memoryResponse.json();
+          if (memoryData.success && memoryData.memoryContext) {
+            memoryContext = memoryData.memoryContext;
+            
+            logger.info('Memory context loaded for therapeutic continuity', {
+              ...requestContext,
+              sessionId,
+              memoryContextCount: memoryContext.length,
+              totalMemoryLength: memoryContext.reduce((acc, m) => acc + m.content.length, 0)
+            });
+          }
+        }
+      } catch (memoryError) {
+        logger.warn('Failed to fetch memory context, proceeding without it', {
+          ...requestContext,
+          error: memoryError instanceof Error ? memoryError.message : 'Unknown error',
+          sessionId
+        });
+      }
+    }
+
+    // Build memory-enhanced system prompt
+    const systemPrompt = buildMemoryEnhancedPrompt(memoryContext);
 
     // Get AI response from Groq
     const completion = await groq.chat.completions.create({
       messages: [
         {
           role: 'system',
-          content: THERAPY_SYSTEM_PROMPT
+          content: systemPrompt
         },
         ...messages
       ],

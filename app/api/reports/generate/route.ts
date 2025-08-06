@@ -42,11 +42,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Optionally save the report to database
+    // Save the report to database for therapeutic memory
     try {
       await prisma.sessionReport.create({
         data: {
           sessionId,
+          reportContent: completion,
           keyPoints: JSON.stringify([]),
           therapeuticInsights: completion,
           patternsIdentified: JSON.stringify([]),
@@ -55,9 +56,19 @@ export async function POST(request: NextRequest) {
           progressNotes: `Report generated on ${new Date().toISOString()}`,
         }
       });
+      
+      logger.info('Session report saved to database for therapeutic memory', {
+        ...requestContext,
+        sessionId,
+        reportLength: completion.length
+      });
     } catch (dbError) {
-      console.warn('Failed to save report to database:', dbError);
-      // Continue anyway - report generation is more important
+      logger.error('Failed to save report to database', {
+        ...requestContext,
+        error: dbError instanceof Error ? dbError.message : 'Unknown error',
+        sessionId
+      });
+      // Continue anyway - report generation is more important than storage
     }
 
     return NextResponse.json({ 

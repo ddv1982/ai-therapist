@@ -35,6 +35,7 @@ export interface Message {
 export interface SessionReport {
   id: string;
   sessionId: string;
+  reportContent: string; // Full AI-generated report content for memory
   keyPoints: string; // JSON string
   therapeuticInsights: string; // JSON string
   patternsIdentified: string; // JSON string
