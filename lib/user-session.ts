@@ -1,12 +1,15 @@
 /**
- * User session management for local network usage
- * Creates unique user sessions per device/browser for privacy
+ * User session management for single-user therapeutic AI application
+ * Provides unified sessions across all devices for the same user
  */
 
+// Fixed user ID for single-user setup - allows unified sessions across devices
+const SINGLE_USER_ID = 'therapeutic-ai-user';
 
 /**
  * Generate a consistent user ID based on browser characteristics
  * This ensures each device gets its own private therapy sessions
+ * @deprecated Use getSingleUserInfo() instead for unified cross-device sessions
  */
 export function generateDeviceUserId(request: Request): string {
   const userAgent = request.headers.get('user-agent') || '';
@@ -29,7 +32,33 @@ export function generateDeviceUserId(request: Request): string {
 }
 
 /**
+ * Get single user info for unified sessions across all devices
+ * This allows the same user to see all their sessions on any device
+ */
+export function getSingleUserInfo(request: Request) {
+  const userAgent = request.headers.get('user-agent') || '';
+  
+  // Extract device type for friendly display (but use same user ID)
+  let deviceType = 'Device';
+  if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iPhone')) {
+    deviceType = 'Mobile';
+  } else if (userAgent.includes('iPad') || userAgent.includes('Tablet')) {
+    deviceType = 'Tablet';
+  } else if (userAgent.includes('Windows') || userAgent.includes('Mac') || userAgent.includes('Linux')) {
+    deviceType = 'Computer';
+  }
+  
+  return {
+    userId: SINGLE_USER_ID,
+    email: 'user@therapeutic-ai.local',
+    name: 'Therapeutic AI User',
+    currentDevice: deviceType,
+  };
+}
+
+/**
  * Get or create user for this device session
+ * @deprecated Use getSingleUserInfo() instead for unified cross-device sessions
  */
 export function getDeviceUserInfo(request: Request) {
   const userId = generateDeviceUserId(request);

@@ -76,28 +76,28 @@ export function generateUUID(): string {
 }
 
 /**
- * Generate a cryptographically secure random password for network access protection
+ * Generate cryptographically secure random string for general purposes
  * Uses Web Crypto API for security (compatible with Edge Runtime)
  */
-export function generateNetworkPassword(length: number = 16): string {
-  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-  let password = '';
+export function generateSecureRandomString(length: number = 32): string {
+  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
   
   // Use Web Crypto API (available in browsers and Node.js 16+)
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     const array = new Uint8Array(length);
     crypto.getRandomValues(array);
     for (let i = 0; i < length; i++) {
-      password += charset[array[i] % charset.length];
+      result += charset[array[i] % charset.length];
     }
-    return password;
+    return result;
   }
   
   // Final fallback using Math.random (less secure but compatible)
   for (let i = 0; i < length; i++) {
-    password += charset[Math.floor(Math.random() * charset.length)];
+    result += charset[Math.floor(Math.random() * charset.length)];
   }
-  return password;
+  return result;
 }
 
 /**

@@ -74,6 +74,14 @@
     scroll-behavior: smooth;
     height: 100%;
     overflow: hidden; /* Prevent page-level scrolling on mobile */
+    /* Prevent zoom on double tap in iOS Safari */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Disable user selection to prevent accidental text selection */
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
   }
   
   body {
@@ -85,6 +93,15 @@
     position: fixed;
     width: 100%;
     -webkit-overflow-scrolling: touch;
+    /* Mobile Safari fixes */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent elastic bounce on iOS */
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    /* Force hardware acceleration */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
   }
   
   /* iOS Safari viewport fix */
@@ -92,7 +109,52 @@
     body {
       height: -webkit-fill-available;
       height: var(--app-height, 100vh);
+      /* Additional iOS-specific fixes */
+      min-height: -webkit-fill-available;
+      min-height: var(--app-height, 100vh);
     }
+  }
+}
+
+/* Mobile Safari specific error fixes */
+@supports (-webkit-touch-callout: none) {
+  /* Ensure React components render properly on iOS */
+  #__next {
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+  
+  /* Fix potential rendering issues */
+  * {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+  }
+  
+  /* Prevent iOS text selection issues */
+  .selectable-text {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+/* Network URL specific fixes */
+@media (min-resolution: 2dppx) and (hover: none) {
+  /* High DPI mobile devices accessing via network */
+  .network-optimized {
+    /* Reduce complexity for better performance */
+    will-change: auto;
+    transform: none;
+  }
+  
+  /* Simplify animations for network access */
+  .animate-message-in,
+  .animate-slide-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -241,6 +303,9 @@
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
       overscroll-behavior-y: contain;
+      /* Enhanced mobile performance */
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
     }
     
     .custom-scrollbar::-webkit-scrollbar {
@@ -249,6 +314,15 @@
     
     .custom-scrollbar::-webkit-scrollbar-thumb {
       @apply bg-muted-foreground/30 rounded-full;
+    }
+    
+    /* iOS Safari specific scrolling fixes */
+    @supports (-webkit-touch-callout: none) {
+      .custom-scrollbar {
+        /* Prevent momentum scrolling issues */
+        -webkit-overflow-scrolling: auto;
+        overflow-scrolling: auto;
+      }
     }
   }
   
@@ -265,6 +339,9 @@
       overscroll-behavior: none;
       overscroll-behavior-y: none;
       -webkit-overflow-scrolling: touch;
+      /* Additional iOS fixes */
+      position: relative;
+      z-index: 1;
     }
     
     /* Fix for iOS keyboard viewport changes */
@@ -278,6 +355,25 @@
         height: var(--app-height, 100vh);
         min-height: var(--app-height, 100vh);
         max-height: var(--app-height, 100vh);
+        /* Ensure proper stacking */
+        z-index: 0;
+      }
+      
+      /* Prevent iOS zoom on input focus */
+      input[type="text"],
+      input[type="password"],
+      input[type="email"],
+      textarea,
+      select {
+        font-size: 16px !important;
+        -webkit-appearance: none;
+        border-radius: 0;
+      }
+      
+      /* Fix iOS button styling */
+      button {
+        -webkit-appearance: none;
+        border-radius: 0;
       }
     }
   }

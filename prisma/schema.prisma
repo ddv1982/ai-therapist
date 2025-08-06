@@ -32,7 +32,7 @@ model Session {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
 
-  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages Message[]
   reports  SessionReport[]
 
@@ -45,7 +45,7 @@ model Session {
 model Message {
   id        String   @id @default(uuid())
   sessionId String   @map("session_id")
-  role      String   // 'user' or 'assistant'
+  role      String // 'user' or 'assistant'
   content   String
   timestamp DateTime @default(now())
   createdAt DateTime @default(now()) @map("created_at")
@@ -59,16 +59,16 @@ model Message {
 }
 
 model SessionReport {
-  id                   String   @id @default(uuid())
-  sessionId            String   @map("session_id")
-  reportContent        String   @map("report_content") // Full AI-generated report content for memory
-  keyPoints            String   @map("key_points") // JSON string for SQLite compatibility
-  therapeuticInsights  String   @map("therapeutic_insights") // JSON string
-  patternsIdentified   String   @map("patterns_identified") // JSON string
-  actionItems          String   @map("action_items") // JSON string
-  moodAssessment       String?  @map("mood_assessment")
-  progressNotes        String?  @map("progress_notes")
-  createdAt            DateTime @default(now()) @map("created_at")
+  id                  String   @id @default(uuid())
+  sessionId           String   @map("session_id")
+  reportContent       String   @map("report_content") // Full AI-generated report content for memory
+  keyPoints           String   @map("key_points") // JSON string for SQLite compatibility
+  therapeuticInsights String   @map("therapeutic_insights") // JSON string
+  patternsIdentified  String   @map("patterns_identified") // JSON string
+  actionItems         String   @map("action_items") // JSON string
+  moodAssessment      String?  @map("mood_assessment")
+  progressNotes       String?  @map("progress_notes")
+  createdAt           DateTime @default(now()) @map("created_at")
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
@@ -77,3 +77,48 @@ model SessionReport {
   @@map("session_reports")
 }
 
+model AuthConfig {
+  id          String   @id @default(uuid())
+  secret      String // TOTP secret key
+  backupCodes String // JSON array of backup codes
+  isSetup     Boolean  @default(false) @map("is_setup")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("auth_config")
+}
+
+model TrustedDevice {
+  id          String   @id @default(uuid())
+  deviceId    String   @unique @map("device_id") // Fingerprint-based device identifier
+  name        String // User-friendly device name
+  fingerprint String // Device fingerprint hash
+  ipAddress   String   @map("ip_address")
+  userAgent   String   @map("user_agent")
+  lastSeen    DateTime @map("last_seen")
+  trustedAt   DateTime @default(now()) @map("trusted_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  authSessions AuthSession[]
+
+  @@index([deviceId])
+  @@index([lastSeen])
+  @@map("trusted_devices")
+}
+
+model AuthSession {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @map("session_token") // Secure session token
+  deviceId     String   @map("device_id")
+  ipAddress    String   @map("ip_address")
+  expiresAt    DateTime @map("expires_at")
+  lastActivity DateTime @default(now()) @map("last_activity")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  device TrustedDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([sessionToken])
+  @@index([deviceId])
+  @@index([expiresAt])
+  @@map("auth_sessions")
+}

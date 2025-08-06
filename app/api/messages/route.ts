@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { validateApiAuth, createAuthErrorResponse } from '@/lib/api-auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate authentication first
+    const authResult = await validateApiAuth(request);
+    if (!authResult.isValid) {
+      return createAuthErrorResponse(authResult.error || 'Authentication required');
+    }
+    
     const { sessionId, role, content } = await request.json();
 
     if (!sessionId || !role || !content) {
@@ -12,15 +19,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get device-specific user ID for privacy isolation
-    const { getDeviceUserInfo } = await import('@/lib/user-session');
-    const deviceUser = getDeviceUserInfo(request);
+    // Get unified user ID for cross-device session access
+    const { getSingleUserInfo } = await import('@/lib/user-session');
+    const userInfo = getSingleUserInfo(request);
 
-    // Verify session belongs to this device user
+    // Verify session belongs to this user
     const session = await prisma.session.findUnique({
       where: { 
         id: sessionId,
-        userId: deviceUser.userId 
+        userId: userInfo.userId 
       }
     });
 
@@ -52,6 +59,12 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Validate authentication first
+    const authResult = await validateApiAuth(request);
+    if (!authResult.isValid) {
+      return createAuthErrorResponse(authResult.error || 'Authentication required');
+    }
+    
     const { searchParams } = new URL(request.url);
     const sessionId = searchParams.get('sessionId');
 
@@ -62,15 +75,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get device-specific user ID for privacy isolation
-    const { getDeviceUserInfo } = await import('@/lib/user-session');
-    const deviceUser = getDeviceUserInfo(request);
+    // Get unified user ID for cross-device session access
+    const { getSingleUserInfo } = await import('@/lib/user-session');
+    const userInfo = getSingleUserInfo(request);
 
-    // Verify session belongs to this device user
+    // Verify session belongs to this user
     const session = await prisma.session.findUnique({
       where: { 
         id: sessionId,
-        userId: deviceUser.userId 
+        userId: userInfo.userId 
       }
     });
 

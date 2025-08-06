@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createSessionSchema, validateRequest } from '@/lib/validation';
 import { logger, createRequestLogger } from '@/lib/logger';
+import { validateApiAuth, createAuthErrorResponse } from '@/lib/api-auth';
 
 export async function POST(request: NextRequest) {
   const requestContext = createRequestLogger(request);
   
   try {
+    // Validate authentication first
+    const authResult = await validateApiAuth(request);
+    if (!authResult.isValid) {
+      logger.warn('Unauthorized session creation request', { ...requestContext, error: authResult.error });
+      return createAuthErrorResponse(authResult.error || 'Authentication required');
+    }
+    
     logger.info('Creating new session', requestContext);
     
     const body = await request.json();
@@ -23,24 +31,24 @@ export async function POST(request: NextRequest) {
 
     const { title } = validation.data;
 
-    // Get device-specific user ID for privacy isolation
-    const { getDeviceUserInfo } = await import('@/lib/user-session');
-    const deviceUser = getDeviceUserInfo(request);
+    // Get unified user ID for cross-device session access
+    const { getSingleUserInfo } = await import('@/lib/user-session');
+    const userInfo = getSingleUserInfo(request);
 
     // Create or get device-specific user
     await prisma.user.upsert({
-      where: { id: deviceUser.userId },
+      where: { id: userInfo.userId },
       update: {},
       create: {
-        id: deviceUser.userId,
-        email: deviceUser.email,
-        name: deviceUser.name,
+        id: userInfo.userId,
+        email: userInfo.email,
+        name: userInfo.name,
       },
     });
 
     const session = await prisma.session.create({
       data: {
-        userId: deviceUser.userId,
+        userId: userInfo.userId,
         title,
         status: 'active',
       },
@@ -49,7 +57,7 @@ export async function POST(request: NextRequest) {
     logger.info('Session created successfully', {
       ...requestContext,
       sessionId: session.id,
-      userId: deviceUser.userId
+      userId: userInfo.userId
     });
 
     return NextResponse.json(session);
@@ -84,14 +92,21 @@ export async function GET(request: NextRequest) {
   const requestContext = createRequestLogger(request);
   
   try {
+    // Validate authentication first
+    const authResult = await validateApiAuth(request);
+    if (!authResult.isValid) {
+      logger.warn('Unauthorized sessions fetch request', { ...requestContext, error: authResult.error });
+      return createAuthErrorResponse(authResult.error || 'Authentication required');
+    }
+    
     logger.debug('Fetching sessions', requestContext);
     
-    // Get device-specific user ID for privacy isolation
-    const { getDeviceUserInfo } = await import('@/lib/user-session');
-    const deviceUser = getDeviceUserInfo(request);
+    // Get unified user ID for cross-device session access
+    const { getSingleUserInfo } = await import('@/lib/user-session');
+    const userInfo = getSingleUserInfo(request);
 
     const sessions = await prisma.session.findMany({
-      where: { userId: deviceUser.userId },
+      where: { userId: userInfo.userId },
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {

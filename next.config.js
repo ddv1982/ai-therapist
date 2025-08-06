@@ -3,6 +3,13 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['prisma'],
   },
+  // Enable source maps for better mobile debugging
+  productionBrowserSourceMaps: process.env.NODE_ENV === 'development',
+  
+  // Optimize for mobile and network access
+  compress: true,
+  poweredByHeader: false,
+  
   // Allow dev origins for network access during development
   ...(process.env.NODE_ENV === 'development' && {
     allowedDevOrigins: ['192.168.178.59:3001', '192.168.178.59:3000', 'localhost:3000', '127.0.0.1:3000']
@@ -24,8 +31,8 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            // Restrict CORS to specific development origins and production domain
-            value: isDevelopment ? 'http://localhost:3000' : 'https://your-domain.com',
+            // More permissive for development network access, but secure for production
+            value: isDevelopment ? '*' : 'https://your-domain.com',
           },
           {
             key: 'Access-Control-Allow-Methods',
@@ -51,6 +58,15 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
+          },
+          // Mobile Safari specific headers
+          {
+            key: 'Cache-Control',
+            value: isDevelopment ? 'no-cache, no-store, must-revalidate' : 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Vary',
+            value: 'Accept-Encoding, User-Agent',
           },
         ],
       },

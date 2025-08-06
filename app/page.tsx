@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { AuthGuard } from '@/components/auth/auth-guard';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -25,6 +26,7 @@ import { generateUUID } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
 import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/memory-utils';
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
+import { MobileDebugInfo } from '@/components/mobile-debug-info';
 
 interface Message {
   id: string;
@@ -65,6 +67,53 @@ export default function ChatPage() {
   const [memoryContext, setMemoryContext] = useState<MemoryContextInfo>({ hasMemory: false, reportCount: 0 });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Mobile Safari debugging
+  const logMobileError = useCallback(async (error: unknown, context: string) => {
+    const isSafari = typeof navigator !== 'undefined' && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    const isMobileDevice = typeof window !== 'undefined' && window.innerWidth < 768;
+    const isNetworkUrl = typeof window !== 'undefined' && !window.location.hostname.match(/localhost|127\.0\.0\.1/);
+    
+    if (isSafari && isMobileDevice) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      
+      console.error(`MOBILE SAFARI ERROR [${context}]:`, {
+        error: errorMessage,
+        stack: errorStack,
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        viewport: {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          devicePixelRatio: window.devicePixelRatio
+        },
+        isNetworkUrl,
+        timestamp: new Date().toISOString(),
+        context
+      });
+      
+      // Send to error logging endpoint
+      try {
+        await fetch('/api/errors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            error: errorMessage,
+            stack: errorStack,
+            userAgent: navigator.userAgent,
+            url: window.location.href,
+            timestamp: new Date().toISOString(),
+            context,
+            isMobileSafari: true,
+            isNetworkUrl
+          })
+        });
+      } catch (loggingError) {
+        console.error('Failed to log mobile error:', loggingError);
+      }
+    }
+  }, []);
 
   // Model-specific token limits (memoized for performance)
   const getModelMaxTokens = useCallback((modelName: string): number => {
@@ -85,11 +134,19 @@ export default function ChatPage() {
       if (response.ok) {
         const sessionsData = await response.json();
         setSessions(sessionsData);
+      } else {
+        throw new Error(`Failed to load sessions: ${response.status}`);
       }
     } catch (error) {
       console.error('Failed to load sessions:', error);
+      await logMobileError(error, 'loadSessions');
+      showToast({
+        type: 'error',
+        title: 'Loading Error',
+        message: 'Failed to load chat sessions. Please refresh the page.'
+      });
     }
-  }, []);
+  }, [logMobileError, showToast]);
 
   // Load messages for a specific session (memoized)
   const loadMessages = useCallback(async (sessionId: string) => {
@@ -107,11 +164,19 @@ export default function ChatPage() {
         // Check for memory context when loading session
         const memoryInfo = await checkMemoryContext(sessionId);
         setMemoryContext(memoryInfo);
+      } else {
+        throw new Error(`Failed to load messages: ${response.status}`);
       }
     } catch (error) {
       console.error('Failed to load messages:', error);
+      await logMobileError(error, 'loadMessages');
+      showToast({
+        type: 'error',
+        title: 'Loading Error',
+        message: 'Failed to load chat messages. Please try again.'
+      });
     }
-  }, []);
+  }, [logMobileError, showToast]);
 
   // Save message to database (memoized)
   const saveMessage = useCallback(async (sessionId: string, role: 'user' | 'assistant', content: string) => {
@@ -666,10 +731,11 @@ export default function ChatPage() {
   };
 
   return (
-    <div 
-      className="flex bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20"
-      role="application"
-      aria-label="AI Therapist Chat Application"
+    <AuthGuard>
+      <div 
+        className="flex bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20"
+        role="application"
+        aria-label="AI Therapist Chat Application"
       style={{
         height: viewportHeight,
         minHeight: viewportHeight,
@@ -1303,6 +1369,9 @@ export default function ChatPage() {
         </div>
       </main>
 
-    </div>
+      {/* Mobile Debug Info - only shows on mobile Safari with network URL */}
+      <MobileDebugInfo />
+      </div>
+    </AuthGuard>
   );
 }

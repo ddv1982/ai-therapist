@@ -2,12 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Groq } from 'groq-sdk';
 import { buildMemoryEnhancedPrompt, type MemoryContext } from '@/lib/therapy-prompts';
 import { logger, createRequestLogger } from '@/lib/logger';
+import { validateApiAuth, createAuthErrorResponse } from '@/lib/api-auth';
 
 export async function POST(request: NextRequest) {
   const requestContext = createRequestLogger(request);
   let model = 'openai/gpt-oss-120b'; // Default model value accessible in catch block
   
   try {
+    // Validate authentication first
+    const authResult = await validateApiAuth(request);
+    if (!authResult.isValid) {
+      logger.warn('Unauthorized chat request', { ...requestContext, error: authResult.error });
+      return createAuthErrorResponse(authResult.error || 'Authentication required');
+    }
+    
     logger.info('Chat request received', requestContext);
     
     const requestData = await request.json();

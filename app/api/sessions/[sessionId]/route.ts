@@ -16,9 +16,9 @@ export async function PATCH(
     const { status, endedAt, title } = await request.json();
     const { sessionId } = params;
 
-    // Get device-specific user ID for privacy isolation
-    const { getDeviceUserInfo } = await import('@/lib/user-session');
-    const deviceUser = getDeviceUserInfo(request);
+    // Get unified user ID for cross-device session access
+    const { getSingleUserInfo } = await import('@/lib/user-session');
+    const userInfo = getSingleUserInfo(request);
 
     const updateData: SessionUpdateData = {
       updatedAt: new Date(),
@@ -31,7 +31,7 @@ export async function PATCH(
     const session = await prisma.session.update({
       where: { 
         id: sessionId,
-        userId: deviceUser.userId // Ensure user can only update their own sessions
+        userId: userInfo.userId // Ensure user can only update their own sessions
       },
       data: updateData,
     });
@@ -53,14 +53,14 @@ export async function GET(
   try {
     const { sessionId } = params;
 
-    // Get device-specific user ID for privacy isolation
-    const { getDeviceUserInfo } = await import('@/lib/user-session');
-    const deviceUser = getDeviceUserInfo(request);
+    // Get unified user ID for cross-device session access
+    const { getSingleUserInfo } = await import('@/lib/user-session');
+    const userInfo = getSingleUserInfo(request);
 
     const session = await prisma.session.findUnique({
       where: { 
         id: sessionId,
-        userId: deviceUser.userId // Ensure user can only access their own sessions
+        userId: userInfo.userId // Ensure user can only access their own sessions
       },
       include: {
         messages: {
@@ -94,14 +94,14 @@ export async function DELETE(
   try {
     const { sessionId } = params;
 
-    // Get device-specific user ID for privacy isolation
-    const { getDeviceUserInfo } = await import('@/lib/user-session');
-    const deviceUser = getDeviceUserInfo(request);
+    // Get unified user ID for cross-device session access
+    const { getSingleUserInfo } = await import('@/lib/user-session');
+    const userInfo = getSingleUserInfo(request);
 
     await prisma.session.delete({
       where: { 
         id: sessionId,
-        userId: deviceUser.userId // Ensure user can only delete their own sessions
+        userId: userInfo.userId // Ensure user can only delete their own sessions
       },
     });
 

@@ -3,7 +3,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Bug, Wifi } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -13,6 +13,15 @@ interface Props {
 interface State {
   hasError: boolean;
   error?: Error;
+  errorInfo?: ErrorInfo;
+  errorDetails?: {
+    userAgent: string;
+    url: string;
+    timestamp: string;
+    isMobile: boolean;
+    isSafari: boolean;
+    isNetworkUrl: boolean;
+  };
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -21,11 +30,66 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    // Collect browser and network information for debugging
+    const errorDetails = {
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
+      url: typeof window !== 'undefined' ? window.location.href : 'Unknown',
+      timestamp: new Date().toISOString(),
+      isMobile: typeof window !== 'undefined' && window.innerWidth < 768,
+      isSafari: typeof navigator !== 'undefined' && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent),
+      isNetworkUrl: typeof window !== 'undefined' && !window.location.hostname.match(/localhost|127\.0\.0\.1/)
+    };
+
+    return { hasError: true, error, errorDetails };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    
+    this.setState({
+      errorInfo
+    });
+    
+    // Enhanced mobile Safari specific error logging
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    const isMobile = window.innerWidth < 768;
+    const isNetworkUrl = !window.location.hostname.match(/localhost|127\.0\.0\.1/);
+    
+    if (isSafari && isMobile && isNetworkUrl) {
+      console.error('MOBILE SAFARI NETWORK ERROR DETAILS:', {
+        error: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        viewport: {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          devicePixelRatio: window.devicePixelRatio
+        },
+        timestamp: new Date().toISOString()
+      });
+      
+      // Try to send error to an API endpoint for debugging (optional)
+      try {
+        fetch('/api/errors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            error: error.message,
+            stack: error.stack,
+            componentStack: errorInfo.componentStack,
+            userAgent: navigator.userAgent,
+            url: window.location.href,
+            timestamp: new Date().toISOString()
+          })
+        }).catch(() => {
+          // Silently fail if error logging API is not available
+        });
+      } catch {
+        // Ignore fetch errors
+      }
+    }
   }
 
   public render() {
@@ -44,18 +108,47 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             
             <h2 className="text-xl font-semibold mb-2 text-foreground">
-              Something went wrong
+              {this.state.errorDetails?.isSafari && this.state.errorDetails?.isMobile
+                ? 'Mobile Safari Error Detected'
+                : 'Something went wrong'}
             </h2>
             
-            <p className="text-muted-foreground mb-6">
-              We apologize for the inconvenience. The application encountered an unexpected error.
+            <p className="text-muted-foreground mb-4">
+              {this.state.errorDetails?.isSafari && this.state.errorDetails?.isMobile
+                ? 'A mobile Safari-specific error occurred. This might be related to network access or JavaScript compatibility.'
+                : 'We apologize for the inconvenience. The application encountered an unexpected error.'}
             </p>
             
-            {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div className="mb-4 p-3 bg-muted rounded-lg text-left">
-                <p className="text-sm text-muted-foreground font-mono">
+            {this.state.errorDetails?.isNetworkUrl && (
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wifi className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">Network Access Detected</span>
+                </div>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  You&apos;re accessing this app via network URL. Some mobile browsers have restrictions on network-accessed applications.
+                </p>
+              </div>
+            )}
+            
+            {(process.env.NODE_ENV === 'development' || this.state.errorDetails?.isSafari) && this.state.error && (
+              <div className="mb-4 p-3 bg-muted rounded-lg text-left overflow-hidden">
+                <div className="flex items-center gap-2 mb-2">
+                  <Bug className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Error Details</span>
+                </div>
+                <p className="text-xs text-muted-foreground font-mono mb-2 break-words">
                   {this.state.error.message}
                 </p>
+                {this.state.errorDetails && (
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p><strong>Browser:</strong> {this.state.errorDetails.isSafari ? 'Safari' : 'Other'} {this.state.errorDetails.isMobile ? '(Mobile)' : '(Desktop)'}</p>
+                    <p><strong>Time:</strong> {new Date(this.state.errorDetails.timestamp).toLocaleString()}</p>
+                    {this.state.errorDetails.isNetworkUrl && (
+                      <p><strong>Access:</strong> Network URL</p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             
@@ -70,11 +163,53 @@ export class ErrorBoundary extends Component<Props, State> {
               
               <Button
                 variant="outline"
-                onClick={() => this.setState({ hasError: false, error: undefined })}
+                onClick={() => this.setState({ hasError: false, error: undefined, errorInfo: undefined, errorDetails: undefined })}
                 className="w-full"
               >
                 Try Again
               </Button>
+              
+              {this.state.errorDetails?.isSafari && this.state.errorDetails?.isMobile && (
+                <div className="mt-4 space-y-3">
+                  <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+                    <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">Mobile Safari Quick Fixes:</h4>
+                    <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-1">
+                      <li>• Try refreshing the page (swipe down to reload)</li>
+                      <li>• Check your Wi-Fi or cellular connection</li>
+                      <li>• Clear Safari cache: Settings → Safari → Clear History</li>
+                      <li>• Close other Safari tabs to free up memory</li>
+                      <li>• Restart Safari completely</li>
+                      {this.state.errorDetails?.isNetworkUrl && (
+                        <li>• Try accessing via localhost if on the same network</li>
+                      )}
+                    </ul>
+                  </div>
+                  
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Advanced Troubleshooting:</h4>
+                    <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                      <li>• Enable JavaScript: Settings → Safari → Advanced → JavaScript</li>
+                      <li>• Disable Content Blockers temporarily</li>
+                      <li>• Check if Private Browsing is affecting the app</li>
+                      <li>• Try using a different browser (Chrome, Firefox)</li>
+                      <li>• Ensure iOS is up to date</li>
+                    </ul>
+                  </div>
+                  
+                  {this.state.errorDetails?.isNetworkUrl && (
+                    <div className="p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
+                      <h4 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">Network Access Tips:</h4>
+                      <ul className="text-xs text-green-700 dark:text-green-300 space-y-1">
+                        <li>• Make sure you&apos;re on the same Wi-Fi network</li>
+                        <li>• Check if the server is still running</li>
+                        <li>• Try accessing other devices on the network</li>
+                        <li>• Temporarily disable VPN if enabled</li>
+                        <li>• Check firewall settings on the host device</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </Card>
         </div>

@@ -20,9 +20,9 @@ class NetworkRateLimiter {
   private cleanupInterval: NodeJS.Timeout | null = null;
   
   private readonly config: RateLimitConfig = {
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    maxAttempts: 5,
-    blockDuration: 30 * 60 * 1000, // 30 minutes for blocked IPs
+    windowMs: 5 * 60 * 1000, // 5 minutes - shorter window for better UX
+    maxAttempts: 50, // Much higher limit for therapeutic single-user context
+    blockDuration: 5 * 60 * 1000, // 5 minutes for blocked IPs - shorter recovery time
   };
 
   constructor() {
@@ -35,9 +35,49 @@ class NetworkRateLimiter {
   }
 
   /**
+   * Check if IP should be exempt from rate limiting
+   */
+  private isExemptIP(ip: string): boolean {
+    // Allow localhost and private network ranges for development
+    const exemptIPs = [
+      'localhost',
+      '127.0.0.1',
+      '::1',
+      'unknown',
+      '192.168.',
+      '10.0.',
+      '172.16.',
+      '172.17.',
+      '172.18.',
+      '172.19.',
+      '172.20.',
+      '172.21.',
+      '172.22.',
+      '172.23.',
+      '172.24.',
+      '172.25.',
+      '172.26.',
+      '172.27.',
+      '172.28.',
+      '172.29.',
+      '172.30.',
+      '172.31.'
+    ];
+    
+    return exemptIPs.some(exemptIP => ip.includes(exemptIP));
+  }
+
+  /**
    * Check if IP is allowed to make a request
    */
   checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+    // Always allow exempt IPs (localhost, private networks)
+    if (this.isExemptIP(ip)) {
+      if (process?.env?.NODE_ENV === 'development') {
+        console.log(`[RATE_LIMITER] Allowing exempt IP: ${ip}`);
+      }
+      return { allowed: true };
+    }
     const now = Date.now();
     const entry = this.store.get(ip);
 
@@ -55,6 +95,9 @@ class NetworkRateLimiter {
     if (entry.count >= this.config.maxAttempts) {
       const blockExpiry = entry.resetTime + this.config.blockDuration;
       if (now < blockExpiry) {
+        if (process?.env?.NODE_ENV === 'development') {
+          console.log(`[RATE_LIMITER] IP ${ip} blocked - ${entry.count}/${this.config.maxAttempts} attempts, retry in ${Math.ceil((blockExpiry - now) / 1000)}s`);
+        }
         return { 
           allowed: false, 
           retryAfter: Math.ceil((blockExpiry - now) / 1000) 
