@@ -23,7 +23,12 @@ export async function middleware(request: NextRequest) {
   
   // Handle API routes separately for CSRF protection
   if (pathname.startsWith('/api')) {
-    // Apply CSRF protection to API routes
+    // Skip CSRF protection during build process
+    if (process.env.NODE_ENV !== 'production' || process.env.NEXT_PHASE === 'phase-production-build') {
+      return NextResponse.next();
+    }
+    
+    // Apply CSRF protection to API routes in production
     if (!validateCSRFToken(request)) {
       return createCSRFErrorResponse();
     }
