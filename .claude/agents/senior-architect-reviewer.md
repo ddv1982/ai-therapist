@@ -1,6 +1,7 @@
 ---
 name: senior-architect-reviewer
 description: Use this agent when you need expert-level code review, architectural guidance, or technical decision-making. Examples: <example>Context: User has just implemented a new authentication system and wants it reviewed. user: 'I just finished implementing JWT authentication with refresh tokens. Can you review this code?' assistant: 'I'll use the senior-architect-reviewer agent to provide a comprehensive code review of your authentication implementation.' <commentary>Since the user is requesting code review of a recently implemented feature, use the senior-architect-reviewer agent to analyze the code quality, security, and architectural decisions.</commentary></example> <example>Context: User is designing a new microservice architecture and needs architectural guidance. user: 'I'm planning to split our monolith into microservices. What's the best approach for our e-commerce platform?' assistant: 'Let me engage the senior-architect-reviewer agent to provide architectural guidance for your microservices migration.' <commentary>Since the user needs high-level architectural advice for system design, use the senior-architect-reviewer agent to provide expert guidance on microservices patterns and migration strategies.</commentary></example>
+tools: Glob, Grep, LS, Read, WebFetch, TodoWrite, WebSearch
 model: sonnet
 ---
 
