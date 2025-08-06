@@ -36,8 +36,8 @@ export function generateSessionTitle(): string {
 }
 
 /**
- * Generate a UUID v4 compatible string using browser-compatible methods
- * Falls back to crypto.getRandomValues() or Math.random() if crypto.randomUUID() is not available
+ * Generate a UUID v4 compatible string using cryptographically secure methods
+ * SECURITY: Removed Math.random() fallback - fails hard if crypto not available
  */
 export function generateUUID(): string {
   // Try modern crypto.randomUUID() first (Node.js 19+ and modern browsers)
@@ -45,7 +45,7 @@ export function generateUUID(): string {
     return crypto.randomUUID();
   }
   
-  // Fallback for browsers and older Node.js versions
+  // Fallback for browsers and older Node.js versions using crypto.getRandomValues()
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
@@ -67,37 +67,30 @@ export function generateUUID(): string {
     ].join('-');
   }
   
-  // Final fallback using Math.random() (less secure but compatible)
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+  // SECURITY: No fallback to Math.random() - fail hard if crypto is unavailable
+  throw new Error('Cryptographically secure random number generation is not available. Please ensure your environment supports crypto.randomUUID() or crypto.getRandomValues()');
 }
 
 /**
  * Generate cryptographically secure random string for general purposes
- * Uses Web Crypto API for security (compatible with Edge Runtime)
+ * SECURITY: Removed Math.random() fallback - fails hard if crypto not available
  */
 export function generateSecureRandomString(length: number = 32): string {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
   
   // Use Web Crypto API (available in browsers and Node.js 16+)
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     const array = new Uint8Array(length);
     crypto.getRandomValues(array);
+    let result = '';
     for (let i = 0; i < length; i++) {
       result += charset[array[i] % charset.length];
     }
     return result;
   }
   
-  // Final fallback using Math.random (less secure but compatible)
-  for (let i = 0; i < length; i++) {
-    result += charset[Math.floor(Math.random() * charset.length)];
-  }
-  return result;
+  // SECURITY: No fallback to Math.random() - fail hard if crypto is unavailable
+  throw new Error('Cryptographically secure random number generation is not available. Please ensure your environment supports crypto.getRandomValues()');
 }
 
 /**

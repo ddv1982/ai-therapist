@@ -4,6 +4,7 @@ import { REPORT_GENERATION_PROMPT } from '@/lib/therapy-prompts';
 import { prisma } from '@/lib/db';
 import { logger, createRequestLogger } from '@/lib/logger';
 import { reportGenerationSchema, validateRequest } from '@/lib/validation';
+import { encryptSessionReportContent } from '@/lib/message-encryption';
 
 
 export async function POST(request: NextRequest) {
@@ -41,16 +42,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save the report to database for therapeutic memory
+    // Save the report to database for therapeutic memory with encryption
     try {
+      // Encrypt sensitive report content before storage
+      const encryptedReportContent = encryptSessionReportContent(completion);
+      
       await prisma.sessionReport.create({
         data: {
           sessionId,
-          reportContent: completion,
-          keyPoints: JSON.stringify([]),
-          therapeuticInsights: completion,
-          patternsIdentified: JSON.stringify([]),
-          actionItems: JSON.stringify([]),
+          reportContent: encryptedReportContent, // Encrypted sensitive content
+          keyPoints: [], // PostgreSQL native JSON array
+          therapeuticInsights: {}, // PostgreSQL native JSON object - could contain structured insights
+          patternsIdentified: [], // PostgreSQL native JSON array
+          actionItems: [], // PostgreSQL native JSON array
           moodAssessment: '',
           progressNotes: `Report generated on ${new Date().toISOString()}`,
         }

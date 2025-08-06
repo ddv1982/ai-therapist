@@ -31,12 +31,76 @@ jest.mock('groq-sdk', () => ({
   })),
 }))
 
-// Mock crypto.randomUUID
+// Mock crypto for testing with realistic behavior
 Object.defineProperty(global, 'crypto', {
   value: {
-    randomUUID: () => 'test-uuid-123',
+    randomUUID: () => {
+      // Generate a proper UUID v4 for testing
+      const hex = '0123456789abcdef';
+      let uuid = '';
+      for (let i = 0; i < 36; i++) {
+        if (i === 8 || i === 13 || i === 18 || i === 23) {
+          uuid += '-';
+        } else if (i === 14) {
+          uuid += '4'; // Version 4
+        } else if (i === 19) {
+          uuid += hex[Math.floor(Math.random() * 4) + 8]; // Variant bits
+        } else {
+          uuid += hex[Math.floor(Math.random() * 16)];
+        }
+      }
+      return uuid;
+    },
+    getRandomValues: (array) => {
+      // Use Math.random for testing (crypto would use secure random in real environment)
+      for (let i = 0; i < array.length; i++) {
+        array[i] = Math.floor(Math.random() * 256);
+      }
+      return array;
+    },
+    subtle: {
+      importKey: jest.fn(),
+      encrypt: jest.fn(),
+      decrypt: jest.fn(),
+    }
   },
+  configurable: true,
 })
+
+// Mock environment variables
+process.env.ENCRYPTION_KEY = 'test-encryption-key-32-chars-long-for-testing';
+process.env.CSRF_SECRET = 'test-csrf-secret-for-testing';
+process.env.NODE_ENV = 'test';
+
+// Mock Next.js Request
+global.Request = class MockRequest {
+  constructor(url, options = {}) {
+    this.url = url;
+    this.method = options.method || 'GET';
+    this.headers = new Map(Object.entries(options.headers || {}));
+  }
+  
+  get(name) {
+    return this.headers.get(name);
+  }
+};
+
+global.Response = class MockResponse {
+  constructor(body, init = {}) {
+    this.body = body;
+    this.status = init.status || 200;
+    this.headers = new Map(Object.entries(init.headers || {}));
+  }
+  
+  static json(data, init) {
+    return new MockResponse(JSON.stringify(data), init);
+  }
+};
+
+// Mock Buffer if not available
+if (typeof Buffer === 'undefined') {
+  global.Buffer = require('buffer').Buffer;
+}
 
 // Suppress console warnings in tests
 global.console = {

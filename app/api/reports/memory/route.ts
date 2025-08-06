@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger, createRequestLogger } from '@/lib/logger';
+import { decryptSessionReportContent } from '@/lib/message-encryption';
 
 /**
  * GET /api/reports/memory
@@ -47,16 +48,21 @@ export async function GET(request: NextRequest) {
       take: Math.min(limit, 10) // Cap at 10 reports max for performance
     });
     
-    // Format reports for memory context
-    const memoryContext = reports.map(report => ({
-      sessionTitle: report.session.title,
-      sessionDate: report.session.startedAt.toISOString().split('T')[0],
-      reportDate: report.createdAt.toISOString().split('T')[0],
-      content: report.reportContent,
-      summary: report.reportContent.length > 500 
-        ? report.reportContent.substring(0, 500) + '...'
-        : report.reportContent
-    }));
+    // Decrypt and format reports for memory context
+    const memoryContext = reports.map(report => {
+      // Decrypt the report content for use
+      const decryptedContent = decryptSessionReportContent(report.reportContent);
+      
+      return {
+        sessionTitle: report.session.title,
+        sessionDate: report.session.startedAt.toISOString().split('T')[0],
+        reportDate: report.createdAt.toISOString().split('T')[0],
+        content: decryptedContent,
+        summary: decryptedContent.length > 500 
+          ? decryptedContent.substring(0, 500) + '...'
+          : decryptedContent
+      };
+    });
     
     logger.info('Session reports retrieved successfully', {
       ...requestContext,

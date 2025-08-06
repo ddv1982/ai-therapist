@@ -12,6 +12,25 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    
+    // Enhanced strict mode settings for better type safety
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": false, // Allow dynamic property access for compatibility
+    "noUncheckedIndexedAccess": false, // Disable for compatibility with existing code
+    "exactOptionalPropertyTypes": false, // Disable for compatibility with existing code
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": false, // Disable for development, enable in CI
+    "noUnusedParameters": false, // Disable for development, enable in CI
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    
     "plugins": [
       {
         "name": "next"

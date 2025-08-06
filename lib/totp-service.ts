@@ -2,6 +2,7 @@ import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import { prisma } from '@/lib/db';
 import { generateSecureRandomString } from '@/lib/utils';
+import { encryptSensitiveData, decryptSensitiveData, encryptBackupCodes, decryptBackupCodes } from '@/lib/crypto-utils';
 
 export interface TOTPSetupData {
   secret: string;
@@ -44,7 +45,7 @@ export async function generateTOTPSetup(): Promise<TOTPSetupData> {
 }
 
 /**
- * Save TOTP configuration to database
+ * Save TOTP configuration to database with encryption
  */
 export async function saveTOTPConfig(secret: string, backupCodes: string[]): Promise<void> {
   // First check if config already exists and remove it
@@ -61,10 +62,14 @@ export async function saveTOTPConfig(secret: string, backupCodes: string[]): Pro
     used: false,
   }));
 
+  // Encrypt sensitive data before storage
+  const encryptedSecret = encryptSensitiveData(secret);
+  const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
+
   await prisma.authConfig.create({
     data: {
-      secret,
-      backupCodes: JSON.stringify(backupCodesData),
+      secret: encryptedSecret,
+      backupCodes: encryptedBackupCodes,
       isSetup: true,
     },
   });
@@ -85,9 +90,12 @@ export async function getTOTPDiagnostics(token?: string): Promise<{
     throw new Error('TOTP not configured');
   }
 
+  // Decrypt the secret for use
+  const decryptedSecret = decryptSensitiveData(config.secret);
+
   const currentTime = Math.floor(Date.now() / 1000);
   const currentToken = speakeasy.totp({
-    secret: config.secret,
+    secret: decryptedSecret,
     encoding: 'base32',
     time: currentTime,
   });
@@ -96,7 +104,7 @@ export async function getTOTPDiagnostics(token?: string): Promise<{
   if (token) {
     const cleanToken = token.replace(/\s/g, '');
     providedTokenValid = speakeasy.totp.verify({
-      secret: config.secret,
+      secret: decryptedSecret,
       encoding: 'base32',
       token: cleanToken,
       window: 4,
@@ -125,6 +133,9 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
     return false;
   }
 
+  // Decrypt the secret for use
+  const decryptedSecret = decryptSensitiveData(config.secret);
+
   // Clean and validate token format
   const cleanToken = token.replace(/\s/g, ''); // Remove any whitespace
   console.log(`  🧽 [${verificationId}] Token cleaned: "${token}" -> "${cleanToken}"`);
@@ -137,7 +148,7 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
   // Get current time info for comparison
   const currentTime = Math.floor(Date.now() / 1000);
   const currentToken = speakeasy.totp({
-    secret: config.secret,
+    secret: decryptedSecret,
     encoding: 'base32',
     time: currentTime,
   });
@@ -149,7 +160,7 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
 
   // Verification with window tolerance
   const verified = speakeasy.totp.verify({
-    secret: config.secret,
+    secret: decryptedSecret,
     encoding: 'base32',
     token: cleanToken,
     window: 4, // Increased from 2 to 4 for better multi-device support
@@ -165,7 +176,7 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
     for (let i = -6; i <= 6; i++) {
       const testTime = currentTime + (i * 30);
       const testToken = speakeasy.totp({
-        secret: config.secret,
+        secret: decryptedSecret,
         encoding: 'base32',
         time: testTime,
       });
@@ -198,7 +209,7 @@ export async function verifyBackupCode(code: string): Promise<boolean> {
 
   let backupCodes: BackupCode[];
   try {
-    backupCodes = JSON.parse(config.backupCodes);
+    backupCodes = decryptBackupCodes(config.backupCodes);
   } catch {
     return false;
   }
@@ -216,11 +227,12 @@ export async function verifyBackupCode(code: string): Promise<boolean> {
   backupCodes[codeIndex].used = true;
   backupCodes[codeIndex].usedAt = new Date();
 
-  // Update the database
+  // Re-encrypt and update the database
+  const encryptedBackupCodes = encryptBackupCodes(backupCodes);
   await prisma.authConfig.update({
     where: { id: config.id },
     data: {
-      backupCodes: JSON.stringify(backupCodes),
+      backupCodes: encryptedBackupCodes,
     },
   });
 
@@ -246,7 +258,7 @@ export async function getUnusedBackupCodesCount(): Promise<number> {
 
   let backupCodes: BackupCode[];
   try {
-    backupCodes = JSON.parse(config.backupCodes);
+    backupCodes = decryptBackupCodes(config.backupCodes);
   } catch {
     return 0;
   }
@@ -272,10 +284,13 @@ export async function regenerateBackupCodes(): Promise<string[]> {
     used: false,
   }));
 
+  // Encrypt the backup codes before storage
+  const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
+
   await prisma.authConfig.update({
     where: { id: config.id },
     data: {
-      backupCodes: JSON.stringify(backupCodesData),
+      backupCodes: encryptedBackupCodes,
     },
   });
 

@@ -12,8 +12,8 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  error?: Error;
-  errorInfo?: ErrorInfo;
+  error?: Error | undefined;
+  errorInfo?: ErrorInfo | undefined;
   errorDetails?: {
     userAgent: string;
     url: string;
@@ -21,7 +21,7 @@ interface State {
     isMobile: boolean;
     isSafari: boolean;
     isNetworkUrl: boolean;
-  };
+  } | undefined;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
     hasError: false
   };
 
-  public static getDerivedStateFromError(error: Error): State {
+  public override static getDerivedStateFromError(error: Error): State {
     // Collect browser and network information for debugging
     const errorDetails = {
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
@@ -43,7 +43,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error, errorDetails };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     
     this.setState({
@@ -92,7 +92,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
   }
 
-  public render() {
+  public override render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;
@@ -163,7 +163,12 @@ export class ErrorBoundary extends Component<Props, State> {
               
               <Button
                 variant="outline"
-                onClick={() => this.setState({ hasError: false, error: undefined, errorInfo: undefined, errorDetails: undefined })}
+                onClick={() => this.setState({ 
+                  hasError: false, 
+                  error: undefined as Error | undefined, 
+                  errorInfo: undefined as ErrorInfo | undefined, 
+                  errorDetails: undefined as State['errorDetails'] 
+                })}
                 className="w-full"
               >
                 Try Again

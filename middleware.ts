@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRateLimiter } from '@/lib/rate-limiter';
+import { validateCSRFToken, createCSRFErrorResponse, addCSRFTokenToResponse } from '@/lib/csrf-protection';
 
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
@@ -20,20 +21,27 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const clientIP = getClientIP(request);
   
-  // Skip middleware for API routes, static files, authentication pages, and Next.js internals
+  // Handle API routes separately for CSRF protection
+  if (pathname.startsWith('/api')) {
+    // Apply CSRF protection to API routes
+    if (!validateCSRFToken(request)) {
+      return createCSRFErrorResponse();
+    }
+    return NextResponse.next();
+  }
+  
+  // Skip middleware for static files, authentication pages, and Next.js internals
   if (
-    pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
     pathname.startsWith('/auth/') || // Skip auth pages to prevent redirect loops
     pathname.includes('.') ||
-    pathname === '/auth' ||
-    pathname === '/' // Main page should handle auth internally
+    pathname === '/auth'
   ) {
     return NextResponse.next();
   }
   
-  // Apply rate limiting to prevent abuse (but only for non-auth pages)
+  // Apply rate limiting to prevent abuse
   const rateLimiter = getRateLimiter();
   const rateLimitResult = rateLimiter.checkRateLimit(clientIP);
   
@@ -48,7 +56,12 @@ export async function middleware(request: NextRequest) {
     });
   }
   
-  // For now, allow all requests - authentication will be handled at component level
+  // For main application pages, add CSRF token to response
+  if (pathname === '/') {
+    const response = NextResponse.next();
+    return addCSRFTokenToResponse(response);
+  }
+  
   return NextResponse.next();
 }
 

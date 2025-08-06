@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { validateApiAuth, createAuthErrorResponse } from '@/lib/api-auth';
+import { encryptMessage, safeDecryptMessages } from '@/lib/message-encryption';
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,16 +39,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Encrypt the message before storing
+    const encryptedMessageData = encryptMessage({
+      role,
+      content,
+      timestamp: new Date()
+    });
+
     const message = await prisma.message.create({
       data: {
         sessionId,
-        role,
-        content,
-        timestamp: new Date(),
+        role: encryptedMessageData.role,
+        content: encryptedMessageData.content,
+        timestamp: encryptedMessageData.timestamp,
       },
     });
 
-    return NextResponse.json(message);
+    // Return decrypted message for immediate use by client
+    return NextResponse.json({
+      id: message.id,
+      sessionId: message.sessionId,
+      role,
+      content, // Return original unencrypted content
+      timestamp: message.timestamp,
+      createdAt: message.createdAt
+    });
   } catch (error) {
     console.error('Create message error:', error);
     return NextResponse.json(
@@ -99,7 +115,24 @@ export async function GET(request: NextRequest) {
       orderBy: { timestamp: 'asc' }
     });
 
-    return NextResponse.json(messages);
+    // Decrypt messages before returning to client
+    const decryptedMessages = safeDecryptMessages(messages.map(msg => ({
+      role: msg.role,
+      content: msg.content,
+      timestamp: msg.timestamp
+    })));
+
+    // Combine decrypted content with original message metadata
+    const responseMessages = messages.map((msg, index) => ({
+      id: msg.id,
+      sessionId: msg.sessionId,
+      role: decryptedMessages[index].role,
+      content: decryptedMessages[index].content,
+      timestamp: decryptedMessages[index].timestamp,
+      createdAt: msg.createdAt
+    }));
+
+    return NextResponse.json(responseMessages);
   } catch (error) {
     console.error('Get messages error:', error);
     return NextResponse.json(

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuthSession } from '@/lib/device-fingerprint';
 import { isTOTPSetup } from '@/lib/totp-service';
-import { isLocalhost } from '@/lib/utils';
 
 export interface AuthResult {
   isAuthenticated: boolean;
@@ -14,12 +13,11 @@ export interface AuthResult {
  * Check authentication status for a request
  */
 export async function checkAuth(request: NextRequest): Promise<AuthResult> {
-  const host = request.headers.get('host') || '';
   const pathname = request.nextUrl.pathname;
   
-  // Always allow localhost access without authentication during development
-  const forwardedHost = request.headers.get('x-forwarded-host');
-  if (isLocalhost(host) && (!forwardedHost || isLocalhost(forwardedHost))) {
+  // SECURITY: Only allow bypassing authentication in development environment
+  // Never trust host headers for security decisions - they can be spoofed
+  if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
     return { isAuthenticated: true, needsSetup: false, needsVerification: false };
   }
   

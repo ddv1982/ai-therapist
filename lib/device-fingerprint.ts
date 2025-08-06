@@ -18,20 +18,59 @@ export interface AuthSessionData {
 }
 
 /**
- * Generate device fingerprint from browser information
- * More permissive fingerprinting for better multi-device support
+ * Generate enhanced device fingerprint with increased entropy
+ * Balances security with usability for therapeutic application
  */
-export function generateDeviceFingerprint(userAgent: string): string {
+export function generateDeviceFingerprint(userAgent: string, additionalData?: {
+  screenResolution?: string;
+  timezone?: string;
+  language?: string;
+  platform?: string;
+}): string {
   const parser = new UAParser(userAgent);
   const result = parser.getResult();
   
-  // Create a more permissive fingerprint that groups similar devices together
-  // This helps the same user authenticate from different browsers/apps on the same device
+  // Enhanced fingerprint with more entropy for security
+  const fingerprintData = {
+    // Core device information
+    os: result.os.name || 'unknown',
+    osVersion: result.os.version || 'unknown',
+    device: result.device.type || 'desktop',
+    deviceModel: result.device.model || 'unknown',
+    deviceVendor: result.device.vendor || 'unknown',
+    
+    // Browser information (for security while maintaining some flexibility)
+    browser: result.browser.name || 'unknown',
+    browserMajor: result.browser.major || 'unknown',
+    
+    // Additional entropy data if provided
+    screenResolution: additionalData?.screenResolution || 'unknown',
+    timezone: additionalData?.timezone || 'unknown', 
+    language: additionalData?.language || 'unknown',
+    platform: additionalData?.platform || 'unknown',
+    
+    // CPU architecture if available
+    cpu: result.cpu.architecture || 'unknown',
+  };
+  
+  const fingerprintString = JSON.stringify(fingerprintData, Object.keys(fingerprintData).sort());
+  return createHash('sha256').update(fingerprintString).digest('hex');
+}
+
+/**
+ * Generate a fallback device fingerprint with reduced entropy for compatibility
+ * Used when enhanced fingerprinting data is not available
+ */
+export function generateBasicDeviceFingerprint(userAgent: string): string {
+  const parser = new UAParser(userAgent);
+  const result = parser.getResult();
+  
+  // More permissive fingerprint that groups similar devices together
+  // This helps with multi-browser support while maintaining some security
   const fingerprintData = {
     os: result.os.name || 'unknown',
     device: result.device.type || 'desktop',
-    // Remove browser version and OS version to allow different browsers/versions
-    // This makes authentication work across Chrome, Firefox, mobile apps, etc.
+    browser: result.browser.name || 'unknown',
   };
   
   const fingerprintString = JSON.stringify(fingerprintData);
@@ -60,10 +99,23 @@ export function generateDeviceName(userAgent: string): string {
 }
 
 /**
- * Get or create device information
+ * Get or create device information with enhanced fingerprinting
  */
-export async function getOrCreateDevice(userAgent: string, ipAddress: string): Promise<DeviceInfo> {
-  const fingerprint = generateDeviceFingerprint(userAgent);
+export async function getOrCreateDevice(
+  userAgent: string, 
+  ipAddress: string,
+  additionalData?: {
+    screenResolution?: string;
+    timezone?: string;
+    language?: string;
+    platform?: string;
+  }
+): Promise<DeviceInfo> {
+  // Try enhanced fingerprinting first, fall back to basic if additional data not available
+  const fingerprint = additionalData 
+    ? generateDeviceFingerprint(userAgent, additionalData)
+    : generateBasicDeviceFingerprint(userAgent);
+    
   const deviceName = generateDeviceName(userAgent);
   
   // Look for existing device with same fingerprint
