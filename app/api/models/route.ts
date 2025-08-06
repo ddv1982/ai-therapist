@@ -6,6 +6,8 @@ interface GroqModel {
   owned_by?: string;
   active: boolean;
   context_window?: number;
+  created?: number;
+  object?: string;
 }
 
 export async function GET() {
@@ -38,17 +40,18 @@ export async function GET() {
       return 32000;
     };
 
-    // Filter and format models for the UI
+    // Filter and format models for the UI  
     const availableModels = models.data
-      .filter((model: GroqModel) => model.active)
-      .map((model: GroqModel) => {
-        const apiMaxTokens = model.context_window || 4096;
+      .filter((model) => (model as any).active)
+      .map((model) => {
+        const groqModel = model as GroqModel;
+        const apiMaxTokens = groqModel.context_window || 4096;
         return {
-          id: model.id,
-          name: model.id,
-          provider: model.owned_by || 'groq',
-          maxTokens: getCustomMaxTokens(model.id, apiMaxTokens),
-          active: model.active
+          id: groqModel.id,
+          name: groqModel.id,
+          provider: groqModel.owned_by || 'groq',
+          maxTokens: getCustomMaxTokens(groqModel.id, apiMaxTokens),
+          active: groqModel.active
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name));

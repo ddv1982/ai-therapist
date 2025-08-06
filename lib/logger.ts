@@ -199,12 +199,26 @@ class Logger {
 // Export singleton instance
 export const logger = new Logger();
 
-// Express-style middleware for request logging
-export function createRequestLogger(req: { headers: Record<string, string | string[] | undefined>, method?: string, url?: string, connection?: { remoteAddress?: string } }): LogContext {
+// Helper to get header value from NextRequest
+function getHeaderValue(headers: Headers | Record<string, string | string[] | undefined>, key: string): string | undefined {
+  if (headers instanceof Headers) {
+    return headers.get(key) || undefined;
+  }
+  const value = headers[key];
+  return Array.isArray(value) ? value[0] : value;
+}
+
+// Next.js and Express-style middleware for request logging
+export function createRequestLogger(req: { 
+  headers: Headers | Record<string, string | string[] | undefined>, 
+  method?: string, 
+  url?: string, 
+  connection?: { remoteAddress?: string }
+} | { headers: Headers, method: string, url: string }): LogContext {
   return {
-    requestId: (Array.isArray(req.headers['x-request-id']) ? req.headers['x-request-id'][0] : req.headers['x-request-id']) || Math.random().toString(36).substring(7),
-    userAgent: Array.isArray(req.headers['user-agent']) ? req.headers['user-agent'][0] : req.headers['user-agent'],
-    ip: (Array.isArray(req.headers['x-forwarded-for']) ? req.headers['x-forwarded-for'][0] : req.headers['x-forwarded-for']) || req.connection?.remoteAddress,
+    requestId: getHeaderValue(req.headers, 'x-request-id') || Math.random().toString(36).substring(7),
+    userAgent: getHeaderValue(req.headers, 'user-agent'),
+    ip: getHeaderValue(req.headers, 'x-forwarded-for') || ('connection' in req ? req.connection?.remoteAddress : undefined),
     method: req.method,
     url: req.url
   };
