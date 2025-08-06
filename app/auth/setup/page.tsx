@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,8 +21,12 @@ export default function TOTPSetupPage() {
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
   const [backupCodesSaved, setBackupCodesSaved] = useState(false);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
+    // Prevent double execution in development mode
+    if (hasFetched.current) return;
+    hasFetched.current = true;
     fetchSetupData();
   }, []);
 
@@ -30,6 +34,12 @@ export default function TOTPSetupPage() {
     try {
       const response = await fetch('/api/auth/setup');
       if (!response.ok) {
+        const errorData = await response.json();
+        // If TOTP is already configured, redirect to verification
+        if (response.status === 400 && errorData.error === 'TOTP already configured') {
+          window.location.href = '/auth/verify';
+          return;
+        }
         throw new Error('Failed to fetch setup data');
       }
       const data = await response.json();

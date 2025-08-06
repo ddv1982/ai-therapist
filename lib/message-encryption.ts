@@ -118,7 +118,8 @@ export function decryptSessionReportContent(encryptedReportContent: string): str
 export function isContentEncrypted(content: string): boolean {
   try {
     // Encrypted content should be base64 and longer than typical plain text
-    if (content.length > 100 && /^[A-Za-z0-9+/=]+$/.test(content)) {
+    // Also check if it looks like our encryption format (base64 with sufficient length)
+    if (content.length > 50 && /^[A-Za-z0-9+/=]+$/.test(content)) {
       // Try to decode as base64 to verify format
       Buffer.from(content, 'base64');
       return true;
