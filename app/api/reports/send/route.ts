@@ -452,7 +452,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Report generated and sent successfully' 
+      message: 'Report generated and sent successfully',
+      reportContent: completion // Return the report content so it can be added to chat
     });
 
   } catch (error) {

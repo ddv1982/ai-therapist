@@ -543,6 +543,12 @@ export default function ChatPage() {
 
   const generateAndSendReport = async () => {
     if (!emailAddress.trim() || !currentSession || messages.length === 0) {
+      console.log('Report generation failed - missing data:', {
+        hasEmail: !!emailAddress.trim(),
+        hasSession: !!currentSession,
+        messageCount: messages.length,
+        currentSessionValue: currentSession
+      });
       showToast({
         type: 'warning',
         title: 'Missing Information',
@@ -550,6 +556,8 @@ export default function ChatPage() {
       });
       return;
     }
+
+    console.log('Generating report for session:', currentSession);
 
     // Validate email configuration if not using console logging
     if (emailService === 'smtp') {
@@ -586,7 +594,7 @@ export default function ChatPage() {
         },
         body: JSON.stringify({
           sessionId: currentSession,
-          messages: messages,
+          messages: messages.filter(msg => !msg.content.startsWith('📊 **Session Report**')), // Exclude previous reports
           emailAddress: emailAddress.trim(),
           model: model,
           emailConfig: {
@@ -600,15 +608,43 @@ export default function ChatPage() {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        
+        // Add the report content to the current chat
+        if (result.reportContent && currentSession) {
+          const reportMessage = {
+            id: Date.now().toString(),
+            role: 'assistant' as const,
+            content: `📊 **Session Report**\n\n${result.reportContent}`,
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, reportMessage]);
+          
+          // Save the report message to database
+          try {
+            await saveMessage(currentSession, 'assistant', reportMessage.content);
+          } catch (error) {
+            console.error('Failed to save report message:', error);
+          }
+        }
+        
         showToast({
           type: 'success',
           title: 'Report Sent',
-          message: 'Report has been sent to your email address!'
+          message: 'Report has been sent to your email and added to this chat!'
         });
         setShowEmailModal(false);
-        setEmailAddress('');
+        // Don't clear email address - keep it for future use
       } else {
         const error = await response.json();
+        console.error('Report generation failed:', {
+          status: response.status,
+          error: error,
+          currentSession: currentSession,
+          messagesLength: messages.length
+        });
+        
         let errorMessage = `Failed to send report: ${error.error || 'Unknown error'}`;
         if (error.details) {
           errorMessage += ` Details: ${error.details}`;
@@ -1275,10 +1311,7 @@ export default function ChatPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    setShowEmailModal(false);
-                    setEmailAddress('');
-                  }}
+                  onClick={() => setShowEmailModal(false)}
                   className="rounded-full h-8 w-8 p-0 hover:bg-muted"
                 >
                   <X className="w-4 h-4" />
@@ -1421,10 +1454,7 @@ export default function ChatPage() {
                 <div className="flex gap-3 pt-2">
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      setShowEmailModal(false);
-                      setEmailAddress('');
-                    }}
+                    onClick={() => setShowEmailModal(false)}
                     disabled={isGeneratingReport}
                     className="flex-1"
                   >
