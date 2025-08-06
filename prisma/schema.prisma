@@ -6,30 +6,29 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 model User {
   id        String   @id @default(uuid())
-  email     String   @unique @db.VarChar(255)
-  name      String?  @db.VarChar(255)
+  email     String   @unique
+  name      String?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   sessions Session[]
 
-  @@index([email])
   @@map("users")
 }
 
 model Session {
   id        String    @id @default(uuid())
   userId    String    @map("user_id")
-  title     String    @db.VarChar(500)
+  title     String
   startedAt DateTime  @default(now()) @map("started_at")
   endedAt   DateTime? @map("ended_at")
-  status    String    @default("active") @db.VarChar(50)
+  status    String    @default("active")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
 
@@ -37,27 +36,19 @@ model Session {
   messages Message[]
   reports  SessionReport[]
 
-  @@index([userId])
-  @@index([createdAt])
-  @@index([status])
-  @@index([userId, status])
   @@map("sessions")
 }
 
 model Message {
   id        String   @id @default(uuid())
   sessionId String   @map("session_id")
-  role      String   @db.VarChar(20) // 'user' or 'assistant'
-  content   String   @db.Text // Encrypted therapeutic message content
+  role      String // 'user' or 'assistant'
+  content   String // Encrypted therapeutic message content
   timestamp DateTime @default(now())
   createdAt DateTime @default(now()) @map("created_at")
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
-  @@index([sessionId])
-  @@index([timestamp])
-  @@index([role])
-  @@index([sessionId, timestamp])
   @@map("messages")
 }
 
@@ -69,21 +60,19 @@ model SessionReport {
   therapeuticInsights Json     @map("therapeutic_insights") // JSON for structured data
   patternsIdentified  Json     @map("patterns_identified") // JSON for structured data
   actionItems         Json     @map("action_items") // JSON for structured data
-  moodAssessment      String?  @map("mood_assessment") @db.VarChar(500)
-  progressNotes       String?  @map("progress_notes") @db.Text
+  moodAssessment      String?  @map("mood_assessment")
+  progressNotes       String?  @map("progress_notes")
   createdAt           DateTime @default(now()) @map("created_at")
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
-  @@index([sessionId])
-  @@index([createdAt])
   @@map("session_reports")
 }
 
 model AuthConfig {
   id          String   @id @default(uuid())
-  secret      String   @db.Text // Encrypted TOTP secret key - stores base64 encrypted data
-  backupCodes String   @db.Text // Encrypted JSON array of backup codes
+  secret      String // Encrypted TOTP secret key - stores base64 encrypted data
+  backupCodes String // Encrypted JSON array of backup codes
   isSetup     Boolean  @default(false) @map("is_setup")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -94,39 +83,30 @@ model AuthConfig {
 
 model TrustedDevice {
   id          String   @id @default(uuid())
-  deviceId    String   @unique @map("device_id") @db.VarChar(64) // Cryptographically secure device identifier
-  name        String   @db.VarChar(255) // User-friendly device name
-  fingerprint String   @db.VarChar(64) // SHA-256 device fingerprint hash (64 hex chars)
-  ipAddress   String   @map("ip_address") @db.VarChar(45) // IPv6 max length
-  userAgent   String   @map("user_agent") @db.Text // User agent can be long
+  deviceId    String   @unique @map("device_id") // Cryptographically secure device identifier
+  name        String // User-friendly device name
+  fingerprint String // SHA-256 device fingerprint hash (64 hex chars)
+  ipAddress   String   @map("ip_address") // IPv6 max length
+  userAgent   String   @map("user_agent") // User agent can be long
   lastSeen    DateTime @map("last_seen")
   trustedAt   DateTime @default(now()) @map("trusted_at")
   createdAt   DateTime @default(now()) @map("created_at")
 
   authSessions AuthSession[]
 
-  @@index([deviceId])
-  @@index([fingerprint])
-  @@index([lastSeen])
-  @@index([trustedAt])
   @@map("trusted_devices")
 }
 
 model AuthSession {
   id           String   @id @default(uuid())
-  sessionToken String   @unique @map("session_token") @db.VarChar(128) // Cryptographically secure session token
+  sessionToken String   @unique @map("session_token") // Cryptographically secure session token
   deviceId     String   @map("device_id")
-  ipAddress    String   @map("ip_address") @db.VarChar(45) // IPv6 max length
+  ipAddress    String   @map("ip_address") // IPv6 max length
   expiresAt    DateTime @map("expires_at")
   lastActivity DateTime @default(now()) @map("last_activity")
   createdAt    DateTime @default(now()) @map("created_at")
 
   device TrustedDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 
-  @@index([sessionToken])
-  @@index([deviceId])
-  @@index([expiresAt])
-  @@index([deviceId, expiresAt])
-  @@index([lastActivity])
   @@map("auth_sessions")
 }

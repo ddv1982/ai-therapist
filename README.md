@@ -39,7 +39,7 @@ A modern, responsive therapeutic AI application built with Next.js 14, providing
 ### Prerequisites
 - Node.js 18+ 
 - npm or yarn
-- PostgreSQL 12+ (for production) or SQLite (development)
+- SQLite (included - no setup required)
 
 ### Installation
 
@@ -191,8 +191,7 @@ Create a `.env.local` file with:
 
 ```bash
 # Required
-DATABASE_URL="postgresql://username:password@localhost:5432/ai_therapist"
-# For development: DATABASE_URL="file:./dev.db"
+DATABASE_URL="file:./prisma/dev.db"
 GROQ_API_KEY="your_groq_api_key_here"
 
 # Required for security features
@@ -227,8 +226,8 @@ NODE_ENV="development"
 - **Enterprise-Grade Encryption** - AES-256-GCM encryption for all sensitive data
 - **TOTP Authentication** - Time-based two-factor authentication with encrypted secrets
 - **Device Trust Management** - Enhanced fingerprinting with 30-day sessions
-- **Database Security** - PostgreSQL with field-level encryption
-- **CSRF Protection** - Cryptographically signed tokens prevent cross-site attacks
+- **Database Security** - SQLite with field-level encryption
+- **Content Security Policy** - CSP headers prevent XSS attacks
 - **Secure Token Generation** - Cryptographically secure random generation only
 - **No External Data Sharing** - Data only sent to Groq API for responses
 - **Backup Code Recovery** - Encrypted backup codes for account recovery
@@ -345,8 +344,7 @@ If you encounter any issues:
 - Check if the key is properly set in environment or UI
 
 **Database Issues**  
-- **PostgreSQL**: Ensure PostgreSQL is running and connection string is correct
-- **Development**: Use SQLite with `DATABASE_URL="file:./dev.db"`
+- **SQLite**: Database file created automatically in `prisma/dev.db`
 - Run `npm run db:generate && npm run db:push` to reset database
 - Use `scripts/migrate-to-single-user.js` to consolidate existing sessions
 
@@ -388,7 +386,7 @@ This therapeutic AI application now implements **enterprise-level security** sui
 - **End-to-End Testing**: Complete authentication flow testing
 
 #### **Database Security**
-- **PostgreSQL Production**: Standardized on PostgreSQL with proper constraints
+- **SQLite Database**: Lightweight, embedded database with encryption
 - **SQL Injection Prevention**: Parameterized queries and input validation
 - **Cascade Delete Protection**: Proper foreign key relationships prevent data inconsistencies
 

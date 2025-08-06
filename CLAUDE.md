@@ -22,7 +22,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Important Notes
 - Always run `npm run db:generate` after modifying `prisma/schema.prisma`
 - Use `db:push` for development, `db:migrate` for production deployments
-- The app requires PostgreSQL database and Groq API key to function
+- The app requires SQLite database (auto-created) and Groq API key to function
 - `npm run dev` binds to `0.0.0.0` for network access from other devices
 - Use `npm run dev:local` if you only want localhost access
 
@@ -33,7 +33,7 @@ This is a compassionate AI therapist application built with specific therapeutic
 
 ### Key Architectural Components
 
-**Database Schema (Prisma + PostgreSQL)**
+**Database Schema (Prisma + SQLite)**
 - `User` → `Session` → `Message` relationship for chat history
 - `SessionReport` for therapeutic insights and progress tracking
 - All models use UUID primary keys and proper cascade deletes
@@ -128,9 +128,9 @@ This is a compassionate AI therapist application built with specific therapeutic
 ### Environment Requirements
 
 **Required Environment Variables**
-- `DATABASE_URL` - PostgreSQL connection string
+- `DATABASE_URL` - SQLite database file path (e.g., `file:./prisma/dev.db`)
 - `GROQ_API_KEY` - Groq API key (auto-detected by frontend, hides manual input when present)
-- `NEXTAUTH_SECRET` - For future authentication features
+- `NEXTAUTH_SECRET` - For authentication features
 
 **Optional Environment Variables (for Email Reports)**
 - Configure your preferred email service in `/app/api/reports/send/route.ts`
@@ -142,7 +142,7 @@ This is a compassionate AI therapist application built with specific therapeutic
 - Frontend checks `/api/env` route to detect if environment variable exists
 
 **Database Setup**
-- PostgreSQL required with UUID extension
+- SQLite embedded database (no setup required)
 - Prisma handles all database operations
 - Schema supports cascading deletes for data integrity
 - Field-level encryption for sensitive therapeutic data
@@ -161,7 +161,7 @@ This is a compassionate AI therapist application built with specific therapeutic
 - Added field-level encryption for therapeutic message content
 - Implemented CSRF protection with signed tokens
 - Enhanced input validation and sanitization
-- Database migration to PostgreSQL with proper constraints
+- Database schema optimized for SQLite with proper constraints
 
 **Code Quality:**
 - Enabled TypeScript strict mode
@@ -188,7 +188,7 @@ This is a compassionate AI therapist application built with specific therapeutic
 - [x] TOTP secrets encrypted at rest
 - [x] Device fingerprinting enhanced
 - [x] Secure token generation implemented
-- [x] Database schema standardized on PostgreSQL
+- [x] Database schema standardized on SQLite
 
 ✅ **High Priority Improvements:**
 - [x] Content Security Policy headers implemented
