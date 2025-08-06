@@ -253,7 +253,7 @@ function showAuthenticationModal(): NextResponse {
 </body>
 </html>`;
   
-  return new Response(html, {
+  return new NextResponse(html, {
     status: 200,
     headers: {
       'Content-Type': 'text/html',

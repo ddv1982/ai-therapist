@@ -1,6 +1,12 @@
 import Groq from 'groq-sdk';
 import type { Message } from '@/types/chat';
 
+// Simplified message type for report generation (only needs role and content)
+export interface ReportMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
@@ -34,7 +40,7 @@ export const createTherapyCompletion = async (messages: Message[], systemPrompt:
   return completion;
 };
 
-export const generateSessionReport = async (messages: Message[], systemPrompt: string, model: string = 'openai/gpt-oss-120b') => {
+export const generateSessionReport = async (messages: ReportMessage[], systemPrompt: string, model: string = 'openai/gpt-oss-120b') => {
   const groqMessages: GroqMessage[] = [
     {
       role: 'system',

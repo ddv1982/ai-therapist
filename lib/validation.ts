@@ -101,40 +101,79 @@ export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown):
   }
 }
 
-// Email report validation schema
-export const emailReportSchema = z.object({
+
+// Simple message schema for report generation (only needs role and content)
+export const reportMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']).refine((val) => val === 'user' || val === 'assistant', {
+    message: "Role must be 'user' or 'assistant'"
+  }),
+  content: z.string()
+    .min(1, 'Message content cannot be empty')
+    .max(50000, 'Message content too long'),
+});
+
+// Session report generation validation schema
+export const reportGenerationSchema = z.object({
   sessionId: z.string()
     .uuid('Invalid session ID format'),
-  messages: z.array(messageSchema)
-    .min(1, 'At least one message is required'),
-  emailAddress: z.string()
-    .email('Invalid email address format')
-    .max(254, 'Email address too long'),
+  messages: z.array(reportMessageSchema)
+    .min(1, 'At least one message is required')
+    .max(1000, 'Too many messages (max 1000)'),
   model: z.string()
     .min(1, 'Model name required')
     .max(100, 'Model name too long')
     .optional(),
-  emailConfig: z.object({
-    service: z.enum(['console', 'smtp'], {
-      errorMap: () => ({ message: 'Service must be either "console" or "smtp"' })
-    }),
-    smtpHost: z.string().min(1, 'SMTP host is required').optional(),
-    smtpUser: z.string().email('Invalid SMTP user email').optional(),
-    smtpPass: z.string().min(1, 'SMTP password is required').optional(),
-    fromEmail: z.string()
-      .min(1, 'From email is required')
-      .regex(/^(?:[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|.+<[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}>)$/, 
-        'Invalid from email format (use: email@domain.com or "Name <email@domain.com>")')
-      .optional()
-  }).refine((data) => {
-    if (data.service === 'smtp') {
-      return data.smtpHost && data.smtpUser && data.smtpPass && data.fromEmail;
-    }
-    return true;
-  }, {
-    message: 'SMTP configuration fields are required when using SMTP service'
-  }).optional()
 });
+
+// API key validation schema
+export const apiKeySchema = z.object({
+  apiKey: z.string()
+    .min(10, 'API key too short')
+    .max(200, 'API key too long')
+    .regex(/^[A-Za-z0-9_-]+$/, 'API key contains invalid characters'),
+});
+
+// Model settings validation schema
+export const modelSettingsSchema = z.object({
+  model: z.string()
+    .min(1, 'Model name required')
+    .max(100, 'Model name too long'),
+  temperature: z.number()
+    .min(0, 'Temperature must be between 0 and 2')
+    .max(2, 'Temperature must be between 0 and 2'),
+  maxTokens: z.number()
+    .int('Max tokens must be an integer')
+    .min(256, 'Max tokens must be at least 256')
+    .max(131072, 'Max tokens cannot exceed 131,072'),
+  topP: z.number()
+    .min(0.1, 'Top P must be between 0.1 and 1.0')
+    .max(1.0, 'Top P must be between 0.1 and 1.0'),
+});
+
+// Input sanitization utilities
+export const sanitizeInput = {
+  /**
+   * Sanitize user input by removing potentially harmful content
+   */
+  text: (input: string): string => {
+    return input
+      .trim()
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters
+      .replace(/\s+/g, ' '); // Normalize whitespace
+  },
+
+  /**
+   * Sanitize HTML content (basic protection)
+   */
+  html: (input: string): string => {
+    return input
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;');
+  },
+};
 
 // Type exports for validated data
 export type ChatRequestInput = z.infer<typeof chatRequestSchema>;
@@ -142,4 +181,6 @@ export type ChatMessageInput = z.infer<typeof chatMessageSchema>;
 export type CreateSessionInput = z.infer<typeof createSessionSchema>;
 export type MessageInput = z.infer<typeof messageSchema>;
 export type SessionIdInput = z.infer<typeof sessionIdSchema>;
-export type EmailReportInput = z.infer<typeof emailReportSchema>;
+export type ReportGenerationInput = z.infer<typeof reportGenerationSchema>;
+export type ApiKeyInput = z.infer<typeof apiKeySchema>;
+export type ModelSettingsInput = z.infer<typeof modelSettingsSchema>;

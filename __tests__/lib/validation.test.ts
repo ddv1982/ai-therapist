@@ -1,4 +1,4 @@
-import { validateRequest, chatRequestSchema, messageSchema, emailReportSchema } from '@/lib/validation'
+import { validateRequest, chatRequestSchema, messageSchema, reportGenerationSchema } from '@/lib/validation'
 
 describe('Validation Functions', () => {
   describe('validateRequest', () => {
@@ -122,73 +122,47 @@ describe('Validation Functions', () => {
     })
   })
 
-  describe('emailReportSchema', () => {
+  describe('reportGenerationSchema', () => {
     const validMessage = {
       role: 'user' as const,
-      content: 'Test message',
-      sessionId: '123e4567-e89b-12d3-a456-426614174000'
+      content: 'Test message'
     }
 
-    it('should validate console email report', () => {
-      const validReport = {
+    it('should validate report generation request', () => {
+      const validRequest = {
         sessionId: '123e4567-e89b-12d3-a456-426614174000',
         messages: [validMessage],
-        emailAddress: 'test@example.com',
-        emailConfig: {
-          service: 'console' as const
-        }
+        model: 'openai/gpt-oss-120b'
       }
 
-      const result = validateRequest(emailReportSchema, validReport)
+      const result = validateRequest(reportGenerationSchema, validRequest)
       expect(result.success).toBe(true)
     })
 
-    it('should validate SMTP email report', () => {
-      const validReport = {
-        sessionId: '123e4567-e89b-12d3-a456-426614174000',
-        messages: [validMessage],
-        emailAddress: 'test@example.com',
-        emailConfig: {
-          service: 'smtp' as const,
-          smtpHost: 'smtp.gmail.com',
-          smtpUser: 'user@gmail.com',
-          smtpPass: 'password',
-          fromEmail: 'from@example.com'
-        }
+    it('should reject invalid session ID', () => {
+      const invalidRequest = {
+        sessionId: 'invalid-uuid',
+        messages: [validMessage]
       }
 
-      const result = validateRequest(emailReportSchema, validReport)
-      expect(result.success).toBe(true)
-    })
-
-    it('should reject invalid email address', () => {
-      const invalidReport = {
-        sessionId: '123e4567-e89b-12d3-a456-426614174000',
-        messages: [validMessage],
-        emailAddress: 'not-an-email'
-      }
-
-      const result = validateRequest(emailReportSchema, invalidReport)
+      const result = validateRequest(reportGenerationSchema, invalidRequest)
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain('Invalid email address format')
+        expect(result.error).toContain('Invalid session ID format')
       }
     })
 
-    it('should reject SMTP config without required fields', () => {
-      const invalidReport = {
+    it('should reject empty messages array', () => {
+      const invalidRequest = {
         sessionId: '123e4567-e89b-12d3-a456-426614174000',
-        messages: [validMessage],
-        emailAddress: 'test@example.com',
-        emailConfig: {
-          service: 'smtp' as const,
-          smtpHost: 'smtp.gmail.com'
-          // Missing required SMTP fields
-        }
+        messages: []
       }
 
-      const result = validateRequest(emailReportSchema, invalidReport)
+      const result = validateRequest(reportGenerationSchema, invalidRequest)
       expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error).toContain('At least one message is required')
+      }
     })
   })
 })

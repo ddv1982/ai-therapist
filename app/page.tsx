@@ -5,18 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { 
-  Settings, 
   Send, 
-  Plus, 
-  MessageSquare, 
   FileText,
-  Trash2,
   Menu,
-  X,
   Heart,
-  Sparkles,
   User,
-  Mail
+  Settings,
+  Plus,
+  MessageSquare,
+  Trash2,
+  X,
+  Sparkles
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import ReactMarkdown from 'react-markdown';
@@ -25,6 +24,8 @@ import type { ModelConfig } from '@/types/index';
 import { generateUUID } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
+import { SessionSidebar } from '@/components/chat/session-sidebar';
+import { SettingsPanel } from '@/components/chat/settings-panel';
 
 interface Message {
   id: string;
@@ -61,20 +62,12 @@ export default function ChatPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState('100vh');
   const [availableModels, setAvailableModels] = useState<ModelConfig[]>([]);
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [emailAddress, setEmailAddress] = useState('');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-  const [emailService, setEmailService] = useState('smtp');
-  const [smtpHost, setSmtpHost] = useState('smtp.gmail.com');
-  const [smtpUser, setSmtpUser] = useState('');
-  const [smtpPass, setSmtpPass] = useState('');
-  const [fromEmail, setFromEmail] = useState('AI Therapist <noreply@therapist.ai>');
-  const [saveEmailSettings, setSaveEmailSettings] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Model-specific token limits
-  const getModelMaxTokens = (modelName: string): number => {
+  // Model-specific token limits (memoized for performance)
+  const getModelMaxTokens = useCallback((modelName: string): number => {
     // First check if we have the model in our available models list
     const modelInfo = availableModels.find(m => m.id === modelName);
     if (modelInfo && modelInfo.maxTokens) {
@@ -83,10 +76,10 @@ export default function ChatPage() {
     
     // Fallback to default limit if model not found in API data
     return 8192;
-  };
+  }, [availableModels]);
 
-  // Load sessions from database on component mount
-  const loadSessions = async () => {
+  // Load sessions from database on component mount (memoized)
+  const loadSessions = useCallback(async () => {
     try {
       const response = await fetch('/api/sessions');
       if (response.ok) {
@@ -96,16 +89,16 @@ export default function ChatPage() {
     } catch (error) {
       console.error('Failed to load sessions:', error);
     }
-  };
+  }, []);
 
-  // Load messages for a specific session
-  const loadMessages = async (sessionId: string) => {
+  // Load messages for a specific session (memoized)
+  const loadMessages = useCallback(async (sessionId: string) => {
     try {
       const response = await fetch(`/api/messages?sessionId=${sessionId}`);
       if (response.ok) {
         const messagesData = await response.json();
         // Convert timestamp strings to Date objects
-        const formattedMessages = messagesData.map((msg: any) => ({
+        const formattedMessages = messagesData.map((msg: { id: string; role: string; content: string; timestamp: string }) => ({
           ...msg,
           timestamp: new Date(msg.timestamp)
         }));
@@ -114,10 +107,10 @@ export default function ChatPage() {
     } catch (error) {
       console.error('Failed to load messages:', error);
     }
-  };
+  }, []);
 
-  // Save message to database
-  const saveMessage = async (sessionId: string, role: 'user' | 'assistant', content: string) => {
+  // Save message to database (memoized)
+  const saveMessage = useCallback(async (sessionId: string, role: 'user' | 'assistant', content: string) => {
     try {
       const response = await fetch('/api/messages', {
         method: 'POST',
@@ -141,7 +134,7 @@ export default function ChatPage() {
       console.error('Error saving message:', error);
       return null;
     }
-  };
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -154,7 +147,7 @@ export default function ChatPage() {
   // Load sessions on component mount
   useEffect(() => {
     loadSessions();
-  }, []);
+  }, [loadSessions]);
 
   // Check if environment variable is set
   useEffect(() => {
@@ -172,29 +165,6 @@ export default function ChatPage() {
     return () => abortController.abort();
   }, []);
 
-  // Load saved email settings
-  useEffect(() => {
-    const savedEmailSettings = localStorage.getItem('emailSettings');
-    if (savedEmailSettings) {
-      try {
-        const settings = JSON.parse(savedEmailSettings);
-        setEmailService(settings.emailService || 'smtp');
-        setSmtpHost(settings.smtpHost || 'smtp.gmail.com');
-        setSmtpUser(settings.smtpUser || '');
-        setSmtpPass(settings.smtpPass || '');
-        setFromEmail(settings.fromEmail || 'AI Therapist <noreply@therapist.ai>');
-        // Load saved email address and checkbox state
-        if (settings.emailAddress) {
-          setEmailAddress(settings.emailAddress);
-        }
-        if (settings.saveEmailSettings !== undefined) {
-          setSaveEmailSettings(settings.saveEmailSettings);
-        }
-      } catch (error) {
-        console.error('Failed to load email settings:', error);
-      }
-    }
-  }, []);
 
   // Load saved model settings
   useEffect(() => {
@@ -336,6 +306,16 @@ export default function ChatPage() {
     };
     localStorage.setItem('modelSettings', JSON.stringify(modelSettings));
   }, [model, temperature, maxTokens, topP]);
+
+  // Memoized current model data for performance
+  const currentModelData = useMemo(() => {
+    return availableModels.find(m => m.id === model);
+  }, [availableModels, model]);
+
+  // Memoized model max tokens calculation
+  const currentModelMaxTokens = useMemo(() => {
+    return getModelMaxTokens(model);
+  }, [getModelMaxTokens, model]);
 
   const startNewSession = () => {
     // Just clear current session and messages - don't create DB session yet
@@ -515,7 +495,7 @@ export default function ChatPage() {
         });
       }
     }
-  }, [input, isLoading, apiKey, hasEnvApiKey, model, messages, currentSession, showToast]);
+  }, [input, isLoading, apiKey, hasEnvApiKey, model, messages, currentSession, showToast, temperature, maxTokens, topP, saveMessage]);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -534,60 +514,22 @@ export default function ChatPage() {
     sendMessage();
   }, [sendMessage]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
 
-  const generateAndSendReport = async () => {
-    if (!emailAddress.trim() || !currentSession || messages.length === 0) {
-      console.log('Report generation failed - missing data:', {
-        hasEmail: !!emailAddress.trim(),
-        hasSession: !!currentSession,
-        messageCount: messages.length,
-        currentSessionValue: currentSession
-      });
+  const generateReport = async () => {
+    if (!currentSession || messages.length === 0) {
       showToast({
         type: 'warning',
-        title: 'Missing Information',
-        message: 'Please enter a valid email address and ensure you have messages in the current session.'
+        title: 'No Session Data',
+        message: 'Please ensure you have messages in the current session to generate a report.'
       });
       return;
     }
 
     console.log('Generating report for session:', currentSession);
 
-    // Validate email configuration if not using console logging
-    if (emailService === 'smtp') {
-      if (!smtpHost.trim() || !smtpUser.trim() || !smtpPass.trim() || !fromEmail.trim()) {
-        showToast({
-          type: 'warning',
-          title: 'SMTP Configuration Required',
-          message: 'Please fill in all SMTP configuration fields or use console logging for testing.'
-        });
-        return;
-      }
-    }
-
-    // Save email settings if requested
-    if (saveEmailSettings) {
-      const emailSettingsToSave = {
-        emailService,
-        smtpHost,
-        smtpUser,
-        smtpPass,
-        fromEmail,
-        emailAddress: emailAddress.trim(),
-        saveEmailSettings: true
-      };
-      localStorage.setItem('emailSettings', JSON.stringify(emailSettingsToSave));
-    }
-
     setIsGeneratingReport(true);
     try {
-      const response = await fetch('/api/reports/send', {
+      const response = await fetch('/api/reports/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -595,15 +537,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           sessionId: currentSession,
           messages: messages.filter(msg => !msg.content.startsWith('📊 **Session Report**')), // Exclude previous reports
-          emailAddress: emailAddress.trim(),
-          model: model,
-          emailConfig: {
-            service: emailService,
-            smtpHost: smtpHost.trim(),
-            smtpUser: smtpUser.trim(),
-            smtpPass: smtpPass.trim(),
-            fromEmail: fromEmail.trim()
-          }
+          model: model
         }),
       });
 
@@ -631,11 +565,9 @@ export default function ChatPage() {
         
         showToast({
           type: 'success',
-          title: 'Report Sent',
-          message: 'Report has been sent to your email and added to this chat!'
+          title: 'Report Generated',
+          message: 'Session report has been added to this chat!'
         });
-        setShowEmailModal(false);
-        // Don't clear email address - keep it for future use
       } else {
         const error = await response.json();
         console.error('Report generation failed:', {
@@ -645,22 +577,18 @@ export default function ChatPage() {
           messagesLength: messages.length
         });
         
-        let errorMessage = `Failed to send report: ${error.error || 'Unknown error'}`;
-        if (error.details) {
-          errorMessage += ` Details: ${error.details}`;
-        }
         showToast({
-          type: 'error', 
-          title: 'Email Failed',
-          message: errorMessage
+          type: 'error',
+          title: 'Report Failed',
+          message: error.error || 'Failed to generate report. Please try again.'
         });
       }
     } catch (error) {
-      console.error('Error sending report:', error);
+      console.error('Error generating report:', error);
       showToast({
         type: 'error',
         title: 'Report Failed',
-        message: 'Failed to send report. Please try again.'
+        message: 'Failed to generate report. Please try again.'
       });
     } finally {
       setIsGeneratingReport(false);
@@ -979,21 +907,22 @@ export default function ChatPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowEmailModal(true)}
-                  className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors relative overflow-hidden group touch-manipulation"
+                  onClick={generateReport}
+                  disabled={isGeneratingReport}
+                  className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors relative overflow-hidden group touch-manipulation disabled:opacity-50"
                   style={{
                     WebkitTapHighlightColor: 'transparent'
                   }}
                   title="Generate session report"
                 >
                   <div className="shimmer-effect"></div>
-                  <FileText className="w-5 h-5 relative z-10" />
+                  {isGeneratingReport ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin relative z-10" />
+                  ) : (
+                    <FileText className="w-5 h-5 relative z-10" />
+                  )}
                 </Button>
               )}
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-accent/50 text-accent-foreground">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span className="text-therapy-sm font-medium">Online</span>
-              </div>
             </div>
           </div>
           {/* Decorative gradient line */}
@@ -1124,17 +1053,17 @@ export default function ChatPage() {
                       <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                          h1: ({node, ...props}) => <h1 className="text-xl sm:text-2xl font-bold mb-4 text-foreground border-b border-border/30 pb-2" {...props} />,
-                          h2: ({node, ...props}) => <h2 className="text-lg sm:text-xl font-semibold mb-3 text-foreground mt-6 first:mt-0" {...props} />,
-                          h3: ({node, ...props}) => <h3 className="text-base sm:text-lg font-semibold mb-2 text-foreground mt-4 first:mt-0" {...props} />,
-                          h4: ({node, ...props}) => <h4 className="text-sm sm:text-base font-semibold mb-2 text-foreground mt-3 first:mt-0" {...props} />,
-                          p: ({node, ...props}) => <p className="mb-4 text-foreground leading-relaxed last:mb-0" {...props} />,
-                          strong: ({node, ...props}) => <strong className="font-bold text-foreground bg-primary/10 px-1 py-0.5 rounded" {...props} />,
-                          em: ({node, ...props}) => <em className="italic text-accent font-medium" {...props} />,
-                          ol: ({node, ...props}) => <ol className="list-decimal ml-6 mb-4 space-y-2 text-foreground" {...props} />,
-                          ul: ({node, ...props}) => <ul className="list-disc ml-6 mb-4 space-y-2 text-foreground" {...props} />,
-                          li: ({node, ...props}) => <li className="text-foreground leading-relaxed pl-1" {...props} />,
-                          blockquote: ({node, ...props}) => (
+                          h1: ({...props}) => <h1 className="text-xl sm:text-2xl font-bold mb-4 text-foreground border-b border-border/30 pb-2" {...props} />,
+                          h2: ({...props}) => <h2 className="text-lg sm:text-xl font-semibold mb-3 text-foreground mt-6 first:mt-0" {...props} />,
+                          h3: ({...props}) => <h3 className="text-base sm:text-lg font-semibold mb-2 text-foreground mt-4 first:mt-0" {...props} />,
+                          h4: ({...props}) => <h4 className="text-sm sm:text-base font-semibold mb-2 text-foreground mt-3 first:mt-0" {...props} />,
+                          p: ({...props}) => <p className="mb-4 text-foreground leading-relaxed last:mb-0" {...props} />,
+                          strong: ({...props}) => <strong className="font-bold text-foreground bg-primary/10 px-1 py-0.5 rounded" {...props} />,
+                          em: ({...props}) => <em className="italic text-accent font-medium" {...props} />,
+                          ol: ({...props}) => <ol className="list-decimal ml-6 mb-4 space-y-2 text-foreground" {...props} />,
+                          ul: ({...props}) => <ul className="list-disc ml-6 mb-4 space-y-2 text-foreground" {...props} />,
+                          li: ({...props}) => <li className="text-foreground leading-relaxed pl-1" {...props} />,
+                          blockquote: ({...props}) => (
                             <blockquote className="border-l-4 border-primary bg-primary/5 pl-6 pr-4 py-3 my-4 rounded-r-lg italic text-foreground relative" {...props}>
                               <div className="absolute top-2 left-2 text-primary/50 text-xl">&quot;</div>
                             </blockquote>
@@ -1148,19 +1077,19 @@ export default function ChatPage() {
                               <code className="block bg-muted p-4 rounded-lg text-sm text-foreground font-mono border border-border/30 overflow-x-auto my-4" {...props} />
                             );
                           },
-                          pre: ({node, ...props}) => <pre className="bg-muted p-4 rounded-lg border border-border/30 overflow-x-auto my-4" {...props} />,
-                          a: ({node, ...props}) => <a className="text-primary hover:text-primary/80 underline underline-offset-2 font-medium" {...props} />,
-                          hr: ({node, ...props}) => <hr className="border-border/50 my-6" {...props} />,
-                          table: ({node, ...props}) => (
+                          pre: ({...props}) => <pre className="bg-muted p-4 rounded-lg border border-border/30 overflow-x-auto my-4" {...props} />,
+                          a: ({...props}) => <a className="text-primary hover:text-primary/80 underline underline-offset-2 font-medium" {...props} />,
+                          hr: ({...props}) => <hr className="border-border/50 my-6" {...props} />,
+                          table: ({...props}) => (
                             <div className="overflow-x-auto my-6 rounded-lg border border-border/30 bg-card shadow-sm">
                               <table className="w-full border-collapse" {...props} />
                             </div>
                           ),
-                          thead: ({node, ...props}) => <thead className="bg-primary/10 border-b border-border/30" {...props} />,
-                          tbody: ({node, ...props}) => <tbody {...props} />,
-                          tr: ({node, ...props}) => <tr className="border-b border-border/20 last:border-b-0 hover:bg-muted/20 transition-colors" {...props} />,
-                          th: ({node, ...props}) => <th className="px-4 py-3 text-left font-semibold text-foreground text-sm uppercase tracking-wide bg-primary/5" {...props} />,
-                          td: ({node, ...props}) => <td className="px-4 py-3 text-foreground border-r border-border/10 last:border-r-0" {...props} />,
+                          thead: ({...props}) => <thead className="bg-primary/10 border-b border-border/30" {...props} />,
+                          tbody: ({...props}) => <tbody {...props} />,
+                          tr: ({...props}) => <tr className="border-b border-border/20 last:border-b-0 hover:bg-muted/20 transition-colors" {...props} />,
+                          th: ({...props}) => <th className="px-4 py-3 text-left font-semibold text-foreground text-sm uppercase tracking-wide bg-primary/5" {...props} />,
+                          td: ({...props}) => <td className="px-4 py-3 text-foreground border-r border-border/10 last:border-r-0" {...props} />,
                         }}
                       >
                         {message.content}
@@ -1293,196 +1222,6 @@ export default function ChatPage() {
         </div>
       </main>
 
-      {/* Email Report Modal */}
-      {showEmailModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-lg w-full border border-border/50 animate-fade-in max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">Send Session Report</h3>
-                    <p className="text-sm text-muted-foreground">Configure email and generate therapeutic session summary</p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowEmailModal(false)}
-                  className="rounded-full h-8 w-8 p-0 hover:bg-muted"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="text-sm font-medium block mb-2">
-                    Recipient Email Address
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={emailAddress}
-                    onChange={(e) => setEmailAddress(e.target.value)}
-                    placeholder="Enter recipient email address"
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
-                    disabled={isGeneratingReport}
-                    style={{
-                      fontSize: isMobile ? '16px' : undefined // Prevent zoom on iOS
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium block mb-2">
-                    Email Service
-                  </label>
-                  <select
-                    value={emailService}
-                    onChange={(e) => setEmailService(e.target.value)}
-                    className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
-                    disabled={isGeneratingReport}
-                  >
-                    <option value="console">Console Log (Testing)</option>
-                    <option value="smtp">SMTP (Gmail, Outlook, etc.)</option>
-                  </select>
-                </div>
-
-                {emailService === 'smtp' && (
-                  <>
-                    <div>
-                      <label className="text-sm font-medium block mb-2">
-                        SMTP Host (pre-filled for Gmail)
-                      </label>
-                      <input
-                        type="text"
-                        value={smtpHost}
-                        onChange={(e) => setSmtpHost(e.target.value)}
-                        placeholder="Enter SMTP host"
-                        className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
-                        disabled={isGeneratingReport}
-                        style={{
-                          fontSize: isMobile ? '16px' : undefined
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium block mb-2">
-                        SMTP Username/Email
-                      </label>
-                      <input
-                        type="email"
-                        value={smtpUser}
-                        onChange={(e) => setSmtpUser(e.target.value)}
-                        placeholder="your-email@gmail.com"
-                        className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
-                        disabled={isGeneratingReport}
-                        style={{
-                          fontSize: isMobile ? '16px' : undefined
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium block mb-2">
-                        SMTP Password/App Password
-                      </label>
-                      <input
-                        type="password"
-                        value={smtpPass}
-                        onChange={(e) => setSmtpPass(e.target.value)}
-                        placeholder="Your app password"
-                        className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
-                        disabled={isGeneratingReport}
-                        style={{
-                          fontSize: isMobile ? '16px' : undefined
-                        }}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        For Gmail: Use an App Password, not your regular password. 
-                        <br />Go to Google Account → Security → App passwords
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium block mb-2">
-                        From Email Address (can be any address)
-                      </label>
-                      <input
-                        type="text"
-                        value={fromEmail}
-                        onChange={(e) => setFromEmail(e.target.value)}
-                        placeholder="Enter from email address"
-                        className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all"
-                        disabled={isGeneratingReport}
-                        style={{
-                          fontSize: isMobile ? '16px' : undefined
-                        }}
-                      />
-                    </div>
-                  </>
-                )}
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="saveSettings"
-                    checked={saveEmailSettings}
-                    onChange={(e) => setSaveEmailSettings(e.target.checked)}
-                    className="rounded border-border focus:ring-2 focus:ring-primary/30"
-                    disabled={isGeneratingReport}
-                  />
-                  <label htmlFor="saveSettings" className="text-sm text-muted-foreground">
-                    Save email configuration for future use
-                  </label>
-                </div>
-
-                <div className="bg-muted/30 p-3 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    {emailService === 'console' 
-                      ? "Email will be logged to console for testing. Check server logs to see the report content."
-                      : "The report will include key themes, insights, and recommendations from your current session."
-                    }
-                  </p>
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowEmailModal(false)}
-                    disabled={isGeneratingReport}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={generateAndSendReport}
-                    disabled={isGeneratingReport || !emailAddress.trim()}
-                    className="flex-1 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white"
-                  >
-                    {isGeneratingReport ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        Sending...
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        {emailService === 'console' ? 'Generate Report' : 'Send Report'}
-                      </div>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

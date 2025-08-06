@@ -125,25 +125,24 @@ while (true) {
 }
 ```
 
-#### Email Report Generation
+#### Session Report Generation
 
 ```typescript
-const reportResponse = await fetch('/api/reports/send', {
+const reportResponse = await fetch('/api/reports/generate', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     sessionId: 'session-uuid',
-    emailAddress: 'user@example.com',
-    messages: sessionMessages,
-    emailConfig: {
-      service: 'smtp',
-      smtpHost: 'smtp.gmail.com',
-      smtpUser: 'your-email@gmail.com',
-      smtpPass: 'your-app-password',
-      fromEmail: 'therapist@yourapp.com'
-    }
+    messages: sessionMessages.map(m => ({
+      role: m.role,
+      content: m.content
+    })),
+    model: 'openai/gpt-oss-120b'
   })
 });
+
+const { reportContent } = await reportResponse.json();
+// Report content is returned to be displayed in chat
 ```
 
 ## 🏗️ Architecture
