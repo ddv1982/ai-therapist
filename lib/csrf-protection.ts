@@ -75,7 +75,7 @@ export function verifyCSRFToken(providedToken: string): boolean {
     }
     
     return timingSafeEqual(providedSignature, expectedSignatureBuffer);
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -143,7 +143,7 @@ export function getCSRFTokenFromCookies(request: NextRequest): string | null {
 /**
  * Generate initial CSRF response for pages
  */
-export function createCSRFProtectedResponse(request: NextRequest): NextResponse {
+export function createCSRFProtectedResponse(_request: NextRequest): NextResponse {
   const response = NextResponse.next();
   return addCSRFTokenToResponse(response);
 }
@@ -159,7 +159,7 @@ export interface CSRFHeaders {
  * Helper to get CSRF headers for client-side API calls
  * This is used in the frontend to add CSRF tokens to requests
  */
-export function getCSRFHeaders(): CSRFHeaders | {} {
+export function getCSRFHeaders(): CSRFHeaders | Record<string, never> {
   if (typeof window === 'undefined') {
     return {}; // Server-side, no CSRF headers needed
   }

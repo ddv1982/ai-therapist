@@ -42,7 +42,7 @@ export async function GET() {
 
     // Filter and format models for the UI  
     const availableModels = models.data
-      .filter((model) => (model as any).active)
+      .filter((model) => (model as GroqModel).active)
       .map((model) => {
         const groqModel = model as GroqModel;
         const apiMaxTokens = groqModel.context_window || 4096;

@@ -85,16 +85,25 @@ export function decryptSensitiveData(encryptedData: string): string {
 }
 
 /**
+ * Backup code interface for type safety
+ */
+interface BackupCode {
+  code: string;
+  used: boolean;
+  usedAt?: Date;
+}
+
+/**
  * Encrypt backup codes array
  */
-export function encryptBackupCodes(backupCodes: any[]): string {
+export function encryptBackupCodes(backupCodes: BackupCode[]): string {
   return encryptSensitiveData(JSON.stringify(backupCodes));
 }
 
 /**
  * Decrypt backup codes array
  */
-export function decryptBackupCodes(encryptedBackupCodes: string): any[] {
+export function decryptBackupCodes(encryptedBackupCodes: string): BackupCode[] {
   const decrypted = decryptSensitiveData(encryptedBackupCodes);
   return JSON.parse(decrypted);
 }

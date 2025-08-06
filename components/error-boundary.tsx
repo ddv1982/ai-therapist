@@ -25,11 +25,11 @@ interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
+  public override state: State = {
     hasError: false
   };
 
-  public override static getDerivedStateFromError(error: Error): State {
+  public static getDerivedStateFromError(error: Error): State {
     // Collect browser and network information for debugging
     const errorDetails = {
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',

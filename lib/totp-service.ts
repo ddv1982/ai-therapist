@@ -3,6 +3,7 @@ import QRCode from 'qrcode';
 import { prisma } from '@/lib/db';
 import { generateSecureRandomString } from '@/lib/utils';
 import { encryptSensitiveData, decryptSensitiveData, encryptBackupCodes, decryptBackupCodes } from '@/lib/crypto-utils';
+import { logger } from '@/lib/logger';
 
 export interface TOTPSetupData {
   secret: string;
@@ -125,11 +126,11 @@ export async function getTOTPDiagnostics(token?: string): Promise<{
  */
 export async function verifyTOTPToken(token: string): Promise<boolean> {
   const verificationId = Math.random().toString(36).substring(7);
-  console.log(`  🔍 [${verificationId}] TOTP verification starting`);
+  logger.debug(`TOTP verification starting`, { verificationId });
   
   const config = await prisma.authConfig.findFirst();
   if (!config || !config.isSetup) {
-    console.error(`  ❌ [${verificationId}] TOTP verification failed: No config or not setup`);
+    logger.debug(`TOTP verification failed: No config or not setup`, { verificationId });
     return false;
   }
 
@@ -138,10 +139,10 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
 
   // Clean and validate token format
   const cleanToken = token.replace(/\s/g, ''); // Remove any whitespace
-  console.log(`  🧽 [${verificationId}] Token cleaned: "${token}" -> "${cleanToken}"`);
+  logger.debug(`Token cleaned`, { verificationId, originalToken: token, cleanToken });
   
   if (!/^\d{6}$/.test(cleanToken)) {
-    console.error(`  ❌ [${verificationId}] Invalid token format: "${cleanToken}" (length: ${cleanToken.length})`);
+    logger.debug(`Invalid token format`, { verificationId, cleanToken, length: cleanToken.length });
     return false;
   }
 
@@ -153,10 +154,10 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
     time: currentTime,
   });
   
-  console.log(`  🕰 [${verificationId}] Server time: ${new Date().toISOString()}`);
-  console.log(`  🔢 [${verificationId}] Current server token: ${currentToken}`);
-  console.log(`  📱 [${verificationId}] Provided token: ${cleanToken}`);
-  console.log(`  ⚖️ [${verificationId}] Tokens match: ${currentToken === cleanToken ? 'YES' : 'NO'}`);
+  logger.debug(`Server time`, { verificationId, serverTime: new Date().toISOString() });
+  logger.debug(`Current server token`, { verificationId, currentToken });
+  logger.debug(`Provided token`, { verificationId, providedToken: cleanToken });
+  logger.debug(`Tokens match check`, { verificationId, match: currentToken === cleanToken });
 
   // Verification with window tolerance
   const verified = speakeasy.totp.verify({
@@ -166,11 +167,11 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
     window: 4, // Increased from 2 to 4 for better multi-device support
   });
 
-  console.log(`  ${verified ? '✅' : '❌'} [${verificationId}] TOTP verification: ${verified ? 'SUCCESS' : 'FAILED'}`);
+  logger.debug(`TOTP verification result`, { verificationId, verified, result: verified ? 'SUCCESS' : 'FAILED' });
   
   // If verification failed, show time windows for debugging
   if (!verified) {
-    console.log(`  🔍 [${verificationId}] Checking time windows for token match:`);
+    logger.debug(`Checking time windows for token match`, { verificationId });
     let foundMatch = false;
     
     for (let i = -6; i <= 6; i++) {
@@ -183,15 +184,13 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
       const matches = testToken === cleanToken;
       
       if (matches) {
-        console.log(`  ⭐ [${verificationId}] MATCH FOUND at window ${i} (${i * 30}s offset): ${testToken}`);
-        console.log(`  🕰 [${verificationId}] Match time: ${new Date(testTime * 1000).toISOString()}`);
+        logger.debug(`MATCH FOUND at time window`, { verificationId, window: i, offset: i * 30, testToken, matchTime: new Date(testTime * 1000).toISOString() });
         foundMatch = true;
       }
     }
     
     if (!foundMatch) {
-      console.log(`  ❌ [${verificationId}] No token match found in any time window`);
-      console.log(`  💡 [${verificationId}] Possible issues: device time sync, wrong secret, or expired token`);
+      logger.debug(`No token match found in any time window`, { verificationId, possibleIssues: 'device time sync, wrong secret, or expired token' });
     }
   }
   
