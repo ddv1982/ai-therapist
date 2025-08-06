@@ -3,7 +3,6 @@
  * Creates unique user sessions per device/browser for privacy
  */
 
-import { generateUUID } from '@/lib/utils';
 
 /**
  * Generate a consistent user ID based on browser characteristics

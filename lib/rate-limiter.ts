@@ -17,7 +17,7 @@ interface RateLimitConfig {
 
 class NetworkRateLimiter {
   private store = new Map<string, RateLimitEntry>();
-  private cleanupInterval: any = null;
+  private cleanupInterval: NodeJS.Timeout | null = null;
   
   private readonly config: RateLimitConfig = {
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -129,7 +129,6 @@ class NetworkRateLimiter {
    * Get suspicious activity report
    */
   getSuspiciousActivity(): Array<{ ip: string; attempts: number; lastAttempt: number }> {
-    const now = Date.now();
     const suspicious: Array<{ ip: string; attempts: number; lastAttempt: number }> = [];
 
     for (const [ip, entry] of Array.from(this.store.entries())) {

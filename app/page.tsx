@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -25,8 +25,6 @@ import { generateUUID } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
 import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/memory-utils';
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
-import { SessionSidebar } from '@/components/chat/session-sidebar';
-import { SettingsPanel } from '@/components/chat/settings-panel';
 
 interface Message {
   id: string;
@@ -234,7 +232,7 @@ export default function ChatPage() {
       });
 
     return () => abortController.abort();
-  }, [model]);
+  }, [model, maxTokens]);
 
   // Update maxTokens when model changes or available models data loads
   useEffect(() => {
@@ -244,7 +242,7 @@ export default function ChatPage() {
         setMaxTokens(modelLimit);
       }
     }
-  }, [model, availableModels]);
+  }, [model, availableModels, getModelMaxTokens, maxTokens]);
 
   // Mobile detection with dynamic resize handling and iOS viewport fixes
   useEffect(() => {
@@ -313,15 +311,6 @@ export default function ChatPage() {
     localStorage.setItem('modelSettings', JSON.stringify(modelSettings));
   }, [model, temperature, maxTokens, topP]);
 
-  // Memoized current model data for performance
-  const currentModelData = useMemo(() => {
-    return availableModels.find(m => m.id === model);
-  }, [availableModels, model]);
-
-  // Memoized model max tokens calculation
-  const currentModelMaxTokens = useMemo(() => {
-    return getModelMaxTokens(model);
-  }, [getModelMaxTokens, model]);
 
   const startNewSession = () => {
     // Just clear current session and messages - don't create DB session yet
@@ -465,7 +454,7 @@ export default function ChatPage() {
                     : msg
                 ));
               }
-            } catch (e) {
+            } catch {
               // Skip invalid JSON lines
             }
           }

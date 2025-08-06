@@ -4,7 +4,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { formatDuration } from '@/lib/utils';
 import type { SessionControlsProps } from '@/types/session';
-import { Play, Square, Pause } from 'lucide-react';
+import { Play, Square } from 'lucide-react';
 
 export function SessionControls({
   sessionId,

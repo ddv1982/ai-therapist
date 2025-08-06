@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
 import { Groq } from 'groq-sdk';
 
+interface GroqModel {
+  id: string;
+  owned_by?: string;
+  active: boolean;
+  context_window?: number;
+}
+
 export async function GET() {
   try {
     const groqApiKey = process.env.GROQ_API_KEY;
@@ -33,8 +40,8 @@ export async function GET() {
 
     // Filter and format models for the UI
     const availableModels = models.data
-      .filter((model: any) => model.active)
-      .map((model: any) => {
+      .filter((model: GroqModel) => model.active)
+      .map((model: GroqModel) => {
         const apiMaxTokens = model.context_window || 4096;
         return {
           id: model.id,

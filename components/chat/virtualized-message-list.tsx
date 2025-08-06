@@ -41,7 +41,7 @@ function VirtualizedMessageListComponent({
 
   return (
     <div className={containerClassName}>
-      {visibleMessages.map((message, index) => (
+      {visibleMessages.map((message) => (
         <div
           key={message.id}
           role="article"

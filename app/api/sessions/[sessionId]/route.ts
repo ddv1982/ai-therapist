@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
+interface SessionUpdateData {
+  updatedAt: Date;
+  status?: string;
+  endedAt?: Date | null;
+  title?: string;
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { sessionId: string } }
@@ -13,7 +20,7 @@ export async function PATCH(
     const { getDeviceUserInfo } = await import('@/lib/user-session');
     const deviceUser = getDeviceUserInfo(request);
 
-    const updateData: any = {
+    const updateData: SessionUpdateData = {
       updatedAt: new Date(),
     };
 

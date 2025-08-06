@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Groq } from 'groq-sdk';
 import { buildMemoryEnhancedPrompt, type MemoryContext } from '@/lib/therapy-prompts';
-import { chatRequestSchema, validateRequest } from '@/lib/validation';
 import { logger, createRequestLogger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { memo, useMemo } from 'react';
+import type { Components } from 'react-markdown';
 import { User, Heart } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -18,23 +19,23 @@ interface ChatMessageProps {
 }
 
 // Memoized markdown components to prevent recreation on every render
-const markdownComponents = {
-  h1: ({node, ...props}: any) => <h1 className="text-xl sm:text-2xl font-bold mb-4 text-foreground border-b border-border/30 pb-2" {...props} />,
-  h2: ({node, ...props}: any) => <h2 className="text-lg sm:text-xl font-semibold mb-3 text-foreground mt-6 first:mt-0" {...props} />,
-  h3: ({node, ...props}: any) => <h3 className="text-base sm:text-lg font-semibold mb-2 text-foreground mt-4 first:mt-0" {...props} />,
-  h4: ({node, ...props}: any) => <h4 className="text-sm sm:text-base font-semibold mb-2 text-foreground mt-3 first:mt-0" {...props} />,
-  p: ({node, ...props}: any) => <p className="mb-4 text-foreground leading-relaxed last:mb-0" {...props} />,
-  strong: ({node, ...props}: any) => <strong className="font-bold text-foreground bg-primary/10 px-1 py-0.5 rounded" {...props} />,
-  em: ({node, ...props}: any) => <em className="italic text-accent font-medium" {...props} />,
-  ol: ({node, ...props}: any) => <ol className="list-decimal ml-6 mb-4 space-y-2 text-foreground" {...props} />,
-  ul: ({node, ...props}: any) => <ul className="list-disc ml-6 mb-4 space-y-2 text-foreground" {...props} />,
-  li: ({node, ...props}: any) => <li className="text-foreground leading-relaxed pl-1" {...props} />,
-  blockquote: ({node, ...props}: any) => (
+const markdownComponents: Components = {
+  h1: ({ ...props }) => <h1 className="text-xl sm:text-2xl font-bold mb-4 text-foreground border-b border-border/30 pb-2" {...props} />,
+  h2: ({ ...props }) => <h2 className="text-lg sm:text-xl font-semibold mb-3 text-foreground mt-6 first:mt-0" {...props} />,
+  h3: ({ ...props }) => <h3 className="text-base sm:text-lg font-semibold mb-2 text-foreground mt-4 first:mt-0" {...props} />,
+  h4: ({ ...props }) => <h4 className="text-sm sm:text-base font-semibold mb-2 text-foreground mt-3 first:mt-0" {...props} />,
+  p: ({ ...props }) => <p className="mb-4 text-foreground leading-relaxed last:mb-0" {...props} />,
+  strong: ({ ...props }) => <strong className="font-bold text-foreground bg-primary/10 px-1 py-0.5 rounded" {...props} />,
+  em: ({ ...props }) => <em className="italic text-accent font-medium" {...props} />,
+  ol: ({ ...props }) => <ol className="list-decimal ml-6 mb-4 space-y-2 text-foreground" {...props} />,
+  ul: ({ ...props }) => <ul className="list-disc ml-6 mb-4 space-y-2 text-foreground" {...props} />,
+  li: ({ ...props }) => <li className="text-foreground leading-relaxed pl-1" {...props} />,
+  blockquote: ({ ...props }) => (
     <blockquote className="border-l-4 border-primary bg-primary/5 pl-6 pr-4 py-3 my-4 rounded-r-lg italic text-foreground relative" {...props}>
       <div className="absolute top-2 left-2 text-primary/50 text-xl">&quot;</div>
     </blockquote>
   ),
-  code: ({node, ...props}: any) => {
+  code: ({ node, ...props }) => {
     const isInline = node?.tagName !== 'pre';
     return isInline ? (
       <code className="bg-muted px-2 py-1 rounded text-sm font-mono text-foreground border border-border/50" {...props} />

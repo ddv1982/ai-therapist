@@ -16,6 +16,10 @@ export enum LogLevel {
   DEBUG = 'debug'
 }
 
+interface ErrorWithCode extends Error {
+  code?: string | number;
+}
+
 export interface LogContext {
   userId?: string;
   sessionId?: string;
@@ -23,7 +27,7 @@ export interface LogContext {
   userAgent?: string;
   timestamp?: string;
   requestId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface LogEntry {
@@ -160,7 +164,7 @@ class Logger {
     this.error(`API Error: ${endpoint}`, {
       ...context,
       apiEndpoint: endpoint,
-      errorCode: (error as any).code,
+      errorCode: (error as ErrorWithCode).code,
       errorType: error.constructor.name
     }, error);
   }
@@ -169,7 +173,7 @@ class Logger {
     this.error(`Database Error: ${operation}`, {
       ...context,
       operation,
-      errorCode: (error as any).code,
+      errorCode: (error as ErrorWithCode).code,
       errorType: error.constructor.name
     }, error);
   }
@@ -196,21 +200,21 @@ class Logger {
 export const logger = new Logger();
 
 // Express-style middleware for request logging
-export function createRequestLogger(req: any): LogContext {
+export function createRequestLogger(req: { headers: Record<string, string | string[] | undefined>, method?: string, url?: string, connection?: { remoteAddress?: string } }): LogContext {
   return {
-    requestId: req.headers['x-request-id'] || Math.random().toString(36).substring(7),
-    userAgent: req.headers['user-agent'],
-    ip: req.headers['x-forwarded-for'] || req.connection?.remoteAddress,
+    requestId: (Array.isArray(req.headers['x-request-id']) ? req.headers['x-request-id'][0] : req.headers['x-request-id']) || Math.random().toString(36).substring(7),
+    userAgent: Array.isArray(req.headers['user-agent']) ? req.headers['user-agent'][0] : req.headers['user-agent'],
+    ip: (Array.isArray(req.headers['x-forwarded-for']) ? req.headers['x-forwarded-for'][0] : req.headers['x-forwarded-for']) || req.connection?.remoteAddress,
     method: req.method,
     url: req.url
   };
 }
 
 // Helper for safely logging objects with potential circular references
-export function safeStringify(obj: any, maxDepth = 3): string {
+export function safeStringify(obj: unknown, maxDepth = 3): string {
   const seen = new WeakSet();
   
-  function stringify(value: any, depth = 0): any {
+  function stringify(value: unknown, depth = 0): unknown {
     if (depth > maxDepth) return '[Max depth reached]';
     if (value === null) return null;
     if (typeof value !== 'object') return value;
@@ -222,7 +226,7 @@ export function safeStringify(obj: any, maxDepth = 3): string {
       return value.map(item => stringify(item, depth + 1));
     }
     
-    const result: any = {};
+    const result: Record<string, unknown> = {};
     for (const [key, val] of Object.entries(value)) {
       result[key] = stringify(val, depth + 1);
     }
@@ -232,7 +236,7 @@ export function safeStringify(obj: any, maxDepth = 3): string {
   
   try {
     return JSON.stringify(stringify(obj));
-  } catch (error) {
+  } catch {
     return '[Failed to stringify object]';
   }
 }

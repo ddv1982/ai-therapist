@@ -4,7 +4,6 @@ import { REPORT_GENERATION_PROMPT } from '@/lib/therapy-prompts';
 import { prisma } from '@/lib/db';
 import { logger, createRequestLogger } from '@/lib/logger';
 import { reportGenerationSchema, validateRequest } from '@/lib/validation';
-import type { ReportGenerationInput } from '@/lib/validation';
 
 
 export async function POST(request: NextRequest) {

@@ -12,7 +12,7 @@ import type { Session } from '@/types/session';
 import { Send } from 'lucide-react';
 import { generateSessionTitle, generateUUID } from '@/lib/utils';
 
-export function ChatInterface({ sessionId, initialMessages = [] }: ChatInterfaceProps) {
+export function ChatInterface({ initialMessages = [] }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -158,7 +158,7 @@ export function ChatInterface({ sessionId, initialMessages = [] }: ChatInterface
                   )
                 );
               }
-            } catch (e) {
+            } catch {
               // Skip invalid JSON
             }
           }
