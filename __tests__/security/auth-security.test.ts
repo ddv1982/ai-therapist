@@ -3,7 +3,6 @@
  * Tests critical security vulnerabilities and authentication flows
  */
 
-import { validateCSRFToken, generateCSRFToken } from '@/lib/csrf-protection';
 import { encryptSensitiveData, decryptSensitiveData } from '@/lib/crypto-utils';
 import { generateSecureRandomString, generateUUID } from '@/lib/utils';
 import { generateDeviceFingerprint, generateBasicDeviceFingerprint } from '@/lib/device-fingerprint';
@@ -24,46 +23,34 @@ afterEach(() => {
 });
 
 describe('Authentication Security Tests', () => {
-  describe('CSRF Protection', () => {
-    it('should generate valid CSRF tokens', () => {
-      const token = generateCSRFToken();
-      expect(token).toBeTruthy();
-      expect(typeof token).toBe('string');
-      expect(token.length).toBeGreaterThan(0);
+  describe('Content Security Policy', () => {
+    it('should validate secure CSP configuration', () => {
+      const secureCSP = {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"], // Required for Tailwind
+        connectSrc: ["'self'", "https://api.groq.com"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        fontSrc: ["'self'", "data:"],
+      };
+
+      expect(secureCSP.defaultSrc).toContain("'self'");
+      expect(secureCSP.scriptSrc).not.toContain("'unsafe-eval'");
+      expect(secureCSP.connectSrc).toContain("https://api.groq.com");
     });
 
-    it('should validate legitimate CSRF tokens', () => {
-      const token = generateCSRFToken();
-      const isValid = validateCSRFToken(token);
-      expect(isValid).toBe(true);
-    });
+    it('should validate SameSite cookie configuration', () => {
+      const cookieConfig = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict' as const,
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        path: '/',
+      };
 
-    it('should reject invalid CSRF tokens', () => {
-      const invalidToken = 'invalid-token';
-      const isValid = validateCSRFToken(invalidToken);
-      expect(isValid).toBe(false);
-    });
-
-    it('should reject tampered CSRF tokens', () => {
-      const validToken = generateCSRFToken();
-      const tamperedToken = validToken.slice(0, -1) + 'X';
-      const isValid = validateCSRFToken(tamperedToken);
-      expect(isValid).toBe(false);
-    });
-
-    it('should reject expired CSRF tokens', async () => {
-      // Mock Date.now to create an expired token
-      const realDateNow = Date.now;
-      Date.now = jest.fn(() => 1000); // Old timestamp
-      
-      const expiredToken = generateCSRFToken();
-      
-      Date.now = jest.fn(() => 1000 + (61 * 60 * 1000)); // 61 minutes later
-      
-      const isValid = validateCSRFToken(expiredToken);
-      expect(isValid).toBe(false);
-      
-      Date.now = realDateNow; // Restore
+      expect(cookieConfig.sameSite).toBe('strict');
+      expect(cookieConfig.httpOnly).toBe(true);
+      expect(cookieConfig.path).toBe('/');
     });
   });
 

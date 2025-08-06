@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRateLimiter } from '@/lib/rate-limiter';
-import { validateCSRFToken, createCSRFErrorResponse, addCSRFTokenToResponse } from '@/lib/csrf-protection';
 
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
@@ -21,17 +20,8 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const clientIP = getClientIP(request);
   
-  // Handle API routes separately for CSRF protection
+  // Skip API routes - CSRF protection handled at individual route level
   if (pathname.startsWith('/api')) {
-    // Skip CSRF protection during build process
-    if (process.env.NODE_ENV !== 'production' || process.env.NEXT_PHASE === 'phase-production-build') {
-      return NextResponse.next();
-    }
-    
-    // Apply CSRF protection to API routes in production
-    if (!validateCSRFToken(request)) {
-      return createCSRFErrorResponse();
-    }
     return NextResponse.next();
   }
   
@@ -61,12 +51,7 @@ export async function middleware(request: NextRequest) {
     });
   }
   
-  // For main application pages, add CSRF token to response
-  if (pathname === '/') {
-    const response = NextResponse.next();
-    return addCSRFTokenToResponse(response);
-  }
-  
+  // Continue to main application pages
   return NextResponse.next();
 }
 

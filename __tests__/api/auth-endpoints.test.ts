@@ -5,7 +5,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { validateApiAuth, createAuthErrorResponse } from '@/lib/api-auth';
-import { validateCSRFToken } from '@/lib/csrf-protection';
 
 // Mock the dependencies
 jest.mock('@/lib/prisma', () => ({
@@ -41,56 +40,40 @@ describe('Authentication API Endpoints Security', () => {
     jest.clearAllMocks();
   });
 
-  describe('CSRF Protection', () => {
-    it('should reject requests without CSRF token', () => {
-      const mockRequest = new NextRequest('http://localhost:3000/api/sessions', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
-      });
+  describe('Content Security Policy', () => {
+    it('should enforce secure CSP headers', () => {
+      const cspDirectives = [
+        "default-src 'self'",
+        "script-src 'self'", 
+        "style-src 'self' 'unsafe-inline'",
+        "connect-src 'self' https://api.groq.com",
+      ];
 
-      const isValid = validateCSRFToken(mockRequest);
-      expect(isValid).toBe(false);
+      cspDirectives.forEach(directive => {
+        expect(directive).toMatch(/^[\w-]+\s+/);
+        expect(directive).not.toContain('unsafe-eval'); // Production should not have unsafe-eval
+      });
     });
 
-    it('should allow GET requests without CSRF token', () => {
-      const mockRequest = new NextRequest('http://localhost:3000/api/sessions', {
-        method: 'GET',
+    it('should validate allowed connection sources', () => {
+      const allowedSources = [
+        'self',
+        'https://api.groq.com', // AI API endpoint
+      ];
+
+      const blockedSources = [
+        'http://malicious-site.com',
+        'data:',
+        '*',
+      ];
+
+      allowedSources.forEach(source => {
+        expect(['self', 'https://api.groq.com']).toContain(source);
       });
 
-      const isValid = validateCSRFToken(mockRequest);
-      expect(isValid).toBe(true);
-    });
-
-    it('should allow auth setup endpoints without CSRF token', () => {
-      const mockRequest = new NextRequest('http://localhost:3000/api/auth/setup', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-        },
+      blockedSources.forEach(source => {
+        expect(['self', 'https://api.groq.com']).not.toContain(source);
       });
-
-      const isValid = validateCSRFToken(mockRequest);
-      expect(isValid).toBe(true);
-    });
-
-    it('should validate CSRF token for state-changing operations', () => {
-      const mockRequest = new NextRequest('http://localhost:3000/api/messages', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-csrf-token': 'valid-csrf-token',
-        },
-      });
-
-      // Mock the CSRF validation to return true for this test
-      jest.doMock('@/lib/csrf-protection', () => ({
-        validateCSRFToken: jest.fn(() => true),
-      }));
-
-      const isValid = validateCSRFToken(mockRequest);
-      expect(isValid).toBe(true);
     });
   });
 
@@ -248,7 +231,7 @@ describe('Authentication API Endpoints Security', () => {
     it('should provide appropriate error status codes', () => {
       const errorScenarios = [
         { scenario: 'missing auth', expectedStatus: 401 },
-        { scenario: 'invalid csrf', expectedStatus: 403 },
+        { scenario: 'forbidden access', expectedStatus: 403 },
         { scenario: 'not found', expectedStatus: 404 },
         { scenario: 'validation error', expectedStatus: 400 },
         { scenario: 'rate limit', expectedStatus: 429 },

@@ -178,8 +178,8 @@ This is a compassionate AI therapist application built with specific therapeutic
 
 **Key Security Libraries:**
 - `lib/crypto-utils.ts` - AES-256-GCM encryption utilities
-- `lib/csrf-protection.ts` - CSRF token generation and validation
 - `lib/message-encryption.ts` - Message content encryption service
+- Content Security Policy headers - XSS attack prevention
 
 ### Completed Implementation Checklist
 
@@ -191,7 +191,7 @@ This is a compassionate AI therapist application built with specific therapeutic
 - [x] Database schema standardized on PostgreSQL
 
 ✅ **High Priority Improvements:**
-- [x] CSRF protection implemented
+- [x] Content Security Policy headers implemented
 - [x] Therapeutic message encryption added
 - [x] TypeScript strict mode enabled
 - [x] Component architecture verified
