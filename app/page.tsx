@@ -148,10 +148,56 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages]);
 
-  // Load sessions on component mount
+  // Load current active session (memoized)
+  const loadCurrentSession = useCallback(async () => {
+    try {
+      // First try to get from localStorage for faster loading
+      const savedCurrentSession = localStorage.getItem('currentSessionId');
+      
+      const response = await fetch('/api/sessions/current');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.currentSession) {
+          const sessionId = data.currentSession.id;
+          setCurrentSession(sessionId);
+          await loadMessages(sessionId);
+          
+          // Save to localStorage for faster future loads
+          localStorage.setItem('currentSessionId', sessionId);
+          
+          console.log('Loaded current session:', sessionId, 'with', data.currentSession.messageCount, 'messages');
+          return;
+        }
+      }
+      
+      // Fallback: if no current session from API but we have one saved locally
+      if (savedCurrentSession) {
+        try {
+          // Verify the saved session still exists
+          const verifyResponse = await fetch(`/api/sessions/${savedCurrentSession}`);
+          if (verifyResponse.ok) {
+            setCurrentSession(savedCurrentSession);
+            await loadMessages(savedCurrentSession);
+            console.log('Restored session from localStorage:', savedCurrentSession);
+          } else {
+            // Saved session no longer exists, clear localStorage
+            localStorage.removeItem('currentSessionId');
+          }
+        } catch (error) {
+          console.error('Failed to verify saved session:', error);
+          localStorage.removeItem('currentSessionId');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load current session:', error);
+    }
+  }, [loadMessages]); // Removed currentSession dependency to avoid circular dependency
+
+  // Load sessions and current session on component mount
   useEffect(() => {
     loadSessions();
-  }, [loadSessions]);
+    loadCurrentSession();
+  }, [loadSessions, loadCurrentSession]);
 
   // Check if environment variable is set
   useEffect(() => {
@@ -312,10 +358,35 @@ export default function ChatPage() {
   }, [model, temperature, maxTokens, topP]);
 
 
+  // Set current session for cross-device continuity (memoized)
+  const setCurrentSessionAndSync = useCallback(async (sessionId: string) => {
+    try {
+      // Update the backend to mark this as the current session
+      await fetch('/api/sessions/current', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId }),
+      });
+      
+      setCurrentSession(sessionId);
+      localStorage.setItem('currentSessionId', sessionId);
+      await loadMessages(sessionId);
+    } catch (error) {
+      console.error('Failed to sync current session:', error);
+      // Still set locally even if sync fails
+      setCurrentSession(sessionId);
+      localStorage.setItem('currentSessionId', sessionId);
+      await loadMessages(sessionId);
+    }
+  }, [loadMessages]);
+
   const startNewSession = () => {
     // Just clear current session and messages - don't create DB session yet
     setCurrentSession(null);
     setMessages([]);
+    localStorage.removeItem('currentSessionId');
     // Focus the input field after starting new session
     setTimeout(() => textareaRef.current?.focus(), 100);
   };
@@ -331,6 +402,7 @@ export default function ChatPage() {
         if (currentSession === sessionId) {
           setCurrentSession(null);
           setMessages([]);
+          localStorage.removeItem('currentSessionId');
         }
       } else {
         console.error('Failed to delete session');
@@ -371,7 +443,9 @@ export default function ChatPage() {
         if (response.ok) {
           const newSession = await response.json();
           setSessions(prev => [newSession, ...prev]);
-          setCurrentSession(newSession.id);
+          
+          // Set as current session and sync across devices
+          await setCurrentSessionAndSync(newSession.id);
           sessionId = newSession.id;
         } else {
           console.error('Failed to create session');
@@ -491,7 +565,7 @@ export default function ChatPage() {
         });
       }
     }
-  }, [input, isLoading, apiKey, hasEnvApiKey, model, messages, currentSession, showToast, temperature, maxTokens, topP, saveMessage]);
+  }, [input, isLoading, apiKey, hasEnvApiKey, model, messages, currentSession, showToast, temperature, maxTokens, topP, saveMessage, setCurrentSessionAndSync]);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -694,8 +768,7 @@ export default function ChatPage() {
               <div 
                 className="flex items-start gap-3"
                 onClick={() => {
-                  setCurrentSession(session.id);
-                  loadMessages(session.id);
+                  setCurrentSessionAndSync(session.id);
                   // Hide sidebar on mobile after selecting a chat
                   if (isMobile) {
                     setShowSidebar(false);
