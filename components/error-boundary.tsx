@@ -70,24 +70,63 @@ export class ErrorBoundary extends Component<Props, State> {
         timestamp: new Date().toISOString()
       });
       
-      // Try to send error to an API endpoint for debugging (optional)
+      // Enhanced error reporting with retry logic
+      this.reportError(error, errorInfo);
+    }
+  }
+
+  private reportError = async (error: Error, errorInfo: ErrorInfo, retryCount = 0) => {
+    if (retryCount > 2) return; // Max 3 attempts
+
+    try {
+      const errorReport = {
+        error: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        viewport: {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          devicePixelRatio: window.devicePixelRatio
+        },
+        timestamp: new Date().toISOString(),
+        sessionId: sessionStorage.getItem('sessionId') || 'unknown',
+        userId: localStorage.getItem('userId') || 'anonymous',
+        errorBoundary: true,
+        retryAttempt: retryCount
+      };
+
+      const response = await fetch('/api/errors', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'X-Error-Boundary': 'true'
+        },
+        body: JSON.stringify(errorReport),
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+
+      if (!response.ok && retryCount < 2) {
+        // Retry after a delay
+        setTimeout(() => this.reportError(error, errorInfo, retryCount + 1), 2000);
+      }
+    } catch (fetchError) {
+      // Store error locally if reporting fails
       try {
-        fetch('/api/errors', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            error: error.message,
-            stack: error.stack,
-            componentStack: errorInfo.componentStack,
-            userAgent: navigator.userAgent,
-            url: window.location.href,
-            timestamp: new Date().toISOString()
-          })
-        }).catch(() => {
-          // Silently fail if error logging API is not available
+        const localErrors = JSON.parse(localStorage.getItem('unreportedErrors') || '[]');
+        localErrors.push({
+          error: error.message,
+          timestamp: new Date().toISOString(),
+          url: window.location.href
         });
+        localStorage.setItem('unreportedErrors', JSON.stringify(localErrors.slice(-10))); // Keep last 10
       } catch {
-        // Ignore fetch errors
+        // Ignore localStorage errors
+      }
+
+      if (retryCount < 2) {
+        setTimeout(() => this.reportError(error, errorInfo, retryCount + 1), 2000);
       }
     }
   }
@@ -118,6 +157,14 @@ export class ErrorBoundary extends Component<Props, State> {
                 ? 'A mobile Safari-specific error occurred. This might be related to network access or JavaScript compatibility.'
                 : 'We apologize for the inconvenience. The application encountered an unexpected error.'}
             </p>
+            
+            {/* Therapeutic-specific reassurance */}
+            <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+              <p className="text-sm text-primary/90">
+                <strong>Your therapeutic data is safe.</strong> This error doesn&apos;t affect your saved sessions or conversations. 
+                All your therapeutic progress remains secure and will be available once the issue is resolved.
+              </p>
+            </div>
             
             {this.state.errorDetails?.isNetworkUrl && (
               <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">

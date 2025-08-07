@@ -9,6 +9,8 @@
  * @version 1.0.0
  */
 
+import { generateRequestId } from './crypto-secure';
+
 export enum LogLevel {
   ERROR = 'error',
   WARN = 'warn',
@@ -216,7 +218,7 @@ export function createRequestLogger(req: {
   connection?: { remoteAddress?: string }
 } | { headers: Headers, method: string, url: string }): LogContext {
   return {
-    requestId: getHeaderValue(req.headers, 'x-request-id') || Math.random().toString(36).substring(7),
+    requestId: getHeaderValue(req.headers, 'x-request-id') || generateRequestId(),
     userAgent: getHeaderValue(req.headers, 'user-agent'),
     ip: getHeaderValue(req.headers, 'x-forwarded-for') || ('connection' in req ? req.connection?.remoteAddress : undefined),
     method: req.method,

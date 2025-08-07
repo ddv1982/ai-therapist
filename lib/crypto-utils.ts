@@ -116,6 +116,9 @@ export function generateEncryptionKey(): string {
   return randomBytes(32).toString('base64');
 }
 
+// Re-export backup code generation from consolidated crypto module
+export { generateBackupCodes } from './crypto-secure';
+
 /**
  * Validate encryption key strength
  */

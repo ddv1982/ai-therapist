@@ -47,6 +47,32 @@ export const sessionIdSchema = z.object({
     .uuid('Invalid session ID format'),
 });
 
+// Query parameters schema for fetching messages
+export const messagesQuerySchema = z.object({
+  sessionId: z.string()
+    .uuid('Invalid session ID format'),
+});
+
+// Session update validation schema
+export const updateSessionSchema = z.object({
+  title: z.string()
+    .min(1, 'Session title cannot be empty')
+    .max(200, 'Session title too long (max 200 characters)')
+    .trim()
+    .optional(),
+  status: z.string()
+    .min(1, 'Status cannot be empty')
+    .max(50, 'Status too long')
+    .optional(),
+  endedAt: z.string()
+    .datetime()
+    .nullable()
+    .optional(),
+}).refine(
+  (data) => Object.keys(data).length > 0,
+  { message: "At least one field must be provided for update" }
+);
+
 // Message validation schema
 export const messageSchema = z.object({
   role: z.enum(['user', 'assistant']).refine((val) => val === 'user' || val === 'assistant', {

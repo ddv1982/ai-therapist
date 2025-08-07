@@ -133,13 +133,17 @@ export default function ChatPage() {
       const response = await fetch('/api/sessions');
       if (response.ok) {
         const sessionsData = await response.json();
-        setSessions(sessionsData);
+        // Handle new standardized API response format
+        const sessions = sessionsData.success ? (sessionsData.data || []) : sessionsData;
+        setSessions(Array.isArray(sessions) ? sessions : []);
       } else {
         throw new Error(`Failed to load sessions: ${response.status}`);
       }
     } catch (error) {
       console.error('Failed to load sessions:', error);
       await logMobileError(error, 'loadSessions');
+      // Ensure sessions is always an array even on error
+      setSessions([]);
       showToast({
         type: 'error',
         title: 'Loading Error',
@@ -154,9 +158,14 @@ export default function ChatPage() {
       const response = await fetch(`/api/messages?sessionId=${sessionId}`);
       if (response.ok) {
         const messagesData = await response.json();
+        // Handle new standardized API response format
+        const messages = messagesData.success ? (messagesData.data || []) : messagesData;
+        const messageArray = Array.isArray(messages) ? messages : [];
+        
         // Convert timestamp strings to Date objects
-        const formattedMessages = messagesData.map((msg: { id: string; role: string; content: string; timestamp: string }) => ({
+        const formattedMessages = messageArray.map((msg: { id: string; role: string; content: string; timestamp: string }) => ({
           ...msg,
+          role: msg.role as 'user' | 'assistant',
           timestamp: new Date(msg.timestamp)
         }));
         setMessages(formattedMessages);
@@ -170,6 +179,8 @@ export default function ChatPage() {
     } catch (error) {
       console.error('Failed to load messages:', error);
       await logMobileError(error, 'loadMessages');
+      // Ensure messages is always an array even on error
+      setMessages([]);
       showToast({
         type: 'error',
         title: 'Loading Error',
@@ -194,7 +205,9 @@ export default function ChatPage() {
       });
 
       if (response.ok) {
-        return await response.json();
+        const result = await response.json();
+        // Handle new standardized API response format
+        return result.success ? result.data : result;
       } else {
         console.error('Failed to save message');
         return null;
@@ -222,15 +235,17 @@ export default function ChatPage() {
       const response = await fetch('/api/sessions/current');
       if (response.ok) {
         const data = await response.json();
-        if (data.currentSession) {
-          const sessionId = data.currentSession.id;
+        // Handle new standardized API response format
+        const currentSessionData = data.success ? data.data : data;
+        if (currentSessionData?.currentSession) {
+          const sessionId = currentSessionData.currentSession.id;
           setCurrentSession(sessionId);
           await loadMessages(sessionId);
           
           // Save to localStorage for faster future loads
           localStorage.setItem('currentSessionId', sessionId);
           
-          console.log('Loaded current session:', sessionId, 'with', data.currentSession.messageCount, 'messages');
+          console.log('Loaded current session:', sessionId, 'with', currentSessionData.currentSession.messageCount, 'messages');
           return;
         }
       }
@@ -506,7 +521,9 @@ export default function ChatPage() {
         });
 
         if (response.ok) {
-          const newSession = await response.json();
+          const result = await response.json();
+          // Handle new standardized API response format
+          const newSession = result.success ? result.data : result;
           setSessions(prev => [newSession, ...prev]);
           
           // Set as current session and sync across devices

@@ -1,5 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
+import { updateSessionSchema } from '@/lib/validation';
+import { withAuth, withValidationAndParams, db, errorHandlers } from '@/lib/api-middleware';
+import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api-response';
+import { logger } from '@/lib/logger';
 
 interface SessionUpdateData {
   updatedAt: Date;
@@ -8,109 +12,109 @@ interface SessionUpdateData {
   title?: string;
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { sessionId: string } }
-) {
-  try {
-    const { status, endedAt, title } = await request.json();
-    const { sessionId } = params;
+export const PATCH = withValidationAndParams(
+  updateSessionSchema,
+  async (request, context, validatedData, params) => {
+    try {
+      const { sessionId } = params;
+      const { status, endedAt, title } = validatedData;
 
-    // Get unified user ID for cross-device session access
-    const { getSingleUserInfo } = await import('@/lib/user-session');
-    const userInfo = getSingleUserInfo(request);
+      // Verify session belongs to this user
+      const { valid } = await db.verifySessionOwnership(sessionId, context.userInfo.userId);
+      if (!valid) {
+        return createNotFoundErrorResponse('Session', context.requestId);
+      }
 
-    const updateData: SessionUpdateData = {
-      updatedAt: new Date(),
-    };
+      const updateData: SessionUpdateData = {
+        updatedAt: new Date(),
+      };
 
-    if (status !== undefined) updateData.status = status;
-    if (endedAt !== undefined) updateData.endedAt = endedAt ? new Date(endedAt) : null;
-    if (title !== undefined) updateData.title = title;
+      if (status !== undefined) updateData.status = status;
+      if (endedAt !== undefined) updateData.endedAt = endedAt ? new Date(endedAt) : null;
+      if (title !== undefined) updateData.title = title;
 
-    const session = await prisma.session.update({
-      where: { 
-        id: sessionId,
-        userId: userInfo.userId // Ensure user can only update their own sessions
-      },
-      data: updateData,
-    });
-
-    return NextResponse.json(session);
-  } catch (error) {
-    console.error('Update session error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { sessionId: string } }
-) {
-  try {
-    const { sessionId } = params;
-
-    // Get unified user ID for cross-device session access
-    const { getSingleUserInfo } = await import('@/lib/user-session');
-    const userInfo = getSingleUserInfo(request);
-
-    const session = await prisma.session.findUnique({
-      where: { 
-        id: sessionId,
-        userId: userInfo.userId // Ensure user can only access their own sessions
-      },
-      include: {
-        messages: {
-          orderBy: { timestamp: 'asc' }
+      const session = await prisma.session.update({
+        where: { 
+          id: sessionId,
+          userId: context.userInfo.userId
         },
-        reports: true,
-      },
-    });
+        data: updateData,
+      });
 
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Session not found' },
-        { status: 404 }
+      logger.info('Session updated successfully', {
+        requestId: context.requestId,
+        sessionId,
+        updatedFields: Object.keys(validatedData),
+        userId: context.userInfo.userId
+      });
+
+      return createSuccessResponse(session, { requestId: context.requestId });
+    } catch (error) {
+      return errorHandlers.handleDatabaseError(
+        error as Error,
+        'update session',
+        context
       );
     }
-
-    return NextResponse.json(session);
-  } catch (error) {
-    console.error('Get session error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
   }
-}
+);
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { sessionId: string } }
-) {
+export const GET = withAuth(async (request, context, params) => {
   try {
     const { sessionId } = params;
 
-    // Get unified user ID for cross-device session access
-    const { getSingleUserInfo } = await import('@/lib/user-session');
-    const userInfo = getSingleUserInfo(request);
+    const session = await db.getSessionWithMessages(sessionId, context.userInfo.userId);
+
+    if (!session) {
+      return createNotFoundErrorResponse('Session', context.requestId);
+    }
+
+    logger.info('Session fetched successfully', {
+      requestId: context.requestId,
+      sessionId,
+      messageCount: session.messages.length,
+      userId: context.userInfo.userId
+    });
+
+    return createSuccessResponse(session, { requestId: context.requestId });
+  } catch (error) {
+    return errorHandlers.handleDatabaseError(
+      error as Error,
+      'fetch session',
+      context
+    );
+  }
+});
+
+export const DELETE = withAuth(async (request, context, params) => {
+  try {
+    const { sessionId } = params;
+
+    // Verify session belongs to this user before deleting
+    const { valid } = await db.verifySessionOwnership(sessionId, context.userInfo.userId);
+    if (!valid) {
+      return createNotFoundErrorResponse('Session', context.requestId);
+    }
 
     await prisma.session.delete({
       where: { 
         id: sessionId,
-        userId: userInfo.userId // Ensure user can only delete their own sessions
+        userId: context.userInfo.userId
       },
     });
 
-    return NextResponse.json({ success: true });
+    logger.info('Session deleted successfully', {
+      requestId: context.requestId,
+      sessionId,
+      userId: context.userInfo.userId
+    });
+
+    return createSuccessResponse({ success: true }, { requestId: context.requestId });
   } catch (error) {
-    console.error('Delete session error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return errorHandlers.handleDatabaseError(
+      error as Error,
+      'delete session',
+      context
     );
   }
-}
+});

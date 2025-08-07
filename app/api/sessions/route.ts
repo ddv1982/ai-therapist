@@ -1,137 +1,64 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
-import { createSessionSchema, validateRequest } from '@/lib/validation';
-import { logger, createRequestLogger } from '@/lib/logger';
-import { validateApiAuth, createAuthErrorResponse } from '@/lib/api-auth';
+import { createSessionSchema } from '@/lib/validation';
+import { logger } from '@/lib/logger';
+import { withValidation, withAuth, db, errorHandlers } from '@/lib/api-middleware';
+import { createSuccessResponse } from '@/lib/api-response';
 
-export async function POST(request: NextRequest) {
-  const requestContext = createRequestLogger(request);
-  
-  try {
-    // Validate authentication first
-    const authResult = await validateApiAuth(request);
-    if (!authResult.isValid) {
-      logger.warn('Unauthorized session creation request', { ...requestContext, error: authResult.error });
-      return createAuthErrorResponse(authResult.error || 'Authentication required');
-    }
-    
-    logger.info('Creating new session', requestContext);
-    
-    const body = await request.json();
-    
-    // Validate request body
-    const validation = validateRequest(createSessionSchema, body);
-    if (!validation.success) {
-      logger.validationError('/api/sessions', validation.error, requestContext);
-      return NextResponse.json(
-        { error: `Validation failed: ${validation.error}` },
-        { status: 400 }
-      );
-    }
+export const POST = withValidation(
+  createSessionSchema,
+  async (request, context, validatedData) => {
+    try {
+      const { title } = validatedData;
 
-    const { title } = validation.data;
-
-    // Get unified user ID for cross-device session access
-    const { getSingleUserInfo } = await import('@/lib/user-session');
-    const userInfo = getSingleUserInfo(request);
-
-    // Create or get device-specific user
-    await prisma.user.upsert({
-      where: { id: userInfo.userId },
-      update: {},
-      create: {
-        id: userInfo.userId,
-        email: userInfo.email,
-        name: userInfo.name,
-      },
-    });
-
-    const session = await prisma.session.create({
-      data: {
-        userId: userInfo.userId,
-        title,
-        status: 'active',
-      },
-    });
-
-    logger.info('Session created successfully', {
-      ...requestContext,
-      sessionId: session.id,
-      userId: userInfo.userId
-    });
-
-    return NextResponse.json(session);
-  } catch (error) {
-    const err = error as Error;
-    logger.databaseError('create session', err, requestContext);
-    
-    // Check for specific database errors
-    if (err.message.includes('UNIQUE constraint')) {
-      return NextResponse.json(
-        { 
-          error: 'Session creation failed',
-          details: 'A session with this identifier already exists',
-          code: 'DUPLICATE_SESSION'
-        },
-        { status: 409 }
-      );
-    }
-    
-    return NextResponse.json(
-      { 
-        error: 'Failed to create session',
-        details: 'Unable to create a new therapy session. Please try again.',
-        code: 'SESSION_CREATE_ERROR'
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(request: NextRequest) {
-  const requestContext = createRequestLogger(request);
-  
-  try {
-    // Validate authentication first
-    const authResult = await validateApiAuth(request);
-    if (!authResult.isValid) {
-      logger.warn('Unauthorized sessions fetch request', { ...requestContext, error: authResult.error });
-      return createAuthErrorResponse(authResult.error || 'Authentication required');
-    }
-    
-    logger.debug('Fetching sessions', requestContext);
-    
-    // Get unified user ID for cross-device session access
-    const { getSingleUserInfo } = await import('@/lib/user-session');
-    const userInfo = getSingleUserInfo(request);
-
-    const sessions = await prisma.session.findMany({
-      where: { userId: userInfo.userId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        _count: {
-          select: { messages: true }
-        }
+      // Ensure user exists in database
+      const userExists = await db.ensureUserExists(context.userInfo);
+      if (!userExists) {
+        throw new Error('Failed to ensure user exists');
       }
-    });
+
+      const session = await prisma.session.create({
+        data: {
+          userId: context.userInfo.userId,
+          title,
+          status: 'active',
+        },
+      });
+
+      logger.info('Session created successfully', {
+        requestId: context.requestId,
+        sessionId: session.id,
+        userId: context.userInfo.userId
+      });
+
+      return createSuccessResponse(session, { requestId: context.requestId });
+    } catch (error) {
+      return errorHandlers.handleDatabaseError(
+        error as Error,
+        'create session',
+        context
+      );
+    }
+  }
+);
+
+export const GET = withAuth(async (request, context) => {
+  try {
+    logger.debug('Fetching sessions', context);
+
+    const sessions = await db.getUserSessions(context.userInfo.userId);
 
     logger.info('Sessions fetched successfully', {
-      ...requestContext,
+      requestId: context.requestId,
       sessionCount: sessions.length
     });
 
-    return NextResponse.json(sessions);
+    return createSuccessResponse(sessions, { requestId: context.requestId });
   } catch (error) {
-    const err = error as Error;
-    logger.databaseError('fetch sessions', err, requestContext);
-    
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch sessions',
-        details: 'Unable to retrieve your therapy sessions. Please refresh the page.',
-        code: 'SESSION_FETCH_ERROR'
-      },
-      { status: 500 }
+    return errorHandlers.handleDatabaseError(
+      error as Error,
+      'fetch sessions',
+      context
     );
   }
-}
+});

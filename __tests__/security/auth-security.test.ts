@@ -129,9 +129,8 @@ describe('Authentication Security Tests', () => {
     });
 
     it('should fail when crypto is unavailable', () => {
-      // Mock crypto as unavailable
-      const originalCrypto = global.crypto;
-      global.crypto = undefined as any;
+      // Mock crypto as unavailable using the helper function
+      global.mockCrypto(undefined as any);
       
       expect(() => {
         generateSecureRandomString(16);
@@ -141,8 +140,8 @@ describe('Authentication Security Tests', () => {
         generateUUID();
       }).toThrow('Cryptographically secure random number generation is not available');
       
-      // Restore crypto
-      global.crypto = originalCrypto;
+      // Restore crypto using the helper function
+      global.restoreCrypto();
     });
   });
 

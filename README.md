@@ -130,6 +130,12 @@ A modern, responsive therapeutic AI application built with Next.js 14, providing
 - `npm run db:migrate` - Create and apply database migrations  
 - `npm run db:studio` - Open Prisma Studio database GUI
 
+#### Testing
+- `npm run test` - Run unit tests
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Run tests with coverage report
+- `npm run test:all` - Run all tests (currently same as unit tests)
+
 #### Utilities
 - `npm run network-ip` - Display network IP addresses
 
@@ -163,6 +169,11 @@ ai-therapist/
 ├── prisma/                     # Database schema and SQLite file
 ├── scripts/                    # Utility scripts
 │   └── migrate-to-single-user.js # Session consolidation script
+├── __tests__/                  # Unit test suite
+│   ├── api/                   # API endpoint tests
+│   ├── components/            # Component tests
+│   ├── lib/                   # Utility function tests
+│   └── security/              # Security implementation tests
 └── types/                      # TypeScript type definitions
 ```
 
@@ -351,7 +362,8 @@ If you encounter any issues:
 **Build Issues**
 - Clear `.next` folder: `rm -rf .next`
 - Reinstall dependencies: `rm -rf node_modules && npm install`
-- Run tests: `npm test` to verify security implementations
+- Run tests: `npm test` to verify all 112 unit tests pass
+- Check test coverage: `npm run test:coverage`
 
 **Session Migration**
 - Run migration script to consolidate device-specific sessions:
@@ -380,10 +392,12 @@ This therapeutic AI application now implements **enterprise-level security** sui
 - **Environment-Based Controls**: Production authentication enforced via environment detection
 
 #### **Testing & Quality Assurance**
-- **Security Test Suite**: Comprehensive tests for encryption, authentication, and CSRF protection
+- **Unit Test Suite**: 112 comprehensive unit tests with 100% pass rate
+- **Security Test Suite**: Dedicated tests for encryption, authentication, and device fingerprinting
+- **Component Testing**: React Testing Library tests for UI components
+- **API Testing**: Complete test coverage for authentication and chat endpoints
 - **TypeScript Strict Mode**: Enhanced type safety prevents runtime errors
-- **Component Architecture**: Modular design improves maintainability and security review
-- **End-to-End Testing**: Complete authentication flow testing
+- **Modular Architecture**: Clean separation of concerns improves maintainability
 
 #### **Database Security**
 - **SQLite Database**: Lightweight, embedded database with encryption

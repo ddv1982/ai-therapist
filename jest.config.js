@@ -20,6 +20,8 @@ const customJestConfig = {
     'lib/**/*.{ts,tsx}',
     '!**/*.d.ts',
     '!**/node_modules/**',
+    '!lib/**/*.test.{ts,tsx}',
+    '!__tests__/**/*',
   ],
   coverageThreshold: {
     global: {
@@ -31,6 +33,17 @@ const customJestConfig = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    // Mock static assets
+    '\\.(css|less|sass|scss|png|jpg|jpeg|gif|webp|svg)$': 'identity-obj-proxy',
+  },
+  transformIgnorePatterns: [
+    'node_modules/(?!(react-markdown|remark-gfm|micromark|decode-named-character-reference|character-entities|unist-util-stringify-position|unified|bail|is-plain-obj|trough|vfile|unist-util-is|zwitch|longest-streak|mdast-util-to-markdown|mdast-util-phrasing|mdast-util-list-item-indent|mdast-util-to-string|micromark-util-sanitize-uri|micromark-util-encode|micromark-util-decode-string|micromark-extension-gfm|micromark-util-combine-extensions|micromark-extension-gfm-table|micromark-extension-gfm-strikethrough|micromark-extension-gfm-task-list-item|micromark-extension-gfm-autolink-literal|micromark-util-classify-character|micromark-util-resolve-all|micromark-util-subtokenize|micromark-util-chunked|micromark-util-decode-numeric-character-reference|mdast-util-from-markdown|mdast-util-gfm|mdast-util-gfm-table|mdast-util-gfm-strikethrough|mdast-util-gfm-task-list-item|mdast-util-gfm-autolink-literal)/)'
+  ],
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  globals: {
+    'ts-jest': {
+      useESM: true,
+    },
   },
 }
 

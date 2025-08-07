@@ -9,6 +9,46 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+/**
+ * Enhanced Prisma client with connection pooling and optimized configuration
+ * for therapeutic AI application with SQLite database
+ */
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+  // SQLite-specific optimizations
+  __internal: {
+    engine: {
+      // Connection pool configuration for SQLite
+      connectionTimeout: 60000, // 60 seconds
+      poolTimeout: 60000,       // 60 seconds
+      maxConnections: 1,        // SQLite supports only one writer
+    },
+  },
+});
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+/**
+ * Database connection health check utility
+ */
+export async function checkDatabaseHealth(): Promise<{ healthy: boolean; message: string }> {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return { healthy: true, message: 'Database connection successful' };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown database error';
+    return { healthy: false, message: `Database connection failed: ${errorMessage}` };
+  }
+}
+
+/**
+ * Graceful database disconnect for application shutdown
+ */
+export async function disconnectDatabase(): Promise<void> {
+  await prisma.$disconnect();
+}

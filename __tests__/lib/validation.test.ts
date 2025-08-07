@@ -1,10 +1,10 @@
-import { validateRequest, chatRequestSchema, messageSchema, reportGenerationSchema } from '@/lib/validation'
+import { validateRequest, chatRequestSchema, messageSchema, reportGenerationSchema, chatMessageSchema } from '@/lib/validation'
 
 describe('Validation Functions', () => {
   describe('validateRequest', () => {
     it('should return success for valid data', () => {
       const validData = { message: 'Hello world' }
-      const schema = messageSchema.pick({ content: true }).extend({ message: messageSchema.shape.content })
+      const schema = chatMessageSchema
       
       const result = validateRequest(schema, validData)
       
@@ -16,7 +16,7 @@ describe('Validation Functions', () => {
 
     it('should return error for invalid data', () => {
       const invalidData = { message: '' }
-      const schema = messageSchema.pick({ content: true }).extend({ message: messageSchema.shape.content })
+      const schema = chatMessageSchema
       
       const result = validateRequest(schema, invalidData)
       
