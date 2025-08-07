@@ -60,6 +60,8 @@ export default function ChatPage() {
   const [temperature, setTemperature] = useState(0.6);
   const [maxTokens, setMaxTokens] = useState(32000);
   const [topP, setTopP] = useState(0.95);
+  const [browserSearchEnabled, setBrowserSearchEnabled] = useState(true);
+  const [reasoningEffort, setReasoningEffort] = useState('medium');
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState('100vh');
   const [availableModels, setAvailableModels] = useState<ModelConfig[]>([]);
@@ -306,6 +308,8 @@ export default function ChatPage() {
         if (settings.temperature !== undefined) setTemperature(settings.temperature);
         if (settings.maxTokens !== undefined) setMaxTokens(settings.maxTokens);
         if (settings.topP !== undefined) setTopP(settings.topP);
+        if (settings.browserSearchEnabled !== undefined) setBrowserSearchEnabled(settings.browserSearchEnabled);
+        if (settings.reasoningEffort) setReasoningEffort(settings.reasoningEffort);
       } catch (error) {
         console.error('Failed to load model settings:', error);
       }
@@ -432,10 +436,12 @@ export default function ChatPage() {
       model,
       temperature,
       maxTokens,
-      topP
+      topP,
+      browserSearchEnabled,
+      reasoningEffort
     };
     localStorage.setItem('modelSettings', JSON.stringify(modelSettings));
-  }, [model, temperature, maxTokens, topP]);
+  }, [model, temperature, maxTokens, topP, browserSearchEnabled, reasoningEffort]);
 
 
   // Set current session for cross-device continuity (memoized)
@@ -569,7 +575,9 @@ export default function ChatPage() {
           model: model,
           temperature: temperature,
           maxTokens: maxTokens,
-          topP: topP
+          topP: topP,
+          browserSearchEnabled: browserSearchEnabled,
+          reasoningEffort: reasoningEffort
         }),
       });
 
@@ -647,7 +655,7 @@ export default function ChatPage() {
         });
       }
     }
-  }, [input, isLoading, apiKey, hasEnvApiKey, model, messages, currentSession, showToast, temperature, maxTokens, topP, saveMessage, setCurrentSessionAndSync]);
+  }, [input, isLoading, apiKey, hasEnvApiKey, model, messages, currentSession, showToast, temperature, maxTokens, topP, browserSearchEnabled, reasoningEffort, saveMessage, setCurrentSessionAndSync]);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -1016,6 +1024,54 @@ export default function ChatPage() {
                 />
                 <div className="text-xs text-muted-foreground mt-1">
                   Nucleus sampling threshold
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium block mb-2">
+                  Browser Search
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="browserSearch"
+                    checked={browserSearchEnabled}
+                    onChange={(e) => setBrowserSearchEnabled(e.target.checked)}
+                    className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary"
+                  />
+                  <label htmlFor="browserSearch" className="text-sm text-muted-foreground">
+                    Enable web search capabilities
+                  </label>
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Allow AI to search the web for current information
+                  {(() => {
+                    const supportedModels = ['gpt-oss-120b', 'gpt-oss-20b', 'llama-3.1', 'llama3-groq-70b-8192-tool-use-preview'];
+                    const isSupported = supportedModels.some(supported => model.includes(supported));
+                    return !isSupported && (
+                      <span className="text-orange-600 block mt-1">
+                        ⚠ Current model ({model.split('/').pop()}) may not support browser search
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium block mb-1">
+                  Reasoning Effort: {reasoningEffort}
+                </label>
+                <select
+                  value={reasoningEffort}
+                  onChange={(e) => setReasoningEffort(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background"
+                >
+                  <option value="low">Low - Fast responses</option>
+                  <option value="medium">Medium - Balanced reasoning</option>
+                  <option value="high">High - Deep analysis</option>
+                </select>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Controls how much time AI spends reasoning about responses
                 </div>
               </div>
             </div>

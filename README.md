@@ -31,7 +31,9 @@ A modern, responsive therapeutic AI application built with Next.js 14, providing
 - **CSRF Protection** - Cryptographically signed tokens for API security
 - **Multiple AI Models** - Support for various Groq AI models
 - **API Key Flexibility** - Environment variable or UI-based API key configuration
-- **Dynamic Model Settings** - Adjustable temperature, max tokens, and top-p
+- **Advanced AI Settings** - Temperature, tokens, top-p, reasoning effort, and browser search
+- **High-Performance AI** - Uses OpenAI GPT OSS 120B with advanced reasoning capabilities  
+- **Web Search Integration** - Optional browser search for current information and facts
 - **Lazy Session Creation** - Sessions only created when user sends first message
 
 ## 🚀 Quick Start
@@ -220,10 +222,15 @@ NODE_ENV="development"
 - **Detection**: App automatically detects if environment variable exists
 
 ### Model Configuration
-- **Default Model**: qwen/qwen3-32b
+- **Default Model**: openai/gpt-oss-120b (high-performance reasoning model)
 - **Available Models**: All Groq models (Featured, Production, Preview)
 - **Token Limits**: Automatically enforced per model
-- **Settings**: Temperature (0-2), Max Tokens (256-131K), Top P (0.1-1.0)
+- **Advanced Settings**: 
+  - Temperature (0-2): Controls randomness in responses
+  - Max Tokens (256-30K): Response length limit
+  - Top P (0.1-1.0): Nucleus sampling threshold
+  - **Browser Search**: Enable web search capabilities for current information
+  - **Reasoning Effort**: Low/Medium/High - Controls AI reasoning depth
 
 ## 🛡️ Safety & Security Features
 

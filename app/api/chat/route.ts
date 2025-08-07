@@ -25,6 +25,8 @@ export async function POST(request: NextRequest) {
       temperature = 0.6,
       maxTokens = 32000,
       topP = 0.95,
+      browserSearchEnabled = true,
+      reasoningEffort = 'medium',
       sessionId
     } = requestData;
     
@@ -38,6 +40,8 @@ export async function POST(request: NextRequest) {
       temperature,
       maxTokens,
       topP,
+      browserSearchEnabled,
+      reasoningEffort,
       hasApiKey: !!apiKey
     });
 
@@ -99,7 +103,8 @@ export async function POST(request: NextRequest) {
     const systemPrompt = buildMemoryEnhancedPrompt(memoryContext);
 
     // Get AI response from Groq
-    const completion = await groq.chat.completions.create({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const completionParams: any = {
       messages: [
         {
           role: 'system',
@@ -112,7 +117,87 @@ export async function POST(request: NextRequest) {
       max_tokens: maxTokens,
       top_p: topP,
       stream: true
-    });
+    };
+
+    // Add reasoning effort if supported by the model
+    if (reasoningEffort && ['low', 'medium', 'high'].includes(reasoningEffort)) {
+      completionParams.reasoning_effort = reasoningEffort;
+    }
+
+    // Add browser search tools if enabled (only for compatible models)
+    if (browserSearchEnabled) {
+      // List of models known to support browser search tools
+      const toolsSupportedModels = [
+        'openai/gpt-oss-120b',
+        'openai/gpt-oss-20b',
+        'llama-3.1-70b-versatile',
+        'llama-3.1-8b-instant',
+        'llama3-groq-70b-8192-tool-use-preview'
+      ];
+      
+      const supportsTools = toolsSupportedModels.some(supportedModel => 
+        model.includes(supportedModel.split('/').pop() || supportedModel)
+      );
+      
+      if (supportsTools) {
+        completionParams.tools = [{"type": "browser_search"}];
+        logger.info('Browser search enabled for compatible model', {
+          ...requestContext,
+          model,
+          supportsTools
+        });
+      } else {
+        logger.warn('Browser search requested but model does not support tools', {
+          ...requestContext,
+          model,
+          browserSearchEnabled,
+          supportedModels: toolsSupportedModels
+        });
+        // Add a note to the system prompt instead
+        completionParams.messages[0].content += '\n\nNote: The user requested web search capabilities, but this model does not support live web browsing. Please let the user know if you need current information that might require web search.';
+      }
+    }
+
+    // Create completion with enhanced error handling
+    let completion;
+    try {
+      logger.info('Creating Groq completion with parameters', {
+        ...requestContext,
+        paramsKeys: Object.keys(completionParams),
+        hasTools: !!completionParams.tools,
+        hasReasoningEffort: !!completionParams.reasoning_effort
+      });
+      
+      completion = await groq.chat.completions.create(completionParams);
+    } catch (apiError) {
+      logger.error('Groq API error during completion creation', {
+        ...requestContext,
+        error: apiError instanceof Error ? apiError.message : 'Unknown error',
+        model,
+        browserSearchEnabled,
+        reasoningEffort,
+        paramsKeys: Object.keys(completionParams)
+      });
+      
+      // If tools caused the error, try without tools
+      if (browserSearchEnabled && completionParams.tools) {
+        logger.warn('Retrying without browser search tools due to API error', requestContext);
+        delete completionParams.tools;
+        
+        try {
+          completion = await groq.chat.completions.create(completionParams);
+          logger.info('Successfully created completion without tools', requestContext);
+        } catch (retryError) {
+          logger.error('Failed even without tools', {
+            ...requestContext,
+            retryError: retryError instanceof Error ? retryError.message : 'Unknown error'
+          });
+          throw retryError;
+        }
+      } else {
+        throw apiError;
+      }
+    }
 
     // Convert Groq stream to Response stream
     const encoder = new TextEncoder();
@@ -122,7 +207,8 @@ export async function POST(request: NextRequest) {
         
         try {
           // Collect the complete response first
-          for await (const chunk of completion) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          for await (const chunk of completion as any) {
             const content = chunk.choices[0]?.delta?.content || '';
             if (content) {
               fullResponse += content;
