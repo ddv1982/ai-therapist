@@ -58,8 +58,8 @@ export default function ChatPage() {
   const [hasEnvApiKey, setHasEnvApiKey] = useState(false);
   const [model, setModel] = useState('openai/gpt-oss-120b');
   const [temperature, setTemperature] = useState(0.6);
-  const [maxTokens, setMaxTokens] = useState(32000);
-  const [topP, setTopP] = useState(0.95);
+  const [maxTokens, setMaxTokens] = useState(30000);
+  const [topP, setTopP] = useState(1);
   const [browserSearchEnabled, setBrowserSearchEnabled] = useState(true);
   const [reasoningEffort, setReasoningEffort] = useState('medium');
   const [isMobile, setIsMobile] = useState(false);

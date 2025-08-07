@@ -24,20 +24,20 @@ export async function GET() {
     const groq = new Groq({ apiKey: groqApiKey });
     const models = await groq.models.list();
     
-    // Custom token limits: 32000 default, keep lower values, Kimi to 16000
+    // Custom token limits: 30000 default, keep lower values, Kimi to 16000
     const getCustomMaxTokens = (modelId: string, apiMaxTokens: number): number => {
       // Special case for Kimi models
       if (modelId.includes('kimi')) {
         return 16000;
       }
       
-      // If API reports a value lower than 32000, keep the lower value
-      if (apiMaxTokens && apiMaxTokens < 32000) {
+      // If API reports a value lower than 30000, keep the lower value
+      if (apiMaxTokens && apiMaxTokens < 30000) {
         return apiMaxTokens;
       }
       
-      // Otherwise set to 32000
-      return 32000;
+      // Otherwise set to 30000
+      return 30000;
     };
 
     // Filter and format models for the UI  

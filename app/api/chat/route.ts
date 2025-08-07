@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
       messages, 
       apiKey, 
       temperature = 0.6,
-      maxTokens = 32000,
-      topP = 0.95,
+      maxTokens = 30000,
+      topP = 1,
       browserSearchEnabled = true,
       reasoningEffort = 'medium',
       sessionId
@@ -122,6 +122,11 @@ export async function POST(request: NextRequest) {
     // Add reasoning effort if supported by the model
     if (reasoningEffort && ['low', 'medium', 'high'].includes(reasoningEffort)) {
       completionParams.reasoning_effort = reasoningEffort;
+      logger.info('Reasoning effort enabled', {
+        ...requestContext,
+        model,
+        reasoningEffort
+      });
     }
 
     // Add browser search tools if enabled (only for compatible models)
