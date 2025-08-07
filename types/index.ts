@@ -207,3 +207,6 @@ export interface ChatState {
   settings: ChatSettings;
   error?: string;
 }
+
+// Re-export CBT Types
+export * from './cbt';

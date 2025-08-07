@@ -16,7 +16,8 @@ import {
   MessageSquare,
   Trash2,
   X,
-  Sparkles
+  Sparkles,
+  BookOpen
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import ReactMarkdown from 'react-markdown';
@@ -27,6 +28,7 @@ import { useToast } from '@/components/ui/toast';
 import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/memory-utils';
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
 import { MobileDebugInfo } from '@/components/mobile-debug-info';
+import { CBTDiaryModal } from '@/components/cbt/cbt-diary-modal';
 
 interface Message {
   id: string;
@@ -67,6 +69,7 @@ export default function ChatPage() {
   const [availableModels, setAvailableModels] = useState<ModelConfig[]>([]);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [memoryContext, setMemoryContext] = useState<MemoryContextInfo>({ hasMemory: false, reportCount: 0 });
+  const [showCBTModal, setShowCBTModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -755,6 +758,16 @@ export default function ChatPage() {
     }
   };
 
+  const openCBTModal = useCallback(() => {
+    setShowCBTModal(true);
+  }, []);
+
+  const handleCBTSendToChat = useCallback((formattedContent: string) => {
+    setInput(formattedContent);
+    // Focus the textarea after insertion
+    setTimeout(() => textareaRef.current?.focus(), 100);
+  }, []);
+
   return (
     <AuthGuard>
       <div 
@@ -1111,6 +1124,19 @@ export default function ChatPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={openCBTModal}
+                className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors relative overflow-hidden group touch-manipulation"
+                style={{
+                  WebkitTapHighlightColor: 'transparent'
+                }}
+                title="Open CBT diary"
+              >
+                <div className="shimmer-effect"></div>
+                <BookOpen className="w-5 h-5 relative z-10" />
+              </Button>
               {currentSession && messages.length > 0 && (
                 <Button
                   variant="ghost"
@@ -1444,6 +1470,13 @@ export default function ChatPage() {
 
       {/* Mobile Debug Info - only shows on mobile Safari with network URL */}
       <MobileDebugInfo />
+      
+      {/* CBT Diary Modal */}
+      <CBTDiaryModal
+        open={showCBTModal}
+        onOpenChange={setShowCBTModal}
+        onSendToChat={handleCBTSendToChat}
+      />
       </div>
     </AuthGuard>
   );

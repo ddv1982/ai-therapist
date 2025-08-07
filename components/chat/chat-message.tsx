@@ -43,6 +43,18 @@ const markdownComponents: Components = {
       <code className="block bg-muted p-4 rounded-lg text-sm font-mono text-foreground border border-border/50 overflow-x-auto" {...props} />
     );
   },
+  pre: ({ ...props }) => <pre className="bg-muted p-4 rounded-lg border border-border/30 overflow-x-auto my-4" {...props} />,
+  hr: ({ ...props }) => <hr className="border-border/50 my-6" {...props} />,
+  table: ({ ...props }) => (
+    <div className="overflow-x-auto my-6 rounded-lg border border-border/30 bg-card shadow-sm">
+      <table className="w-full border-collapse" {...props} />
+    </div>
+  ),
+  thead: ({ ...props }) => <thead className="bg-primary/10 border-b border-border/30" {...props} />,
+  tbody: ({ ...props }) => <tbody {...props} />,
+  tr: ({ ...props }) => <tr className="border-b border-border/20 last:border-b-0 hover:bg-muted/20 transition-colors" {...props} />,
+  th: ({ ...props }) => <th className="px-4 py-3 text-left font-semibold text-foreground text-sm uppercase tracking-wide bg-primary/5" {...props} />,
+  td: ({ ...props }) => <td className="px-4 py-3 text-foreground border-r border-border/10 last:border-r-0" {...props} />,
 };
 
 function ChatMessageComponent({ message }: ChatMessageProps) {
@@ -88,20 +100,14 @@ function ChatMessageComponent({ message }: ChatMessageProps) {
       <div className={contentClasses}>
         {/* Message Bubble */}
         <div className={bubbleClasses}>
-          {isUser ? (
-            <div className="text-therapy-sm sm:text-therapy-base leading-relaxed">
+          <div className="text-therapy-sm sm:text-therapy-base leading-relaxed prose prose-sm max-w-none dark:prose-invert [&>*:last-child]:mb-0">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={markdownComponents}
+            >
               {message.content}
-            </div>
-          ) : (
-            <div className="text-therapy-sm sm:text-therapy-base leading-relaxed prose prose-sm max-w-none dark:prose-invert [&>*:last-child]:mb-0">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={markdownComponents}
-              >
-                {message.content}
-              </ReactMarkdown>
-            </div>
-          )}
+            </ReactMarkdown>
+          </div>
         </div>
 
         {/* Timestamp */}
