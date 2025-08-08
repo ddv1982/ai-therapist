@@ -16,7 +16,7 @@ export function MessageBubble({ message, isUser, timestamp }: MessageBubbleProps
           ? "therapy-accent rounded-br-sm" // User messages: accent color, slight radius adjustment
           : "therapy-muted rounded-bl-sm" // AI messages: neutral styling
       )}>
-        <div className="text-therapy-base leading-relaxed">
+        <div className="text-therapy-base leading-relaxed selectable-text">
           {message.content}
         </div>
         <div className={cn(

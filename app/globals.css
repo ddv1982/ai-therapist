@@ -78,9 +78,7 @@
     -webkit-text-size-adjust: 100%;
     -ms-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    /* Disable user selection to prevent accidental text selection */
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
+    /* Prevent zoom on double tap and improve touch experience */
     -webkit-tap-highlight-color: transparent;
   }
   

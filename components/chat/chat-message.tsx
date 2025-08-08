@@ -144,7 +144,7 @@ function ChatMessageComponent({ message }: ChatMessageProps) {
         {/* Message Bubble */}
         <div className={bubbleClasses}>
           <div 
-            className="text-therapy-sm sm:text-therapy-base leading-relaxed"
+            className="text-therapy-sm sm:text-therapy-base leading-relaxed selectable-text"
             dangerouslySetInnerHTML={{ __html: processMarkdown(message.content) }}
           />
         </div>
