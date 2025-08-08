@@ -27,6 +27,7 @@ import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
 import { MobileDebugInfo } from '@/components/mobile-debug-info';
 import { CBTDiaryModal } from '@/components/cbt/cbt-diary-modal';
+import { therapeuticInteractive, therapeuticContent, getTherapeuticIconButton } from '@/lib/design-tokens';
 
 interface Message {
   id: string;
@@ -827,7 +828,7 @@ export default function ChatPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowSidebar(false)}
-                className="rounded-full h-8 w-8 p-0 hover:bg-primary/10 relative overflow-hidden group"
+                className={therapeuticInteractive.iconButtonSmall}
               >
                 <div className="shimmer-effect"></div>
                 <X className="w-4 h-4 relative z-10" />
@@ -880,7 +881,7 @@ export default function ChatPage() {
                 <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
                   currentSession === session.id 
                     ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary'
+                    : therapeuticInteractive.itemHover
                 }`}>
                   <MessageSquare className="w-4 h-4" />
                 </div>
@@ -1101,7 +1102,7 @@ export default function ChatPage() {
                 size="sm"
                 onTouchStart={() => setShowSidebar(!showSidebar)}
                 onClick={() => setShowSidebar(!showSidebar)}
-                className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors relative overflow-hidden group touch-manipulation"
+                className={getTherapeuticIconButton('large')}
                 style={{
                   WebkitTapHighlightColor: 'transparent'
                 }}
@@ -1126,7 +1127,7 @@ export default function ChatPage() {
                 variant="ghost"
                 size="sm"
                 onClick={openCBTModal}
-                className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors relative overflow-hidden group touch-manipulation"
+                className={getTherapeuticIconButton('large')}
                 style={{
                   WebkitTapHighlightColor: 'transparent'
                 }}
@@ -1141,7 +1142,7 @@ export default function ChatPage() {
                   size="sm"
                   onClick={generateReport}
                   disabled={isGeneratingReport}
-                  className="rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors relative overflow-hidden group touch-manipulation disabled:opacity-50"
+                  className={getTherapeuticIconButton('large', true)}
                   style={{
                     WebkitTapHighlightColor: 'transparent'
                   }}
@@ -1301,12 +1302,12 @@ export default function ChatPage() {
                           h2: ({...props}) => <h2 className="text-lg sm:text-xl font-semibold mb-3 text-foreground mt-6 first:mt-0" {...props} />,
                           h3: ({...props}) => <h3 className="text-base sm:text-lg font-semibold mb-2 text-foreground mt-4 first:mt-0" {...props} />,
                           h4: ({...props}) => <h4 className="text-sm sm:text-base font-semibold mb-2 text-foreground mt-3 first:mt-0" {...props} />,
-                          p: ({...props}) => <p className="mb-4 text-foreground leading-relaxed last:mb-0" {...props} />,
-                          strong: ({...props}) => <strong className="font-bold text-foreground bg-primary/10 px-1 py-0.5 rounded" {...props} />,
+                          p: ({...props}) => <p className={therapeuticContent.paragraph} {...props} />,
+                          strong: ({...props}) => <strong className={therapeuticContent.strongHighlight} {...props} />,
                           em: ({...props}) => <em className="italic text-accent font-medium" {...props} />,
                           ol: ({...props}) => <ol className="list-decimal ml-6 mb-4 space-y-2 text-foreground" {...props} />,
                           ul: ({...props}) => <ul className="list-disc ml-6 mb-4 space-y-2 text-foreground" {...props} />,
-                          li: ({...props}) => <li className="text-foreground leading-relaxed pl-1" {...props} />,
+                          li: ({...props}) => <li className={therapeuticContent.listItem} {...props} />,
                           blockquote: ({...props}) => (
                             <blockquote className="border-l-4 border-primary bg-primary/5 pl-6 pr-4 py-3 my-4 rounded-r-lg italic text-foreground relative" {...props}>
                               <div className="absolute top-2 left-2 text-primary/50 text-xl">&quot;</div>
@@ -1329,7 +1330,7 @@ export default function ChatPage() {
                               <table className="w-full border-collapse" {...props} />
                             </div>
                           ),
-                          thead: ({...props}) => <thead className="bg-primary/10 border-b border-border/30" {...props} />,
+                          thead: ({...props}) => <thead className={therapeuticContent.tableHeader} {...props} />,
                           tbody: ({...props}) => <tbody {...props} />,
                           tr: ({...props}) => <tr className="border-b border-border/20 last:border-b-0 hover:bg-muted/20 transition-colors" {...props} />,
                           th: ({...props}) => <th className="px-4 py-3 text-left font-semibold text-foreground text-sm uppercase tracking-wide bg-primary/5" {...props} />,

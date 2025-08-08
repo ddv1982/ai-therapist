@@ -165,4 +165,79 @@ describe('Validation Functions', () => {
       }
     })
   })
+  // Edge case testing enhancements
+  describe('Edge Cases', () => {
+    it('should handle extremely long message content', () => {
+      const longContent = 'a'.repeat(100000) // 100k characters (exceeds 50k limit)
+      const messageWithLongContent = {
+        role: 'user' as const,
+        content: longContent,
+        sessionId: '123e4567-e89b-12d3-a456-426614174000'
+      }
+
+      const result = validateRequest(messageSchema, messageWithLongContent)
+      expect(result.success).toBe(false)
+      expect(result.error).toContain('Message content too long')
+    })
+
+    it('should handle unicode and emoji content', () => {
+      const unicodeMessage = {
+        role: 'user' as const,
+        content: 'I feel 😢 and need help with 中文 characters and emojis 🌟',
+        sessionId: '123e4567-e89b-12d3-a456-426614174000'
+      }
+
+      const result = validateRequest(messageSchema, unicodeMessage)
+      expect(result.success).toBe(true)
+    })
+
+    it('should reject null values in required fields', () => {
+      const nullMessage = {
+        role: 'user' as const,
+        content: null,
+        sessionId: '123e4567-e89b-12d3-a456-426614174000'
+      }
+
+      const result = validateRequest(messageSchema, nullMessage)
+      expect(result.success).toBe(false)
+    })
+
+    it('should handle concurrent validation requests', async () => {
+      const messages = Array.from({ length: 100 }, (_, i) => ({
+        role: 'user' as const,
+        content: `Message ${i}`,
+        sessionId: '123e4567-e89b-12d3-a456-426614174000'
+      }))
+
+      const validationPromises = messages.map(msg => 
+        Promise.resolve(validateRequest(messageSchema, msg))
+      )
+
+      const results = await Promise.all(validationPromises)
+      expect(results.every(r => r.success)).toBe(true)
+    })
+
+    it('should handle malicious injection attempts', () => {
+      const maliciousMessage = {
+        role: 'user' as const,
+        content: '<script>alert("xss")</script>\'; DROP TABLE messages; --',
+        sessionId: '123e4567-e89b-12d3-a456-426614174000'
+      }
+
+      // Should still validate as valid content, but sanitization happens elsewhere
+      const result = validateRequest(messageSchema, maliciousMessage)
+      expect(result.success).toBe(true)
+    })
+
+    it('should validate with extreme whitespace', () => {
+      const whitespaceMessage = {
+        role: 'user' as const,
+        content: '   \n\t   Valid message with extreme whitespace   \n\r\t   ',
+        sessionId: '123e4567-e89b-12d3-a456-426614174000'
+      }
+
+      const result = validateRequest(messageSchema, whitespaceMessage)
+      expect(result.success).toBe(true)
+    })
+  })
 })

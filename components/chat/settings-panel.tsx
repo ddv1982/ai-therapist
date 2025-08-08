@@ -4,20 +4,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import type { ModelConfig } from '@/types/index';
+import { SettingsPanelProps } from '@/types/component-props';
 
-interface SettingsPanelProps {
-  showSettings: boolean;
-  setShowSettings: (show: boolean) => void;
-  hasEnvApiKey: boolean;
-  apiKey: string;
-  setApiKey: (key: string) => void;
-  model: string;
-  setModel: (model: string) => void;
-  availableModels: ModelConfig[];
-  temperature: number;
-  setTemperature: (temp: number) => void;
-  maxTokens: number;
-  setMaxTokens: (tokens: number) => void;
+// Using centralized SettingsPanelProps interface
+// Includes all configuration props for therapeutic AI settings
   topP: number;
   setTopP: (topP: number) => void;
   getModelMaxTokens: (modelName: string) => number;

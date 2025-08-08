@@ -3,17 +3,11 @@
 import React, { memo, useMemo } from 'react';
 import { User, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { therapeuticContent, therapeuticTypography } from '@/lib/design-tokens';
+import { MessageComponentProps } from '@/types/component-props';
 
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
-
-interface ChatMessageProps {
-  message: Message;
-}
+// Using centralized props interface
+type ChatMessageProps = MessageComponentProps;
 
 // Enhanced markdown processor with proper table support
 function processMarkdown(text: string): string {
@@ -22,7 +16,7 @@ function processMarkdown(text: string): string {
   
   return text
     // Bold text
-    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-foreground bg-primary/10 px-1 py-0.5 rounded">$1</strong>')
+    .replace(/\*\*(.*?)\*\*/g, `<strong class="${therapeuticContent.strongHighlight}">$1</strong>`)
     // Italic text  
     .replace(/\*(.*?)\*/g, '<em class="italic text-accent font-medium">$1</em>')
     // Headers
@@ -32,9 +26,9 @@ function processMarkdown(text: string): string {
     // Horizontal rules (but not table separators)
     .replace(/^---$/gm, '<hr class="border-border/50 my-6" />')
     // Lists (basic support)
-    .replace(/^- (.*$)/gm, '<li class="text-foreground leading-relaxed pl-1 mb-1">• $1</li>')
+    .replace(/^- (.*$)/gm, `<li class="${therapeuticContent.listItemWithMargin}">• $1</li>`)
     // Paragraphs
-    .replace(/\n\n/g, '</p><p class="mb-4 text-foreground leading-relaxed last:mb-0">')
+    .replace(/\n\n/g, `</p><p class="${therapeuticContent.paragraph}">`)
     // Line breaks
     .replace(/\n/g, '<br />');
 }
@@ -77,7 +71,7 @@ function processMarkdownTables(text: string): string {
     
     // Add header
     if (headerCells.length > 0) {
-      tableHtml += '<thead class="bg-primary/10 border-b border-border/30">';
+      tableHtml += `<thead class="${therapeuticContent.tableHeader}">`;
       tableHtml += '<tr>';
       headerCells.forEach(cell => {
         tableHtml += `<th class="px-4 py-3 text-left font-semibold text-foreground text-sm uppercase tracking-wide bg-primary/5">${cell}</th>`;

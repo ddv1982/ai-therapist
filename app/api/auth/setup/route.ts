@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateTOTPSetup, saveTOTPConfig, isTOTPSetup } from '@/lib/totp-service';
 import { getOrCreateDevice, createAuthSession } from '@/lib/device-fingerprint';
 import { createAuthResponse, getClientIP } from '@/lib/auth-middleware';
+import { handleApiError, TherapeuticErrorPatterns } from '@/lib/error-utils';
+import { createRequestLogger } from '@/lib/logger';
 
 // GET /api/auth/setup - Get setup data (QR code, backup codes)
 export async function GET() {
@@ -22,8 +24,12 @@ export async function GET() {
       secret: setupData.secret, // Keep for verification
     });
   } catch (error) {
-    console.error('TOTP setup generation failed:', error);
-    return NextResponse.json({ error: 'Failed to generate setup data' }, { status: 500 });
+    return handleApiError(error, {
+      operation: 'totp_setup_generation',
+      category: 'authentication',
+      severity: 'high',
+      userMessage: 'Failed to initialize authentication setup. Please try again.'
+    });
   }
 }
 
@@ -69,7 +75,11 @@ export async function POST(request: NextRequest) {
     // Return success with authentication
     return createAuthResponse(session.sessionToken, '/');
   } catch (error) {
-    console.error('TOTP setup failed:', error);
-    return NextResponse.json({ error: 'Setup failed' }, { status: 500 });
+    return handleApiError(error, {
+      operation: 'totp_setup_completion',
+      category: 'authentication',
+      severity: 'high',
+      userMessage: 'Failed to complete authentication setup. Please try again.'
+    });
   }
 }

@@ -3,6 +3,7 @@
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/lib/theme-context';
 import { Button } from '@/components/ui/button';
+import { therapeuticInteractive } from '@/lib/design-tokens';
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
@@ -12,7 +13,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="sm"
       onClick={toggleTheme}
-      className="relative h-9 w-9 p-0 rounded-full hover:bg-primary/10 transition-all duration-300 group border-2 border-primary/20 overflow-hidden"
+      className={therapeuticInteractive.iconButtonMedium}
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       {/* Shimmer effect */}

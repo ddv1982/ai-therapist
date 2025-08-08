@@ -260,3 +260,72 @@ export function createPaginatedResponse<T>(
     },
   });
 }
+// ============================================================================
+// THERAPEUTIC-SPECIFIC RESPONSE UTILITIES
+// ============================================================================
+
+/**
+ * Specialized response for therapeutic session operations
+ */
+export interface TherapeuticSessionResponse {
+  sessionId: string;
+  status: 'active' | 'completed' | 'paused';
+  messageCount: number;
+  duration?: number;
+  insights?: string[];
+  nextSuggestedAction?: string;
+}
+
+export function createSessionResponse(
+  sessionData: TherapeuticSessionResponse,
+  requestId?: string
+): NextResponse<ApiResponse<TherapeuticSessionResponse>> {
+  return createSuccessResponse(sessionData, {
+    requestId,
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Specialized response for AI chat completions
+ */
+export interface ChatCompletionResponse {
+  messageId: string;
+  content: string;
+  model: string;
+  tokenUsage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  processingTime?: number;
+  therapeuticContext?: {
+    moodDetected?: string;
+    emotionalSupport?: boolean;
+    riskAssessment?: 'low' | 'medium' | 'high';
+  };
+}
+
+export function createChatCompletionResponse(
+  completionData: ChatCompletionResponse,
+  requestId?: string
+): NextResponse<ApiResponse<ChatCompletionResponse>> {
+  return createSuccessResponse(completionData, {
+    requestId,
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Add therapeutic safety headers to any response
+ */
+export function addTherapeuticHeaders<T>(
+  response: NextResponse<ApiResponse<T>>
+): NextResponse<ApiResponse<T>> {
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Therapeutic-Context', 'enabled');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  return response;
+}

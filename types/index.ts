@@ -210,3 +210,6 @@ export interface ChatState {
 
 // Re-export CBT Types
 export * from './cbt';
+
+// Re-export Component Props Types
+export * from './component-props';

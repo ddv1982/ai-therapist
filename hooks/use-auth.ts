@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { handleClientError } from '@/lib/error-utils';
 
 interface AuthStatus {
   isAuthenticated: boolean;
@@ -114,14 +115,19 @@ export function useAuth(): AuthStatus {
         return;
       }
       
-      console.error('Failed to check auth status:', error);
+      const { userMessage, shouldRetry, category } = handleClientError(error, {
+        operation: 'auth_status_check',
+        fallbackMessage: 'Unable to verify authentication status'
+      });
       
-      // Handle timeout errors more gracefully
-      const errorMessage = (error as Error).message;
-      const isTimeout = errorMessage.includes('timeout') || errorMessage.includes('Timeout');
-      
-      if (isTimeout) {
-        console.warn('Auth check timed out - falling back to setup mode');
+      // Log with enhanced error info (in development only)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Auth status check failed:', {
+          error: (error as Error).message,
+          category,
+          shouldRetry,
+          userMessage
+        });
       }
       
       const errorStatus: AuthStatus = {

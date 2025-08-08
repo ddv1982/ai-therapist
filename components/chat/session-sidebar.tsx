@@ -12,30 +12,11 @@ import {
   Sparkles
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { therapeuticInteractive } from '@/lib/design-tokens';
+import { SessionSidebarProps } from '@/types/component-props';
 
-interface Session {
-  id: string;
-  title: string;
-  lastMessage?: string;
-  startedAt: Date;
-  _count?: {
-    messages: number;
-  };
-}
-
-interface SessionSidebarProps {
-  showSidebar: boolean;
-  setShowSidebar: (show: boolean) => void;
-  sessions: Session[];
-  currentSession: string | null;
-  setCurrentSession: (sessionId: string) => void;
-  loadMessages: (sessionId: string) => void;
-  deleteSession: (sessionId: string) => void;
-  startNewSession: () => void;
-  isMobile: boolean;
-  viewportHeight: string;
-  children?: React.ReactNode; // For settings panel
-}
+// Using centralized props interface from types/component-props.ts
+// SessionSidebarProps includes all necessary props
 
 export function SessionSidebar({
   showSidebar,
@@ -91,7 +72,7 @@ export function SessionSidebar({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowSidebar(false)}
-                className="rounded-full h-8 w-8 p-0 hover:bg-primary/10 relative overflow-hidden group"
+                className={therapeuticInteractive.iconButtonSmall}
               >
                 <div className="shimmer-effect"></div>
                 <X className="w-4 h-4 relative z-10" />
@@ -145,7 +126,7 @@ export function SessionSidebar({
                 <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
                   currentSession === session.id 
                     ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary'
+                    : therapeuticInteractive.itemHover
                 }`}>
                   <MessageSquare className="w-4 h-4" />
                 </div>
