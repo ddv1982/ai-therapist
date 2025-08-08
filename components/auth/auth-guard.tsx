@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 
 interface AuthGuardProps {
@@ -9,11 +9,27 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const { isAuthenticated, needsSetup, needsVerification, isLoading } = useAuth();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Add timeout for loading state to prevent endless hanging
+  useEffect(() => {
+    if (isLoading) {
+      const timeout = setTimeout(() => {
+        console.warn('Auth loading timed out - redirecting to setup');
+        setLoadingTimeout(true);
+      }, 15000); // 15 second timeout for loading
+
+      return () => clearTimeout(timeout);
+    } else {
+      setLoadingTimeout(false);
+      return undefined;
+    }
+  }, [isLoading]);
 
   useEffect(() => {
-    if (isLoading) return;
+    if (isLoading && !loadingTimeout) return;
 
-    if (needsSetup) {
+    if (needsSetup || loadingTimeout) {
       window.location.href = '/auth/setup';
       return;
     }
@@ -22,14 +38,18 @@ export function AuthGuard({ children }: AuthGuardProps) {
       window.location.href = '/auth/verify';
       return;
     }
-  }, [isAuthenticated, needsSetup, needsVerification, isLoading]);
+  }, [isAuthenticated, needsSetup, needsVerification, isLoading, loadingTimeout]);
 
-  if (isLoading) {
+  if (isLoading && !loadingTimeout) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Checking authentication...</p>
+          {/* Show timeout warning after 10 seconds */}
+          <p className="text-muted-foreground text-sm mt-2 opacity-60">
+            If this takes too long, you&apos;ll be redirected automatically
+          </p>
         </div>
       </div>
     );

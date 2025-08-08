@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger';
  */
 
 // Base response interface
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: {
@@ -154,7 +154,7 @@ export function createRateLimitErrorResponse(
 export function createServerErrorResponse(
   error: Error,
   requestId?: string,
-  context?: Record<string, any>
+  context?: Record<string, unknown>
 ): NextResponse<ApiResponse> {
   // Log the error for debugging
   logger.apiError('Server error', error, { requestId, ...context });
@@ -172,12 +172,24 @@ export function createServerErrorResponse(
 }
 
 // Type guards for response validation
-export function isSuccessResponse<T>(response: any): response is ApiResponse<T> {
-  return response && typeof response === 'object' && response.success === true;
+export function isSuccessResponse<T>(response: unknown): response is ApiResponse<T> {
+  if (!response || typeof response !== 'object' || response === null) {
+    return false;
+  }
+  if (!('success' in response)) {
+    return false;
+  }
+  return (response as { success: boolean }).success === true;
 }
 
-export function isErrorResponse(response: any): response is ApiResponse {
-  return response && typeof response === 'object' && response.success === false;
+export function isErrorResponse(response: unknown): response is ApiResponse {
+  if (!response || typeof response !== 'object' || response === null) {
+    return false;
+  }
+  if (!('success' in response)) {
+    return false;
+  }
+  return (response as { success: boolean }).success === false;
 }
 
 // Response validation schema
@@ -197,7 +209,7 @@ export const apiResponseSchema = z.object({
 });
 
 // Helper to validate API response format
-export function validateApiResponse(response: any): {
+export function validateApiResponse(response: unknown): {
   valid: boolean;
   error?: string;
 } {

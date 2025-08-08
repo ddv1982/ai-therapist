@@ -1,10 +1,7 @@
 'use client';
 
 import React, { memo, useMemo } from 'react';
-import type { Components } from 'react-markdown';
 import { User, Heart } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 
 interface Message {
@@ -18,44 +15,96 @@ interface ChatMessageProps {
   message: Message;
 }
 
-// Memoized markdown components to prevent recreation on every render
-const markdownComponents: Components = {
-  h1: ({ ...props }) => <h1 className="text-xl sm:text-2xl font-bold mb-4 text-foreground border-b border-border/30 pb-2" {...props} />,
-  h2: ({ ...props }) => <h2 className="text-lg sm:text-xl font-semibold mb-3 text-foreground mt-6 first:mt-0" {...props} />,
-  h3: ({ ...props }) => <h3 className="text-base sm:text-lg font-semibold mb-2 text-foreground mt-4 first:mt-0" {...props} />,
-  h4: ({ ...props }) => <h4 className="text-sm sm:text-base font-semibold mb-2 text-foreground mt-3 first:mt-0" {...props} />,
-  p: ({ ...props }) => <p className="mb-4 text-foreground leading-relaxed last:mb-0" {...props} />,
-  strong: ({ ...props }) => <strong className="font-bold text-foreground bg-primary/10 px-1 py-0.5 rounded" {...props} />,
-  em: ({ ...props }) => <em className="italic text-accent font-medium" {...props} />,
-  ol: ({ ...props }) => <ol className="list-decimal ml-6 mb-4 space-y-2 text-foreground" {...props} />,
-  ul: ({ ...props }) => <ul className="list-disc ml-6 mb-4 space-y-2 text-foreground" {...props} />,
-  li: ({ ...props }) => <li className="text-foreground leading-relaxed pl-1" {...props} />,
-  blockquote: ({ ...props }) => (
-    <blockquote className="border-l-4 border-primary bg-primary/5 pl-6 pr-4 py-3 my-4 rounded-r-lg italic text-foreground relative" {...props}>
-      <div className="absolute top-2 left-2 text-primary/50 text-xl">&quot;</div>
-    </blockquote>
-  ),
-  code: ({ node, ...props }) => {
-    const isInline = node?.tagName !== 'pre';
-    return isInline ? (
-      <code className="bg-muted px-2 py-1 rounded text-sm font-mono text-foreground border border-border/50" {...props} />
-    ) : (
-      <code className="block bg-muted p-4 rounded-lg text-sm font-mono text-foreground border border-border/50 overflow-x-auto" {...props} />
-    );
-  },
-  pre: ({ ...props }) => <pre className="bg-muted p-4 rounded-lg border border-border/30 overflow-x-auto my-4" {...props} />,
-  hr: ({ ...props }) => <hr className="border-border/50 my-6" {...props} />,
-  table: ({ ...props }) => (
-    <div className="overflow-x-auto my-6 rounded-lg border border-border/30 bg-card shadow-sm">
-      <table className="w-full border-collapse" {...props} />
-    </div>
-  ),
-  thead: ({ ...props }) => <thead className="bg-primary/10 border-b border-border/30" {...props} />,
-  tbody: ({ ...props }) => <tbody {...props} />,
-  tr: ({ ...props }) => <tr className="border-b border-border/20 last:border-b-0 hover:bg-muted/20 transition-colors" {...props} />,
-  th: ({ ...props }) => <th className="px-4 py-3 text-left font-semibold text-foreground text-sm uppercase tracking-wide bg-primary/5" {...props} />,
-  td: ({ ...props }) => <td className="px-4 py-3 text-foreground border-r border-border/10 last:border-r-0" {...props} />,
-};
+// Enhanced markdown processor with proper table support
+function processMarkdown(text: string): string {
+  // Process tables first (before other replacements)
+  text = processMarkdownTables(text);
+  
+  return text
+    // Bold text
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-foreground bg-primary/10 px-1 py-0.5 rounded">$1</strong>')
+    // Italic text  
+    .replace(/\*(.*?)\*/g, '<em class="italic text-accent font-medium">$1</em>')
+    // Headers
+    .replace(/^### (.*$)/gm, '<h3 class="text-base sm:text-lg font-semibold mb-2 text-foreground mt-4 first:mt-0">$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2 class="text-lg sm:text-xl font-semibold mb-3 text-foreground mt-6 first:mt-0">$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1 class="text-xl sm:text-2xl font-bold mb-4 text-foreground border-b border-border/30 pb-2">$1</h1>')
+    // Horizontal rules (but not table separators)
+    .replace(/^---$/gm, '<hr class="border-border/50 my-6" />')
+    // Lists (basic support)
+    .replace(/^- (.*$)/gm, '<li class="text-foreground leading-relaxed pl-1 mb-1">• $1</li>')
+    // Paragraphs
+    .replace(/\n\n/g, '</p><p class="mb-4 text-foreground leading-relaxed last:mb-0">')
+    // Line breaks
+    .replace(/\n/g, '<br />');
+}
+
+// Dedicated table processor for markdown tables
+function processMarkdownTables(text: string): string {
+  // Match complete markdown tables (header + separator + rows)
+  const tableRegex = /(\|[^|\n]+\|[^\n]*\n\|[-:|]+\|[^\n]*(?:\n\|[^|\n]*\|[^\n]*)*)/gm;
+  
+  return text.replace(tableRegex, (match) => {
+    const lines = match.trim().split('\n');
+    if (lines.length < 2) return match;
+    
+    // Parse header row
+    const headerRow = lines[0];
+    const separatorRow = lines[1];
+    const dataRows = lines.slice(2);
+    
+    // Extract header cells
+    const headerCells = headerRow
+      .split('|')
+      .slice(1, -1) // Remove empty first/last elements
+      .map(cell => cell.trim())
+      .filter(cell => cell);
+    
+    // Extract data rows
+    const processedDataRows = dataRows.map(row => {
+      const cells = row
+        .split('|')
+        .slice(1, -1) // Remove empty first/last elements  
+        .map(cell => cell.trim())
+        .filter(cell => cell);
+      
+      return cells;
+    });
+    
+    // Build HTML table
+    let tableHtml = '<div class="overflow-x-auto my-6 rounded-lg border border-border/30 bg-card shadow-sm">';
+    tableHtml += '<table class="w-full border-collapse">';
+    
+    // Add header
+    if (headerCells.length > 0) {
+      tableHtml += '<thead class="bg-primary/10 border-b border-border/30">';
+      tableHtml += '<tr>';
+      headerCells.forEach(cell => {
+        tableHtml += `<th class="px-4 py-3 text-left font-semibold text-foreground text-sm uppercase tracking-wide bg-primary/5">${cell}</th>`;
+      });
+      tableHtml += '</tr>';
+      tableHtml += '</thead>';
+    }
+    
+    // Add body
+    if (processedDataRows.length > 0) {
+      tableHtml += '<tbody>';
+      processedDataRows.forEach(row => {
+        tableHtml += '<tr class="border-b border-border/20 last:border-b-0 hover:bg-muted/20 transition-colors">';
+        row.forEach(cell => {
+          tableHtml += `<td class="px-4 py-3 text-foreground border-r border-border/10 last:border-r-0">${cell}</td>`;
+        });
+        tableHtml += '</tr>';
+      });
+      tableHtml += '</tbody>';
+    }
+    
+    tableHtml += '</table>';
+    tableHtml += '</div>';
+    
+    return tableHtml;
+  });
+}
 
 function ChatMessageComponent({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
@@ -100,14 +149,10 @@ function ChatMessageComponent({ message }: ChatMessageProps) {
       <div className={contentClasses}>
         {/* Message Bubble */}
         <div className={bubbleClasses}>
-          <div className="text-therapy-sm sm:text-therapy-base leading-relaxed prose prose-sm max-w-none dark:prose-invert [&>*:last-child]:mb-0">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={markdownComponents}
-            >
-              {message.content}
-            </ReactMarkdown>
-          </div>
+          <div 
+            className="text-therapy-sm sm:text-therapy-base leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: processMarkdown(message.content) }}
+          />
         </div>
 
         {/* Timestamp */}

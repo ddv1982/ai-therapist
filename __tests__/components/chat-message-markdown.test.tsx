@@ -42,22 +42,23 @@ I was walking outside during my lunch break.
   timestamp: new Date('2025-08-07T12:00:00.000Z')
 };
 
-describe('ChatMessage Markdown Rendering', () => {
+describe('ChatMessage Lightweight Rendering', () => {
   it('should render the message content', () => {
     render(<ChatMessage message={mockMessage} />);
     
-    // Check that basic content is rendered
+    // Check that basic content is rendered with lightweight processing
     expect(screen.getByText(/CBT Diary Entry/)).toBeInTheDocument();
-    expect(screen.getByText(/Date: 2025-08-07/)).toBeInTheDocument();
+    expect(screen.getByText(/Date:/)).toBeInTheDocument();
+    expect(screen.getByText(/2025-08-07/)).toBeInTheDocument();
     expect(screen.getByText(/Situation/)).toBeInTheDocument();
     expect(screen.getByText(/Feelings/)).toBeInTheDocument();
   });
 
-  it('should render markdown content with proper processing', () => {
+  it('should render content with lightweight processing', () => {
     const { container } = render(<ChatMessage message={mockMessage} />);
     
-    // Check that the content is processed (should have ReactMarkdown div wrapper)
-    expect(container.querySelector('.prose')).toBeInTheDocument();
+    // Check that the content is processed with our lightweight processor
+    expect(container.innerHTML).toContain('CBT Diary Entry');
   });
 
   it('should handle table-like content', () => {

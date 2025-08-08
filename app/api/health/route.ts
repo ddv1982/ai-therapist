@@ -21,8 +21,7 @@ interface HealthCheckResponse {
   uptime: number;
 }
 
-export const GET = withApiMiddleware(async (request, context) => {
-  const startTime = Date.now();
+export const GET = withApiMiddleware(async (_request, context) => {
   
   try {
     // Check database health
@@ -67,23 +66,6 @@ export const GET = withApiMiddleware(async (request, context) => {
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown health check error';
-    
-    const unhealthyResponse: HealthCheckResponse = {
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || '1.0.0',
-      checks: {
-        database: {
-          status: 'unhealthy',
-          message: 'Health check failed',
-        },
-        api: {
-          status: 'healthy',
-          message: 'API is responding but health check encountered errors',
-        },
-      },
-      uptime: process.uptime(),
-    };
 
     return createErrorResponse(
       'Health check failed',
@@ -100,6 +82,6 @@ export const GET = withApiMiddleware(async (request, context) => {
 /**
  * Liveness probe - simple endpoint to check if the API is responsive
  */
-export async function HEAD(request: NextRequest) {
+export async function HEAD(_request: NextRequest) {
   return new Response(null, { status: 200 });
 }

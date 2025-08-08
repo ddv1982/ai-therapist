@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { updateSessionSchema } from '@/lib/validation';
 import { withAuth, withValidationAndParams, db, errorHandlers } from '@/lib/api-middleware';
@@ -16,7 +15,7 @@ export const PATCH = withValidationAndParams(
   updateSessionSchema,
   async (request, context, validatedData, params) => {
     try {
-      const { sessionId } = params;
+      const { sessionId } = params as { sessionId: string };
       const { status, endedAt, title } = validatedData;
 
       // Verify session belongs to this user
@@ -59,9 +58,9 @@ export const PATCH = withValidationAndParams(
   }
 );
 
-export const GET = withAuth(async (request, context, params) => {
+export const GET = withAuth(async (_request, context, params) => {
   try {
-    const { sessionId } = params;
+    const { sessionId } = params as { sessionId: string };
 
     const session = await db.getSessionWithMessages(sessionId, context.userInfo.userId);
 
@@ -86,9 +85,9 @@ export const GET = withAuth(async (request, context, params) => {
   }
 });
 
-export const DELETE = withAuth(async (request, context, params) => {
+export const DELETE = withAuth(async (_request, context, params) => {
   try {
-    const { sessionId } = params;
+    const { sessionId } = params as { sessionId: string };
 
     // Verify session belongs to this user before deleting
     const { valid } = await db.verifySessionOwnership(sessionId, context.userInfo.userId);

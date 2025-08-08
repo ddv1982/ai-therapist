@@ -111,7 +111,7 @@ export class ErrorBoundary extends Component<Props, State> {
         // Retry after a delay
         setTimeout(() => this.reportError(error, errorInfo, retryCount + 1), 2000);
       }
-    } catch (fetchError) {
+    } catch {
       // Store error locally if reporting fails
       try {
         const localErrors = JSON.parse(localStorage.getItem('unreportedErrors') || '[]');

@@ -29,7 +29,7 @@ describe('ChatMessage Component', () => {
     expect(screen.getByText('I understand you\'re looking for stress management techniques.')).toBeInTheDocument()
   })
 
-  it('renders markdown content for assistant messages', () => {
+  it('renders markdown content with lightweight processing', () => {
     const assistantMessage = {
       ...mockMessage,
       role: 'assistant' as const,
@@ -38,11 +38,11 @@ describe('ChatMessage Component', () => {
 
     render(<ChatMessage message={assistantMessage} />)
     
-    // Check for rendered markdown elements
+    // Check for rendered content with lightweight processing
     expect(screen.getByText('Stress Management Tips:')).toBeInTheDocument()
-    expect(screen.getByText('Deep breathing')).toBeInTheDocument()
-    expect(screen.getByText('Regular exercise')).toBeInTheDocument()
-    expect(screen.getByText('Adequate sleep')).toBeInTheDocument()
+    expect(screen.getByText('• Deep breathing')).toBeInTheDocument()
+    expect(screen.getByText('• Regular exercise')).toBeInTheDocument()
+    expect(screen.getByText('• Adequate sleep')).toBeInTheDocument()
   })
 
   it('renders table content correctly', () => {
@@ -57,13 +57,16 @@ describe('ChatMessage Component', () => {
 
     render(<ChatMessage message={assistantMessage} />)
     
-    // With our mock, table content is rendered as text, so check for content with partial matching
-    expect(screen.getByText((content, element) => {
-      return content.includes('Technique') && content.includes('Duration')
-    })).toBeInTheDocument()
-    expect(screen.getByText((content, element) => {
-      return content.includes('Meditation') && content.includes('10-20 min')
-    })).toBeInTheDocument()
+    // Check for properly formatted table with headers and data
+    expect(screen.getByText('Technique')).toBeInTheDocument()
+    expect(screen.getByText('Duration')).toBeInTheDocument()
+    expect(screen.getByText('Frequency')).toBeInTheDocument()
+    expect(screen.getByText('Meditation')).toBeInTheDocument()
+    expect(screen.getByText('10-20 min')).toBeInTheDocument()
+    expect(screen.getByText('Daily')).toBeInTheDocument()
+    expect(screen.getByText('Exercise')).toBeInTheDocument()
+    expect(screen.getByText('30 min')).toBeInTheDocument()
+    expect(screen.getByText('3x/week')).toBeInTheDocument()
   })
 
   it('applies correct styling for user vs assistant messages', () => {

@@ -32,31 +32,31 @@ export interface AuthenticatedRequestContext extends RequestContext {
 /**
  * Higher-order function to wrap API routes with common middleware
  */
-export function withApiMiddleware<T = any>(
+export function withApiMiddleware<T = unknown>(
   handler: (
     request: NextRequest,
     context: RequestContext,
-    params?: any
+    params?: unknown
   ) => Promise<NextResponse<ApiResponse<T>>>
 ) {
   return async (
     request: NextRequest,
-    routeParams?: { params: any }
+    routeParams?: { params: unknown }
   ): Promise<NextResponse<ApiResponse<T>>> => {
     const requestContext = createRequestLogger(request);
     
     try {
       const context: RequestContext = {
         requestId: requestContext.requestId || 'unknown',
-        method: requestContext.method,
-        url: requestContext.url,
-        userAgent: requestContext.userAgent,
+        method: requestContext.method as string | undefined,
+        url: requestContext.url as string | undefined,
+        userAgent: requestContext.userAgent as string | undefined,
       };
 
       return await handler(request, context, routeParams?.params);
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      return createServerErrorResponse(err, requestContext.requestId, requestContext);
+      return createServerErrorResponse(err, requestContext.requestId, requestContext) as NextResponse<ApiResponse<T>>;
     }
   };
 }
@@ -64,11 +64,11 @@ export function withApiMiddleware<T = any>(
 /**
  * Higher-order function to wrap API routes with authentication middleware
  */
-export function withAuth<T = any>(
+export function withAuth<T = unknown>(
   handler: (
     request: NextRequest,
     context: AuthenticatedRequestContext,
-    params?: any
+    params?: unknown
   ) => Promise<NextResponse<ApiResponse<T>>>
 ) {
   return withApiMiddleware(async (request, baseContext, params) => {
@@ -105,16 +105,16 @@ export function withAuth<T = any>(
 /**
  * Higher-order function to wrap API routes with validation middleware
  */
-export function withValidation<TSchema extends z.ZodSchema, TResponse = any>(
+export function withValidation<TSchema extends z.ZodSchema, TResponse = unknown>(
   schema: TSchema,
   handler: (
     request: NextRequest,
     context: AuthenticatedRequestContext,
     validatedData: z.infer<TSchema>,
-    params?: any
+    params?: unknown
   ) => Promise<NextResponse<ApiResponse<TResponse>>>
 ) {
-  return withAuth<TResponse>(async (request, context, params) => {
+  return withAuth<TResponse>(async (request, context, params?) => {
     let requestData: unknown;
     
     try {
@@ -126,42 +126,42 @@ export function withValidation<TSchema extends z.ZodSchema, TResponse = any>(
         const { searchParams } = new URL(request.url);
         requestData = Object.fromEntries(searchParams.entries());
       }
-    } catch (error) {
+    } catch {
       logger.validationError(
-        context.url,
+        context.url || 'unknown',
         'Invalid JSON in request body',
         context
       );
       return createValidationErrorResponse(
         'Invalid JSON format in request body',
         context.requestId
-      );
+      ) as NextResponse<ApiResponse<TResponse>>;
     }
 
     // Validate the request data
     const validation = validateRequest(schema, requestData);
     if (!validation.success) {
-      logger.validationError(context.url, validation.error, context);
-      return createValidationErrorResponse(validation.error, context.requestId);
+      logger.validationError(context.url || 'unknown', validation.error, context);
+      return createValidationErrorResponse(validation.error, context.requestId) as NextResponse<ApiResponse<TResponse>>;
     }
 
-    return await handler(request, context, validation.data, params);
+    return await handler(request, context, validation.data as z.infer<TSchema>, params);
   });
 }
 
 /**
  * Helper for routes that need both validation and route params
  */
-export function withValidationAndParams<TSchema extends z.ZodSchema, TResponse = any>(
+export function withValidationAndParams<TSchema extends z.ZodSchema, TResponse = unknown>(
   schema: TSchema,
   handler: (
     request: NextRequest,
     context: AuthenticatedRequestContext,
     validatedData: z.infer<TSchema>,
-    params: any
+    params: unknown
   ) => Promise<NextResponse<ApiResponse<TResponse>>>
 ) {
-  return (request: NextRequest, routeParams: { params: any }) => {
+  return (request: NextRequest, routeParams: { params: unknown }) => {
     return withValidation(schema, (req, ctx, data) => 
       handler(req, ctx, data, routeParams.params)
     )(request, routeParams);
@@ -178,7 +178,7 @@ export const db = {
   async verifySessionOwnership(
     sessionId: string,
     userId: string
-  ): Promise<{ valid: boolean; session?: any }> {
+  ): Promise<{ valid: boolean; session?: unknown }> {
     try {
       const session = await prisma.session.findUnique({
         where: { 
@@ -287,14 +287,14 @@ export const errorHandlers = {
  * Rate limiting middleware (placeholder for future implementation)
  */
 export function withRateLimit(
-  maxRequests: number = 100,
-  windowMs: number = 60000 // 1 minute
+  _maxRequests: number = 100,
+  _windowMs: number = 60000 // 1 minute
 ) {
   return function<T>(
     handler: (
       request: NextRequest,
       context: AuthenticatedRequestContext,
-      params?: any
+      params?: unknown
     ) => Promise<NextResponse<ApiResponse<T>>>
   ) {
     return withAuth<T>(async (request, context, params) => {

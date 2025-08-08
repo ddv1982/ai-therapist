@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createSessionSchema } from '@/lib/validation';
 import { logger } from '@/lib/logger';
@@ -42,7 +41,7 @@ export const POST = withValidation(
   }
 );
 
-export const GET = withAuth(async (request, context) => {
+export const GET = withAuth(async (_request, context) => {
   try {
     logger.debug('Fetching sessions', context);
 

@@ -77,7 +77,7 @@ export function generateSecureBytes(length: number = 32): string {
       return Buffer.from(array).toString('base64');
     } else {
       // Browser environment
-      return btoa(String.fromCharCode(...array));
+      return btoa(String.fromCharCode(...Array.from(array)));
     }
   }
   
@@ -131,7 +131,7 @@ export function generateBackupCodes(count: number = 10): string[] {
  */
 export function isCryptoAvailable(): boolean {
   return typeof crypto !== 'undefined' && 
-         (crypto.randomUUID || crypto.getRandomValues);
+         !!(crypto.randomUUID || crypto.getRandomValues);
 }
 
 /**

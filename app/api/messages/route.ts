@@ -1,8 +1,7 @@
-import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { messageSchema, messagesQuerySchema } from '@/lib/validation';
 import { encryptMessage, safeDecryptMessages } from '@/lib/message-encryption';
-import { withValidation, withAuth, db, errorHandlers } from '@/lib/api-middleware';
+import { withValidation, db, errorHandlers } from '@/lib/api-middleware';
 import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api-response';
 import { logger } from '@/lib/logger';
 

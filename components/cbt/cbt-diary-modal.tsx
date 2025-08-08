@@ -67,17 +67,17 @@ const EmotionScale: React.FC<EmotionScaleProps> = ({ label, value, onChange, cla
 );
 
 // Array Field Component for dynamic lists
-interface ArrayFieldProps {
-  items: { [key: string]: any }[];
+interface ArrayFieldProps<T = unknown> {
+  items: T[];
   onAdd: () => void;
   onRemove: (index: number) => void;
-  renderItem: (item: any, index: number, onChange: (index: number, field: string, value: any) => void) => React.ReactNode;
+  renderItem: (item: T, index: number, onChange: (index: number, field: string, value: unknown) => void) => React.ReactNode;
   addButtonText: string;
   emptyMessage: string;
   maxItems?: number;
 }
 
-const ArrayField: React.FC<ArrayFieldProps> = ({ 
+const ArrayField = <T,>({ 
   items, 
   onAdd, 
   onRemove, 
@@ -85,8 +85,8 @@ const ArrayField: React.FC<ArrayFieldProps> = ({
   addButtonText, 
   emptyMessage,
   maxItems = 10 
-}) => {
-  const handleItemChange = (index: number, field: string, value: any) => {
+}: ArrayFieldProps<T>) => {
+  const handleItemChange = (_index: number, _field: string, _value: unknown) => {
     // This will be handled by the parent component through form state
   };
 

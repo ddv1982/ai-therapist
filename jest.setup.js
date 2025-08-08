@@ -31,39 +31,7 @@ jest.mock('groq-sdk', () => ({
   })),
 }))
 
-// Mock react-markdown with better simulation
-jest.mock('react-markdown', () => {
-  const React = require('react');
-  return function ReactMarkdown({ children }) {
-    // Simple markdown processing for testing
-    if (typeof children === 'string') {
-      // Process bold text **text** -> <strong>text</strong>
-      let processed = children.replace(/\*\*(.*?)\*\*/g, '$1');
-      
-      // Process list items - * item -> • item  
-      processed = processed.replace(/^- (.+)$/gm, '• $1');
-      
-      // Split by lines and process each
-      const lines = processed.split('\n');
-      return lines.map((line, index) => {
-        const key = `line-${index}`;
-        if (line.startsWith('• ')) {
-          return React.createElement('div', { key }, line.substring(2));
-        }
-        if (line.startsWith('| ')) {
-          // Simple table simulation
-          const cells = line.split('|').filter(cell => cell.trim());
-          return React.createElement('div', { key }, cells.join(' '));
-        }
-        return React.createElement('div', { key }, line);
-      });
-    }
-    return children;
-  }
-})
-
-// Mock remark-gfm
-jest.mock('remark-gfm', () => () => {})
+// ReactMarkdown and remark-gfm no longer used - removed from dependencies
 
 // Mock crypto for testing with realistic behavior
 Object.defineProperty(global, 'crypto', {

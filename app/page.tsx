@@ -20,8 +20,6 @@ import {
   BookOpen
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import type { ModelConfig } from '@/types/index';
 import { generateUUID } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';

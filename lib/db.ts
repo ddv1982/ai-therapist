@@ -20,15 +20,6 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
       url: process.env.DATABASE_URL,
     },
   },
-  // SQLite-specific optimizations
-  __internal: {
-    engine: {
-      // Connection pool configuration for SQLite
-      connectionTimeout: 60000, // 60 seconds
-      poolTimeout: 60000,       // 60 seconds
-      maxConnections: 1,        // SQLite supports only one writer
-    },
-  },
 });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;

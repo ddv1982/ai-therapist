@@ -72,9 +72,16 @@ export function useAuth(): AuthStatus {
     abortControllerRef.current = new AbortController();
 
     try {
-      const response = await fetch('/api/auth/session', {
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Auth check timeout')), 10000); // 10 second timeout
+      });
+      
+      const fetchPromise = fetch('/api/auth/session', {
         signal: abortControllerRef.current.signal
       });
+      
+      const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
       
       if (response.ok) {
         const data = await response.json();
@@ -108,6 +115,15 @@ export function useAuth(): AuthStatus {
       }
       
       console.error('Failed to check auth status:', error);
+      
+      // Handle timeout errors more gracefully
+      const errorMessage = (error as Error).message;
+      const isTimeout = errorMessage.includes('timeout') || errorMessage.includes('Timeout');
+      
+      if (isTimeout) {
+        console.warn('Auth check timed out - falling back to setup mode');
+      }
+      
       const errorStatus: AuthStatus = {
         isAuthenticated: false,
         needsSetup: true,
