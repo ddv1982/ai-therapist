@@ -1,17 +1,10 @@
 'use client';
 
 import React, { memo, useMemo } from 'react';
-import { ChatMessage } from './chat-message';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
+import { Message, type MessageData } from '@/components/message';
 
 interface VirtualizedMessageListProps {
-  messages: Message[];
+  messages: MessageData[];
   isStreaming: boolean;
   isMobile: boolean;
 }
@@ -47,7 +40,7 @@ function VirtualizedMessageListComponent({
           role="article"
           aria-label={`Message from ${message.role}`}
         >
-          <ChatMessage message={message} />
+          <Message message={message} />
         </div>
       ))}
       

@@ -250,8 +250,12 @@ export function useCBTForm(options: UseCBTFormOptions = {}): UseCBTFormReturn {
 
     const formatQuestions = (questions: { question: string; answer: string }[]) => {
       return questions
-        .filter(q => q.question.trim() || q.answer.trim())
-        .map(q => `| ${q.question} | ${q.answer} |`)
+        .map(q => {
+          // Ensure empty cells display properly with placeholder or empty space
+          const question = q.question.trim() || ' ';
+          const answer = q.answer.trim() || ' ';
+          return `| ${question} | ${answer} |`;
+        })
         .join('\n');
     };
 
@@ -260,93 +264,88 @@ export function useCBTForm(options: UseCBTFormOptions = {}): UseCBTFormReturn {
       .map(mode => `- [x] ${mode.name} *(${mode.description})*`)
       .join('\n');
 
-    return `📝 **CBT Diary Entry**
+    return `# 📝 CBT Diary Entry
 
 **Date:** ${formData.date}
 
 ---
 
-## **Situation**
+## Situation
 ${formData.situation || '[No situation described]'}
 
 ---
 
-## **Feelings** 
-*(Initial emotion ratings from 1-10)*
+## Initial Feelings
+*Emotion ratings from 1-10*
 
 ${formatEmotions(formData.initialEmotions) || '[No emotions rated]'}
 
 ---
 
-## **Automatic Thoughts** 
-*(Credibility ratings from 1-10)*
+## Automatic Thoughts
+*Credibility ratings from 1-10*
 
 ${formatThoughts(formData.automaticThoughts) || '[No thoughts entered]'}
 
 ---
 
-## **Schema** 
-*(Core belief and credibility)*
+## Core Belief
+*Credibility: ${formData.coreBeliefCredibility}/10*
 
-**Core Belief:** *(Credibility: ${formData.coreBeliefCredibility}/10)*
 ${formData.coreBeliefText || '[No core belief identified]'}
 
----
-
-## **Schema-Behavior** 
+### Schema Behaviors
 
 **Confirming behaviors:** ${formData.confirmingBehaviors || '[Not specified]'}
+
 **Avoidant behaviors:** ${formData.avoidantBehaviors || '[Not specified]'}
+
 **Overriding behaviors:** ${formData.overridingBehaviors || '[Not specified]'}
 
----
-
-## **Schema-Modes** 
-*(Emotional states experienced)*
+### Schema Modes
+*Emotional states experienced*
 
 ${selectedModes || '[No schema modes selected]'}
 
 ---
 
-## **Challenge**
+## Challenge Questions
 
-| **Question** | **Answer** |
-|--------------|------------|
+| Question | Answer |
+|----------|---------|
 ${formatQuestions(formData.challengeQuestions)}
 
 ${formData.additionalQuestions.some(q => q.question.trim() || q.answer.trim()) ? `
-**Additional Questions:**
+### Additional Questions
 
-| **Question** | **Answer** |
-|--------------|------------|
+| Question | Answer |
+|----------|---------|
 ${formatQuestions(formData.additionalQuestions)}
 ` : ''}
 
 ---
 
-## **Rational Thoughts** 
-*(Confidence ratings from 1-10)*
+## Rational Thoughts
+*Confidence ratings from 1-10*
 
 ${formatThoughts(formData.rationalThoughts) || '[No rational thoughts developed]'}
 
 ---
 
-## **Effect on Feelings**
-*(Updated emotion ratings after reflection)*
+## Final Reflection
+
+### Updated Feelings
+*After completing this reflection*
 
 ${formatEmotions(formData.finalEmotions) || '[No final emotions rated]'}
 
 **Credibility of Original Thoughts:** ${formData.originalThoughtCredibility}/10
 
----
-
-## **Result**
-
-### **New Behaviors**
+### New Behaviors
 ${formData.newBehaviors || '[No new behaviors identified]'}
 
-### **Possible Alternative Responses** 
-*(For future reference)*
+### Alternative Responses
+*For future situations*
 
 ${formData.alternativeResponses
   .filter(r => r.response.trim())
@@ -355,7 +354,7 @@ ${formData.alternativeResponses
 
 ---
 
-*Remember: This is a tool for self-reflection and growth. Be patient and compassionate with yourself throughout this process.*`;
+*This reflection is a tool for self-awareness and growth. Be patient and compassionate with yourself throughout this process.*`;
   }, [formData]);
 
   // Load draft from localStorage on mount

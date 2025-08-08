@@ -82,7 +82,7 @@ export const therapeuticSpacing = {
   
   // Specific therapeutic spacing patterns
   messageSpacing: 'mb-4',
-  listItemSpacing: 'pl-1 mb-1',
+  listItemSpacing: 'pl-6 py-2 mb-3 relative',
   iconSpacing: 'mb-4',
 } as const;
 
@@ -95,7 +95,7 @@ export const therapeuticInteractive = {
   iconButtonSmall: 'rounded-full h-8 w-8 p-0 hover:bg-primary/10 relative overflow-hidden group',
   
   // Icon buttons - medium (9x9) 
-  iconButtonMedium: 'relative h-9 w-9 p-0 rounded-full hover:bg-primary/10 transition-all duration-300 group border-2 border-primary/20 overflow-hidden',
+  iconButtonMedium: 'relative h-10 w-10 p-2 rounded-full hover:bg-primary/10 hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300 group border border-border/30 hover:border-primary/30 overflow-hidden backdrop-blur-sm',
   
   // Icon buttons - large (10x10)
   iconButtonLarge: 'rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors relative overflow-hidden group touch-manipulation',
@@ -118,9 +118,9 @@ export const therapeuticContent = {
   // Markdown formatting for chat messages
   strongHighlight: 'font-bold text-foreground bg-primary/10 px-1 py-0.5 rounded',
   
-  // List formatting
-  listItem: 'text-foreground leading-relaxed pl-1',
-  listItemWithMargin: 'text-foreground leading-relaxed pl-1 mb-1',
+  // List formatting - enhanced visual styling
+  listItem: 'text-foreground leading-relaxed pl-6 py-2 relative',
+  listItemWithMargin: 'text-foreground leading-relaxed pl-6 py-2 mb-3 relative',
   
   // Table formatting
   tableHeader: 'bg-primary/10 border-b border-border/30',

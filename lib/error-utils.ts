@@ -5,12 +5,11 @@
  */
 
 import { NextResponse } from 'next/server';
-import { logger, createRequestLogger } from '@/lib/logger';
+import { logger } from '@/lib/logger';
 import { RequestContext } from '@/lib/api-middleware';
 import { 
   createServerErrorResponse,
   createValidationErrorResponse,
-  createNotFoundErrorResponse,
   createForbiddenErrorResponse,
   ApiResponse
 } from '@/lib/api-response';
@@ -37,7 +36,7 @@ export interface EnhancedErrorContext {
 export interface ErrorLogEntry {
   error: Error;
   context: EnhancedErrorContext;
-  timestamp: Date;
+  timestamp: string;
   stackTrace?: string;
   requestDetails?: {
     method?: string;
@@ -202,7 +201,7 @@ export function shouldLogError(severity: ErrorSeverity, category: ErrorCategory)
 export function handleApiError(
   error: Error | unknown,
   context: EnhancedErrorContext = {}
-): NextResponse<ApiResponse<never>> {
+): NextResponse<ApiResponse> {
   const actualError = error instanceof Error ? error : new Error(String(error));
   const classification = classifyError(actualError);
   
@@ -218,7 +217,7 @@ export function handleApiError(
     const logEntry: ErrorLogEntry = {
       error: actualError,
       context: enhancedContext,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
       stackTrace: actualError.stack,
     };
     
@@ -274,7 +273,7 @@ export function handleMessageError(
   error: Error | unknown,
   operation: 'create' | 'retrieve' | 'encrypt' | 'decrypt',
   context: Partial<EnhancedErrorContext> = {}
-): NextResponse<ApiResponse<never>> {
+): NextResponse<ApiResponse> {
   const enhancedContext: EnhancedErrorContext = {
     ...context,
     operation: `message_${operation}`,
@@ -302,7 +301,7 @@ export function handleSessionError(
   error: Error | unknown,
   operation: 'create' | 'retrieve' | 'update' | 'delete' | 'access_check',
   context: Partial<EnhancedErrorContext> = {}
-): NextResponse<ApiResponse<never>> {
+): NextResponse<ApiResponse> {
   const enhancedContext: EnhancedErrorContext = {
     ...context,
     operation: `session_${operation}`,
@@ -325,7 +324,7 @@ export function handleSessionError(
 export function handleAIError(
   error: Error | unknown,
   context: Partial<EnhancedErrorContext> = {}
-): NextResponse<ApiResponse<never>> {
+): NextResponse<ApiResponse> {
   const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
   
   const enhancedContext: EnhancedErrorContext = {

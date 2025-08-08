@@ -28,6 +28,7 @@ import {
 import { useCBTForm } from '@/hooks/use-cbt-form';
 import { CBTDiaryEmotions } from '@/types/cbt';
 import { cn } from '@/lib/utils';
+import { getCBTTokens } from '@/lib/design-system/message';
 
 interface CBTDiaryModalProps {
   open: boolean;
@@ -43,28 +44,35 @@ interface EmotionScaleProps {
   className?: string;
 }
 
-const EmotionScale: React.FC<EmotionScaleProps> = ({ label, value, onChange, className }) => (
-  <div className={cn("space-y-2", className)}>
-    <div className="flex justify-between items-center">
-      <label className="text-therapy-sm font-medium text-foreground">{label}</label>
-      <span className="text-therapy-sm text-muted-foreground font-mono">{value}/10</span>
+const EmotionScale: React.FC<EmotionScaleProps> = ({ label, value, onChange, className }) => {
+  const tokens = getCBTTokens();
+  
+  return (
+    <div className={cn(tokens.slider.container, className)}>
+      <div className={tokens.slider.label}>
+        <label className={tokens.slider.labelText}>{label}</label>
+        <span className={tokens.slider.value}>{value}/10</span>
+      </div>
+      <input
+        type="range"
+        min="0"
+        max="10"
+        step="1"
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value))}
+        className={cn(
+          tokens.slider.track,
+          "slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 slider-thumb:rounded-full slider-thumb:bg-primary slider-thumb:cursor-pointer slider-track:bg-muted slider-track:rounded-lg"
+        )}
+      />
+      <div className={tokens.slider.scale}>
+        <span>0</span>
+        <span>5</span>
+        <span>10</span>
+      </div>
     </div>
-    <input
-      type="range"
-      min="0"
-      max="10"
-      step="1"
-      value={value}
-      onChange={(e) => onChange(parseInt(e.target.value))}
-      className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 slider-thumb:rounded-full slider-thumb:bg-primary slider-thumb:cursor-pointer slider-track:bg-muted slider-track:rounded-lg"
-    />
-    <div className="flex justify-between text-xs text-muted-foreground">
-      <span>0</span>
-      <span>5</span>
-      <span>10</span>
-    </div>
-  </div>
-);
+  );
+};
 
 // Array Field Component for dynamic lists
 interface ArrayFieldProps<T = unknown> {
@@ -86,19 +94,21 @@ const ArrayField = <T,>({
   emptyMessage,
   maxItems = 10 
 }: ArrayFieldProps<T>) => {
+  const tokens = getCBTTokens();
+  
   const handleItemChange = (_index: number, _field: string, _value: unknown) => {
     // This will be handled by the parent component through form state
   };
 
   return (
-    <div className="space-y-4">
+    <div className={tokens.arrayField.container}>
       {items.length === 0 ? (
-        <p className="text-therapy-sm text-muted-foreground text-center py-4 italic">
+        <p className={tokens.arrayField.empty}>
           {emptyMessage}
         </p>
       ) : (
         items.map((item, index) => (
-          <div key={index} className="relative p-4 border border-border/30 rounded-lg bg-card/50">
+          <div key={index} className={tokens.arrayField.item}>
             {renderItem(item, index, handleItemChange)}
             {items.length > 1 && (
               <Button
@@ -106,7 +116,7 @@ const ArrayField = <T,>({
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemove(index)}
-                className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                className={tokens.arrayField.removeButton}
               >
                 <Minus className="w-4 h-4" />
               </Button>
@@ -120,7 +130,7 @@ const ArrayField = <T,>({
           type="button"
           variant="outline"
           onClick={onAdd}
-          className="w-full h-12 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-colors"
+          className={tokens.arrayField.addButton}
         >
           <Plus className="w-4 h-4 mr-2" />
           {addButtonText}
@@ -135,6 +145,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
   onOpenChange,
   onSendToChat
 }) => {
+  const tokens = getCBTTokens();
   const {
     formData,
     updateField,
@@ -189,34 +200,34 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
   }, [updateNestedField]);
 
   const renderSituationSection = () => (
-    <div className="space-y-6">
+    <div className={tokens.section.container}>
       <div>
-        <label className="block text-therapy-sm font-medium mb-2">
+        <label className={tokens.input.label}>
           Date
         </label>
         <Input
           type="date"
           value={formData.date}
           onChange={(e) => updateField('date', e.target.value)}
-          className="w-full"
+          className="w-full bg-card border border-border/30 rounded-lg p-3 text-foreground hover:border-border/50 focus:border-primary/50 transition-colors duration-200"
         />
       </div>
       
       <div>
-        <label className="block text-therapy-sm font-medium mb-2">
-          Situation <span className="text-red-500">*</span>
+        <label className={tokens.input.label}>
+          Situation <span className={tokens.input.required}>*</span>
         </label>
         <Textarea
           placeholder="Where am I? With whom? What is happening? Describe the specific context, location, people present, and circumstances..."
           value={formData.situation}
           onChange={(e) => updateField('situation', e.target.value)}
-          className="w-full min-h-[120px] resize-none"
+          className={cn(tokens.input.field, "min-h-[380px]")}
           maxLength={1000}
         />
         {errors.situation && (
-          <p className="text-red-500 text-xs mt-1">{errors.situation}</p>
+          <p className={tokens.input.error}>{errors.situation}</p>
         )}
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className={tokens.input.helper}>
           {formData.situation.length}/1000 characters
         </p>
       </div>
@@ -224,9 +235,9 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
   );
 
   const renderEmotionsSection = () => (
-    <div className="space-y-6">
+    <div className={tokens.section.container}>
       <div>
-        <h3 className="text-therapy-base font-semibold mb-4 flex items-center gap-2">
+        <h3 className={tokens.section.header}>
           <Heart className="w-5 h-5 text-primary" />
           Initial Emotions
         </h3>
@@ -268,13 +279,14 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
           />
         </div>
         
-        <div className="mt-6 p-4 border border-border/30 rounded-lg bg-muted/20">
-          <h4 className="text-therapy-sm font-medium mb-3">Other Emotion</h4>
+        <div className="mt-6 p-4 border border-border/30 rounded-lg bg-card/50">
+          <h4 className={tokens.section.subHeader}>Other Emotion</h4>
           <div className="space-y-3">
             <Input
               placeholder="Name of emotion (e.g., jealousy, excitement)"
               value={formData.initialEmotions.other || ''}
               onChange={(e) => updateNestedField('initialEmotions.other', e.target.value)}
+              className="w-full bg-card border border-border/30 rounded-lg p-3 text-foreground"
             />
             {formData.initialEmotions.other && (
               <EmotionScale
@@ -287,16 +299,16 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
         </div>
 
         {errors.initialEmotions && (
-          <p className="text-red-500 text-xs mt-2">{errors.initialEmotions}</p>
+          <p className={tokens.input.error}>{errors.initialEmotions}</p>
         )}
       </div>
     </div>
   );
 
   const renderThoughtsSection = () => (
-    <div className="space-y-6">
+    <div className={tokens.section.container}>
       <div>
-        <h3 className="text-therapy-base font-semibold mb-4 flex items-center gap-2">
+        <h3 className={tokens.section.header}>
           <Brain className="w-5 h-5 text-primary" />
           Automatic Thoughts
         </h3>
@@ -309,7 +321,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
           renderItem={(thought, index) => (
             <div className="space-y-3">
               <div>
-                <label className="block text-therapy-sm font-medium mb-2">
+                <label className={tokens.input.label}>
                   Automatic Thought {index + 1}
                 </label>
                 <Textarea
@@ -320,7 +332,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                     newThoughts[index] = { ...newThoughts[index], thought: e.target.value };
                     updateField('automaticThoughts', newThoughts);
                   }}
-                  className="w-full min-h-[80px] resize-none"
+                  className={tokens.input.field}
                 />
               </div>
               <EmotionScale
@@ -336,33 +348,33 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
           )}
         />
         {errors.automaticThoughts && (
-          <p className="text-red-500 text-xs mt-2">{errors.automaticThoughts}</p>
+          <p className={tokens.input.error}>{errors.automaticThoughts}</p>
         )}
       </div>
     </div>
   );
 
   const renderSchemaSection = () => (
-    <div className="space-y-6">
+    <div className={tokens.section.container}>
       {/* Core Belief */}
       <div>
-        <h3 className="text-therapy-base font-semibold mb-4 flex items-center gap-2">
+        <h3 className={tokens.section.header}>
           <Target className="w-5 h-5 text-primary" />
           Core Belief
         </h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-therapy-sm font-medium mb-2">
-              Core Belief <span className="text-red-500">*</span>
+            <label className={tokens.input.label}>
+              Core Belief <span className={tokens.input.required}>*</span>
             </label>
             <Textarea
               placeholder="What deeper belief about myself, others, or the world does this connect to?"
               value={formData.coreBeliefText}
               onChange={(e) => updateField('coreBeliefText', e.target.value)}
-              className="w-full min-h-[80px] resize-none"
+              className={tokens.input.field}
             />
             {errors.coreBeliefText && (
-              <p className="text-red-500 text-xs mt-1">{errors.coreBeliefText}</p>
+              <p className={tokens.input.error}>{errors.coreBeliefText}</p>
             )}
           </div>
           <EmotionScale
@@ -375,39 +387,39 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
 
       {/* Schema Behaviors */}
       <div>
-        <h3 className="text-therapy-base font-semibold mb-4">Schema-Behaviors</h3>
+        <h3 className={tokens.section.subHeader}>Schema-Behaviors</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-therapy-sm font-medium mb-2">
+            <label className={tokens.input.label}>
               Confirming Behaviors
             </label>
             <Textarea
               placeholder="Actions that reinforce the belief"
               value={formData.confirmingBehaviors}
               onChange={(e) => updateField('confirmingBehaviors', e.target.value)}
-              className="w-full min-h-[60px] resize-none"
+              className={cn(tokens.input.field, "min-h-[60px]")}
             />
           </div>
           <div>
-            <label className="block text-therapy-sm font-medium mb-2">
+            <label className={tokens.input.label}>
               Avoidant Behaviors
             </label>
             <Textarea
               placeholder="Actions to escape or avoid the situation"
               value={formData.avoidantBehaviors}
               onChange={(e) => updateField('avoidantBehaviors', e.target.value)}
-              className="w-full min-h-[60px] resize-none"
+              className={cn(tokens.input.field, "min-h-[60px]")}
             />
           </div>
           <div>
-            <label className="block text-therapy-sm font-medium mb-2">
+            <label className={tokens.input.label}>
               Overriding Behaviors
             </label>
             <Textarea
               placeholder="Compensatory actions to counteract the belief"
               value={formData.overridingBehaviors}
               onChange={(e) => updateField('overridingBehaviors', e.target.value)}
-              className="w-full min-h-[60px] resize-none"
+              className={cn(tokens.input.field, "min-h-[60px]")}
             />
           </div>
         </div>
@@ -415,8 +427,8 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
 
       {/* Schema Modes */}
       <div>
-        <h3 className="text-therapy-base font-semibold mb-4">Schema-Modes</h3>
-        <p className="text-therapy-sm text-muted-foreground mb-4">
+        <h3 className={tokens.section.subHeader}>Schema-Modes</h3>
+        <p className={tokens.section.description}>
           Which emotional states were you experiencing?
         </p>
         <div className="space-y-3">
@@ -429,7 +441,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                 className="w-4 h-4 mt-1 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
               />
               <div className="flex-1">
-                <div className="font-medium text-therapy-sm">{mode.name}</div>
+                <div className="font-medium text-sm text-foreground">{mode.name}</div>
                 <div className="text-xs text-muted-foreground italic">{mode.description}</div>
               </div>
             </label>
@@ -440,16 +452,16 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
   );
 
   const renderChallengeSection = () => (
-    <div className="space-y-6">
+    <div className={tokens.section.container}>
       <div>
-        <h3 className="text-therapy-base font-semibold mb-4 flex items-center gap-2">
+        <h3 className={tokens.section.header}>
           <Lightbulb className="w-5 h-5 text-primary" />
           Challenge Questions
         </h3>
         <div className="space-y-4">
           {formData.challengeQuestions.map((question, index) => (
-            <div key={index} className="p-4 border border-border/30 rounded-lg bg-card/50">
-              <div className="font-medium text-therapy-sm mb-2 text-primary">
+            <div key={index} className={tokens.arrayField.item}>
+              <div className="font-medium text-sm mb-2 text-primary">
                 {question.question}
               </div>
               <Textarea
@@ -460,7 +472,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                   newQuestions[index] = { ...newQuestions[index], answer: e.target.value };
                   updateField('challengeQuestions', newQuestions);
                 }}
-                className="w-full min-h-[80px] resize-none"
+                className={tokens.input.field}
               />
             </div>
           ))}
@@ -468,7 +480,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
       </div>
 
       <div>
-        <h3 className="text-therapy-base font-semibold mb-4">Additional Questions</h3>
+        <h3 className={tokens.section.subHeader}>Additional Questions</h3>
         <ArrayField
           items={formData.additionalQuestions}
           onAdd={addAdditionalQuestion}
@@ -478,7 +490,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
           renderItem={(question, index) => (
             <div className="space-y-3">
               <div>
-                <label className="block text-therapy-sm font-medium mb-2">
+                <label className={tokens.input.label}>
                   Question
                 </label>
                 <Input
@@ -489,10 +501,11 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                     newQuestions[index] = { ...newQuestions[index], question: e.target.value };
                     updateField('additionalQuestions', newQuestions);
                   }}
+                  className="w-full bg-card border border-border/30 rounded-lg p-3 text-foreground"
                 />
               </div>
               <div>
-                <label className="block text-therapy-sm font-medium mb-2">
+                <label className={tokens.input.label}>
                   Answer
                 </label>
                 <Textarea
@@ -503,7 +516,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                     newQuestions[index] = { ...newQuestions[index], answer: e.target.value };
                     updateField('additionalQuestions', newQuestions);
                   }}
-                  className="w-full min-h-[80px] resize-none"
+                  className={tokens.input.field}
                 />
               </div>
             </div>
@@ -512,7 +525,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
       </div>
 
       <div>
-        <h3 className="text-therapy-base font-semibold mb-4">Rational Thoughts</h3>
+        <h3 className={tokens.section.subHeader}>Rational Thoughts</h3>
         <ArrayField
           items={formData.rationalThoughts}
           onAdd={addRationalThought}
@@ -522,7 +535,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
           renderItem={(thought, index) => (
             <div className="space-y-3">
               <div>
-                <label className="block text-therapy-sm font-medium mb-2">
+                <label className={tokens.input.label}>
                   Balanced Perspective {index + 1}
                 </label>
                 <Textarea
@@ -533,7 +546,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                     newThoughts[index] = { ...newThoughts[index], thought: e.target.value };
                     updateField('rationalThoughts', newThoughts);
                   }}
-                  className="w-full min-h-[80px] resize-none"
+                  className={tokens.input.field}
                 />
               </div>
               <EmotionScale
@@ -553,14 +566,14 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
   );
 
   const renderResultsSection = () => (
-    <div className="space-y-6">
+    <div className={tokens.section.container}>
       {/* Final Emotions */}
       <div>
-        <h3 className="text-therapy-base font-semibold mb-4 flex items-center gap-2">
+        <h3 className={tokens.section.header}>
           <Heart className="w-5 h-5 text-accent" />
           Effect on Feelings
         </h3>
-        <p className="text-therapy-sm text-muted-foreground mb-4">
+        <p className={tokens.section.description}>
           How do you feel after completing this reflection?
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -622,23 +635,23 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
 
       {/* New Behaviors */}
       <div>
-        <h3 className="text-therapy-base font-semibold mb-4">New Behaviors</h3>
+        <h3 className={tokens.section.subHeader}>New Behaviors</h3>
         <div>
-          <label className="block text-therapy-sm font-medium mb-2">
+          <label className={tokens.input.label}>
             What will you do differently next time this situation arises?
           </label>
           <Textarea
             placeholder="Describe new behaviors or responses you want to try..."
             value={formData.newBehaviors}
             onChange={(e) => updateField('newBehaviors', e.target.value)}
-            className="w-full min-h-[100px] resize-none"
+            className={cn(tokens.input.field, "min-h-[100px]")}
           />
         </div>
       </div>
 
       {/* Alternative Responses */}
       <div>
-        <h3 className="text-therapy-base font-semibold mb-4">Alternative Responses</h3>
+        <h3 className={tokens.section.subHeader}>Alternative Responses</h3>
         <ArrayField
           items={formData.alternativeResponses}
           onAdd={addAlternativeResponse}
@@ -647,7 +660,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
           emptyMessage="No alternative responses identified"
           renderItem={(response, index) => (
             <div>
-              <label className="block text-therapy-sm font-medium mb-2">
+              <label className={tokens.input.label}>
                 Alternative Response {index + 1}
               </label>
               <Textarea
@@ -658,7 +671,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                   newResponses[index] = { ...newResponses[index], response: e.target.value };
                   updateField('alternativeResponses', newResponses);
                 }}
-                className="w-full min-h-[80px] resize-none"
+                className={tokens.input.field}
               />
             </div>
           )}
@@ -686,19 +699,19 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-w-4xl w-full max-h-[90vh] flex flex-col p-0 gap-0"
+        className="max-w-4xl w-full h-[90vh] max-h-[90vh] flex flex-col p-0 gap-0"
         showCloseButton={false}
       >
         {/* Header */}
-        <DialogHeader className="px-6 py-4 border-b border-border/30 flex-shrink-0">
+        <DialogHeader className={tokens.modal.header}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 pl-2">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
               <div>
-                <DialogTitle className="text-therapy-lg">CBT Diary Entry</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-lg font-semibold text-foreground">CBT Diary Entry</DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground">
                   Structured reflection for cognitive behavioral therapy
                 </DialogDescription>
               </div>
@@ -714,7 +727,6 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                 size="sm"
                 onClick={() => setShowConfirmReset(true)}
                 disabled={!isDirty}
-                className="h-8 px-2"
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
@@ -722,7 +734,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => onOpenChange(false)}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 hover:bg-muted/50"
               >
                 ✕
               </Button>
@@ -731,8 +743,8 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
         </DialogHeader>
 
         {/* Section Navigation */}
-        <div className="px-6 py-3 border-b border-border/20 bg-muted/20 flex-shrink-0">
-          <div className="flex flex-wrap gap-2">
+        <div className={tokens.modal.navigation}>
+          <div className="flex flex-wrap gap-2 pl-2">
             {sections.map((section) => {
               const Icon = section.icon;
               const isActive = section.id === activeSection;
@@ -750,8 +762,9 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                   size="sm"
                   onClick={() => setActiveSection(section.id)}
                   className={cn(
-                    "flex items-center gap-2 h-8 px-3 text-xs",
-                    hasError && "border-red-300 text-red-600"
+                    tokens.navigation.tab,
+                    isActive ? tokens.navigation.tabActive : tokens.navigation.tabInactive,
+                    hasError && tokens.navigation.tabError
                   )}
                 >
                   <Icon className="w-3 h-3" />
@@ -763,47 +776,43 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className={tokens.modal.content}>
           {renderCurrentSection()}
         </div>
 
         {/* Footer */}
-        <DialogFooter className="px-6 py-4 flex-shrink-0">
+        <DialogFooter className={cn(tokens.modal.footer, "pb-6")}>
           <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 onClick={() => setActiveSection(sections[currentSectionIndex - 1]?.id)}
                 disabled={!canGoPrev}
-                className="h-9"
               >
                 ← Previous
               </Button>
-              <span className="text-xs text-muted-foreground px-2">
+              <span className="text-xs text-muted-foreground px-3">
                 {currentSectionIndex + 1} of {sections.length}
               </span>
               <Button
                 variant="ghost"
                 onClick={() => setActiveSection(sections[currentSectionIndex + 1]?.id)}
                 disabled={!canGoNext}
-                className="h-9"
               >
                 Next →
               </Button>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 pr-2">
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="h-9"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSendToChat}
                 disabled={!isValid}
-                className="h-9 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white"
               >
                 <Send className="w-4 h-4 mr-2" />
                 Send to Chat
@@ -816,8 +825,8 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
         {showConfirmReset && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
             <div className="bg-background p-6 rounded-lg border max-w-md">
-              <h3 className="text-therapy-lg font-semibold mb-2">Reset CBT Diary?</h3>
-              <p className="text-therapy-sm text-muted-foreground mb-4">
+              <h3 className="text-lg font-semibold mb-2 text-foreground">Reset CBT Diary?</h3>
+              <p className="text-sm text-muted-foreground mb-4">
                 This will clear all your entries and start fresh. This action cannot be undone.
               </p>
               <div className="flex justify-end gap-2">
@@ -845,3 +854,5 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
     </Dialog>
   );
 };
+
+export default CBTDiaryModal;

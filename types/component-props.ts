@@ -129,6 +129,7 @@ export interface ModelConfigProps {
   model: string;
   setModel: (model: string) => void;
   availableModels: ModelConfig[];
+  getModelMaxTokens: (modelName: string) => number;
   isLoading?: boolean;
 }
 
@@ -346,7 +347,9 @@ export interface ChatInterfaceProps
 export interface SessionSidebarProps 
   extends SidebarProps,
           SessionListProps {
+  setCurrentSession: (sessionId: string) => void;
   loadMessages: (sessionId: string) => void;
+  deleteSession: (sessionId: string) => void;
   startNewSession: () => void;
 }
 

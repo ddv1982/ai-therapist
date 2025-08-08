@@ -10,7 +10,6 @@ import {
   FileText,
   Menu,
   Heart,
-  User,
   Settings,
   Plus,
   MessageSquare,
@@ -25,16 +24,13 @@ import { generateUUID } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
 import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/memory-utils';
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
+import type { MessageData } from '@/components/message';
 import { MobileDebugInfo } from '@/components/mobile-debug-info';
 import { CBTDiaryModal } from '@/components/cbt/cbt-diary-modal';
-import { therapeuticInteractive, therapeuticContent, getTherapeuticIconButton } from '@/lib/design-tokens';
+import { therapeuticInteractive, getTherapeuticIconButton } from '@/lib/design-tokens';
 
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
+// Using MessageData from the new message system
+type Message = MessageData;
 
 interface Session {
   id: string;
@@ -762,9 +758,18 @@ export default function ChatPage() {
   }, []);
 
   const handleCBTSendToChat = useCallback((formattedContent: string) => {
-    setInput(formattedContent);
-    // Focus the textarea after insertion
-    setTimeout(() => textareaRef.current?.focus(), 100);
+    // Add CBT diary as an assistant message (white bubble with proper table formatting)
+    const cbtMessage: Message = {
+      id: `cbt-${Date.now()}`,
+      role: 'assistant',
+      content: formattedContent,
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, cbtMessage]);
+    
+    // Scroll to bottom to show the new message
+    setTimeout(scrollToBottom, 100);
   }, []);
 
   return (
@@ -1222,196 +1227,6 @@ export default function ChatPage() {
               isStreaming={isLoading}
               isMobile={isMobile}
             />
-          )}
-          
-          {/* Fallback to original rendering for complex cases */}
-          {false && (
-            <div className={`max-w-4xl mx-auto ${isMobile ? 'space-y-3 pb-3' : 'space-y-6'}`}>
-              {messages.map((message, index) => (
-                <div
-                  key={message.id}
-                  className={`animate-message-in ${
-                    isMobile 
-                      ? 'w-full' 
-                      : `flex gap-2 sm:gap-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`
-                  }`}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {!isMobile && message.role === 'assistant' && (
-                    <div className="relative h-10 w-10 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center flex-shrink-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-                      {/* Subtle breathing glow */}
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-accent to-primary animate-gentle-glow"></div>
-                      
-                      {/* Heart icon - calm and stable */}
-                      <Heart 
-                        className="relative w-5 h-5 text-white z-10 drop-shadow-sm group-hover:scale-110 transition-transform duration-300" 
-                        style={{
-                          filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.2))'
-                        }}
-                      />
-                      
-                      {/* Gentle sparkle on hover only */}
-                      <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    </div>
-                  )}
-                  <div
-                    className={`${
-                      isMobile 
-                        ? `w-full rounded-xl px-4 py-3 shadow-sm transition-all duration-300 hover:shadow-md mb-3 ${
-                            message.role === 'user'
-                              ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground'
-                              : 'bg-card border border-border/50 text-card-foreground backdrop-blur-sm'
-                          }`
-                        : `message-bubble ${
-                            message.role === 'user'
-                              ? 'message-bubble-user'
-                              : 'message-bubble-assistant'
-                          }`
-                    }`}
-                  >
-                    {/* Mobile header with role indicator */}
-                    {isMobile && (
-                      <div className="flex items-center justify-between mb-2 pb-2 border-b border-current/10">
-                        <div className="flex items-center gap-2">
-                          {message.role === 'assistant' ? (
-                            <>
-                              <Heart className="w-4 h-4" />
-                              <span className="text-sm font-medium">AI Therapist</span>
-                            </>
-                          ) : (
-                            <>
-                              <User className="w-4 h-4" />
-                              <span className="text-sm font-medium">You</span>
-                            </>
-                          )}
-                        </div>
-                        <p className="text-xs opacity-60">
-                          {message.timestamp.toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
-                        </p>
-                      </div>
-                    )}
-                    
-                    <div className="text-therapy-sm sm:text-therapy-base leading-relaxed prose prose-sm max-w-none dark:prose-invert [&>*:last-child]:mb-0">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          h1: ({...props}) => <h1 className="text-xl sm:text-2xl font-bold mb-4 text-foreground border-b border-border/30 pb-2" {...props} />,
-                          h2: ({...props}) => <h2 className="text-lg sm:text-xl font-semibold mb-3 text-foreground mt-6 first:mt-0" {...props} />,
-                          h3: ({...props}) => <h3 className="text-base sm:text-lg font-semibold mb-2 text-foreground mt-4 first:mt-0" {...props} />,
-                          h4: ({...props}) => <h4 className="text-sm sm:text-base font-semibold mb-2 text-foreground mt-3 first:mt-0" {...props} />,
-                          p: ({...props}) => <p className={therapeuticContent.paragraph} {...props} />,
-                          strong: ({...props}) => <strong className={therapeuticContent.strongHighlight} {...props} />,
-                          em: ({...props}) => <em className="italic text-accent font-medium" {...props} />,
-                          ol: ({...props}) => <ol className="list-decimal ml-6 mb-4 space-y-2 text-foreground" {...props} />,
-                          ul: ({...props}) => <ul className="list-disc ml-6 mb-4 space-y-2 text-foreground" {...props} />,
-                          li: ({...props}) => <li className={therapeuticContent.listItem} {...props} />,
-                          blockquote: ({...props}) => (
-                            <blockquote className="border-l-4 border-primary bg-primary/5 pl-6 pr-4 py-3 my-4 rounded-r-lg italic text-foreground relative" {...props}>
-                              <div className="absolute top-2 left-2 text-primary/50 text-xl">&quot;</div>
-                            </blockquote>
-                          ),
-                          code: ({node, ...props}) => {
-                            // Check if code is inline by looking at parent node
-                            const isInline = node?.tagName !== 'pre';
-                            return isInline ? (
-                              <code className="bg-muted px-2 py-1 rounded text-sm text-foreground font-mono border border-border/30" {...props} />
-                            ) : (
-                              <code className="block bg-muted p-4 rounded-lg text-sm text-foreground font-mono border border-border/30 overflow-x-auto my-4" {...props} />
-                            );
-                          },
-                          pre: ({...props}) => <pre className="bg-muted p-4 rounded-lg border border-border/30 overflow-x-auto my-4" {...props} />,
-                          a: ({...props}) => <a className="text-primary hover:text-primary/80 underline underline-offset-2 font-medium" {...props} />,
-                          hr: ({...props}) => <hr className="border-border/50 my-6" {...props} />,
-                          table: ({...props}) => (
-                            <div className="overflow-x-auto my-6 rounded-lg border border-border/30 bg-card shadow-sm">
-                              <table className="w-full border-collapse" {...props} />
-                            </div>
-                          ),
-                          thead: ({...props}) => <thead className={therapeuticContent.tableHeader} {...props} />,
-                          tbody: ({...props}) => <tbody {...props} />,
-                          tr: ({...props}) => <tr className="border-b border-border/20 last:border-b-0 hover:bg-muted/20 transition-colors" {...props} />,
-                          th: ({...props}) => <th className="px-4 py-3 text-left font-semibold text-foreground text-sm uppercase tracking-wide bg-primary/5" {...props} />,
-                          td: ({...props}) => <td className="px-4 py-3 text-foreground border-r border-border/10 last:border-r-0" {...props} />,
-                        }}
-                      >
-                        {message.content}
-                      </ReactMarkdown>
-                    </div>
-                    
-                    {/* Desktop timestamp and AI indicator */}
-                    {!isMobile && (
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs sm:text-therapy-sm opacity-60">
-                          {message.timestamp.toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
-                        </p>
-                        {message.role === 'assistant' && (
-                          <div className="flex items-center gap-1 opacity-60">
-                            <Sparkles className="w-3 h-3" />
-                            <span className="text-xs">AI</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {!isMobile && message.role === 'user' && (
-                    <div className="relative h-10 w-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-lg hover:shadow-xl transition-all duration-300 group">
-                      {/* Subtle breathing glow */}
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-accent animate-gentle-glow"></div>
-                      
-                      {/* User icon - calm and stable */}
-                      <User 
-                        className="relative w-5 h-5 text-white z-10 drop-shadow-sm group-hover:scale-110 transition-transform duration-300" 
-                        style={{
-                          filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.2))'
-                        }}
-                      />
-                      
-                      {/* Gentle sparkle on hover only */}
-                      <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-white/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              
-              {isLoading && (
-                <div className={`${isMobile ? 'w-full mb-3' : 'flex gap-4 justify-start'} animate-message-in`}>
-                  {!isMobile && (
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center flex-shrink-0 shadow-lg">
-                      <Heart className="w-5 h-5 text-white animate-pulse" />
-                    </div>
-                  )}
-                  <div className={`${
-                    isMobile 
-                      ? 'w-full rounded-xl px-4 py-3 shadow-sm transition-all duration-300 hover:shadow-md bg-card border border-border/50 text-card-foreground backdrop-blur-sm'
-                      : 'message-bubble message-bubble-assistant'
-                  }`}>
-                    {isMobile && (
-                      <div className="flex items-center justify-between mb-2 pb-2 border-b border-current/10">
-                        <div className="flex items-center gap-2">
-                          <Heart className="w-4 h-4" />
-                          <span className="text-sm font-medium">AI Therapist</span>
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-3">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
-                      </div>
-                      <span className="text-therapy-sm text-muted-foreground">Reflecting on your words...</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
           )}
           
           {/* Messages end ref for auto-scroll */}

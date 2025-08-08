@@ -134,6 +134,23 @@ export function createNotFoundErrorResponse(
   );
 }
 
+// Forbidden error response helper
+export function createForbiddenErrorResponse(
+  reason: string,
+  requestId?: string
+): NextResponse<ApiResponse> {
+  return createErrorResponse(
+    'Access denied',
+    403,
+    {
+      code: 'FORBIDDEN',
+      details: reason,
+      suggestedAction: 'Please verify your permissions and try again',
+      requestId,
+    }
+  );
+}
+
 // Rate limit error response helper
 export function createRateLimitErrorResponse(
   requestId?: string

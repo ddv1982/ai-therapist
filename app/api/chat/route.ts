@@ -258,10 +258,10 @@ export async function POST(request: NextRequest) {
       requestId: requestContext.requestId,
       operation: 'ai_chat_completion',
       additionalContext: {
-        model,
-        browserSearchEnabled,
-        reasoningEffort,
-        messageCount: messages.length
+        model: model || 'unknown',
+        browserSearchEnabled: false,
+        reasoningEffort: 'unknown',
+        messageCount: 0
       }
     });
   }

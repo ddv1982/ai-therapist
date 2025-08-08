@@ -221,28 +221,7 @@
     @apply p-2; /* 8px internal padding */
   }
   
-  /* Beautiful message bubbles */
-  .message-bubble {
-    @apply rounded-2xl px-4 sm:px-6 py-3 sm:py-4 shadow-sm transition-all duration-300 hover:shadow-md;
-  }
-  
-  .message-bubble-user {
-    @apply bg-gradient-to-br from-primary to-primary/90 text-primary-foreground ml-auto max-w-[90%] sm:max-w-[80%];
-    background: var(--gradient-primary);
-  }
-  
-  .message-bubble-assistant {
-    @apply bg-card border border-border/50 text-card-foreground mr-auto max-w-[95%] sm:max-w-[85%] backdrop-blur-sm;
-  }
-  
-  /* Light mode specific enhancements */
-  :root:not(.dark) .message-bubble-assistant {
-    @apply bg-white border-border shadow-sm;
-  }
-  
-  :root:not(.dark) .message-bubble-user {
-    @apply shadow-md;
-  }
+  /* Note: Message bubbles now handled by design system tokens */
   
   /* Glassmorphism effects */
   .glass-card {
@@ -452,5 +431,62 @@
   
   input[type="range"]:focus::-moz-range-thumb {
     @apply ring-2 ring-primary ring-offset-2;
+  }
+
+  /* Message Content - Simplified approach using design system */
+  .message-content-user,
+  .message-content-assistant {
+    /* Common base styles for all message content */
+    @apply leading-relaxed;
+  }
+  
+  .message-content-user h1, .message-content-user h2, .message-content-user h3, .message-content-user h4,
+  .message-content-assistant h1, .message-content-assistant h2, .message-content-assistant h3, .message-content-assistant h4 {
+    @apply font-semibold mb-3 first:mt-0;
+  }
+  
+  .message-content-user h1, .message-content-assistant h1 { @apply text-xl; }
+  .message-content-user h2, .message-content-assistant h2 { @apply text-lg; }
+  .message-content-user h3, .message-content-assistant h3 { @apply text-base; }
+  
+  .message-content-user p, .message-content-assistant p {
+    @apply leading-relaxed mb-3 last:mb-0;
+  }
+  
+  .message-content-user ul, .message-content-user ol,
+  .message-content-assistant ul, .message-content-assistant ol {
+    @apply my-4 pl-6;
+  }
+  
+  .message-content-user li, .message-content-assistant li {
+    @apply leading-relaxed;
+  }
+  
+  /* Role-specific overrides for better contrast */
+  .message-content-user strong {
+    @apply font-bold bg-white/20 px-1 py-0.5 rounded;
+  }
+  
+  .message-content-assistant strong {
+    @apply font-bold bg-primary/10 px-1 py-0.5 rounded;
+  }
+  
+  .message-content-user code {
+    @apply bg-white/20 px-2 py-1 rounded text-sm font-mono;
+  }
+  
+  .message-content-assistant code {
+    @apply bg-muted px-2 py-1 rounded text-sm font-mono;
+  }
+
+  /* Theme-specific avatar styling */
+  /* Light mode: red heart icon */
+  :root:not(.dark) .message-avatar-assistant {
+    @apply text-red-500;
+  }
+  
+  /* Dark mode: white heart icon (default) */
+  .dark .message-avatar-assistant {
+    @apply text-white;
   }
 }

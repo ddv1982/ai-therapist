@@ -3,7 +3,7 @@
  * Provides code splitting, lazy loading, and bundle optimization helpers
  */
 
-import { lazy, ComponentType, LazyExoticComponent } from 'react';
+import React, { lazy, ComponentType, LazyExoticComponent } from 'react';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -13,7 +13,7 @@ import { logger } from '@/lib/logger';
 /**
  * Enhanced lazy loading with error boundary and loading states
  */
-export function createLazyComponent<T = {}>(
+export function createLazyComponent<T = object>(
   importFn: () => Promise<{ default: ComponentType<T> }>,
   componentName: string
 ): LazyExoticComponent<ComponentType<T>> {
@@ -52,8 +52,8 @@ export function createLazyComponent<T = {}>(
 /**
  * Preload component for better user experience
  */
-export function preloadComponent(
-  importFn: () => Promise<{ default: ComponentType<any> }>,
+export function preloadComponent<T = Record<string, unknown>>(
+  importFn: () => Promise<{ default: ComponentType<T> }>,
   componentName: string
 ): void {
   // Use requestIdleCallback if available, otherwise setTimeout
@@ -159,7 +159,11 @@ export class TherapeuticPerformanceMonitor {
     measurements: number;
     performance: 'excellent' | 'good' | 'fair' | 'poor';
   }> {
-    const report: Record<string, any> = {};
+    const report: Record<string, {
+      averageLoadTime: number;
+      measurements: number;
+      performance: 'excellent' | 'good' | 'fair' | 'poor';
+    }> = {};
     
     this.metrics.forEach((times, componentName) => {
       const averageLoadTime = this.getAverageLoadTime(componentName);
@@ -188,15 +192,28 @@ export class TherapeuticPerformanceMonitor {
 /**
  * Memory-efficient message history management
  */
+interface MessageLike {
+  id: string;
+  role: string;
+  content: string;
+  timestamp: Date;
+}
+
+interface CacheEntry {
+  messages: MessageLike[];
+  timestamp: number;
+  size: number;
+}
+
 export class TherapeuticMessageCache {
-  private cache: Map<string, any[]> = new Map();
+  private cache: Map<string, CacheEntry> = new Map();
   private maxCacheSize = 1000; // Maximum messages to keep in memory
   private maxSessionAge = 24 * 60 * 60 * 1000; // 24 hours
 
   /**
    * Store messages for a session with automatic cleanup
    */
-  setMessages(sessionId: string, messages: any[]): void {
+  setMessages(sessionId: string, messages: MessageLike[]): void {
     // Limit message history to prevent memory bloat
     const limitedMessages = messages.slice(-this.maxCacheSize);
     
@@ -215,7 +232,7 @@ export class TherapeuticMessageCache {
   /**
    * Get cached messages for a session
    */
-  getMessages(sessionId: string): any[] | null {
+  getMessages(sessionId: string): MessageLike[] | null {
     const cached = this.cache.get(sessionId);
     if (!cached) return null;
     
@@ -279,8 +296,8 @@ export class TherapeuticMessageCache {
 /**
  * Optimize therapeutic message rendering for large sessions
  */
-export function optimizeMessageRendering(messages: any[]): {
-  visibleMessages: any[];
+export function optimizeMessageRendering(messages: MessageLike[]): {
+  visibleMessages: MessageLike[];
   totalCount: number;
   shouldVirtualize: boolean;
 } {

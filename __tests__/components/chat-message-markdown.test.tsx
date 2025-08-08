@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { ChatMessage } from '@/components/chat/chat-message';
+import { Message } from '@/components/message';
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
@@ -44,7 +44,7 @@ I was walking outside during my lunch break.
 
 describe('ChatMessage Lightweight Rendering', () => {
   it('should render the message content', () => {
-    render(<ChatMessage message={mockMessage} />);
+    render(<Message message={mockMessage} />);
     
     // Check that basic content is rendered with lightweight processing
     expect(screen.getByText(/CBT Diary Entry/)).toBeInTheDocument();
@@ -55,14 +55,14 @@ describe('ChatMessage Lightweight Rendering', () => {
   });
 
   it('should render content with lightweight processing', () => {
-    const { container } = render(<ChatMessage message={mockMessage} />);
+    const { container } = render(<Message message={mockMessage} />);
     
     // Check that the content is processed with our lightweight processor
     expect(container.innerHTML).toContain('CBT Diary Entry');
   });
 
   it('should handle table-like content', () => {
-    render(<ChatMessage message={mockMessage} />);
+    render(<Message message={mockMessage} />);
     
     // Check that table content is present
     expect(screen.getByText(/Question/)).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe('ChatMessage Lightweight Rendering', () => {
   });
 
   it('should render lists properly', () => {
-    render(<ChatMessage message={mockMessage} />);
+    render(<Message message={mockMessage} />);
     
     // Check that list items are rendered
     expect(screen.getByText(/fear: 8\/10/i)).toBeInTheDocument();
@@ -79,7 +79,7 @@ describe('ChatMessage Lightweight Rendering', () => {
   });
 
   it('should render strong/bold text', () => {
-    render(<ChatMessage message={mockMessage} />);
+    render(<Message message={mockMessage} />);
     
     // Check that bold text is rendered (may be within larger text blocks)
     expect(screen.getByText(/Date:/)).toBeInTheDocument();
@@ -88,14 +88,14 @@ describe('ChatMessage Lightweight Rendering', () => {
   });
 
   it('should render emphasis/italic text', () => {
-    render(<ChatMessage message={mockMessage} />);
+    render(<Message message={mockMessage} />);
     
     // Check that italic text is rendered
     expect(screen.getByText(/this is for reflection and growth/i)).toBeInTheDocument();
   });
 
   it('should display user icon for user messages', () => {
-    render(<ChatMessage message={mockMessage} />);
+    render(<Message message={mockMessage} />);
     
     expect(screen.getByTestId('user-icon')).toBeInTheDocument();
     expect(screen.queryByTestId('heart-icon')).not.toBeInTheDocument();
@@ -103,14 +103,14 @@ describe('ChatMessage Lightweight Rendering', () => {
 
   it('should display heart icon for assistant messages', () => {
     const assistantMessage = { ...mockMessage, role: 'assistant' as const };
-    render(<ChatMessage message={assistantMessage} />);
+    render(<Message message={assistantMessage} />);
     
     expect(screen.getByTestId('heart-icon')).toBeInTheDocument();
     expect(screen.queryByTestId('user-icon')).not.toBeInTheDocument();
   });
 
   it('should format timestamp correctly', () => {
-    render(<ChatMessage message={mockMessage} />);
+    render(<Message message={mockMessage} />);
     
     // Check that a timestamp is displayed (may vary based on timezone)
     expect(screen.getByText(/\d{2}:\d{2}/)).toBeInTheDocument();

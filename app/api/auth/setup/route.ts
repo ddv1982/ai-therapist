@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateTOTPSetup, saveTOTPConfig, isTOTPSetup } from '@/lib/totp-service';
 import { getOrCreateDevice, createAuthSession } from '@/lib/device-fingerprint';
 import { createAuthResponse, getClientIP } from '@/lib/auth-middleware';
-import { handleApiError, TherapeuticErrorPatterns } from '@/lib/error-utils';
-import { createRequestLogger } from '@/lib/logger';
+import { handleApiError } from '@/lib/error-utils';
 
 // GET /api/auth/setup - Get setup data (QR code, backup codes)
 export async function GET() {

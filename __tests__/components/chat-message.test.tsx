@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { ChatMessage } from '@/components/chat/chat-message'
+import { Message } from '@/components/message'
 
 describe('ChatMessage Component', () => {
   const mockMessage = {
@@ -10,7 +10,7 @@ describe('ChatMessage Component', () => {
   }
 
   it('renders user message correctly', () => {
-    render(<ChatMessage message={mockMessage} />)
+    render(<Message message={mockMessage} />)
     
     expect(screen.getByText('Hello, how can I manage stress?')).toBeInTheDocument()
     // The timestamp will be formatted based on local timezone, so we'll look for the time pattern
@@ -24,7 +24,7 @@ describe('ChatMessage Component', () => {
       content: 'I understand you\'re looking for stress management techniques.'
     }
 
-    render(<ChatMessage message={assistantMessage} />)
+    render(<Message message={assistantMessage} />)
     
     expect(screen.getByText('I understand you\'re looking for stress management techniques.')).toBeInTheDocument()
   })
@@ -36,13 +36,16 @@ describe('ChatMessage Component', () => {
       content: '**Stress Management Tips:**\n\n- Deep breathing\n- Regular exercise\n- Adequate sleep'
     }
 
-    render(<ChatMessage message={assistantMessage} />)
+    const { container } = render(<Message message={assistantMessage} />)
     
     // Check for rendered content with lightweight processing
     expect(screen.getByText('Stress Management Tips:')).toBeInTheDocument()
-    expect(screen.getByText('• Deep breathing')).toBeInTheDocument()
-    expect(screen.getByText('• Regular exercise')).toBeInTheDocument()
-    expect(screen.getByText('• Adequate sleep')).toBeInTheDocument()
+    expect(screen.getByText('Deep breathing')).toBeInTheDocument()
+    expect(screen.getByText('Regular exercise')).toBeInTheDocument()
+    expect(screen.getByText('Adequate sleep')).toBeInTheDocument()
+    // Check that list items are properly structured with standard HTML
+    const listItems = container.querySelectorAll('li')
+    expect(listItems).toHaveLength(3)
   })
 
   it('renders table content correctly', () => {
@@ -55,7 +58,7 @@ describe('ChatMessage Component', () => {
 | Exercise | 30 min | 3x/week |`
     }
 
-    render(<ChatMessage message={assistantMessage} />)
+    render(<Message message={assistantMessage} />)
     
     // Check for properly formatted table with headers and data
     expect(screen.getByText('Technique')).toBeInTheDocument()
@@ -70,11 +73,11 @@ describe('ChatMessage Component', () => {
   })
 
   it('applies correct styling for user vs assistant messages', () => {
-    const { rerender } = render(<ChatMessage message={mockMessage} />)
+    const { rerender } = render(<Message message={mockMessage} />)
     
     // User message container should have flex-row-reverse class
-    // Look for the outer container, not the content container
-    const userContainer = document.querySelector('.flex.items-start.space-x-4.mb-6');
+    // Look for the article container with the updated class structure
+    const userContainer = document.querySelector('.flex.items-start.gap-4.mb-6');
     expect(userContainer).toHaveClass('flex-row-reverse')
 
     // Assistant message should have flex-row class
@@ -83,13 +86,13 @@ describe('ChatMessage Component', () => {
       role: 'assistant' as const
     }
     
-    rerender(<ChatMessage message={assistantMessage} />)
-    const assistantContainer = document.querySelector('.flex.items-start.space-x-4.mb-6');
+    rerender(<Message message={assistantMessage} />)
+    const assistantContainer = document.querySelector('.flex.items-start.gap-4.mb-6');
     expect(assistantContainer).toHaveClass('flex-row')
   })
 
   it('displays correct avatar icons', () => {
-    const { rerender } = render(<ChatMessage message={mockMessage} />)
+    const { rerender } = render(<Message message={mockMessage} />)
     
     // User message should show User icon
     expect(document.querySelector('svg')).toBeInTheDocument()
@@ -100,7 +103,7 @@ describe('ChatMessage Component', () => {
       role: 'assistant' as const
     }
     
-    rerender(<ChatMessage message={assistantMessage} />)
+    rerender(<Message message={assistantMessage} />)
     expect(document.querySelector('svg')).toBeInTheDocument()
   })
 
@@ -110,7 +113,7 @@ describe('ChatMessage Component', () => {
       content: ''
     }
 
-    render(<ChatMessage message={emptyMessage} />)
+    render(<Message message={emptyMessage} />)
     
     // Component should still render without crashing - check for timestamp pattern
     expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument()
@@ -127,11 +130,11 @@ describe('ChatMessage Component', () => {
       timestamp: new Date('2024-01-01T21:45:00Z')
     }
 
-    const { rerender } = render(<ChatMessage message={morningMessage} />)
+    const { rerender } = render(<Message message={morningMessage} />)
     // Check that timestamp is rendered in correct format (will be local timezone)
     expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument()
 
-    rerender(<ChatMessage message={eveningMessage} />)
+    rerender(<Message message={eveningMessage} />)
     // Check that a different timestamp is rendered 
     expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument()
   })

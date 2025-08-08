@@ -3,15 +3,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
-import type { ModelConfig } from '@/types/index';
 import { SettingsPanelProps } from '@/types/component-props';
 
-// Using centralized SettingsPanelProps interface
-// Includes all configuration props for therapeutic AI settings
-  topP: number;
-  setTopP: (topP: number) => void;
-  getModelMaxTokens: (modelName: string) => number;
-}
+// Using centralized SettingsPanelProps interface from types/component-props.ts
 
 export function SettingsPanel({
   showSettings,
@@ -156,3 +150,5 @@ export function SettingsPanel({
     </div>
   );
 }
+
+export default SettingsPanel;

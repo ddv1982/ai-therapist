@@ -248,3 +248,5 @@ export function SecuritySettings() {
     </div>
   );
 }
+
+export default SecuritySettings;
