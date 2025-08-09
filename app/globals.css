@@ -962,4 +962,30 @@
       overscroll-behavior: none;
     }
   }
+  
+  /* Mobile Table Text Styling - When tables are converted to text on mobile */
+  .mobile-table-text {
+    @apply bg-card border border-border/20 rounded-lg p-4 shadow-sm space-y-4;
+    /* Match therapeutic table card styling on mobile */
+    margin-bottom: 1rem;
+  }
+  
+  .mobile-table-row {
+    @apply p-3 bg-muted/5 rounded-md border-l-2 border-primary/30;
+    /* Visual separation between data rows */
+    margin-bottom: 0.75rem;
+  }
+  
+  .mobile-table-row:last-child {
+    margin-bottom: 0;
+  }
+  
+  .mobile-table-text p {
+    @apply mb-2 last:mb-0;
+  }
+  
+  .mobile-table-text strong {
+    @apply text-foreground font-semibold;
+    /* Ensure labels are clearly visible */
+  }
 }

@@ -132,8 +132,96 @@ function enhanceTableCellsWithLabels(html: string): string {
 }
 
 /**
+ * Detect if we're on a mobile device
+ * Uses both client-side detection and responsive design principles
+ */
+function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') {
+    // Server-side: assume desktop for SSR, will be corrected on client
+    return false;
+  }
+  
+  // Check screen width (mobile-first breakpoint)
+  const isMobileWidth = window.innerWidth < 768;
+  
+  // Check user agent for mobile devices
+  const userAgent = navigator.userAgent || '';
+  const isMobileUA = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+  
+  // Return true if either condition is met
+  return isMobileWidth || isMobileUA;
+}
+
+/**
+ * Convert HTML table to readable text format for mobile
+ */
+function convertTableToMobileText(html: string): string {
+  // Find all tables and convert them to text
+  return html.replace(/<table[^>]*>[\s\S]*?<\/table>/gi, (tableMatch) => {
+    // Extract table data
+    const rows: string[][] = [];
+    let headers: string[] = [];
+    
+    // Extract headers
+    const headerMatches = tableMatch.match(/<th[^>]*>([\s\S]*?)<\/th>/gi);
+    if (headerMatches) {
+      headers = headerMatches.map(th => 
+        th.replace(/<\/?[^>]+(>|$)/g, '').trim()
+      );
+    }
+    
+    // Extract data rows
+    const rowMatches = tableMatch.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi);
+    if (rowMatches) {
+      rowMatches.forEach(rowMatch => {
+        const cellMatches = rowMatch.match(/<td[^>]*>([\s\S]*?)<\/td>/gi);
+        if (cellMatches) {
+          const rowData = cellMatches.map(td => 
+            td.replace(/<\/?[^>]+(>|$)/g, '').trim()
+          );
+          rows.push(rowData);
+        }
+      });
+    }
+    
+    // Convert to mobile-friendly text format
+    if (headers.length === 0 && rows.length === 0) {
+      return '<p><em>Table data not available</em></p>';
+    }
+    
+    let mobileText = '<div class="mobile-table-text">\n';
+    
+    // If we have headers but no data rows, just show headers
+    if (headers.length > 0 && rows.length === 0) {
+      mobileText += '<p><strong>' + headers.join(' • ') + '</strong></p>\n';
+    }
+    // If we have data, format it nicely
+    else if (rows.length > 0) {
+      rows.forEach((row, rowIndex) => {
+        mobileText += '<div class="mobile-table-row">\n';
+        
+        row.forEach((cell, cellIndex) => {
+          if (cell.trim()) {
+            const header = headers[cellIndex] || `Item ${cellIndex + 1}`;
+            mobileText += `<p><strong>${header}:</strong> ${cell}</p>\n`;
+          }
+        });
+        
+        mobileText += '</div>\n';
+        if (rowIndex < rows.length - 1) {
+          mobileText += '<hr style="margin: 1rem 0; border: none; border-top: 1px solid #e5e7eb;">\n';
+        }
+      });
+    }
+    
+    mobileText += '</div>';
+    return mobileText;
+  });
+}
+
+/**
  * Simplified markdown processor using markdown-it + sanitize-html
- * Generates standard HTML elements and relies on CSS classes for styling
+ * Automatically converts tables to text on mobile devices for better readability
  */
 export function processMarkdown(text: string, _isUser: boolean = false): string {
   if (!text) return '';
@@ -147,20 +235,53 @@ export function processMarkdown(text: string, _isUser: boolean = false): string 
     html = `<p>${text}</p>`;
   }
 
-  // Auto-enhance tables with therapeutic classes and responsive wrappers
-  html = enhanceTablesForTherapeuticUse(html);
+  // Check if we're on mobile and should convert tables to text
+  const isMobile = isMobileDevice();
+  
+  if (isMobile) {
+    // Convert tables to mobile-friendly text format
+    html = convertTableToMobileText(html);
+  } else {
+    // Desktop: enhance tables with therapeutic classes and responsive wrappers
+    html = enhanceTablesForTherapeuticUse(html);
+  }
 
-  // Sanitize HTML for security while preserving table styling classes
+  // Sanitize HTML for security
+  const allowedTags = [
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'p', 'br', 'strong', 'em', 'u', 's',
+    'ul', 'ol', 'li',
+    'hr', 'blockquote', 'code', 'pre',
+    'div', 'a'
+  ];
+  
+  const allowedClasses = {
+    'div': ['mobile-table-text', 'mobile-table-row', 'table-responsive', 'table-container'],
+    '*': ['mobile-table-text', 'mobile-table-row']
+  };
+  
+  // Add table tags and classes only for desktop
+  if (!isMobile) {
+    allowedTags.push('table', 'thead', 'tbody', 'tr', 'th', 'td');
+    allowedClasses['table'] = [
+      'therapeutic-table', 'table-responsive', 'table-striped', 
+      'table-compact', 'table-stacked', 'table-cbt-report', 'table-progress',
+      'table-comparison', 'table-dashboard', 'table-touch-optimized',
+      'table-scroll-horizontal', 'custom-table', 'w-full'
+    ];
+    allowedClasses['tr'] = ['progress-positive', 'progress-negative'];
+    allowedClasses['td'] = ['progress-positive', 'progress-negative'];
+    allowedClasses['*'] = [
+      ...allowedClasses['*'],
+      'therapeutic-table', 'table-responsive', 'table-striped', 'table-compact', 
+      'table-stacked', 'table-cbt-report', 'table-progress', 'table-comparison',
+      'table-dashboard', 'table-touch-optimized', 'custom-table',
+      'progress-positive', 'progress-negative'
+    ];
+  }
+
   const sanitizedHtml = sanitizeHtml(html, {
-    allowedTags: [
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'p', 'br', 'strong', 'em', 'u', 's',
-      'ul', 'ol', 'li',  // Standard list elements
-      'table', 'thead', 'tbody', 'tr', 'th', 'td',
-      'hr', 'blockquote', 'code', 'pre',
-      'div', // Allow div wrappers for responsive tables
-      'a' // Allow links
-    ],
+    allowedTags,
     allowedAttributes: {
       'a': ['href', 'title', 'target', 'rel'],
       'table': ['class', 'id'],
@@ -168,33 +289,23 @@ export function processMarkdown(text: string, _isUser: boolean = false): string 
       'tbody': ['class', 'id'],
       'tr': ['class', 'id'],
       'th': ['class', 'id'],
-      'td': ['class', 'id', 'data-label'], // data-label for mobile stacked layout
-      'p': ['class', 'id'],
+      'td': ['class', 'id', 'data-label'],
+      'p': ['class', 'id', 'style'],
       'div': ['class', 'id'],
+      'hr': ['style'],
       'ul': ['class', 'id'],
       'ol': ['class', 'id'],
       'li': ['class', 'id']
     },
-    // Allow therapeutic table classes and responsive wrappers - Enhanced for mobile-first
-    allowedClasses: {
-      'table': [
-        'therapeutic-table', 'table-responsive', 'table-striped', 
-        'table-compact', 'table-stacked', 'table-cbt-report', 'table-progress',
-        'table-comparison', 'table-dashboard', 'table-touch-optimized',
-        'table-scroll-horizontal', 'custom-table', 'w-full'
-      ],
-      'div': ['table-responsive', 'table-container', 'overflow-x-auto', 'table-scroll-horizontal'],
-      'tr': ['progress-positive', 'progress-negative'],
-      'td': ['progress-positive', 'progress-negative'],
-      '*': [
-        'therapeutic-table', 'table-responsive', 'table-striped', 'table-compact', 
-        'table-stacked', 'table-cbt-report', 'table-progress', 'table-comparison',
-        'table-dashboard', 'table-touch-optimized', 'custom-table',
-        'progress-positive', 'progress-negative'
-      ]
+    allowedClasses,
+    allowedStyles: {
+      'hr': {
+        'margin': [/^\d+(\.\d+)?(px|em|rem|%)(\s+\d+(\.\d+)?(px|em|rem|%))*$/],
+        'border': [/^none$/],
+        'border-top': [/^1px solid #[a-fA-F0-9]{6}$/]
+      }
     },
     transformTags: {
-      // Security-related transforms for links
       'a': function(tagName, attribs) {
         attribs.target = '_blank';
         attribs.rel = 'noopener noreferrer';
