@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
     
     // Smart model selection based on content
     const lastMessage = messages[messages.length - 1]?.content || '';
+    
+    // Check for CBT/diary content patterns
     const isCBTOrDiary = lastMessage.includes('CBT Thought Record') || 
                         lastMessage.includes('**Situation:**') ||
                         lastMessage.includes('**Thoughts:**') ||
@@ -41,8 +43,21 @@ export async function POST(request: NextRequest) {
                         lastMessage.includes('**Behaviors:**') ||
                         requestData.model === 'openai/gpt-oss-120b';
     
-    // Use gpt-oss-120b for CBT/diary analysis, gpt-oss-20b for regular chat
-    model = isCBTOrDiary ? 'openai/gpt-oss-120b' : 'openai/gpt-oss-20b';
+    // Check for web search request patterns
+    const webSearchPatterns = [
+      /search\s+for|look\s+up|find\s+information|research\s+(about|current|recent)/i,
+      /what\s+are\s+the\s+latest|current\s+research|recent\s+studies/i,
+      /find\s+me\s+information|look\s+up\s+current|search\s+online/i,
+      /what\s+does\s+current\s+research\s+say|recent\s+developments/i,
+      /search\s+the\s+web|browse\s+for|find\s+current/i
+    ];
+    
+    const isWebSearchRequest = webSearchPatterns.some(pattern => 
+      pattern.test(lastMessage)
+    );
+    
+    // Use gpt-oss-120b for CBT/diary analysis OR web search requests, gpt-oss-20b for regular chat
+    model = (isCBTOrDiary || isWebSearchRequest) ? 'openai/gpt-oss-120b' : 'openai/gpt-oss-20b';
 
     // Log the actual settings being used
     logger.info('Using chat settings', {
@@ -53,7 +68,12 @@ export async function POST(request: NextRequest) {
       topP,
       browserSearchEnabled,
       reasoningEffort,
-      hasApiKey: !!apiKey
+      hasApiKey: !!apiKey,
+      modelSelectionReason: {
+        isCBTOrDiary,
+        isWebSearchRequest,
+        selectedModel: model
+      }
     });
 
     if (!messages) {
@@ -194,13 +214,20 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Enable browser search tools for OpenAI models (always enabled)
-    if (browserSearchEnabled && (model.includes('openai/gpt-oss'))) {
+    // Enable browser search tools only for the larger model (openai/gpt-oss-120b)
+    if (browserSearchEnabled && model === 'openai/gpt-oss-120b') {
       completionParams.tools = [{"type": "browser_search"}];
-      logger.info('Browser search enabled for OpenAI model', {
+      logger.info('Browser search enabled for larger OpenAI model', {
         ...requestContext,
         model,
-        browserSearchEnabled: true
+        browserSearchEnabled: true,
+        reason: isWebSearchRequest ? 'web_search_request' : (isCBTOrDiary ? 'cbt_content' : 'manual_selection')
+      });
+    } else if (browserSearchEnabled && model === 'openai/gpt-oss-20b') {
+      logger.info('Browser search disabled for smaller model (performance optimization)', {
+        ...requestContext,
+        model,
+        browserSearchEnabled: false
       });
     }
 

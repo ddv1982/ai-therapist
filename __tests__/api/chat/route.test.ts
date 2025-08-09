@@ -269,6 +269,36 @@ describe('/api/chat Route - Core Functionality', () => {
         );
       }
     });
+
+    it('should detect web search request patterns', async () => {
+      const webSearchPatterns = [
+        'Please search for current depression treatments',
+        'Look up recent studies on anxiety',
+        'Find information about CBT techniques',
+        'Research about PTSD therapy',
+        'What are the latest developments in trauma therapy?',
+        'What does current research say about mindfulness?',
+        'Search the web for meditation techniques',
+        'Find current information on bipolar disorder'
+      ];
+
+      for (const pattern of webSearchPatterns) {
+        jest.clearAllMocks();
+        mockGroqInstance.chat.completions.create.mockResolvedValue(createMockCompletion());
+        
+        const request = createMockRequest({
+          messages: [{ role: 'user', content: pattern }]
+        });
+
+        await POST(request);
+
+        expect(mockGroqInstance.chat.completions.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            model: 'openai/gpt-oss-120b'
+          })
+        );
+      }
+    });
   });
 
   describe('Memory Context', () => {
@@ -421,9 +451,9 @@ describe('/api/chat Route - Core Functionality', () => {
       expect(callArgs).not.toHaveProperty('reasoning_effort');
     });
 
-    it('should add browser search tools for OpenAI models', async () => {
+    it('should add browser search tools only for large model with web search requests', async () => {
       const request = createMockRequest({
-        messages: [{ role: 'user', content: 'Hello' }],
+        messages: [{ role: 'user', content: 'Please search for current depression treatments' }],
         browserSearchEnabled: true
       });
 
@@ -431,9 +461,23 @@ describe('/api/chat Route - Core Functionality', () => {
 
       expect(mockGroqInstance.chat.completions.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          tools: [{ type: "browser_search" }]
+          tools: [{ type: "browser_search" }],
+          model: 'openai/gpt-oss-120b'
         })
       );
+    });
+
+    it('should not add browser search tools for small model with regular messages', async () => {
+      const request = createMockRequest({
+        messages: [{ role: 'user', content: 'Hello how are you?' }],
+        browserSearchEnabled: true
+      });
+
+      await POST(request);
+
+      const callArgs = mockGroqInstance.chat.completions.create.mock.calls[0][0];
+      expect(callArgs).not.toHaveProperty('tools');
+      expect(callArgs.model).toBe('openai/gpt-oss-20b');
     });
   });
 
@@ -562,18 +606,37 @@ describe('/api/chat Route - Core Functionality', () => {
       );
     });
 
-    it('should log browser search enabled', async () => {
+    it('should log browser search enabled for large model with web search', async () => {
       const request = createMockRequest({
-        messages: [{ role: 'user', content: 'Hello' }],
+        messages: [{ role: 'user', content: 'Please research current anxiety therapies' }],
         browserSearchEnabled: true
       });
 
       await POST(request);
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Browser search enabled for OpenAI model',
+        'Browser search enabled for larger OpenAI model',
         expect.objectContaining({
-          browserSearchEnabled: true
+          browserSearchEnabled: true,
+          model: 'openai/gpt-oss-120b',
+          reason: 'web_search_request'
+        })
+      );
+    });
+
+    it('should log browser search disabled for small model', async () => {
+      const request = createMockRequest({
+        messages: [{ role: 'user', content: 'Hello there' }],
+        browserSearchEnabled: true
+      });
+
+      await POST(request);
+
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Browser search disabled for smaller model (performance optimization)',
+        expect.objectContaining({
+          model: 'openai/gpt-oss-20b',
+          browserSearchEnabled: false
         })
       );
     });
