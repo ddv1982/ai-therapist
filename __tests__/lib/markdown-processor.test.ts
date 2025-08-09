@@ -67,7 +67,7 @@ Content below`;
       expect(result).toContain('Content below');
     });
 
-    it('should convert tables to proper HTML tables', () => {
+    it('should convert tables to proper HTML tables with therapeutic styling', () => {
       const input = `| Column 1 | Column 2 |
 |----------|----------|
 | Cell 1   | Cell 2   |
@@ -75,6 +75,7 @@ Content below`;
       
       const result = processMarkdown(input, false);
       
+      // Basic table structure
       expect(result).toContain('<table');
       expect(result).toContain('<thead');
       expect(result).toContain('<tbody');
@@ -84,6 +85,12 @@ Content below`;
       expect(result).toContain('Column 2');
       expect(result).toContain('Cell 1');
       expect(result).toContain('Cell 2');
+      
+      // Enhanced therapeutic features
+      expect(result).toContain('class="therapeutic-table table-striped"'); // Auto-applied classes
+      expect(result).toContain('<div class="table-responsive">'); // Responsive wrapper
+      expect(result).toContain('data-label="Column 1"'); // Mobile labels
+      expect(result).toContain('data-label="Column 2"'); // Mobile labels
     });
 
     it('should handle tables with empty cells', () => {
@@ -103,6 +110,143 @@ Content below`;
       expect(result).toContain('Better');
       // Should handle empty cell gracefully
       expect(result).toMatch(/<td[^>]*>\s*(&nbsp;|\s*)<\/td>/);
+      
+      // Should still have therapeutic enhancements
+      expect(result).toContain('class="therapeutic-table table-striped"');
+      expect(result).toContain('<div class="table-responsive">');
+    });
+
+    it('should support custom table classes via markdown-it-attrs', () => {
+      const input = `| Header 1 | Header 2 |
+|----------|----------|
+| Data 1   | Data 2   |
+
+{.table-compact}`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should contain the custom class
+      expect(result).toContain('table-compact');
+      // Should still have the responsive wrapper
+      expect(result).toContain('<div class="table-responsive">');
+    });
+
+    it('should handle complex therapeutic table scenarios', () => {
+      const input = `| Emotion | Initial (0-100) | After CBT (0-100) |
+|---------|-----------------|-------------------|
+| Anxiety | 85              | 35                |
+| Sadness | 70              | 25                |
+
+{.table-cbt-report}`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should have proper structure
+      expect(result).toContain('Emotion');
+      expect(result).toContain('Initial (0-100)');
+      expect(result).toContain('After CBT (0-100)');
+      expect(result).toContain('Anxiety');
+      expect(result).toContain('85');
+      expect(result).toContain('35');
+      
+      // Should have therapeutic enhancements
+      expect(result).toContain('table-cbt-report');
+      expect(result).toContain('<div class="table-responsive">');
+      expect(result).toContain('data-label="Emotion"');
+      expect(result).toContain('data-label="Initial (0-100)"');
+    });
+
+    it('should create proper mobile data-labels for complex headers', () => {
+      const input = `| **Cognitive Distortion** | Frequency | **Therapeutic Priority** |
+|---------------------------|-----------|--------------------------|
+| All-or-nothing thinking   | 8/10      | High                     |
+| Catastrophizing           | 6/10      | Medium                   |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should extract clean header text for data-labels
+      expect(result).toContain('data-label="Cognitive Distortion"');
+      expect(result).toContain('data-label="Frequency"');
+      expect(result).toContain('data-label="Therapeutic Priority"');
+      
+      // Should preserve header formatting
+      expect(result).toContain('<strong>Cognitive Distortion</strong>');
+      expect(result).toContain('<strong>Therapeutic Priority</strong>');
+    });
+
+    it('should handle tables without headers gracefully', () => {
+      const input = `| Row 1 Col 1 | Row 1 Col 2 |
+|-------------|-------------|
+| Row 2 Col 1 | Row 2 Col 2 |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should still apply therapeutic styling
+      expect(result).toContain('class="therapeutic-table table-striped"');
+      expect(result).toContain('<div class="table-responsive">');
+      
+      // Should have basic table structure
+      expect(result).toContain('<table');
+      expect(result).toContain('<tbody');
+    });
+
+    it('should wrap multiple tables independently', () => {
+      const input = `| Table 1 | Col 2 |
+|---------|-------|
+| Data    | More  |
+
+Some text between tables.
+
+| Table 2 | Col 2 |
+|---------|-------|
+| Other   | Data  |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should have two responsive wrappers
+      const wrapperMatches = result.match(/<div class="table-responsive">/g);
+      expect(wrapperMatches).toHaveLength(2);
+      
+      // Both tables should have therapeutic styling
+      const tableMatches = result.match(/class="therapeutic-table table-striped"/g);
+      expect(tableMatches).toHaveLength(2);
+    });
+  });
+
+  describe('Enhanced table functionality', () => {
+    it('should preserve existing table classes when present', () => {
+      const input = `| Header | Data |
+|--------|------|
+| Test   | Info |
+
+{.custom-table}`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should preserve the custom class
+      expect(result).toContain('custom-table');
+      // Should still wrap in responsive container
+      expect(result).toContain('<div class="table-responsive">');
+    });
+
+    it('should handle tables with complex cell content', () => {
+      const input = `| Question | Answer |
+|----------|---------|
+| **How are you feeling?** | *Much better* now |
+| What's your goal? | To improve ~~my mood~~ my **overall wellness** |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should preserve inline formatting
+      expect(result).toContain('<strong>How are you feeling?</strong>');
+      expect(result).toContain('<em>Much better</em>');
+      expect(result).toContain('<s>my mood</s>');
+      expect(result).toContain('<strong>overall wellness</strong>');
+      
+      // Should have therapeutic styling
+      expect(result).toContain('class="therapeutic-table table-striped"');
+      expect(result).toContain('data-label="Question"');
+      expect(result).toContain('data-label="Answer"');
     });
   });
 

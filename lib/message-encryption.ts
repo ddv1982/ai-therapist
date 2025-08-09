@@ -166,3 +166,143 @@ export function safeDecryptMessages(messages: Array<{
 }> {
   return messages.map(message => safeDecryptMessage(message));
 }
+
+// ========================================
+// ENHANCED PSYCHOLOGICAL ANALYSIS ENCRYPTION
+// ========================================
+
+/**
+ * Encrypt cognitive distortions analysis data
+ */
+export function encryptCognitiveDistortions(distortions: unknown[]): string {
+  return encryptSensitiveData(JSON.stringify(distortions));
+}
+
+/**
+ * Decrypt cognitive distortions analysis data
+ */
+export function decryptCognitiveDistortions(encryptedDistortions: string): unknown[] {
+  try {
+    const decryptedData = decryptSensitiveData(encryptedDistortions);
+    return JSON.parse(decryptedData) as unknown[];
+  } catch (error) {
+    console.error('Failed to decrypt cognitive distortions data:', error);
+    return [];
+  }
+}
+
+/**
+ * Encrypt schema analysis data
+ */
+export function encryptSchemaAnalysis(schemaAnalysis: Record<string, unknown>): string {
+  return encryptSensitiveData(JSON.stringify(schemaAnalysis));
+}
+
+/**
+ * Decrypt schema analysis data
+ */
+export function decryptSchemaAnalysis(encryptedSchemaAnalysis: string): Record<string, unknown> {
+  try {
+    const decryptedData = decryptSensitiveData(encryptedSchemaAnalysis);
+    return JSON.parse(decryptedData) as Record<string, unknown>;
+  } catch (error) {
+    console.error('Failed to decrypt schema analysis data:', error);
+    return {
+      activeModes: [],
+      triggeredSchemas: [],
+      predominantMode: null,
+      behavioralPatterns: [],
+      copingStrategies: { adaptive: [], maladaptive: [] },
+      therapeuticRecommendations: []
+    };
+  }
+}
+
+/**
+ * Encrypt therapeutic frameworks data
+ */
+export function encryptTherapeuticFrameworks(frameworks: unknown[]): string {
+  return encryptSensitiveData(JSON.stringify(frameworks));
+}
+
+/**
+ * Decrypt therapeutic frameworks data
+ */
+export function decryptTherapeuticFrameworks(encryptedFrameworks: string): unknown[] {
+  try {
+    const decryptedData = decryptSensitiveData(encryptedFrameworks);
+    return JSON.parse(decryptedData) as unknown[];
+  } catch (error) {
+    console.error('Failed to decrypt therapeutic frameworks data:', error);
+    return [];
+  }
+}
+
+/**
+ * Encrypt therapeutic recommendations data
+ */
+export function encryptTherapeuticRecommendations(recommendations: unknown[]): string {
+  return encryptSensitiveData(JSON.stringify(recommendations));
+}
+
+/**
+ * Decrypt therapeutic recommendations data  
+ */
+export function decryptTherapeuticRecommendations(encryptedRecommendations: string): unknown[] {
+  try {
+    const decryptedData = decryptSensitiveData(encryptedRecommendations);
+    return JSON.parse(decryptedData) as unknown[];
+  } catch (error) {
+    console.error('Failed to decrypt therapeutic recommendations data:', error);
+    return [];
+  }
+}
+
+/**
+ * Comprehensive encryption for all enhanced analysis data
+ */
+export function encryptEnhancedAnalysisData(analysisData: {
+  cognitiveDistortions?: unknown[];
+  schemaAnalysis?: Record<string, unknown>;
+  therapeuticFrameworks?: unknown[];
+  recommendations?: unknown[];
+}) {
+  return {
+    cognitiveDistortions: analysisData.cognitiveDistortions ? 
+      encryptCognitiveDistortions(analysisData.cognitiveDistortions) : null,
+    schemaAnalysis: analysisData.schemaAnalysis ? 
+      encryptSchemaAnalysis(analysisData.schemaAnalysis) : null,
+    therapeuticFrameworks: analysisData.therapeuticFrameworks ? 
+      encryptTherapeuticFrameworks(analysisData.therapeuticFrameworks) : null,
+    recommendations: analysisData.recommendations ? 
+      encryptTherapeuticRecommendations(analysisData.recommendations) : null,
+  };
+}
+
+/**
+ * Comprehensive decryption for all enhanced analysis data
+ */
+export function decryptEnhancedAnalysisData(encryptedData: {
+  cognitiveDistortions?: string | null;
+  schemaAnalysis?: string | null;
+  therapeuticFrameworks?: string | null;
+  recommendations?: string | null;
+}) {
+  return {
+    cognitiveDistortions: encryptedData.cognitiveDistortions ? 
+      decryptCognitiveDistortions(encryptedData.cognitiveDistortions) : [],
+    schemaAnalysis: encryptedData.schemaAnalysis ? 
+      decryptSchemaAnalysis(encryptedData.schemaAnalysis) : {
+        activeModes: [],
+        triggeredSchemas: [],
+        predominantMode: null,
+        behavioralPatterns: [],
+        copingStrategies: { adaptive: [], maladaptive: [] },
+        therapeuticRecommendations: []
+      },
+    therapeuticFrameworks: encryptedData.therapeuticFrameworks ? 
+      decryptTherapeuticFrameworks(encryptedData.therapeuticFrameworks) : [],
+    recommendations: encryptedData.recommendations ? 
+      decryptTherapeuticRecommendations(encryptedData.recommendations) : [],
+  };
+}

@@ -489,4 +489,233 @@
   .dark .message-avatar-assistant {
     @apply text-white;
   }
+
+  /* ========================================
+   * THERAPEUTIC TABLE DESIGN SYSTEM (2025)
+   * ======================================== */
+
+  /* Base Therapeutic Table Styling */
+  .therapeutic-table {
+    @apply w-full border-collapse rounded-lg overflow-hidden;
+    @apply bg-card text-foreground shadow-sm;
+    border: 1px solid hsl(var(--border));
+    font-variant-numeric: tabular-nums; /* Better number alignment */
+  }
+
+  /* Table Headers - Therapeutic Design Language */
+  .therapeutic-table th {
+    @apply bg-muted/50 text-muted-foreground font-semibold;
+    @apply text-therapy-sm text-left;
+    @apply px-4 py-3; /* 8pt grid: 16px horizontal, 12px vertical */
+    border-bottom: 2px solid hsl(var(--border));
+    border-right: 1px solid hsl(var(--border)/0.5);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .therapeutic-table th:last-child {
+    border-right: none;
+  }
+
+  /* Table Data Cells - Clean and Readable */
+  .therapeutic-table td {
+    @apply text-therapy-base;
+    @apply px-4 py-3; /* Consistent with headers */
+    border-bottom: 1px solid hsl(var(--border)/0.3);
+    border-right: 1px solid hsl(var(--border)/0.2);
+    vertical-align: top; /* Better for multi-line content */
+  }
+
+  .therapeutic-table td:last-child {
+    border-right: none;
+  }
+
+  /* Row Hover Effects - Subtle Therapeutic Interaction */
+  .therapeutic-table tbody tr {
+    transition: background-color 0.2s ease;
+  }
+
+  .therapeutic-table tbody tr:hover {
+    @apply bg-muted/30;
+  }
+
+  /* Zebra Striping - Enhanced Readability */
+  .table-striped tbody tr:nth-child(even) {
+    @apply bg-muted/20;
+  }
+
+  .table-striped tbody tr:nth-child(even):hover {
+    @apply bg-muted/40;
+  }
+
+  /* Compact Layout - For Dense Data (CBT Forms) */
+  .table-compact th,
+  .table-compact td {
+    @apply px-3 py-2 text-therapy-sm; /* Tighter spacing */
+  }
+
+  /* ========================================
+   * RESPONSIVE TABLE PATTERNS
+   * ======================================== */
+
+  /* Container Scrolling Pattern */
+  .table-responsive {
+    @apply overflow-x-auto max-w-full;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground)/0.3) transparent;
+  }
+
+  .table-responsive::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .table-responsive::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+    transition: background-color 0.2s ease;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+
+  /* Mobile-First Responsive Patterns */
+  @media (max-width: 768px) {
+    /* Stacked Rows Pattern - Transform tables into cards */
+    .table-stacked {
+      @apply block w-full;
+    }
+    
+    .table-stacked thead {
+      @apply hidden; /* Hide headers on mobile */
+    }
+    
+    .table-stacked tbody {
+      @apply block w-full;
+    }
+    
+    .table-stacked tbody tr {
+      @apply block w-full mb-4 p-4 rounded-lg border border-border/30;
+      @apply bg-card shadow-sm;
+    }
+    
+    .table-stacked td {
+      @apply block w-full px-0 py-2 border-none;
+      @apply text-therapy-base;
+      position: relative;
+      padding-left: 40% !important; /* Space for pseudo-label */
+    }
+    
+    /* Add column labels using CSS - requires data-label attribute */
+    .table-stacked td:before {
+      content: attr(data-label) ": ";
+      @apply absolute left-0 top-2 w-1/3 pr-2;
+      @apply font-semibold text-muted-foreground text-therapy-sm;
+    }
+
+    /* Priority Columns - Show only important columns */
+    .table-priority-mobile .hide-mobile {
+      @apply hidden;
+    }
+
+    /* Enhanced mobile scrolling for horizontal tables */
+    .table-responsive {
+      @apply rounded-lg border border-border/30;
+      margin: 0 -1rem; /* Break out of container padding */
+      padding: 0 1rem;
+    }
+  }
+
+  /* Tablet Responsive Adjustments */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .therapeutic-table th,
+    .therapeutic-table td {
+      @apply px-3 py-2; /* Slightly tighter on tablets */
+    }
+  }
+
+  /* ========================================
+   * SPECIALIZED TABLE VARIANTS
+   * ======================================== */
+
+  /* CBT Session Report Tables */
+  .table-cbt-report {
+    @apply therapeutic-table table-striped;
+  }
+
+  .table-cbt-report th {
+    @apply bg-primary/10 text-primary;
+    border-bottom: 2px solid hsl(var(--primary)/0.3);
+  }
+
+  /* Therapeutic Progress Tables */
+  .table-progress {
+    @apply therapeutic-table;
+  }
+
+  .table-progress .progress-positive {
+    @apply bg-accent/10 text-accent;
+  }
+
+  .table-progress .progress-negative {
+    @apply bg-destructive/10 text-destructive;
+  }
+
+  /* Data Comparison Tables */
+  .table-comparison th:first-child {
+    @apply bg-primary/5 text-primary font-bold;
+  }
+
+  .table-comparison td:first-child {
+    @apply bg-primary/5 font-medium;
+  }
+
+  /* ========================================
+   * ACCESSIBILITY ENHANCEMENTS
+   * ======================================== */
+
+  /* Focus States for Keyboard Navigation */
+  .therapeutic-table:focus-within {
+    @apply ring-2 ring-primary ring-offset-2;
+  }
+
+  /* High Contrast Mode Support */
+  @media (prefers-contrast: high) {
+    .therapeutic-table {
+      border: 2px solid;
+    }
+    
+    .therapeutic-table th,
+    .therapeutic-table td {
+      border: 1px solid;
+    }
+  }
+
+  /* Reduced Motion Support */
+  @media (prefers-reduced-motion: reduce) {
+    .therapeutic-table tbody tr,
+    .table-responsive::-webkit-scrollbar-thumb {
+      transition: none;
+    }
+  }
+
+  /* Print Styles */
+  @media print {
+    .therapeutic-table {
+      @apply shadow-none border-2 border-black;
+    }
+    
+    .table-responsive {
+      overflow: visible;
+    }
+    
+    .table-stacked tbody tr {
+      break-inside: avoid;
+    }
+  }
 }

@@ -1,11 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateSessionReport, type ReportMessage } from '@/lib/groq-client';
-import { REPORT_GENERATION_PROMPT } from '@/lib/therapy-prompts';
+import { generateSessionReport, extractStructuredAnalysis, type ReportMessage } from '@/lib/groq-client';
+import { REPORT_GENERATION_PROMPT, ANALYSIS_EXTRACTION_PROMPT } from '@/lib/therapy-prompts';
 import { prisma } from '@/lib/db';
 import { logger, createRequestLogger } from '@/lib/logger';
 import { reportGenerationSchema, validateRequest } from '@/lib/validation';
-import { encryptSessionReportContent } from '@/lib/message-encryption';
+import { encryptSessionReportContent, encryptEnhancedAnalysisData } from '@/lib/message-encryption';
+import type { Prisma } from '@prisma/client';
 
+
+interface ParsedAnalysis {
+  sessionOverview?: {
+    themes?: string[];
+    emotionalTone?: string;
+    engagement?: string;
+  };
+  cognitiveDistortions?: unknown[];
+  schemaAnalysis?: {
+    activeModes?: unknown[];
+    triggeredSchemas?: unknown[];
+    behavioralPatterns?: string[];
+    predominantMode?: string | null;
+    copingStrategies?: { adaptive: string[]; maladaptive: string[] };
+    therapeuticRecommendations?: string[];
+  };
+  therapeuticFrameworks?: unknown[];
+  recommendations?: unknown[];
+  keyPoints?: Prisma.InputJsonValue;
+  therapeuticInsights?: Prisma.InputJsonValue;
+  patternsIdentified?: Prisma.InputJsonValue;
+  actionItems?: Prisma.InputJsonValue;
+  moodAssessment?: string;
+  progressNotes?: string;
+  analysisConfidence?: number;
+}
 
 export async function POST(request: NextRequest) {
   const requestContext = createRequestLogger(request);
@@ -31,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     const { sessionId, messages, model } = validation.data;
 
-    // Generate the session report using AI
+    // Generate the human-readable session report using AI
     console.log(`Generating session report using model: ${model}...`);
     const completion = await generateSessionReport(messages as ReportMessage[], REPORT_GENERATION_PROMPT, model);
     
@@ -42,22 +69,74 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Extract structured analysis data from the report
+    console.log('Extracting structured analysis data...');
+    const analysisData = await extractStructuredAnalysis(completion, ANALYSIS_EXTRACTION_PROMPT, model);
+    
+    let parsedAnalysis: ParsedAnalysis = {};
+    if (analysisData) {
+      try {
+        parsedAnalysis = JSON.parse(analysisData) as ParsedAnalysis;
+      } catch (error) {
+        console.warn('Failed to parse structured analysis, using defaults:', error);
+        // Continue with empty analysis - the human-readable report is still valuable
+      }
+    }
+
     // Save the report to database for therapeutic memory with encryption
     try {
+
       // Encrypt sensitive report content before storage
       const encryptedReportContent = encryptSessionReportContent(completion);
       
+      // Prepare enhanced analysis data for encryption
+      const enhancedAnalysisData = {
+        cognitiveDistortions: parsedAnalysis.cognitiveDistortions || [],
+        schemaAnalysis: parsedAnalysis.schemaAnalysis || {
+          activeModes: [],
+          triggeredSchemas: [],
+          predominantMode: null,
+          behavioralPatterns: [],
+          copingStrategies: { adaptive: [], maladaptive: [] },
+          therapeuticRecommendations: []
+        },
+        therapeuticFrameworks: parsedAnalysis.therapeuticFrameworks || [],
+        recommendations: parsedAnalysis.recommendations || []
+      };
+
+      // Encrypt the enhanced psychological analysis data
+      const encryptedAnalysisData = encryptEnhancedAnalysisData(enhancedAnalysisData);
+      
+      // Create enhanced analysis data
+      const reportData = {
+        sessionId,
+        reportContent: encryptedReportContent, // Encrypted full report content
+        keyPoints: parsedAnalysis.keyPoints || [],
+        therapeuticInsights: parsedAnalysis.therapeuticInsights || {},
+        patternsIdentified: parsedAnalysis.patternsIdentified || [],
+        actionItems: parsedAnalysis.actionItems || [],
+        moodAssessment: parsedAnalysis.moodAssessment || '',
+        progressNotes: parsedAnalysis.progressNotes || `Report generated on ${new Date().toISOString()}`,
+        
+        // Enhanced psychological analysis fields (encrypted) - handle null values properly
+        ...(encryptedAnalysisData.cognitiveDistortions && { 
+          cognitiveDistortions: encryptedAnalysisData.cognitiveDistortions 
+        }),
+        ...(encryptedAnalysisData.schemaAnalysis && { 
+          schemaAnalysis: encryptedAnalysisData.schemaAnalysis 
+        }),
+        ...(encryptedAnalysisData.therapeuticFrameworks && { 
+          therapeuticFrameworks: encryptedAnalysisData.therapeuticFrameworks 
+        }),
+        ...(encryptedAnalysisData.recommendations && { 
+          recommendations: encryptedAnalysisData.recommendations 
+        }),
+        analysisConfidence: parsedAnalysis.analysisConfidence || 75,
+        analysisVersion: "enhanced_v1.0" // Track version for future updates
+      };
+
       await prisma.sessionReport.create({
-        data: {
-          sessionId,
-          reportContent: encryptedReportContent, // Encrypted sensitive content
-          keyPoints: [], // PostgreSQL native JSON array
-          therapeuticInsights: {}, // PostgreSQL native JSON object - could contain structured insights
-          patternsIdentified: [], // PostgreSQL native JSON array
-          actionItems: [], // PostgreSQL native JSON array
-          moodAssessment: '',
-          progressNotes: `Report generated on ${new Date().toISOString()}`,
-        }
+        data: reportData
       });
       
       logger.info('Session report saved to database for therapeutic memory', {

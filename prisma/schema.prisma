@@ -62,6 +62,17 @@ model SessionReport {
   actionItems         Json     @map("action_items") // JSON for structured data
   moodAssessment      String?  @map("mood_assessment")
   progressNotes       String?  @map("progress_notes")
+  
+  // Enhanced Psychological Analysis (Encrypted JSON fields)
+  cognitiveDistortions    Json?    @map("cognitive_distortions") // Array of CognitiveDistortion objects
+  schemaAnalysis          Json?    @map("schema_analysis") // SchemaAnalysis object with modes and schemas
+  therapeuticFrameworks   Json?    @map("therapeutic_frameworks") // Array of TherapeuticFramework objects
+  recommendations         Json?    @map("recommendations") // Array of TherapeuticRecommendation objects
+  
+  // Analysis Metadata
+  analysisConfidence      Int?     @map("analysis_confidence") // 0-100 scale
+  analysisVersion         String?  @map("analysis_version") // Version of analysis framework used
+  
   createdAt           DateTime @default(now()) @map("created_at")
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)

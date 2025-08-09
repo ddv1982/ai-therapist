@@ -63,3 +63,27 @@ export const generateSessionReport = async (messages: ReportMessage[], systemPro
 
   return completion.choices[0]?.message?.content || null;
 };
+
+export const extractStructuredAnalysis = async (reportContent: string, systemPrompt: string, model: string = 'openai/gpt-oss-120b') => {
+  const groqMessages: GroqMessage[] = [
+    {
+      role: 'system',
+      content: systemPrompt
+    },
+    {
+      role: 'user',
+      content: `Please extract structured analysis data from the following therapeutic report:\n\n${reportContent}`
+    }
+  ];
+  
+  const completion = await groq.chat.completions.create({
+    messages: groqMessages,
+    model: model,
+    temperature: 0.1, // Lower temperature for more consistent JSON output
+    max_tokens: 1024,
+    top_p: 0.8,
+    stream: false,
+  });
+
+  return completion.choices[0]?.message?.content || null;
+};
