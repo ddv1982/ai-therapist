@@ -555,13 +555,23 @@ function enhanceTableCellsWithLabels(html: string): string {
 export function processMarkdown(text: string, _isUser: boolean = false): string {
   if (!text) return '';
 
+  // Pre-process text to handle common HTML entities and tags
+  const processedText = text
+    // Convert literal <br> tags to actual line breaks for markdown processing
+    .replace(/<br\s*\/?>/gi, '\n')
+    // Convert other common HTML entities that might appear as text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"');
+
   // Convert markdown to HTML using markdown-it
   let html: string;
   try {
-    html = md.render(text);
+    html = md.render(processedText);
   } catch (error) {
     console.warn('Markdown parsing failed:', error);
-    html = `<p>${text}</p>`;
+    html = `<p>${processedText}</p>`;
   }
 
   // Always enhance tables with modern responsive system

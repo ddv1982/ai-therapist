@@ -37,6 +37,22 @@ describe('Markdown Processor with sanitize-html', () => {
       expect(result).toContain('</em>');
     });
 
+    it('should handle literal <br> tags by converting them to line breaks', () => {
+      const input = 'First line<br>Second line<br/>Third line';
+      
+      const result = processMarkdown(input, false);
+      
+      // Should convert <br> tags to actual line breaks, which markdown-it will handle
+      expect(result).not.toContain('<br>');
+      expect(result).not.toContain('&lt;br&gt;');
+      // Should contain the text content properly formatted
+      expect(result).toContain('First line');
+      expect(result).toContain('Second line');
+      expect(result).toContain('Third line');
+      // With breaks: true in markdown-it, line breaks should create proper breaks
+      expect(result).toContain('<br />');
+    });
+
     it('should convert lists to standard HTML ul/li elements', () => {
       const input = `- First item
 - Second item
