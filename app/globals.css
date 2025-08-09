@@ -73,13 +73,7 @@
   html {
     scroll-behavior: smooth;
     height: 100%;
-    overflow: hidden; /* Prevent page-level scrolling on mobile */
-    /* Prevent zoom on double tap in iOS Safari */
-    -webkit-text-size-adjust: 100%;
-    -ms-text-size-adjust: 100%;
-    text-size-adjust: 100%;
-    /* Prevent zoom on double tap and improve touch experience */
-    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
   }
   
   body {
@@ -90,51 +84,79 @@
     overflow: hidden; /* Prevent page-level scrolling */
     position: fixed;
     width: 100%;
-    -webkit-overflow-scrolling: touch;
-    /* Mobile Safari fixes */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    /* Prevent elastic bounce on iOS */
-    overscroll-behavior: none;
-    overscroll-behavior-y: none;
-    /* Force hardware acceleration */
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
   }
-  
-  /* iOS Safari viewport fix */
-  @supports (-webkit-touch-callout: none) {
+
+  /* Basic interactive elements */
+  button,
+  [role="button"] {
+    user-select: none;
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+
+  button:active,
+  [role="button"]:active {
+    transform: scale(0.98);
+    opacity: 0.95;
+  }
+
+  /* Mobile input fixes */
+  @media (max-width: 768px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px; /* Prevent mobile zoom on focus */
+    }
+    
+    button,
+    [role="button"] {
+      min-height: 44px;
+    }
+  }
+
+  /* Hover effects for desktop */
+  @media (hover: hover) {
+    button:hover,
+    [role="button"]:hover {
+      opacity: 0.9;
+    }
+    
+    a:hover {
+      opacity: 0.8;
+    }
+  }
+
+  /* Text selection */
+  input,
+  textarea,
+  .message-content,
+  .message-content-user,
+  .message-content-assistant {
+    user-select: text;
+  }
+
+  button,
+  [role="button"],
+  nav,
+  .sidebar {
+    user-select: none;
+    cursor: pointer;
+  }
+
+  /* Mobile viewport fix */
+  @media (max-width: 768px) {
     body {
-      height: -webkit-fill-available;
-      height: var(--app-height, 100vh);
-      /* Additional iOS-specific fixes */
-      min-height: -webkit-fill-available;
-      min-height: var(--app-height, 100vh);
+      height: 100vh;
+      min-height: 100vh;
     }
   }
 }
 
-/* Mobile Safari specific error fixes */
-@supports (-webkit-touch-callout: none) {
-  /* Ensure React components render properly on iOS */
+/* Mobile responsive fixes */
+@media (max-width: 768px) {
   #__next {
     height: 100%;
     overflow: hidden;
     position: relative;
-  }
-  
-  /* Fix potential rendering issues */
-  * {
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    -webkit-perspective: 1000;
-    perspective: 1000;
-  }
-  
-  /* Prevent iOS text selection issues */
-  .selectable-text {
-    -webkit-user-select: text;
-    user-select: text;
   }
 }
 
@@ -355,12 +377,9 @@
     }
   }
   
-  /* Gradient text */
+  /* Simple gradient text */
   .gradient-text {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: hsl(var(--primary));
   }
   
   /* Consistent shimmer effect */
@@ -491,231 +510,456 @@
   }
 
   /* ========================================
-   * THERAPEUTIC TABLE DESIGN SYSTEM (2025)
+   * MOBILE-FIRST TOUCH-OPTIMIZED TABLE SYSTEM (2025)
+   * iPhone 13 Mini Optimized - Progressive Enhancement
    * ======================================== */
 
-  /* Base Therapeutic Table Styling */
+  /* ========================================
+   * PHASE 1: TOUCH INTERACTION FIXES
+   * ======================================== */
+
+  /* Critical iOS Safari Double-Tap Fix */
+  .table-container,
+  .table-responsive,
+  .therapeutic-table,
+  .therapeutic-table *,
+  .table-touch-optimized * {
+    touch-action: manipulation; /* Prevents double-tap zoom on iOS */
+    -webkit-tap-highlight-color: transparent; /* Remove iOS tap highlight */
+  }
+
+  /* Mobile-First Base Table Styling - iPhone 13 Mini Primary (375px) */
   .therapeutic-table {
-    @apply w-full border-collapse rounded-lg overflow-hidden;
-    @apply bg-card text-foreground shadow-sm;
-    border: 1px solid hsl(var(--border));
-    font-variant-numeric: tabular-nums; /* Better number alignment */
-  }
-
-  /* Table Headers - Therapeutic Design Language */
-  .therapeutic-table th {
-    @apply bg-muted/50 text-muted-foreground font-semibold;
-    @apply text-therapy-sm text-left;
-    @apply px-4 py-3; /* 8pt grid: 16px horizontal, 12px vertical */
-    border-bottom: 2px solid hsl(var(--border));
-    border-right: 1px solid hsl(var(--border)/0.5);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .therapeutic-table th:last-child {
-    border-right: none;
-  }
-
-  /* Table Data Cells - Clean and Readable */
-  .therapeutic-table td {
-    @apply text-therapy-base;
-    @apply px-4 py-3; /* Consistent with headers */
-    border-bottom: 1px solid hsl(var(--border)/0.3);
-    border-right: 1px solid hsl(var(--border)/0.2);
-    vertical-align: top; /* Better for multi-line content */
-  }
-
-  .therapeutic-table td:last-child {
-    border-right: none;
-  }
-
-  /* Row Hover Effects - Subtle Therapeutic Interaction */
-  .therapeutic-table tbody tr {
-    transition: background-color 0.2s ease;
-  }
-
-  .therapeutic-table tbody tr:hover {
-    @apply bg-muted/30;
-  }
-
-  /* Zebra Striping - Enhanced Readability */
-  .table-striped tbody tr:nth-child(even) {
-    @apply bg-muted/20;
-  }
-
-  .table-striped tbody tr:nth-child(even):hover {
-    @apply bg-muted/40;
-  }
-
-  /* Compact Layout - For Dense Data (CBT Forms) */
-  .table-compact th,
-  .table-compact td {
-    @apply px-3 py-2 text-therapy-sm; /* Tighter spacing */
-  }
-
-  /* ========================================
-   * RESPONSIVE TABLE PATTERNS
-   * ======================================== */
-
-  /* Container Scrolling Pattern */
-  .table-responsive {
-    @apply overflow-x-auto max-w-full;
+    /* Start with mobile card layout */
+    display: block;
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-variant-numeric: tabular-nums;
+    /* Touch optimization */
+    touch-action: manipulation;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground)/0.3) transparent;
+    overscroll-behavior: contain;
   }
 
-  .table-responsive::-webkit-scrollbar {
-    height: 8px;
+  /* Mobile Card-Based Layout (Default - iPhone 13 Mini Optimized) */
+  .therapeutic-table thead {
+    display: none; /* Hidden on mobile, shown on larger screens */
   }
 
-  .table-responsive::-webkit-scrollbar-track {
-    @apply bg-transparent;
+  .therapeutic-table tbody {
+    display: block;
+    width: 100%;
   }
 
-  .table-responsive::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded-full;
-    transition: background-color 0.2s ease;
+  .therapeutic-table tbody tr {
+    display: block;
+    @apply mb-3 p-3 rounded-lg border border-border/20 bg-card shadow-sm;
+    /* Touch targets - 44px minimum for iOS but more compact */
+    min-height: 44px;
+    /* Touch feedback */
+    transition: all 0.15s ease;
+    cursor: default;
+    /* Mobile-first: smaller, more compact design */
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
   }
 
-  .table-responsive::-webkit-scrollbar-thumb:hover {
-    @apply bg-muted-foreground/30;
+  /* Touch Feedback States - Subtle and Readable */
+  .therapeutic-table tbody tr:active {
+    transform: scale(0.995);
+    @apply bg-muted/10;
   }
 
-  /* Mobile-First Responsive Patterns */
-  @media (max-width: 768px) {
-    /* Stacked Rows Pattern - Transform tables into cards */
-    .table-stacked {
-      @apply block w-full;
-    }
-    
-    .table-stacked thead {
-      @apply hidden; /* Hide headers on mobile */
-    }
-    
-    .table-stacked tbody {
-      @apply block w-full;
-    }
-    
-    .table-stacked tbody tr {
-      @apply block w-full mb-4 p-4 rounded-lg border border-border/30;
-      @apply bg-card shadow-sm;
-    }
-    
-    .table-stacked td {
-      @apply block w-full px-0 py-2 border-none;
-      @apply text-therapy-base;
-      position: relative;
-      padding-left: 40% !important; /* Space for pseudo-label */
-    }
-    
-    /* Add column labels using CSS - requires data-label attribute */
-    .table-stacked td:before {
-      content: attr(data-label) ": ";
-      @apply absolute left-0 top-2 w-1/3 pr-2;
-      @apply font-semibold text-muted-foreground text-therapy-sm;
-    }
-
-    /* Priority Columns - Show only important columns */
-    .table-priority-mobile .hide-mobile {
-      @apply hidden;
-    }
-
-    /* Enhanced mobile scrolling for horizontal tables */
-    .table-responsive {
-      @apply rounded-lg border border-border/30;
-      margin: 0 -1rem; /* Break out of container padding */
-      padding: 0 1rem;
-    }
+  .therapeutic-table td {
+    display: block;
+    width: 100%;
+    @apply px-0 py-2 border-none text-sm;
+    position: relative;
+    min-height: 20px;
+    /* Compact mobile design with less padding */
+    padding-left: 30% !important;
+    line-height: 1.4;
   }
 
-  /* Tablet Responsive Adjustments */
-  @media (min-width: 769px) and (max-width: 1024px) {
-    .therapeutic-table th,
+  /* Mobile Data Labels - Compact design */
+  .therapeutic-table td:before {
+    content: attr(data-label) ": ";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 28%;
+    @apply font-medium text-muted-foreground text-xs pr-1;
+    word-wrap: break-word;
+    line-height: 1.2;
+  }
+
+  /* Remove labels for empty cells */
+  .therapeutic-table td:empty:before {
+    display: none;
+  }
+
+  /* ========================================
+   * RESPONSIVE CONTAINER SYSTEM
+   * ======================================== */
+
+  .table-responsive {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Mobile horizontal scrolling fallback */
+  .table-responsive.table-scroll-horizontal {
+    @apply overflow-x-auto;
+  }
+
+  /* ========================================
+   * PROGRESSIVE ENHANCEMENT - TABLET & DESKTOP
+   * ======================================== */
+
+  /* Tablet Layout (768px - 1023px) */
+  @media (min-width: 768px) {
+    .therapeutic-table {
+      display: table;
+      @apply border-collapse rounded-xl overflow-hidden;
+      @apply bg-card text-foreground shadow-md;
+      border: 1px solid hsl(var(--border));
+    }
+
+    .therapeutic-table thead {
+      display: table-header-group;
+    }
+
+    .therapeutic-table tbody {
+      display: table-row-group;
+    }
+
+    .therapeutic-table tbody tr {
+      display: table-row;
+      @apply mb-0 p-0 rounded-none border-none bg-transparent shadow-none;
+      min-height: auto;
+      /* Enhanced tablet touch targets */
+      height: 56px;
+    }
+
     .therapeutic-table td {
-      @apply px-3 py-2; /* Slightly tighter on tablets */
+      display: table-cell;
+      @apply px-4 py-4 border-b border-border/30 text-therapy-base;
+      padding-left: 16px !important;
+      vertical-align: middle;
+      position: static;
+      width: auto;
+    }
+
+    .therapeutic-table td:before {
+      display: none;
+    }
+
+    /* Tablet Headers */
+    .therapeutic-table th {
+      @apply bg-muted/40 text-muted-foreground font-semibold;
+      @apply text-therapy-sm text-left px-4 py-4;
+      border-bottom: 2px solid hsl(var(--border));
+      border-right: 1px solid hsl(var(--border)/0.3);
+      height: 56px;
+      vertical-align: middle;
+    }
+
+    .therapeutic-table th:last-child,
+    .therapeutic-table td:last-child {
+      border-right: none;
+    }
+
+    /* Tablet zebra striping */
+    .table-striped tbody tr:nth-child(even) {
+      @apply bg-muted/10;
+    }
+  }
+
+  /* Desktop Layout (1024px+) - Full Enhancement */
+  @media (min-width: 1024px) {
+    .therapeutic-table {
+      @apply shadow-lg;
+      border: 1px solid hsl(var(--border)/0.8);
+    }
+
+    .therapeutic-table tbody tr {
+      height: 52px;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+    .therapeutic-table th {
+      @apply bg-gradient-to-r from-muted/60 to-muted/40;
+      height: 52px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+
+    .therapeutic-table td {
+      @apply px-6 py-3;
+      height: 52px;
+    }
+
+    /* Desktop hover effects - Only for hover-capable devices */
+    @media (hover: hover) {
+      .therapeutic-table tbody tr:hover {
+        @apply bg-muted/20;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .table-striped tbody tr:nth-child(even):hover {
+        @apply bg-muted/30;
+      }
+    }
+
+    /* Desktop-only enhanced scrollbars */
+    .table-responsive.table-scroll-horizontal::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .table-responsive.table-scroll-horizontal::-webkit-scrollbar-thumb:hover {
+      @apply bg-muted-foreground/50;
     }
   }
 
   /* ========================================
-   * SPECIALIZED TABLE VARIANTS
+   * SPECIALIZED MOBILE-FIRST TABLE VARIANTS
    * ======================================== */
 
-  /* CBT Session Report Tables */
-  .table-cbt-report {
-    @apply therapeutic-table table-striped;
+  /* Compact Mobile Layout */
+  .table-compact tbody tr {
+    @apply p-3 mb-3;
+    min-height: 40px;
   }
 
-  .table-cbt-report th {
-    @apply bg-primary/10 text-primary;
-    border-bottom: 2px solid hsl(var(--primary)/0.3);
+  .table-compact td {
+    @apply py-2 text-therapy-sm;
+    padding-left: 30% !important;
   }
 
-  /* Therapeutic Progress Tables */
-  .table-progress {
-    @apply therapeutic-table;
+  .table-compact td:before {
+    width: 28%;
+    @apply text-xs;
+  }
+
+  @media (min-width: 768px) {
+    .table-compact th,
+    .table-compact td {
+      @apply px-3 py-2 text-therapy-sm;
+      height: 44px;
+    }
+  }
+
+  /* CBT Session Report Tables - Enhanced Mobile Cards */
+  .table-cbt-report tbody tr {
+    @apply border-l-4 border-primary/60 bg-gradient-to-r from-primary/5 to-transparent;
+  }
+
+  .table-cbt-report td:first-child:before {
+    @apply text-primary font-bold;
+  }
+
+  @media (min-width: 768px) {
+    .table-cbt-report th {
+      @apply bg-gradient-to-r from-primary/20 to-primary/10 text-primary;
+      border-bottom: 2px solid hsl(var(--primary)/0.4);
+    }
+  }
+
+  /* Progress Tables with Visual Indicators */
+  .table-progress tbody tr {
+    position: relative;
+    overflow: hidden;
   }
 
   .table-progress .progress-positive {
-    @apply bg-accent/10 text-accent;
+    @apply border-l-4 border-accent/60 bg-gradient-to-r from-accent/10 to-transparent;
   }
 
   .table-progress .progress-negative {
-    @apply bg-destructive/10 text-destructive;
+    @apply border-l-4 border-destructive/60 bg-gradient-to-r from-destructive/10 to-transparent;
   }
 
-  /* Data Comparison Tables */
-  .table-comparison th:first-child {
-    @apply bg-primary/5 text-primary font-bold;
+  @media (min-width: 768px) {
+    .table-progress .progress-positive td {
+      @apply bg-accent/5;
+    }
+
+    .table-progress .progress-negative td {
+      @apply bg-destructive/5;
+    }
+  }
+
+  /* Dashboard/Metrics Tables - Large Numbers */
+  .table-dashboard tbody tr {
+    @apply p-6;
+    min-height: 80px;
+  }
+
+  .table-dashboard td[data-type="metric"] {
+    @apply text-2xl font-bold text-primary;
+  }
+
+  .table-dashboard td[data-type="label"] {
+    @apply text-therapy-sm text-muted-foreground;
+  }
+
+  /* Comparison Tables */
+  .table-comparison tbody tr {
+    @apply border-l-4 border-muted/40;
   }
 
   .table-comparison td:first-child {
-    @apply bg-primary/5 font-medium;
+    @apply font-semibold text-foreground;
+    background: linear-gradient(to right, hsl(var(--muted))/10, transparent);
+  }
+
+  @media (min-width: 768px) {
+    .table-comparison td:first-child {
+      @apply bg-primary/5 font-medium;
+    }
   }
 
   /* ========================================
-   * ACCESSIBILITY ENHANCEMENTS
+   * ACCESSIBILITY & DEVICE SUPPORT ENHANCEMENTS
    * ======================================== */
 
-  /* Focus States for Keyboard Navigation */
+  /* Touch-Friendly Focus States for Keyboard Navigation */
   .therapeutic-table:focus-within {
     @apply ring-2 ring-primary ring-offset-2;
+    outline: none;
   }
 
-  /* High Contrast Mode Support */
+  /* Individual cell focus for better touch navigation */
+  .therapeutic-table td:focus,
+  .therapeutic-table th:focus {
+    @apply ring-2 ring-primary ring-offset-1 relative;
+    z-index: 5;
+    outline: none;
+  }
+
+  /* High Contrast Mode Support - Enhanced for Mobile */
   @media (prefers-contrast: high) {
     .therapeutic-table {
-      border: 2px solid;
+      border: 2px solid currentColor;
     }
     
     .therapeutic-table th,
     .therapeutic-table td {
-      border: 1px solid;
+      border: 1px solid currentColor;
+    }
+
+    .therapeutic-table tbody tr {
+      border: 2px solid currentColor;
+    }
+    
+    .therapeutic-table td:before {
+      @apply text-foreground font-bold;
     }
   }
 
-  /* Reduced Motion Support */
+  /* Reduced Motion Support - Respect User Preferences */
   @media (prefers-reduced-motion: reduce) {
     .therapeutic-table tbody tr,
-    .table-responsive::-webkit-scrollbar-thumb {
+    .table-responsive::-webkit-scrollbar-thumb,
+    .therapeutic-table tbody tr:active {
       transition: none;
+      transform: none;
+    }
+    
+    .therapeutic-table tbody tr:hover {
+      transform: none;
+      box-shadow: none;
     }
   }
 
-  /* Print Styles */
+  /* Dark Mode Battery Optimization - OLED Friendly */
+  @media (prefers-color-scheme: dark) {
+    .therapeutic-table tbody tr {
+      /* True black backgrounds for OLED efficiency */
+      @apply bg-black/50;
+    }
+    
+    .therapeutic-table td:before {
+      /* Higher contrast for dark mode readability */
+      @apply text-muted-foreground/90;
+    }
+  }
+
+  /* Print Styles - Mobile-First Print Layout */
   @media print {
     .therapeutic-table {
       @apply shadow-none border-2 border-black;
+      display: table !important;
+      page-break-inside: avoid;
+    }
+    
+    .therapeutic-table thead {
+      display: table-header-group !important;
+    }
+    
+    .therapeutic-table tbody {
+      display: table-row-group !important;
+    }
+    
+    .therapeutic-table tbody tr {
+      display: table-row !important;
+      @apply p-0 mb-0 border border-black bg-white;
+      page-break-inside: avoid;
+    }
+    
+    .therapeutic-table td {
+      display: table-cell !important;
+      @apply px-2 py-1 border border-black;
+      padding-left: 8px !important;
+    }
+    
+    .therapeutic-table td:before {
+      display: none !important;
     }
     
     .table-responsive {
-      overflow: visible;
+      overflow: visible !important;
     }
-    
-    .table-stacked tbody tr {
-      break-inside: avoid;
+  }
+
+  /* ========================================
+   * TOUCH-SPECIFIC GLOBAL OPTIMIZATIONS
+   * ======================================== */
+
+  /* Global touch optimization for all interactive elements in tables */
+  .therapeutic-table button,
+  .therapeutic-table input,
+  .therapeutic-table select,
+  .therapeutic-table textarea,
+  .therapeutic-table [role="button"],
+  .therapeutic-table [tabindex] {
+    touch-action: manipulation;
+    /* Minimum touch target size for iOS */
+    min-height: 44px;
+    min-width: 44px;
+    /* Prevent iOS zoom on focus */
+    font-size: 16px;
+    /* Enhanced touch feedback */
+    transition: transform 0.1s ease, background-color 0.15s ease;
+  }
+
+  .therapeutic-table button:active,
+  .therapeutic-table [role="button"]:active {
+    transform: scale(0.98);
+    background-color: hsl(var(--muted) / 0.3);
+  }
+
+  /* Mobile table optimizations */
+  @media (max-width: 768px) {
+    .therapeutic-table {
+      overscroll-behavior: none;
     }
   }
 }

@@ -86,9 +86,9 @@ Content below`;
       expect(result).toContain('Cell 1');
       expect(result).toContain('Cell 2');
       
-      // Enhanced therapeutic features
-      expect(result).toContain('class="therapeutic-table table-striped"'); // Auto-applied classes
-      expect(result).toContain('<div class="table-responsive">'); // Responsive wrapper
+      // Enhanced therapeutic features - Updated for touch-optimized classes
+      expect(result).toContain('class="therapeutic-table table-touch-optimized table-striped"'); // Auto-applied classes
+      expect(result).toContain('<div class="table-responsive table-container">'); // Touch-optimized responsive wrapper
       expect(result).toContain('data-label="Column 1"'); // Mobile labels
       expect(result).toContain('data-label="Column 2"'); // Mobile labels
     });
@@ -112,8 +112,8 @@ Content below`;
       expect(result).toMatch(/<td[^>]*>\s*(&nbsp;|\s*)<\/td>/);
       
       // Should still have therapeutic enhancements
-      expect(result).toContain('class="therapeutic-table table-striped"');
-      expect(result).toContain('<div class="table-responsive">');
+      expect(result).toContain('class="therapeutic-table table-touch-optimized table-striped"');
+      expect(result).toContain('<div class="table-responsive table-container">');
     });
 
     it('should support custom table classes via markdown-it-attrs', () => {
@@ -128,7 +128,7 @@ Content below`;
       // Should contain the custom class
       expect(result).toContain('table-compact');
       // Should still have the responsive wrapper
-      expect(result).toContain('<div class="table-responsive">');
+      expect(result).toContain('<div class="table-responsive table-container">');
     });
 
     it('should handle complex therapeutic table scenarios', () => {
@@ -151,7 +151,7 @@ Content below`;
       
       // Should have therapeutic enhancements
       expect(result).toContain('table-cbt-report');
-      expect(result).toContain('<div class="table-responsive">');
+      expect(result).toContain('<div class="table-responsive table-container">');
       expect(result).toContain('data-label="Emotion"');
       expect(result).toContain('data-label="Initial (0-100)"');
     });
@@ -182,8 +182,8 @@ Content below`;
       const result = processMarkdown(input, false);
       
       // Should still apply therapeutic styling
-      expect(result).toContain('class="therapeutic-table table-striped"');
-      expect(result).toContain('<div class="table-responsive">');
+      expect(result).toContain('class="therapeutic-table table-touch-optimized table-striped"');
+      expect(result).toContain('<div class="table-responsive table-container">');
       
       // Should have basic table structure
       expect(result).toContain('<table');
@@ -204,11 +204,11 @@ Some text between tables.
       const result = processMarkdown(input, false);
       
       // Should have two responsive wrappers
-      const wrapperMatches = result.match(/<div class="table-responsive">/g);
+      const wrapperMatches = result.match(/<div class="table-responsive table-container">/g);
       expect(wrapperMatches).toHaveLength(2);
       
       // Both tables should have therapeutic styling
-      const tableMatches = result.match(/class="therapeutic-table table-striped"/g);
+      const tableMatches = result.match(/class="therapeutic-table table-touch-optimized table-striped"/g);
       expect(tableMatches).toHaveLength(2);
     });
   });
@@ -226,7 +226,7 @@ Some text between tables.
       // Should preserve the custom class
       expect(result).toContain('custom-table');
       // Should still wrap in responsive container
-      expect(result).toContain('<div class="table-responsive">');
+      expect(result).toContain('<div class="table-responsive table-container">');
     });
 
     it('should handle tables with complex cell content', () => {
@@ -244,7 +244,7 @@ Some text between tables.
       expect(result).toContain('<strong>overall wellness</strong>');
       
       // Should have therapeutic styling
-      expect(result).toContain('class="therapeutic-table table-striped"');
+      expect(result).toContain('class="therapeutic-table table-touch-optimized table-striped"');
       expect(result).toContain('data-label="Question"');
       expect(result).toContain('data-label="Answer"');
     });
