@@ -7,6 +7,19 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { CBTDiaryModal } from '@/components/cbt/cbt-diary-modal';
 
+// Mock the CBT export button component
+jest.mock('@/components/cbt/cbt-export-button', () => ({
+  CBTExportButton: ({ formData, isValid, disabled }: any) => (
+    <button 
+      data-testid="cbt-export-button"
+      disabled={disabled || !isValid}
+      title="Export CBT diary"
+    >
+      Export
+    </button>
+  ),
+}));
+
 const mockFormData = {
   date: '2024-01-15',
   situation: 'Test situation',

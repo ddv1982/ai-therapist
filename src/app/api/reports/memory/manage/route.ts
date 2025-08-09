@@ -112,7 +112,18 @@ export async function GET(request: NextRequest) {
           }
         }
         
-        const reportDetail = {
+        const reportDetail: {
+          id: string;
+          sessionId: string;
+          sessionTitle: string;
+          sessionDate: string;
+          reportDate: string;
+          contentPreview: string;
+          keyInsights: string[];
+          hasEncryptedContent: boolean;
+          reportSize: number;
+          fullContent?: string;
+        } = {
           id: report.id,
           sessionId: report.sessionId,
           sessionTitle: report.session.title,

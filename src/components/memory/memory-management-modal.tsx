@@ -78,8 +78,8 @@ export function MemoryManagementModal({
       console.error('Failed to load memory data:', error);
       showToast({
         title: 'Error',
-        description: 'Failed to load memory data',
-        variant: 'destructive',
+        message: 'Failed to load memory data',
+        type: 'error',
       });
     } finally {
       setIsLoading(false);
@@ -94,7 +94,12 @@ export function MemoryManagementModal({
     setIsDeleting(true);
     
     try {
-      let deleteOptions;
+      let deleteOptions: {
+        type: 'all' | 'recent' | 'specific' | 'all-except-current';
+        sessionId?: string;
+        sessionIds?: string[];
+        limit?: number;
+      };
       
       switch (type) {
         case 'all':
@@ -109,6 +114,8 @@ export function MemoryManagementModal({
         case 'specific':
           deleteOptions = { type: 'specific', sessionIds: Array.from(selectedReports) };
           break;
+        default:
+          throw new Error(`Unknown deletion type: ${type}`);
       }
       
       const result = await deleteMemory(deleteOptions);
@@ -120,8 +127,8 @@ export function MemoryManagementModal({
         // Show success toast after modal closes
         showToast({
           title: 'Memory Deleted',
-          description: result.message,
-          variant: 'default',
+          message: result.message,
+          type: 'success',
         });
         
         // Refresh memory context for main app
@@ -134,16 +141,16 @@ export function MemoryManagementModal({
       } else {
         showToast({
           title: 'Deletion Failed',
-          description: result.message,
-          variant: 'destructive',
+          message: result.message,
+          type: 'error',
         });
       }
     } catch (error) {
       console.error('Memory deletion error:', error);
       showToast({
         title: 'Error',
-        description: 'Failed to delete memory',
-        variant: 'destructive',
+        message: 'Failed to delete memory',
+        type: 'error',
       });
     } finally {
       setIsDeleting(false);
@@ -179,7 +186,7 @@ export function MemoryManagementModal({
     }
   };
 
-  const toggleReportSelection = (reportId: string, event?: React.MouseEvent) => {
+  const toggleReportSelection = (reportId: string, event?: React.MouseEvent | React.ChangeEvent<HTMLInputElement>) => {
     if (event) {
       event.stopPropagation();
     }

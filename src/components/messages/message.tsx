@@ -8,6 +8,7 @@ import { buildMessageClasses, type MessageRole } from '@/lib/design-system/messa
 import { MessageAvatar } from './message-avatar';
 import { MessageContent } from './message-content';
 import { MessageTimestamp } from './message-timestamp';
+import { MessageActions } from './message-actions';
 
 interface MessageData {
   id: string;
@@ -36,7 +37,7 @@ function MessageComponent({ message, variant: _variant = 'default', className }:
       <MessageAvatar role={message.role} />
       
       {/* Content Wrapper */}
-      <div className={contentWrapperClasses}>
+      <div className={cn(contentWrapperClasses, "relative group")}>
         {/* Message Content */}
         <MessageContent 
           content={message.content} 
@@ -47,6 +48,14 @@ function MessageComponent({ message, variant: _variant = 'default', className }:
         <MessageTimestamp 
           timestamp={message.timestamp}
           role={message.role}
+        />
+
+        {/* Message Actions (CBT Export) */}
+        <MessageActions
+          messageId={message.id}
+          messageContent={message.content}
+          messageRole={message.role}
+          timestamp={message.timestamp}
         />
       </div>
     </article>

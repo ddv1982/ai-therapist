@@ -1200,7 +1200,7 @@ export default function ChatPage() {
       <MemoryManagementModal
         open={showMemoryModal}
         onOpenChange={setShowMemoryModal}
-        currentSessionId={currentSession}
+        currentSessionId={currentSession ?? undefined}
         onMemoryUpdated={setMemoryContext}
       />
       </div>

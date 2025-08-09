@@ -26,6 +26,7 @@ import {
   Target,
   Eye
 } from 'lucide-react';
+import { CBTExportButton } from './cbt-export-button';
 import { useCBTForm } from '@/hooks/use-cbt-form';
 import { CBTDiaryEmotions } from '@/types/cbt';
 import { cn } from '@/lib/utils';
@@ -1242,6 +1243,15 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
               >
                 Cancel
               </Button>
+              
+              <CBTExportButton 
+                formData={formData}
+                isValid={isValid}
+                disabled={!isDirty}
+                size="default"
+                variant="outline"
+              />
+              
               <Button
                 onClick={handleSendToChat}
                 disabled={!isValid}
