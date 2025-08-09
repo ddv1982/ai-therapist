@@ -199,6 +199,7 @@ export default function ChatPage() {
     }
   }, []);
 
+  // Simple, reliable scroll behavior
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -1133,7 +1134,7 @@ export default function ChatPage() {
             />
           )}
           
-          {/* Messages end ref for auto-scroll */}
+          {/* Simple scroll anchor for auto-scroll */}
           <div ref={messagesEndRef} />
         </div>
 
