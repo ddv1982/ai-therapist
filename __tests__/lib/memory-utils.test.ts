@@ -1,203 +1,324 @@
 /**
- * Memory system utility tests
+ * Tests for memory utilities functions
  */
 
-import { buildMemoryEnhancedPrompt, THERAPY_SYSTEM_PROMPT, type MemoryContext } from '@/lib/therapy-prompts';
+import {
+  checkMemoryContext,
+  formatMemoryInfo,
+  getMemoryManagementData,
+  deleteMemory,
+  refreshMemoryContext,
+  getSessionReportDetail,
+  type MemoryContextInfo,
+  type MemoryManagementResponse,
+} from '@/lib/memory-utils';
+
+// Mock fetch
+global.fetch = jest.fn();
+const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
 
 describe('Memory Utils', () => {
-  describe('buildMemoryEnhancedPrompt', () => {
-    it('should return base prompt when no memory context provided', () => {
-      const prompt = buildMemoryEnhancedPrompt([]);
-      expect(prompt).toBe(THERAPY_SYSTEM_PROMPT);
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('checkMemoryContext', () => {
+    it('should return no memory when sessionId is not provided', async () => {
+      const result = await checkMemoryContext();
+
+      expect(result).toEqual({
+        hasMemory: false,
+        reportCount: 0,
+      });
+      expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('should return base prompt when empty array provided', () => {
-      const prompt = buildMemoryEnhancedPrompt();
-      expect(prompt).toBe(THERAPY_SYSTEM_PROMPT);
+    it('should fetch and return memory context info', async () => {
+      const mockResponse = {
+        success: true,
+        memoryContext: [
+          {
+            sessionTitle: 'Session 1',
+            reportDate: '2024-01-01',
+          },
+          {
+            sessionTitle: 'Session 2', 
+            reportDate: '2024-01-02',
+          },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      } as Response);
+
+      const result = await checkMemoryContext('test-session-id');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/reports/memory?excludeSessionId=test-session-id&limit=3'
+      );
+
+      expect(result).toEqual({
+        hasMemory: true,
+        reportCount: 2,
+        lastReportDate: '2024-01-02',
+      });
     });
 
-    it('should integrate memory context into system prompt', () => {
-      const memoryContext: MemoryContext[] = [
-        {
-          sessionTitle: 'Work Anxiety Session',
-          sessionDate: '2025-08-09',
-          reportDate: '2025-08-09',
-          content: 'Full therapeutic report content here...',
-          summary: 'Key insights: Client shows catastrophic thinking patterns. Therapeutic focus: CBT techniques for anxiety management. Growth areas: Emotion regulation, cognitive flexibility.'
-        }
-      ];
+    it('should handle failed fetch gracefully', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      const prompt = buildMemoryEnhancedPrompt(memoryContext);
+      const result = await checkMemoryContext('test-session-id');
 
-      expect(prompt).toContain('THERAPEUTIC MEMORY CONTEXT:');
-      expect(prompt).toContain('Work Anxiety Session');
-      expect(prompt).toContain('2025-08-09');
-      expect(prompt).toContain('catastrophic thinking patterns');
-      expect(prompt).toContain('CBT techniques for anxiety management');
-      expect(prompt).toContain('Use this context to:');
-      expect(prompt).toContain('Build upon insights and patterns identified');
+      expect(result).toEqual({
+        hasMemory: false,
+        reportCount: 0,
+      });
+    });
+  });
+
+  describe('formatMemoryInfo', () => {
+    it('should return empty string when no memory', () => {
+      const memoryInfo: MemoryContextInfo = {
+        hasMemory: false,
+        reportCount: 0,
+      };
+
+      expect(formatMemoryInfo(memoryInfo)).toBe('');
     });
 
-    it('should handle multiple memory contexts', () => {
-      const memoryContext: MemoryContext[] = [
-        {
-          sessionTitle: 'Initial Assessment',
-          sessionDate: '2025-08-01',
-          reportDate: '2025-08-01',
-          content: 'Initial session content...',
-          summary: 'First session insights about anxiety patterns'
-        },
-        {
-          sessionTitle: 'CBT Session',
-          sessionDate: '2025-08-05',
-          reportDate: '2025-08-05',
-          content: 'CBT session content...',
-          summary: 'Progress with cognitive restructuring techniques'
-        },
-        {
-          sessionTitle: 'Follow-up',
-          sessionDate: '2025-08-08',
-          reportDate: '2025-08-08',
-          content: 'Follow-up content...',
-          summary: 'Continued work on thought records and behavioral experiments'
-        }
-      ];
+    it('should format single session correctly', () => {
+      const memoryInfo: MemoryContextInfo = {
+        hasMemory: true,
+        reportCount: 1,
+        lastReportDate: '2024-01-01',
+      };
 
-      const prompt = buildMemoryEnhancedPrompt(memoryContext);
-
-      expect(prompt).toContain('Previous Session 1 (2025-08-01): "Initial Assessment"');
-      expect(prompt).toContain('Previous Session 2 (2025-08-05): "CBT Session"');
-      expect(prompt).toContain('Previous Session 3 (2025-08-08): "Follow-up"');
-      expect(prompt).toContain('First session insights about anxiety patterns');
-      expect(prompt).toContain('Progress with cognitive restructuring techniques');
-      expect(prompt).toContain('Continued work on thought records');
+      expect(formatMemoryInfo(memoryInfo)).toBe('Using insights from 1 previous session (2024-01-01)');
     });
 
-    it('should include therapeutic continuity guidelines', () => {
-      const memoryContext: MemoryContext[] = [
-        {
-          sessionTitle: 'Test Session',
-          sessionDate: '2025-08-09',
-          reportDate: '2025-08-09',
-          content: 'Test content',
-          summary: 'Test summary'
-        }
-      ];
+    it('should format multiple sessions correctly', () => {
+      const memoryInfo: MemoryContextInfo = {
+        hasMemory: true,
+        reportCount: 3,
+        lastReportDate: '2024-01-03',
+      };
 
-      const prompt = buildMemoryEnhancedPrompt(memoryContext);
+      expect(formatMemoryInfo(memoryInfo)).toBe('Using insights from 3 previous sessions (latest: 2024-01-03)');
+    });
+  });
 
-      expect(prompt).toContain('Acknowledge previous therapeutic work and progress made');
-      expect(prompt).toContain('Reference therapeutic goals and areas of focus previously established');
-      expect(prompt).toContain('Maintain continuity in your therapeutic approach');
-      expect(prompt).toContain('Track progress over time and celebrate growth');
+  describe('deleteMemory', () => {
+    it('should delete all memory', async () => {
+      const mockResponse = {
+        success: true,
+        deletedCount: 5,
+        message: 'Successfully deleted 5 session reports',
+        deletionType: 'all',
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      } as Response);
+
+      const result = await deleteMemory({ type: 'all' });
+
+      expect(mockFetch).toHaveBeenCalledWith('/api/reports/memory?', {
+        method: 'DELETE',
+      });
+      expect(result).toEqual(mockResponse);
     });
 
-    it('should include confidentiality reminder', () => {
-      const memoryContext: MemoryContext[] = [
-        {
-          sessionTitle: 'Test Session',
-          sessionDate: '2025-08-09',
-          reportDate: '2025-08-09',
-          content: 'Test content',
-          summary: 'Test summary'
-        }
-      ];
+    it('should delete specific sessions', async () => {
+      const mockResponse = {
+        success: true,
+        deletedCount: 2,
+        message: 'Successfully deleted specific session reports',
+        deletionType: 'specific',
+      };
 
-      const prompt = buildMemoryEnhancedPrompt(memoryContext);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      } as Response);
 
-      expect(prompt).toContain('IMPORTANT: Never reference specific conversation details from previous sessions');
-      expect(prompt).toContain('Only use the general therapeutic insights and patterns provided');
+      const result = await deleteMemory({
+        type: 'specific',
+        sessionIds: ['session-1', 'session-2'],
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/reports/memory?sessionIds=session-1%2Csession-2',
+        { method: 'DELETE' }
+      );
+      expect(result).toEqual(mockResponse);
     });
 
-    it('should properly format dates and session information', () => {
-      const memoryContext: MemoryContext[] = [
-        {
-          sessionTitle: 'Session with "Quotes" & Special Characters',
-          sessionDate: '2025-12-25',
-          reportDate: '2025-12-26',
-          content: 'Content with special characters & symbols',
-          summary: 'Summary with "quotes" and other punctuation!'
-        }
-      ];
+    it('should handle deletion errors', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      const prompt = buildMemoryEnhancedPrompt(memoryContext);
-
-      expect(prompt).toContain('Previous Session 1 (2025-12-25): "Session with "Quotes" & Special Characters"');
-      expect(prompt).toContain('Report Generated: 2025-12-26');
-      expect(prompt).toContain('Summary with "quotes" and other punctuation!');
+      try {
+        await deleteMemory({ type: 'all' });
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toBe('Network error');
+      }
     });
+  });
 
-    it('should maintain original prompt structure with memory insertion', () => {
-      const memoryContext: MemoryContext[] = [
-        {
-          sessionTitle: 'Test',
-          sessionDate: '2025-08-09',
-          reportDate: '2025-08-09',
-          content: 'Content',
-          summary: 'Summary'
-        }
-      ];
-
-      const prompt = buildMemoryEnhancedPrompt(memoryContext);
-
-      // Should contain original therapeutic principles
-      expect(prompt).toContain('You are a compassionate, professional AI therapist');
-      expect(prompt).toContain('Core Principles:');
-      expect(prompt).toContain('Respond with empathy, compassion, and without judgment');
+  describe('refreshMemoryContext', () => {
+    it('should refresh memory context after deletion', async () => {
+      const result = await refreshMemoryContext('test-session');
       
-      // Memory section should be inserted before the "Remember" section
-      expect(prompt).toContain('THERAPEUTIC MEMORY CONTEXT:');
-      expect(prompt).toContain('Remember: Your primary role is to listen deeply');
-      
-      // Should maintain web search guidelines
-      expect(prompt).toContain('Web Search Guidelines:');
-      expect(prompt).toContain('Response Guidelines:');
+      expect(result).toEqual({
+        hasMemory: false,
+        reportCount: 0,
+      });
+    });
+  });
+
+  describe('getSessionReportDetail', () => {
+    it('should fetch full content for specific report', async () => {
+      const mockDetailResponse = {
+        success: true,
+        memoryDetails: [{
+          id: 'report-1',
+          sessionId: 'session-1',
+          sessionTitle: 'Test Session',
+          sessionDate: '2024-01-01',
+          reportDate: '2024-01-01',
+          contentPreview: 'Preview content...',
+          fullContent: 'Complete therapeutic session content with detailed analysis...',
+          keyInsights: ['Insight 1', 'Insight 2'],
+          hasEncryptedContent: true,
+          reportSize: 2048
+        }],
+        reportCount: 1,
+        stats: { totalReportsFound: 1, successfullyProcessed: 1, failedDecryptions: 0, hasMemory: true }
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockDetailResponse),
+      } as Response);
+
+      const result = await getSessionReportDetail('report-1', 'current-session');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/reports/memory/manage?excludeSessionId=current-session&includeFullContent=true'
+      );
+
+      expect(result).toEqual({
+        id: 'report-1',
+        sessionId: 'session-1',
+        sessionTitle: 'Test Session',
+        sessionDate: '2024-01-01',
+        reportDate: '2024-01-01',
+        fullContent: 'Complete therapeutic session content with detailed analysis...',
+        keyInsights: ['Insight 1', 'Insight 2'],
+        reportSize: 2048
+      });
     });
 
-    it('should handle empty or undefined summary gracefully', () => {
-      const memoryContext: MemoryContext[] = [
-        {
-          sessionTitle: 'Session with Empty Summary',
-          sessionDate: '2025-08-09',
-          reportDate: '2025-08-09',
-          content: 'Some content here',
-          summary: ''
-        },
-        {
-          sessionTitle: 'Session with Undefined Summary',
-          sessionDate: '2025-08-10',
-          reportDate: '2025-08-10',
-          content: 'More content',
-          summary: undefined as any
-        }
-      ];
+    it('should fetch full content without session exclusion', async () => {
+      const mockDetailResponse = {
+        success: true,
+        memoryDetails: [{
+          id: 'report-1',
+          sessionId: 'session-1',
+          sessionTitle: 'Test Session',
+          sessionDate: '2024-01-01',
+          reportDate: '2024-01-01',
+          fullContent: 'Complete content...',
+          keyInsights: [],
+          hasEncryptedContent: true,
+          reportSize: 1024
+        }],
+        reportCount: 1,
+        stats: { totalReportsFound: 1, successfullyProcessed: 1, failedDecryptions: 0, hasMemory: true }
+      };
 
-      const prompt = buildMemoryEnhancedPrompt(memoryContext);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockDetailResponse),
+      } as Response);
 
-      expect(prompt).toContain('Session with Empty Summary');
-      expect(prompt).toContain('Session with Undefined Summary');
-      expect(prompt).toContain('Therapeutic Insights:'); // Should still contain the label
+      const result = await getSessionReportDetail('report-1');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        '/api/reports/memory/manage?includeFullContent=true'
+      );
+
+      expect(result).toBeDefined();
+      expect(result?.fullContent).toBe('Complete content...');
     });
 
-    it('should preserve therapeutic memory context formatting', () => {
-      const memoryContext: MemoryContext[] = [
-        {
-          sessionTitle: 'Anxiety Management',
-          sessionDate: '2025-08-09',
-          reportDate: '2025-08-09',
-          content: 'Full report content',
-          summary: 'Key insights: Catastrophic thinking identified. Therapeutic focus: CBT techniques. Growth areas: Emotion regulation. Patterns identified: Anxiety spirals when facing new projects.'
-        }
-      ];
+    it('should return null when report not found', async () => {
+      const mockDetailResponse = {
+        success: true,
+        memoryDetails: [],
+        reportCount: 0,
+        stats: { totalReportsFound: 0, successfullyProcessed: 0, failedDecryptions: 0, hasMemory: false }
+      };
 
-      const prompt = buildMemoryEnhancedPrompt(memoryContext);
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockDetailResponse),
+      } as Response);
 
-      // Check that the therapeutic memory section is properly structured
-      const memorySection = prompt.match(/THERAPEUTIC MEMORY CONTEXT:.*?(?=\n\nRemember:)/s)?.[0];
-      expect(memorySection).toBeTruthy();
-      expect(memorySection).toContain('Previous Session 1 (2025-08-09): "Anxiety Management"');
-      expect(memorySection).toContain('Report Generated: 2025-08-09');
-      expect(memorySection).toContain('Therapeutic Insights: Key insights: Catastrophic thinking identified');
+      const result = await getSessionReportDetail('nonexistent-report');
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when full content is missing', async () => {
+      const mockDetailResponse = {
+        success: true,
+        memoryDetails: [{
+          id: 'report-1',
+          sessionId: 'session-1',
+          sessionTitle: 'Test Session',
+          sessionDate: '2024-01-01',
+          reportDate: '2024-01-01',
+          contentPreview: 'Preview only...',
+          // fullContent is missing
+          keyInsights: [],
+          hasEncryptedContent: false,
+          reportSize: 1024
+        }],
+        reportCount: 1,
+        stats: { totalReportsFound: 1, successfullyProcessed: 0, failedDecryptions: 1, hasMemory: true }
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockDetailResponse),
+      } as Response);
+
+      const result = await getSessionReportDetail('report-1');
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle API errors gracefully', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+      const result = await getSessionReportDetail('report-1');
+
+      expect(result).toBeNull();
+    });
+
+    it('should handle HTTP error responses', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      } as Response);
+
+      const result = await getSessionReportDetail('report-1');
+
+      expect(result).toBeNull();
     });
   });
 });

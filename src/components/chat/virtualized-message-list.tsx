@@ -2,6 +2,7 @@
 
 import React, { memo, useMemo } from 'react';
 import { Message, type MessageData } from '@/components/message';
+import { StreamingMessageWrapper } from '@/components/messages/streaming-message-wrapper';
 
 interface VirtualizedMessageListProps {
   messages: MessageData[];
@@ -65,7 +66,21 @@ function VirtualizedMessageListComponent({
                 role="article"
                 aria-label={`Message from ${message.role}`}
               >
-                <Message message={message} />
+                <StreamingMessageWrapper
+                  content={message.content}
+                  isStreaming={isStreaming}
+                  isLastMessage={isLastMessage}
+                  role={message.role}
+                  onAnimationComplete={(stage) => {
+                    // Optional: Add telemetry or user feedback for animation completion
+                    if (stage === 'revealed' && message.role === 'assistant') {
+                      // Could dispatch analytics event or update UI state
+                      console.debug('Streaming animation completed for message:', message.id);
+                    }
+                  }}
+                >
+                  <Message message={message} />
+                </StreamingMessageWrapper>
               </div>
             )}
           </div>

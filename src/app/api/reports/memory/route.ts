@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { logger, createRequestLogger } from '@/lib/logger';
 import { decryptSessionReportContent } from '@/lib/message-encryption';
+import { validateApiAuth, createAuthErrorResponse } from '@/lib/api-auth';
 
 /**
  * Create therapeutic summary from structured session report data
@@ -201,6 +202,130 @@ export async function GET(request: NextRequest) {
         error: 'Failed to retrieve memory context',
         success: false,
         memoryContext: [] // Return empty context instead of undefined
+      },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/reports/memory
+ * 
+ * Deletes session reports to clear therapeutic memory context.
+ * Supports various deletion modes:
+ * - All memory: no parameters
+ * - Specific sessions: ?sessionIds=id1,id2,id3
+ * - Recent N reports: ?limit=3
+ * - Exclude current: ?excludeSessionId=currentId&limit=N
+ */
+export async function DELETE(request: NextRequest) {
+  const requestContext = createRequestLogger(request);
+  
+  try {
+    // Validate authentication first
+    const authResult = await validateApiAuth(request);
+    if (!authResult.isValid) {
+      logger.warn('Unauthorized memory deletion request', { ...requestContext, error: authResult.error });
+      return createAuthErrorResponse(authResult.error || 'Authentication required');
+    }
+    
+    logger.info('Memory deletion request received', requestContext);
+    
+    const { searchParams } = new URL(request.url);
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : undefined;
+    const excludeSessionId = searchParams.get('excludeSessionId');
+    const sessionIdsParam = searchParams.get('sessionIds');
+    const sessionIds = sessionIdsParam ? sessionIdsParam.split(',') : undefined;
+    
+    let deletionCriteria: Record<string, unknown> = {};
+    let deletionDescription = '';
+    
+    if (sessionIds && sessionIds.length > 0) {
+      // Delete specific session reports
+      deletionCriteria = {
+        sessionId: {
+          in: sessionIds
+        }
+      };
+      deletionDescription = `specific sessions: ${sessionIds.join(', ')}`;
+    } else if (limit) {
+      // Delete recent N reports (optionally excluding current session)
+      const reportsToDelete = await prisma.sessionReport.findMany({
+        where: excludeSessionId ? {
+          sessionId: {
+            not: excludeSessionId
+          }
+        } : undefined,
+        select: { id: true },
+        orderBy: { createdAt: 'desc' },
+        take: limit
+      });
+      
+      if (reportsToDelete.length === 0) {
+        logger.info('No reports found to delete', { ...requestContext, limit, excludeSessionId });
+        return NextResponse.json({
+          success: true,
+          deletedCount: 0,
+          message: 'No reports found matching deletion criteria'
+        });
+      }
+      
+      deletionCriteria = {
+        id: {
+          in: reportsToDelete.map(r => r.id)
+        }
+      };
+      deletionDescription = `${reportsToDelete.length} recent reports${excludeSessionId ? ` (excluding current session)` : ''}`;
+    } else if (excludeSessionId) {
+      // Delete all memory except current session
+      deletionCriteria = {
+        sessionId: {
+          not: excludeSessionId
+        }
+      };
+      deletionDescription = 'all memory (excluding current session)';
+    } else {
+      // Delete all memory
+      deletionCriteria = {};
+      deletionDescription = 'all memory';
+    }
+    
+    logger.info('Executing memory deletion', {
+      ...requestContext,
+      deletionDescription,
+      criteria: deletionCriteria
+    });
+    
+    // Execute the deletion
+    const deleteResult = await prisma.sessionReport.deleteMany({
+      where: deletionCriteria
+    });
+    
+    logger.info('Memory deletion completed successfully', {
+      ...requestContext,
+      deletionDescription,
+      deletedCount: deleteResult.count
+    });
+    
+    return NextResponse.json({
+      success: true,
+      deletedCount: deleteResult.count,
+      message: `Successfully deleted ${deleteResult.count} session reports (${deletionDescription})`,
+      deletionType: sessionIds ? 'specific' : limit ? 'recent' : excludeSessionId ? 'all-except-current' : 'all'
+    });
+    
+  } catch (error) {
+    logger.error('Error deleting memory context', {
+      ...requestContext,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    
+    return NextResponse.json(
+      { 
+        error: 'Failed to delete memory context',
+        success: false,
+        deletedCount: 0
       },
       { status: 500 }
     );

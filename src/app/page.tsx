@@ -25,6 +25,7 @@ import { VirtualizedMessageList } from '@/components/chat/virtualized-message-li
 import type { MessageData } from '@/components/messages/message';
 import { MobileDebugInfo } from '@/components/ui/layout/mobile-debug-info';
 import { CBTDiaryModal } from '@/components/cbt/cbt-diary-modal';
+import { MemoryManagementModal } from '@/components/memory/memory-management-modal';
 import { therapeuticInteractive, getTherapeuticIconButton } from '@/lib/ui/design-tokens';
 
 // Using MessageData from the new message system
@@ -55,6 +56,7 @@ export default function ChatPage() {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [memoryContext, setMemoryContext] = useState<MemoryContextInfo>({ hasMemory: false, reportCount: 0 });
   const [showCBTModal, setShowCBTModal] = useState(false);
+  const [showMemoryModal, setShowMemoryModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -1075,11 +1077,21 @@ export default function ChatPage() {
           {/* Memory Context Indicator */}
           {memoryContext.hasMemory && currentSession && (
             <div className={`mb-4 ${isMobile ? 'mx-1' : 'mx-2'}`}>
-              <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2 text-center">
-                <p className="text-xs text-primary/80 flex items-center justify-center gap-2">
-                  <Sparkles className="w-3 h-3" />
-                  {formatMemoryInfo(memoryContext)}
-                </p>
+              <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-primary/80 flex items-center gap-2">
+                    <Sparkles className="w-3 h-3" />
+                    {formatMemoryInfo(memoryContext)}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowMemoryModal(true)}
+                    className="text-primary/60 hover:text-primary hover:bg-primary/10 h-6 px-2"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -1182,6 +1194,14 @@ export default function ChatPage() {
         open={showCBTModal}
         onOpenChange={setShowCBTModal}
         onSendToChat={handleCBTSendToChat}
+      />
+      
+      {/* Memory Management Modal */}
+      <MemoryManagementModal
+        open={showMemoryModal}
+        onOpenChange={setShowMemoryModal}
+        currentSessionId={currentSession}
+        onMemoryUpdated={setMemoryContext}
       />
       </div>
     </AuthGuard>

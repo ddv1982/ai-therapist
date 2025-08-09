@@ -38,6 +38,11 @@ class NetworkRateLimiter {
    * Check if IP should be exempt from rate limiting
    */
   private isExemptIP(ip: string): boolean {
+    // Handle undefined or null IP
+    if (!ip) {
+      return false;
+    }
+    
     // Allow localhost and private network ranges for development
     const exemptIPs = [
       'localhost',

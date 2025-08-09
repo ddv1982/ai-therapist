@@ -228,3 +228,4 @@ export * from './api';
 export * from './therapy';
 export * from './database';
 export * from './ui';
+export * from './streaming';
