@@ -1,0 +1,621 @@
+/* ========================================
+ * ROBUST TABLE SYSTEM - MOBILE-FIRST (2025)
+ * Modern CSS with 5-Column Rule & Alternative Views
+ * ======================================== */
+
+/* Import alternative views for 6+ column data */
+@import './alternative-views.css';
+
+/* CSS Custom Properties for Theming */
+.table-system {
+  /* Base table theming */
+  --table-bg: hsl(var(--card));
+  --table-border: hsl(var(--border));
+  --table-text: hsl(var(--foreground));
+  --table-header-bg: hsl(var(--muted) / 0.8);
+  --table-stripe-bg: hsl(var(--muted) / 0.15);
+  --table-hover-bg: hsl(var(--muted) / 0.25);
+  
+  /* Responsive breakpoints using container queries */
+  --table-mobile-breakpoint: 480px;
+  --table-tablet-breakpoint: 768px;
+  
+  /* Spacing system (8pt grid) */
+  --table-cell-padding-mobile: 0.75rem;
+  --table-cell-padding-desktop: 1rem 1.25rem;
+  --table-row-min-height-mobile: 44px;
+  --table-row-min-height-desktop: 60px;
+  
+  /* Typography scale */
+  --table-font-size-mobile: 0.875rem;
+  --table-font-size-desktop: 1rem;
+  --table-header-font-weight: 700;
+  
+  /* Border system */
+  --table-border-width: 1px;
+  --table-border-radius: 0.5rem;
+  --table-cell-border: var(--table-border-width) solid var(--table-border);
+}
+
+/* ========================================
+ * CORE TABLE FOUNDATION
+ * ======================================== */
+
+/* Table Container - Responsive Wrapper */
+.table-container {
+  width: 100%;
+  margin: 1rem 0;
+  border-radius: var(--table-border-radius);
+  overflow: hidden;
+  background: var(--table-bg);
+  border: var(--table-cell-border);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  
+  /* Container query context */
+  container-type: inline-size;
+  container-name: table;
+}
+
+/* Base Table Element */
+.therapeutic-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+  color: var(--table-text);
+  font-variant-numeric: tabular-nums;
+  
+  /* Mobile-first: Start with block layout */
+  display: block;
+}
+
+/* ========================================
+ * MOBILE-FIRST LAYOUT (Default: 0-480px)
+ * Card-based stacked design
+ * ======================================== */
+
+/* Mobile: Hide table headers, use card layout */
+.therapeutic-table thead {
+  display: none;
+}
+
+.therapeutic-table tbody {
+  display: block;
+  gap: 0.75rem;
+}
+
+.therapeutic-table tbody tr {
+  display: block;
+  background: var(--table-bg);
+  border: var(--table-cell-border);
+  border-radius: 0.5rem;
+  padding: var(--table-cell-padding-mobile);
+  margin-bottom: 0.75rem;
+  min-height: var(--table-row-min-height-mobile);
+  
+  /* Touch optimization */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.therapeutic-table td {
+  display: block;
+  padding: 0.5rem 0;
+  border: none;
+  font-size: var(--table-font-size-mobile);
+  line-height: 1.4;
+  
+  /* Mobile label system */
+  position: relative;
+  padding-left: 30%;
+  min-height: 1.5rem;
+}
+
+/* Mobile data labels */
+.therapeutic-table td::before {
+  content: attr(data-label) ": ";
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 28%;
+  font-weight: 600;
+  color: var(--table-text);
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.therapeutic-table td:empty::before {
+  display: none;
+}
+
+/* ========================================
+ * TABLET+ LAYOUT (481px+)
+ * Container Query Based Responsive Design
+ * ======================================== */
+
+@container table (min-width: 481px) {
+  /* Switch to table layout on larger containers */
+  .therapeutic-table {
+    display: table;
+    table-layout: auto; /* Content-based column widths */
+  }
+  
+  .therapeutic-table thead {
+    display: table-header-group;
+  }
+  
+  .therapeutic-table tbody {
+    display: table-row-group;
+    gap: 0;
+  }
+  
+  .therapeutic-table tbody tr {
+    display: table-row;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 0;
+    min-height: var(--table-row-min-height-desktop);
+    
+    /* Hover effects for desktop */
+    transition: background-color 0.2s ease;
+  }
+  
+  .therapeutic-table th,
+  .therapeutic-table td {
+    display: table-cell;
+    vertical-align: top;
+    padding: var(--table-cell-padding-desktop);
+    border-bottom: var(--table-cell-border);
+    font-size: var(--table-font-size-desktop);
+    line-height: 1.5;
+  }
+  
+  .therapeutic-table th {
+    background: var(--table-header-bg);
+    font-weight: var(--table-header-font-weight);
+    text-align: left;
+    border-bottom: 2px solid var(--table-border);
+    
+    /* Column width management */
+    min-width: 8ch;
+    max-width: 35%;
+  }
+  
+  .therapeutic-table td {
+    position: static;
+    padding-left: var(--table-cell-padding-desktop);
+    min-height: auto;
+  }
+  
+  .therapeutic-table td::before {
+    display: none;
+  }
+  
+  /* Remove last column/row borders */
+  .therapeutic-table th:last-child,
+  .therapeutic-table td:last-child {
+    border-right: none;
+  }
+  
+  .therapeutic-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+/* ========================================
+ * DESKTOP+ ENHANCEMENTS (769px+)
+ * ======================================== */
+
+@container table (min-width: 769px) {
+  .therapeutic-table {
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+  
+  .therapeutic-table th,
+  .therapeutic-table td {
+    padding: 1rem 1.5rem;
+  }
+  
+  .therapeutic-table th {
+    min-width: 10ch;
+    max-width: 40%;
+  }
+  
+  /* Enhanced hover effects for desktop */
+  .therapeutic-table tbody tr:hover {
+    background: var(--table-hover-bg);
+  }
+}
+
+/* ========================================
+ * WIDE TABLE SYSTEM (5+ Columns)
+ * Advanced responsive patterns for complex data
+ * ======================================== */
+
+/* Wide table detection using CSS counters */
+.therapeutic-table {
+  counter-reset: column-count;
+}
+
+.therapeutic-table th {
+  counter-increment: column-count;
+}
+
+.therapeutic-table th:nth-child(5) {
+  --is-wide-table: 1;
+}
+
+/* ========================================
+ * PRIORITY PLUS PATTERN (5-7 columns)
+ * Hide lower priority columns, show in expandable section
+ * ======================================== */
+
+/* Mark tables with 5+ columns as wide */
+.wide-table-container {
+  position: relative;
+}
+
+.wide-table-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 20px;
+  background: linear-gradient(to left, var(--table-bg), transparent);
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Removed horizontal scroll indicator - no longer needed with 5-column rule */
+
+/* Priority Plus: Hide lower priority columns on tablet */
+@container table (min-width: 481px) and (max-width: 768px) {
+  .therapeutic-table.table-priority-plus th:nth-child(n+5),
+  .therapeutic-table.table-priority-plus td:nth-child(n+5) {
+    display: none;
+  }
+  
+  /* Show "more columns" indicator */
+  .therapeutic-table.table-priority-plus th:nth-child(4)::after,
+  .therapeutic-table.table-priority-plus td:nth-child(4)::after {
+    content: '+' attr(data-hidden-count) ' more';
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--table-border);
+    color: var(--table-text);
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+    opacity: 0.7;
+  }
+}
+
+/* ========================================
+ * OPTIMIZED 4-5 COLUMN TABLE ENHANCEMENTS
+ * Enhanced styling for maximum width tables
+ * ======================================== */
+
+.therapeutic-table.table-optimized-wide {
+  table-layout: auto;
+}
+
+@container table (min-width: 481px) {
+  .therapeutic-table.table-optimized-wide th {
+    min-width: 6ch;
+    max-width: 25%;
+  }
+}
+
+@container table (min-width: 769px) {
+  .therapeutic-table.table-optimized-wide th {
+    min-width: 8ch;
+    max-width: 22%;
+  }
+  
+  .therapeutic-table.table-optimized-wide th,
+  .therapeutic-table.table-optimized-wide td {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* ========================================
+ * ADAPTIVE CARD TRANSFORMATION (Mobile)
+ * Convert wide tables to cards on small screens
+ * ======================================== */
+
+@container table (max-width: 480px) {
+  .therapeutic-table.table-adaptive-cards {
+    display: block;
+  }
+  
+  .therapeutic-table.table-adaptive-cards thead {
+    display: none;
+  }
+  
+  .therapeutic-table.table-adaptive-cards tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .therapeutic-table.table-adaptive-cards tbody tr {
+    display: block;
+    background: var(--table-bg);
+    border: 1px solid var(--table-border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .therapeutic-table.table-adaptive-cards td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.5rem 0;
+    border: none;
+    border-bottom: 1px solid var(--table-border);
+  }
+  
+  .therapeutic-table.table-adaptive-cards td:last-child {
+    border-bottom: none;
+  }
+  
+  .therapeutic-table.table-adaptive-cards td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--table-text);
+    margin-right: 1rem;
+    flex-shrink: 0;
+    min-width: 30%;
+  }
+  
+  /* Priority-based field ordering in cards */
+  .therapeutic-table.table-adaptive-cards td[data-priority="high"] {
+    order: -2;
+    font-size: 1.1em;
+    font-weight: 600;
+  }
+  
+  .therapeutic-table.table-adaptive-cards td[data-priority="medium"] {
+    order: -1;
+  }
+  
+  .therapeutic-table.table-adaptive-cards td[data-priority="low"] {
+    order: 1;
+    opacity: 0.7;
+    font-size: 0.9em;
+  }
+}
+
+/* ========================================
+ * COLUMN MANAGEMENT SYSTEM
+ * User-controlled column visibility and ordering
+ * ======================================== */
+
+.column-manager {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 20;
+}
+
+.column-toggle-button {
+  padding: 0.5rem;
+  background: var(--table-bg);
+  border: 1px solid var(--table-border);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--table-text);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.column-toggle-button:hover {
+  opacity: 1;
+}
+
+.column-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: var(--table-bg);
+  border: 1px solid var(--table-border);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem;
+  min-width: 200px;
+  z-index: 30;
+}
+
+.column-option {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  transition: background-color 0.2s ease;
+}
+
+.column-option:hover {
+  background: var(--table-stripe-bg);
+}
+
+.column-option input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+/* Hidden columns styling */
+.therapeutic-table th[data-column-hidden="true"],
+.therapeutic-table td[data-column-hidden="true"] {
+  display: none;
+}
+
+/* ========================================
+ * WIDE TABLE ACCESSIBILITY ENHANCEMENTS
+ * ======================================== */
+
+/* Enhanced focus management for optimized tables */
+.therapeutic-table.table-optimized-wide:focus-within {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Keyboard navigation hints */
+.table-container[data-keyboard-nav="true"]::after {
+  content: 'Use arrow keys to navigate';
+  position: absolute;
+  bottom: -1.5rem;
+  left: 0;
+  font-size: 0.75rem;
+  color: var(--table-text);
+  opacity: 0.6;
+}
+
+/* Screen reader announcements for hidden content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ========================================
+ * TABLE VARIANTS
+ * ======================================== */
+
+/* Striped Tables */
+.table-striped tbody tr:nth-child(even) {
+  background: var(--table-stripe-bg);
+}
+
+@container table (min-width: 481px) {
+  .table-striped tbody tr:nth-child(even) {
+    background: var(--table-stripe-bg);
+  }
+  
+  .table-striped tbody tr:nth-child(even):hover {
+    background: var(--table-hover-bg);
+  }
+}
+
+/* Compact Tables */
+.table-compact {
+  --table-cell-padding-mobile: 0.5rem;
+  --table-cell-padding-desktop: 0.75rem 1rem;
+  --table-row-min-height-mobile: 36px;
+  --table-row-min-height-desktop: 48px;
+  --table-font-size-mobile: 0.75rem;
+  --table-font-size-desktop: 0.875rem;
+}
+
+/* CBT Report Tables */
+.table-cbt-report .therapeutic-table td:first-child::before {
+  font-weight: var(--table-header-font-weight);
+}
+
+/* Progress Tables with Indicators */
+.table-progress .progress-positive {
+  border-left: 4px solid hsl(var(--accent));
+  background: linear-gradient(to right, hsl(var(--accent) / 0.1), transparent);
+}
+
+.table-progress .progress-negative {
+  border-left: 4px solid hsl(var(--destructive));
+  background: linear-gradient(to right, hsl(var(--destructive) / 0.1), transparent);
+}
+
+/* ========================================
+ * ACCESSIBILITY & REDUCED MOTION
+ * ======================================== */
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  .table-system {
+    --table-border: currentColor;
+  }
+  
+  .therapeutic-table {
+    border: 2px solid currentColor;
+  }
+  
+  .therapeutic-table th,
+  .therapeutic-table td {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .therapeutic-table tbody tr {
+    transition: none;
+  }
+}
+
+/* Focus management for keyboard navigation */
+.therapeutic-table:focus-within {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.therapeutic-table th:focus,
+.therapeutic-table td:focus {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: -2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ========================================
+ * PRINT STYLES
+ * ======================================== */
+
+@media print {
+  .table-container {
+    box-shadow: none;
+    border: 2px solid black;
+  }
+  
+  .therapeutic-table {
+    display: table !important;
+    background: white;
+    color: black;
+  }
+  
+  .therapeutic-table thead {
+    display: table-header-group !important;
+  }
+  
+  .therapeutic-table tbody {
+    display: table-row-group !important;
+  }
+  
+  .therapeutic-table tbody tr {
+    display: table-row !important;
+    background: white;
+    page-break-inside: avoid;
+  }
+  
+  .therapeutic-table th,
+  .therapeutic-table td {
+    display: table-cell !important;
+    border: 1px solid black;
+    padding: 0.5rem;
+  }
+  
+  .therapeutic-table td::before {
+    display: none !important;
+  }
+}

@@ -86,9 +86,9 @@ Content below`;
       expect(result).toContain('Cell 1');
       expect(result).toContain('Cell 2');
       
-      // Enhanced therapeutic features - Updated for touch-optimized classes
-      expect(result).toContain('class="therapeutic-table table-touch-optimized table-striped"'); // Auto-applied classes
-      expect(result).toContain('<div class="table-responsive table-container">'); // Touch-optimized responsive wrapper
+      // Enhanced therapeutic features - Updated for new table system
+      expect(result).toContain('class="therapeutic-table table-striped"'); // Auto-applied classes
+      expect(result).toContain('<div class="table-container table-system">'); // Modern responsive wrapper
       expect(result).toContain('data-label="Column 1"'); // Mobile labels
       expect(result).toContain('data-label="Column 2"'); // Mobile labels
     });
@@ -112,8 +112,8 @@ Content below`;
       expect(result).toMatch(/<td[^>]*>\s*(&nbsp;|\s*)<\/td>/);
       
       // Should still have therapeutic enhancements
-      expect(result).toContain('class="therapeutic-table table-touch-optimized table-striped"');
-      expect(result).toContain('<div class="table-responsive table-container">');
+      expect(result).toContain('class="therapeutic-table table-striped"');
+      expect(result).toContain('<div class="table-container table-system">');
     });
 
     it('should support custom table classes via markdown-it-attrs', () => {
@@ -128,7 +128,7 @@ Content below`;
       // Should contain the custom class
       expect(result).toContain('table-compact');
       // Should still have the responsive wrapper
-      expect(result).toContain('<div class="table-responsive table-container">');
+      expect(result).toContain('<div class="table-container table-system">');
     });
 
     it('should handle complex therapeutic table scenarios', () => {
@@ -151,7 +151,7 @@ Content below`;
       
       // Should have therapeutic enhancements
       expect(result).toContain('table-cbt-report');
-      expect(result).toContain('<div class="table-responsive table-container">');
+      expect(result).toContain('<div class="table-container table-system">');
       expect(result).toContain('data-label="Emotion"');
       expect(result).toContain('data-label="Initial (0-100)"');
     });
@@ -182,8 +182,8 @@ Content below`;
       const result = processMarkdown(input, false);
       
       // Should still apply therapeutic styling
-      expect(result).toContain('class="therapeutic-table table-touch-optimized table-striped"');
-      expect(result).toContain('<div class="table-responsive table-container">');
+      expect(result).toContain('class="therapeutic-table table-striped"');
+      expect(result).toContain('<div class="table-container table-system">');
       
       // Should have basic table structure
       expect(result).toContain('<table');
@@ -204,11 +204,11 @@ Some text between tables.
       const result = processMarkdown(input, false);
       
       // Should have two responsive wrappers
-      const wrapperMatches = result.match(/<div class="table-responsive table-container">/g);
+      const wrapperMatches = result.match(/<div class="table-container table-system">/g);
       expect(wrapperMatches).toHaveLength(2);
       
       // Both tables should have therapeutic styling
-      const tableMatches = result.match(/class="therapeutic-table table-touch-optimized table-striped"/g);
+      const tableMatches = result.match(/class="therapeutic-table table-striped"/g);
       expect(tableMatches).toHaveLength(2);
     });
   });
@@ -226,7 +226,7 @@ Some text between tables.
       // Should preserve the custom class
       expect(result).toContain('custom-table');
       // Should still wrap in responsive container
-      expect(result).toContain('<div class="table-responsive table-container">');
+      expect(result).toContain('<div class="table-container table-system">');
     });
 
     it('should handle tables with complex cell content', () => {
@@ -244,7 +244,7 @@ Some text between tables.
       expect(result).toContain('<strong>overall wellness</strong>');
       
       // Should have therapeutic styling
-      expect(result).toContain('class="therapeutic-table table-touch-optimized table-striped"');
+      expect(result).toContain('class="therapeutic-table table-striped"');
       expect(result).toContain('data-label="Question"');
       expect(result).toContain('data-label="Answer"');
     });
@@ -370,6 +370,210 @@ I was walking outside during my lunch break.
       expect(assistantResult).toContain('<strong');
       expect(userResult).toContain('Bold text');
       expect(assistantResult).toContain('Bold text');
+    });
+  });
+
+  describe('5-Column Rule and Alternative Views', () => {
+    it('should process 1-5 column tables as standard responsive tables', () => {
+      const input = `| Column 1 | Column 2 | Column 3 | Column 4 |
+|----------|----------|----------|----------|
+| Data 1   | Data 2   | Data 3   | Data 4   |
+| More 1   | More 2   | More 3   | More 4   |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should be a standard table (not alternative view)
+      expect(result).toContain('<table');
+      expect(result).toContain('<div class="table-container table-system">');
+      expect(result).toContain('therapeutic-table table-striped table-optimized-wide'); // 4-column gets optimization
+      expect(result).toContain('data-columns="4"');
+      expect(result).not.toContain('alternative-view-container');
+    });
+
+    it('should process 5-column tables as optimized wide tables', () => {
+      const input = `| Col 1 | Col 2 | Col 3 | Col 4 | Col 5 |
+|-------|-------|-------|-------|-------|
+| A     | B     | C     | D     | E     |
+| F     | G     | H     | I     | J     |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should be a standard table with optimization
+      expect(result).toContain('<table');
+      expect(result).toContain('data-columns="5"');
+      expect(result).toContain('table-optimized-wide');
+      expect(result).not.toContain('alternative-view-container');
+    });
+
+    it('should transform 6-column tables to structured cards', () => {
+      const input = `| Patient | Date | Mood | Anxiety | Intervention | Notes |
+|---------|------|------|---------|-------------|-------|
+| John D  | 2025-08-09 | 7/10 | High | CBT | Thought records |
+| Jane S  | 2025-08-08 | 5/10 | Medium | DBT | Distress tolerance |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should be transformed to alternative view
+      expect(result).not.toContain('<table');
+      expect(result).toContain('alternative-view-container');
+      expect(result).toContain('structured-cards-container');
+      expect(result).toContain('structured-card');
+      expect(result).toContain('field-label');
+      expect(result).toContain('field-value');
+      expect(result).toContain('John D');
+      expect(result).toContain('CBT');
+    });
+
+    it('should transform 8-column key-value tables to definition lists', () => {
+      const input = `| Question | Answer | Importance | Evidence | Counter | Emotion | Before | After |
+|----------|--------|------------|----------|---------|---------|--------|-------|
+| What happened? | Meeting | High | None | Maybe helpful | Anxiety | 8/10 | 4/10 |
+| Why worried? | Performance | Medium | Past success | Could go well | Fear | 7/10 | 3/10 |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should be transformed to definition list format
+      expect(result).not.toContain('<table');
+      expect(result).toContain('alternative-view-container');
+      expect(result).toContain('definition-list-container');
+      expect(result).toContain('<dl class="therapeutic-definition-list"');
+      expect(result).toContain('<dt class="definition-term">');
+      expect(result).toContain('<dd class="definition-description">');
+      expect(result).toContain('What happened?');
+      expect(result).toContain('Meeting');
+    });
+
+    it('should transform 10+ column tables to expandable rows', () => {
+      const input = `| ID | Patient | Date | Time | Mood | Anxiety | Depression | Sleep | Appetite | Energy | Focus | Medication | Notes | Follow-up |
+|----|---------|----- |------|------|---------|------------|-------|----------|--------|-------|------------|-------|-----------|
+| 1  | John D  | 2025-08-09 | 10:30 | 6/10 | High | Medium | Poor | Normal | Low | Poor | Sertraline | Struggling with work | Next week |
+| 2  | Jane S  | 2025-08-08 | 14:15 | 8/10 | Low | Low | Good | Good | High | Good | None | Great progress | 2 weeks |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should be transformed to expandable rows
+      expect(result).not.toContain('<table');
+      expect(result).toContain('alternative-view-container');
+      expect(result).toContain('expandable-rows-container');
+      expect(result).toContain('expandable-row');
+      expect(result).toContain('row-summary');
+      expect(result).toContain('expand-button');
+      expect(result).toContain('row-details');
+      expect(result).toContain('John D');
+      expect(result).toContain('Show Details');
+    });
+
+    it('should detect therapeutic content patterns for cards', () => {
+      const input = `| Patient | Session | Date | Primary Concern | Mood Score | Intervention |
+|---------|---------|------|----------------|------------|-------------|
+| Alice M | 3 | 2025-08-09 | Work stress | 4/10 | Mindfulness |
+| Bob K   | 1 | 2025-08-08 | Relationships | 6/10 | Communication skills |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should use structured cards due to therapeutic patterns
+      expect(result).toContain('structured-cards-container');
+      expect(result).toContain('primary-field'); // Therapeutic fields should be marked as primary
+      expect(result).toContain('Alice M');
+      expect(result).toContain('Work stress');
+    });
+
+    it('should handle alternative view data with missing cells', () => {
+      const input = `| Col1 | Col2 | Col3 | Col4 | Col5 | Col6 | Col7 |
+|------|------|------|------|------|------|------|
+| A    | B    | C    |      | E    | F    | G    |
+| H    | I    |      | K    | L    |      | N    |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should handle empty cells gracefully in alternative view
+      expect(result).toContain('alternative-view-container');
+      expect(result).toContain('\u2014'); // Em dash for empty values
+      expect(result).toContain('A');
+      expect(result).toContain('B');
+      expect(result).toContain('H');
+    });
+
+    it('should preserve table structure for extraction errors', () => {
+      // Table with 6 columns but very limited data that might cause extraction issues
+      const input = `| A | B | C | D | E | F |
+|---|---|---|---|---|---|
+| X | Y |   |   |   |   |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should transform to alternative view, but if extraction fails, should fallback gracefully
+      // This test ensures no crashes occur with unusual table structures
+      expect(result).toContain('A');
+      expect(result).toContain('X');
+      expect(result).toContain('Y');
+      // Could be either table or alternative view, both are acceptable
+    });
+
+    it('should apply correct column-specific CSS classes', () => {
+      const input = `| Col1 | Col2 | Col3 | Col4 | Col5 |
+|------|------|------|------|------|
+| A    | B    | C    | D    | E    |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // 5-column table should get optimization class
+      expect(result).toContain('table-optimized-wide');
+      expect(result).toContain('data-columns="5"');
+    });
+
+    it('should generate proper ARIA labels for alternative views', () => {
+      const input = `| Name | Age | City | Job | Salary | Benefits |
+|------|-----|------|-----|--------|----------|
+| John | 30  | NYC  | Dev | 100k   | Health   |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should include accessibility attributes
+      expect(result).toContain('alternative-view-container');
+      expect(result).toContain('Complex Data View'); // Should have descriptive header
+    });
+  });
+
+  describe('Column Detection Edge Cases', () => {
+    it('should handle tables with colspan attributes', () => {
+      // Note: Standard markdown doesn't support colspan, but HTML tables might
+      const input = `| Col1 | Col2 | Col3 |
+|------|------|------|
+| A    | B    | C    |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should count actual columns, not colspan values
+      expect(result).toContain('data-columns="3"');
+      expect(result).toContain('<table');
+    });
+
+    it('should handle tables with no headers', () => {
+      const input = `| A | B | C | D | E | F | G |
+|---|---|---|---|---|---|---|
+| 1 | 2 | 3 | 4 | 5 | 6 | 7 |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should still count columns and transform to alternative view
+      expect(result).toContain('alternative-view-container');
+      expect(result).not.toContain('<table');
+    });
+
+    it('should handle tables with uneven row lengths', () => {
+      const input = `| A | B | C | D | E | F |
+|---|---|---|---|---|---|
+| 1 | 2 | 3 | 4 | 5 | 6 |
+| X | Y | Z |   |   |   |`;
+      
+      const result = processMarkdown(input, false);
+      
+      // Should base column count on header row
+      expect(result).toContain('alternative-view-container');
+      expect(result).toContain('X');
+      expect(result).toContain('Y');
+      expect(result).toContain('Z');
     });
   });
 });
