@@ -13,7 +13,7 @@ import {
   CompleteTable,
   WideTable,
   WideColumnDefinition,
-} from './table';
+} from './';
 
 export function TableDemo() {
   return (

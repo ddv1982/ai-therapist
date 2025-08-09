@@ -4,16 +4,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { MessageBubble } from './message-bubble';
+import { Message } from '@/components/message';
 import { TypingIndicator } from './typing-indicator';
 import { SessionControls } from './session-controls';
-import type { ChatInterfaceProps, Message } from '@/types/chat';
-import type { Session } from '@/types/session';
+import type { ChatInterfaceProps } from '@/types/chat';
+import type { Message as MessageType } from '@/types';
+import type { Session } from '@/types';
 import { Send } from 'lucide-react';
 import { generateSessionTitle, generateUUID } from '@/lib/utils';
 
 export function ChatInterface({ initialMessages = [] }: ChatInterfaceProps) {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<MessageType[]>(initialMessages);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
@@ -94,7 +95,7 @@ export function ChatInterface({ initialMessages = [] }: ChatInterfaceProps) {
     e.preventDefault();
     if (!input.trim() || !currentSession || isLoading) return;
 
-    const userMessage: Message = {
+    const userMessage: MessageType = {
       id: generateUUID(),
       sessionId: currentSession.id,
       role: 'user',
@@ -122,7 +123,7 @@ export function ChatInterface({ initialMessages = [] }: ChatInterfaceProps) {
       const reader = response.body?.getReader();
       if (!reader) throw new Error('No response body');
 
-      const assistantMessage: Message = {
+      const assistantMessage: MessageType = {
         id: generateUUID(),
         sessionId: currentSession.id,
         role: 'assistant',
@@ -198,11 +199,9 @@ export function ChatInterface({ initialMessages = [] }: ChatInterfaceProps) {
           )}
           
           {messages.map((message) => (
-            <MessageBubble
+            <Message
               key={message.id}
               message={message}
-              isUser={message.role === 'user'}
-              timestamp={message.timestamp}
             />
           ))}
           

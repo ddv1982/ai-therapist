@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateSessionReport } from '@/lib/groq-client';
 import { REPORT_GENERATION_PROMPT } from '@/lib/therapy-prompts';
 import { prisma } from '@/lib/db';
-import type { Message } from '@/types/chat';
+import type { Message } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {

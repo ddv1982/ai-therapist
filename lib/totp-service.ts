@@ -125,7 +125,7 @@ export async function getTOTPDiagnostics(token?: string): Promise<{
  * Verify TOTP token
  */
 export async function verifyTOTPToken(token: string): Promise<boolean> {
-  const verificationId = Math.random().toString(36).substring(7);
+  const verificationId = generateSecureRandomString(8, 'abcdefghijklmnopqrstuvwxyz0123456789');
   logger.debug(`TOTP verification starting`, { verificationId });
   
   const config = await prisma.authConfig.findFirst();

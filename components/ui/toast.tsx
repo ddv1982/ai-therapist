@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, generateSecureRandomString } from '@/lib/utils';
 
 export interface Toast {
   id: string;
@@ -36,7 +36,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const showToast = useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = Math.random().toString(36).substring(2, 9);
+    const id = generateSecureRandomString(8, 'abcdefghijklmnopqrstuvwxyz0123456789');
     const newToast: Toast = {
       ...toast,
       id,

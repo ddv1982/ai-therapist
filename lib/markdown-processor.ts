@@ -231,8 +231,8 @@ function generateStructuredCards(tableData: TableDataStructure): string {
     cardsHtml += `<div class="structured-card" data-row="${rowIndex}">`;
     
     // Group related fields together
-    const primaryFields = [];
-    const secondaryFields = [];
+    const primaryFields: { label: string; value: string }[] = [];
+    const secondaryFields: { label: string; value: string }[] = [];
     
     row.forEach((cell, cellIndex) => {
       if (cellIndex < headers.length) {

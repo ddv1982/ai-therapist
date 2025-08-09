@@ -62,10 +62,7 @@ export type TableVariant =
   | 'progress'
   | 'comparison'
   | 'dashboard'
-  | 'compact'
-  | 'wide-scroll'
-  | 'priority-plus'
-  | 'adaptive-cards';
+  | 'compact';
 
 // Table size variants
 export type TableSize = 

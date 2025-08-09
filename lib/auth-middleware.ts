@@ -26,7 +26,7 @@ export async function checkAuth(request: NextRequest): Promise<AuthResult> {
   
   // If TOTP is not set up, redirect to setup unless already on setup page
   if (!isSetup) {
-    if (pathname === '/auth/setup' || pathname.startsWith('/api/auth/setup')) {
+    if (pathname === '/auth/setup' || (pathname && pathname.startsWith('/api/auth/setup'))) {
       return { isAuthenticated: false, needsSetup: true, needsVerification: false };
     }
     
@@ -50,7 +50,7 @@ export async function checkAuth(request: NextRequest): Promise<AuthResult> {
   }
   
   // No valid session, need verification unless already on verify page
-  if (pathname === '/auth/verify' || pathname.startsWith('/api/auth/verify')) {
+  if (pathname === '/auth/verify' || (pathname && pathname.startsWith('/api/auth/verify'))) {
     return { isAuthenticated: false, needsSetup: false, needsVerification: true };
   }
   

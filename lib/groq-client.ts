@@ -1,5 +1,5 @@
 import Groq from 'groq-sdk';
-import type { Message } from '@/types/chat';
+import type { Message } from '@/types';
 
 // Simplified message type for report generation (only needs role and content)
 export interface ReportMessage {

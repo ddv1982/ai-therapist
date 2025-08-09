@@ -388,7 +388,8 @@ export const WideTable = forwardRef<HTMLTableElement, WideTableProps>(
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {/* Table body content would be rendered by parent component */}
+                    {/* Empty body - content would be rendered by parent component */}
+                    <></>
                   </TableBody>
                 </>
               )}

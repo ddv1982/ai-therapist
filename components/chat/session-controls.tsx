@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { formatDuration } from '@/lib/utils';
-import type { SessionControlsProps } from '@/types/session';
+import type { SessionControlsProps } from '@/types';
 import { Play, Square } from 'lucide-react';
 
 export function SessionControls({

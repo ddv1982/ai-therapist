@@ -35,8 +35,7 @@ export interface GenerateReportRequest {
   messages: Message[];
 }
 
-import type { Session } from './session';
-import type { Message } from './chat';
+import type { Session, Message } from './index';
 
 // ========================================
 // COGNITIVE DISTORTION ANALYSIS TYPES

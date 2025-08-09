@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyTOTPToken, verifyBackupCode, isTOTPSetup, getTOTPDiagnostics } from '@/lib/totp-service';
 import { getOrCreateDevice, createAuthSession } from '@/lib/device-fingerprint';
 import { getClientIP } from '@/lib/auth-middleware';
+import { generateSecureRandomString } from '@/lib/utils';
 
 // POST /api/auth/verify - Verify TOTP token or backup code
 export async function POST(request: NextRequest) {
-  const requestId = Math.random().toString(36).substring(7);
+  const requestId = generateSecureRandomString(8, 'abcdefghijklmnopqrstuvwxyz0123456789');
   const startTime = Date.now();
   
   try {

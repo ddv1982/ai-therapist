@@ -547,6 +547,9 @@ describe('AlternativeViewWrapper Component', () => {
     });
 
     it('should handle HTML with event attributes safely', () => {
+      // Mock window.alert to prevent jsdom errors
+      const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+      
       // This tests that HTML string rendering doesn't execute scripts
       const htmlWithEvents = '<div onclick="alert(\'xss\')">Safe Content</div>';
       
@@ -559,10 +562,13 @@ describe('AlternativeViewWrapper Component', () => {
       const element = screen.getByText('Safe Content');
       expect(element).toBeInTheDocument();
       
-      // Click should not execute the onclick
-      expect(() => {
-        fireEvent.click(element);
-      }).not.toThrow();
+      // Click should not execute the onclick due to sanitization
+      fireEvent.click(element);
+      
+      // Alert should not have been called due to HTML sanitization
+      expect(alertSpy).not.toHaveBeenCalled();
+      
+      alertSpy.mockRestore();
     });
   });
 

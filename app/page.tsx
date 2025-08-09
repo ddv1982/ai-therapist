@@ -24,7 +24,7 @@ import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
 import type { MessageData } from '@/components/message';
 import { MobileDebugInfo } from '@/components/mobile-debug-info';
-import { CBTThoughtRecordModal } from '@/components/cbt/CBTThoughtRecordModal';
+import { CBTThoughtRecordModal } from '@/components/cbt/cbt-thought-record-modal';
 import { therapeuticInteractive, getTherapeuticIconButton } from '@/lib/design-tokens';
 
 // Using MessageData from the new message system
