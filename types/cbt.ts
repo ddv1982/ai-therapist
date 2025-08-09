@@ -39,6 +39,25 @@ export interface CBTDiaryAlternativeResponse {
   response: string;
 }
 
+// ========================================
+// SCHEMA REFLECTION TYPES
+// ========================================
+
+export type SchemaReflectionCategory = 'childhood' | 'schemas' | 'coping' | 'modes' | 'custom';
+
+export interface SchemaReflectionQuestion {
+  question: string;
+  answer: string;
+  category: SchemaReflectionCategory;
+  isRequired?: boolean;
+}
+
+export interface SchemaReflectionData {
+  enabled: boolean;
+  questions: SchemaReflectionQuestion[];
+  selfAssessment: string; // Open-ended reflection space
+}
+
 export interface CBTDiaryFormData {
   // Basic Information
   date: string;
@@ -59,6 +78,9 @@ export interface CBTDiaryFormData {
   
   // Schema Modes (checkboxes)
   schemaModes: CBTDiarySchemaMode[];
+  
+  // Schema Reflection (optional)
+  schemaReflection: SchemaReflectionData;
   
   // Challenge Questions
   challengeQuestions: CBTDiaryChallengeQuestion[];
@@ -161,6 +183,72 @@ export const DEFAULT_CHALLENGE_QUESTIONS: CBTDiaryChallengeQuestion[] = [
   }
 ];
 
+// Default schema reflection questions
+export const DEFAULT_SCHEMA_REFLECTION_QUESTIONS: SchemaReflectionQuestion[] = [
+  // Childhood Patterns
+  {
+    question: "What does this situation remind you of from your childhood or past?",
+    answer: "",
+    category: "childhood"
+  },
+  {
+    question: "Does this trigger any familiar feelings from earlier in your life?",
+    answer: "",
+    category: "childhood"
+  },
+  
+  // Schema Domain Exploration
+  {
+    question: "Do you notice patterns of abandonment fears, perfectionism, or people-pleasing in this situation?",
+    answer: "",
+    category: "schemas"
+  },
+  {
+    question: "What core needs (safety, acceptance, autonomy, competence) feel threatened here?",
+    answer: "",
+    category: "schemas"
+  },
+  {
+    question: "Are you feeling defective, unlovable, or like you don't belong?",
+    answer: "",
+    category: "schemas"
+  },
+  
+  // Coping Strategy Reflection
+  {
+    question: "How are you trying to protect yourself in this situation?",
+    answer: "",
+    category: "coping"
+  },
+  {
+    question: "What behaviors help you feel safer, even if they might not be helpful long-term?",
+    answer: "",
+    category: "coping"
+  },
+  {
+    question: "Are you avoiding, surrendering, or overcompensating to cope with these feelings?",
+    answer: "",
+    category: "coping"
+  },
+  
+  // Mode Awareness
+  {
+    question: "Which 'part' of you is most active right now? (vulnerable child, critical parent, detached protector, etc.)",
+    answer: "",
+    category: "modes"
+  },
+  {
+    question: "What would your healthiest, most balanced self do in this situation?",
+    answer: "",
+    category: "modes"
+  },
+  {
+    question: "Are you being overly critical of yourself or others right now?",
+    answer: "",
+    category: "modes"
+  }
+];
+
 // ========================================
 // CBT THOUGHT RECORD (7-Column Format)
 // ========================================
@@ -171,61 +259,11 @@ export interface CBTEmotion {
   intensity: number;
 }
 
-// CBT Thought Record - Standard 7-column format
-export interface CBTThoughtRecord {
-  date: string;
-  
-  // Column 1: Situation (when, where, who)
-  situation: string;
-  
-  // Column 2: Automatic Thought(s)
-  automaticThoughts: string;
-  
-  // Column 3: Emotion(s) & Intensity (0-100)
-  emotions: CBTEmotion[];
-  
-  // Column 4: Evidence for the Thought
-  evidenceFor: string;
-  
-  // Column 5: Evidence against the Thought  
-  evidenceAgainst: string;
-  
-  // Column 6: Balanced / Alternative Thought
-  balancedThought: string;
-  
-  // Column 7: New Feeling (Intensity after reframing)
-  newEmotions: CBTEmotion[];
-}
-
-// Form state for CBT thought record
-export interface CBTFormState {
-  data: CBTThoughtRecord;
-  isDirty: boolean;
-  isValid: boolean;
-  errors: Record<string, string>;
-  lastSaved?: Date;
-}
-
-// Validation error type
+// Validation error type (used by useCBTForm hook)
 export interface CBTFormValidationError {
   field: string;
   message: string;
 }
-
-// Initial data generator
-export const getInitialCBTThoughtRecord = (): CBTThoughtRecord => {
-  const today = new Date().toISOString().split('T')[0];
-  return {
-    date: today,
-    situation: '',
-    automaticThoughts: '',
-    emotions: [{ name: '', intensity: 0 }],
-    evidenceFor: '',
-    evidenceAgainst: '',
-    balancedThought: '',
-    newEmotions: [{ name: '', intensity: 0 }]
-  };
-};
 
 // ========================================
 // ORIGINAL COMPLEX CBT TYPES (Legacy)
@@ -258,6 +296,11 @@ export const getInitialCBTFormData = (): CBTDiaryFormData => {
     avoidantBehaviors: '',
     overridingBehaviors: '',
     schemaModes: DEFAULT_SCHEMA_MODES.map(mode => ({ ...mode })),
+    schemaReflection: {
+      enabled: false, // Schema reflection is optional and disabled by default
+      questions: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.map(q => ({ ...q })),
+      selfAssessment: ''
+    },
     challengeQuestions: DEFAULT_CHALLENGE_QUESTIONS.map(q => ({ ...q })),
     additionalQuestions: [{ question: '', answer: '' }],
     rationalThoughts: [{ thought: '', confidence: 0 }],

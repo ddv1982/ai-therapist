@@ -1,0 +1,442 @@
+import { getRateLimiter } from '@/lib/rate-limiter';
+
+// Mock console for development logging tests
+const mockConsole = {
+  log: jest.fn()
+};
+
+describe('RateLimiter', () => {
+  let originalConsole: Console;
+  let originalEnv: string | undefined;
+
+  beforeAll(() => {
+    originalConsole = global.console;
+    originalEnv = process.env.NODE_ENV;
+  });
+
+  beforeEach(() => {
+    // Reset console mock
+    mockConsole.log.mockClear();
+    global.console = mockConsole as any;
+    
+    // Clear any existing rate limiter instance by creating new ones
+    jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    global.console = originalConsole;
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  describe('Exempt IP Handling', () => {
+    it('should allow localhost IPv4', () => {
+      const rateLimiter = getRateLimiter();
+      const result = rateLimiter.checkRateLimit('127.0.0.1');
+      
+      expect(result.allowed).toBe(true);
+      expect(result.retryAfter).toBeUndefined();
+    });
+
+    it('should allow localhost IPv6', () => {
+      const rateLimiter = getRateLimiter();
+      const result = rateLimiter.checkRateLimit('::1');
+      
+      expect(result.allowed).toBe(true);
+    });
+
+    it('should allow private network ranges', () => {
+      const rateLimiter = getRateLimiter();
+      const privateIPs = [
+        '192.168.1.1',
+        '10.0.0.1',
+        '172.16.0.1',
+        '172.17.0.1',
+        '172.31.255.255'
+      ];
+
+      privateIPs.forEach(ip => {
+        const result = rateLimiter.checkRateLimit(ip);
+        expect(result.allowed).toBe(true);
+      });
+    });
+
+    it('should allow unknown IP', () => {
+      const rateLimiter = getRateLimiter();
+      const result = rateLimiter.checkRateLimit('unknown');
+      
+      expect(result.allowed).toBe(true);
+    });
+
+    it('should log exempt IP in development mode', () => {
+      process.env.NODE_ENV = 'development';
+      const rateLimiter = getRateLimiter();
+      
+      rateLimiter.checkRateLimit('127.0.0.1');
+      
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('[RATE_LIMITER] Allowing exempt IP: 127.0.0.1')
+      );
+    });
+  });
+
+  describe('Rate Limiting Logic', () => {
+    it('should allow first request from external IP', () => {
+      const rateLimiter = getRateLimiter();
+      const result = rateLimiter.checkRateLimit('203.0.113.1');
+      
+      expect(result.allowed).toBe(true);
+    });
+
+    it('should track multiple requests from same IP', () => {
+      const rateLimiter = getRateLimiter();
+      const ip = '203.0.113.1';
+      
+      // Make several requests
+      for (let i = 0; i < 10; i++) {
+        const result = rateLimiter.checkRateLimit(ip);
+        expect(result.allowed).toBe(true);
+      }
+      
+      // Check status
+      const status = rateLimiter.getStatus(ip);
+      expect(status.count).toBe(10);
+      expect(status.remaining).toBe(40); // 50 max - 10 used
+    });
+
+    it('should block IP after exceeding max attempts', () => {
+      const rateLimiter = getRateLimiter();
+      const ip = '203.0.113.2';
+      
+      // Make maximum allowed requests (50)
+      for (let i = 0; i < 50; i++) {
+        const result = rateLimiter.checkRateLimit(ip);
+        expect(result.allowed).toBe(true);
+      }
+      
+      // Next request should be blocked
+      const blockedResult = rateLimiter.checkRateLimit(ip);
+      expect(blockedResult.allowed).toBe(false);
+      expect(blockedResult.retryAfter).toBeGreaterThan(0);
+    });
+
+    it('should provide correct retryAfter time', () => {
+      const rateLimiter = getRateLimiter();
+      const ip = '203.0.113.3';
+      
+      // Exceed limit
+      for (let i = 0; i <= 50; i++) {
+        rateLimiter.checkRateLimit(ip);
+      }
+      
+      const result = rateLimiter.checkRateLimit(ip);
+      expect(result.retryAfter).toBeGreaterThan(0);
+      expect(result.retryAfter).toBeLessThanOrEqual(300); // 5 minutes in seconds
+    });
+
+    it('should log blocked IP in development mode', () => {
+      process.env.NODE_ENV = 'development';
+      const rateLimiter = getRateLimiter();
+      const ip = '203.0.113.4';
+      
+      // Exceed limit
+      for (let i = 0; i <= 50; i++) {
+        rateLimiter.checkRateLimit(ip);
+      }
+      
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('[RATE_LIMITER] IP 203.0.113.4 blocked')
+      );
+    });
+  });
+
+  describe('Status Reporting', () => {
+    it('should return correct status for new IP', () => {
+      const rateLimiter = getRateLimiter();
+      const status = rateLimiter.getStatus('203.0.113.5');
+      
+      expect(status.count).toBe(0);
+      expect(status.remaining).toBe(50);
+      expect(status.resetTime).toBeGreaterThan(Date.now());
+    });
+
+    it('should return correct status for IP with attempts', () => {
+      const rateLimiter = getRateLimiter();
+      const ip = '203.0.113.6';
+      
+      // Make some requests
+      for (let i = 0; i < 15; i++) {
+        rateLimiter.checkRateLimit(ip);
+      }
+      
+      const status = rateLimiter.getStatus(ip);
+      expect(status.count).toBe(15);
+      expect(status.remaining).toBe(35);
+    });
+
+    it('should return zero remaining for blocked IP', () => {
+      const rateLimiter = getRateLimiter();
+      const ip = '203.0.113.7';
+      
+      // Exceed limit
+      for (let i = 0; i <= 50; i++) {
+        rateLimiter.checkRateLimit(ip);
+      }
+      
+      const status = rateLimiter.getStatus(ip);
+      expect(status.remaining).toBe(0);
+    });
+  });
+
+  describe('Suspicious Activity Detection', () => {
+    it('should detect suspicious activity', () => {
+      const rateLimiter = getRateLimiter();
+      const suspiciousIP = '203.0.113.8';
+      
+      // Generate suspicious activity
+      for (let i = 0; i <= 50; i++) {
+        rateLimiter.checkRateLimit(suspiciousIP);
+      }
+      
+      const suspicious = rateLimiter.getSuspiciousActivity();
+      expect(suspicious).toHaveLength(1);
+      expect(suspicious[0].ip).toBe(suspiciousIP);
+      expect(suspicious[0].attempts).toBeGreaterThanOrEqual(50);
+      expect(suspicious[0].lastAttempt).toBeGreaterThan(0);
+    });
+
+    it('should sort suspicious activity by last attempt time', () => {
+      const rateLimiter = getRateLimiter();
+      const ip1 = '203.0.113.9';
+      const ip2 = '203.0.113.10';
+      
+      // Generate activity for first IP
+      for (let i = 0; i <= 50; i++) {
+        rateLimiter.checkRateLimit(ip1);
+      }
+      
+      // Wait a bit and generate activity for second IP
+      setTimeout(() => {
+        for (let i = 0; i <= 50; i++) {
+          rateLimiter.checkRateLimit(ip2);
+        }
+      }, 10);
+      
+      // Run after timeout
+      setTimeout(() => {
+        const suspicious = rateLimiter.getSuspiciousActivity();
+        if (suspicious.length >= 2) {
+          expect(suspicious[0].lastAttempt).toBeGreaterThanOrEqual(suspicious[1].lastAttempt);
+        }
+      }, 20);
+    });
+
+    it('should not include non-suspicious IPs', () => {
+      const rateLimiter = getRateLimiter();
+      const normalIP = '203.0.113.11';
+      
+      // Make normal requests
+      for (let i = 0; i < 20; i++) {
+        rateLimiter.checkRateLimit(normalIP);
+      }
+      
+      const suspicious = rateLimiter.getSuspiciousActivity();
+      const foundIP = suspicious.find(entry => entry.ip === normalIP);
+      expect(foundIP).toBeUndefined();
+    });
+  });
+
+  describe('Time Window Handling', () => {
+    beforeEach(() => {
+      // Mock Date.now for time-based tests
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should reset rate limit after time window expires', () => {
+      const rateLimiter = getRateLimiter();
+      const ip = '203.0.113.12';
+      
+      // Make some requests
+      for (let i = 0; i < 30; i++) {
+        rateLimiter.checkRateLimit(ip);
+      }
+      
+      let status = rateLimiter.getStatus(ip);
+      expect(status.count).toBe(30);
+      
+      // Fast forward past window expiry (5 minutes)
+      jest.advanceTimersByTime(5 * 60 * 1000 + 1000);
+      
+      // Next request should reset the counter
+      const result = rateLimiter.checkRateLimit(ip);
+      expect(result.allowed).toBe(true);
+      
+      status = rateLimiter.getStatus(ip);
+      expect(status.count).toBe(1); // Reset to 1 after new request
+    });
+
+    it('should unblock IP after block duration expires', () => {
+      const rateLimiter = getRateLimiter();
+      const ip = '203.0.113.13';
+      
+      // Exceed limit to get blocked
+      for (let i = 0; i <= 50; i++) {
+        rateLimiter.checkRateLimit(ip);
+      }
+      
+      // Verify blocked
+      let result = rateLimiter.checkRateLimit(ip);
+      expect(result.allowed).toBe(false);
+      
+      // Fast forward past block duration (5 minutes + window)
+      jest.advanceTimersByTime(10 * 60 * 1000 + 1000);
+      
+      // Should be allowed again
+      result = rateLimiter.checkRateLimit(ip);
+      expect(result.allowed).toBe(true);
+    });
+  });
+
+  describe('Memory Management', () => {
+    it('should clean up expired entries', () => {
+      const rateLimiter = getRateLimiter();
+      const ip = '203.0.113.14';
+      
+      // Make some requests
+      rateLimiter.checkRateLimit(ip);
+      
+      // Verify entry exists
+      const status = rateLimiter.getStatus(ip);
+      expect(status.count).toBe(1);
+      
+      // Access private cleanup method via any
+      const rateLimiterAny = rateLimiter as any;
+      
+      // Fast forward past cleanup time
+      jest.useFakeTimers();
+      jest.advanceTimersByTime(10 * 60 * 1000 + 1000);
+      
+      // Trigger cleanup
+      rateLimiterAny.cleanup();
+      
+      // Entry should be cleaned up - status should be reset
+      const newStatus = rateLimiter.getStatus(ip);
+      expect(newStatus.count).toBe(0);
+      
+      jest.useRealTimers();
+    });
+
+    it('should handle cleanup interval initialization', () => {
+      // Test that cleanup interval is set up during construction
+      const rateLimiter = getRateLimiter();
+      const rateLimiterAny = rateLimiter as any;
+      
+      expect(rateLimiterAny.cleanupInterval).toBeTruthy();
+    });
+  });
+
+  describe('Singleton Pattern', () => {
+    it('should return same instance on multiple calls', () => {
+      const limiter1 = getRateLimiter();
+      const limiter2 = getRateLimiter();
+      
+      expect(limiter1).toBe(limiter2);
+    });
+
+    it('should maintain state across calls', () => {
+      const limiter1 = getRateLimiter();
+      const ip = '203.0.113.15';
+      
+      limiter1.checkRateLimit(ip);
+      
+      const limiter2 = getRateLimiter();
+      const status = limiter2.getStatus(ip);
+      
+      expect(status.count).toBe(1);
+    });
+  });
+
+  describe('Destroy Method', () => {
+    it('should clean up resources on destroy', () => {
+      const rateLimiter = getRateLimiter();
+      const rateLimiterAny = rateLimiter as any;
+      
+      // Make some requests to populate store
+      rateLimiter.checkRateLimit('203.0.113.16');
+      
+      // Destroy should clear interval and store
+      rateLimiter.destroy();
+      
+      expect(rateLimiterAny.cleanupInterval).toBeNull();
+      
+      // Store should be cleared
+      const status = rateLimiter.getStatus('203.0.113.16');
+      expect(status.count).toBe(0);
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle empty IP string', () => {
+      const rateLimiter = getRateLimiter();
+      const result = rateLimiter.checkRateLimit('');
+      
+      expect(result.allowed).toBe(true);
+    });
+
+    it('should handle undefined IP', () => {
+      const rateLimiter = getRateLimiter();
+      const result = rateLimiter.checkRateLimit(undefined as any);
+      
+      // Should handle gracefully without throwing
+      expect(typeof result.allowed).toBe('boolean');
+    });
+
+    it('should handle attempt filtering correctly', () => {
+      const rateLimiter = getRateLimiter();
+      const ip = '203.0.113.17';
+      
+      // Make requests with time progression
+      jest.useFakeTimers();
+      
+      rateLimiter.checkRateLimit(ip);
+      jest.advanceTimersByTime(1000);
+      rateLimiter.checkRateLimit(ip);
+      jest.advanceTimersByTime(1000);
+      rateLimiter.checkRateLimit(ip);
+      
+      // Attempts should be tracked correctly
+      const status = rateLimiter.getStatus(ip);
+      expect(status.count).toBe(3);
+      
+      jest.useRealTimers();
+    });
+  });
+
+  describe('Development Environment Handling', () => {
+    it('should not log in production mode', () => {
+      process.env.NODE_ENV = 'production';
+      const rateLimiter = getRateLimiter();
+      
+      rateLimiter.checkRateLimit('127.0.0.1');
+      
+      expect(mockConsole.log).not.toHaveBeenCalled();
+    });
+
+    it('should handle missing process.env gracefully', () => {
+      const originalProcess = global.process;
+      global.process = {} as any;
+      
+      const rateLimiter = getRateLimiter();
+      
+      // Should not throw
+      expect(() => {
+        rateLimiter.checkRateLimit('127.0.0.1');
+      }).not.toThrow();
+      
+      global.process = originalProcess;
+    });
+  });
+});

@@ -23,7 +23,8 @@ import {
   MessageCircle,
   CheckSquare,
   Lightbulb,
-  Target
+  Target,
+  Eye
 } from 'lucide-react';
 import { useCBTForm } from '@/hooks/use-cbt-form';
 import { CBTDiaryEmotions } from '@/types/cbt';
@@ -159,6 +160,11 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
     addAlternativeResponse,
     removeAlternativeResponse,
     updateSchemaMode,
+    toggleSchemaReflection,
+    updateSchemaReflectionQuestion,
+    addSchemaReflectionQuestion,
+    removeSchemaReflectionQuestion,
+    updateSchemaReflectionAssessment,
     validateForm,
     resetForm,
     generateFormattedOutput,
@@ -171,14 +177,22 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
   const [activeSection, setActiveSection] = useState<string>('situation');
   const [showConfirmReset, setShowConfirmReset] = useState(false);
 
+  // Guard against uninitialized schema reflection data
+  const schemaReflection = formData.schemaReflection || {
+    enabled: false,
+    questions: [],
+    selfAssessment: ''
+  };
+
   // Section navigation
   const sections = [
-    { id: 'situation', name: 'Situation', icon: MessageCircle },
-    { id: 'emotions', name: 'Emotions', icon: Heart },
-    { id: 'thoughts', name: 'Thoughts', icon: Brain },
-    { id: 'schema', name: 'Schema', icon: Target },
-    { id: 'challenge', name: 'Challenge', icon: Lightbulb },
-    { id: 'results', name: 'Results', icon: CheckSquare }
+    { id: 'situation', name: 'Situation', icon: MessageCircle, required: true },
+    { id: 'emotions', name: 'Emotions', icon: Heart, required: true },
+    { id: 'thoughts', name: 'Thoughts', icon: Brain, required: true },
+    { id: 'schema', name: 'Schema', icon: Target, required: true },
+    { id: 'challenge', name: 'Challenge', icon: Lightbulb, required: true },
+    { id: 'reflection', name: 'Reflection', icon: Eye, required: false },
+    { id: 'results', name: 'Results', icon: CheckSquare, required: false }
   ];
 
   const handleSendToChat = useCallback(() => {
@@ -680,12 +694,237 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
     </div>
   );
 
+  const renderReflectionSection = () => (
+    <div className={tokens.section.container}>
+      {/* Header consistent with other sections */}
+      <div>
+        <h3 className={tokens.section.header}>
+          <Eye className="w-5 h-5 text-primary" />
+          Schema Reflection
+          <span className="text-sm font-normal text-muted-foreground ml-2">(Optional)</span>
+        </h3>
+        <p className={tokens.section.description}>
+          Explore your deeper patterns and emotional responses through guided self-reflection.
+        </p>
+      </div>
+      
+      {/* Enable reflection checkbox - simplified styling */}
+      <div>
+        <div className="flex items-center gap-3 mb-4 p-4 border border-border/30 rounded-lg bg-muted/20">
+          <input
+            type="checkbox"
+            id="enable-reflection"
+            checked={schemaReflection.enabled}
+            onChange={(e) => toggleSchemaReflection(e.target.checked)}
+            className="w-5 h-5 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
+          />
+          <div className="flex-1">
+            <label htmlFor="enable-reflection" className={tokens.input.label}>
+              Enable Schema Reflection
+            </label>
+            <p className="text-sm text-muted-foreground">
+              Unlock deeper insights through therapeutic self-exploration
+            </p>
+          </div>
+          {!schemaReflection.enabled && (
+            <div className="text-xs text-muted-foreground">
+              11 Questions Available
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Reflection Preview (shown when disabled) */}
+      {!schemaReflection.enabled && (
+        <div>
+          <div className="p-4 border border-border/30 rounded-lg bg-muted/20">
+            <h4 className={tokens.section.subHeader}>
+              What You&apos;ll Explore
+            </h4>
+            <p className="text-muted-foreground mb-4">
+              Schema reflection helps you understand the deeper patterns behind your reactions. 
+              This therapeutic approach reveals connections to your past and guides healing.
+            </p>
+            
+            {/* Sample Questions Preview */}
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="p-3 border border-border/30 rounded-lg">
+                  <h5 className="text-sm font-medium text-foreground mb-1">Childhood Patterns</h5>
+                  <p className="text-xs text-muted-foreground">
+                    What does this situation remind you of from your past?
+                  </p>
+                </div>
+                <div className="p-3 border border-border/30 rounded-lg">
+                  <h5 className="text-sm font-medium text-foreground mb-1">Schema Patterns</h5>
+                  <p className="text-xs text-muted-foreground">
+                    Do you notice patterns of perfectionism or people-pleasing?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="text-center pt-2">
+                <p className="text-sm text-muted-foreground mb-3">
+                  11 professionally crafted questions across therapeutic domains
+                </p>
+                <Button
+                  type="button"
+                  onClick={() => toggleSchemaReflection(true)}
+                  className="hover:bg-accent hover:text-accent-foreground"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Begin Schema Reflection
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Schema Reflection Content (only visible when enabled) */}
+      {schemaReflection.enabled && (
+        <div className="space-y-6">
+          {/* Personal Assessment */}
+          <div>
+            <h4 className={tokens.section.subHeader}>Personal Assessment</h4>
+            <p className="text-sm text-muted-foreground mb-4">
+              Take a moment for open-ended reflection about your patterns and insights. 
+              What themes emerge as you explore this situation?
+            </p>
+            <div className="relative">
+              <Textarea
+                placeholder="What patterns do you notice about yourself in this situation? What insights are emerging for you? What feels familiar or different about how you're responding? What does your inner wisdom tell you about this experience?"
+                value={schemaReflection.selfAssessment}
+                onChange={(e) => updateSchemaReflectionAssessment(e.target.value)}
+                className={cn(tokens.input.field, "min-h-[140px]")}
+                maxLength={2000}
+              />
+              <div className="absolute bottom-3 right-3 text-xs text-muted-foreground bg-background px-2 py-1 rounded">
+                {schemaReflection.selfAssessment.length}/2000
+              </div>
+            </div>
+          </div>
+
+          {/* Reflection Questions */}
+          <div>
+            <h4 className={tokens.section.subHeader}>Guided Reflection Questions</h4>
+            <p className="text-sm text-muted-foreground mb-4">
+              Answer the questions that resonate most deeply with your experience.
+            </p>
+            
+            {/* Questions by Category */}
+            <div className="space-y-4">
+              {[
+                { key: 'childhood', name: 'Childhood Patterns' },
+                { key: 'schemas', name: 'Schema Patterns' },
+                { key: 'coping', name: 'Coping Strategies' },
+                { key: 'modes', name: 'Emotional Modes' }
+              ].map(({ key, name }) => {
+                const categoryQuestions = schemaReflection.questions.filter(q => q.category === key);
+                const answeredCount = categoryQuestions.filter(q => q.answer.trim()).length;
+                
+                return (
+                  <div key={key} className="p-4 border border-border/30 rounded-lg bg-muted/20">
+                    <div className="flex items-center justify-between mb-3">
+                      <h5 className={tokens.input.label}>{name}</h5>
+                      <div className="text-xs text-muted-foreground">
+                        {answeredCount}/{categoryQuestions.length} answered
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {categoryQuestions.map((question, _index) => {
+                        const globalIndex = schemaReflection.questions.indexOf(question);
+                        
+                        return (
+                          <div key={globalIndex}>
+                            <label className={tokens.input.label}>
+                              {question.question}
+                            </label>
+                            <Textarea
+                              placeholder="Take time to explore this question honestly and compassionately. What comes up for you? What patterns or insights emerge?"
+                              value={question.answer}
+                              onChange={(e) => updateSchemaReflectionQuestion(globalIndex, 'answer', e.target.value)}
+                              className={cn(tokens.input.field, "min-h-[80px]")}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Custom Questions */}
+          {schemaReflection.questions.filter(q => q.category === 'custom').length > 0 && (
+            <div>
+              <h4 className={tokens.section.subHeader}>Custom Questions</h4>
+              
+              <div className="space-y-4">
+                {schemaReflection.questions
+                  .map((question, index) => ({ question, index }))
+                  .filter(({ question }) => question.category === 'custom')
+                  .map(({ question, index }) => {
+                    return (
+                      <div key={index} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            placeholder="What would you like to explore about this experience?"
+                            value={question.question}
+                            onChange={(e) => updateSchemaReflectionQuestion(index, 'question', e.target.value)}
+                            className={tokens.input.field}
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSchemaReflectionQuestion(index)}
+                            className="text-muted-foreground hover:text-red-500"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        {question.question.trim() && (
+                          <Textarea
+                            placeholder="Take time to explore your custom question with curiosity and self-compassion..."
+                            value={question.answer}
+                            onChange={(e) => updateSchemaReflectionQuestion(index, 'answer', e.target.value)}
+                            className={cn(tokens.input.field, "min-h-[80px]")}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
+          {/* Add Custom Question Button */}
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => addSchemaReflectionQuestion('custom')}
+              className="hover:bg-accent hover:text-accent-foreground"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Custom Reflection Question
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   const renderCurrentSection = () => {
     switch (activeSection) {
       case 'situation': return renderSituationSection();
       case 'emotions': return renderEmotionsSection();
       case 'thoughts': return renderThoughtsSection();
       case 'schema': return renderSchemaSection();
+      case 'reflection': return renderReflectionSection();
       case 'challenge': return renderChallengeSection();
       case 'results': return renderResultsSection();
       default: return renderSituationSection();
@@ -699,8 +938,11 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-w-4xl w-full h-[90vh] max-h-[90vh] flex flex-col p-0 gap-0"
+        className="max-w-4xl w-full h-[90vh] max-h-[90vh] flex flex-col p-0 gap-0 sm:max-w-5xl"
         showCloseButton={false}
+        role="dialog"
+        aria-labelledby="cbt-diary-title"
+        aria-describedby="cbt-diary-description"
       >
         {/* Header */}
         <DialogHeader className={tokens.modal.header}>
@@ -710,8 +952,8 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
               <div>
-                <DialogTitle className="text-lg font-semibold text-foreground">CBT Diary Entry</DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground">
+                <DialogTitle id="cbt-diary-title" className="text-lg font-semibold text-foreground">CBT Diary Entry</DialogTitle>
+                <DialogDescription id="cbt-diary-description" className="text-sm text-muted-foreground">
                   Structured reflection for cognitive behavioral therapy
                 </DialogDescription>
               </div>
@@ -742,36 +984,203 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
           </div>
         </DialogHeader>
 
-        {/* Section Navigation */}
-        <div className={tokens.modal.navigation}>
-          <div className="flex flex-wrap gap-2 pl-2">
-            {sections.map((section) => {
+        {/* Section Navigation - Therapeutic Design */}
+        <div className="px-4 sm:px-6 py-4 border-b border-border/30 bg-gradient-to-r from-background via-muted/5 to-background overflow-x-auto">
+          <div className="flex gap-2 sm:gap-4 min-w-max sm:flex-wrap sm:min-w-0 justify-start sm:justify-center">
+            {sections.map((section, index) => {
               const Icon = section.icon;
               const isActive = section.id === activeSection;
               const hasError = Object.keys(errors).some(key => 
                 (section.id === 'situation' && (key === 'situation')) ||
                 (section.id === 'emotions' && key === 'initialEmotions') ||
                 (section.id === 'thoughts' && key === 'automaticThoughts') ||
-                (section.id === 'schema' && key === 'coreBeliefText')
+                (section.id === 'schema' && key === 'coreBeliefText') ||
+                (section.id === 'challenge' && key === 'challengeQuestions')
               );
+              
+              // Progress calculation for each section
+              const getCompletion = () => {
+                switch (section.id) {
+                  case 'situation':
+                    return formData.situation.trim() ? 100 : 0;
+                  case 'emotions':
+                    const hasInitialEmotion = Object.entries(formData.initialEmotions).some(([key, value]) => 
+                      key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0
+                    ) || (formData.initialEmotions.otherIntensity && formData.initialEmotions.otherIntensity > 0);
+                    return hasInitialEmotion ? 100 : 0;
+                  case 'thoughts':
+                    const hasThoughts = formData.automaticThoughts.some(t => t.thought.trim());
+                    return hasThoughts ? 100 : 0;
+                  case 'schema':
+                    const hasSchema = formData.coreBeliefText.trim();
+                    const selectedModes = formData.schemaModes.filter(m => m.selected).length;
+                    return hasSchema ? (selectedModes > 0 ? 100 : 75) : 0;
+                  case 'reflection':
+                    if (!schemaReflection.enabled) return 0;
+                    const hasAssessment = schemaReflection.selfAssessment.trim();
+                    const answeredQuestions = schemaReflection.questions.filter(q => q.answer.trim()).length;
+                    const totalQuestions = schemaReflection.questions.length;
+                    const questionProgress = totalQuestions > 0 ? (answeredQuestions / totalQuestions) * 70 : 0;
+                    const assessmentProgress = hasAssessment ? 30 : 0;
+                    return Math.round(questionProgress + assessmentProgress);
+                  case 'challenge':
+                    const answeredChallenges = formData.challengeQuestions.filter(q => q.answer.trim()).length;
+                    const hasRationalThoughts = formData.rationalThoughts.some(t => t.thought.trim());
+                    return answeredChallenges > 0 ? (hasRationalThoughts ? 100 : 70) : 0;
+                  case 'results':
+                    const hasFinalEmotion = Object.entries(formData.finalEmotions).some(([key, value]) => 
+                      key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0
+                    ) || (formData.finalEmotions.otherIntensity && formData.finalEmotions.otherIntensity > 0);
+                    const hasNewBehaviors = formData.newBehaviors.trim();
+                    return hasFinalEmotion ? (hasNewBehaviors ? 100 : 60) : 0;
+                  default:
+                    return 0;
+                }
+              };
+              
+              const completion = getCompletion();
+              const isReflection = section.id === 'reflection';
+              const reflectionEnabled = schemaReflection.enabled;
 
               return (
-                <Button
-                  key={section.id}
-                  variant={isActive ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setActiveSection(section.id)}
-                  className={cn(
-                    tokens.navigation.tab,
-                    isActive ? tokens.navigation.tabActive : tokens.navigation.tabInactive,
-                    hasError && tokens.navigation.tabError
-                  )}
-                >
-                  <Icon className="w-3 h-3" />
-                  {section.name}
-                </Button>
+                <div key={section.id} className="relative group">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setActiveSection(section.id)}
+                    className={cn(
+                      "flex flex-col items-center gap-1 sm:gap-2 h-auto py-2 sm:py-3 px-2 sm:px-3 min-w-[72px] sm:min-w-[88px] transition-all duration-200",
+                      // Use standard accent hover colors consistently
+                      "hover:!bg-accent hover:!text-accent-foreground",
+                      isActive 
+                        ? "!bg-primary !text-primary-foreground shadow-md" 
+                        : section.required 
+                        ? "!bg-muted !border !border-muted-foreground/20 !text-foreground shadow-sm"
+                        : "!bg-background !border !border-border/30",
+                      hasError && "border-red-300 bg-red-50/50 text-red-700 hover:bg-red-50",
+                      !section.required && !isActive && "border-dashed border-muted-foreground/30",
+                      isReflection && !reflectionEnabled && "border-dashed border-primary/40 hover:border-primary/60",
+                      "relative overflow-hidden rounded-lg"
+                    )}
+                    aria-pressed={isActive}
+                    aria-label={`${section.name} section${section.required ? ' (required)' : ' (optional)'}${isActive ? ' (current)' : ''}${completion === 100 ? ' (completed)' : completion > 0 ? ` (${completion}% complete)` : ''}`}
+                  >
+                    {/* Progress background */}
+                    <div 
+                      className={cn(
+                        "absolute bottom-0 left-0 h-0.5 sm:h-1 transition-all duration-300",
+                        completion > 0 && completion < 100 ? "bg-yellow-400" : 
+                        completion === 100 ? "bg-green-500" : "bg-transparent"
+                      )}
+                      style={{ width: `${completion}%` }}
+                    />
+                    
+                    
+                    <div className="flex items-center justify-center">
+                      <Icon className={cn(
+                        "w-4 h-4 sm:w-5 sm:h-5 transition-colors",
+                        isActive && "text-primary-foreground",
+                        !isActive && section.required && "text-foreground",
+                        !isActive && !section.required && "text-muted-foreground",
+                        isReflection && reflectionEnabled && !isActive && "text-primary",
+                        section.id === 'challenge' && !isActive && "text-red-500",
+                        hasError && "text-red-500"
+                      )} />
+                    </div>
+                    
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-xs font-medium leading-tight text-center">
+                        {section.name}
+                      </span>
+                      <span className={cn(
+                        "text-[10px] px-1.5 py-0.5 rounded-full leading-none",
+                        section.required 
+                          ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                          : "bg-muted/60 text-muted-foreground"
+                      )}>
+                        {section.required ? "Required" : "Optional"}
+                      </span>
+                    </div>
+                    
+                    <span className="text-[10px] font-medium text-center opacity-60">
+                      {index + 1} of {sections.length}
+                    </span>
+                    
+                    
+                    {/* Reflection availability indicator */}
+                    {isReflection && !reflectionEnabled && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-primary to-accent rounded-full animate-pulse" />
+                    )}
+                  </Button>
+                  
+                  {/* Tooltip on hover */}
+                  <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground text-xs px-2 py-1 rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap border">
+                    {completion === 100 ? "✓ Complete" : 
+                     completion > 0 ? `${completion}% complete` : 
+                     isReflection && !reflectionEnabled ? "Click to enable reflection" : 
+                     section.required ? "Required section" : "Optional section"}
+                  </div>
+                </div>
               );
             })}
+          </div>
+          
+          {/* Overall Progress */}
+          <div className="mt-4">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground font-medium flex-shrink-0">Overall Progress</span>
+              <div className="flex-1 h-2 bg-muted/60 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+                  style={{ 
+                    width: `${Math.round(sections.reduce((acc, section) => {
+                      const completion = (() => {
+                        switch (section.id) {
+                          case 'situation': return formData.situation.trim() ? 100 : 0;
+                          case 'emotions': return (Object.entries(formData.initialEmotions).some(([key, value]) => 
+                            key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0
+                          ) || (formData.initialEmotions.otherIntensity && formData.initialEmotions.otherIntensity > 0)) ? 100 : 0;
+                          case 'thoughts': return formData.automaticThoughts.some(t => t.thought.trim()) ? 100 : 0;
+                          case 'schema': return formData.coreBeliefText.trim() ? 100 : 0;
+                          case 'reflection': return schemaReflection.enabled && 
+                            (schemaReflection.selfAssessment.trim() || 
+                             schemaReflection.questions.some(q => q.answer.trim())) ? 100 : 0;
+                          case 'challenge': return formData.challengeQuestions.some(q => q.answer.trim()) ? 100 : 0;
+                          case 'results': return (Object.entries(formData.finalEmotions).some(([key, value]) => 
+                            key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0
+                          ) || (formData.finalEmotions.otherIntensity && formData.finalEmotions.otherIntensity > 0)) ? 100 : 0;
+                          default: return 0;
+                        }
+                      })();
+                      return acc + completion;
+                    }, 0) / sections.length)}%`
+                  }}
+                />
+              </div>
+              <span className="text-xs text-muted-foreground font-medium min-w-[3rem]">
+                {Math.round(sections.reduce((acc, section) => {
+                  const completion = (() => {
+                    switch (section.id) {
+                      case 'situation': return formData.situation.trim() ? 100 : 0;
+                      case 'emotions': return (Object.entries(formData.initialEmotions).some(([key, value]) => 
+                        key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0
+                      ) || (formData.initialEmotions.otherIntensity && formData.initialEmotions.otherIntensity > 0)) ? 100 : 0;
+                      case 'thoughts': return formData.automaticThoughts.some(t => t.thought.trim()) ? 100 : 0;
+                      case 'schema': return formData.coreBeliefText.trim() ? 100 : 0;
+                      case 'reflection': return schemaReflection.enabled && 
+                        (schemaReflection.selfAssessment.trim() || 
+                         schemaReflection.questions.some(q => q.answer.trim())) ? 100 : 0;
+                      case 'challenge': return formData.challengeQuestions.some(q => q.answer.trim()) ? 100 : 0;
+                      case 'results': return (Object.entries(formData.finalEmotions).some(([key, value]) => 
+                        key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0
+                      ) || (formData.finalEmotions.otherIntensity && formData.finalEmotions.otherIntensity > 0)) ? 100 : 0;
+                      default: return 0;
+                    }
+                  })();
+                  return acc + completion;
+                }, 0) / sections.length)}%
+              </span>
+            </div>
           </div>
         </div>
 
@@ -781,38 +1190,68 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
         </div>
 
         {/* Footer */}
-        <DialogFooter className={cn(tokens.modal.footer, "pb-6")}>
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3">
+        <DialogFooter className={cn(tokens.modal.footer, "p-6 pt-4 border-t border-border/30")}>
+          <div className="flex items-center justify-between w-full gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Button
-                variant="ghost"
+                variant="outline"
+                size="sm"
                 onClick={() => setActiveSection(sections[currentSectionIndex - 1]?.id)}
                 disabled={!canGoPrev}
+                className="px-4 hover:bg-accent hover:text-accent-foreground transition-colors"
+                tabIndex={canGoPrev ? 0 : -1}
+                aria-label="Go to previous section"
               >
                 ← Previous
               </Button>
-              <span className="text-xs text-muted-foreground px-3">
-                {currentSectionIndex + 1} of {sections.length}
-              </span>
+              <div className="flex items-center gap-2 px-2 sm:px-4">
+                <span className="text-xs text-muted-foreground font-medium">
+                  {currentSectionIndex + 1} of {sections.length}
+                </span>
+                {isDirty && lastSaved && (
+                  <div className="flex items-center gap-1 text-xs text-green-600">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                    <span className="hidden sm:inline">Auto-saved</span>
+                  </div>
+                )}
+              </div>
               <Button
-                variant="ghost"
+                variant="outline"
+                size="sm"
                 onClick={() => setActiveSection(sections[currentSectionIndex + 1]?.id)}
                 disabled={!canGoNext}
+                className="px-4 hover:bg-accent hover:text-accent-foreground transition-colors"
+                tabIndex={canGoNext ? 0 : -1}
+                aria-label="Go to next section"
               >
                 Next →
               </Button>
             </div>
             
             <div className="flex items-center gap-3 pr-2">
+              {/* Accessibility indicator */}
+              <div className="sr-only" aria-live="polite" aria-atomic="true">
+                {isValid ? "Form is complete and ready to send" : "Please complete required sections before sending"}
+              </div>
+              
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                className="hover:bg-accent hover:text-accent-foreground transition-colors"
+                aria-label="Cancel and close diary"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleSendToChat}
                 disabled={!isValid}
+                className={cn(
+                  "bg-gradient-to-r transition-all duration-200",
+                  isValid 
+                    ? "from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl" 
+                    : "from-muted to-muted text-muted-foreground cursor-not-allowed"
+                )}
+                aria-label={isValid ? "Send diary entry to chat" : "Complete required sections first"}
               >
                 <Send className="w-4 h-4 mr-2" />
                 Send to Chat

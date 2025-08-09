@@ -140,6 +140,24 @@ interface AlternativeViewWrapperProps {
   className?: string;
 }
 
+/**
+ * Sanitize HTML string by removing dangerous attributes and script tags
+ * This is a basic sanitizer - in production, consider using DOMPurify
+ */
+function sanitizeHtml(html: string): string {
+  // Remove script tags completely
+  let sanitized = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
+  
+  // Remove dangerous event handlers (onclick, onload, etc.)
+  sanitized = sanitized.replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '');
+  sanitized = sanitized.replace(/\s+on\w+\s*=\s*[^\s>]+/gi, '');
+  
+  // Remove javascript: protocol URLs
+  sanitized = sanitized.replace(/javascript:/gi, '');
+  
+  return sanitized;
+}
+
 export function AlternativeViewWrapper({ children, className = '' }: AlternativeViewWrapperProps) {
   const { containerRef } = useAlternativeViews();
   
@@ -147,7 +165,7 @@ export function AlternativeViewWrapper({ children, className = '' }: Alternative
     <div 
       ref={containerRef} 
       className={`alternative-view-wrapper ${className}`}
-      dangerouslySetInnerHTML={typeof children === 'string' ? { __html: children } : undefined}
+      dangerouslySetInnerHTML={typeof children === 'string' ? { __html: sanitizeHtml(children) } : undefined}
     >
       {typeof children === 'string' ? null : children}
     </div>

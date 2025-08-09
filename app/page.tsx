@@ -24,7 +24,7 @@ import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
 import type { MessageData } from '@/components/message';
 import { MobileDebugInfo } from '@/components/mobile-debug-info';
-import { CBTThoughtRecordModal } from '@/components/cbt/cbt-thought-record-modal';
+import { CBTDiaryModal } from '@/components/cbt/cbt-diary-modal';
 import { therapeuticInteractive, getTherapeuticIconButton } from '@/lib/design-tokens';
 
 // Using MessageData from the new message system
@@ -1028,7 +1028,7 @@ export default function ChatPage() {
                 style={{
                   WebkitTapHighlightColor: 'transparent'
                 }}
-                title="Open CBT thought record"
+                title="Open CBT diary with reflection"
               >
                 <div className="shimmer-effect"></div>
                 <BookOpen className="w-5 h-5 relative z-10" />
@@ -1177,8 +1177,8 @@ export default function ChatPage() {
       {/* Mobile Debug Info - only shows on mobile Safari with network URL */}
       <MobileDebugInfo />
       
-      {/* CBT Thought Record Modal */}
-      <CBTThoughtRecordModal
+      {/* CBT Diary Modal with Schema Reflection */}
+      <CBTDiaryModal
         open={showCBTModal}
         onOpenChange={setShowCBTModal}
         onSendToChat={handleCBTSendToChat}

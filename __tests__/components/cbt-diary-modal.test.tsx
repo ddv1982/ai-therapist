@@ -55,7 +55,12 @@ jest.mock('@/hooks/use-cbt-form', () => ({
       newBehaviors: 'New behaviors',
       alternativeResponses: [
         { response: 'Alternative response' }
-      ]
+      ],
+      schemaReflection: {
+        enabled: false,
+        questions: [],
+        selfAssessment: ''
+      }
     },
     formState: {
       data: {} as any,
@@ -74,6 +79,11 @@ jest.mock('@/hooks/use-cbt-form', () => ({
     addAlternativeResponse: jest.fn(),
     removeAlternativeResponse: jest.fn(),
     updateSchemaMode: jest.fn(),
+    toggleSchemaReflection: jest.fn(),
+    updateSchemaReflectionQuestion: jest.fn(),
+    addSchemaReflectionQuestion: jest.fn(),
+    removeSchemaReflectionQuestion: jest.fn(),
+    updateSchemaReflectionAssessment: jest.fn(),
     validateForm: jest.fn(() => []),
     resetForm: jest.fn(),
     generateFormattedOutput: jest.fn(() => 'Formatted CBT output'),
@@ -126,13 +136,14 @@ describe('CBTDiaryModal', () => {
       />
     );
 
-    // Check that section buttons exist (there will be multiple "Situation" elements)
-    expect(screen.getAllByText('Situation')).toHaveLength(2); // Button and label
-    expect(screen.getByText('Emotions')).toBeInTheDocument();
-    expect(screen.getByText('Thoughts')).toBeInTheDocument();
-    expect(screen.getByText('Schema')).toBeInTheDocument();
-    expect(screen.getByText('Challenge')).toBeInTheDocument();
-    expect(screen.getByText('Results')).toBeInTheDocument();
+    // Check that section buttons exist using aria-labels (which are unique)
+    expect(screen.getByLabelText(/Situation section/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Emotions section/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Thoughts section/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Schema section/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Reflection section/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Challenge section/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Results section/)).toBeInTheDocument();
   });
 
   it('shows form fields in the situation section by default', () => {
@@ -159,7 +170,7 @@ describe('CBTDiaryModal', () => {
     );
 
     // Click on Emotions section
-    fireEvent.click(screen.getByText('Emotions'));
+    fireEvent.click(screen.getByLabelText(/Emotions section/));
     
     await waitFor(() => {
       expect(screen.getByText('Initial Emotions')).toBeInTheDocument();
@@ -194,7 +205,7 @@ describe('CBTDiaryModal', () => {
     });
   });
 
-  it('shows navigation buttons', () => {
+  it('shows navigation buttons with correct section count', () => {
     render(
       <CBTDiaryModal
         open={true}
@@ -205,7 +216,54 @@ describe('CBTDiaryModal', () => {
 
     expect(screen.getByText('← Previous')).toBeInTheDocument();
     expect(screen.getByText('Next →')).toBeInTheDocument();
-    expect(screen.getByText('1 of 6')).toBeInTheDocument();
+    
+    // Check that there are multiple instances of "1 of 7" (section navigation and footer)
+    const sectionCountElements = screen.getAllByText('1 of 7');
+    expect(sectionCountElements.length).toBeGreaterThan(0);
+  });
+
+  it('shows required and optional section indicators', () => {
+    render(
+      <CBTDiaryModal
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        onSendToChat={mockOnSendToChat}
+      />
+    );
+
+    // Check that required sections (first 5) show "Required" label
+    expect(screen.getByLabelText(/Situation.*required/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Emotions.*required/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Thoughts.*required/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Schema.*required/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Challenge.*required/)).toBeInTheDocument();
+    
+    // Check that optional sections show "Optional" label
+    expect(screen.getByLabelText(/Reflection.*optional/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Results.*optional/)).toBeInTheDocument();
+  });
+
+  it('displays sections in correct order with Reflection as position 6', () => {
+    render(
+      <CBTDiaryModal
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        onSendToChat={mockOnSendToChat}
+      />
+    );
+
+    // Get all section navigation buttons
+    const sectionButtons = screen.getAllByRole('button').filter(button => 
+      button.getAttribute('aria-pressed') !== null
+    );
+    
+    // Should have 7 sections total
+    expect(sectionButtons).toHaveLength(7);
+    
+    // Verify Reflection is in position 6 (index 5) - before Results
+    const reflectionButton = screen.getByLabelText(/Reflection.*optional/);
+    expect(reflectionButton).toBeInTheDocument();
+    expect(reflectionButton.textContent).toContain('6 of 7');
   });
 
   it('can cancel and close the modal', () => {

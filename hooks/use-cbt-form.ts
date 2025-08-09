@@ -3,6 +3,7 @@ import {
   CBTDiaryFormData, 
   CBTDiaryFormState, 
   CBTFormValidationError,
+  SchemaReflectionCategory,
   getInitialCBTFormData 
 } from '@/types/cbt';
 
@@ -25,6 +26,12 @@ interface UseCBTFormReturn {
   addAlternativeResponse: () => void;
   removeAlternativeResponse: (index: number) => void;
   updateSchemaMode: (modeId: string, selected: boolean) => void;
+  // Schema Reflection methods
+  toggleSchemaReflection: (enabled: boolean) => void;
+  updateSchemaReflectionQuestion: (index: number, field: 'question' | 'answer', value: string) => void;
+  addSchemaReflectionQuestion: (category?: SchemaReflectionCategory) => void;
+  removeSchemaReflectionQuestion: (index: number) => void;
+  updateSchemaReflectionAssessment: (value: string) => void;
   validateForm: () => CBTFormValidationError[];
   resetForm: () => void;
   generateFormattedOutput: () => string;
@@ -76,6 +83,13 @@ export function useCBTForm(options: UseCBTFormOptions = {}): UseCBTFormReturn {
     // Core belief
     if (!formData.coreBeliefText.trim()) {
       errors.push({ field: 'coreBeliefText', message: 'Core belief is required' });
+    }
+
+    // Challenge questions - at least one question should be answered
+    const hasChallengeAnswers = formData.challengeQuestions.some(q => q.answer.trim()) ||
+                               formData.additionalQuestions.some(q => q.answer.trim());
+    if (!hasChallengeAnswers) {
+      errors.push({ field: 'challengeQuestions', message: 'At least one challenge question must be answered' });
     }
 
     return errors;
@@ -215,6 +229,63 @@ export function useCBTForm(options: UseCBTFormOptions = {}): UseCBTFormReturn {
     }));
   }, []);
 
+  // Schema reflection management
+  const toggleSchemaReflection = useCallback((enabled: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      schemaReflection: {
+        ...prev.schemaReflection,
+        enabled
+      }
+    }));
+  }, []);
+
+  const updateSchemaReflectionQuestion = useCallback((index: number, field: 'question' | 'answer', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      schemaReflection: {
+        ...prev.schemaReflection,
+        questions: prev.schemaReflection.questions.map((q, i) => 
+          i === index ? { ...q, [field]: value } : q
+        )
+      }
+    }));
+  }, []);
+
+  const addSchemaReflectionQuestion = useCallback((category: SchemaReflectionCategory = 'custom') => {
+    setFormData(prev => ({
+      ...prev,
+      schemaReflection: {
+        ...prev.schemaReflection,
+        questions: [...prev.schemaReflection.questions, {
+          question: '',
+          answer: '',
+          category
+        }]
+      }
+    }));
+  }, []);
+
+  const removeSchemaReflectionQuestion = useCallback((index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      schemaReflection: {
+        ...prev.schemaReflection,
+        questions: prev.schemaReflection.questions.filter((_, i) => i !== index)
+      }
+    }));
+  }, []);
+
+  const updateSchemaReflectionAssessment = useCallback((value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      schemaReflection: {
+        ...prev.schemaReflection,
+        selfAssessment: value
+      }
+    }));
+  }, []);
+
   // Reset form
   const resetForm = useCallback(() => {
     const newData = getInitialCBTFormData();
@@ -264,48 +335,98 @@ export function useCBTForm(options: UseCBTFormOptions = {}): UseCBTFormReturn {
       .map(mode => `- [x] ${mode.name} *(${mode.description})*`)
       .join('\n');
 
-    return `# 📝 CBT Diary Entry
+    // Check if reflection is enabled and has content for AI guidance
+    const hasReflectionContent = formData.schemaReflection.enabled && (
+      formData.schemaReflection.selfAssessment.trim() ||
+      formData.schemaReflection.questions.some(q => q.answer.trim())
+    );
+
+    const reflectionInsights = hasReflectionContent 
+      ? formData.schemaReflection.questions
+          .filter(q => q.answer.trim())
+          .map(q => ({ category: q.category, question: q.question, answer: q.answer }))
+      : [];
+
+    return `# 🌟 CBT Diary Entry with ${hasReflectionContent ? 'Deep ' : ''}Reflection
 
 **Date:** ${formData.date}
+${hasReflectionContent ? `
+> 💡 **AI Therapist Note:** This entry includes profound schema reflection insights. Please provide therapeutic feedback that acknowledges these deeper patterns and offers compassionate guidance for healing and growth.
 
----
+` : ''}---
 
-## Situation
+## 📍 Situation Context
 ${formData.situation || '[No situation described]'}
 
 ---
 
-## Initial Feelings
-*Emotion ratings from 1-10*
+## 💭 Emotional Landscape
+*Initial emotional state (1-10 intensity)*
 
 ${formatEmotions(formData.initialEmotions) || '[No emotions rated]'}
 
 ---
 
-## Automatic Thoughts
-*Credibility ratings from 1-10*
+## 🧠 Automatic Thoughts
+*Cognitive patterns and credibility ratings (1-10)*
 
 ${formatThoughts(formData.automaticThoughts) || '[No thoughts entered]'}
 
 ---
 
-## Core Belief
+## 🎯 Core Schema Analysis
 *Credibility: ${formData.coreBeliefCredibility}/10*
 
-${formData.coreBeliefText || '[No core belief identified]'}
+**Core Belief:** ${formData.coreBeliefText || '[No core belief identified]'}
 
-### Schema Behaviors
+### Behavioral Patterns
+- **Confirming behaviors:** ${formData.confirmingBehaviors || '[Not specified]'}
+- **Avoidant behaviors:** ${formData.avoidantBehaviors || '[Not specified]'}  
+- **Overriding behaviors:** ${formData.overridingBehaviors || '[Not specified]'}
 
-**Confirming behaviors:** ${formData.confirmingBehaviors || '[Not specified]'}
-
-**Avoidant behaviors:** ${formData.avoidantBehaviors || '[Not specified]'}
-
-**Overriding behaviors:** ${formData.overridingBehaviors || '[Not specified]'}
-
-### Schema Modes
+### Active Schema Modes
 *Emotional states experienced*
 
 ${selectedModes || '[No schema modes selected]'}
+
+${formData.schemaReflection.enabled ? `
+---
+
+## 🔍 SCHEMA REFLECTION - THERAPEUTIC INSIGHTS
+
+> **For AI Therapist:** The following reflection represents deep self-exploration. Please respond with therapeutic empathy, validate insights, and offer gentle guidance for continued healing and self-compassion.
+
+${formData.schemaReflection.selfAssessment ? `### 🌱 Personal Self-Assessment
+
+**Client's Inner Wisdom:**
+"${formData.schemaReflection.selfAssessment}"
+
+*This personal assessment reveals important self-awareness that deserves therapeutic acknowledgment and gentle exploration.*
+
+` : ''}${reflectionInsights.length > 0 ? `### 🧭 Guided Reflection Insights
+
+${reflectionInsights
+  .reduce((acc, insight) => {
+    const categoryEmojis = {
+      childhood: '👶',
+      schemas: '🧠', 
+      coping: '🛡️',
+      modes: '💭'
+    };
+    const categoryName = insight.category.charAt(0).toUpperCase() + insight.category.slice(1);
+    const emoji = categoryEmojis[insight.category as keyof typeof categoryEmojis] || '💡';
+    
+    acc.push(`**${emoji} ${categoryName} Pattern:**`);
+    acc.push(`*Question:* "${insight.question}"`);
+    acc.push(`*Insight:* "${insight.answer}"`);
+    acc.push('');
+    return acc;
+  }, [] as string[])
+  .join('\n')}
+
+> **Therapeutic Note:** These insights reveal important connections between past experiences, current patterns, and healing opportunities. Please acknowledge the courage it takes to explore these depths and offer supportive guidance.
+
+` : ''}` : ''}
 
 ---
 
@@ -386,6 +507,12 @@ ${formData.alternativeResponses
     addAlternativeResponse,
     removeAlternativeResponse,
     updateSchemaMode,
+    // Schema Reflection methods
+    toggleSchemaReflection,
+    updateSchemaReflectionQuestion,
+    addSchemaReflectionQuestion,
+    removeSchemaReflectionQuestion,
+    updateSchemaReflectionAssessment,
     validateForm,
     resetForm,
     generateFormattedOutput,
