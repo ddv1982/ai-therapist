@@ -344,6 +344,108 @@ Generate Session Report
 - 🧠 **Deep analysis** when therapeutic content requires it
 - 🔄 **Seamless switching** - completely automatic and transparent
 
+## 🎯 User Input vs AI Decision Control
+
+### **Therapeutic Autonomy & Data Control**
+This system maintains clear boundaries between **user therapeutic autonomy** and **AI technical assistance**, ensuring user input always drives core therapeutic content while AI handles only technical processing decisions.
+
+### **✅ USER INPUT ALWAYS DRIVES (100% User Control)**
+
+**CBT Diary & Templates:**
+- All therapeutic content (situations, emotions, thoughts, core beliefs)
+- Schema mode selections (vulnerable child, angry child, healthy adult, etc.)  
+- Challenge question answers and rational thought development
+- Schema reflection questions and personal insights
+- Alternative response strategies and behavioral patterns
+- Emotional intensity ratings and credibility assessments
+
+**Schema Reflection System (Expanded CBT Template):**
+- **Schema reflection is OPTIONAL** - disabled by default (`enabled: false`)
+- User explicitly chooses to enable deep schema reflection
+- All 10 schema reflection questions require user answers:
+  - Childhood pattern connections and triggers
+  - Core needs assessment (safety, acceptance, autonomy, competence)
+  - Coping strategy identification and protective mechanisms
+  - Schema mode awareness and emotional state recognition
+  - Self-compassion practices and healing approaches
+
+**Chat Interface & Settings:**
+- All conversation content originates from user messages
+- User controls all AI settings (temperature, max tokens, model preference)
+- User decides when to generate CBT templates or session reports
+- User chooses whether to enable schema reflection features
+
+### **🤖 AI MAKES AUTONOMOUS DECISIONS**
+
+**Smart Model Selection:**
+```typescript
+// AI automatically detects CBT content and switches models
+const isCBTOrDiary = lastMessage.includes('CBT Thought Record') || 
+                    lastMessage.includes('**Situation:**') ||
+                    lastMessage.includes('**Thoughts:**');
+
+// Uses gpt-oss-120b for CBT analysis, gpt-oss-20b for regular chat
+model = isCBTOrDiary ? 'openai/gpt-oss-120b' : 'openai/gpt-oss-20b';
+```
+
+**Therapeutic Memory Context:**
+- AI automatically retrieves previous session insights for therapeutic continuity
+- Memory contains only professional observations, never specific conversation details
+- AI decides which previous sessions to reference (last 3 sessions by default)
+- Memory system maintains confidentiality while providing therapeutic context
+
+**Report Generation & Analysis:**
+- AI analyzes user-provided data for cognitive distortions and patterns
+- AI identifies schema modes and maladaptive patterns from user responses
+- AI generates therapeutic framework recommendations based on user input
+- AI assigns confidence scores to its own analysis (never assumes certainty)
+
+**Technical Processing:**
+- AI automatically enables browser search for OpenAI models
+- AI decides when to use web search for current therapeutic resources
+- AI handles encryption, authentication, and data security automatically
+- AI manages streaming animations and performance optimizations
+
+### **🔄 Clear Data Flow Prioritization**
+
+**Therapeutic Data Flow:**
+1. **User fills CBT template** → Data stored exactly as user provided
+2. **AI processes patterns** → Analysis based only on user input, never assumptions
+3. **AI generates insights** → Professional observations without personal detail reproduction
+4. **Memory system** → Uses only therapeutic insights, maintains complete confidentiality
+
+**Schema Reflection Flow:**
+```typescript
+schemaReflection: {
+  enabled: false, // User must explicitly enable
+  questions: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.map(q => ({ ...q })),
+  selfAssessment: '' // Always starts empty, requires user input
+}
+```
+
+### **🎨 Key Principles**
+
+**When USER INPUT drives the system:**
+- ✅ Any time you're filling out therapeutic forms or questionnaires
+- ✅ All CBT diary entries, schema reflections, and personal insights  
+- ✅ Choosing to enable/disable schema reflection features
+- ✅ All conversation content and therapeutic discussions
+- ✅ All emotional ratings, intensity scores, and credibility assessments
+- ✅ All behavioral patterns, coping strategies, and alternative responses
+
+**When AI makes technical decisions:**
+- 🤖 Which AI model to use for different types of therapeutic content
+- 🤖 When to enable browser search tools for current information
+- 🤖 How to analyze user patterns for professional therapeutic reports
+- 🤖 Which previous sessions to reference for therapeutic continuity
+- 🤖 What therapeutic frameworks might be helpful based on user data
+
+### **🛡️ Privacy & Therapeutic Ethics**
+
+**Core Commitment:** Your expanded CBT template and schema reflection system maintain perfect user agency - the AI never assumes, invents, or pre-fills personal therapeutic data. Users maintain complete control over their therapeutic journey while AI provides technical support and professional pattern analysis.
+
+**The Key Insight:** This system properly separates **user therapeutic autonomy** from **AI technical assistance** - exactly what's needed in ethical therapeutic AI applications.
+
 ## 🎬 Advanced Streaming Animation System
 
 ### **Streaming Message Diffusion**
