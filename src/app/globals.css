@@ -511,4 +511,372 @@
 
   /* Import the new modular table system */
   @import '../components/ui/enhanced/data-table/table-styles.css';
+
+  /* ========================================
+   * STREAMING MESSAGE DIFFUSION ANIMATIONS
+   * ======================================== */
+  
+  /* Core Streaming Wrapper Styles */
+  .streaming-message-wrapper {
+    position: relative;
+    isolation: isolate;
+    contain: layout style;
+    transform: translateZ(0); /* Force GPU layer */
+    will-change: auto; /* Reset after animation */
+  }
+
+  .streaming-message-wrapper.streaming-active {
+    will-change: transform, filter, opacity;
+  }
+
+  /* Content Container with GPU Acceleration */
+  .streaming-content-container {
+    position: relative;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  .streaming-content-container.transform-gpu {
+    transform: translate3d(0, 0, 0);
+  }
+
+  .streaming-content-container.streaming-preserve-3d {
+    transform-style: preserve-3d;
+  }
+
+  /* Animation Stage 1: Blur - Content appears with processing blur */
+  .streaming-blur .streaming-content-container {
+    filter: blur(2.5px) brightness(0.95) saturate(1.1);
+    transform: translate3d(0, 2px, 0) scale(1.01);
+    opacity: 0.85;
+    transition: all 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Subtle animation for blur stage */
+  @keyframes streaming-blur-pulse {
+    0% { 
+      filter: blur(2.5px) brightness(0.95) saturate(1.1);
+      transform: translate3d(0, 2px, 0) scale(1.01);
+    }
+    50% { 
+      filter: blur(3px) brightness(0.92) saturate(1.15);
+      transform: translate3d(0, 3px, 0) scale(1.015);
+    }
+    100% { 
+      filter: blur(2.5px) brightness(0.95) saturate(1.1);
+      transform: translate3d(0, 2px, 0) scale(1.01);
+    }
+  }
+
+  .streaming-blur .streaming-content-container {
+    animation: streaming-blur-pulse 2s ease-in-out infinite;
+  }
+
+  /* Animation Stage 2: Stabilizing - Layout stabilizes with reduced blur */
+  .streaming-stabilizing .streaming-content-container {
+    filter: blur(0.8px) brightness(0.98) saturate(1.05);
+    transform: translate3d(0, 1px, 0) scale(1.005);
+    opacity: 0.94;
+    transition: all 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Gentle settling animation */
+  @keyframes streaming-stabilize {
+    0% {
+      filter: blur(2.5px) brightness(0.95) saturate(1.1);
+      transform: translate3d(0, 2px, 0) scale(1.01);
+    }
+    100% {
+      filter: blur(0.8px) brightness(0.98) saturate(1.05);
+      transform: translate3d(0, 1px, 0) scale(1.005);
+    }
+  }
+
+  .streaming-stabilizing .streaming-content-container {
+    animation: streaming-stabilize 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  /* Animation Stage 3: Revealed - Content is fully crisp and readable */
+  .streaming-revealed .streaming-content-container {
+    filter: none;
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+    transition: all 300ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* Smooth reveal animation */
+  @keyframes streaming-reveal {
+    0% {
+      filter: blur(0.8px) brightness(0.98) saturate(1.05);
+      transform: translate3d(0, 1px, 0) scale(1.005);
+      opacity: 0.94;
+    }
+    100% {
+      filter: none;
+      transform: translate3d(0, 0, 0) scale(1);
+      opacity: 1;
+    }
+  }
+
+  .streaming-revealed .streaming-content-container {
+    animation: streaming-reveal 300ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  /* Overlay Effects */
+  .streaming-overlay {
+    background: radial-gradient(
+      circle at center,
+      transparent 30%,
+      hsla(var(--primary), 0.03) 70%,
+      transparent 100%
+    );
+    border-radius: inherit;
+  }
+
+  .streaming-pulse-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    background: hsl(var(--primary));
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.4;
+    animation: streaming-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes streaming-pulse {
+    0%, 100% { 
+      opacity: 0.4; 
+      transform: translate(-50%, -50%) scale(1); 
+    }
+    50% { 
+      opacity: 0.8; 
+      transform: translate(-50%, -50%) scale(1.2); 
+    }
+  }
+
+  /* Dimension Stabilizer */
+  .streaming-dimension-stabilizer {
+    pointer-events: none;
+    user-select: none;
+    visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: -1;
+  }
+
+  /* Special Handling for Table Content */
+  .streaming-table-content {
+    contain: size layout style;
+  }
+
+  .streaming-table-content .streaming-content-container {
+    /* Enhanced stability for table layouts */
+    contain: layout style;
+  }
+
+  /* Ensure tables maintain their structure during animation */
+  .streaming-table-content table {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .streaming-blur .streaming-table-content table,
+  .streaming-stabilizing .streaming-table-content table {
+    /* Prevent table layout shifts during animation */
+    visibility: visible;
+    opacity: inherit;
+  }
+
+  /* Streaming Table Container Optimizations */
+  .streaming-table-container {
+    contain: layout;
+    isolation: isolate;
+  }
+
+  .streaming-stable-table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .streaming-layout-stable {
+    contain: layout style;
+    will-change: contents;
+  }
+
+  /* Streaming-optimized table headers */
+  th[data-streaming-header="true"] {
+    min-width: var(--min-width, 4em);
+    max-width: none;
+    word-wrap: break-word;
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  /* Data attribute styling for streaming tables */
+  table[data-streaming-table="true"] {
+    transform: translateZ(0); /* Force GPU layer for smooth animation */
+  }
+
+  /* Container with stable layout during streaming */
+  div[data-streaming-container="true"] {
+    transform: translateZ(0);
+    contain: layout;
+  }
+
+  div[data-layout-stable="true"] {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* Enhanced table cell stability during streaming */
+  .streaming-stable-table td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 0; /* Forces equal distribution with table-layout: fixed */
+    box-sizing: border-box;
+  }
+
+  .streaming-stable-table th {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  /* Complex Content Optimizations */
+  .streaming-complex-content {
+    /* Enhanced GPU acceleration for complex layouts */
+    will-change: transform, filter;
+  }
+
+  .streaming-complex-content .streaming-content-container {
+    /* Optimize rendering for complex markdown */
+    contain: layout style;
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* Mobile-Specific Optimizations */
+  @media (max-width: 768px) {
+    /* Reduce animation intensity on mobile for better performance */
+    .streaming-blur .streaming-content-container {
+      filter: blur(1.5px) brightness(0.97);
+      transform: translate3d(0, 1px, 0) scale(1.005);
+    }
+
+    .streaming-stabilizing .streaming-content-container {
+      filter: blur(0.5px) brightness(0.99);
+      transform: translate3d(0, 0.5px, 0) scale(1.002);
+    }
+
+    /* Faster animations on mobile */
+    .streaming-blur .streaming-content-container {
+      animation-duration: 1.5s;
+    }
+
+    .streaming-stabilizing .streaming-content-container {
+      transition-duration: 300ms;
+    }
+
+    .streaming-revealed .streaming-content-container {
+      transition-duration: 200ms;
+    }
+  }
+
+  /* High DPI Display Optimizations */
+  @media (min-resolution: 2dppx) {
+    .streaming-blur .streaming-content-container {
+      filter: blur(2px) brightness(0.96) saturate(1.08);
+    }
+
+    .streaming-stabilizing .streaming-content-container {
+      filter: blur(0.6px) brightness(0.98) saturate(1.03);
+    }
+  }
+
+  /* Reduced Motion Support */
+  @media (prefers-reduced-motion: reduce) {
+    .streaming-message-wrapper * {
+      animation: none !important;
+      transition: opacity 200ms ease !important;
+    }
+
+    .streaming-blur .streaming-content-container,
+    .streaming-stabilizing .streaming-content-container {
+      filter: none !important;
+      transform: none !important;
+      opacity: 0.9 !important;
+    }
+
+    .streaming-revealed .streaming-content-container {
+      opacity: 1 !important;
+    }
+  }
+
+  /* Dark Theme Adjustments */
+  .dark .streaming-blur .streaming-content-container {
+    filter: blur(2.5px) brightness(1.05) saturate(1.1);
+  }
+
+  .dark .streaming-stabilizing .streaming-content-container {
+    filter: blur(0.8px) brightness(1.02) saturate(1.05);
+  }
+
+  .dark .streaming-overlay {
+    background: radial-gradient(
+      circle at center,
+      transparent 30%,
+      hsla(var(--primary), 0.05) 70%,
+      transparent 100%
+    );
+  }
+
+  .dark .streaming-pulse-indicator {
+    background: hsl(var(--accent));
+  }
+
+  /* Performance Optimizations */
+  .streaming-message-wrapper:not(.streaming-active) {
+    will-change: auto;
+  }
+
+  .streaming-message-wrapper:not(.streaming-active) * {
+    will-change: auto;
+  }
+
+  /* Integration with existing therapeutic design system */
+  /* Ensure compatibility with message bubble styles */
+  .message-bubble .streaming-message-wrapper {
+    border-radius: inherit;
+  }
+
+  .message-content-assistant .streaming-message-wrapper,
+  .message-content-user .streaming-message-wrapper {
+    color: inherit;
+    background: transparent;
+  }
+
+  /* Table system integration */
+  .therapeutic-table .streaming-message-wrapper {
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  /* Animation performance boost for tables in streaming */
+  .streaming-active .therapeutic-table {
+    will-change: contents;
+  }
+
+  .streaming-active .table-container {
+    contain: layout;
+  }
 }

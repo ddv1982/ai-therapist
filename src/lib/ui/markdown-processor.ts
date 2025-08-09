@@ -56,11 +56,11 @@ function countTableColumns(tableHtml: string): number {
 }
 
 /**
- * Process standard tables (1-5 columns) with responsive container
+ * Process standard tables (1-5 columns) with responsive container and streaming support
  */
 function processStandardTable(tableHtml: string, columnCount: number): string {
-  // Wrap in responsive container
-  let processedHtml = '<div class="table-container table-system">' + tableHtml + '</div>';
+  // Work with original table HTML first, then wrap in container at the end
+  let processedHtml = tableHtml;
   
   // Enhanced class application for standard tables
   processedHtml = processedHtml.replace(
@@ -69,7 +69,7 @@ function processStandardTable(tableHtml: string, columnCount: number): string {
       const classes = existingClasses.trim();
       
       // Determine table variant and add column-specific optimizations
-      let baseClasses = 'therapeutic-table';
+      let baseClasses = 'therapeutic-table streaming-stable-table';
       let variant = '';
       
       // Map therapeutic table types
@@ -93,27 +93,39 @@ function processStandardTable(tableHtml: string, columnCount: number): string {
         baseClasses += ' table-optimized-wide';
       }
       
+      // Add streaming layout stability
+      baseClasses += ' streaming-layout-stable';
+      
       const allClasses = `${classes} ${baseClasses} ${variant}`.split(' ')
         .filter((cls, index, arr) => cls && arr.indexOf(cls) === index)
         .join(' ');
         
-      return `<table class="${allClasses}" data-columns="${columnCount}"${rest}>`;
+      return `<table class="${allClasses}" data-columns="${columnCount}" data-streaming-optimized="true"${rest}>`;
     }
   );
   
   // Handle tables without classes
-  let baseClassesNoExisting = 'therapeutic-table table-striped';
+  let baseClassesNoExisting = 'therapeutic-table table-striped streaming-stable-table streaming-layout-stable';
   if (columnCount === 4 || columnCount === 5) {
     baseClassesNoExisting += ' table-optimized-wide';
   }
   
   processedHtml = processedHtml.replace(
     /<table(?![^>]*class=)([^>]*)>/gi, 
-    `<table class="${baseClassesNoExisting}" data-columns="${columnCount}"$1>`
+    `<table class="${baseClassesNoExisting}" data-columns="${columnCount}" data-streaming-optimized="true"$1>`
   );
   
-  // Add mobile data-label attributes
+  // Normalize table structure to ensure proper thead/tbody elements (skip if already has thead)
+  if (!processedHtml.includes('<thead')) {
+    processedHtml = normalizeTableStructure(processedHtml);
+  }
+  
+  // Add mobile data-label attributes and streaming attributes
   processedHtml = enhanceTableCellsWithLabels(processedHtml);
+  processedHtml = addStreamingStabilityAttributes(processedHtml);
+  
+  // Finally, wrap in responsive container
+  processedHtml = '<div class="table-container table-system streaming-table-container">' + processedHtml + '</div>';
   
   return processedHtml;
 }
@@ -393,6 +405,78 @@ type AlternativeViewType = 'structured-cards' | 'definition-list' | 'expandable-
  * Touch optimization is now handled entirely via CSS classes
  * This prevents React hydration mismatches with inline styles
  */
+
+/**
+ * Normalize table structure to ensure proper thead/tbody elements
+ * This fixes issues where markdown-it doesn't generate proper table structure
+ */
+function normalizeTableStructure(html: string): string {
+  return html.replace(/<table([^>]*)>([\s\S]*?)<\/table>/gi, (match, tableAttrs, tableContent) => {
+    // Check if we already have proper thead/tbody structure
+    if (tableContent.includes('<thead') && tableContent.includes('<tbody')) {
+      return match; // Already properly structured
+    }
+    
+    // Extract all table rows
+    const rows = tableContent.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
+    
+    if (rows.length === 0) {
+      return match; // No rows found, return as is
+    }
+    
+    // First row should be the header if it contains <th> elements
+    const firstRow = rows[0];
+    const isHeaderRow = firstRow.includes('<th');
+    
+    let normalizedContent = '';
+    
+    if (isHeaderRow) {
+      // Wrap first row in thead
+      normalizedContent += `<thead>${firstRow}</thead>`;
+      
+      // Wrap remaining rows in tbody
+      if (rows.length > 1) {
+        const bodyRows = rows.slice(1).join('');
+        normalizedContent += `<tbody>${bodyRows}</tbody>`;
+      }
+    } else {
+      // No header row, wrap all rows in tbody
+      normalizedContent += `<tbody>${rows.join('')}</tbody>`;
+    }
+    
+    return `<table${tableAttrs}>${normalizedContent}</table>`;
+  });
+}
+
+/**
+ * Add streaming stability attributes to prevent layout shifts during animation
+ */
+function addStreamingStabilityAttributes(html: string): string {
+  // Add container-level attributes for streaming optimization
+  html = html.replace(
+    /<div class="([^"]*table-container[^"]*)"([^>]*)>/gi,
+    '<div class="$1" data-streaming-container="true" data-layout-stable="true"$2>'
+  );
+  
+  // Add table-level streaming attributes
+  html = html.replace(
+    /<table([^>]*)>/gi,
+    '<table data-streaming-table="true" style="table-layout: fixed; width: 100%;"$1>'
+  );
+  
+  // Add header stability attributes
+  html = html.replace(
+    /<th([^>]*?)>([\s\S]*?)<\/th>/gi,
+    (match, attributes, content) => {
+      const cleanContent = content.replace(/<\/?[^>]+(>|$)/g, '').trim();
+      const estimatedWidth = Math.max(cleanContent.length * 0.6, 4); // Rough character-based width estimation
+      
+      return `<th${attributes} data-streaming-header="true" data-min-width="${estimatedWidth}em">${content}</th>`;
+    }
+  );
+  
+  return html;
+}
 
 /**
  * Add data-label attributes to table cells for mobile stacked layout
