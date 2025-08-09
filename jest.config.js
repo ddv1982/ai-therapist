@@ -15,12 +15,10 @@ const customJestConfig = {
     '<rootDir>/e2e/',
   ],
   collectCoverageFrom: [
-    'app/**/*.{ts,tsx}',
-    'components/**/*.{ts,tsx}',
-    'lib/**/*.{ts,tsx}',
+    'src/**/*.{ts,tsx}',
     '!**/*.d.ts',
     '!**/node_modules/**',
-    '!lib/**/*.test.{ts,tsx}',
+    '!src/**/*.test.{ts,tsx}',
     '!__tests__/**/*',
   ],
   coverageThreshold: {
@@ -32,7 +30,7 @@ const customJestConfig = {
     },
   },
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
+    '^@/(.*)$': '<rootDir>/src/$1',
     // Mock static assets
     '\\.(css|less|sass|scss|png|jpg|jpeg|gif|webp|svg)$': 'identity-obj-proxy',
   },

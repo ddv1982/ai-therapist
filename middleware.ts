@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRateLimiter } from '@/lib/rate-limiter';
+import { getRateLimiter } from '@/lib/api/rate-limiter';
 
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');

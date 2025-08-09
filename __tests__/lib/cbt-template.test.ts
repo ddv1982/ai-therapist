@@ -1,4 +1,4 @@
-import { generateCBTTemplate, generateQuickCBTTemplate, getCBTPromptsForEmotion } from '@/lib/cbt-template';
+import { generateCBTTemplate, generateQuickCBTTemplate, getCBTPromptsForEmotion } from '@/lib/therapy/cbt-template';
 
 describe('CBT Template Functions', () => {
   describe('generateCBTTemplate', () => {

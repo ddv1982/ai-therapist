@@ -11,7 +11,7 @@ import {
   TableSize,
   WideTableStrategy,
   ColumnPriority,
-} from '@/components/ui/table/table-types';
+} from '@/components/ui/enhanced/data-table/table-types';
 
 describe('Table Type Guards', () => {
   describe('isValidTableVariant', () => {

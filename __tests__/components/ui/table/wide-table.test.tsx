@@ -8,14 +8,14 @@ import {
   ColumnManager,
   PriorityPlusIndicator,
   useWideTableContext,
-} from '@/components/ui/table/wide-table';
+} from '@/components/ui/enhanced/data-table/wide-table';
 import {
   WideColumnDefinition,
   ColumnVisibilityState,
-} from '@/components/ui/table/table-types';
+} from '@/components/ui/enhanced/data-table/table-types';
 
 // Mock CSS imports
-jest.mock('@/components/ui/table/table-styles.css', () => ({}));
+jest.mock('@/components/ui/enhanced/data-table/table-styles.css', () => ({}));
 
 // Mock localStorage
 const localStorageMock = {
@@ -483,23 +483,10 @@ describe('Wide Table Components', () => {
       // Suppress console.error for this test
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       
-      // The error boundary should catch the error
-      const ErrorBoundary = ({ children }: { children: React.ReactNode }) => {
-        try {
-          return <>{children}</>;
-        } catch (error) {
-          return <div>Error: {(error as Error).message}</div>;
-        }
-      };
-      
-      render(
-        <ErrorBoundary>
-          <TestComponent />
-        </ErrorBoundary>
-      );
-      
-      // The error should be thrown during rendering
-      expect(consoleSpy).toHaveBeenCalled();
+      // Should throw error during render
+      expect(() => {
+        render(<TestComponent />);
+      }).toThrow('useWideTableContext must be used within a WideTable');
       
       consoleSpy.mockRestore();
     });

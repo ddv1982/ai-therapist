@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event';
 import {
   useAlternativeViews,
   AlternativeViewWrapper,
-} from '@/components/ui/table/use-alternative-views';
+} from '@/components/ui/enhanced/data-table/use-alternative-views';
 
 describe('useAlternativeViews Hook', () => {
   // Mock requestAnimationFrame for testing animations

@@ -12,10 +12,10 @@ import {
   TableCell,
   CompleteTable,
   useTableResponsive,
-} from '@/components/ui/table/table';
+} from '@/components/ui/enhanced/data-table/table';
 
 // Mock CSS imports
-jest.mock('@/components/ui/table/table-styles.css', () => ({}));
+jest.mock('@/components/ui/enhanced/data-table/table-styles.css', () => ({}));
 
 describe('Table Components', () => {
   describe('TableContainer', () => {
