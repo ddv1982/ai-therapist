@@ -161,6 +161,76 @@ export const DEFAULT_CHALLENGE_QUESTIONS: CBTDiaryChallengeQuestion[] = [
   }
 ];
 
+// ========================================
+// CBT THOUGHT RECORD (7-Column Format)
+// ========================================
+
+// Single emotion entry with name and intensity (0-100)
+export interface CBTEmotion {
+  name: string;
+  intensity: number;
+}
+
+// CBT Thought Record - Standard 7-column format
+export interface CBTThoughtRecord {
+  date: string;
+  
+  // Column 1: Situation (when, where, who)
+  situation: string;
+  
+  // Column 2: Automatic Thought(s)
+  automaticThoughts: string;
+  
+  // Column 3: Emotion(s) & Intensity (0-100)
+  emotions: CBTEmotion[];
+  
+  // Column 4: Evidence for the Thought
+  evidenceFor: string;
+  
+  // Column 5: Evidence against the Thought  
+  evidenceAgainst: string;
+  
+  // Column 6: Balanced / Alternative Thought
+  balancedThought: string;
+  
+  // Column 7: New Feeling (Intensity after reframing)
+  newEmotions: CBTEmotion[];
+}
+
+// Form state for CBT thought record
+export interface CBTFormState {
+  data: CBTThoughtRecord;
+  isDirty: boolean;
+  isValid: boolean;
+  errors: Record<string, string>;
+  lastSaved?: Date;
+}
+
+// Validation error type
+export interface CBTFormValidationError {
+  field: string;
+  message: string;
+}
+
+// Initial data generator
+export const getInitialCBTThoughtRecord = (): CBTThoughtRecord => {
+  const today = new Date().toISOString().split('T')[0];
+  return {
+    date: today,
+    situation: '',
+    automaticThoughts: '',
+    emotions: [{ name: '', intensity: 0 }],
+    evidenceFor: '',
+    evidenceAgainst: '',
+    balancedThought: '',
+    newEmotions: [{ name: '', intensity: 0 }]
+  };
+};
+
+// ========================================
+// ORIGINAL COMPLEX CBT TYPES (Legacy)
+// ========================================
+
 // Initial empty form data
 export const getInitialCBTFormData = (): CBTDiaryFormData => {
   const today = new Date().toISOString().split('T')[0];

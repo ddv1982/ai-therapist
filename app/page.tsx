@@ -26,7 +26,7 @@ import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
 import type { MessageData } from '@/components/message';
 import { MobileDebugInfo } from '@/components/mobile-debug-info';
-import { CBTDiaryModal } from '@/components/cbt/cbt-diary-modal';
+import { CBTThoughtRecordModal } from '@/components/cbt/CBTThoughtRecordModal';
 import { therapeuticInteractive, getTherapeuticIconButton } from '@/lib/design-tokens';
 
 // Using MessageData from the new message system
@@ -757,20 +757,161 @@ export default function ChatPage() {
     setShowCBTModal(true);
   }, []);
 
-  const handleCBTSendToChat = useCallback((formattedContent: string) => {
-    // Add CBT diary as an assistant message (white bubble with proper table formatting)
+  const handleCBTSendToChat = useCallback(async (formattedContent: string) => {
+    if (isLoading) return;
+    
+    // Check if we have API key either from user input or environment
+    if (!apiKey && !hasEnvApiKey) {
+      showToast({
+        type: 'warning',
+        title: 'API Key Required',
+        message: 'Please enter your Groq API key in the settings panel or set GROQ_API_KEY environment variable'
+      });
+      return;
+    }
+
+    // Auto-create session if none exists, using CBT content as title
+    let sessionId = currentSession;
+    if (!sessionId) {
+      try {
+        const title = 'CBT Thought Record - ' + new Date().toLocaleDateString();
+        const response = await fetch('/api/sessions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: title
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const newSession = result.success ? result.data : result;
+          setSessions(prev => [newSession, ...prev]);
+          
+          await setCurrentSessionAndSync(newSession.id);
+          sessionId = newSession.id;
+        } else {
+          console.error('Failed to create session');
+          return;
+        }
+      } catch (error) {
+        console.error('Error creating session:', error);
+        return;
+      }
+    }
+
+    // Add CBT diary as a user message
     const cbtMessage: Message = {
       id: `cbt-${Date.now()}`,
-      role: 'assistant',
+      role: 'user',
       content: formattedContent,
       timestamp: new Date()
     };
-    
+
     setMessages(prev => [...prev, cbtMessage]);
-    
-    // Scroll to bottom to show the new message
-    setTimeout(scrollToBottom, 100);
-  }, []);
+    setIsLoading(true);
+
+    // Save user message to database
+    await saveMessage(sessionId!, 'user', cbtMessage.content);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [...messages, cbtMessage].map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })),
+          sessionId: sessionId,
+          apiKey: apiKey,
+          model: model,
+          temperature: temperature,
+          maxTokens: maxTokens,
+          topP: topP,
+          browserSearchEnabled: browserSearchEnabled,
+          reasoningEffort: reasoningEffort
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No response body');
+
+      const aiMessage: Message = {
+        id: generateUUID(),
+        role: 'assistant',
+        content: '',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+
+      let fullContent = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = new TextDecoder().decode(value);
+        const lines = chunk.split('\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+            try {
+              const data = JSON.parse(line.slice(6));
+              const content = data.choices?.[0]?.delta?.content || '';
+              if (content) {
+                fullContent += content;
+                setMessages(prev => prev.map(msg => 
+                  msg.id === aiMessage.id 
+                    ? { ...msg, content: fullContent }
+                    : msg
+                ));
+              }
+            } catch {
+              // Skip invalid JSON lines
+            }
+          }
+        }
+      }
+
+      setIsLoading(false);
+
+      // Save AI response to database
+      await saveMessage(sessionId!, 'assistant', fullContent);
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error sending CBT message:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('model_not_found') || errorMessage.includes('404')) {
+        showToast({
+          type: 'error',
+          title: 'Model Not Available',
+          message: `The selected model "${model}" is not available. Please choose a different model in the settings panel.`
+        });
+      } else if (errorMessage.includes('Failed to fetch')) {
+        showToast({
+          type: 'error',
+          title: 'Network Error',
+          message: 'Please check your connection and try again.'
+        });
+      } else {
+        showToast({
+          type: 'error',
+          title: 'Message Failed',
+          message: 'Failed to send CBT diary. Please check your API key and settings.'
+        });
+      }
+    }
+  }, [isLoading, apiKey, hasEnvApiKey, model, messages, currentSession, showToast, temperature, maxTokens, topP, browserSearchEnabled, reasoningEffort, saveMessage, setCurrentSessionAndSync, setSessions]);
 
   return (
     <AuthGuard>
@@ -1136,7 +1277,7 @@ export default function ChatPage() {
                 style={{
                   WebkitTapHighlightColor: 'transparent'
                 }}
-                title="Open CBT diary"
+                title="Open CBT thought record"
               >
                 <div className="shimmer-effect"></div>
                 <BookOpen className="w-5 h-5 relative z-10" />
@@ -1285,8 +1426,8 @@ export default function ChatPage() {
       {/* Mobile Debug Info - only shows on mobile Safari with network URL */}
       <MobileDebugInfo />
       
-      {/* CBT Diary Modal */}
-      <CBTDiaryModal
+      {/* CBT Thought Record Modal */}
+      <CBTThoughtRecordModal
         open={showCBTModal}
         onOpenChange={setShowCBTModal}
         onSendToChat={handleCBTSendToChat}
