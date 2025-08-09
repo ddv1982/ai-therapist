@@ -10,7 +10,6 @@ import {
   FileText,
   Menu,
   Heart,
-  Settings,
   Plus,
   MessageSquare,
   Trash2,
@@ -19,7 +18,6 @@ import {
   BookOpen
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import type { ModelConfig } from '@/types/index';
 import { generateUUID } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
 import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/memory-utils';
@@ -49,19 +47,11 @@ export default function ChatPage() {
   const [currentSession, setCurrentSession] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [apiKey, setApiKey] = useState('');
   const [hasEnvApiKey, setHasEnvApiKey] = useState(false);
-  const [model, setModel] = useState('openai/gpt-oss-120b');
-  const [temperature, setTemperature] = useState(0.6);
-  const [maxTokens, setMaxTokens] = useState(30000);
-  const [topP, setTopP] = useState(1);
-  const [browserSearchEnabled, setBrowserSearchEnabled] = useState(true);
-  const [reasoningEffort, setReasoningEffort] = useState('medium');
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState('100vh');
-  const [availableModels, setAvailableModels] = useState<ModelConfig[]>([]);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [memoryContext, setMemoryContext] = useState<MemoryContextInfo>({ hasMemory: false, reportCount: 0 });
   const [showCBTModal, setShowCBTModal] = useState(false);
@@ -115,17 +105,6 @@ export default function ChatPage() {
     }
   }, []);
 
-  // Model-specific token limits (memoized for performance)
-  const getModelMaxTokens = useCallback((modelName: string): number => {
-    // First check if we have the model in our available models list
-    const modelInfo = availableModels.find(m => m.id === modelName);
-    if (modelInfo && modelInfo.maxTokens) {
-      return modelInfo.maxTokens;
-    }
-    
-    // Fallback to default limit if model not found in API data
-    return 8192;
-  }, [availableModels]);
 
   // Load sessions from database on component mount (memoized)
   const loadSessions = useCallback(async () => {
@@ -296,81 +275,8 @@ export default function ChatPage() {
   }, []);
 
 
-  // Load saved model settings
-  useEffect(() => {
-    const savedModelSettings = localStorage.getItem('modelSettings');
-    if (savedModelSettings) {
-      try {
-        const settings = JSON.parse(savedModelSettings);
-        if (settings.model) setModel(settings.model);
-        if (settings.temperature !== undefined) setTemperature(settings.temperature);
-        if (settings.maxTokens !== undefined) setMaxTokens(settings.maxTokens);
-        if (settings.topP !== undefined) setTopP(settings.topP);
-        if (settings.browserSearchEnabled !== undefined) setBrowserSearchEnabled(settings.browserSearchEnabled);
-        if (settings.reasoningEffort) setReasoningEffort(settings.reasoningEffort);
-      } catch (error) {
-        console.error('Failed to load model settings:', error);
-      }
-    }
-  }, []);
 
-  // Fetch available models
-  useEffect(() => {  
-    const abortController = new AbortController();
-    
-    fetch('/api/models', { signal: abortController.signal })
-      .then(res => res.json())
-      .then(data => {
-        if (data.models) {
-          setAvailableModels(data.models);
-          
-          // Migration: Fix old kimi model ID to new one
-          let currentModel = model;
-          if (currentModel === 'kimi/kimi-k2-instruct') {
-            currentModel = 'moonshotai/kimi-k2-instruct';
-            setModel(currentModel);
-          }
-          
-          // Check if current model exists and update maxTokens accordingly
-          const currentModelData = data.models.find((m: ModelConfig) => m.id === currentModel);
-          if (currentModelData) {
-            // Model exists, ensure maxTokens doesn't exceed its limit
-            if (maxTokens > currentModelData.maxTokens) {
-              setMaxTokens(currentModelData.maxTokens);
-            }
-          } else if (data.models.length > 0) {
-            // Model doesn't exist, switch to first available model
-            const firstModel = data.models[0];
-            setModel(firstModel.id);
-            setMaxTokens(firstModel.maxTokens);
-          }
-        }
-      })
-      .catch(error => {
-        if (error.name !== 'AbortError') {
-          console.error('Failed to fetch models:', error);
-          // Fallback to basic models if API fails
-          setAvailableModels([
-            { id: 'openai/gpt-oss-120b', name: 'GPT OSS 120B', provider: 'OpenAI', maxTokens: 32000, category: 'featured' },
-            { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant', provider: 'Meta', maxTokens: 32000, category: 'production' },
-            { id: 'gemma2-9b-it', name: 'Gemma 2 9B', provider: 'Google', maxTokens: 8192, category: 'production' },
-            { id: 'moonshotai/kimi-k2-instruct', name: 'Kimi K2 Instruct', provider: 'Moonshot', maxTokens: 16000, category: 'preview' }
-          ]);
-        }
-      });
 
-    return () => abortController.abort();
-  }, [model, maxTokens]);
-
-  // Update maxTokens when model changes or available models data loads
-  useEffect(() => {
-    if (availableModels.length > 0) {
-      const modelLimit = getModelMaxTokens(model);
-      if (maxTokens > modelLimit) {
-        setMaxTokens(modelLimit);
-      }
-    }
-  }, [model, availableModels, getModelMaxTokens, maxTokens]);
 
   // Mobile detection with dynamic resize handling and iOS viewport fixes
   useEffect(() => {
@@ -428,18 +334,6 @@ export default function ChatPage() {
     };
   }, []);
 
-  // Save model settings to localStorage whenever they change
-  useEffect(() => {
-    const modelSettings = {
-      model,
-      temperature,
-      maxTokens,
-      topP,
-      browserSearchEnabled,
-      reasoningEffort
-    };
-    localStorage.setItem('modelSettings', JSON.stringify(modelSettings));
-  }, [model, temperature, maxTokens, topP, browserSearchEnabled, reasoningEffort]);
 
 
   // Set current session for cross-device continuity (memoized)
@@ -570,12 +464,12 @@ export default function ChatPage() {
           })),
           sessionId: sessionId,
           apiKey: apiKey,
-          model: model,
-          temperature: temperature,
-          maxTokens: maxTokens,
-          topP: topP,
-          browserSearchEnabled: browserSearchEnabled,
-          reasoningEffort: reasoningEffort
+          model: 'openai/gpt-oss-20b',
+          temperature: 0.6,
+          maxTokens: 30000,
+          topP: 1,
+          browserSearchEnabled: true,
+          reasoningEffort: 'medium'
         }),
       });
 
@@ -637,7 +531,7 @@ export default function ChatPage() {
         showToast({
           type: 'error',
           title: 'Model Not Available',
-          message: `The selected model "${model}" is not available. Please choose a different model in the settings panel.`
+          message: 'The selected model is not available. Please try again.'
         });
       } else if (errorMessage.includes('Failed to fetch')) {
         showToast({
@@ -653,7 +547,7 @@ export default function ChatPage() {
         });
       }
     }
-  }, [input, isLoading, apiKey, hasEnvApiKey, model, messages, currentSession, showToast, temperature, maxTokens, topP, browserSearchEnabled, reasoningEffort, saveMessage, setCurrentSessionAndSync]);
+  }, [input, isLoading, apiKey, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync]);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -695,7 +589,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           sessionId: currentSession,
           messages: messages.filter(msg => !msg.content.startsWith('📊 **Session Report**')), // Exclude previous reports
-          model: model
+          model: 'openai/gpt-oss-120b'
         }),
       });
 
@@ -829,12 +723,12 @@ export default function ChatPage() {
           })),
           sessionId: sessionId,
           apiKey: apiKey,
-          model: model,
-          temperature: temperature,
-          maxTokens: maxTokens,
-          topP: topP,
-          browserSearchEnabled: browserSearchEnabled,
-          reasoningEffort: reasoningEffort
+          model: 'openai/gpt-oss-120b',
+          temperature: 0.6,
+          maxTokens: 30000,
+          topP: 1,
+          browserSearchEnabled: true,
+          reasoningEffort: 'medium'
         }),
       });
 
@@ -895,7 +789,7 @@ export default function ChatPage() {
         showToast({
           type: 'error',
           title: 'Model Not Available',
-          message: `The selected model "${model}" is not available. Please choose a different model in the settings panel.`
+          message: 'The selected model is not available. Please try again.'
         });
       } else if (errorMessage.includes('Failed to fetch')) {
         showToast({
@@ -907,11 +801,11 @@ export default function ChatPage() {
         showToast({
           type: 'error',
           title: 'Message Failed',
-          message: 'Failed to send CBT diary. Please check your API key and settings.'
+          message: 'Failed to send CBT diary. Please check your API key.'
         });
       }
     }
-  }, [isLoading, apiKey, hasEnvApiKey, model, messages, currentSession, showToast, temperature, maxTokens, topP, browserSearchEnabled, reasoningEffort, saveMessage, setCurrentSessionAndSync, setSessions]);
+  }, [isLoading, apiKey, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, setSessions]);
 
   return (
     <AuthGuard>
@@ -1063,178 +957,35 @@ export default function ChatPage() {
           }
         </div>
 
-        {/* Settings Panel */}
-        <div className="p-4 border-t border-border/50 bg-gradient-to-t from-muted/30 to-transparent dark:from-muted/10">
-          <Button
-            variant="ghost"
-            onClick={() => setShowSettings(!showSettings)}
-            className="w-full justify-start gap-2 text-foreground hover:text-foreground hover:bg-muted/50 dark:hover:bg-muted/30 transition-all"
-          >
-            <Settings className="w-4 h-4" />
-            <span className="font-medium">Settings</span>
-          </Button>
-          
-          {showSettings && (
-            <div className="mt-4 space-y-4">
-              {hasEnvApiKey ? (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                  <div className="text-sm font-medium text-green-800 mb-1">
-                    ✓ API Key Configured
-                  </div>
-                  <div className="text-xs text-green-700">
-                    Using GROQ_API_KEY from environment variable
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <label className="text-sm font-medium block mb-1">
-                    Groq API Key
-                  </label>
-                  <input
-                    type="password"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="Enter your Groq API key"
-                    className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background"
-                  />
-                  {!apiKey && (
-                    <div className="text-xs text-orange-600 mt-1">
-                      ⚠ API key required for chat functionality
-                    </div>
-                  )}
-                  {apiKey && (
-                    <div className="text-xs text-green-600 mt-1">
-                      ✓ API key provided
-                    </div>
-                  )}
+        {/* Simple API Key Input */}
+        {!hasEnvApiKey && (
+          <div className="p-4 border-t border-border/50 bg-gradient-to-t from-muted/30 to-transparent dark:from-muted/10">
+            <div className="space-y-2">
+              <label className="text-sm font-medium block">
+                Groq API Key
+              </label>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Enter your Groq API key"
+                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background"
+              />
+              {!apiKey && (
+                <div className="text-xs text-orange-600">
+                  ⚠ API key required for chat functionality
                 </div>
               )}
-              
-              <div>
-                <label className="text-sm font-medium block mb-1">
-                  Model
-                </label>
-                <select
-                  value={model}
-                  onChange={(e) => setModel(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background"
-                >
-                  {availableModels.length === 0 ? (
-                    <option disabled>Loading models...</option>
-                  ) : (
-                    availableModels.map((modelOption) => (
-                      <option key={modelOption.id} value={modelOption.id}>
-                        {modelOption.id} {modelOption.maxTokens ? `(${(modelOption.maxTokens / 1000).toFixed(0)}K tokens)` : ''}
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium block mb-1">
-                  Temperature: {temperature}
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="2"
-                  step="0.1"
-                  value={temperature}
-                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                  className="w-full"
-                />
-                <div className="text-xs text-muted-foreground mt-1">
-                  Controls randomness (0 = focused, 2 = creative)
+              {apiKey && (
+                <div className="text-xs text-green-600">
+                  ✓ API key provided
                 </div>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium block mb-1">
-                  Max Tokens: {maxTokens.toLocaleString()} / {getModelMaxTokens(model).toLocaleString()}
-                </label>
-                <input
-                  type="range"
-                  min="256"
-                  max={getModelMaxTokens(model)}
-                  step="512"
-                  value={maxTokens}
-                  onChange={(e) => setMaxTokens(parseInt(e.target.value))}
-                  className="w-full"
-                />
-                <div className="text-xs text-muted-foreground mt-1">
-                  Maximum response length for {model.split('/').pop()}: {getModelMaxTokens(model).toLocaleString()} tokens
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium block mb-1">
-                  Top P: {topP}
-                </label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1"
-                  step="0.05"
-                  value={topP}
-                  onChange={(e) => setTopP(parseFloat(e.target.value))}
-                  className="w-full"
-                />
-                <div className="text-xs text-muted-foreground mt-1">
-                  Nucleus sampling threshold
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium block mb-2">
-                  Browser Search
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="browserSearch"
-                    checked={browserSearchEnabled}
-                    onChange={(e) => setBrowserSearchEnabled(e.target.checked)}
-                    className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary"
-                  />
-                  <label htmlFor="browserSearch" className="text-sm text-muted-foreground">
-                    Enable web search capabilities
-                  </label>
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Allow AI to search the web for current information
-                  {(() => {
-                    const supportedModels = ['gpt-oss-120b', 'gpt-oss-20b', 'llama-3.1', 'llama3-groq-70b-8192-tool-use-preview'];
-                    const isSupported = supportedModels.some(supported => model.includes(supported));
-                    return !isSupported && (
-                      <span className="text-orange-600 block mt-1">
-                        ⚠ Current model ({model.split('/').pop()}) may not support browser search
-                      </span>
-                    );
-                  })()}
-                </div>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium block mb-1">
-                  Reasoning Effort: {reasoningEffort}
-                </label>
-                <select
-                  value={reasoningEffort}
-                  onChange={(e) => setReasoningEffort(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background"
-                >
-                  <option value="low">Low - Fast responses</option>
-                  <option value="medium">Medium - Balanced reasoning</option>
-                  <option value="high">High - Deep analysis</option>
-                </select>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Controls how much time AI spends reasoning about responses
-                </div>
-              </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+
       </aside>
 
       {/* Main Chat Area */}

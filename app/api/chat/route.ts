@@ -7,7 +7,7 @@ import { handleAIError } from '@/lib/error-utils';
 
 export async function POST(request: NextRequest) {
   const requestContext = createRequestLogger(request);
-  let model = 'openai/gpt-oss-120b'; // Default model value accessible in catch block
+  let model = 'openai/gpt-oss-20b'; // Default to fast model for regular chat
   
   try {
     // Validate authentication first
@@ -31,8 +31,18 @@ export async function POST(request: NextRequest) {
       sessionId
     } = requestData;
     
-    // Override default model if provided
-    model = requestData.model || model;
+    // Smart model selection based on content
+    const lastMessage = messages[messages.length - 1]?.content || '';
+    const isCBTOrDiary = lastMessage.includes('CBT Thought Record') || 
+                        lastMessage.includes('**Situation:**') ||
+                        lastMessage.includes('**Thoughts:**') ||
+                        lastMessage.includes('**Emotions:**') ||
+                        lastMessage.includes('**Physical Sensations:**') ||
+                        lastMessage.includes('**Behaviors:**') ||
+                        requestData.model === 'openai/gpt-oss-120b';
+    
+    // Use gpt-oss-120b for CBT/diary analysis, gpt-oss-20b for regular chat
+    model = isCBTOrDiary ? 'openai/gpt-oss-120b' : 'openai/gpt-oss-20b';
 
     // Log the actual settings being used
     logger.info('Using chat settings', {
@@ -71,6 +81,12 @@ export async function POST(request: NextRequest) {
     let memoryContext: MemoryContext[] = [];
     if (sessionId) {
       try {
+        logger.info('Fetching therapeutic memory context', {
+          ...requestContext,
+          sessionId,
+          memoryEndpoint: `/api/reports/memory?excludeSessionId=${sessionId}&limit=3`
+        });
+        
         const memoryResponse = await fetch(`${request.nextUrl.origin}/api/reports/memory?excludeSessionId=${sessionId}&limit=3`, {
           method: 'GET',
           headers: {
@@ -83,21 +99,69 @@ export async function POST(request: NextRequest) {
           if (memoryData.success && memoryData.memoryContext) {
             memoryContext = memoryData.memoryContext;
             
-            logger.info('Memory context loaded for therapeutic continuity', {
+            // Enhanced logging with memory statistics
+            const memoryStats = {
+              totalReportsFound: memoryData.stats?.totalReportsFound || 0,
+              successfullyDecrypted: memoryData.stats?.successfullyDecrypted || memoryContext.length,
+              failedDecryptions: memoryData.stats?.failedDecryptions || 0,
+              memoryContextCount: memoryContext.length,
+              totalMemoryLength: memoryContext.reduce((acc, m) => acc + m.content.length, 0),
+              totalSummaryLength: memoryContext.reduce((acc, m) => acc + m.summary.length, 0),
+              sessionTitles: memoryContext.map(m => m.sessionTitle),
+              sessionDates: memoryContext.map(m => m.sessionDate)
+            };
+            
+            logger.info('Therapeutic memory context loaded successfully', {
               ...requestContext,
               sessionId,
-              memoryContextCount: memoryContext.length,
-              totalMemoryLength: memoryContext.reduce((acc, m) => acc + m.content.length, 0)
+              ...memoryStats
+            });
+            
+            // Log individual memory entries for debugging
+            memoryContext.forEach((memory, index) => {
+              logger.info(`Memory context ${index + 1}`, {
+                ...requestContext,
+                sessionId,
+                memorySessionTitle: memory.sessionTitle,
+                memorySessionDate: memory.sessionDate,
+                memoryReportDate: memory.reportDate,
+                summaryLength: memory.summary.length,
+                contentLength: memory.content.length
+              });
+            });
+            
+          } else {
+            logger.warn('Memory response successful but no memory context found', {
+              ...requestContext,
+              sessionId,
+              responseData: {
+                success: memoryData.success,
+                hasMemoryContext: !!memoryData.memoryContext,
+                memoryContextLength: memoryData.memoryContext?.length || 0
+              }
             });
           }
+        } else {
+          const errorText = await memoryResponse.text();
+          logger.error('Memory endpoint returned error response', {
+            ...requestContext,
+            sessionId,
+            memoryResponseStatus: memoryResponse.status,
+            memoryResponseError: errorText.substring(0, 200)
+          });
         }
       } catch (memoryError) {
-        logger.warn('Failed to fetch memory context, proceeding without it', {
+        logger.error('Failed to fetch memory context, proceeding without it', {
           ...requestContext,
           error: memoryError instanceof Error ? memoryError.message : 'Unknown error',
+          errorStack: memoryError instanceof Error ? memoryError.stack : undefined,
           sessionId
         });
       }
+    } else {
+      logger.info('No sessionId provided, skipping memory context loading', {
+        ...requestContext
+      });
     }
 
     // Build memory-enhanced system prompt
@@ -130,38 +194,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Add browser search tools if enabled (only for compatible models)
-    if (browserSearchEnabled) {
-      // List of models known to support browser search tools
-      const toolsSupportedModels = [
-        'openai/gpt-oss-120b',
-        'openai/gpt-oss-20b',
-        'llama-3.1-70b-versatile',
-        'llama-3.1-8b-instant',
-        'llama3-groq-70b-8192-tool-use-preview'
-      ];
-      
-      const supportsTools = toolsSupportedModels.some(supportedModel => 
-        model.includes(supportedModel.split('/').pop() || supportedModel)
-      );
-      
-      if (supportsTools) {
-        completionParams.tools = [{"type": "browser_search"}];
-        logger.info('Browser search enabled for compatible model', {
-          ...requestContext,
-          model,
-          supportsTools
-        });
-      } else {
-        logger.warn('Browser search requested but model does not support tools', {
-          ...requestContext,
-          model,
-          browserSearchEnabled,
-          supportedModels: toolsSupportedModels
-        });
-        // Add a note to the system prompt instead
-        completionParams.messages[0].content += '\n\nNote: The user requested web search capabilities, but this model does not support live web browsing. Please let the user know if you need current information that might require web search.';
-      }
+    // Enable browser search tools for OpenAI models (always enabled)
+    if (browserSearchEnabled && (model.includes('openai/gpt-oss'))) {
+      completionParams.tools = [{"type": "browser_search"}];
+      logger.info('Browser search enabled for OpenAI model', {
+        ...requestContext,
+        model,
+        browserSearchEnabled: true
+      });
     }
 
     // Create completion with enhanced error handling

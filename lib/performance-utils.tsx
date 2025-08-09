@@ -90,12 +90,8 @@ export const LazyCSBTDiaryModal = createLazyComponent(
 );
 
 /**
- * Lazy loaded settings panel for non-critical functionality
+ * Settings panel removed - models are now automatically selected based on content
  */
-export const LazySettingsPanel = createLazyComponent(
-  () => import('@/components/chat/settings-panel'),
-  'SettingsPanel'
-);
 
 /**
  * Lazy loaded security settings for administrative features
@@ -377,10 +373,7 @@ export const preloadTherapeuticComponents = () => {
     'CBTDiaryModal'
   );
   
-  preloadComponent(
-    () => import('@/components/chat/settings-panel'),
-    'SettingsPanel'
-  );
+  // Settings panel removed - models are now automatically selected
 };
 
 // Development-only performance reporting

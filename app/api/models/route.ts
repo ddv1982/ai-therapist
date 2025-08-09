@@ -1,69 +1,37 @@
 import { NextResponse } from 'next/server';
-import { Groq } from 'groq-sdk';
 
-interface GroqModel {
-  id: string;
-  owned_by?: string;
-  active: boolean;
-  context_window?: number;
-  created?: number;
-  object?: string;
-}
-
+// Simple endpoint that returns hardcoded model information
+// Since we use fixed models now, no need to query Groq API
 export async function GET() {
   try {
-    const groqApiKey = process.env.GROQ_API_KEY;
-    
-    if (!groqApiKey) {
-      return NextResponse.json(
-        { error: 'API key not configured' },
-        { status: 500 }
-      );
-    }
-
-    const groq = new Groq({ apiKey: groqApiKey });
-    const models = await groq.models.list();
-    
-    // Custom token limits: 30000 default, keep lower values, Kimi to 16000
-    const getCustomMaxTokens = (modelId: string, apiMaxTokens: number): number => {
-      // Special case for Kimi models
-      if (modelId.includes('kimi')) {
-        return 16000;
+    const availableModels = [
+      { 
+        id: 'openai/gpt-oss-20b', 
+        name: 'GPT OSS 20B (Fast)', 
+        provider: 'OpenAI', 
+        maxTokens: 30000, 
+        category: 'production',
+        description: 'Fast model for regular conversations'
+      },
+      { 
+        id: 'openai/gpt-oss-120b', 
+        name: 'GPT OSS 120B (Deep Analysis)', 
+        provider: 'OpenAI', 
+        maxTokens: 30000, 
+        category: 'featured',
+        description: 'Advanced model for CBT analysis and session reports'
       }
-      
-      // If API reports a value lower than 30000, keep the lower value
-      if (apiMaxTokens && apiMaxTokens < 30000) {
-        return apiMaxTokens;
-      }
-      
-      // Otherwise set to 30000
-      return 30000;
-    };
-
-    // Filter and format models for the UI  
-    const availableModels = models.data
-      .filter((model) => (model as GroqModel).active)
-      .map((model) => {
-        const groqModel = model as GroqModel;
-        const apiMaxTokens = groqModel.context_window || 4096;
-        return {
-          id: groqModel.id,
-          name: groqModel.id,
-          provider: groqModel.owned_by || 'groq',
-          maxTokens: getCustomMaxTokens(groqModel.id, apiMaxTokens),
-          active: groqModel.active
-        };
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
+    ];
 
     return NextResponse.json({
       models: availableModels,
-      total: availableModels.length
+      total: availableModels.length,
+      note: 'Models are now automatically selected based on content type'
     });
   } catch (error) {
-    console.error('Failed to fetch models:', error);
+    console.error('Failed to return model info:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch available models' },
+      { error: 'Failed to get model information' },
       { status: 500 }
     );
   }

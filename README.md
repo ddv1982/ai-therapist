@@ -13,6 +13,7 @@ A modern, responsive therapeutic AI application built with Next.js 14, providing
 
 ### 💬 Chat Experience
 - **Real-time Streaming** - AI responses stream in real-time
+- **Smart Typing Indicators** - Shows exactly where AI response will appear (not at bottom)
 - **Markdown Support** - Rich text formatting in AI responses
 - **Session Management** - Create, save, and switch between therapy sessions
 - **Mobile-Optimized Layout** - Full-width messages on mobile for better readability
@@ -29,11 +30,11 @@ A modern, responsive therapeutic AI application built with Next.js 14, providing
 - **TOTP Authentication** - Secure two-factor authentication with device trust
 - **Cross-Device Sessions** - Unified session access across all devices
 - **CSRF Protection** - Cryptographically signed tokens for API security
-- **Multiple AI Models** - Support for various Groq AI models
+- **Smart AI Model Selection** - Automatic model switching based on content type
 - **API Key Flexibility** - Environment variable or UI-based API key configuration
-- **Advanced AI Settings** - Temperature, tokens, top-p, reasoning effort, and browser search
-- **High-Performance AI** - Uses OpenAI GPT OSS 120B with advanced reasoning capabilities  
-- **Web Search Integration** - Optional browser search for current information and facts
+- **Dual-Model Architecture** - Fast model for chat, analytical model for CBT/reports
+- **High-Performance AI** - OpenAI GPT OSS models with browser search capabilities  
+- **Web Search Integration** - Built-in browser search tools for current information
 - **Lazy Session Creation** - Sessions only created when user sends first message
 
 ## 🚀 Quick Start
@@ -67,7 +68,7 @@ A modern, responsive therapeutic AI application built with Next.js 14, providing
    
    **Method 2: UI Configuration**
    - Leave environment variable empty
-   - Enter API key in the Settings panel within the app
+   - Enter API key in the simple input field in the sidebar
 
 4. **Initialize the database**
    ```bash
@@ -107,12 +108,11 @@ A modern, responsive therapeutic AI application built with Next.js 14, providing
 - Sidebar auto-closes when selecting a chat on mobile
 - Mobile-optimized authentication flow
 
-### Settings Configuration
-- **API Key**: Configure your Groq API key
-- **Model Selection**: Choose from available AI models
-- **Advanced Settings**: Adjust temperature, max tokens, and top-p values
-- **Theme Toggle**: Switch between light and dark modes
-- **Security Settings**: Manage trusted devices and backup codes
+### Simple Configuration
+- **API Key**: Configure your Groq API key (environment or sidebar input)
+- **Automatic Model Selection**: AI automatically chooses the best model for each task
+- **Theme Toggle**: Switch between light and dark modes in the sidebar
+- **Security**: TOTP authentication with device trust management
 
 ## 🛠 Development
 
@@ -217,20 +217,54 @@ NODE_ENV="development"
 ```
 
 ### API Key Configuration
-- **Environment Variable**: Set `GROQ_API_KEY` in `.env.local`
-- **UI Configuration**: Enter API key in Settings panel if environment variable not set
+- **Environment Variable**: Set `GROQ_API_KEY` in `.env.local` (recommended)
+- **UI Configuration**: Enter API key in sidebar input if environment variable not set
 - **Detection**: App automatically detects if environment variable exists
 
-### Model Configuration
-- **Default Model**: openai/gpt-oss-120b (high-performance reasoning model)
-- **Available Models**: All Groq models (Featured, Production, Preview)
-- **Token Limits**: Automatically enforced per model
-- **Advanced Settings**: 
-  - Temperature (0-2): Controls randomness in responses
-  - Max Tokens (256-30K): Response length limit
-  - Top P (0.1-1.0): Nucleus sampling threshold
-  - **Browser Search**: Enable web search capabilities for current information
-  - **Reasoning Effort**: Low/Medium/High - Controls AI reasoning depth
+### Smart Model Selection
+- **Dual-Model System**: Automatic model selection based on content type
+- **Fast Model**: `openai/gpt-oss-20b` for regular conversations (efficient)
+- **Analytical Model**: `openai/gpt-oss-120b` for CBT analysis and session reports
+- **Browser Search**: Built-in web search tools enabled for both models
+- **Content Detection**: Automatically detects CBT/diary content and switches to analytical model
+- **Automatic Fallback**: Returns to fast model after analytical tasks completed
+
+## 🧠 Intelligent Model Architecture
+
+### **Dual-Model System**
+The application uses an intelligent dual-model approach for optimal performance and cost efficiency:
+
+#### **🚀 Fast Model (openai/gpt-oss-20b)**
+- **Used for**: Regular conversations, casual therapy chats
+- **Benefits**: Fast response times, cost-efficient, great for general support
+- **Features**: Browser search tools enabled for current information
+
+#### **🔬 Analytical Model (openai/gpt-oss-120b)**
+- **Used for**: CBT Thought Records, session report generation, deep analysis
+- **Triggers**: Detects content with CBT markers (`**Situation:**`, `**Thoughts:**`, etc.)
+- **Benefits**: Advanced reasoning, detailed therapeutic insights
+- **Features**: Browser search tools and enhanced analytical capabilities
+
+#### **🔄 Smart Switching Logic**
+```
+User: "Hello, how are you?"
+→ Fast Model (gpt-oss-20b)
+
+User: [CBT Thought Record with structured fields]
+→ Analytical Model (gpt-oss-120b) 
+
+User: "Thank you for that analysis"
+→ Fast Model (gpt-oss-20b)
+
+Generate Session Report
+→ Analytical Model (gpt-oss-120b)
+```
+
+### **Benefits**
+- ⚡ **Faster responses** for regular conversations
+- 💰 **Cost efficient** - only use expensive model when needed
+- 🧠 **Deep analysis** when therapeutic content requires it
+- 🔄 **Seamless switching** - completely automatic and transparent
 
 ## 🛡️ Safety & Security Features
 

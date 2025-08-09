@@ -56,11 +56,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { sessionId, messages, model } = validation.data;
+    const { sessionId, messages } = validation.data;
+    
+    // Always use gpt-oss-120b for detailed session reports
+    const reportModel = 'openai/gpt-oss-120b';
 
     // Generate the human-readable session report using AI
-    console.log(`Generating session report using model: ${model}...`);
-    const completion = await generateSessionReport(messages as ReportMessage[], REPORT_GENERATION_PROMPT, model);
+    console.log(`Generating session report using model: ${reportModel}...`);
+    const completion = await generateSessionReport(messages as ReportMessage[], REPORT_GENERATION_PROMPT, reportModel);
     
     if (!completion) {
       return NextResponse.json(
@@ -71,14 +74,25 @@ export async function POST(request: NextRequest) {
 
     // Extract structured analysis data from the report
     console.log('Extracting structured analysis data...');
-    const analysisData = await extractStructuredAnalysis(completion, ANALYSIS_EXTRACTION_PROMPT, model);
+    const analysisData = await extractStructuredAnalysis(completion, ANALYSIS_EXTRACTION_PROMPT, reportModel);
     
     let parsedAnalysis: ParsedAnalysis = {};
     if (analysisData) {
       try {
-        parsedAnalysis = JSON.parse(analysisData) as ParsedAnalysis;
+        // Clean up the JSON string before parsing (remove markdown code blocks if present)
+        let cleanedAnalysisData = analysisData.trim();
+        if (cleanedAnalysisData.startsWith('```json')) {
+          cleanedAnalysisData = cleanedAnalysisData.replace(/```json\s*|\s*```/g, '');
+        }
+        if (cleanedAnalysisData.startsWith('```')) {
+          cleanedAnalysisData = cleanedAnalysisData.replace(/```\s*|\s*```/g, '');
+        }
+        
+        parsedAnalysis = JSON.parse(cleanedAnalysisData) as ParsedAnalysis;
+        console.log('Successfully parsed structured analysis data');
       } catch (error) {
         console.warn('Failed to parse structured analysis, using defaults:', error);
+        console.warn('Raw analysis data:', analysisData?.substring(0, 500));
         // Continue with empty analysis - the human-readable report is still valuable
       }
     }
@@ -118,19 +132,19 @@ export async function POST(request: NextRequest) {
         moodAssessment: parsedAnalysis.moodAssessment || '',
         progressNotes: parsedAnalysis.progressNotes || `Report generated on ${new Date().toISOString()}`,
         
-        // Enhanced psychological analysis fields (encrypted) - handle null values properly
-        ...(encryptedAnalysisData.cognitiveDistortions && { 
+        // Enhanced psychological analysis fields (encrypted) - safely handle all fields
+        ...(encryptedAnalysisData.cognitiveDistortions ? { 
           cognitiveDistortions: encryptedAnalysisData.cognitiveDistortions 
-        }),
-        ...(encryptedAnalysisData.schemaAnalysis && { 
+        } : {}),
+        ...(encryptedAnalysisData.schemaAnalysis ? { 
           schemaAnalysis: encryptedAnalysisData.schemaAnalysis 
-        }),
-        ...(encryptedAnalysisData.therapeuticFrameworks && { 
+        } : {}),
+        ...(encryptedAnalysisData.therapeuticFrameworks ? { 
           therapeuticFrameworks: encryptedAnalysisData.therapeuticFrameworks 
-        }),
-        ...(encryptedAnalysisData.recommendations && { 
+        } : {}),
+        ...(encryptedAnalysisData.recommendations ? { 
           recommendations: encryptedAnalysisData.recommendations 
-        }),
+        } : {}),
         analysisConfidence: parsedAnalysis.analysisConfidence || 75,
         analysisVersion: "enhanced_v1.0" // Track version for future updates
       };

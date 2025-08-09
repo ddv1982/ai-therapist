@@ -34,26 +34,43 @@ function VirtualizedMessageListComponent({
 
   return (
     <div className={containerClassName}>
-      {visibleMessages.map((message) => (
-        <div
-          key={message.id}
-          role="article"
-          aria-label={`Message from ${message.role}`}
-        >
-          <Message message={message} />
-        </div>
-      ))}
-      
-      {/* Streaming indicator */}
-      {isStreaming && (
-        <div className="flex justify-center items-center py-4">
-          <div className="flex space-x-2 animate-pulse">
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+      {visibleMessages.map((message, index) => {
+        const isLastMessage = index === visibleMessages.length - 1;
+        const isAssistantMessage = message.role === 'assistant';
+        const shouldShowTypingIndicator = isStreaming && isLastMessage && isAssistantMessage && message.content === '';
+        
+        return (
+          <div key={message.id}>
+            {/* Show typing indicator before empty assistant message */}
+            {shouldShowTypingIndicator && (
+              <div className="flex justify-start items-center py-2 mb-2 max-w-4xl mx-auto">
+                <div className="flex items-center gap-4">
+                  {/* Avatar placeholder */}
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 shadow-lg flex items-center justify-center">
+                    <div className="w-4 h-4 text-white">❤️</div>
+                  </div>
+                  {/* Typing dots */}
+                  <div className="flex space-x-2 animate-pulse">
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Only show message if it has content */}
+            {message.content && (
+              <div
+                role="article"
+                aria-label={`Message from ${message.role}`}
+              >
+                <Message message={message} />
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })}
     </div>
   );
 }

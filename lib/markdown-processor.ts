@@ -255,7 +255,7 @@ export function processMarkdown(text: string, _isUser: boolean = false): string 
     'div', 'a'
   ];
   
-  const allowedClasses = {
+  const allowedClasses: Record<string, string[]> = {
     'div': ['mobile-table-text', 'mobile-table-row', 'table-responsive', 'table-container'],
     '*': ['mobile-table-text', 'mobile-table-row']
   };
