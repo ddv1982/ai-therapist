@@ -167,7 +167,7 @@ describe('Groq Client', () => {
         ],
         model: 'openai/gpt-oss-120b',
         temperature: 0.3,
-        max_tokens: 2048,
+        max_tokens: 16384,
         top_p: 0.9,
         stream: false
       });
@@ -274,7 +274,7 @@ describe('Groq Client', () => {
         ],
         model: 'openai/gpt-oss-120b',
         temperature: 0.1,
-        max_tokens: 1024,
+        max_tokens: 8192,
         top_p: 0.8,
         stream: false
       });

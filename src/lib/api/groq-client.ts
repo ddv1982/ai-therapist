@@ -56,7 +56,7 @@ export const generateSessionReport = async (messages: ReportMessage[], systemPro
     messages: groqMessages,
     model: model,
     temperature: 0.3,
-    max_tokens: 2048,
+    max_tokens: 16384,
     top_p: 0.9,
     stream: false,
   });
@@ -80,7 +80,7 @@ export const extractStructuredAnalysis = async (reportContent: string, systemPro
     messages: groqMessages,
     model: model,
     temperature: 0.1, // Lower temperature for more consistent JSON output
-    max_tokens: 1024,
+    max_tokens: 8192,
     top_p: 0.8,
     stream: false,
   });
