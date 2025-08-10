@@ -133,7 +133,7 @@ A modern, responsive therapeutic AI application built with Next.js 14, providing
 - `npm run db:studio` - Open Prisma Studio database GUI
 
 #### Testing
-- `npm run test` - Run unit tests (856 tests, 98.3% pass rate, 84% coverage)
+- `npm run test` - Run unit tests (856 tests, 100% pass rate, 38.67% coverage)
 - `npm run test:watch` - Run tests in watch mode for development
 - `npm run test:coverage` - Generate comprehensive coverage report
 - `npm run test:all` - Run all available tests (comprehensive suite)
@@ -215,7 +215,7 @@ ai-therapist/
 │       ├── therapy.ts        # Therapy types
 │       └── report.ts         # Report types
 │
-├── __tests__/                 # Comprehensive test suite (856 tests, 98.3% pass rate)
+├── __tests__/                 # Comprehensive test suite (856 tests, 100% pass rate)
 │   ├── api/                   # API endpoint tests
 │   │   └── chat/              # Chat API tests
 │   ├── components/            # Component tests
@@ -246,7 +246,7 @@ ai-therapist/
 - **Stateless Operation**: Each message evaluated independently - no sticky model behavior
 - **3-Tier Priority System**: Deep thinking → Web search → Regular chat with automatic detection
 - **Unified Utilities**: Created `model-utils.ts` and `streaming-utils.ts` for clean separation
-- **Production Ready**: 98.3% test pass rate with comprehensive model selection coverage
+- **Production Ready**: 100% test pass rate with comprehensive model selection coverage
 
 #### Domain-Driven Design
 - **Clear Domain Separation**: Auth, API, Database, Therapy, UI, and Utils domains
@@ -257,13 +257,13 @@ ai-therapist/
 #### Modern Development Standards
 - **TypeScript Strict Mode**: Enhanced type safety and error prevention
 - **src/ Directory Structure**: Industry-standard Next.js organization
-- **Comprehensive Testing**: 856 unit tests with 98.3% pass rate and 84% coverage
+- **Comprehensive Testing**: 856 unit tests with 100% pass rate and 38.67% coverage
 - **Path Mapping**: Clean `@/` imports for better developer experience
 
 #### Testing Architecture
-- **84% Test Coverage** (up from 32% baseline)
-- **856 Total Tests** with focus on security and authentication
-- **98.3% Test Pass Rate** with comprehensive model selection testing
+- **38.67% Test Coverage** (focused on critical security and model selection)
+- **856 Total Tests** with focus on security and authentication  
+- **100% Test Pass Rate** with comprehensive model selection testing
 - **Domain-Based Test Organization**: Tests mirror source structure
 - **Jest + Testing Library**: Modern testing stack with TypeScript support
 
@@ -658,8 +658,8 @@ If you encounter any issues:
 **Build Issues**
 - Clear `.next` folder: `rm -rf .next`
 - Reinstall dependencies: `rm -rf node_modules && npm install`
-- Run tests: `npm test` to verify all 773 unit tests pass
-- Check test coverage: `npm run test:coverage` (target: 72%+ coverage)
+- Run tests: `npm test` to verify all 856 unit tests pass
+- Check test coverage: `npm run test:coverage` (38.67% focused coverage)
 
 **Session Migration**
 - Run migration script to consolidate device-specific sessions:
@@ -688,7 +688,7 @@ This therapeutic AI application now implements **enterprise-level security** sui
 - **Environment-Based Controls**: Production authentication enforced via environment detection
 
 #### **Testing & Quality Assurance**
-- **Comprehensive Test Suite**: 856 total tests (98.3% pass rate) with 84% code coverage
+- **Comprehensive Test Suite**: 856 total tests (100% pass rate) with 38.67% code coverage
 - **Security-Focused Testing**: Dedicated tests for encryption, authentication, and device fingerprinting
 - **Component Testing**: React Testing Library tests for all UI components
 - **API Testing**: Complete test coverage for authentication, chat, and streaming endpoints
@@ -697,7 +697,7 @@ This therapeutic AI application now implements **enterprise-level security** sui
 - **Domain-Based Test Organization**: Tests mirror the domain-driven source structure
 - **TypeScript Strict Mode**: Enhanced type safety prevents runtime errors
 - **Modern Testing Stack**: Jest, Testing Library with full TypeScript support
-- **Production Ready**: 98.3% test pass rate with stateless model selection coverage
+- **Production Ready**: 100% test pass rate with stateless model selection coverage
 
 #### **Database Security**
 - **SQLite Database**: Lightweight, embedded database with encryption
