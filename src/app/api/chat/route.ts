@@ -4,6 +4,7 @@ import { buildMemoryEnhancedPrompt, type MemoryContext } from '@/lib/therapy-pro
 import { logger, createRequestLogger } from '@/lib/logger';
 import { validateApiAuth, createAuthErrorResponse } from '@/lib/api-auth';
 import { handleAIError } from '@/lib/error-utils';
+import { supportsWebSearch, shouldUseWebSearch, selectModelForRequirements, shouldUseDeepThinking } from '@/lib/model-utils';
 
 export async function POST(request: NextRequest) {
   const requestContext = createRequestLogger(request);
@@ -31,48 +32,114 @@ export async function POST(request: NextRequest) {
       sessionId
     } = requestData;
     
-    // Smart model selection based on content
+    // ROBUST MODEL SELECTION - Requirement-based rather than text-guessing
     const lastMessage = messages[messages.length - 1]?.content || '';
+    const forceModel = requestData.model; // Allow manual model override
     
-    // Check for CBT/diary content patterns
-    const isCBTOrDiary = lastMessage.includes('CBT Thought Record') || 
-                        lastMessage.includes('**Situation:**') ||
-                        lastMessage.includes('**Thoughts:**') ||
-                        lastMessage.includes('**Emotions:**') ||
-                        lastMessage.includes('**Physical Sensations:**') ||
-                        lastMessage.includes('**Behaviors:**') ||
-                        requestData.model === 'openai/gpt-oss-120b';
+    // Extract conversation context for better analysis
+    const conversationContext = messages.slice(-3).map((m: { content: string }) => m.content);
     
-    // Check for web search request patterns
-    const webSearchPatterns = [
-      /search\s+for|look\s+up|find\s+information|research\s+(about|current|recent)/i,
-      /what\s+are\s+the\s+latest|current\s+research|recent\s+studies/i,
-      /find\s+me\s+information|look\s+up\s+current|search\s+online/i,
-      /what\s+does\s+current\s+research\s+say|recent\s+developments/i,
-      /search\s+the\s+web|browse\s+for|find\s+current/i
-    ];
+    let modelSelection;
+    let webSearchDetection;
+    let deepThinkingDetection;
     
-    const isWebSearchRequest = webSearchPatterns.some(pattern => 
-      pattern.test(lastMessage)
-    );
+    if (forceModel) {
+      // Manual override - respect user choice
+      modelSelection = { 
+        modelId: forceModel, 
+        displayName: forceModel, 
+        reason: 'Manual model override by user' 
+      };
+      webSearchDetection = { 
+        shouldUseWebSearch: supportsWebSearch(forceModel) && browserSearchEnabled,
+        reason: 'Based on manual model selection',
+        confidence: 'high' as const
+      };
+      deepThinkingDetection = {
+        shouldUseDeepThinking: false,
+        reason: 'Skipped due to manual model override',
+        confidence: 'high' as const
+      };
+    } else {
+      // 3-TIER PRIORITY SYSTEM: Stateless per-message evaluation
+      
+      // PRIORITY 1: Deep thinking detection (highest priority)
+      const deepThinkingDetection = shouldUseDeepThinking(lastMessage);
+      
+      if (deepThinkingDetection.shouldUseDeepThinking) {
+        // Deep analysis requested → use 120B without web search tools
+        modelSelection = {
+          modelId: 'openai/gpt-oss-120b',
+          displayName: 'GPT OSS 120B (Deep Analysis)',
+          reason: `Deep thinking requested: ${deepThinkingDetection.reason}`
+        };
+        webSearchDetection = {
+          shouldUseWebSearch: false,
+          reason: 'Deep thinking mode - no web search needed',
+          confidence: 'high' as const
+        };
+      } else {
+        // PRIORITY 2: Web search detection
+        webSearchDetection = shouldUseWebSearch(lastMessage, browserSearchEnabled);
+        
+        if (webSearchDetection.shouldUseWebSearch && browserSearchEnabled) {
+          // Web search needed → use 120B with web search tools
+          modelSelection = {
+            modelId: 'openai/gpt-oss-120b',
+            displayName: 'GPT OSS 120B (Deep Analysis + Web Search)',
+            reason: `Web search needed: ${webSearchDetection.reason}`
+          };
+        } else {
+          // PRIORITY 3: CBT analysis or regular chat → smart selection
+          modelSelection = selectModelForRequirements(lastMessage, webSearchDetection);
+        }
+      }
+    }
     
-    // Use gpt-oss-120b for CBT/diary analysis OR web search requests, gpt-oss-20b for regular chat
-    model = (isCBTOrDiary || isWebSearchRequest) ? 'openai/gpt-oss-120b' : 'openai/gpt-oss-20b';
+    model = modelSelection.modelId;
 
-    // Log the actual settings being used
-    logger.info('Using chat settings', {
+    // Enhanced decision chain logging for debugging
+    logger.info('Model selection decision chain', {
       ...requestContext,
-      model,
-      temperature,
-      maxTokens,
-      topP,
-      browserSearchEnabled,
-      reasoningEffort,
-      hasApiKey: !!apiKey,
-      modelSelectionReason: {
-        isCBTOrDiary,
-        isWebSearchRequest,
-        selectedModel: model
+      decisionChain: {
+        phase1_contentAnalysis: {
+          lastMessageLength: lastMessage.length,
+          lastMessagePreview: lastMessage.substring(0, 100),
+          stateless: true // No conversation context used
+        },
+        phase2_deepThinkingDetection: forceModel ? null : {
+          shouldUseDeepThinking: deepThinkingDetection?.shouldUseDeepThinking || false,
+          reason: deepThinkingDetection?.reason || 'Not evaluated (force model)',
+          confidence: deepThinkingDetection?.confidence || 'N/A'
+        },
+        phase3_webSearchDetection: {
+          shouldUseWebSearch: webSearchDetection.shouldUseWebSearch,
+          reason: webSearchDetection.reason,
+          confidence: webSearchDetection.confidence,
+          browserSearchEnabled,
+          userCanUseWebSearch: browserSearchEnabled
+        },
+        phase4_modelSelection: {
+          selectedModel: model,
+          displayName: modelSelection.displayName,
+          selectionReason: modelSelection.reason,
+          isForceModel: !!forceModel,
+          willUse120B: model === 'openai/gpt-oss-120b',
+          willUse20B: model === 'openai/gpt-oss-20b'
+        },
+        phase5_toolsDecision: {
+          webSearchToolsWillBeAdded: webSearchDetection.shouldUseWebSearch && supportsWebSearch(model),
+          modelSupportsWebSearch: supportsWebSearch(model),
+          webSearchRequested: webSearchDetection.shouldUseWebSearch,
+          finalDecision: webSearchDetection.shouldUseWebSearch && supportsWebSearch(model) ? 'ADD_WEB_SEARCH_TOOLS' : 'NO_TOOLS'
+        }
+      },
+      settings: {
+        temperature,
+        maxTokens,
+        topP,
+        reasoningEffort,
+        hasApiKey: !!apiKey
       }
     });
 
@@ -214,20 +281,41 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Enable browser search tools only for the larger model (openai/gpt-oss-120b)
-    if (browserSearchEnabled && model === 'openai/gpt-oss-120b') {
+    // PHASE 3: Add web search tools based on requirements detection
+    if (webSearchDetection.shouldUseWebSearch && supportsWebSearch(model)) {
       completionParams.tools = [{"type": "browser_search"}];
-      logger.info('Browser search enabled for larger OpenAI model', {
+      logger.info('Web search tools added - requirements satisfied', {
         ...requestContext,
         model,
-        browserSearchEnabled: true,
-        reason: isWebSearchRequest ? 'web_search_request' : (isCBTOrDiary ? 'cbt_content' : 'manual_selection')
+        modelDisplayName: modelSelection.displayName,
+        webSearchDetection: {
+          shouldUseWebSearch: webSearchDetection.shouldUseWebSearch,
+          reason: webSearchDetection.reason,
+          confidence: webSearchDetection.confidence
+        },
+        toolsAdded: ['browser_search']
       });
-    } else if (browserSearchEnabled && model === 'openai/gpt-oss-20b') {
-      logger.info('Browser search disabled for smaller model (performance optimization)', {
+    } else if (webSearchDetection.shouldUseWebSearch && !supportsWebSearch(model)) {
+      // This should theoretically never happen with the new logic since we select 120B when web search is needed
+      logger.warn('Web search needed but model does not support it - this indicates a logic error', {
         ...requestContext,
         model,
-        browserSearchEnabled: false
+        modelDisplayName: modelSelection.displayName,
+        webSearchDetection: {
+          shouldUseWebSearch: webSearchDetection.shouldUseWebSearch,
+          reason: webSearchDetection.reason,
+          confidence: webSearchDetection.confidence
+        },
+        issue: 'model_selection_logic_error'
+      });
+    } else {
+      logger.info('No web search tools needed', {
+        ...requestContext,
+        model,
+        webSearchDetection: {
+          shouldUseWebSearch: webSearchDetection.shouldUseWebSearch,
+          reason: webSearchDetection.reason
+        }
       });
     }
 
@@ -272,7 +360,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Convert Groq stream to Response stream
+    // Convert Groq stream to Response stream with model metadata
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
@@ -291,12 +379,28 @@ export async function POST(request: NextRequest) {
           // Filter out <think></think> tags from the complete response
           const filteredResponse = fullResponse.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
           
+          // Send model metadata as the first chunk (critical for model capture)
+          const modelMetadata = `data: ${JSON.stringify({
+            choices: [{ delta: { content: '' } }],
+            model: model,
+            model_info: {
+              name: model,
+              timestamp: new Date().toISOString(),
+              reliable: true,
+              is_metadata_chunk: true
+            }
+          })}\n\n`;
+          controller.enqueue(encoder.encode(modelMetadata));
+          
           // Send the filtered response in chunks to simulate streaming
           const chunkSize = 50; // Adjust for desired streaming speed
           for (let i = 0; i < filteredResponse.length; i += chunkSize) {
             const chunk = filteredResponse.slice(i, i + chunkSize);
             const response = `data: ${JSON.stringify({
-              choices: [{ delta: { content: chunk } }]
+              choices: [{ delta: { content: chunk } }],
+              model: model, // Ensure every chunk has model info
+              chunk_index: Math.floor(i / chunkSize),
+              has_content: chunk.length > 0
             })}\n\n`;
             controller.enqueue(encoder.encode(response));
             
@@ -313,7 +417,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    return new NextResponse(stream, {
+    return new Response(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',

@@ -9,7 +9,7 @@ export const POST = withValidation(
   messageSchema,
   async (request, context, validatedData) => {
     try {
-      const { sessionId, role, content } = validatedData;
+      const { sessionId, role, content, modelUsed } = validatedData;
 
       // Verify session belongs to this user
       const { valid } = await db.verifySessionOwnership(sessionId, context.userInfo.userId);
@@ -29,6 +29,7 @@ export const POST = withValidation(
           sessionId,
           role: encryptedMessageData.role,
           content: encryptedMessageData.content,
+          modelUsed,
           timestamp: encryptedMessageData.timestamp,
         },
       });
@@ -37,7 +38,10 @@ export const POST = withValidation(
         requestId: context.requestId,
         messageId: message.id,
         sessionId,
-        userId: context.userInfo.userId
+        userId: context.userInfo.userId,
+        role,
+        modelUsed: modelUsed || 'none',
+        hasModelInfo: !!modelUsed
       });
 
       // Return decrypted message for immediate use by client
@@ -46,6 +50,7 @@ export const POST = withValidation(
         sessionId: message.sessionId,
         role,
         content, // Return original unencrypted content
+        modelUsed,
         timestamp: message.timestamp,
         createdAt: message.createdAt
       };
@@ -91,6 +96,7 @@ export const GET = withValidation(
         sessionId: msg.sessionId,
         role: decryptedMessages[index].role,
         content: decryptedMessages[index].content,
+        modelUsed: msg.modelUsed,
         timestamp: decryptedMessages[index].timestamp,
         createdAt: msg.createdAt
       }));

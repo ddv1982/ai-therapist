@@ -21,6 +21,7 @@ import { ThemeToggle } from '@/components/ui/enhanced/theme-toggle';
 import { generateUUID } from '@/lib/utils';
 import { useToast } from '@/components/ui/primitives/toast';
 import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/memory-utils';
+import { handleStreamingResponse } from '@/lib/streaming-utils';
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
 import type { MessageData } from '@/components/messages/message';
 import { MobileDebugInfo } from '@/components/ui/layout/mobile-debug-info';
@@ -171,7 +172,7 @@ export default function ChatPage() {
   }, [logMobileError, showToast]);
 
   // Save message to database (memoized)
-  const saveMessage = useCallback(async (sessionId: string, role: 'user' | 'assistant', content: string) => {
+  const saveMessage = useCallback(async (sessionId: string, role: 'user' | 'assistant', content: string, modelUsed?: string) => {
     try {
       const response = await fetch('/api/messages', {
         method: 'POST',
@@ -182,6 +183,7 @@ export default function ChatPage() {
           sessionId,
           role,
           content,
+          modelUsed,
         }),
       });
 
@@ -467,7 +469,6 @@ export default function ChatPage() {
           })),
           sessionId: sessionId,
           apiKey: apiKey,
-          model: 'openai/gpt-oss-20b',
           temperature: 0.6,
           maxTokens: 30000,
           topP: 1,
@@ -480,50 +481,39 @@ export default function ChatPage() {
         throw new Error('Failed to send message');
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('No response body');
-
+      // Create AI message placeholder
       const aiMessage: Message = {
         id: generateUUID(),
         role: 'assistant',
         content: '',
         timestamp: new Date()
       };
-
       setMessages(prev => [...prev, aiMessage]);
 
-      let fullContent = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = new TextDecoder().decode(value);
-        const lines = chunk.split('\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-            try {
-              const data = JSON.parse(line.slice(6));
-              const content = data.choices?.[0]?.delta?.content || '';
-              if (content) {
-                fullContent += content;
-                setMessages(prev => prev.map(msg => 
-                  msg.id === aiMessage.id 
-                    ? { ...msg, content: fullContent }
-                    : msg
-                ));
-              }
-            } catch {
-              // Skip invalid JSON lines
-            }
-          }
+      // Use unified streaming handler
+      await handleStreamingResponse(response, {
+        onProgress: (content: string, modelUsed: string) => {
+          setMessages(prev => prev.map(msg => 
+            msg.id === aiMessage.id 
+              ? { ...msg, content, modelUsed }
+              : msg
+          ));
+        },
+        onComplete: async (fullContent: string, modelUsed: string) => {
+          // Save AI response to database with model information
+          await saveMessage(sessionId!, 'assistant', fullContent, modelUsed);
+          setIsLoading(false);
+        },
+        onError: (error: Error) => {
+          setIsLoading(false);
+          console.error('Streaming error:', error);
+          showToast({
+            type: 'error',
+            title: 'Streaming Error',
+            message: 'Failed to process AI response. Please try again.'
+          });
         }
-      }
-
-      setIsLoading(false);
-
-      // Save AI response to database
-      await saveMessage(sessionId!, 'assistant', fullContent);
+      });
     } catch (error) {
       setIsLoading(false);
       console.error('Error sending message:', error);
@@ -605,14 +595,15 @@ export default function ChatPage() {
             id: Date.now().toString(),
             role: 'assistant' as const,
             content: `📊 **Session Report**\n\n${result.reportContent}`,
-            timestamp: new Date()
+            timestamp: new Date(),
+            modelUsed: 'openai/gpt-oss-120b' // Reports use the larger model
           };
           
           setMessages(prev => [...prev, reportMessage]);
           
-          // Save the report message to database
+          // Save the report message to database with model information
           try {
-            await saveMessage(currentSession, 'assistant', reportMessage.content);
+            await saveMessage(currentSession, 'assistant', reportMessage.content, 'openai/gpt-oss-120b');
           } catch (error) {
             console.error('Failed to save report message:', error);
           }
@@ -726,7 +717,6 @@ export default function ChatPage() {
           })),
           sessionId: sessionId,
           apiKey: apiKey,
-          model: 'openai/gpt-oss-120b',
           temperature: 0.6,
           maxTokens: 30000,
           topP: 1,
@@ -739,50 +729,39 @@ export default function ChatPage() {
         throw new Error('Failed to send message');
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('No response body');
-
+      // Create AI message placeholder
       const aiMessage: Message = {
         id: generateUUID(),
         role: 'assistant',
         content: '',
         timestamp: new Date()
       };
-
       setMessages(prev => [...prev, aiMessage]);
 
-      let fullContent = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = new TextDecoder().decode(value);
-        const lines = chunk.split('\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-            try {
-              const data = JSON.parse(line.slice(6));
-              const content = data.choices?.[0]?.delta?.content || '';
-              if (content) {
-                fullContent += content;
-                setMessages(prev => prev.map(msg => 
-                  msg.id === aiMessage.id 
-                    ? { ...msg, content: fullContent }
-                    : msg
-                ));
-              }
-            } catch {
-              // Skip invalid JSON lines
-            }
-          }
+      // Use unified streaming handler
+      await handleStreamingResponse(response, {
+        onProgress: (content: string, modelUsed: string) => {
+          setMessages(prev => prev.map(msg => 
+            msg.id === aiMessage.id 
+              ? { ...msg, content, modelUsed }
+              : msg
+          ));
+        },
+        onComplete: async (fullContent: string, modelUsed: string) => {
+          // Save AI response to database with model information
+          await saveMessage(sessionId!, 'assistant', fullContent, modelUsed);
+          setIsLoading(false);
+        },
+        onError: (error: Error) => {
+          setIsLoading(false);
+          console.error('Streaming error:', error);
+          showToast({
+            type: 'error',
+            title: 'Streaming Error',
+            message: 'Failed to process AI response. Please try again.'
+          });
         }
-      }
-
-      setIsLoading(false);
-
-      // Save AI response to database
-      await saveMessage(sessionId!, 'assistant', fullContent);
+      });
     } catch (error) {
       setIsLoading(false);
       console.error('Error sending CBT message:', error);

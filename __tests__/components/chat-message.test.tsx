@@ -138,4 +138,60 @@ describe('ChatMessage Component', () => {
     // Check that a different timestamp is rendered 
     expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument()
   })
+
+  it('displays model name for assistant messages', () => {
+    const assistantMessage = {
+      ...mockMessage,
+      role: 'assistant' as const,
+      content: 'I can help with stress management techniques.',
+      modelUsed: 'openai/gpt-oss-20b'
+    }
+
+    render(<Message message={assistantMessage} />)
+    
+    // Check that model name is displayed for assistant messages
+    expect(screen.getByText(/GPT OSS 20B/)).toBeInTheDocument()
+  })
+
+  it('displays enhanced model name for larger models', () => {
+    const assistantMessage = {
+      ...mockMessage,
+      role: 'assistant' as const,
+      content: 'I can provide in-depth analysis of your CBT thought record.',
+      modelUsed: 'openai/gpt-oss-120b'
+    }
+
+    render(<Message message={assistantMessage} />)
+    
+    // Check that enhanced model name is displayed for larger models
+    expect(screen.getByText(/GPT OSS 120B \(Deep Analysis\)/)).toBeInTheDocument()
+  })
+
+  it('does not display model name for user messages', () => {
+    const userMessage = {
+      ...mockMessage,
+      role: 'user' as const,
+      modelUsed: 'openai/gpt-oss-20b' // Should not be displayed for user messages
+    }
+
+    render(<Message message={userMessage} />)
+    
+    // Check that model name is NOT displayed for user messages
+    expect(screen.queryByText(/GPT OSS 20B/)).not.toBeInTheDocument()
+  })
+
+  it('handles assistant messages without model information', () => {
+    const assistantMessage = {
+      ...mockMessage,
+      role: 'assistant' as const,
+      content: 'I can help with stress management techniques.'
+      // No modelUsed property
+    }
+
+    render(<Message message={assistantMessage} />)
+    
+    // Component should render without model info, no crash
+    expect(screen.getByText('I can help with stress management techniques.')).toBeInTheDocument()
+    expect(screen.queryByText(/GPT/)).not.toBeInTheDocument()
+  })
 })

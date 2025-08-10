@@ -44,6 +44,7 @@ model Message {
   sessionId String   @map("session_id")
   role      String // 'user' or 'assistant'
   content   String // Encrypted therapeutic message content
+  modelUsed String?  @map("model_used") // AI model used for assistant messages
   timestamp DateTime @default(now())
   createdAt DateTime @default(now()) @map("created_at")
 

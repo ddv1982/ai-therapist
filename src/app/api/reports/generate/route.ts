@@ -38,7 +38,16 @@ export async function POST(request: NextRequest) {
   const requestContext = createRequestLogger(request);
   
   try {
-    logger.info('Report generation request received', requestContext);
+    // Always use analytical model for detailed session reports
+    const reportModel = 'openai/gpt-oss-120b';
+    
+    logger.info('Report generation request received', {
+      ...requestContext,
+      modelUsed: reportModel,
+      modelDisplayName: 'GPT OSS 120B (Deep Analysis)',
+      selectionReason: 'Report generation requires analytical model',
+      reportGenerationFlow: true
+    });
     
     const body = await request.json();
     
@@ -57,12 +66,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { sessionId, messages } = validation.data;
-    
-    // Always use gpt-oss-120b for detailed session reports
-    const reportModel = 'openai/gpt-oss-120b';
 
     // Generate the human-readable session report using AI
-    console.log(`Generating session report using model: ${reportModel}...`);
+    logger.info('Generating session report with AI model', {
+      ...requestContext,
+      modelUsed: reportModel,
+      messageCount: messages.length,
+      reportGenerationStep: 'ai_generation'
+    });
+    
     const completion = await generateSessionReport(messages as ReportMessage[], REPORT_GENERATION_PROMPT, reportModel);
     
     if (!completion) {
@@ -167,10 +179,19 @@ export async function POST(request: NextRequest) {
       // Continue anyway - report generation is more important than storage
     }
 
+    logger.info('Session report generated successfully', {
+      ...requestContext,
+      modelUsed: reportModel,
+      reportLength: completion.length,
+      reportGenerationStep: 'completed_successfully'
+    });
+
     return NextResponse.json({ 
       success: true, 
       message: 'Report generated successfully',
-      reportContent: completion
+      reportContent: completion,
+      modelUsed: reportModel, // Include model info in response
+      modelDisplayName: 'GPT OSS 120B (Deep Analysis)'
     });
 
   } catch (error) {

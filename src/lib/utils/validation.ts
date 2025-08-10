@@ -83,6 +83,10 @@ export const messageSchema = z.object({
     .max(50000, 'Message content too long'),
   sessionId: z.string()
     .uuid('Invalid session ID format'),
+  modelUsed: z.string()
+    .min(1, 'Model name cannot be empty')
+    .max(100, 'Model name too long')
+    .optional(),
 });
 
 

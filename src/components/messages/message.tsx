@@ -15,6 +15,7 @@ interface MessageData {
   role: MessageRole;
   content: string;
   timestamp: Date;
+  modelUsed?: string;
 }
 
 interface MessageProps {
@@ -48,6 +49,7 @@ function MessageComponent({ message, variant: _variant = 'default', className }:
         <MessageTimestamp 
           timestamp={message.timestamp}
           role={message.role}
+          modelUsed={message.modelUsed}
         />
 
         {/* Message Actions (CBT Export) */}
@@ -72,6 +74,7 @@ export const Message = memo(MessageComponent, (prevProps, nextProps) => {
     prevMsg.content === nextMsg.content &&
     prevMsg.role === nextMsg.role &&
     prevMsg.timestamp.getTime() === nextMsg.timestamp.getTime() &&
+    prevMsg.modelUsed === nextMsg.modelUsed &&
     prevProps.variant === nextProps.variant
   );
 });

@@ -9,10 +9,11 @@ import { buildMessageClasses, type MessageRole } from '@/lib/design-system/messa
 interface MessageTimestampProps {
   timestamp: Date;
   role: MessageRole;
+  modelUsed?: string;
   className?: string;
 }
 
-export function MessageTimestamp({ timestamp, role, className }: MessageTimestampProps) {
+export function MessageTimestamp({ timestamp, role, modelUsed, className }: MessageTimestampProps) {
   const timestampClasses = buildMessageClasses(role, 'timestamp');
   
   const formattedTime = timestamp.toLocaleTimeString([], { 
@@ -20,9 +21,31 @@ export function MessageTimestamp({ timestamp, role, className }: MessageTimestam
     minute: '2-digit' 
   });
   
+  // Format model name for display
+  const formatModelName = (model?: string): string => {
+    if (!model) return '';
+    
+    // Convert from API format to user-friendly format
+    if (model === 'openai/gpt-oss-20b') {
+      return 'GPT OSS 20B';
+    } else if (model === 'openai/gpt-oss-120b') {
+      return 'GPT OSS 120B (Deep Analysis)';
+    }
+    
+    // Fallback to original name if format is unknown
+    return model.replace(/^[^/]+\//, '').toUpperCase();
+  };
+  
   return (
     <div className={cn(timestampClasses, className)}>
-      {formattedTime}
+      <div className="flex items-center gap-2 text-sm">
+        <span>{formattedTime}</span>
+        {role === 'assistant' && modelUsed && (
+          <span className="text-muted-foreground/70 text-xs">
+            • {formatModelName(modelUsed)}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

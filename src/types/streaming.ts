@@ -88,6 +88,8 @@ export interface StreamingMessageWrapperProps {
   onAnimationComplete?: (stage: StreamingStage) => void;
   /** Callback for content analysis results */
   onContentAnalysis?: (analysis: ContentAnalysisResult) => void;
+  /** Callback when scroll is requested during animation stages */
+  onScrollRequest?: (stage: StreamingStage) => void;
 }
 
 // Animation configuration interface
@@ -251,6 +253,7 @@ export interface BaseMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  modelUsed?: string;
 }
 
 // Streaming system integration with existing chat types
