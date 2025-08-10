@@ -21,69 +21,98 @@ export interface ValidationResult {
   exclusionReason?: string;           // Reason if excluded from analysis
 }
 
-// Patterns indicating emotional distress and therapeutic relevance
-const EMOTIONAL_DISTRESS_PATTERNS = [
-  // Direct emotional expressions
-  /I feel (so|really|extremely|incredibly|overwhelmingly)?\s?(scared|terrified|anxious|worried|depressed|sad|hopeless|worthless|ashamed|guilty|angry|furious|devastated|heartbroken)/i,
+// High-strength emotional distress patterns (3 points each)
+const HIGH_STRENGTH_DISTRESS_PATTERNS = [
+  // Direct emotional expressions with strong intensity
+  /I feel (extremely|incredibly|overwhelmingly|completely|totally|absolutely)\s?(scared|terrified|anxious|worried|depressed|sad|hopeless|worthless|ashamed|guilty|devastated|heartbroken)/i,
   
-  // Intensity amplifiers with emotions
-  /I'm (so|really|extremely|completely|totally|absolutely)\s?(worried|scared|anxious|sad|depressed|angry|frustrated|overwhelmed)/i,
+  // Direct terror/panic statements
+  /I'm (terrified|petrified|panicking)/i,
   
-  // Self-critical language with emotional weight
-  /(I'm such a|I'm so|I feel like such a)\s?(failure|idiot|loser|disappointment|burden|mess)/i,
-  
-  // Distress about consequences
-  /(I'm afraid|I'm terrified|I'm worried|I panic|I'm scared)\s?(that|about|of)/i,
-  
-  // Emotional reasoning patterns with distress
-  /(I feel like|it feels like|I can't shake the feeling)\s?(everything|everyone|nothing|nobody)/i,
+  // Strong self-critical language
+  /(I'm such a|I feel like such a)\s?(failure|idiot|loser|disappointment|burden|mess|fraud)/i,
+  /(complete|total|absolute|utter)\s?(failure|disaster|mess|loser)/i,
   
   // Catastrophic emotional language
   /(everything (is|feels)|my life is|I'm completely|this is) (falling apart|ruined|hopeless|pointless|a disaster|over)/i,
+  /(everything.*worthless|everything.*garbage|everything.*terrible)/i,
   
-  // Interpersonal anxiety with emotional weight
-  /(everyone (thinks|knows|sees)|nobody (cares|likes|understands)|I'm sure (they|people))\s?.*(about me|I'm|that I)/i,
+  // Fear-based distress about judgment  
+  /(I'm terrified|I'm petrified|I panic)\s?(that|about|of|everyone)/i,
   
-  // Additional therapeutic language patterns
-  /(I always|I never)\s.*(mess up|fail|screw up|ruin|worthless|incompetent|stupid)/i,
+  // Strong interpersonal anxiety with emotional weight
+  /(everyone (thinks|knows|sees)|I'm sure (they|people))\s?.*(I'm (bad|wrong|stupid|incompetent|worthless|a failure))/i,
   
-  // Emotional distress with self-critical "always/never"
+  // Strong emotional reasoning with distress
+  /(I feel like|I can't shake the feeling)\s?(everything|everyone|nothing|nobody).*(falling apart|against me|hopeless|ruined)/i,
+];
+
+// Medium-strength emotional distress patterns (2 points each)  
+const MEDIUM_STRENGTH_DISTRESS_PATTERNS = [
+  // Direct emotional expressions
+  /I feel (so|really)?\s?(scared|terrified|anxious|worried|depressed|sad|hopeless|worthless|ashamed|guilty|angry|furious)/i,
+  
+  // Intensity amplifiers with emotions
+  /I'm (so|really|completely|totally)\s?(worried|scared|anxious|sad|depressed|angry|frustrated|overwhelmed)/i,
+  
+  // Distress about consequences
+  /(I'm afraid|I'm worried|I'm scared)\s?(that|about|of)/i,
+  
+  // Therapeutic language with self-criticism
+  /(I always|I never)\s.*(mess up|fail|screw up|ruin|disappoint|hurt)/i,
+  
+  // Emotional distress with "always/never" patterns
   /(I'm worried|I'm scared|I feel like)\s.*(I always|I never|everyone|everything)/i,
   
-  // Struggling/dealing with emotional issues
+  // Struggling/dealing with issues
   /(I'm|I've been) (really )?struggling with/i,
-  /(I'm|I've been) dealing with.*anxiety|depression|stress|worry/i,
+  /(I'm|I've been) dealing with.*(anxiety|depression|stress|worry)/i,
   
+  // Fear of judgment and exposure  
+  /(everyone will see|everyone will think|everyone will know)\s.*(how|that I'm|I'm)\s.*(incompetent|stupid|worthless|a failure|bad|inadequate)/i,
+  
+  // Relationship and connection anxiety
+  /(I'll never find|nobody will ever|no one will ever)\s.*(love|care|understand|accept)/i,
+];
+
+// Low-strength distress patterns (1 point each)
+const LOW_STRENGTH_DISTRESS_PATTERNS = [
   // Spiraling and overwhelm patterns
   /spiraling into/i,
-  /(feeling|I feel) (really |so )?overwhelmed/i,
+  /(feeling|I feel) (really |so |quite )?overwhelmed/i,
   
-  // Sleep and focus impacts from emotional distress
+  // Sleep and focus impacts
   /(losing|I've lost) sleep (over|because)/i,
   /(affecting|impacting) my (focus|concentration|ability)/i,
   
   // Trapped in thoughts/feelings
-  /(trapped|stuck) in.*thoughts|feelings/i,
+  /(trapped|stuck) in.*(thoughts|feelings)/i,
   /can't find a way out/i,
   
   // Work and situational stress
   /(had|having) (some |a bit of |a lot of )?stress/i,
-  /(feeling|I feel) (a bit|really|so |quite )?overwhelmed/i,
   /wondering if I handled.*correctly/i,
   /meeting didn't go.*planned/i,
   
-  // Self-doubt and reflection patterns
+  // Self-doubt and reflection
   /(wondering|questioning) (if|whether) I/i,
   /(doubting|questioning) myself/i,
+  
+  // Worry-based patterns  
+  /(starting to worry|I'm worried|I worry)\s?(that|about)/i,
+];
+
+// Combined array for backward compatibility
+const EMOTIONAL_DISTRESS_PATTERNS = [
+  ...HIGH_STRENGTH_DISTRESS_PATTERNS,
+  ...MEDIUM_STRENGTH_DISTRESS_PATTERNS, 
+  ...LOW_STRENGTH_DISTRESS_PATTERNS
 ];
 
 // Patterns indicating neutral, non-therapeutic contexts
 const NEUTRAL_CONTEXT_PATTERNS = [
-  // Routine and habitual descriptions
-  /I (always|usually|typically|generally|normally|regularly)\s?(take|go|do|work|eat|sleep|wake up|leave|arrive)/i,
-  
-  // Organizational and planning contexts
-  /(I need to|I have to|I should|let's|we need to)\s?(organize|plan|coordinate|schedule|arrange|manage|handle|prepare)\s?(everything|all)/i,
+  // Routine and habitual descriptions - stronger patterns
+  /I (always|usually|typically|generally|normally|regularly)\s?(take|go|do|work|eat|sleep|wake up|leave|arrive)\s?(the|to|at|for)/i,
   
   // Factual observations without emotional weight
   /(everyone at the|all the people|everybody in the)\s?(meeting|conference|event|party|class|office)/i,
@@ -92,10 +121,11 @@ const NEUTRAL_CONTEXT_PATTERNS = [
   /(this|that|it)\s?(never|always|usually)\s?(works|functions|operates|runs|performs)/i,
   
   // Professional or academic contexts
-  /(I always|everyone|we should|they never)\s?(follow|use|implement|apply|consider|review|analyze|evaluate)/i,
+  /(everyone|we should|they never)\s?(follow|use|implement|apply|consider|review|analyze|evaluate)/i,
   
-  // Neutral planning language
-  /(we should|let's|I'll|I need to)\s?(make sure|ensure|check|verify|confirm)\s?(everything|all)/i,
+  // Neutral daily routine descriptions
+  /(daily routine|everyone knows)/i,
+  /(it's my|that's my)\s?(routine|habit|way|approach)/i,
 ];
 
 // Strong emotional amplifiers that increase therapeutic relevance
@@ -108,21 +138,25 @@ const EMOTIONAL_AMPLIFIERS = [
 
 // Context exclusion patterns for organizational/routine contexts
 const EXCLUSION_PATTERNS = [
-  // Work/professional organizing
-  /(project|meeting|presentation|deadline|work|office|team|colleagues?)\s.*(everything|everyone|always|never)/i,
+  // Work/professional organizing (only when no emotional distress words)
+  /(organize|coordinate|plan|handle|manage)\s.*(everything|all)\s.*(for|at)\s.*(project|meeting|presentation|deadline|work|office|team)/i,
   
-  // Event planning - more comprehensive
+  // Event planning - more comprehensive  
   /(party|event|wedding|celebration|conference|gathering|birthday)\s.*(organize|coordinate|plan|handle|manage)\s.*(everything|all|details)/i,
   /(organize|organizing|plan|planning|coordinate|coordinating)\s.*(everything|all)\s.*(for|at)\s.*(party|event|wedding|celebration|gathering)/i,
   
   // Routine descriptions
   /(commute|schedule|routine|habit|daily|weekly|monthly)\s.*(always|never|usually)/i,
   
-  // Technical/procedural contexts
-  /(system|process|procedure|method|approach|technique)\s.*(always|never|everyone)/i,
+  // Technical/procedural contexts - more specific to avoid factual observations
+  /(we should|let's|I'll|I need to)\s?(implement|use|follow)\s.*(system|process|procedure|method|approach|technique)/i,
   
   // Family/social event coordination
   /(family|social|birthday|graduation)\s.*(party|event|gathering|celebration)\s.*(organize|plan|coordinate|handle)/i,
+  
+  // Professional planning contexts (only neutral ones)
+  /(we should|let's|I'll|I need to)\s?(coordinate|organize|make sure|ensure)\s.*(all|everything)\s.*(details|project|team|requirements)/i,
+  /(need to|have to|should)\s?(organize|coordinate|plan)\s.*(everything|all)\s.*(for|at)\s.*(tonight|event|party)/i,
 ];
 
 /**
@@ -135,15 +169,39 @@ export function analyzeTherapeuticContext(content: string): ContextualAnalysis {
   const neutralContextFlags: string[] = [];
   const stressIndicators: string[] = [];
   
-  // Check for emotional distress patterns
+  // Check for emotional distress patterns with weighted scoring
   let distressMatches = 0;
-  for (const pattern of EMOTIONAL_DISTRESS_PATTERNS) {
+  
+  // High-strength patterns (3 points each)
+  for (const pattern of HIGH_STRENGTH_DISTRESS_PATTERNS) {
     const matches = content.match(pattern);
     if (matches) {
       distressMatches++;
-      emotionalIntensity += 2; // Each distress pattern adds intensity
-      stressIndicators.push(matches[0].substring(0, 50)); // Truncate for privacy
+      emotionalIntensity += 3; // High-strength distress patterns
+      stressIndicators.push(matches[0].substring(0, 50));
+      therapeuticRelevance += 3;
+    }
+  }
+  
+  // Medium-strength patterns (2 points each)
+  for (const pattern of MEDIUM_STRENGTH_DISTRESS_PATTERNS) {
+    const matches = content.match(pattern);
+    if (matches) {
+      distressMatches++;
+      emotionalIntensity += 2; // Medium-strength distress patterns
+      stressIndicators.push(matches[0].substring(0, 50));
       therapeuticRelevance += 2;
+    }
+  }
+  
+  // Low-strength patterns (1 point each)  
+  for (const pattern of LOW_STRENGTH_DISTRESS_PATTERNS) {
+    const matches = content.match(pattern);
+    if (matches) {
+      distressMatches++;
+      emotionalIntensity += 1; // Low-strength distress patterns
+      stressIndicators.push(matches[0].substring(0, 50));
+      therapeuticRelevance += 1;
     }
   }
   
@@ -184,22 +242,30 @@ export function analyzeTherapeuticContext(content: string): ContextualAnalysis {
   emotionalIntensity = Math.min(10, emotionalIntensity);
   therapeuticRelevance = Math.min(10, therapeuticRelevance);
   
-  // Determine context type with improved logic
+  // Determine context type with nuanced therapeutic priority logic
   let contextType: ContextualAnalysis['contextType'];
   
-  // Organizational context takes precedence when there are multiple organizational matches
-  if (organizationalMatches > 0 && emotionalIntensity < 5) {
-    contextType = 'organizational';
-  }
-  // Therapeutic context when emotional intensity is high regardless of some neutral flags
-  else if (emotionalIntensity >= 6 && therapeuticRelevance >= 5 && distressMatches > 0) {
+  // Strong therapeutic signals override any organizational context
+  if (emotionalIntensity >= 5 && therapeuticRelevance >= 4 && distressMatches > 0) {
     contextType = 'therapeutic';
   }
-  // Neutral context for routine/factual with low emotion
-  else if (neutralMatches > 0 && emotionalIntensity < 4 && distressMatches === 0) {
+  // Mixed context: has both organizational and emotional elements
+  else if (organizationalMatches > 0 && distressMatches > 0) {
+    contextType = 'ambiguous';
+  }
+  // Pure emotional distress without organizational elements
+  else if (emotionalIntensity >= 3 && distressMatches > 0 && organizationalMatches === 0) {
+    contextType = 'therapeutic';
+  }
+  // Pure organizational context only when NO emotional signals
+  else if (organizationalMatches > 0 && emotionalIntensity === 0 && distressMatches === 0) {
+    contextType = 'organizational';
+  }
+  // Neutral context for routine/factual with minimal emotion and no distress
+  else if (neutralMatches > 0 && emotionalIntensity < 2 && distressMatches === 0) {
     contextType = 'neutral';
   }
-  // Ambiguous for everything else
+  // Everything else is ambiguous
   else {
     contextType = 'ambiguous';
   }
@@ -228,12 +294,12 @@ export function analyzeTherapeuticContext(content: string): ContextualAnalysis {
 export function validateTherapeuticContext(content: string): ValidationResult {
   const contextualAnalysis = analyzeTherapeuticContext(content);
   
-  // Determine if context is valid for therapeutic analysis
+  // Determine if context is valid for therapeutic analysis with graduated thresholds
   const isValidTherapeuticContext = 
     contextualAnalysis.contextType === 'therapeutic' ||
     (contextualAnalysis.contextType === 'ambiguous' && 
-     contextualAnalysis.emotionalIntensity >= 5 && 
-     contextualAnalysis.therapeuticRelevance >= 5);
+     (contextualAnalysis.emotionalIntensity >= 1 || 
+      contextualAnalysis.therapeuticRelevance >= 1));
   
   // Calculate confidence adjustment multiplier
   let confidenceAdjustment = 1.0;
@@ -253,8 +319,8 @@ export function validateTherapeuticContext(content: string): ValidationResult {
       exclusionReason = 'Content appears in organizational/planning context without emotional distress';
     } else if (contextualAnalysis.neutralContextFlags.includes('routine_factual')) {
       exclusionReason = 'Content appears to be routine/factual description without therapeutic relevance';
-    } else if (contextualAnalysis.emotionalIntensity < 5) {
-      exclusionReason = 'Insufficient emotional intensity for therapeutic analysis';
+    } else if (contextualAnalysis.emotionalIntensity < 3 && contextualAnalysis.therapeuticRelevance < 4) {
+      exclusionReason = 'Insufficient emotional intensity or therapeutic relevance for analysis';
     }
   }
   
