@@ -455,6 +455,9 @@ export default function ChatPage() {
 
     // Save user message to database
     await saveMessage(sessionId!, 'user', userMessage.content);
+    
+    // Reload sessions to update message count in sidebar
+    await loadSessions();
 
     try {
       const response = await fetch('/api/chat', {
@@ -502,6 +505,10 @@ export default function ChatPage() {
         onComplete: async (fullContent: string, modelUsed: string) => {
           // Save AI response to database with model information
           await saveMessage(sessionId!, 'assistant', fullContent, modelUsed);
+          
+          // Reload sessions to update message count in sidebar
+          await loadSessions();
+          
           setIsLoading(false);
         },
         onError: (error: Error) => {
@@ -540,7 +547,7 @@ export default function ChatPage() {
         });
       }
     }
-  }, [input, isLoading, apiKey, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync]);
+  }, [input, isLoading, apiKey, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions]);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -604,6 +611,9 @@ export default function ChatPage() {
           // Save the report message to database with model information
           try {
             await saveMessage(currentSession, 'assistant', reportMessage.content, 'openai/gpt-oss-120b');
+            
+            // Reload sessions to update message count in sidebar
+            await loadSessions();
           } catch (error) {
             console.error('Failed to save report message:', error);
           }
@@ -703,6 +713,9 @@ export default function ChatPage() {
 
     // Save user message to database
     await saveMessage(sessionId!, 'user', cbtMessage.content);
+    
+    // Reload sessions to update message count in sidebar
+    await loadSessions();
 
     try {
       const response = await fetch('/api/chat', {
@@ -750,6 +763,10 @@ export default function ChatPage() {
         onComplete: async (fullContent: string, modelUsed: string) => {
           // Save AI response to database with model information
           await saveMessage(sessionId!, 'assistant', fullContent, modelUsed);
+          
+          // Reload sessions to update message count in sidebar
+          await loadSessions();
+          
           setIsLoading(false);
         },
         onError: (error: Error) => {
@@ -787,7 +804,7 @@ export default function ChatPage() {
         });
       }
     }
-  }, [isLoading, apiKey, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, setSessions]);
+  }, [isLoading, apiKey, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, setSessions, loadSessions]);
 
   return (
     <AuthGuard>
