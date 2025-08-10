@@ -11,8 +11,7 @@ import {
   assessSchemaReflectionDepth,
   hasUserQuantifiedAssessments,
   isBriefRequest,
-  analyzeContentMetrics,
-  type UserDataPriority as UtilUserDataPriority
+  analyzeContentMetrics
 } from './analysis-utils';
 import { validateTherapeuticContext, type ValidationResult } from '@/lib/therapy/context-validator';
 

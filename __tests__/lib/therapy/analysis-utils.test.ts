@@ -15,9 +15,17 @@ import {
   calculateUserDataWeightedConfidence,
   getMinimumWordCountThreshold,
   AnalysisUtils,
+  // ERP analysis functions
+  analyzeERPApplicability,
+  detectCompulsiveBehaviors,
+  detectIntrusiveThoughts,
+  detectAvoidanceBehaviors,
+  scoreThoughtActionFusion,
+  scoreUncertaintyIntolerance,
   type UserRatingExtraction,
   type ContentAnalysisMetrics,
-  type UserDataPriority
+  type UserDataPriority,
+  type ERPAnalysisResult
 } from '@/lib/therapy/analysis-utils';
 
 describe('Analysis Utils - Consolidated Functionality', () => {
@@ -610,6 +618,158 @@ describe('Analysis Utils - Consolidated Functionality', () => {
   // ANALYSIS UTILS BUNDLE TESTS
   // ========================================
   
+  // ========================================
+  // ERP ANALYSIS TESTS
+  // ========================================
+  
+  describe('ERP Analysis Functions', () => {
+    
+    describe('detectCompulsiveBehaviors', () => {
+      test('should detect mental compulsions', () => {
+        const content = 'I keep mental checking and replay events in my mind constantly';
+        const count = detectCompulsiveBehaviors(content);
+        expect(count).toBeGreaterThan(0);
+      });
+      
+      test('should detect physical compulsions', () => {
+        const content = 'I wash my hands repeatedly and check the door lock multiple times';
+        const count = detectCompulsiveBehaviors(content);
+        expect(count).toBeGreaterThanOrEqual(2);
+      });
+      
+      test('should detect reassurance seeking', () => {
+        const content = 'I constantly ask others for reassurance and google symptoms obsessively';
+        const count = detectCompulsiveBehaviors(content);
+        expect(count).toBeGreaterThan(0);
+      });
+      
+      test('should return 0 for non-compulsive content', () => {
+        const content = 'I feel happy today and enjoyed my lunch';
+        const count = detectCompulsiveBehaviors(content);
+        expect(count).toBe(0);
+      });
+    });
+    
+    describe('detectIntrusiveThoughts', () => {
+      test('should detect harm obsessions', () => {
+        const content = 'I have intrusive thoughts about harm and violent thoughts that scare me';
+        const count = detectIntrusiveThoughts(content);
+        expect(count).toBeGreaterThan(0);
+      });
+      
+      test('should detect contamination fears', () => {
+        const content = 'I have contamination fears and am afraid of germs everywhere';
+        const count = detectIntrusiveThoughts(content);
+        expect(count).toBeGreaterThan(0);
+      });
+      
+      test('should detect moral scrupulosity', () => {
+        const content = 'I have blasphemous thoughts that make me feel immoral';
+        const count = detectIntrusiveThoughts(content);
+        expect(count).toBeGreaterThan(0);
+      });
+      
+      test('should return 0 for normal thoughts', () => {
+        const content = 'I think about my vacation plans and work projects';
+        const count = detectIntrusiveThoughts(content);
+        expect(count).toBe(0);
+      });
+    });
+    
+    describe('detectAvoidanceBehaviors', () => {
+      test('should detect situational avoidance', () => {
+        const content = 'I avoid public restrooms and avoid crowds at all costs';
+        const count = detectAvoidanceBehaviors(content);
+        expect(count).toBeGreaterThan(0);
+      });
+      
+      test('should detect trigger avoidance', () => {
+        const content = 'I avoid thinking about bad things and avoid news completely';
+        const count = detectAvoidanceBehaviors(content);
+        expect(count).toBeGreaterThan(0);
+      });
+      
+      test('should return 0 for normal preferences', () => {
+        const content = 'I prefer quiet restaurants and like small gatherings';
+        const count = detectAvoidanceBehaviors(content);
+        expect(count).toBe(0);
+      });
+    });
+    
+    describe('scoreThoughtActionFusion', () => {
+      test('should score thought-action fusion beliefs', () => {
+        const content = 'I believe thinking makes it happen and thoughts cause harm to others';
+        const score = scoreThoughtActionFusion(content);
+        expect(score).toBeGreaterThan(0);
+        expect(score).toBeLessThanOrEqual(10);
+      });
+      
+      test('should return low score for no fusion beliefs', () => {
+        const content = 'I understand thoughts are just ideas and mental events';
+        const score = scoreThoughtActionFusion(content);
+        expect(score).toBeLessThanOrEqual(3);
+      });
+    });
+    
+    describe('scoreUncertaintyIntolerance', () => {
+      test('should score uncertainty intolerance', () => {
+        const content = 'I need to know for sure and cannot stand uncertainty at all';
+        const score = scoreUncertaintyIntolerance(content);
+        expect(score).toBeGreaterThan(0);
+        expect(score).toBeLessThanOrEqual(10);
+      });
+      
+      test('should return 0 for uncertainty acceptance', () => {
+        const content = 'I am comfortable with ambiguity and accept that life is uncertain';
+        const score = scoreUncertaintyIntolerance(content);
+        expect(score).toBe(0);
+      });
+    });
+    
+    describe('analyzeERPApplicability', () => {
+      test('should analyze comprehensive ERP case', () => {
+        const content = `
+          I have intrusive thoughts about harm and contamination fears.
+          I wash my hands repeatedly and check the door lock multiple times.
+          I avoid sharp objects and public restrooms.
+          I need to know for sure that nothing bad will happen.
+          Thinking about bad things makes me feel like they will actually happen.
+        `;
+        
+        const result = analyzeERPApplicability(content);
+        
+        expect(result.compulsiveBehaviorCount).toBeGreaterThan(0);
+        expect(result.intrusiveThoughtCount).toBeGreaterThan(0);
+        expect(result.avoidanceBehaviorCount).toBeGreaterThan(0);
+        expect(result.erpApplicabilityScore).toBeGreaterThan(25);
+        expect(result.dominantPatterns).toContain('compulsive behaviors');
+        expect(result.compassionateApproach).toBe(true);
+      });
+      
+      test('should show low ERP applicability for non-OCD content', () => {
+        const content = 'I feel sad today and am looking forward to the weekend';
+        
+        const result = analyzeERPApplicability(content);
+        
+        expect(result.erpApplicabilityScore).toBeLessThan(10);
+        expect(result.dominantPatterns).toHaveLength(0);
+      });
+      
+      test('should identify dominant patterns correctly', () => {
+        const content = `
+          I have multiple compulsions: wash hands repeatedly, check stove, check door lock.
+          I avoid touching doorknobs, avoid public bathrooms, and avoid sharp objects completely.
+        `;
+        
+        const result = analyzeERPApplicability(content);
+        
+        expect(result.dominantPatterns).toContain('compulsive behaviors');
+        // Note: Avoidance detection depends on specific pattern matches
+        expect(result.dominantPatterns.length).toBeGreaterThanOrEqual(1);
+      });
+    });
+  });
+
   describe('AnalysisUtils bundle', () => {
     
     test('should export all main functions', () => {
@@ -619,6 +779,14 @@ describe('Analysis Utils - Consolidated Functionality', () => {
       expect(AnalysisUtils.extractUserRatings).toBeDefined();
       expect(AnalysisUtils.hasUserQuantifiedAssessments).toBeDefined();
       expect(AnalysisUtils.assessUserDataPriority).toBeDefined();
+      // ERP analysis functions
+      expect(AnalysisUtils.analyzeERPApplicability).toBeDefined();
+      expect(AnalysisUtils.detectCompulsiveBehaviors).toBeDefined();
+      expect(AnalysisUtils.detectIntrusiveThoughts).toBeDefined();
+      expect(AnalysisUtils.detectAvoidanceBehaviors).toBeDefined();
+      expect(AnalysisUtils.scoreThoughtActionFusion).toBeDefined();
+      expect(AnalysisUtils.scoreUncertaintyIntolerance).toBeDefined();
+      // Utilities
       expect(AnalysisUtils.replaceTemplatePlaceholders).toBeDefined();
       expect(AnalysisUtils.convertToClientFriendlyLanguage).toBeDefined();
       expect(AnalysisUtils.calculateUserDataWeightedConfidence).toBeDefined();

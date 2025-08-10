@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const forceModel = requestData.model; // Allow manual model override
     
     // Extract conversation context for better analysis
-    const conversationContext = messages.slice(-3).map((m: { content: string }) => m.content);
+    // const conversationContext = messages.slice(-3).map((m: { content: string }) => m.content);
     
     let modelSelection;
     let webSearchDetection;

@@ -92,6 +92,139 @@ export const BRIEF_REQUEST_PATTERNS = [
   /^tell me about/i
 ];
 
+/**
+ * ERP (Exposure and Response Prevention) related patterns
+ */
+
+/**
+ * Compulsive behavior indicators for ERP analysis
+ */
+export const COMPULSIVE_BEHAVIOR_PATTERNS = [
+  // Mental compulsions
+  /mental.*checking/i,
+  /thought.*neutrali[zs]ing/i,
+  /mental.*ritual/i,
+  /replay.*in.*mind/i,
+  /count.*in.*head/i,
+  /repeat.*phrase.*mentally/i,
+  /undo.*thought/i,
+  
+  // Physical compulsions  
+  /wash.*hands.*repeatedly/i,
+  /check.*door.*lock/i,
+  /check.*stove/i,
+  /arrange.*symmetry/i,
+  /tap.*specific.*number/i,
+  /touch.*even.*number/i,
+  /organize.*perfectly/i,
+  /clean.*excessively/i,
+  
+  // Reassurance seeking
+  /ask.*others.*reassurance/i,
+  /need.*constant.*validation/i,
+  /seek.*confirmation/i,
+  /google.*symptoms/i,
+  /research.*obsessively/i,
+  
+  // Safety behaviors
+  /avoid.*touching/i,
+  /carry.*sanitizer/i,
+  /wear.*gloves/i,
+  /take.*longer.*route/i,
+  /avoid.*certain.*numbers/i,
+  /ritual.*before.*leaving/i
+];
+
+/**
+ * Intrusive thought indicators for ERP analysis
+ */
+export const INTRUSIVE_THOUGHT_PATTERNS = [
+  // Contamination obsessions
+  /contamination.*fear/i,
+  /afraid.*germs/i,
+  /dirty.*unclean/i,
+  /infection.*disease/i,
+  /poison.*toxic/i,
+  
+  // Harm obsessions
+  /intrusive.*thoughts.*harm/i,
+  /afraid.*hurt.*someone/i,
+  /violent.*thoughts/i,
+  /lose.*control.*hurt/i,
+  /stabbing.*thoughts/i,
+  /driving.*hit.*someone/i,
+  
+  // Moral/Religious scrupulosity
+  /blasphemous.*thoughts/i,
+  /immoral.*thinking/i,
+  /sinful.*thoughts/i,
+  /religious.*doubt/i,
+  /moral.*contamination/i,
+  
+  // Symmetry/Order obsessions
+  /things.*must.*be.*perfect/i,
+  /asymmetry.*bothers/i,
+  /need.*everything.*even/i,
+  /numbers.*must.*match/i,
+  
+  // Relationship obsessions
+  /doubt.*love.*partner/i,
+  /right.*person.*for.*me/i,
+  /analyze.*relationship/i,
+  /question.*attraction/i
+];
+
+/**
+ * Avoidance pattern indicators for ERP analysis
+ */
+export const AVOIDANCE_BEHAVIOR_PATTERNS = [
+  // Situational avoidance
+  /avoid.*public.*restrooms/i,
+  /avoid.*hospitals/i,
+  /avoid.*crowds/i,
+  /avoid.*sharp.*objects/i,
+  /avoid.*driving/i,
+  /avoid.*certain.*places/i,
+  
+  // Trigger avoidance
+  /avoid.*thinking.*about/i,
+  /avoid.*news/i,
+  /avoid.*movies.*violence/i,
+  /avoid.*certain.*words/i,
+  /avoid.*numbers/i,
+  
+  // Responsibility avoidance
+  /avoid.*making.*decisions/i,
+  /avoid.*being.*alone.*with/i,
+  /avoid.*handling.*knives/i,
+  /avoid.*being.*responsible/i
+];
+
+/**
+ * Thought-action fusion indicators
+ */
+export const THOUGHT_ACTION_FUSION_PATTERNS = [
+  /thinking.*makes.*happen/i,
+  /thoughts.*cause.*harm/i,
+  /bad.*thought.*means.*bad.*person/i,
+  /thinking.*equals.*doing/i,
+  /thoughts.*have.*power/i,
+  /imagine.*means.*want/i
+];
+
+/**
+ * Uncertainty intolerance indicators
+ */
+export const UNCERTAINTY_INTOLERANCE_PATTERNS = [
+  /need.*to.*know.*for.*sure/i,
+  /cannot.*stand.*uncertainty/i,
+  /what.*if.*something.*happens/i,
+  /need.*100.*percent.*certainty/i,
+  /doubt.*everything/i,
+  /ambiguity.*anxiety/i,
+  /must.*be.*certain/i
+];
+
 // ========================================
 // SHARED INTERFACES
 // ========================================
@@ -118,6 +251,17 @@ export interface UserDataPriority {
   shouldPrioritizeUserData: boolean;
   extractedRatings: UserRatingExtraction[];
   userAssessmentTypes: string[];
+}
+
+export interface ERPAnalysisResult {
+  compulsiveBehaviorCount: number;
+  intrusiveThoughtCount: number;
+  avoidanceBehaviorCount: number;
+  thoughtActionFusionScore: number;
+  uncertaintyIntoleranceScore: number;
+  erpApplicabilityScore: number;
+  dominantPatterns: string[];
+  compassionateApproach: boolean;
 }
 
 // ========================================
@@ -307,6 +451,106 @@ export function assessUserDataPriority(content: string): UserDataPriority {
 }
 
 // ========================================
+// ERP ANALYSIS FUNCTIONS
+// ========================================
+
+/**
+ * Detects compulsive behaviors in content
+ */
+export function detectCompulsiveBehaviors(content: string): number {
+  return COMPULSIVE_BEHAVIOR_PATTERNS.reduce((count, pattern) => {
+    return count + (pattern.test(content) ? 1 : 0);
+  }, 0);
+}
+
+/**
+ * Detects intrusive thought patterns in content
+ */
+export function detectIntrusiveThoughts(content: string): number {
+  return INTRUSIVE_THOUGHT_PATTERNS.reduce((count, pattern) => {
+    return count + (pattern.test(content) ? 1 : 0);
+  }, 0);
+}
+
+/**
+ * Detects avoidance behaviors in content
+ */
+export function detectAvoidanceBehaviors(content: string): number {
+  return AVOIDANCE_BEHAVIOR_PATTERNS.reduce((count, pattern) => {
+    return count + (pattern.test(content) ? 1 : 0);
+  }, 0);
+}
+
+/**
+ * Scores thought-action fusion indicators
+ */
+export function scoreThoughtActionFusion(content: string): number {
+  const matches = THOUGHT_ACTION_FUSION_PATTERNS.reduce((count, pattern) => {
+    return count + (pattern.test(content) ? 1 : 0);
+  }, 0);
+  
+  // Convert to 0-10 scale
+  return Math.min(10, Math.round((matches / THOUGHT_ACTION_FUSION_PATTERNS.length) * 10));
+}
+
+/**
+ * Scores uncertainty intolerance indicators
+ */
+export function scoreUncertaintyIntolerance(content: string): number {
+  const matches = UNCERTAINTY_INTOLERANCE_PATTERNS.reduce((count, pattern) => {
+    return count + (pattern.test(content) ? 1 : 0);
+  }, 0);
+  
+  // Convert to 0-10 scale
+  return Math.min(10, Math.round((matches / UNCERTAINTY_INTOLERANCE_PATTERNS.length) * 10));
+}
+
+/**
+ * Comprehensive ERP analysis of content
+ */
+export function analyzeERPApplicability(content: string): ERPAnalysisResult {
+  const compulsiveBehaviorCount = detectCompulsiveBehaviors(content);
+  const intrusiveThoughtCount = detectIntrusiveThoughts(content);
+  const avoidanceBehaviorCount = detectAvoidanceBehaviors(content);
+  const thoughtActionFusionScore = scoreThoughtActionFusion(content);
+  const uncertaintyIntoleranceScore = scoreUncertaintyIntolerance(content);
+  
+  // Calculate overall ERP applicability score
+  let erpScore = 0;
+  
+  // Weight different components
+  erpScore += Math.min(30, compulsiveBehaviorCount * 5); // Max 30 points
+  erpScore += Math.min(25, intrusiveThoughtCount * 4); // Max 25 points
+  erpScore += Math.min(20, avoidanceBehaviorCount * 3); // Max 20 points
+  erpScore += Math.min(15, thoughtActionFusionScore * 1.5); // Max 15 points
+  erpScore += Math.min(10, uncertaintyIntoleranceScore * 1); // Max 10 points
+  
+  const erpApplicabilityScore = Math.round(erpScore);
+  
+  // Identify dominant patterns
+  const dominantPatterns: string[] = [];
+  if (compulsiveBehaviorCount >= 2) dominantPatterns.push('compulsive behaviors');
+  if (intrusiveThoughtCount >= 2) dominantPatterns.push('intrusive thoughts');
+  if (avoidanceBehaviorCount >= 2) dominantPatterns.push('avoidance behaviors');
+  if (thoughtActionFusionScore >= 6) dominantPatterns.push('thought-action fusion');
+  if (uncertaintyIntoleranceScore >= 6) dominantPatterns.push('uncertainty intolerance');
+  
+  // Determine if compassionate approach is needed (always true for ERP)
+  const compassionateApproach = true;
+  
+  return {
+    compulsiveBehaviorCount,
+    intrusiveThoughtCount,
+    avoidanceBehaviorCount,
+    thoughtActionFusionScore,
+    uncertaintyIntoleranceScore,
+    erpApplicabilityScore,
+    dominantPatterns,
+    compassionateApproach
+  };
+}
+
+// ========================================
 // TEMPLATE AND FORMATTING UTILITIES  
 // ========================================
 
@@ -410,6 +654,14 @@ export const AnalysisUtils = {
   extractUserRatings,
   hasUserQuantifiedAssessments,  
   assessUserDataPriority,
+  
+  // ERP analysis
+  analyzeERPApplicability,
+  detectCompulsiveBehaviors,
+  detectIntrusiveThoughts,
+  detectAvoidanceBehaviors,
+  scoreThoughtActionFusion,
+  scoreUncertaintyIntolerance,
   
   // Utilities
   replaceTemplatePlaceholders,

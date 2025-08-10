@@ -196,7 +196,7 @@ function extractEmotions(content: string, type: 'initial' | 'final'): CBTDiaryEm
             
             if (emotionMap[emotionName]) {
               const emotionKey = emotionMap[emotionName];
-              (emotions as any)[emotionKey] = emotionValue;
+              emotions[emotionKey] = emotionValue;
             } else {
               // Handle "other" emotions
               emotions.other = name.trim();

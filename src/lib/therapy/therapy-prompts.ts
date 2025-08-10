@@ -248,6 +248,36 @@ For each **validated** cognitive distortion in therapeutic contexts, provide:
 14. **Blame**: Inappropriate assignment of responsibility to self or others
 15. **Always Being Right**: Need to prove correctness at all costs
 
+## ERP (Exposure and Response Prevention) Analysis
+**For anxiety disorders, OCD, and intrusive thought patterns:**
+
+### Compulsive Behavior Assessment:
+Identify and analyze compulsive behaviors and safety rituals:
+- **Mental Compulsions**: Thought neutralization, mental checking, repetitive mental rituals
+- **Physical Compulsions**: Washing, checking, ordering, symmetry behaviors, reassurance seeking
+- **Avoidance Compulsions**: Situational avoidance, trigger avoidance, responsibility avoidance
+- **Safety Behaviors**: Protective actions, escape behaviors, hypervigilance patterns
+
+### Intrusive Thought Pattern Analysis:
+Assess intrusive thought characteristics and content themes:
+- **Thought Content Types**: Contamination fears, harm obsessions, symmetry/order concerns, moral/religious scrupulosity, relationship concerns
+- **Thought-Action Fusion**: Beliefs about thoughts leading to actions or outcomes
+- **Responsibility Inflation**: Excessive perceived responsibility for preventing harm
+- **Uncertainty Intolerance**: Difficulty tolerating ambiguous or uncertain situations
+
+### ERP Readiness Assessment:
+Evaluate client's readiness for compassionate ERP intervention:
+- **Motivation Level** (0-10): Client's willingness to engage with feared stimuli
+- **Distress Tolerance** (0-10): Capacity to experience anxiety without compulsions
+- **Support System**: Available resources for ERP implementation
+- **Insight Level**: Understanding of OCD/anxiety cycle and compulsion reinforcement
+
+### Exposure Hierarchy Potential:
+Identify potential exposure targets organized by anxiety level:
+- **Low-Level Exposures** (anxiety 3-4/10): Safe starting points for gradual exposure
+- **Mid-Level Exposures** (anxiety 5-7/10): Progressive challenge exposures
+- **High-Level Exposures** (anxiety 8-10/10): Final goals requiring strong therapeutic alliance
+
 ## Schema Therapy Analysis
 Analyze active schema modes and early maladaptive schemas:
 
@@ -289,6 +319,7 @@ For each applicable framework, assess:
 
 ### Primary Frameworks to Consider:
 - **Cognitive Behavioral Therapy (CBT)**: Thought record work, behavioral experiments, exposure therapy
+- **Exposure and Response Prevention (ERP)**: Compassionate exposure hierarchies, response prevention, safety behavior elimination, intrusive thought management, compulsive behavior interruption
 - **Dialectical Behavior Therapy (DBT)**: Distress tolerance, emotion regulation, interpersonal effectiveness, mindfulness
 - **Schema Therapy**: Mode work, limited reparenting, cognitive techniques, experiential exercises
 - **Acceptance and Commitment Therapy (ACT)**: Values work, psychological flexibility, mindfulness techniques
@@ -401,6 +432,40 @@ Return ONLY a valid JSON object with the following structure:
       "adaptive": ["strategy1"],
       "maladaptive": ["strategy2"]
     }
+  },
+  "erpAnalysis": {
+    "compulsiveBehaviors": [
+      {
+        "type": "mental|physical|avoidance|safety",
+        "description": "behavior description",
+        "frequency": "daily|weekly|situational",
+        "triggerContext": "trigger situation",
+        "anxietyReduction": 7,
+        "functionalImpact": "low|moderate|high"
+      }
+    ],
+    "intrusiveThoughts": [
+      {
+        "contentTheme": "contamination|harm|symmetry|moral|relationship",
+        "thoughtActionFusion": true,
+        "responsibilityInflation": 8,
+        "uncertaintyIntolerance": 6,
+        "neutralizationAttempts": ["strategy1", "strategy2"]
+      }
+    ],
+    "erpReadiness": {
+      "motivationLevel": 7,
+      "distressTolerance": 5,
+      "supportSystem": "strong|moderate|limited",
+      "insightLevel": "high|medium|low"
+    },
+    "exposureHierarchy": {
+      "lowLevel": ["exposure1", "exposure2"],
+      "midLevel": ["exposure3", "exposure4"],
+      "highLevel": ["exposure5", "exposure6"]
+    },
+    "erpApplicability": "high|medium|low",
+    "compassionateApproach": true
   },
   "therapeuticFrameworks": [
     {
