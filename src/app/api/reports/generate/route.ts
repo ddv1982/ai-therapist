@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { logger, createRequestLogger } from '@/lib/logger';
 import { reportGenerationSchema, validateRequest } from '@/lib/validation';
 import { encryptSessionReportContent, encryptEnhancedAnalysisData } from '@/lib/message-encryption';
+import { validateTherapeuticContext, calculateContextualConfidence } from '@/lib/therapy/context-validator';
 import type { Prisma } from '@prisma/client';
 
 
@@ -32,6 +33,18 @@ interface ParsedAnalysis {
   moodAssessment?: string;
   progressNotes?: string;
   analysisConfidence?: number;
+  
+  // Enhanced fields for user data priority
+  userDataIntegration?: {
+    userRatingsUsed?: boolean;
+    userAssessmentCount?: number;
+    userInsightsPrioritized?: boolean;
+  };
+  contentTierMetadata?: {
+    tier?: string;
+    analysisScope?: string;
+    userDataReliability?: number;
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -102,6 +115,47 @@ export async function POST(request: NextRequest) {
         
         parsedAnalysis = JSON.parse(cleanedAnalysisData) as ParsedAnalysis;
         console.log('Successfully parsed structured analysis data');
+        
+        // Apply contextual validation to cognitive distortions
+        if (parsedAnalysis.cognitiveDistortions && Array.isArray(parsedAnalysis.cognitiveDistortions)) {
+          console.log('Applying contextual validation to cognitive distortions...');
+          
+          // Get combined message content for context analysis
+          const fullConversationContent = messages.map(m => m.content).join(' ');
+          const contextValidation = validateTherapeuticContext(fullConversationContent);
+          
+          // Filter and enhance distortions based on context validation
+          parsedAnalysis.cognitiveDistortions = parsedAnalysis.cognitiveDistortions
+            .map((distortion: any) => {
+              // Apply contextual confidence adjustment
+              if (typeof distortion.contextAwareConfidence === 'number') {
+                const enhancedConfidence = calculateContextualConfidence(
+                  distortion.contextAwareConfidence,
+                  contextValidation,
+                  false // TODO: Add CBT alignment check
+                );
+                distortion.contextAwareConfidence = enhancedConfidence;
+              }
+              return distortion;
+            })
+            .filter((distortion: any) => {
+              // Filter out high false positive risk distortions
+              if (distortion.falsePositiveRisk === 'high' && 
+                  distortion.contextAwareConfidence < 60) {
+                console.log(`Filtered out potential false positive: ${distortion.name}`);
+                return false;
+              }
+              return true;
+            });
+          
+          logger.info('Contextual validation applied to cognitive distortions', {
+            originalCount: parsedAnalysis.cognitiveDistortions?.length || 0,
+            contextType: contextValidation.contextualAnalysis.contextType,
+            emotionalIntensity: contextValidation.contextualAnalysis.emotionalIntensity,
+            therapeuticRelevance: contextValidation.contextualAnalysis.therapeuticRelevance
+          });
+        }
+        
       } catch (error) {
         console.warn('Failed to parse structured analysis, using defaults:', error);
         console.warn('Raw analysis data:', analysisData?.substring(0, 500));

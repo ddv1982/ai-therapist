@@ -18,6 +18,18 @@ export interface SessionReport {
   analysisConfidence: number; // 0-100 scale indicating AI confidence in analysis
   analysisVersion: string; // Version of analysis framework used
   
+  // Enhanced fields for client-friendly reporting and data priority
+  contentTier?: ContentTier;
+  analysisScope?: AnalysisScope;
+  userDataPriority?: boolean;
+  gatingConfidence?: number;
+  clientFriendlyReport?: ReportContent;
+  reportStyle?: ReportStyle;
+  
+  // User data integration metadata
+  userDataMetadata?: UserDataMetadata;
+  tierAnalysis?: string; // JSON string of ContentTierAnalysis
+  
   createdAt: Date;
 }
 
@@ -33,9 +45,20 @@ export interface ReportSummaryProps {
 export interface GenerateReportRequest {
   sessionId: string;
   messages: Message[];
+  reportStyle?: 'client_friendly' | 'clinical_notes';
+  forceAnalysisDepth?: 'skip' | 'surface' | 'moderate' | 'comprehensive';
 }
 
 import type { Session, Message } from './index';
+import type { ContextualAnalysis, ValidationResult } from '@/lib/therapy/context-validator';
+import type { ContentTierAnalysis, AnalysisRecommendation } from '@/lib/therapy/content-priority';
+// Removed broken imports - simplified approach
+
+export interface ReportContent {
+  summary: string;
+  insights: string[];
+  recommendations: string[];
+}
 
 // ========================================
 // COGNITIVE DISTORTION ANALYSIS TYPES
@@ -49,6 +72,18 @@ export interface CognitiveDistortion {
   severity: 'low' | 'moderate' | 'high';
   frequency: number; // How often it appeared in the session (0-10 scale)
   therapeuticPriority: 'low' | 'medium' | 'high';
+  
+  // Enhanced contextual validation fields
+  emotionalContext: number; // 0-10 scale of emotional intensity
+  contextualSupport: string[]; // Evidence phrases supporting therapeutic relevance
+  contextAwareConfidence: number; // 0-100 confidence adjusted for context
+  validationRationale: string; // Explanation of therapeutic vs neutral context
+  neutralContextFlags: string[]; // Flags for non-therapeutic contexts
+  falsePositiveRisk: 'low' | 'medium' | 'high'; // Risk assessment
+  
+  // User data integration fields
+  userDataSupported?: boolean; // Whether this distortion is supported by user's own assessment
+  analysisGatingTier?: ContentTier; // Which content tier this distortion was identified in
 }
 
 export const COGNITIVE_DISTORTIONS = {
@@ -348,4 +383,231 @@ export interface TherapeuticRecommendation {
   rationale: string;
   urgency: 'immediate' | 'short-term' | 'long-term';
   expectedOutcome: string;
+}
+
+// ========================================
+// CONTEXTUAL ANALYSIS INTERFACES
+// ========================================
+
+export interface EnhancedCognitiveAnalysis {
+  distortions: CognitiveDistortion[];
+  contextualValidation: ValidationResult;
+  overallConfidence: number;
+  falsePositiveCount: number;
+  therapeuticRelevanceScore: number;
+}
+
+export interface SessionContextSummary {
+  emotionalIntensityRange: [number, number]; // Min/max intensity in session
+  predominantContextType: 'therapeutic' | 'neutral' | 'organizational' | 'mixed';
+  validationFlags: string[];
+  confidenceDistribution: {
+    high: number;    // Count of high confidence distortions (80+)
+    medium: number;  // Count of medium confidence distortions (50-79)
+    low: number;     // Count of low confidence distortions (<50)
+  };
+}
+
+// ========================================
+// CLIENT-FRIENDLY REPORT TYPES
+// ========================================
+
+export type ContentTier = 'tier1_premium' | 'tier2_standard' | 'tier3_minimal';
+export type AnalysisScope = 'comprehensive' | 'targeted' | 'supportive_only' | 'skip';
+export type ReportStyle = 'client_friendly' | 'clinical_notes' | 'brief_supportive';
+
+export interface UserDataMetadata {
+  hasUserData: boolean;
+  userRatingCount: number;
+  userDataReliability: number;
+  assessmentTypes: string[];
+  shouldPrioritizeUserData: boolean;
+}
+
+export interface ClientFriendlySessionReport {
+  id: string;
+  sessionId: string;
+  
+  // Client-friendly metadata
+  contentTier: ContentTier;
+  reportStyle: ReportStyle;
+  analysisApproach: AnalysisScope;
+  
+  // User data integration
+  userDataHighlights: string[];
+  userProvidedAssessments: UserProvidedAssessment[];
+  
+  // Growth-focused insights
+  growthInsights: GrowthInsight[];
+  strengthsIdentified: string[];
+  healingJourneyHighlights: string[];
+  
+  // Supportive recommendations
+  gentleActionSteps: ActionStep[];
+  supportiveResources: Resource[];
+  selfCareReminders: string[];
+  
+  // Pattern recognition (client-friendly language)
+  patternsDiscovered: Pattern[];
+  connectionsMade: string[];
+  
+  // Encouragement and validation
+  validationMessages: string[];
+  courageAcknowledgments: string[];
+  progressRecognition: string[];
+  
+  createdAt: Date;
+}
+
+export interface UserProvidedAssessment {
+  type: 'emotion_rating' | 'thought_credibility' | 'self_evaluation' | 'general';
+  rating?: number;
+  context: string;
+  clientInsight: string;
+  therapeuticValue: 'high' | 'medium' | 'low';
+}
+
+export interface GrowthInsight {
+  category: 'self_awareness' | 'pattern_recognition' | 'emotional_growth' | 'behavioral_change';
+  insight: string;
+  clientFriendlyExplanation: string;
+  encouragingPerspective: string;
+  growthOpportunity: string;
+}
+
+export interface ActionStep {
+  category: 'self_compassion' | 'mindfulness' | 'reflection' | 'self_care' | 'relationship';
+  suggestion: string;
+  rationale: string;
+  difficulty: 'gentle' | 'moderate' | 'challenging';
+  timeframe: 'immediate' | 'this_week' | 'ongoing';
+  optional: boolean;
+}
+
+export interface Resource {
+  type: 'technique' | 'tool' | 'reading' | 'practice' | 'support';
+  name: string;
+  description: string;
+  helpfulFor: string[];
+  accessibilityLevel: 'easy' | 'moderate' | 'requires_guidance';
+}
+
+export interface Pattern {
+  patternType: 'thinking' | 'emotional' | 'behavioral' | 'relational';
+  description: string;
+  clientFriendlyExplanation: string;
+  positiveReframe: string;
+  growthOpportunity: string;
+  userRecognitionLevel: 'high' | 'emerging' | 'unconscious';
+}
+
+// ========================================
+// ENHANCED COGNITIVE DISTORTION TYPES
+// ========================================
+
+export interface EnhancedCognitiveDistortion extends CognitiveDistortion {
+  // User data integration
+  userDataSupported: boolean;
+  analysisGatingTier: ContentTier;
+  
+  // Client-friendly fields
+  clientFriendlyName: string;
+  clientFriendlyDescription: string;
+  growthOpportunity: string;
+  gentleChallenge: string;
+  
+  // Pattern context
+  patternFrequency: 'rare' | 'occasional' | 'frequent' | 'persistent';
+  emotionalImpact: 'mild' | 'moderate' | 'significant';
+  readinessForWork: 'not_ready' | 'exploring' | 'ready' | 'actively_working';
+}
+
+// ========================================
+// REPORT GENERATION TYPES
+// ========================================
+
+export interface ReportGenerationContext {
+  contentTier: ContentTier;
+  analysisScope: AnalysisScope;
+  requestedStyle: ReportStyle;
+  userPreferences?: ReportUserPreferences;
+}
+
+export interface ReportUserPreferences {
+  preferGentleLanguage: boolean;
+  focusOnGrowth: boolean;
+  includeActionItems: boolean;
+  emphasizeStrengths: boolean;
+  minimizePathology: boolean;
+}
+
+export interface ReportGenerationResult {
+  success: boolean;
+  reportContent: string;
+  analysisApproach: AnalysisScope;
+  contentTier: ContentTier;
+  userDataPriority: boolean;
+  confidence: number;
+  hasUserData: boolean;
+  userRatingCount: number;
+  modelUsed: string;
+  modelDisplayName: string;
+  
+  // Error handling
+  warnings?: string[];
+  limitations?: string[];
+}
+
+// ========================================
+// ANALYTICS AND METRICS TYPES
+// ========================================
+
+export interface ReportAnalytics {
+  contentTierDistribution: Record<ContentTier, number>;
+  analysisScopeDistribution: Record<AnalysisScope, number>;
+  userDataPriorityRate: number;
+  averageGatingConfidence: number;
+  
+  // Quality metrics
+  falsePositivePreventionRate: number;
+  userDataIntegrationRate: number;
+  clientFriendlyReportRate: number;
+  
+  // Therapeutic outcomes
+  supportiveResponseRate: number;
+  comprehensiveAnalysisRate: number;
+  overAnalysisPreventionRate: number;
+}
+
+export interface SessionReportMetrics {
+  reportId: string;
+  sessionId: string;
+  
+  // Gating metrics
+  contentTier: ContentTier;
+  analysisScope: AnalysisScope;
+  gatingConfidence: number;
+  
+  // User data metrics
+  userDataPresent: boolean;
+  userRatingCount: number;
+  userDataReliability: number;
+  
+  // Analysis quality metrics
+  cognitiveDistortionsIdentified: number;
+  falsePositivesFiltered: number;
+  contextualConfidenceAverage: number;
+  
+  // Report characteristics
+  reportStyle: ReportStyle;
+  clientFriendlyGenerated: boolean;
+  wordCount: number;
+  processingTimeMs: number;
+  
+  // Therapeutic appropriateness
+  therapeuticRelevanceScore: number;
+  overAnalysisRisk: 'low' | 'medium' | 'high';
+  supportiveAppropriatenessScore: number;
+  
+  createdAt: Date;
 }
