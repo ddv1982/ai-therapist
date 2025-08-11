@@ -8,6 +8,10 @@ import { ToastProvider } from '@/components/ui/primitives/toast';
 const inter = Inter({ 
   subsets: ['latin'],
   variable: '--font-inter',
+  display: 'swap',
+  preload: false,
+  fallback: ['system-ui', 'arial'],
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {

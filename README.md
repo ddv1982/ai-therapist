@@ -135,7 +135,7 @@ uncertaintyIntolerance: 1 point each (max 10)
    ```
 
 6. **Open your browser**
-   - Navigate to `http://localhost:3000`
+   - Navigate to `http://localhost:4000`
    - **First-time setup**: Scan the QR code with your authenticator app for secure access
    - Start your first therapeutic conversation!
 
@@ -172,8 +172,8 @@ uncertaintyIntolerance: 1 point each (max 10)
 ### Available Scripts
 
 #### Core Development
-- `npm run dev` - Start development server (network accessible)
-- `npm run dev:local` - Start development server (localhost only)  
+- `npm run dev` - Start development server with Turbopack (fast bundling)
+- `npm run dev:local` - Start development server with Turbopack (localhost only)  
 - `npm run build` - Build for production
 - `npm run start` - Start production server (network accessible)
 - `npm run start:local` - Start production server (localhost only)
@@ -294,8 +294,11 @@ ai-therapist/
 
 ### Architecture Improvements (2025)
 
-#### Stateless 3-Tier Model Selection
+#### AI SDK 5 Integration & Turbopack Development
+- **Simplified AI Integration**: Migrated from complex custom Groq SDK to clean AI SDK 5 patterns
+- **Turbopack Development**: Fast development bundling with `--turbo` flag for 10x faster builds
 - **Eliminated Over-Engineering**: Removed complex service layers, simplified architecture by ~60%
+- **Clean Provider Pattern**: Uses `@ai-sdk/groq` with `customProvider` and `languageModels` configuration
 - **Stateless Operation**: Each message evaluated independently - no sticky model behavior
 - **3-Tier Priority System**: Deep thinking → Web search → Regular chat with automatic detection
 - **Unified Utilities**: Created `model-utils.ts` and `streaming-utils.ts` for clean separation

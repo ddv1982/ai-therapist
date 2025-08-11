@@ -20,14 +20,28 @@ jest.mock('next/navigation', () => ({
   },
 }))
 
-// Mock Groq SDK
-jest.mock('groq-sdk', () => ({
-  Groq: jest.fn().mockImplementation(() => ({
-    chat: {
-      completions: {
-        create: jest.fn(),
-      },
-    },
+// Mock AI SDK
+jest.mock('ai', () => ({
+  streamText: jest.fn(() => ({
+    toTextStreamResponse: jest.fn(() => new Response('test response')),
+  })),
+  convertToModelMessages: jest.fn((messages) => messages),
+}))
+
+// Mock AI SDK Groq Provider
+jest.mock('@ai-sdk/groq', () => ({
+  groq: jest.fn((modelId) => ({ modelId })),
+  createGroq: jest.fn(() => (modelId) => ({ modelId })),
+}))
+
+// Mock AI SDK React
+jest.mock('@ai-sdk/react', () => ({
+  useChat: jest.fn(() => ({
+    messages: [],
+    input: '',
+    handleInputChange: jest.fn(),
+    handleSubmit: jest.fn(),
+    isLoading: false,
   })),
 }))
 

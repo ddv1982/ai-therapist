@@ -2,22 +2,18 @@
 
 import React, { memo, useMemo } from 'react';
 import { Message, type MessageData } from '@/components/message';
-import { StreamingMessageWrapper } from '@/components/messages/streaming-message-wrapper';
-import type { StreamingStage } from '@/types/streaming';
 
 interface VirtualizedMessageListProps {
   messages: MessageData[];
   isStreaming: boolean;
   isMobile: boolean;
-  onStreamingStageChange?: (stage: StreamingStage) => void;
 }
 
 // Simple virtualization - only render visible and near-visible messages
 function VirtualizedMessageListComponent({ 
   messages, 
   isStreaming, 
-  isMobile,
-  onStreamingStageChange
+  isMobile
 }: VirtualizedMessageListProps) {
   // For conversations with many messages, only render the most recent ones to improve performance
   const visibleMessages = useMemo(() => {
@@ -69,22 +65,7 @@ function VirtualizedMessageListComponent({
                 role="article"
                 aria-label={`Message from ${message.role}`}
               >
-                <StreamingMessageWrapper
-                  content={message.content}
-                  isStreaming={isStreaming}
-                  isLastMessage={isLastMessage}
-                  role={message.role}
-                  onAnimationComplete={(stage) => {
-                    // Optional: Add telemetry or user feedback for animation completion
-                    if (stage === 'revealed' && message.role === 'assistant') {
-                      // Could dispatch analytics event or update UI state
-                      console.debug('Streaming animation completed for message:', message.id);
-                    }
-                  }}
-                  onStageChange={onStreamingStageChange}
-                >
-                  <Message message={message} />
-                </StreamingMessageWrapper>
+                <Message message={message} />
               </div>
             )}
           </div>

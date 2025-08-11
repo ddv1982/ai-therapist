@@ -3,17 +3,6 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['prisma'],
   },
-  // Enable source maps for better mobile debugging
-  productionBrowserSourceMaps: process.env.NODE_ENV === 'development',
-  
-  // Optimize for mobile and network access
-  compress: true,
-  poweredByHeader: false,
-  
-  // Allow dev origins for network access during development
-  ...(process.env.NODE_ENV === 'development' && {
-    allowedDevOrigins: ['192.168.178.59:4001', '192.168.178.59:4000', 'localhost:4000', '127.0.0.1:4000']
-  }),
   // Only expose client-safe environment variables
   env: {
     // Remove server-only secrets from client bundle
@@ -31,8 +20,8 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            // Secure for development network access
-            value: isDevelopment ? 'http://localhost:4000' : 'https://your-domain.com',
+            // Allow network access for development
+            value: isDevelopment ? '*' : 'https://your-domain.com',
           },
           {
             key: 'Access-Control-Allow-Methods',

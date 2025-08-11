@@ -27,9 +27,17 @@ function detectNextJSPort(output) {
 console.log('🌐 Starting Therapist AI App...');
 console.log('');
 
-// Start Next.js with network binding
-const nextProcess = spawn('next', ['dev', '--hostname', '0.0.0.0', '--port', '4000'], {
-  stdio: ['inherit', 'pipe', 'pipe']
+// Start Next.js with Turbopack for faster development
+const nextProcess = spawn('next', ['dev', '--turbo', '--hostname', '0.0.0.0', '--port', '4000'], {
+  stdio: ['inherit', 'pipe', 'pipe'],
+  env: {
+    ...process.env,
+    // Environment variables for Turbopack network HMR
+    TURBOPACK_DEV_HOST: '0.0.0.0',
+    TURBOPACK_DEV_PORT: '4000',
+    // Allow network access for HMR
+    NEXT_DEV_ALLOW_ANY_HOST: 'true',
+  }
 });
 
 let portDetected = false;

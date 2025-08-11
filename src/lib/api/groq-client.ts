@@ -1,4 +1,5 @@
-import Groq from 'groq-sdk';
+import { generateText } from 'ai';
+import { model } from '@/ai/providers';
 import type { Message } from '@/types';
 
 // Simplified message type for report generation (only needs role and content)
@@ -7,83 +8,37 @@ export interface ReportMessage {
   content: string;
 }
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
-
-export interface GroqMessage {
+export interface AIMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
-export const createTherapyCompletion = async (messages: Message[], systemPrompt: string) => {
-  const groqMessages: GroqMessage[] = [
-    {
-      role: 'system',
-      content: systemPrompt
-    },
-    ...messages.map((msg): GroqMessage => ({
-      role: msg.role,
-      content: msg.content
-    }))
-  ];
+export const generateSessionReport = async (messages: ReportMessage[], systemPrompt: string, selectedModel: string = 'openai/gpt-oss-120b') => {
+  const userPrompt = `Please generate a therapeutic session report based on the following conversation:\n\n${messages.map(m => `${m.role}: ${m.content}`).join('\n\n')}`;
 
-  const completion = await groq.chat.completions.create({
-    messages: groqMessages,
-    model: 'qwen/qwen-2.5-72b-instruct',
-    temperature: 0.6,
-    max_tokens: 4096,
-    top_p: 0.95,
-    stream: true,
-  });
-
-  return completion;
-};
-
-export const generateSessionReport = async (messages: ReportMessage[], systemPrompt: string, model: string = 'openai/gpt-oss-120b') => {
-  const groqMessages: GroqMessage[] = [
-    {
-      role: 'system',
-      content: systemPrompt
-    },
-    {
-      role: 'user',
-      content: `Please generate a therapeutic session report based on the following conversation:\n\n${messages.map(m => `${m.role}: ${m.content}`).join('\n\n')}`
-    }
-  ];
-
-  const completion = await groq.chat.completions.create({
-    messages: groqMessages,
-    model: model,
+  const result = await generateText({
+    model: model.languageModel(selectedModel),
+    system: systemPrompt,
+    prompt: userPrompt,
     temperature: 0.3,
-    max_tokens: 16384,
-    top_p: 0.9,
-    stream: false,
+    maxTokens: 16384,
+    topP: 0.9,
   });
 
-  return completion.choices[0]?.message?.content || null;
+  return result.text;
 };
 
-export const extractStructuredAnalysis = async (reportContent: string, systemPrompt: string, model: string = 'openai/gpt-oss-120b') => {
-  const groqMessages: GroqMessage[] = [
-    {
-      role: 'system',
-      content: systemPrompt
-    },
-    {
-      role: 'user',
-      content: `Please extract structured analysis data from the following therapeutic report:\n\n${reportContent}`
-    }
-  ];
+export const extractStructuredAnalysis = async (reportContent: string, systemPrompt: string, selectedModel: string = 'openai/gpt-oss-120b') => {
+  const userPrompt = `Please extract structured analysis data from the following therapeutic report:\n\n${reportContent}`;
   
-  const completion = await groq.chat.completions.create({
-    messages: groqMessages,
-    model: model,
+  const result = await generateText({
+    model: model.languageModel(selectedModel),
+    system: systemPrompt,
+    prompt: userPrompt,
     temperature: 0.1, // Lower temperature for more consistent JSON output
-    max_tokens: 8192,
-    top_p: 0.8,
-    stream: false,
+    maxTokens: 8192,
+    topP: 0.8,
   });
 
-  return completion.choices[0]?.message?.content || null;
+  return result.text;
 };

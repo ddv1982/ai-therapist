@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm run db:setup && node scripts/dev-with-network.js",
-    "dev:local": "npm run db:setup && next dev --port 4000",
+    "dev": "npm run db:setup && next dev --turbo --port 4000",
+    "dev:local": "npm run db:setup && next dev --turbo --port 4000",
     "build": "npm run db:setup && next build",
     "start": "npm run db:setup && node scripts/start-with-network.js",
     "start:local": "next start --port 4000",
@@ -21,6 +21,8 @@
     "test:all": "npm run test"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^2.0.5",
+    "@ai-sdk/react": "^2.0.9",
     "@prisma/client": "^6.13.0",
     "@radix-ui/react-dialog": "^1.1.0",
     "@radix-ui/react-scroll-area": "^1.1.0",
@@ -31,11 +33,11 @@
     "@types/qrcode": "^1.5.5",
     "@types/speakeasy": "^2.0.10",
     "@types/ua-parser-js": "^0.7.39",
+    "ai": "^5.0.9",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "date-fns": "^3.6.0",
     "dotenv": "^17.2.1",
-    "groq-sdk": "^0.7.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.436.0",

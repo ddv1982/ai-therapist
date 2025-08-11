@@ -510,7 +510,6 @@
   }
 
   /* Import the new modular table system */
-  @import '../components/ui/enhanced/data-table/table-styles.css';
 
   /* ========================================
    * STREAMING MESSAGE DIFFUSION ANIMATIONS

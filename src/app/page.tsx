@@ -21,7 +21,7 @@ import { ThemeToggle } from '@/components/ui/enhanced/theme-toggle';
 import { generateUUID } from '@/lib/utils';
 import { useToast } from '@/components/ui/primitives/toast';
 import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/memory-utils';
-import { handleStreamingResponse } from '@/lib/streaming-utils';
+// Removed handleStreamingResponse - AI SDK handles streaming automatically
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
 import type { MessageData } from '@/components/messages/message';
 import { MobileDebugInfo } from '@/components/ui/layout/mobile-debug-info';
@@ -398,12 +398,12 @@ export default function ChatPage() {
   const sendMessage = useCallback(async () => {
     if (!input.trim() || isLoading) return;
     
-    // Check if we have API key either from user input or environment
-    if (!apiKey && !hasEnvApiKey) {
+    // Check if environment API key is available
+    if (!hasEnvApiKey) {
       showToast({
         type: 'warning',
         title: 'API Key Required',
-        message: 'Please enter your Groq API key in the settings panel or set GROQ_API_KEY environment variable'
+        message: 'Please set GROQ_API_KEY environment variable'
       });
       return;
     }
@@ -470,13 +470,8 @@ export default function ChatPage() {
             role: msg.role,
             content: msg.content
           })),
-          sessionId: sessionId,
-          apiKey: apiKey,
-          temperature: 0.6,
-          maxTokens: 30000,
-          topP: 1,
-          browserSearchEnabled: true,
-          reasoningEffort: 'medium'
+          selectedModel: 'openai/gpt-oss-20b',
+          sessionId: sessionId
         }),
       });
 
@@ -493,25 +488,47 @@ export default function ChatPage() {
       };
       setMessages(prev => [...prev, aiMessage]);
 
-      // Use unified streaming handler
-      await handleStreamingResponse(response, {
-        onProgress: (content: string, modelUsed: string) => {
-          setMessages(prev => prev.map(msg => 
-            msg.id === aiMessage.id 
-              ? { ...msg, content, modelUsed }
-              : msg
-          ));
-        },
-        onComplete: async (fullContent: string, modelUsed: string) => {
+      // Handle AI SDK streaming response
+      if (response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullContent = '';
+        
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.type === 'text-delta' && data.delta) {
+                    fullContent += data.delta;
+                    setMessages(prev => prev.map(msg => 
+                      msg.id === aiMessage.id 
+                        ? { ...msg, content: fullContent }
+                        : msg
+                    ));
+                  }
+                } catch (e) {
+                  // Skip invalid JSON lines
+                }
+              }
+            }
+          }
+          
           // Save AI response to database with model information
-          await saveMessage(sessionId!, 'assistant', fullContent, modelUsed);
+          await saveMessage(sessionId!, 'assistant', fullContent, 'openai/gpt-oss-20b');
           
           // Reload sessions to update message count in sidebar
           await loadSessions();
           
           setIsLoading(false);
-        },
-        onError: (error: Error) => {
+        } catch (error) {
           setIsLoading(false);
           console.error('Streaming error:', error);
           showToast({
@@ -520,7 +537,7 @@ export default function ChatPage() {
             message: 'Failed to process AI response. Please try again.'
           });
         }
-      });
+      }
     } catch (error) {
       setIsLoading(false);
       console.error('Error sending message:', error);
@@ -658,12 +675,12 @@ export default function ChatPage() {
   const handleCBTSendToChat = useCallback(async (formattedContent: string) => {
     if (isLoading) return;
     
-    // Check if we have API key either from user input or environment
-    if (!apiKey && !hasEnvApiKey) {
+    // Check if environment API key is available
+    if (!hasEnvApiKey) {
       showToast({
         type: 'warning',
         title: 'API Key Required',
-        message: 'Please enter your Groq API key in the settings panel or set GROQ_API_KEY environment variable'
+        message: 'Please set GROQ_API_KEY environment variable'
       });
       return;
     }
@@ -728,13 +745,8 @@ export default function ChatPage() {
             role: msg.role,
             content: msg.content
           })),
-          sessionId: sessionId,
-          apiKey: apiKey,
-          temperature: 0.6,
-          maxTokens: 30000,
-          topP: 1,
-          browserSearchEnabled: true,
-          reasoningEffort: 'medium'
+          selectedModel: 'openai/gpt-oss-20b',
+          sessionId: sessionId
         }),
       });
 
@@ -751,25 +763,47 @@ export default function ChatPage() {
       };
       setMessages(prev => [...prev, aiMessage]);
 
-      // Use unified streaming handler
-      await handleStreamingResponse(response, {
-        onProgress: (content: string, modelUsed: string) => {
-          setMessages(prev => prev.map(msg => 
-            msg.id === aiMessage.id 
-              ? { ...msg, content, modelUsed }
-              : msg
-          ));
-        },
-        onComplete: async (fullContent: string, modelUsed: string) => {
+      // Handle AI SDK streaming response
+      if (response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullContent = '';
+        
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  if (data.type === 'text-delta' && data.delta) {
+                    fullContent += data.delta;
+                    setMessages(prev => prev.map(msg => 
+                      msg.id === aiMessage.id 
+                        ? { ...msg, content: fullContent }
+                        : msg
+                    ));
+                  }
+                } catch (e) {
+                  // Skip invalid JSON lines
+                }
+              }
+            }
+          }
+          
           // Save AI response to database with model information
-          await saveMessage(sessionId!, 'assistant', fullContent, modelUsed);
+          await saveMessage(sessionId!, 'assistant', fullContent, 'openai/gpt-oss-20b');
           
           // Reload sessions to update message count in sidebar
           await loadSessions();
           
           setIsLoading(false);
-        },
-        onError: (error: Error) => {
+        } catch (error) {
           setIsLoading(false);
           console.error('Streaming error:', error);
           showToast({
@@ -778,7 +812,7 @@ export default function ChatPage() {
             message: 'Failed to process AI response. Please try again.'
           });
         }
-      });
+      }
     } catch (error) {
       setIsLoading(false);
       console.error('Error sending CBT message:', error);
