@@ -1,8 +1,8 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/primitives/button';
+import { Card } from '@/components/ui/primitives/card';
 import { AlertTriangle, RefreshCw, Bug, Wifi } from 'lucide-react';
 
 interface Props {

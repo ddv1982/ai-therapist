@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Message } from '@/components/message';
+import { Message } from '@/components/messages';
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({

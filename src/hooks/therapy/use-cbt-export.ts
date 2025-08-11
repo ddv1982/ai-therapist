@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { CBTDiaryFormData } from '@/types/cbt';
+import { CBTDiaryFormData } from '@/types/therapy';
 import { 
   exportCBTDiary, 
   CBTExportFormat,

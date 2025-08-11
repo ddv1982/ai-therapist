@@ -4,10 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { validateApiAuth, createAuthErrorResponse } from '@/lib/api-auth';
+import { validateApiAuth, createAuthErrorResponse } from '@/lib/api/api-auth';
 
 // Mock the dependencies
-jest.mock('@/lib/db', () => ({
+jest.mock('@/lib/database/db', () => ({
   prisma: {
     authConfig: {
       findFirst: jest.fn(),
@@ -34,8 +34,8 @@ jest.mock('@/lib/db', () => ({
   disconnectDatabase: jest.fn(),
 }));
 
-jest.mock('@/lib/totp-service');
-jest.mock('@/lib/device-fingerprint');
+jest.mock('@/lib/auth/totp-service');
+jest.mock('@/lib/auth/device-fingerprint');
 
 describe('Authentication API Endpoints Security', () => {
   beforeEach(() => {

@@ -25,16 +25,16 @@ import {
   decryptEnhancedAnalysisData,
   EncryptedMessage,
   DecryptedMessage
-} from '@/lib/message-encryption';
+} from '@/lib/chat/message-encryption';
 
 // Mock the crypto utils
-jest.mock('@/lib/crypto-utils', () => ({
+jest.mock('@/lib/auth/crypto-utils', () => ({
   encryptSensitiveData: jest.fn(),
   decryptSensitiveData: jest.fn(),
 }));
 
-const mockEncrypt = require('@/lib/crypto-utils').encryptSensitiveData;
-const mockDecrypt = require('@/lib/crypto-utils').decryptSensitiveData;
+const mockEncrypt = require('@/lib/auth/crypto-utils').encryptSensitiveData;
+const mockDecrypt = require('@/lib/auth/crypto-utils').decryptSensitiveData;
 
 describe('Message Encryption Service', () => {
   beforeEach(() => {

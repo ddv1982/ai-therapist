@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { Message } from '@/components/message';
+import { Message } from '@/components/messages';
 
 describe('Message Component', () => {
   const mockMessage = {

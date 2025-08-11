@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyTOTPToken, verifyBackupCode, isTOTPSetup, getTOTPDiagnostics } from '@/lib/totp-service';
-import { getOrCreateDevice, createAuthSession } from '@/lib/device-fingerprint';
-import { getClientIP } from '@/lib/auth-middleware';
-import { generateSecureRandomString } from '@/lib/utils';
+import { verifyTOTPToken, verifyBackupCode, isTOTPSetup, getTOTPDiagnostics } from '@/lib/auth/totp-service';
+import { getOrCreateDevice, createAuthSession } from '@/lib/auth/device-fingerprint';
+import { getClientIP } from '@/lib/auth/auth-middleware';
+import { generateSecureRandomString } from '@/lib/utils/utils';
+import { devLog } from '@/lib/utils/logger';
 
 // POST /api/auth/verify - Verify TOTP token or backup code
 export async function POST(request: NextRequest) {
@@ -25,68 +26,68 @@ export async function POST(request: NextRequest) {
     // Detect if this is a mobile device
     const isMobile = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
     
-    console.log(`\n=== AUTH REQUEST [${requestId}] ===${ isMobile ? ' 📱 MOBILE' : ' 🖥️  DESKTOP' }`);
-    console.log(`Time: ${new Date().toISOString()}`);
-    console.log(`Type: ${isBackupCode ? 'Backup Code' : 'TOTP Token'}`);
-    console.log(`IP: ${ipAddress}`);
-    console.log(`Host: ${host}`);
-    console.log(`Origin: ${origin || 'none'}`);
-    console.log(`Referer: ${referer || 'none'}`);
-    console.log(`X-Forwarded-For: ${forwarded || 'none'}`);
-    console.log(`X-Real-IP: ${realIp || 'none'}`);
-    console.log(`User-Agent: ${userAgent}`);
-    console.log(`Token Length: ${token?.length || 0}`);
+    devLog(`\n=== AUTH REQUEST [${requestId}] ===${ isMobile ? ' 📱 MOBILE' : ' 🖥️  DESKTOP' }`);
+    devLog(`Time: ${new Date().toISOString()}`);
+    devLog(`Type: ${isBackupCode ? 'Backup Code' : 'TOTP Token'}`);
+    devLog(`IP: ${ipAddress}`);
+    devLog(`Host: ${host}`);
+    devLog(`Origin: ${origin || 'none'}`);
+    devLog(`Referer: ${referer || 'none'}`);
+    devLog(`X-Forwarded-For: ${forwarded || 'none'}`);
+    devLog(`X-Real-IP: ${realIp || 'none'}`);
+    devLog(`User-Agent: ${userAgent}`);
+    devLog(`Token Length: ${token?.length || 0}`);
 
     if (!token) {
-      console.log(`[${requestId}] ❌ ERROR: No token provided`);
-      console.log(`=== AUTH REQUEST END [${requestId}] FAILED ===\n`);
+      devLog(`[${requestId}] ❌ ERROR: No token provided`);
+      devLog(`=== AUTH REQUEST END [${requestId}] FAILED ===\n`);
       return NextResponse.json({ error: 'Token is required' }, { status: 400 });
     }
 
     // Check if TOTP is set up
     const isSetup = await isTOTPSetup();
     if (!isSetup) {
-      console.log(`[${requestId}] ❌ ERROR: TOTP not configured`);
-      console.log(`=== AUTH REQUEST END [${requestId}] FAILED ===\n`);
+      devLog(`[${requestId}] ❌ ERROR: TOTP not configured`);
+      devLog(`=== AUTH REQUEST END [${requestId}] FAILED ===\n`);
       return NextResponse.json({ error: 'TOTP not configured' }, { status: 400 });
     }
 
     let isValid = false;
 
     if (isBackupCode) {
-      console.log(`[${requestId}] 🔑 Verifying backup code...`);
+      devLog(`[${requestId}] 🔑 Verifying backup code...`);
       isValid = await verifyBackupCode(token);
-      console.log(`[${requestId}] Backup code result: ${isValid ? '✅ VALID' : '❌ INVALID'}`);
+      devLog(`[${requestId}] Backup code result: ${isValid ? '✅ VALID' : '❌ INVALID'}`);
     } else {
-      console.log(`[${requestId}] 🔢 Verifying TOTP token...`);
+      devLog(`[${requestId}] 🔢 Verifying TOTP token...`);
       
       // Add mobile-specific diagnostics before verification
       if (isMobile) {
         try {
           const diagnostics = await getTOTPDiagnostics(token);
-          console.log(`[${requestId}] 📱 Mobile TOTP Diagnostics:`);
-          console.log(`  Server time: ${new Date(diagnostics.currentTime * 1000).toISOString()}`);
-          console.log(`  Current valid token: ${diagnostics.currentToken}`);
-          console.log(`  Provided token: ${token}`);
-          console.log(`  Pre-check valid: ${diagnostics.providedTokenValid ? '✅' : '❌'}`);
+          devLog(`[${requestId}] 📱 Mobile TOTP Diagnostics:`);
+          devLog(`  Server time: ${new Date(diagnostics.currentTime * 1000).toISOString()}`);
+          devLog(`  Current valid token: ${diagnostics.currentToken}`);
+          devLog(`  Provided token: ${token}`);
+          devLog(`  Pre-check valid: ${diagnostics.providedTokenValid ? '✅' : '❌'}`);
         } catch (diagError) {
-          console.log(`[${requestId}] ⚠️  Mobile diagnostics failed: ${diagError}`);
+          devLog(`[${requestId}] ⚠️  Mobile diagnostics failed: ${diagError}`);
         }
       }
       
       isValid = await verifyTOTPToken(token);
-      console.log(`[${requestId}] TOTP token result: ${isValid ? '✅ VALID' : '❌ INVALID'}`);
+      devLog(`[${requestId}] TOTP token result: ${isValid ? '✅ VALID' : '❌ INVALID'}`);
     }
 
     if (!isValid) {
       const duration = Date.now() - startTime;
-      console.log(`[${requestId}] ❌ AUTHENTICATION FAILED (${duration}ms)`);
+      devLog(`[${requestId}] ❌ AUTHENTICATION FAILED (${duration}ms)`);
       
       if (isMobile) {
-        console.log(`[${requestId}] 📱 MOBILE AUTH FAILURE - Check time sync between device and server`);
+        devLog(`[${requestId}] 📱 MOBILE AUTH FAILURE - Check time sync between device and server`);
       }
       
-      console.log(`=== AUTH REQUEST END [${requestId}] FAILED ===\n`);
+      devLog(`=== AUTH REQUEST END [${requestId}] FAILED ===\n`);
       return NextResponse.json({ 
         error: 'Invalid token',
         debug: {
@@ -98,22 +99,22 @@ export async function POST(request: NextRequest) {
     }
 
     const duration = Date.now() - startTime;
-    console.log(`[${requestId}] ✅ AUTHENTICATION SUCCESSFUL (${duration}ms)`);
-    console.log(`[${requestId}] 🔧 Creating device and session...`);
+    devLog(`[${requestId}] ✅ AUTHENTICATION SUCCESSFUL (${duration}ms)`);
+    devLog(`[${requestId}] 🔧 Creating device and session...`);
 
     // Create device and session for authentication
     const device = await getOrCreateDevice(userAgent, ipAddress);
     const session = await createAuthSession(device.deviceId, ipAddress);
 
-    console.log(`[${requestId}] ✅ Session created for device: ${device.name}`);
-    console.log(`[${requestId}] Session token: ${session.sessionToken.substring(0, 8)}...`);
-    console.log(`[${requestId}] Session expires: ${session.expiresAt.toISOString()}`);
+    devLog(`[${requestId}] ✅ Session created for device: ${device.name}`);
+    devLog(`[${requestId}] Session token: ${session.sessionToken.substring(0, 8)}...`);
+    devLog(`[${requestId}] Session expires: ${session.expiresAt.toISOString()}`);
     
     if (isMobile) {
-      console.log(`[${requestId}] 📱 Mobile session created - cookie will be set for domain: ${host}`);
+      devLog(`[${requestId}] 📱 Mobile session created - cookie will be set for domain: ${host}`);
     }
     
-    console.log(`=== AUTH REQUEST END [${requestId}] SUCCESS ===\n`);
+    devLog(`=== AUTH REQUEST END [${requestId}] SUCCESS ===\n`);
 
     // Return success with authentication (no redirect, let frontend handle it)
     const response = NextResponse.json({ 
@@ -142,7 +143,7 @@ export async function POST(request: NextRequest) {
     console.error(`[${requestId}] 🚨 EXCEPTION during verification (${duration}ms):`);
     console.error(`Error: ${error}`);
     console.error(`Stack: ${error instanceof Error ? error.stack : 'No stack trace'}`);
-    console.log(`=== AUTH REQUEST END [${requestId}] ERROR ===\n`);
+    devLog(`=== AUTH REQUEST END [${requestId}] ERROR ===\n`);
     
     return NextResponse.json({ 
       error: 'Verification failed',

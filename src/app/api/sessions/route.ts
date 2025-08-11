@@ -1,6 +1,6 @@
-import { prisma } from '@/lib/db';
-import { createSessionSchema } from '@/lib/validation';
-import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/database/db';
+import { createSessionSchema } from '@/lib/utils/validation';
+import { logger } from '@/lib/utils/logger';
 import { withValidation, withAuth, db, errorHandlers } from '@/lib/api-middleware';
 import { createSuccessResponse } from '@/lib/api-response';
 

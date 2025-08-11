@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { handleClientError } from '@/lib/error-utils';
+import { handleClientError } from '@/lib/utils/error-utils';
 
 interface AuthStatus {
   isAuthenticated: boolean;

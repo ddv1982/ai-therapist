@@ -2,16 +2,17 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useChat } from '@ai-sdk/react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Message } from '@/components/message';
+import { DefaultChatTransport } from 'ai';
+import { ScrollArea } from '@/components/ui/primitives/scroll-area';
+import { Textarea } from '@/components/ui/primitives/textarea';
+import { Button } from '@/components/ui/primitives/button';
+import { Message } from '@/components/messages';
 import { TypingIndicator } from './typing-indicator';
 import { SessionControls } from './session-controls';
 import type { ChatInterfaceProps } from '@/types/chat';
 import type { Session } from '@/types';
 import { Send } from 'lucide-react';
-import { generateSessionTitle } from '@/lib/utils';
+import { generateSessionTitle } from '@/lib/utils/utils';
 
 export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatInterfaceProps) {
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
@@ -21,33 +22,42 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   
+  // State for input handling (AI SDK 5 doesn't provide this)
+  const [input, setInput] = useState('');
+  
   // AI SDK useChat hook for simplified streaming
   const {
     messages,
-    input,
-    handleInputChange,
-    handleSubmit: handleChatSubmit,
-    isLoading
+    sendMessage,
+    status
   } = useChat({
-    api: '/api/chat',
-    body: {
-      selectedModel: 'openai/gpt-oss-20b',
-      sessionId: currentSession?.id
-    },
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      body: {
+        selectedModel: 'openai/gpt-oss-20b',
+        sessionId: currentSession?.id
+      }
+    }),
     onError: (error) => {
       console.error('Chat error:', error);
     },
-    onFinish: async (message) => {
+    onFinish: async ({ message }) => {
       // Save the AI response to database after completion
       if (currentSession) {
         try {
+          // Extract text content from message parts
+          const textContent = message.parts
+            .filter(part => part.type === 'text')
+            .map(part => part.text)
+            .join('');
+            
           await fetch('/api/messages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               sessionId: currentSession.id,
               role: 'assistant',
-              content: message.content,
+              content: textContent,
               modelUsed: 'ai-sdk', // We'll capture the actual model later
             }),
           });
@@ -57,6 +67,9 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
       }
     }
   });
+  
+  // Derived state for loading indicator
+  const isLoading = status === 'streaming' || status === 'submitted';
 
   // Check if environment variable is set
   useEffect(() => {
@@ -151,11 +164,18 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
     }
   };
 
+  // Input change handler
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
   // Enhanced submit handler that integrates AI SDK with therapeutic features
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !currentSession || isLoading) return;
 
+    const messageContent = input.trim();
+    
     // Save user message to database before sending
     try {
       await fetch('/api/messages', {
@@ -164,15 +184,21 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
         body: JSON.stringify({
           sessionId: currentSession.id,
           role: 'user',
-          content: input.trim(),
+          content: messageContent,
         }),
       });
     } catch (error) {
       console.error('Failed to save user message:', error);
     }
 
-    // Use AI SDK's handleSubmit with session context
-    handleChatSubmit(e);
+    // Use AI SDK's sendMessage
+    await sendMessage({ 
+      role: 'user', 
+      parts: [{ type: 'text', text: messageContent }]
+    });
+    
+    // Clear input after sending
+    setInput('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -201,17 +227,25 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
             </div>
           )}
           
-          {messages.map((message) => (
-            <Message
-              key={message.id}
-              message={{
-                id: message.id,
-                role: message.role as 'user' | 'assistant',
-                content: message.content,
-                timestamp: message.createdAt || new Date(),
-              }}
-            />
-          ))}
+          {messages.map((message) => {
+            // Extract text content from message parts
+            const textContent = message.parts
+              .filter(part => part.type === 'text')
+              .map(part => part.text)
+              .join('');
+            
+            return (
+              <Message
+                key={message.id}
+                message={{
+                  id: message.id,
+                  role: message.role as 'user' | 'assistant',
+                  content: textContent,
+                  timestamp: new Date(), // AI SDK 5 doesn't provide timestamp
+                }}
+              />
+            );
+          })}
           
           <TypingIndicator isVisible={isLoading} />
         </div>

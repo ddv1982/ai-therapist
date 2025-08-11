@@ -5,7 +5,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { SessionReportViewer } from '@/components/memory/session-report-viewer';
-import type { SessionReportDetail } from '@/lib/memory-utils';
+import type { SessionReportDetail } from '@/lib/chat/memory-utils';
 
 // Mock the message components
 jest.mock('@/components/messages/message-content', () => ({

@@ -1,9 +1,9 @@
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
-import { prisma } from '@/lib/db';
-import { generateSecureRandomString } from '@/lib/utils';
-import { encryptSensitiveData, decryptSensitiveData, encryptBackupCodes, decryptBackupCodes } from '@/lib/crypto-utils';
-import { logger } from '@/lib/logger';
+import { prisma } from '@/lib/database/db';
+import { generateSecureRandomString } from '@/lib/utils/utils';
+import { encryptSensitiveData, decryptSensitiveData, encryptBackupCodes, decryptBackupCodes } from '@/lib/auth/crypto-utils';
+import { logger } from '@/lib/utils/logger';
 
 export interface TOTPSetupData {
   secret: string;

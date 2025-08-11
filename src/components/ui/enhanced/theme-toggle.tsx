@@ -2,7 +2,7 @@
 
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/lib/theme-context';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/primitives/button';
 import { therapeuticInteractive } from '@/lib/design-tokens';
 
 export function ThemeToggle() {

@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { validateApiAuth } from '@/lib/api-auth';
-import { validateRequest } from '@/lib/validation';
-import { getSingleUserInfo } from '@/lib/user-session';
-import { logger, createRequestLogger } from '@/lib/logger';
+import { validateApiAuth } from '@/lib/api/api-auth';
+import { validateRequest } from '@/lib/utils/validation';
+import { getSingleUserInfo } from '@/lib/auth/user-session';
+import { logger, createRequestLogger } from '@/lib/utils/logger';
 import { 
   createAuthenticationErrorResponse,
   createValidationErrorResponse,
   createServerErrorResponse,
   ApiResponse,
 } from '@/lib/api-response';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/database/db';
 
 /**
  * Shared API middleware to eliminate DRY violations across routes

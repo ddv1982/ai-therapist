@@ -3,9 +3,9 @@
  * Tests critical security vulnerabilities and authentication flows
  */
 
-import { encryptSensitiveData, decryptSensitiveData } from '@/lib/crypto-utils';
+import { encryptSensitiveData, decryptSensitiveData } from '@/lib/auth/crypto-utils';
 import { generateSecureRandomString, generateUUID } from '@/lib/utils';
-import { generateDeviceFingerprint, generateBasicDeviceFingerprint } from '@/lib/device-fingerprint';
+import { generateDeviceFingerprint, generateBasicDeviceFingerprint } from '@/lib/auth/device-fingerprint';
 
 // Mock environment variables for testing
 const originalEnv = process.env;

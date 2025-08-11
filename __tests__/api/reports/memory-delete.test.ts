@@ -4,12 +4,12 @@
  */
 
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/database/db';
 import { DELETE } from '@/app/api/reports/memory/route';
 import { GET as GET_MANAGE } from '@/app/api/reports/memory/manage/route';
 
 // Mock the dependencies
-jest.mock('@/lib/db', () => ({
+jest.mock('@/lib/database/db', () => ({
   prisma: {
     sessionReport: {
       findMany: jest.fn(),
@@ -18,14 +18,14 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
-jest.mock('@/lib/api-auth', () => ({
+jest.mock('@/lib/api/api-auth', () => ({
   validateApiAuth: jest.fn(() => Promise.resolve({ isValid: true })),
   createAuthErrorResponse: jest.fn(() => 
     Response.json({ error: 'Authentication required' }, { status: 401 })
   ),
 }));
 
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/lib/utils/logger', () => ({
   logger: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -34,7 +34,7 @@ jest.mock('@/lib/logger', () => ({
   createRequestLogger: jest.fn(() => ({ requestId: 'test-request-id' })),
 }));
 
-jest.mock('@/lib/message-encryption', () => ({
+jest.mock('@/lib/chat/message-encryption', () => ({
   decryptSessionReportContent: jest.fn(),
 }));
 

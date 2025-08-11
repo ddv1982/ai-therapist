@@ -8,11 +8,10 @@ import {
   DialogTitle, 
   DialogDescription,
   DialogFooter 
-} from '@/components/ui/dialog';
-import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from '@/components/ui/primitives/dialog';
+import { Button } from '@/components/ui/primitives/button';
+import { Input } from '@/components/ui/primitives/input';
+import { Textarea } from '@/components/ui/primitives/textarea';
 import { 
   BookOpen, 
   Plus, 
@@ -29,8 +28,8 @@ import {
 } from 'lucide-react';
 import { CBTExportButton } from './cbt-export-button';
 import { useCBTForm } from '@/hooks/use-cbt-form';
-import { CBTDiaryEmotions } from '@/types/cbt';
-import { cn } from '@/lib/utils';
+import { CBTDiaryEmotions } from '@/types/therapy';
+import { cn } from '@/lib/utils/utils';
 import { getCBTTokens } from '@/lib/design-system/message';
 
 interface CBTDiaryModalProps {

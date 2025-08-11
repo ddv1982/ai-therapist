@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { checkDatabaseHealth } from '@/lib/db';
+import { checkDatabaseHealth } from '@/lib/database/db';
 import { withApiMiddleware } from '@/lib/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api-response';
 

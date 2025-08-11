@@ -14,13 +14,13 @@ import {
   regenerateBackupCodes,
   TOTPSetupData,
   BackupCode
-} from '@/lib/totp-service';
-import { prisma } from '@/lib/db';
-import { encryptSensitiveData, encryptBackupCodes } from '@/lib/crypto-utils';
+} from '@/lib/auth/totp-service';
+import { prisma } from '@/lib/database/db';
+import { encryptSensitiveData, encryptBackupCodes } from '@/lib/auth/crypto-utils';
 import speakeasy from 'speakeasy';
 
 // Mock the external dependencies
-jest.mock('@/lib/db', () => ({
+jest.mock('@/lib/database/db', () => ({
   prisma: {
     authConfig: {
       findFirst: jest.fn(),
@@ -31,14 +31,14 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
-jest.mock('@/lib/crypto-utils', () => ({
+jest.mock('@/lib/auth/crypto-utils', () => ({
   encryptSensitiveData: jest.fn(),
   decryptSensitiveData: jest.fn(),
   encryptBackupCodes: jest.fn(),
   decryptBackupCodes: jest.fn(),
 }));
 
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/lib/utils/logger', () => ({
   logger: {
     debug: jest.fn(),
     info: jest.fn(),
@@ -198,7 +198,7 @@ describe('TOTP Service Comprehensive Tests', () => {
 
   describe('getTOTPDiagnostics', () => {
     beforeEach(() => {
-      const { decryptSensitiveData } = require('@/lib/crypto-utils');
+      const { decryptSensitiveData } = require('@/lib/auth/crypto-utils');
       decryptSensitiveData.mockReturnValue('JBSWY3DPEHPK3PXP');
     });
 
@@ -263,7 +263,7 @@ describe('TOTP Service Comprehensive Tests', () => {
 
   describe('verifyTOTPToken', () => {
     beforeEach(() => {
-      const { decryptSensitiveData } = require('@/lib/crypto-utils');
+      const { decryptSensitiveData } = require('@/lib/auth/crypto-utils');
       decryptSensitiveData.mockReturnValue('JBSWY3DPEHPK3PXP');
     });
 
@@ -363,7 +363,7 @@ describe('TOTP Service Comprehensive Tests', () => {
 
   describe('verifyBackupCode', () => {
     beforeEach(() => {
-      const { decryptBackupCodes } = require('@/lib/crypto-utils');
+      const { decryptBackupCodes } = require('@/lib/auth/crypto-utils');
       decryptBackupCodes.mockReturnValue([
         { code: 'ABCD1234', used: false },
         { code: 'EFGH5678', used: true, usedAt: new Date('2024-01-01') },
@@ -451,7 +451,7 @@ describe('TOTP Service Comprehensive Tests', () => {
         isSetup: true
       });
 
-      const { decryptBackupCodes } = require('@/lib/crypto-utils');
+      const { decryptBackupCodes } = require('@/lib/auth/crypto-utils');
       decryptBackupCodes.mockImplementation(() => {
         throw new Error('Decryption failed');
       });
@@ -464,7 +464,7 @@ describe('TOTP Service Comprehensive Tests', () => {
 
   describe('getUnusedBackupCodesCount', () => {
     beforeEach(() => {
-      const { decryptBackupCodes } = require('@/lib/crypto-utils');
+      const { decryptBackupCodes } = require('@/lib/auth/crypto-utils');
       decryptBackupCodes.mockReturnValue([
         { code: 'ABCD1234', used: false },
         { code: 'EFGH5678', used: true, usedAt: new Date() },
@@ -502,7 +502,7 @@ describe('TOTP Service Comprehensive Tests', () => {
         isSetup: true
       });
 
-      const { decryptBackupCodes } = require('@/lib/crypto-utils');
+      const { decryptBackupCodes } = require('@/lib/auth/crypto-utils');
       decryptBackupCodes.mockImplementation(() => {
         throw new Error('Decryption failed');
       });
@@ -520,7 +520,7 @@ describe('TOTP Service Comprehensive Tests', () => {
         isSetup: true
       });
 
-      const { decryptBackupCodes } = require('@/lib/crypto-utils');
+      const { decryptBackupCodes } = require('@/lib/auth/crypto-utils');
       decryptBackupCodes.mockReturnValue([]);
 
       const count = await getUnusedBackupCodesCount();
@@ -665,7 +665,7 @@ describe('TOTP Service Comprehensive Tests', () => {
         isSetup: true
       });
 
-      const { decryptSensitiveData } = require('@/lib/crypto-utils');
+      const { decryptSensitiveData } = require('@/lib/auth/crypto-utils');
       decryptSensitiveData.mockImplementation(() => {
         throw new Error('Decryption failed');
       });
@@ -682,7 +682,7 @@ describe('TOTP Service Comprehensive Tests', () => {
         isSetup: true
       });
 
-      const { decryptBackupCodes } = require('@/lib/crypto-utils');
+      const { decryptBackupCodes } = require('@/lib/auth/crypto-utils');
       decryptBackupCodes.mockImplementation(() => {
         throw new Error('Malformed data');
       });

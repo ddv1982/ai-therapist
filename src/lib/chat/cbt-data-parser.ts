@@ -9,7 +9,7 @@ import {
   SchemaReflectionData,
   SchemaReflectionCategory,
   DEFAULT_SCHEMA_MODES
-} from '@/types/cbt';
+} from '@/types/therapy';
 
 export interface ParsedCBTData {
   formData: CBTDiaryFormData;
@@ -196,7 +196,7 @@ function extractEmotions(content: string, type: 'initial' | 'final'): CBTDiaryEm
             
             if (emotionMap[emotionName]) {
               const emotionKey = emotionMap[emotionName];
-              emotions[emotionKey] = emotionValue;
+              (emotions as any)[emotionKey] = emotionValue;
             } else {
               // Handle "other" emotions
               emotions.other = name.trim();

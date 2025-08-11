@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo, useMemo } from 'react';
-import { Message, type MessageData } from '@/components/message';
+import { Message, type MessageData } from '@/components/messages';
 
 interface VirtualizedMessageListProps {
   messages: MessageData[];

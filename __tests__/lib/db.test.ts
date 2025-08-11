@@ -3,10 +3,10 @@
  * Tests database connection, health checks, and core functionality
  */
 
-import { checkDatabaseHealth, disconnectDatabase, prisma } from '@/lib/db';
+import { checkDatabaseHealth, disconnectDatabase, prisma } from '@/lib/database/db';
 
 // Mock Prisma client
-jest.mock('@/lib/db', () => {
+jest.mock('@/lib/database/db', () => {
   const mockPrisma = {
     $queryRaw: jest.fn(),
     $disconnect: jest.fn(),

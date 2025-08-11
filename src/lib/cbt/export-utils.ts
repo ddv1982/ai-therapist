@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { CBTDiaryFormData } from '@/types/cbt';
+import { CBTDiaryFormData } from '@/types/therapy';
 
 // Export format types
 export type CBTExportFormat = 'pdf' | 'json' | 'markdown' | 'text';

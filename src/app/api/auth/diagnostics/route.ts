@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTOTPDiagnostics, isTOTPSetup } from '@/lib/totp-service';
+import { getTOTPDiagnostics, isTOTPSetup } from '@/lib/auth/totp-service';
 
 // GET /api/auth/diagnostics - Get TOTP diagnostics for debugging
 export async function GET(_request: NextRequest) {

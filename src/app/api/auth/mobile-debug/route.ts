@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTOTPDiagnostics, isTOTPSetup } from '@/lib/totp-service';
-import { getClientIP } from '@/lib/auth-middleware';
+import { getTOTPDiagnostics, isTOTPSetup } from '@/lib/auth/totp-service';
+import { getClientIP } from '@/lib/auth/auth-middleware';
 
 // GET /api/auth/mobile-debug - Get detailed mobile debugging info
 export async function GET(request: NextRequest) {

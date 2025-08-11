@@ -4,9 +4,9 @@
  */
 
 import { NextRequest } from 'next/server';
-import { validateApiAuth } from '@/lib/api-auth';
-import { prisma } from '@/lib/db';
-import { handleApiError } from '@/lib/error-utils';
+import { validateApiAuth } from '@/lib/api/api-auth';
+import { prisma } from '@/lib/database/db';
+import { handleApiError } from '@/lib/utils/error-utils';
 import { 
   createSuccessResponse, 
   createErrorResponse,
@@ -15,7 +15,7 @@ import {
 } from '@/lib/api-response';
 
 // Mock prisma for testing
-jest.mock('@/lib/db', () => ({
+jest.mock('@/lib/database/db', () => ({
   prisma: {
     session: {
       findMany: jest.fn(),
@@ -34,7 +34,7 @@ jest.mock('@/lib/db', () => ({
 }));
 
 // Mock auth validation
-jest.mock('@/lib/api-auth', () => ({
+jest.mock('@/lib/api/api-auth', () => ({
   validateApiAuth: jest.fn(),
 }));
 

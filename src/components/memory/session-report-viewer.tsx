@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import { MessageContent } from '@/components/messages/message-content';
 import { MessageAvatar } from '@/components/messages/message-avatar';
 import { MessageTimestamp } from '@/components/messages/message-timestamp';
 import { buildMessageClasses } from '@/lib/design-system/message';
-import { type SessionReportDetail } from '@/lib/memory-utils';
+import { type SessionReportDetail } from '@/lib/chat/memory-utils';
 import { Calendar, FileText, CheckCircle, Brain } from 'lucide-react';
 
 interface SessionReportViewerProps {

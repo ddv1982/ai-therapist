@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, ButtonProps } from '../primitives/button';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 
 interface ShimmerButtonProps extends ButtonProps {
   shimmerColor?: string;

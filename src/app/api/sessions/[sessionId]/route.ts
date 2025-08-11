@@ -1,8 +1,8 @@
-import { prisma } from '@/lib/db';
-import { updateSessionSchema } from '@/lib/validation';
+import { prisma } from '@/lib/database/db';
+import { updateSessionSchema } from '@/lib/utils/validation';
 import { withAuth, withValidationAndParams, db, errorHandlers } from '@/lib/api-middleware';
 import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api-response';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface SessionUpdateData {
   updatedAt: Date;

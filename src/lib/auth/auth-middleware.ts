@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuthSession } from '@/lib/device-fingerprint';
-import { isTOTPSetup } from '@/lib/totp-service';
+import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
+import { isTOTPSetup } from '@/lib/auth/totp-service';
 
 export interface AuthResult {
   isAuthenticated: boolean;

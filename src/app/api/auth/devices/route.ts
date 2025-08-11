@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTrustedDevices, revokeDeviceTrust } from '@/lib/device-fingerprint';
-import { verifyAuthSession } from '@/lib/device-fingerprint';
-import { regenerateBackupCodes, getUnusedBackupCodesCount } from '@/lib/totp-service';
+import { getTrustedDevices, revokeDeviceTrust } from '@/lib/auth/device-fingerprint';
+import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
+import { regenerateBackupCodes, getUnusedBackupCodesCount } from '@/lib/auth/totp-service';
 
 // GET /api/auth/devices - Get trusted devices and backup codes info
 export async function GET(request: NextRequest) {

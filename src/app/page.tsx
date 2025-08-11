@@ -18,9 +18,9 @@ import {
   BookOpen
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/enhanced/theme-toggle';
-import { generateUUID } from '@/lib/utils';
+import { generateUUID } from '@/lib/utils/utils';
 import { useToast } from '@/components/ui/primitives/toast';
-import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/memory-utils';
+import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/chat/memory-utils';
 // Removed handleStreamingResponse - AI SDK handles streaming automatically
 import { VirtualizedMessageList } from '@/components/chat/virtualized-message-list';
 import type { MessageData } from '@/components/messages/message';
@@ -514,7 +514,7 @@ export default function ChatPage() {
                         : msg
                     ));
                   }
-                } catch (e) {
+                } catch {
                   // Skip invalid JSON lines
                 }
               }
@@ -564,7 +564,7 @@ export default function ChatPage() {
         });
       }
     }
-  }, [input, isLoading, apiKey, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions]);
+  }, [input, isLoading, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions]);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -789,7 +789,7 @@ export default function ChatPage() {
                         : msg
                     ));
                   }
-                } catch (e) {
+                } catch {
                   // Skip invalid JSON lines
                 }
               }
@@ -838,7 +838,7 @@ export default function ChatPage() {
         });
       }
     }
-  }, [isLoading, apiKey, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, setSessions, loadSessions]);
+  }, [isLoading, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, setSessions, loadSessions]);
 
   return (
     <AuthGuard>

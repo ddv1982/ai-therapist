@@ -10,8 +10,8 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/primitives/button';
+import { cn } from '@/lib/utils/utils';
 import { isCBTDiaryMessage, analyzeCBTMessage } from '@/lib/chat/cbt-message-detector';
 import { parseCBTFromMarkdown } from '@/lib/chat/cbt-data-parser';
 import { useCBTExportActions } from '@/hooks/therapy/use-cbt-export';

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { logger, createRequestLogger } from '@/lib/logger';
-import { decryptSessionReportContent } from '@/lib/message-encryption';
-import { validateApiAuth, createAuthErrorResponse } from '@/lib/api-auth';
+import { prisma } from '@/lib/database/db';
+import { logger, createRequestLogger } from '@/lib/utils/logger';
+import { decryptSessionReportContent } from '@/lib/chat/message-encryption';
+import { validateApiAuth, createAuthErrorResponse } from '@/lib/api/api-auth';
 
 /**
  * GET /api/reports/memory/manage

@@ -10,7 +10,7 @@ import {
   CBTDiaryFormData,
   DEFAULT_SCHEMA_REFLECTION_QUESTIONS,
   getInitialCBTFormData
-} from '@/types/cbt';
+} from '@/types/therapy';
 
 describe('Schema Reflection Types', () => {
   describe('SchemaReflectionCategory', () => {

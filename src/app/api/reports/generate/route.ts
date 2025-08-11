@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateSessionReport, extractStructuredAnalysis, type ReportMessage } from '@/lib/groq-client';
-import { REPORT_GENERATION_PROMPT, ANALYSIS_EXTRACTION_PROMPT } from '@/lib/therapy-prompts';
-import { prisma } from '@/lib/db';
-import { logger, createRequestLogger } from '@/lib/logger';
-import { reportGenerationSchema, validateRequest } from '@/lib/validation';
-import { encryptSessionReportContent, encryptEnhancedAnalysisData } from '@/lib/message-encryption';
+import { generateSessionReport, extractStructuredAnalysis, type ReportMessage } from '@/lib/api/groq-client';
+import { REPORT_GENERATION_PROMPT, ANALYSIS_EXTRACTION_PROMPT } from '@/lib/therapy/therapy-prompts';
+import { prisma } from '@/lib/database/db';
+import { logger, createRequestLogger, devLog } from '@/lib/utils/logger';
+import { reportGenerationSchema, validateRequest } from '@/lib/utils/validation';
+import { encryptSessionReportContent, encryptEnhancedAnalysisData } from '@/lib/chat/message-encryption';
 import { validateTherapeuticContext, calculateContextualConfidence } from '@/lib/therapy/context-validator';
 import type { Prisma } from '@prisma/client';
 
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract structured analysis data from the report
-    console.log('Extracting structured analysis data...');
+    devLog('Extracting structured analysis data...');
     const analysisData = await extractStructuredAnalysis(completion, ANALYSIS_EXTRACTION_PROMPT, reportModel);
     
     let parsedAnalysis: ParsedAnalysis = {};
@@ -120,11 +120,11 @@ export async function POST(request: NextRequest) {
         }
         
         parsedAnalysis = JSON.parse(cleanedAnalysisData) as ParsedAnalysis;
-        console.log('Successfully parsed structured analysis data');
+        devLog('Successfully parsed structured analysis data');
         
         // Apply contextual validation to cognitive distortions
         if (parsedAnalysis.cognitiveDistortions && Array.isArray(parsedAnalysis.cognitiveDistortions)) {
-          console.log('Applying contextual validation to cognitive distortions...');
+          devLog('Applying contextual validation to cognitive distortions...');
           
           // Get combined message content for context analysis
           const fullConversationContent = messages.map(m => m.content).join(' ');
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
           
           // Filter and enhance distortions based on context validation
           parsedAnalysis.cognitiveDistortions = parsedAnalysis.cognitiveDistortions
-            .map((distortion: CognitiveDistortion) => {
+            .map((distortion: any) => {
               // Apply contextual confidence adjustment
               if (typeof distortion.contextAwareConfidence === 'number') {
                 const enhancedConfidence = calculateContextualConfidence(
@@ -144,11 +144,11 @@ export async function POST(request: NextRequest) {
               }
               return distortion;
             })
-            .filter((distortion: CognitiveDistortion) => {
+            .filter((distortion: any) => {
               // Filter out high false positive risk distortions
               if (distortion.falsePositiveRisk === 'high' && 
-                  distortion.contextAwareConfidence < 60) {
-                console.log(`Filtered out potential false positive: ${distortion.name}`);
+                  distortion.contextAwareConfidence && distortion.contextAwareConfidence < 60) {
+                devLog(`Filtered out potential false positive: ${distortion.name}`);
                 return false;
               }
               return true;

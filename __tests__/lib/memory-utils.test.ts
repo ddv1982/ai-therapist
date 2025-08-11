@@ -11,7 +11,7 @@ import {
   getSessionReportDetail,
   type MemoryContextInfo,
   type MemoryManagementResponse,
-} from '@/lib/memory-utils';
+} from '@/lib/chat/memory-utils';
 
 // Mock fetch
 global.fetch = jest.fn();

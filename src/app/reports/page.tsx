@@ -1,6 +1,6 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/primitives/card';
+import { Button } from '@/components/ui/primitives/button';
 import Link from 'next/link';
 import { FileText, Calendar, ArrowRight } from 'lucide-react';
 

@@ -8,9 +8,9 @@ import {
   DialogTitle, 
   DialogDescription,
   DialogFooter 
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+} from '@/components/ui/primitives/dialog';
+import { Button } from '@/components/ui/primitives/button';
+import { Card } from '@/components/ui/primitives/card';
 import { 
   Trash2, 
   AlertTriangle, 
@@ -22,7 +22,7 @@ import {
   RefreshCw,
   Eye
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import { useToast } from '@/components/ui/primitives/toast';
 import { 
   getMemoryManagementData, 
@@ -31,7 +31,7 @@ import {
   type MemoryDetailInfo,
   type MemoryManagementResponse,
   type MemoryContextInfo
-} from '@/lib/memory-utils';
+} from '@/lib/chat/memory-utils';
 import { SessionReportDetailModal } from './session-report-detail-modal';
 
 interface MemoryManagementModalProps {

@@ -1,4 +1,4 @@
-import { validateRequest, chatRequestSchema, messageSchema, reportGenerationSchema, chatMessageSchema } from '@/lib/validation'
+import { validateRequest, chatRequestSchema, messageSchema, reportGenerationSchema, chatMessageSchema } from '@/lib/utils/validation'
 
 describe('Validation Functions', () => {
   describe('validateRequest', () => {

@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { formatDuration } from '@/lib/utils';
+import { Button } from '@/components/ui/primitives/button';
+import { formatDuration } from '@/lib/utils/utils';
 import type { SessionControlsProps } from '@/types';
 import { Play, Square } from 'lucide-react';
 

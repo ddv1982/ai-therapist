@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuthSession, revokeAuthSession } from '@/lib/device-fingerprint';
-import { createLogoutResponse } from '@/lib/auth-middleware';
-import { isTOTPSetup } from '@/lib/totp-service';
+import { verifyAuthSession, revokeAuthSession } from '@/lib/auth/device-fingerprint';
+import { createLogoutResponse } from '@/lib/auth/auth-middleware';
+import { isTOTPSetup } from '@/lib/auth/totp-service';
 
 // GET /api/auth/session - Check session status
 export async function GET(request: NextRequest) {

@@ -7,14 +7,14 @@ import {
   DialogHeader, 
   DialogTitle,
   DialogFooter 
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+} from '@/components/ui/primitives/dialog';
+import { Button } from '@/components/ui/primitives/button';
 import { SessionReportViewer } from './session-report-viewer';
 import { 
   getSessionReportDetail, 
   type SessionReportDetail, 
   type MemoryDetailInfo 
-} from '@/lib/memory-utils';
+} from '@/lib/chat/memory-utils';
 import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 
 interface SessionReportDetailModalProps {

@@ -8,7 +8,7 @@ import {
   generateBasicDeviceFingerprint,
   generateDeviceName,
   getOrCreateDevice
-} from '@/lib/device-fingerprint';
+} from '@/lib/auth/device-fingerprint';
 
 describe('Device Fingerprinting', () => {
   describe('generateBasicDeviceFingerprint', () => {

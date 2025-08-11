@@ -1,4 +1,4 @@
-import { processMarkdown } from '@/lib/markdown-processor';
+import { processMarkdown } from '@/lib/ui/markdown-processor';
 
 describe('Markdown Processor with sanitize-html', () => {
   describe('Basic markdown patterns', () => {

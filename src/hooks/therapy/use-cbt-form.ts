@@ -5,7 +5,7 @@ import {
   CBTFormValidationError,
   SchemaReflectionCategory,
   getInitialCBTFormData 
-} from '@/types/cbt';
+} from '@/types/therapy';
 
 interface UseCBTFormOptions {
   autoSaveDelay?: number; // milliseconds

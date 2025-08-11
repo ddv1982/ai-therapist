@@ -2,7 +2,7 @@ import {
   generateDeviceUserId,
   getSingleUserInfo,
   getDeviceUserInfo
-} from '@/lib/user-session';
+} from '@/lib/auth/user-session';
 
 // Mock Request class for testing
 class MockRequest {

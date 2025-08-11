@@ -5,11 +5,11 @@
 
 import React, { act } from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ToastProvider, useToast } from '@/components/ui/toast';
+import { ToastProvider, useToast } from '@/components/ui/primitives/toast';
 
 // Mock the secure random string generation
-jest.mock('@/lib/utils', () => ({
-  ...jest.requireActual('@/lib/utils'),
+jest.mock('@/lib/utils/utils', () => ({
+  ...jest.requireActual('@/lib/utils/utils'),
   generateSecureRandomString: jest.fn((length) => 
     'mock-random-string-' + 'x'.repeat(length)
   ),
@@ -205,7 +205,7 @@ describe('Toast System', () => {
     });
 
     it('should generate unique IDs for each toast', async () => {
-      const { generateSecureRandomString } = require('@/lib/utils');
+      const { generateSecureRandomString } = require('@/lib/utils/utils');
       generateSecureRandomString.mockReturnValueOnce('id-1').mockReturnValueOnce('id-2');
 
       render(

@@ -3,9 +3,9 @@
  */
 
 import React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/design-system/message';
-import { processMarkdown } from '@/lib/markdown-processor';
+import { processMarkdown } from '@/lib/ui/markdown-processor';
 
 interface MessageContentProps {
   content: string;

@@ -3,7 +3,7 @@
  */
 
 import React, { memo } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/design-system/message';
 import { MessageAvatar } from './message-avatar';
 import { MessageContent } from './message-content';

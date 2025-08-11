@@ -1,7 +1,7 @@
 import { UAParser } from 'ua-parser-js';
 import { createHash } from 'crypto';
-import { prisma } from '@/lib/db';
-import { generateSecureRandomString } from '@/lib/utils';
+import { prisma } from '@/lib/database/db';
+import { generateSecureRandomString } from '@/lib/utils/utils';
 
 export interface DeviceInfo {
   deviceId: string;

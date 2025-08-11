@@ -4,10 +4,10 @@
  * Tests the core memory system functionality without complex API mocking
  */
 
-import { buildMemoryEnhancedPrompt, THERAPY_SYSTEM_PROMPT, type MemoryContext } from '@/lib/therapy-prompts';
+import { buildMemoryEnhancedPrompt, THERAPY_SYSTEM_PROMPT, type MemoryContext } from '@/lib/therapy/therapy-prompts';
 
 // Mock the message encryption module
-jest.mock('@/lib/message-encryption', () => ({
+jest.mock('@/lib/chat/message-encryption', () => ({
   encryptSessionReportContent: jest.fn((content: string) => `encrypted_${content}`),
   decryptSessionReportContent: jest.fn((encryptedContent: string) => 
     encryptedContent.replace('encrypted_', '')),
@@ -157,7 +157,7 @@ describe('Memory System Core Functionality', () => {
 
   describe('Encryption Integration', () => {
     it('should work with encrypted session report content', () => {
-      const { encryptSessionReportContent, decryptSessionReportContent } = require('@/lib/message-encryption');
+      const { encryptSessionReportContent, decryptSessionReportContent } = require('@/lib/chat/message-encryption');
 
       const originalContent = 'This is a therapeutic session report with sensitive information.';
       const encrypted = encryptSessionReportContent(originalContent);
@@ -168,7 +168,7 @@ describe('Memory System Core Functionality', () => {
     });
 
     it('should handle enhanced analysis data encryption', () => {
-      const { encryptEnhancedAnalysisData } = require('@/lib/message-encryption');
+      const { encryptEnhancedAnalysisData } = require('@/lib/chat/message-encryption');
 
       const analysisData = {
         cognitiveDistortions: [{ name: 'catastrophizing', severity: 'high' }],

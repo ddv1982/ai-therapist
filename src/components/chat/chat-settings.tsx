@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/primitives/button';
+import { Card } from '@/components/ui/primitives/card';
 import { X, Settings } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import type { ModelConfig, ChatSettings as ChatSettingsType } from '@/types/index';
 
 interface ChatSettingsProps {

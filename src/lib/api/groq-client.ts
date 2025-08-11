@@ -1,6 +1,5 @@
 import { generateText } from 'ai';
 import { model } from '@/ai/providers';
-import type { Message } from '@/types';
 
 // Simplified message type for report generation (only needs role and content)
 export interface ReportMessage {
@@ -21,7 +20,6 @@ export const generateSessionReport = async (messages: ReportMessage[], systemPro
     system: systemPrompt,
     prompt: userPrompt,
     temperature: 0.3,
-    maxTokens: 16384,
     topP: 0.9,
   });
 
@@ -36,7 +34,6 @@ export const extractStructuredAnalysis = async (reportContent: string, systemPro
     system: systemPrompt,
     prompt: userPrompt,
     temperature: 0.1, // Lower temperature for more consistent JSON output
-    maxTokens: 8192,
     topP: 0.8,
   });
 

@@ -201,6 +201,16 @@ class Logger {
 // Export singleton instance
 export const logger = new Logger();
 
+/**
+ * Development-only console logging - will not output anything in production
+ * Use this for debug/development console.log statements
+ */
+export function devLog(...args: unknown[]): void {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(...args);
+  }
+}
+
 // Helper to get header value from NextRequest
 function getHeaderValue(headers: Headers | Record<string, string | string[] | undefined>, key: string): string | undefined {
   if (headers instanceof Headers) {

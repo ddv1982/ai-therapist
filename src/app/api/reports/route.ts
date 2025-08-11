@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateSessionReport } from '@/lib/groq-client';
-import { REPORT_GENERATION_PROMPT } from '@/lib/therapy-prompts';
-import { prisma } from '@/lib/db';
+import { generateSessionReport } from '@/lib/api/groq-client';
+import { REPORT_GENERATION_PROMPT } from '@/lib/therapy/therapy-prompts';
+import { prisma } from '@/lib/database/db';
 import type { Message } from '@/types';
 
 export async function POST(request: NextRequest) {

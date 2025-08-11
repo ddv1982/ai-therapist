@@ -4,14 +4,14 @@
  */
 
 import { NextRequest } from 'next/server';
-import { generateTOTPSetup, saveTOTPConfig, isTOTPSetup } from '@/lib/totp-service';
-import { getOrCreateDevice, createAuthSession } from '@/lib/device-fingerprint';
-import { validateApiAuth } from '@/lib/api-auth';
+import { generateTOTPSetup, saveTOTPConfig, isTOTPSetup } from '@/lib/auth/totp-service';
+import { getOrCreateDevice, createAuthSession } from '@/lib/auth/device-fingerprint';
+import { validateApiAuth } from '@/lib/api/api-auth';
 
 // Mock external dependencies
-jest.mock('@/lib/totp-service');
-jest.mock('@/lib/device-fingerprint');
-jest.mock('@/lib/api-auth');
+jest.mock('@/lib/auth/totp-service');
+jest.mock('@/lib/auth/device-fingerprint');
+jest.mock('@/lib/api/api-auth');
 
 const mockedGenerateTOTPSetup = generateTOTPSetup as jest.MockedFunction<typeof generateTOTPSetup>;
 const mockedSaveTOTPConfig = saveTOTPConfig as jest.MockedFunction<typeof saveTOTPConfig>;

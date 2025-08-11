@@ -5,7 +5,7 @@ import {
   type SessionState,
   type Session,
   type SessionAction
-} from '@/lib/session-reducer';
+} from '@/lib/chat/session-reducer';
 import type { Message } from '@/types';
 
 // Test data helpers

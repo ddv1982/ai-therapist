@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { logger, createRequestLogger } from '@/lib/logger';
+import { prisma } from '@/lib/database/db';
+import { logger, createRequestLogger } from '@/lib/utils/logger';
 
 export async function GET(request: NextRequest) {
   const requestContext = createRequestLogger(request);
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     logger.debug('Fetching current active session', requestContext);
     
     // Get unified user ID for cross-device session access
-    const { getSingleUserInfo } = await import('@/lib/user-session');
+    const { getSingleUserInfo } = await import('@/lib/auth/user-session');
     const userInfo = getSingleUserInfo(request);
 
     // Find the most recent active session with messages
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get unified user ID for cross-device session access
-    const { getSingleUserInfo } = await import('@/lib/user-session');
+    const { getSingleUserInfo } = await import('@/lib/auth/user-session');
     const userInfo = getSingleUserInfo(request);
 
     // Update the session's updatedAt to mark it as current

@@ -1,4 +1,4 @@
-import { encryptSensitiveData, decryptSensitiveData } from '@/lib/crypto-utils';
+import { encryptSensitiveData, decryptSensitiveData } from '@/lib/auth/crypto-utils';
 
 /**
  * Message encryption service for therapeutic content

@@ -6,10 +6,10 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryManagementModal } from '@/components/memory/memory-management-modal';
-import * as memoryUtils from '@/lib/memory-utils';
+import * as memoryUtils from '@/lib/chat/memory-utils';
 
 // Mock the dependencies
-jest.mock('@/lib/memory-utils', () => ({
+jest.mock('@/lib/chat/memory-utils', () => ({
   getMemoryManagementData: jest.fn(),
   deleteMemory: jest.fn(),
   refreshMemoryContext: jest.fn(),

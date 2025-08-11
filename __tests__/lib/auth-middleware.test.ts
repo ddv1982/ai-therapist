@@ -11,14 +11,14 @@ import {
   getClientIP,
   authMiddleware,
   AuthResult
-} from '@/lib/auth-middleware';
+} from '@/lib/auth/auth-middleware';
 
 // Mock the external dependencies
-jest.mock('@/lib/device-fingerprint', () => ({
+jest.mock('@/lib/auth/device-fingerprint', () => ({
   verifyAuthSession: jest.fn(),
 }));
 
-jest.mock('@/lib/totp-service', () => ({
+jest.mock('@/lib/auth/totp-service', () => ({
   isTOTPSetup: jest.fn(),
 }));
 
@@ -46,8 +46,8 @@ jest.mock('next/server', () => ({
   },
 }));
 
-const mockVerifyAuthSession = require('@/lib/device-fingerprint').verifyAuthSession;
-const mockIsTOTPSetup = require('@/lib/totp-service').isTOTPSetup;
+const mockVerifyAuthSession = require('@/lib/auth/device-fingerprint').verifyAuthSession;
+const mockIsTOTPSetup = require('@/lib/auth/totp-service').isTOTPSetup;
 const mockNextResponse = NextResponse as jest.Mocked<typeof NextResponse>;
 
 // Helper to create mock NextRequest
@@ -571,8 +571,8 @@ describe('Authentication Middleware', () => {
 
     it('should redirect to verify as fallback', async () => {
       // Mock checkAuth to return unauthenticated without response
-      jest.doMock('@/lib/auth-middleware', () => ({
-        ...jest.requireActual('@/lib/auth-middleware'),
+      jest.doMock('@/lib/auth/auth-middleware', () => ({
+        ...jest.requireActual('@/lib/auth/auth-middleware'),
         checkAuth: jest.fn().mockResolvedValue({
           isAuthenticated: false,
           needsSetup: false,

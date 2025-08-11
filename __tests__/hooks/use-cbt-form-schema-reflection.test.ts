@@ -8,7 +8,7 @@ import { useCBTForm } from '@/hooks/use-cbt-form';
 import { 
   SchemaReflectionCategory,
   DEFAULT_SCHEMA_REFLECTION_QUESTIONS 
-} from '@/types/cbt';
+} from '@/types/therapy';
 
 describe('useCBTForm - Schema Reflection', () => {
   beforeEach(() => {
