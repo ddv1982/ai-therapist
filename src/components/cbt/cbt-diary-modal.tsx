@@ -9,6 +9,7 @@ import {
   DialogDescription,
   DialogFooter 
 } from '@/components/ui/dialog';
+import * as VisuallyHidden from '@radix-ui/react-visually-hidden';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -941,9 +942,6 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
       <DialogContent 
         className="max-w-4xl w-full h-[90vh] max-h-[90vh] flex flex-col p-0 gap-0 sm:max-w-5xl"
         showCloseButton={false}
-        role="dialog"
-        aria-labelledby="cbt-diary-title"
-        aria-describedby="cbt-diary-description"
       >
         {/* Header */}
         <DialogHeader className={tokens.modal.header}>
@@ -953,8 +951,8 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
                 <BookOpen className="w-5 h-5 text-white" />
               </div>
               <div>
-                <DialogTitle id="cbt-diary-title" className="text-lg font-semibold text-foreground">CBT Diary Entry</DialogTitle>
-                <DialogDescription id="cbt-diary-description" className="text-sm text-muted-foreground">
+                <DialogTitle className="text-lg font-semibold text-foreground">CBT Diary Entry</DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground">
                   Structured reflection for cognitive behavioral therapy
                 </DialogDescription>
               </div>
