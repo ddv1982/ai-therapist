@@ -17,7 +17,7 @@ function getNetworkIP() {
 }
 
 const networkIP = getNetworkIP();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
 
 console.log('🌐 Starting Therapist AI App (Production)...');
 console.log('');
@@ -29,7 +29,7 @@ console.log('📱 Access from other devices using: http://' + networkIP + ':' + 
 console.log('');
 
 // Start Next.js with network binding
-const nextProcess = spawn('next', ['start', '--hostname', '0.0.0.0'], {
+const nextProcess = spawn('next', ['start', '--hostname', '0.0.0.0', '--port', port], {
   stdio: ['inherit', 'pipe', 'pipe'],
   shell: true
 });

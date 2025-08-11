@@ -12,7 +12,7 @@ const nextConfig = {
   
   // Allow dev origins for network access during development
   ...(process.env.NODE_ENV === 'development' && {
-    allowedDevOrigins: ['192.168.178.59:3001', '192.168.178.59:3000', 'localhost:3000', '127.0.0.1:3000']
+    allowedDevOrigins: ['192.168.178.59:4001', '192.168.178.59:4000', 'localhost:4000', '127.0.0.1:4000']
   }),
   // Only expose client-safe environment variables
   env: {
@@ -32,7 +32,7 @@ const nextConfig = {
           {
             key: 'Access-Control-Allow-Origin',
             // Secure for development network access
-            value: isDevelopment ? 'http://localhost:3000' : 'https://your-domain.com',
+            value: isDevelopment ? 'http://localhost:4000' : 'https://your-domain.com',
           },
           {
             key: 'Access-Control-Allow-Methods',

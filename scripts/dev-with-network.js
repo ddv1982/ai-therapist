@@ -21,14 +21,14 @@ const networkIP = getNetworkIP();
 // Function to detect Next.js port by parsing its output
 function detectNextJSPort(output) {
   const portMatch = output.match(/http:\/\/localhost:(\d+)/);
-  return portMatch ? portMatch[1] : '3000';
+  return portMatch ? portMatch[1] : '4000';
 }
 
 console.log('🌐 Starting Therapist AI App...');
 console.log('');
 
 // Start Next.js with network binding
-const nextProcess = spawn('next', ['dev', '--hostname', '0.0.0.0'], {
+const nextProcess = spawn('next', ['dev', '--hostname', '0.0.0.0', '--port', '4000'], {
   stdio: ['inherit', 'pipe', 'pipe']
 });
 
