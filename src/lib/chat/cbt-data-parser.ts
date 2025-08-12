@@ -1,6 +1,7 @@
 import { 
   CBTDiaryFormData, 
-  CBTDiaryEmotions, 
+  CBTDiaryEmotions,
+  NumericEmotionKeys, 
   CBTDiaryAutomaticThought, 
   CBTDiaryRationalThought,
   CBTDiarySchemaMode,
@@ -182,8 +183,8 @@ function extractEmotions(content: string, type: 'initial' | 'final'): CBTDiaryEm
             const emotionName = name.trim().toLowerCase();
             const emotionValue = parseInt(intensity, 10);
             
-            // Map to known emotions
-            const emotionMap: Record<string, keyof CBTDiaryEmotions> = {
+            // Map to known numeric emotions only
+            const emotionMap: Record<string, NumericEmotionKeys> = {
               'fear': 'fear',
               'anger': 'anger',
               'sadness': 'sadness',
@@ -196,7 +197,7 @@ function extractEmotions(content: string, type: 'initial' | 'final'): CBTDiaryEm
             
             if (emotionMap[emotionName]) {
               const emotionKey = emotionMap[emotionName];
-              (emotions as any)[emotionKey] = emotionValue;
+              emotions[emotionKey] = emotionValue;
             } else {
               // Handle "other" emotions
               emotions.other = name.trim();

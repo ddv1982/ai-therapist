@@ -1,6 +1,13 @@
 // CBT (Cognitive Behavioral Therapy) Diary Types
 // Types for structured CBT diary entry form data and validation
 
+// Core numeric emotion properties only  
+export type NumericEmotionKeys = 'fear' | 'anger' | 'sadness' | 'joy' | 'anxiety' | 'shame' | 'guilt';
+
+// Interface for just the numeric emotions (useful for emotion processing)
+export type NumericEmotions = Pick<CBTDiaryEmotions, NumericEmotionKeys>;
+
+// Complete emotion interface with metadata and special fields
 export interface CBTDiaryEmotions {
   fear: number;
   anger: number;

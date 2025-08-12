@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { CBTExportButton } from './cbt-export-button';
 import { useCBTForm } from '@/hooks/use-cbt-form';
-import { CBTDiaryEmotions } from '@/types/therapy';
+import { NumericEmotionKeys } from '@/types/therapy';
 import { cn } from '@/lib/utils/utils';
 import { getCBTTokens } from '@/lib/design-system/message';
 
@@ -206,12 +206,17 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
     }
   }, [validateForm, generateFormattedOutput, onSendToChat, onOpenChange, resetForm]);
 
-  const handleEmotionChange = useCallback((emotionKey: keyof CBTDiaryEmotions, value: number) => {
+  const handleEmotionChange = useCallback((emotionKey: NumericEmotionKeys, value: number) => {
     updateNestedField(`initialEmotions.${emotionKey}`, value);
   }, [updateNestedField]);
 
-  const handleFinalEmotionChange = useCallback((emotionKey: keyof CBTDiaryEmotions, value: number) => {
+  const handleFinalEmotionChange = useCallback((emotionKey: NumericEmotionKeys, value: number) => {
     updateNestedField(`finalEmotions.${emotionKey}`, value);
+  }, [updateNestedField]);
+
+  // Handle special emotion fields like otherIntensity separately
+  const handleOtherIntensityChange = useCallback((field: 'initialEmotions' | 'finalEmotions', value: number) => {
+    updateNestedField(`${field}.otherIntensity`, value);
   }, [updateNestedField]);
 
   const renderSituationSection = () => (
@@ -307,7 +312,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
               <EmotionScale
                 label={formData.initialEmotions.other}
                 value={formData.initialEmotions.otherIntensity || 0}
-                onChange={(value) => handleEmotionChange('otherIntensity', value)}
+                onChange={(value) => handleOtherIntensityChange('initialEmotions', value)}
               />
             )}
           </div>
@@ -634,7 +639,7 @@ export const CBTDiaryModal: React.FC<CBTDiaryModalProps> = ({
             <EmotionScale
               label={formData.initialEmotions.other}
               value={formData.finalEmotions.otherIntensity || 0}
-              onChange={(value) => handleFinalEmotionChange('otherIntensity', value)}
+              onChange={(value) => handleOtherIntensityChange('finalEmotions', value)}
             />
           </div>
         )}
