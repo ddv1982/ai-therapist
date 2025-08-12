@@ -11,6 +11,7 @@ export interface CBTDiaryEmotions {
   guilt: number;
   other?: string;
   otherIntensity?: number;
+  [key: string]: number | string | undefined; // Allow dynamic property access
 }
 
 export interface CBTDiaryAutomaticThought {

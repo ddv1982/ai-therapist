@@ -9,11 +9,7 @@ import { validateTherapeuticContext, calculateContextualConfidence } from '@/lib
 import type { Prisma } from '@prisma/client';
 
 
-interface CognitiveDistortion {
-  name?: string;
-  contextAwareConfidence?: number;
-  falsePositiveRisk?: 'low' | 'medium' | 'high';
-}
+// Note: CognitiveDistortion interface removed - using types from report.ts instead
 
 interface ParsedAnalysis {
   sessionOverview?: {
@@ -131,8 +127,9 @@ export async function POST(request: NextRequest) {
           const contextValidation = validateTherapeuticContext(fullConversationContent);
           
           // Filter and enhance distortions based on context validation
-          parsedAnalysis.cognitiveDistortions = parsedAnalysis.cognitiveDistortions
-            .map((distortion: any) => {
+          if (parsedAnalysis.cognitiveDistortions) {
+            parsedAnalysis.cognitiveDistortions = (parsedAnalysis.cognitiveDistortions as Array<{ contextAwareConfidence?: number; falsePositiveRisk?: string; name?: string }>)
+              .map((distortion) => {
               // Apply contextual confidence adjustment
               if (typeof distortion.contextAwareConfidence === 'number') {
                 const enhancedConfidence = calculateContextualConfidence(
@@ -144,7 +141,7 @@ export async function POST(request: NextRequest) {
               }
               return distortion;
             })
-            .filter((distortion: any) => {
+              .filter((distortion) => {
               // Filter out high false positive risk distortions
               if (distortion.falsePositiveRisk === 'high' && 
                   distortion.contextAwareConfidence && distortion.contextAwareConfidence < 60) {
@@ -153,6 +150,7 @@ export async function POST(request: NextRequest) {
               }
               return true;
             });
+          }
           
           logger.info('Contextual validation applied to cognitive distortions', {
             originalCount: parsedAnalysis.cognitiveDistortions?.length || 0,
