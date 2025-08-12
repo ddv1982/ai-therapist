@@ -38,7 +38,7 @@ const mockConvertToModelMessages = jest.mocked(convertToModelMessages);
 
 // Helper to create mock request
 function createMockRequest(body: any, options: { url?: string } = {}): NextRequest {
-  const url = options.url || 'http://localhost:3000/api/chat';
+  const url = options.url || 'http://localhost:4000/api/chat';
   
   return {
     json: jest.fn().mockResolvedValue(body),
