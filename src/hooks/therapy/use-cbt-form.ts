@@ -6,6 +6,7 @@ import {
   SchemaReflectionCategory,
   getInitialCBTFormData 
 } from '@/types/therapy';
+import { clearAllCBTDrafts, loadCBTDraft, CBT_DRAFT_KEYS } from '@/lib/utils/cbt-draft-utils';
 
 interface UseCBTFormOptions {
   autoSaveDelay?: number; // milliseconds
@@ -41,10 +42,58 @@ interface UseCBTFormReturn {
   lastSaved?: Date;
 }
 
+// Helper function to load and merge individual drafts into initial form data
+const loadFormDataWithDrafts = (): CBTDiaryFormData => {
+  const initialData = getInitialCBTFormData();
+  
+  // Load individual component drafts and merge them
+  const situationDraft = loadCBTDraft(CBT_DRAFT_KEYS.SITUATION, { date: initialData.date, situation: initialData.situation });
+  const emotionsDraft = loadCBTDraft(CBT_DRAFT_KEYS.EMOTIONS, initialData.initialEmotions);
+  const thoughtsDraft = loadCBTDraft(CBT_DRAFT_KEYS.THOUGHTS, initialData.automaticThoughts);
+  const coreBeliefDraft = loadCBTDraft(CBT_DRAFT_KEYS.CORE_BELIEF, { 
+    coreBeliefText: initialData.coreBeliefText, 
+    coreBeliefCredibility: initialData.coreBeliefCredibility,
+    confirmingBehaviors: initialData.confirmingBehaviors,
+    avoidantBehaviors: initialData.avoidantBehaviors,
+    overridingBehaviors: initialData.overridingBehaviors
+  });
+  const challengeQuestionsDraft = loadCBTDraft(CBT_DRAFT_KEYS.CHALLENGE_QUESTIONS, initialData.challengeQuestions);
+  const rationalThoughtsDraft = loadCBTDraft(CBT_DRAFT_KEYS.RATIONAL_THOUGHTS, initialData.rationalThoughts);
+  const schemaModesDraft = loadCBTDraft(CBT_DRAFT_KEYS.SCHEMA_MODES, initialData.schemaModes);
+  const finalEmotionsDraft = loadCBTDraft(CBT_DRAFT_KEYS.FINAL_EMOTIONS, initialData.finalEmotions);
+  const newBehaviorsDraft = loadCBTDraft(CBT_DRAFT_KEYS.NEW_BEHAVIORS, initialData.newBehaviors);
+  const alternativeResponsesDraft = loadCBTDraft(CBT_DRAFT_KEYS.ALTERNATIVE_RESPONSES, initialData.alternativeResponses);
+  const schemaReflectionDraft = loadCBTDraft(CBT_DRAFT_KEYS.SCHEMA_REFLECTION_ASSESSMENT, initialData.schemaReflection.selfAssessment);
+
+  // Merge drafts with initial data
+  return {
+    ...initialData,
+    date: situationDraft.date,
+    situation: situationDraft.situation,
+    initialEmotions: emotionsDraft,
+    automaticThoughts: thoughtsDraft,
+    coreBeliefText: coreBeliefDraft.coreBeliefText,
+    coreBeliefCredibility: coreBeliefDraft.coreBeliefCredibility,
+    confirmingBehaviors: coreBeliefDraft.confirmingBehaviors,
+    avoidantBehaviors: coreBeliefDraft.avoidantBehaviors,
+    overridingBehaviors: coreBeliefDraft.overridingBehaviors,
+    challengeQuestions: challengeQuestionsDraft,
+    rationalThoughts: rationalThoughtsDraft,
+    schemaModes: schemaModesDraft,
+    finalEmotions: finalEmotionsDraft,
+    newBehaviors: newBehaviorsDraft,
+    alternativeResponses: alternativeResponsesDraft,
+    schemaReflection: {
+      ...initialData.schemaReflection,
+      selfAssessment: schemaReflectionDraft
+    }
+  };
+};
+
 export function useCBTForm(options: UseCBTFormOptions = {}): UseCBTFormReturn {
   const { autoSaveDelay = 1000, validateOnChange = true } = options;
   
-  const [formData, setFormData] = useState<CBTDiaryFormData>(getInitialCBTFormData);
+  const [formData, setFormData] = useState<CBTDiaryFormData>(() => loadFormDataWithDrafts());
   const [formState, setFormState] = useState<CBTDiaryFormState>({
     data: formData,
     isDirty: false,
@@ -292,6 +341,8 @@ export function useCBTForm(options: UseCBTFormOptions = {}): UseCBTFormReturn {
     setFormData(newData);
     initialDataRef.current = newData;
     localStorage.removeItem('cbt-form-draft');
+    // Also clear all individual CBT component drafts
+    clearAllCBTDrafts();
   }, []);
 
   // Generate formatted output for sending to chat
@@ -478,14 +529,24 @@ ${formData.alternativeResponses
 *This reflection is a tool for self-awareness and growth. Be patient and compassionate with yourself throughout this process.*`;
   }, [formData]);
 
-  // Load draft from localStorage on mount
+  // Load draft from localStorage on mount - now integrated into initial state
+  // This effect now just handles fallback legacy draft loading
   useEffect(() => {
     const savedDraft = localStorage.getItem('cbt-form-draft');
     if (savedDraft) {
       try {
         const parsedDraft = JSON.parse(savedDraft);
-        setFormData(parsedDraft);
-        setFormState(prev => ({ ...prev, lastSaved: new Date() }));
+        // Only load legacy draft if no individual drafts exist
+        const hasIndividualDrafts = [
+          CBT_DRAFT_KEYS.SITUATION,
+          CBT_DRAFT_KEYS.EMOTIONS,
+          CBT_DRAFT_KEYS.THOUGHTS
+        ].some(key => localStorage.getItem(key));
+        
+        if (!hasIndividualDrafts) {
+          setFormData(parsedDraft);
+          setFormState(prev => ({ ...prev, lastSaved: new Date() }));
+        }
       } catch (error) {
         console.error('Failed to load CBT form draft:', error);
         localStorage.removeItem('cbt-form-draft');
