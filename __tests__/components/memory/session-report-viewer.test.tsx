@@ -4,11 +4,11 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { SessionReportViewer } from '@/components/memory/session-report-viewer';
+import { SessionReportViewer } from '@/features/therapy/memory/session-report-viewer';
 import type { SessionReportDetail } from '@/lib/chat/memory-utils';
 
 // Mock the message components
-jest.mock('@/components/messages/message-content', () => ({
+jest.mock('@/features/chat/messages/message-content', () => ({
   MessageContent: ({ content, role }: any) => (
     <div data-testid="message-content" data-role={role}>
       {content}
@@ -16,7 +16,7 @@ jest.mock('@/components/messages/message-content', () => ({
   ),
 }));
 
-jest.mock('@/components/messages/message-avatar', () => ({
+jest.mock('@/features/chat/messages/message-avatar', () => ({
   MessageAvatar: ({ role }: any) => (
     <div data-testid="message-avatar" data-role={role}>
       Avatar for {role}
@@ -24,7 +24,7 @@ jest.mock('@/components/messages/message-avatar', () => ({
   ),
 }));
 
-jest.mock('@/components/messages/message-timestamp', () => ({
+jest.mock('@/features/chat/messages/message-timestamp', () => ({
   MessageTimestamp: ({ timestamp, role }: any) => (
     <div data-testid="message-timestamp" data-role={role}>
       {timestamp.toDateString()}
@@ -174,8 +174,8 @@ describe('SessionReportViewer', () => {
       const { container } = render(<SessionReportViewer reportDetail={mockReportDetail} />);
 
       // Should have therapeutic typography classes
-      expect(container.querySelector('.text-therapy-lg')).toBeInTheDocument();
-      expect(container.querySelector('.text-therapy-sm')).toBeInTheDocument();
+      expect(container.querySelector('.text-lg')).toBeInTheDocument();
+      expect(container.querySelector('.text-sm')).toBeInTheDocument();
       
       // Should have proper spacing classes
       expect(container.querySelector('.spacing-md')).toBeInTheDocument();

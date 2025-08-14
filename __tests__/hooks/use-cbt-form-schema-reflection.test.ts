@@ -4,7 +4,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { useCBTForm } from '@/hooks/use-cbt-form';
+import { useCBTForm } from '@/hooks/therapy/use-cbt-form';
 import { 
   SchemaReflectionCategory,
   DEFAULT_SCHEMA_REFLECTION_QUESTIONS 

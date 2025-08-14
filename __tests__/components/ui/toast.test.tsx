@@ -5,7 +5,7 @@
 
 import React, { act } from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { ToastProvider, useToast } from '@/components/ui/primitives/toast';
+import { ToastProvider, useToast } from '@/components/ui/toast';
 
 // Mock the secure random string generation
 jest.mock('@/lib/utils/utils', () => ({

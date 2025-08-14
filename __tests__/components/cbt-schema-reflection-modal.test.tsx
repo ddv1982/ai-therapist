@@ -5,10 +5,10 @@
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { CBTDiaryModal } from '@/components/cbt/cbt-diary-modal';
+import { CBTDiaryModal } from '@/features/therapy/cbt/cbt-diary-modal';
 
 // Mock the CBT export button component
-jest.mock('@/components/cbt/cbt-export-button', () => ({
+jest.mock('@/features/therapy/cbt/cbt-export-button', () => ({
   CBTExportButton: ({ formData, isValid, disabled }: any) => (
     <button 
       data-testid="cbt-export-button"
@@ -116,7 +116,7 @@ const mockFormMethods = {
 };
 
 // Mock the CBT form hook
-jest.mock('@/hooks/use-cbt-form', () => ({
+jest.mock('@/hooks/therapy/use-cbt-form', () => ({
   useCBTForm: jest.fn(() => ({
     formData: mockFormData,
     ...mockFormMethods
@@ -184,7 +184,7 @@ jest.mock('lucide-react', () => ({
   Target: () => <div data-testid="target-icon" />
 }));
 
-const { useCBTForm: mockUseCBTForm } = require('@/hooks/use-cbt-form');
+const { useCBTForm: mockUseCBTForm } = require('@/hooks/therapy/use-cbt-form');
 
 describe('CBT Schema Reflection Modal', () => {
   const defaultProps = {
@@ -214,7 +214,8 @@ describe('CBT Schema Reflection Modal', () => {
       
       // Should show reflection content
       expect(screen.getByText('Schema Reflection')).toBeInTheDocument();
-      expect(screen.getByText('(Optional)')).toBeInTheDocument();
+      // Check that reflection UI elements are present
+      expect(screen.getByText('Enable Schema Reflection')).toBeInTheDocument();
     });
   });
 

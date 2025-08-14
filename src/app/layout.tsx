@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/providers/theme-provider';
-import { ErrorBoundary } from '@/components/ui/layout/error-boundary';
-import { ToastProvider } from '@/components/ui/primitives/toast';
+import { ErrorBoundary } from '@/components/layout/error-boundary';
+import { ToastProvider } from '@/components/ui/toast';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -37,18 +37,18 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body className="bg-background font-sans antialiased">
-        <ErrorBoundary>
-          <ThemeProvider>
-            <ToastProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <ErrorBoundary>
               {children}
-            </ToastProvider>
-          </ThemeProvider>
-        </ErrorBoundary>
+            </ErrorBoundary>
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

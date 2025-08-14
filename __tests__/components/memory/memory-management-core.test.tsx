@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryManagementModal } from '@/components/memory/memory-management-modal';
+import { MemoryManagementModal } from '@/features/therapy/memory/memory-management-modal';
 import * as memoryUtils from '@/lib/chat/memory-utils';
 
 // Mock the dependencies
@@ -15,7 +15,7 @@ jest.mock('@/lib/chat/memory-utils', () => ({
   refreshMemoryContext: jest.fn(),
 }));
 
-jest.mock('@/components/ui/primitives/toast', () => ({
+jest.mock('@/components/ui/toast', () => ({
   useToast: () => ({
     showToast: jest.fn(),
   }),

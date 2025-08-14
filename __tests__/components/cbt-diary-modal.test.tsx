@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { CBTDiaryModal } from '@/components/cbt/cbt-diary-modal';
+import { CBTDiaryModal } from '@/features/therapy/cbt/cbt-diary-modal';
 
 // Mock the CBT export button component
-jest.mock('@/components/cbt/cbt-export-button', () => ({
+jest.mock('@/features/therapy/cbt/cbt-export-button', () => ({
   CBTExportButton: ({ formData, isValid, disabled }: any) => (
     <button 
       data-testid="cbt-export-button"
@@ -17,7 +17,7 @@ jest.mock('@/components/cbt/cbt-export-button', () => ({
 }));
 
 // Mock the hook
-jest.mock('@/hooks/use-cbt-form', () => ({
+jest.mock('@/hooks/therapy/use-cbt-form', () => ({
   useCBTForm: () => ({
     formData: {
       date: '2025-01-01',

@@ -4,64 +4,90 @@
 
 @layer base {
   :root {
-    /* Light theme - Vibrant, warm therapeutic colors with better contrast */
-    --background: 40 23% 97%; /* Warm off-white */
-    --foreground: 222 47% 11%; /* Deep blue-gray */
-    --card: 0 0% 100%; /* Pure white for cards */
-    --card-foreground: 222 47% 11%;
+    /* Modern shadcn v2 with tweakcn.com-inspired therapeutic colors */
+    --background: 0 0% 100%;
+    --foreground: 222 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 222 84% 4.9%;
     --primary: 211 96% 48%; /* Vibrant therapeutic blue */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 40 21% 94%; /* Warm beige */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
-    --muted: 40 14% 96%; /* Soft warm gray */
-    --muted-foreground: 215 20% 40%; /* Darker muted text */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
     --accent: 152 60% 42%; /* Rich therapeutic teal */
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 90%; /* Subtle blue-tinted border */
-    --input: 220 13% 90%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 211 96% 48%;
     --radius: 0.75rem;
     
-    /* Enhanced gradients for light mode */
+    /* Enhanced therapeutic gradients */
     --gradient-primary: linear-gradient(135deg, hsl(211 96% 48%) 0%, hsl(217 91% 54%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(152 60% 42%) 0%, hsl(162 63% 46%) 100%);
+    --gradient-muted: linear-gradient(135deg, hsl(210 40% 96%) 0%, hsl(214 32% 91%) 100%);
     
-    /* Sidebar background */
-    --sidebar-background: hsl(210 25% 98%);
+    /* Professional therapeutic colors */
+    --therapy-success: 147 45% 55%;
+    --therapy-warning: 38 92% 50%;
+    --therapy-info: 210 85% 60%;
+    --therapy-calm: 206 100% 50%;
+    --therapy-warm: 25 95% 53%;
+    
+    /* Component-specific variables */
+    --sidebar-background: hsl(210 40% 98%);
+    --modal-backdrop: 222 47% 11% / 0.8;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   }
 
   .dark {
-    /* Dark theme - Deep, comfortable colors for evening therapy */
-    --background: 222 25% 8%;
-    --foreground: 210 15% 92%;
-    --card: 222 25% 10%;
-    --card-foreground: 210 15% 92%;
-    --popover: 222 25% 10%;
-    --popover-foreground: 210 15% 92%;
+    /* Modern dark theme with therapeutic warmth */
+    --background: 222 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
     --primary: 210 85% 60%; /* Brighter blue for dark mode */
-    --primary-foreground: 222 25% 8%;
-    --secondary: 217 25% 15%;
-    --secondary-foreground: 210 15% 92%;
-    --muted: 217 25% 12%;
-    --muted-foreground: 215 15% 65%;
-    --accent: 147 45% 55%; /* Brighter green for dark mode */
-    --accent-foreground: 222 25% 8%;
+    --primary-foreground: 222 84% 4.9%;
+    --secondary: 217 32% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 32% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 147 45% 55%; /* Brighter teal for dark mode */
+    --accent-foreground: 222 84% 4.9%;
     --destructive: 0 75% 65%;
-    --destructive-foreground: 222 25% 8%;
-    --border: 217 25% 18%;
-    --input: 217 25% 18%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 32% 17%;
+    --input: 217 32% 17%;
     --ring: 210 85% 60%;
     
     /* Dark theme gradients */
     --gradient-primary: linear-gradient(135deg, hsl(210 85% 60%) 0%, hsl(220 85% 65%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(147 45% 55%) 0%, hsl(157 45% 60%) 100%);
+    --gradient-muted: linear-gradient(135deg, hsl(217 32% 17%) 0%, hsl(217 32% 20%) 100%);
     
-    /* Sidebar background */
-    --sidebar-background: hsl(222 25% 10%);
+    /* Dark therapeutic colors */
+    --therapy-success: 147 50% 60%;
+    --therapy-warning: 38 95% 60%;
+    --therapy-info: 210 90% 65%;
+    --therapy-calm: 206 100% 60%;
+    --therapy-warm: 25 95% 63%;
+    
+    /* Dark component variables */
+    --sidebar-background: hsl(222 84% 4.9%);
+    --modal-backdrop: 0 0% 0% / 0.9;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
   }
 }
 
@@ -179,47 +205,37 @@
 }
 
 @layer components {
-  /* Therapeutic Typography System - 4 Sizes Only */
-  .text-therapy-xl {
-    @apply text-3xl font-semibold leading-tight;
+  /* Enhanced Therapeutic Typography System - Professional scaling */
+  /* Note: Typography classes are already defined in Tailwind config, no need to redefine here */
+
+  /* Professional 8pt Grid System - Strict adherence to 8px multiples */
+  .spacing-therapy-xs {
+    @apply p-therapy-xs; /* 8px */
   }
   
-  .text-therapy-lg {
-    @apply text-xl font-semibold leading-snug;
+  .spacing-therapy-sm {
+    @apply p-therapy-sm; /* 16px */
   }
   
-  .text-therapy-base {
-    @apply text-base font-normal leading-relaxed;
+  .spacing-therapy-md {
+    @apply p-therapy-md; /* 24px */
   }
   
-  .text-therapy-sm {
-    @apply text-sm font-normal leading-normal;
+  .spacing-therapy-lg {
+    @apply p-therapy-lg; /* 32px */
+  }
+  
+  .spacing-therapy-xl {
+    @apply p-therapy-xl; /* 48px */
+  }
+  
+  .spacing-therapy-2xl {
+    @apply p-therapy-2xl; /* 64px */
   }
 
-  /* 8pt Grid System Components */
-  .spacing-xs {
-    @apply p-2; /* 8px */
-  }
-  
-  .spacing-sm {
-    @apply p-4; /* 16px */
-  }
-  
-  .spacing-md {
-    @apply p-6; /* 24px */
-  }
-  
-  .spacing-lg {
-    @apply p-8; /* 32px */
-  }
-  
-  .spacing-xl {
-    @apply p-12; /* 48px */
-  }
-
-  /* Therapeutic Color Variants */
+  /* Modern Therapeutic Color Variants */
   .therapy-primary {
-    @apply bg-primary text-primary-foreground;
+    @apply bg-primary text-primary-foreground shadow-sm;
   }
   
   .therapy-secondary {
@@ -227,11 +243,92 @@
   }
   
   .therapy-accent {
-    @apply bg-accent text-accent-foreground;
+    @apply bg-accent text-accent-foreground shadow-sm;
   }
   
   .therapy-muted {
     @apply bg-muted text-muted-foreground;
+  }
+  
+  .therapy-card {
+    @apply bg-card text-card-foreground border border-border rounded-therapy-md shadow-sm;
+  }
+  
+  .therapy-success {
+    background-color: hsl(var(--therapy-success));
+    color: hsl(var(--therapy-success-foreground, var(--background)));
+  }
+  
+  .therapy-warning {
+    background-color: hsl(var(--therapy-warning));
+    color: hsl(var(--therapy-warning-foreground, var(--background)));
+  }
+  
+  .therapy-info {
+    background-color: hsl(var(--therapy-info));
+    color: hsl(var(--therapy-info-foreground, var(--background)));
+  }
+
+  /* Professional Component Patterns */
+  .therapy-modal {
+    @apply bg-background border border-border rounded-therapy-lg shadow-xl backdrop-blur-sm;
+  }
+  
+  .therapy-modal-content {
+    @apply spacing-therapy-md max-h-[90vh] overflow-y-auto;
+  }
+  
+  .therapy-modal-header {
+    @apply spacing-therapy-md border-b border-border flex items-center justify-between;
+  }
+  
+  .therapy-modal-footer {
+    @apply spacing-therapy-md border-t border-border flex items-center justify-end gap-therapy-sm;
+  }
+  
+  .therapy-input {
+    @apply w-full px-therapy-sm py-therapy-xs bg-background border border-input rounded-therapy-sm text-base;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
+    @apply placeholder:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply transition-colors duration-200;
+  }
+  
+  .therapy-button {
+    @apply inline-flex items-center justify-center px-therapy-md py-therapy-xs rounded-therapy-sm text-base font-medium;
+    @apply transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+    @apply disabled:opacity-50 disabled:pointer-events-none;
+  }
+  
+  .therapy-button-primary {
+    @apply therapy-button therapy-primary hover:bg-primary/90 active:scale-95;
+  }
+  
+  .therapy-button-secondary {
+    @apply therapy-button therapy-secondary hover:bg-secondary/80 active:scale-95;
+  }
+  
+  .therapy-button-accent {
+    @apply therapy-button therapy-accent hover:bg-accent/90 active:scale-95;
+  }
+  
+  .therapy-button-ghost {
+    @apply therapy-button hover:bg-accent/10 hover:text-accent-foreground active:scale-95;
+  }
+  
+  .therapy-form-group {
+    @apply space-y-therapy-xs;
+  }
+  
+  .therapy-form-label {
+    @apply text-sm font-medium text-foreground;
+  }
+  
+  .therapy-form-description {
+    @apply text-xs text-muted-foreground;
+  }
+  
+  .therapy-form-error {
+    @apply text-xs text-destructive;
   }
 
   /* Chat-specific styling */
@@ -744,6 +841,76 @@
   .streaming-message-wrapper {
     -webkit-overflow-scrolling: touch !important;
     overflow-y: visible !important;
+  }
+}
+
+/* CBT Modal Scroll Optimizations */
+.cbt-modal-scroll-area {
+  /* Smooth scrolling with momentum on iOS */
+  -webkit-overflow-scrolling: touch;
+  
+  /* GPU acceleration for smooth scrolling */
+  will-change: scroll-position;
+  transform: translateZ(0);
+  
+  /* Optimize scroll performance */
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+.cbt-modal-scroll-area::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cbt-modal-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cbt-modal-scroll-area::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 4px;
+}
+
+.cbt-modal-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* CBT Modal Card Performance Optimizations */
+.cbt-modal-card {
+  /* CSS containment for better rendering performance */
+  contain: layout style paint;
+  
+  /* GPU layer promotion for smooth animations */
+  transform: translateZ(0);
+  
+  /* Optimize for layout changes */
+  will-change: auto;
+}
+
+/* Mobile touch scroll enhancements for CBT modal */
+@media (max-width: 768px) {
+  .cbt-modal-scroll-area {
+    /* Enhanced touch scrolling */
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    
+    /* Prevent scroll bouncing */
+    overscroll-behavior: contain;
+  }
+  
+  .cbt-modal-card {
+    /* Reduce GPU usage on mobile */
+    will-change: auto;
+    transform: none;
+  }
+}
+
+/* Performance optimizations for low-power devices */
+@media (max-resolution: 1dppx) {
+  .cbt-modal-card {
+    /* Disable GPU acceleration on low-res displays */
+    transform: none;
+    will-change: auto;
   }
 }
 

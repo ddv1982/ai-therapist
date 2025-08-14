@@ -1,44 +1,34 @@
 /**
  * Components Domain - Master Exports
- * Centralized exports for all component domains
+ * Updated for feature-based organization
  */
 
-// Domain-specific exports
-export * as auth from './auth';
-export * as chat from './chat';
-export * as therapy from './therapy';
-export * as messages from './messages';
+// Feature-based exports (new structure)
+export * as features from '@/features';
+
+// Core component exports
 export * as ui from './ui';
 export * as providers from './providers';
+export * as layout from './layout';
+export * as shared from './shared';
 
-// Direct exports for commonly used components
-export * from './messages';
-export * from './providers';
+// Direct UI exports for convenience
+export * from './ui';
+export * from './layout';
 
-// UI components (flattened for convenience)
-export * from './ui/primitives';
-export * from './ui/enhanced';
-export * from './ui/layout';
-
-// Backward compatible exports for easier migration
-// Auth components
-export * from './auth/auth-guard';
-export * from './auth/security-settings';
-
-// Chat components
-export * from './chat/chat-interface';
-export * from './chat/chat-settings';
-export * from './chat/session-controls';
-export * from './chat/session-sidebar';
-
-// Message components
-export * from './messages/message';
-export * from './messages/message-avatar';
-export * from './messages/message-content';
-export * from './messages/message-timestamp';
+// Shared components (selective exports to avoid conflicts)
+export { ShimmerButton } from './shared/shimmer-button';
+export { ThemeToggle } from './shared/theme-toggle';
 
 // Provider components
-export * from './providers/theme-provider';
+export * from './providers';
 
-// Layout exports for backward compatibility
-export { ErrorBoundary } from './ui/layout/error-boundary';
+// Backward compatibility aliases - redirect to new feature locations
+// NOTE: Use direct feature imports for new code
+export { AuthGuard } from '@/features/auth/components/auth-guard';
+export { SecuritySettings } from '@/features/auth/components/security-settings';
+export { ChatInterface } from '@/features/chat/components/chat-interface';
+export { SessionControls } from '@/features/chat/components/session-controls';
+export { SessionSidebar } from '@/features/chat/components/session-sidebar';
+export { CBTDiaryModal } from '@/features/therapy/cbt/cbt-diary-modal';
+export { MemoryManagementModal } from '@/features/therapy/memory/memory-management-modal';

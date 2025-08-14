@@ -5,7 +5,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { SessionReportDetailModal } from '@/components/memory/session-report-detail-modal';
+import { SessionReportDetailModal } from '@/features/therapy/memory/session-report-detail-modal';
 import * as memoryUtils from '@/lib/chat/memory-utils';
 import type { MemoryDetailInfo } from '@/lib/chat/memory-utils';
 
@@ -14,7 +14,7 @@ jest.mock('@/lib/chat/memory-utils', () => ({
   getSessionReportDetail: jest.fn(),
 }));
 
-jest.mock('@/components/memory/session-report-viewer', () => ({
+jest.mock('@/features/therapy/memory/session-report-viewer', () => ({
   SessionReportViewer: ({ reportDetail }: any) => (
     <div data-testid="session-report-viewer">
       <h2>{reportDetail.sessionTitle}</h2>

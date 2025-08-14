@@ -85,7 +85,7 @@ export function preloadComponent<T = Record<string, unknown>>(
  * Lazy loaded CBT diary modal for better initial bundle size
  */
 export const LazyCSBTDiaryModal = createLazyComponent(
-  () => import('@/components/cbt/cbt-diary-modal'),
+  () => import('@/features/therapy/cbt/cbt-diary-modal'),
   'CBTDiaryModal'
 );
 
@@ -97,7 +97,7 @@ export const LazyCSBTDiaryModal = createLazyComponent(
  * Lazy loaded security settings for administrative features
  */
 export const LazySecuritySettings = createLazyComponent(
-  () => import('@/components/auth/security-settings'),
+  () => import('@/features/auth/components/security-settings'),
   'SecuritySettings'
 );
 
@@ -369,7 +369,7 @@ export const messageCache = new TherapeuticMessageCache();
 export const preloadTherapeuticComponents = () => {
   // Preload commonly used components
   preloadComponent(
-    () => import('@/components/cbt/cbt-diary-modal'),
+    () => import('@/features/therapy/cbt/cbt-diary-modal'),
     'CBTDiaryModal'
   );
   

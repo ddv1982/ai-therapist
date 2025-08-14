@@ -43,75 +43,11 @@ export const messageTypography = {
 
 // Note: List styling now handled by standard browser defaults with CSS classes
 
-// CBT Component styling tokens - extends message system for forms
-export const cbtComponentTokens = {
-  // Modal sections match message bubble aesthetic
-  modal: {
-    header: "px-6 py-4 border-b border-border/30 flex-shrink-0",
-    navigation: "px-6 py-3 border-b border-border/20 bg-muted/20 flex-shrink-0", 
-    content: "flex-1 overflow-y-auto p-6",
-    footer: "px-6 py-5 flex-shrink-0"
-  },
-  
-  // Form sections styled like message content areas
-  section: {
-    container: "space-y-6",
-    header: "text-lg font-semibold mb-4 flex items-center gap-2 text-foreground",
-    subHeader: "text-base font-semibold mb-4 text-foreground",
-    description: "text-sm text-muted-foreground mb-4"
-  },
-
-  // Form inputs matching message bubble styling with improved UX
-  input: {
-    field: "w-full min-h-[120px] resize-none bg-card border border-border/30 rounded-lg p-4 text-foreground leading-relaxed hover:border-border/50 focus:border-primary/50 transition-colors duration-200",
-    label: "block text-sm font-medium mb-2 text-foreground",
-    helper: "text-xs text-muted-foreground mt-2",
-    error: "text-red-500 text-xs mt-1",
-    required: "text-red-500"
-  },
-
-  // Emotion sliders with message system colors
-  slider: {
-    container: "space-y-2",
-    label: "flex justify-between items-center",
-    labelText: "text-sm font-medium text-foreground",
-    value: "text-sm text-muted-foreground font-mono",
-    track: "w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer",
-    scale: "flex justify-between text-xs text-muted-foreground"
-  },
-
-  // Array fields styled like message content blocks
-  arrayField: {
-    container: "space-y-4",
-    item: "relative p-4 border border-border/30 rounded-lg bg-card/50",
-    empty: "text-sm text-muted-foreground text-center py-4 italic",
-    addButton: "w-full h-12 border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 transition-colors",
-    removeButton: "absolute top-2 right-2 h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-  },
-
-  // Navigation tabs match message system aesthetic
-  navigation: {
-    tab: "flex items-center gap-2 h-8 px-3 text-xs rounded-md transition-colors",
-    tabActive: "bg-primary text-primary-foreground",
-    tabInactive: "bg-transparent hover:bg-muted/50 text-muted-foreground hover:text-foreground",
-    tabError: "border-red-300 text-red-600"
-  },
-
-  // Buttons following message system patterns with improved feel
-  button: {
-    primary: "h-10 px-6 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-medium transition-all duration-200",
-    secondary: "h-10 px-6 bg-transparent border border-border/30 hover:bg-muted/50 font-medium transition-all duration-200",
-    ghost: "h-9 px-4 bg-transparent hover:bg-muted/50 transition-colors duration-200",
-    navigation: "h-9 px-4 bg-transparent hover:bg-muted/50 transition-colors duration-200"
-  }
-} as const;
-
 // Complete message design system
 export const messageDesignSystem = {
   base: messageBase,
   variants: messageVariants,
   typography: messageTypography,
-  cbt: cbtComponentTokens,
 } as const;
 
 // Type definitions
@@ -129,17 +65,13 @@ export function getMessageTokens(role: MessageRole) {
   };
 }
 
-/**
- * Get CBT component design tokens
- */
-export function getCBTTokens() {
-  return messageDesignSystem.cbt;
-}
 
 /**
  * Utility function to build message classes
  */
 export function buildMessageClasses(role: MessageRole, element: keyof typeof messageBase) {
   const tokens = getMessageTokens(role);
-  return `${tokens.base[element]} ${tokens.variant[element] || ''}`.trim();
+  const baseClass = tokens.base[element] || '';
+  const variantClass = tokens.variant[element] || '';
+  return `${baseClass} ${variantClass}`.trim();
 }

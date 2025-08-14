@@ -8,7 +8,9 @@
       "WebFetch(domain:www.nngroup.com)",
       "WebFetch(domain:gitlab.com)",
       "WebFetch(domain:sdk.vercel.ai)",
-      "WebFetch(domain:ai-sdk.dev)"
+      "WebFetch(domain:ai-sdk.dev)",
+      "WebFetch(domain:ui.shadcn.com)",
+      "WebFetch(domain:react-day-picker.js.org)"
     ],
     "deny": []
   }

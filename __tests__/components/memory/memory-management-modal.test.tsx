@@ -5,7 +5,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryManagementModal } from '@/components/memory/memory-management-modal';
+import { MemoryManagementModal } from '@/features/therapy/memory/memory-management-modal';
 import * as memoryUtils from '@/lib/chat/memory-utils';
 
 // Mock the dependencies
@@ -16,13 +16,13 @@ jest.mock('@/lib/chat/memory-utils', () => ({
   getSessionReportDetail: jest.fn(),
 }));
 
-jest.mock('@/components/ui/primitives/toast', () => ({
+jest.mock('@/components/ui/toast', () => ({
   useToast: () => ({
     showToast: jest.fn(),
   }),
 }));
 
-jest.mock('@/components/memory/session-report-detail-modal', () => ({
+jest.mock('@/features/therapy/memory/session-report-detail-modal', () => ({
   SessionReportDetailModal: ({ open, reportInfo, onOpenChange }: any) => 
     open ? (
       <div data-testid="session-report-detail-modal">

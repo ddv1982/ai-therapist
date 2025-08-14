@@ -31,6 +31,7 @@ export interface CBTDiarySchemaMode {
   name: string;
   description: string;
   selected: boolean;
+  intensity?: number;
 }
 
 export interface CBTDiaryChallengeQuestion {
