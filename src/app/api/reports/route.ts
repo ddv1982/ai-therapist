@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateSessionReport } from '@/lib/api/groq-client';
 import { REPORT_GENERATION_PROMPT } from '@/lib/therapy/therapy-prompts';
 import { prisma } from '@/lib/database/db';
+import { logger, createRequestLogger } from '@/lib/utils/logger';
 import type { Message } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     try {
       reportData = JSON.parse(reportContent);
     } catch (error) {
-      console.error('Failed to parse report JSON:', error);
+      logger.error('Failed to parse report JSON', createRequestLogger(request), error as Error);
       // Fallback to basic report structure
       reportData = {
         keyPoints: ['Session completed successfully'],
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(report);
   } catch (error) {
-    console.error('Generate report error:', error);
+    logger.apiError('/api/reports', error as Error, createRequestLogger(request));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const reports = await prisma.sessionReport.findMany({
       include: {
@@ -81,7 +82,7 @@ export async function GET() {
 
     return NextResponse.json(reports);
   } catch (error) {
-    console.error('Get reports error:', error);
+    logger.apiError('/api/reports', error as Error, createRequestLogger(request));
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

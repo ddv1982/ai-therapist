@@ -41,3 +41,15 @@ next-env.d.ts
 /prisma/*.db-journal
 /prisma/migrations/
 /prisma/prisma/
+
+# Build artifacts and test reports
+src/lib/.next/
+playwright-report/
+test-results/
+
+# Development test pages
+src/app/test-*/
+
+# E2E test artifacts
+/test-results/
+/playwright-report/

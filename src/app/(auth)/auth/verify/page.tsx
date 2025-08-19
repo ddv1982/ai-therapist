@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { clearAuthCache } from '@/hooks/auth/use-auth';
 import { therapeuticInteractive } from '@/lib/ui/design-tokens';
+import { logger } from '@/lib/utils/logger';
 
 export default function TOTPVerifyPage() {
   const [token, setToken] = useState('');
@@ -39,38 +40,96 @@ export default function TOTPVerifyPage() {
       if (response.ok) {
         const data = await response.json();
         
-        // Clear the auth cache to force refresh of authentication status
-        clearAuthCache();
-        
-        console.log('Verification successful:', data);
-        
-        // Small delay to ensure cookies are set properly
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        // Debug: Check if cookies are available after verification
-        const isMobile = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        const cookiesAvailable = document.cookie.includes('auth-session-token');
-        console.log('Cookies after verification:', {
-          hasCookie: cookiesAvailable,
-          allCookies: document.cookie,
-          isMobile
+        logger.securityEvent('totp_verification_success', {
+          component: 'TOTPVerifyPage',
+          useBackupCode
         });
         
-        // For mobile devices, sometimes cookies take longer to be available
-        // Add a retry mechanism for mobile
-        if (isMobile && !cookiesAvailable) {
-          console.log('Mobile device detected, waiting longer for cookie...');
-          await new Promise(resolve => setTimeout(resolve, 300));
+        // Enhanced redirect logic with retry mechanism
+        const redirectToApp = async (maxRetries = 3) => {
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            logger.securityEvent('auth_redirect_attempt', {
+              component: 'TOTPVerifyPage',
+              attempt,
+              maxRetries
+            });
+            
+            // Clear the auth cache to force refresh of authentication status
+            clearAuthCache();
+            
+            // Wait for cache clear event to propagate
+            await new Promise(resolve => setTimeout(resolve, 150));
+            
+            // Check if cookies are available
+            const cookiesAvailable = document.cookie.includes('auth-session-token');
+            logger.securityEvent('auth_cookie_check', {
+              component: 'TOTPVerifyPage',
+              attempt,
+              hasCookie: cookiesAvailable,
+              cookieCount: document.cookie.split(';').length
+            });
+            
+            if (cookiesAvailable) {
+              // Cookie is available, try to verify auth status
+              try {
+                const authCheck = await fetch('/api/auth/session', {
+                  credentials: 'include',
+                  cache: 'no-cache'
+                });
+                
+                if (authCheck.ok) {
+                  const authData = await authCheck.json();
+                  logger.securityEvent('auth_session_check', {
+                    component: 'TOTPVerifyPage',
+                    attempt,
+                    isAuthenticated: authData.isAuthenticated
+                  });
+                  
+                  if (authData.isAuthenticated) {
+                    logger.securityEvent('auth_redirect_success', {
+                      component: 'TOTPVerifyPage',
+                      redirectUrl: data.redirectUrl || '/'
+                    });
+                    window.location.replace(data.redirectUrl || '/');
+                    return; // Success!
+                  }
+                } else {
+                  logger.securityEvent('auth_check_failed', {
+                    component: 'TOTPVerifyPage',
+                    attempt,
+                    status: authCheck.status
+                  });
+                }
+              } catch (error) {
+                logger.error('Auth check error during verification', {
+                  component: 'TOTPVerifyPage',
+                  attempt
+                }, error instanceof Error ? error : new Error(String(error)));
+              }
+            }
+            
+            // If not the last attempt, wait before retrying
+            if (attempt < maxRetries) {
+              logger.securityEvent('auth_retry_wait', {
+                component: 'TOTPVerifyPage',
+                attempt,
+                nextAttempt: attempt + 1
+              });
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          }
           
-          const cookiesAvailableRetry = document.cookie.includes('auth-session-token');
-          console.log('Cookie retry result:', {
-            hasCookie: cookiesAvailableRetry,
-            allCookies: document.cookie
+          // All attempts failed, force redirect anyway
+          logger.securityEvent('auth_redirect_force', {
+            component: 'TOTPVerifyPage',
+            reason: 'all_attempts_failed',
+            redirectUrl: data.redirectUrl || '/'
           });
-        }
+          window.location.replace(data.redirectUrl || '/');
+        };
         
-        // Redirect to the main app
-        window.location.replace(data.redirectUrl || '/');
+        // Start the redirect process
+        await redirectToApp();
       } else {
         // Handle error responses
         try {
@@ -82,7 +141,10 @@ export default function TOTPVerifyPage() {
         setIsVerifying(false);
       }
     } catch (error) {
-      console.error('Verification error:', error);
+      logger.error('TOTP verification error', {
+        component: 'TOTPVerifyPage',
+        useBackupCode
+      }, error instanceof Error ? error : new Error(String(error)));
       setError('Failed to verify token');
       setIsVerifying(false);
     }

@@ -108,7 +108,7 @@ describe('Memory Deletion API', () => {
       const result = await mockPrisma.sessionReport.deleteMany({
         where: {
           id: {
-            in: reportsToDelete.map(r => r.id)
+            in: reportsToDelete.map((r: any) => r.id)
           }
         }
       });
@@ -201,7 +201,7 @@ describe('Memory Deletion API', () => {
       const result = await mockPrisma.sessionReport.deleteMany({
         where: {
           id: {
-            in: reportsToDelete.map(r => r.id)
+            in: reportsToDelete.map((r: any) => r.id)
           }
         }
       });
@@ -248,7 +248,7 @@ describe('Memory Deletion API', () => {
       const result = await mockPrisma.sessionReport.deleteMany({
         where: {
           id: {
-            in: reportsToDelete.map(r => r.id)
+            in: reportsToDelete.map((r: any) => r.id)
           }
         }
       });

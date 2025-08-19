@@ -18,6 +18,45 @@ export enum LogLevel {
   DEBUG = 'debug'
 }
 
+// Sensitive therapeutic data keys that must NEVER be logged
+const SENSITIVE_THERAPEUTIC_KEYS = new Set([
+  // CBT Data Fields
+  'situation', 'emotions', 'thoughts', 'automaticThoughts', 'rationalThoughts',
+  'coreBeliefText', 'coreBelief', 'coreBeliefs', 'challengeQuestions', 'schemaModes',
+  'initialEmotions', 'finalEmotions', 'newBehaviors', 'alternativeResponses',
+  'schemaReflection', 'confirmingBehaviors', 'avoidantBehaviors', 'overridingBehaviors',
+  
+  // Session Content
+  'content', 'message', 'messages', 'sessionReport', 'therapeuticContent',
+  'sessionData', 'chatHistory', 'conversationData', 'therapeuticData',
+  
+  // User Information
+  'email', 'phone', 'address', 'personalInfo', 'medicalInfo', 'healthData',
+  'patientId', 'patientData', 'userProfile', 'personalDetails',
+  
+  // Authentication & Security
+  'password', 'token', 'secret', 'key', 'credential', 'apiKey', 'sessionKey',
+  'refreshToken', 'accessToken', 'authToken', 'csrfToken', 'totpSecret',
+  
+  // Emotional & Mental Health Data
+  'fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt', 'depression',
+  'trauma', 'mentalState', 'mood', 'emotionalState', 'psychologicalData',
+  
+  // Form Data
+  'formData', 'inputData', 'userInput', 'therapeuticInput', 'sessionInput',
+  'cbtFormData', 'diaryEntry', 'thoughtRecord'
+]);
+
+// Patterns for sensitive content detection
+const SENSITIVE_PATTERNS = [
+  /I feel/i, /I think/i, /I believe/i, /My thoughts/i, /My emotions/i,
+  /depression/i, /anxiety/i, /trauma/i, /abuse/i, /suicidal/i, /self-harm/i,
+  /therapy/i, /therapist/i, /counseling/i, /psychiatric/i, /medication/i,
+  /\b\d{3}-\d{2}-\d{4}\b/, // SSN pattern
+  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/, // Email pattern
+  /\b\d{10,}\b/ // Phone number pattern
+];
+
 interface ErrorWithCode extends Error {
   code?: string | number;
 }
@@ -44,19 +83,72 @@ export interface LogEntry {
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development';
 
+  /**
+   * Filter sensitive therapeutic data from any object
+   * This prevents HIPAA violations and data exposure
+   */
+  private filterSensitiveData(obj: unknown, depth = 0): unknown {
+    if (depth > 5 || obj === null || obj === undefined) return obj;
+    
+    if (typeof obj === 'string') {
+      // Check for sensitive patterns in strings
+      for (const pattern of SENSITIVE_PATTERNS) {
+        if (pattern.test(obj)) {
+          return '[FILTERED_THERAPEUTIC_CONTENT]';
+        }
+      }
+      // Filter long strings that might contain therapeutic content
+      if (obj.length > 100) {
+        return '[FILTERED_LONG_TEXT]';
+      }
+      return obj;
+    }
+    
+    if (typeof obj !== 'object') return obj;
+    
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.filterSensitiveData(item, depth + 1));
+    }
+    
+    const filtered: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      const lowerKey = key.toLowerCase();
+      
+      // Filter sensitive keys
+      if (SENSITIVE_THERAPEUTIC_KEYS.has(key) || 
+          SENSITIVE_THERAPEUTIC_KEYS.has(lowerKey) ||
+          lowerKey.includes('therapeutic') ||
+          lowerKey.includes('patient') ||
+          lowerKey.includes('emotion') ||
+          lowerKey.includes('thought') ||
+          lowerKey.includes('belief') ||
+          lowerKey.includes('session')) {
+        filtered[key] = '[FILTERED_SENSITIVE_DATA]';
+      } else {
+        filtered[key] = this.filterSensitiveData(value, depth + 1);
+      }
+    }
+    
+    return filtered;
+  }
+
   private formatLog(entry: LogEntry): string {
     const { level, message, context, error, timestamp } = entry;
+    
+    // Filter sensitive data from context
+    const filteredContext = context ? this.filterSensitiveData(context) : undefined;
     
     const logData = {
       timestamp,
       level,
       message,
-      ...(context && { context }),
+      ...(filteredContext && typeof filteredContext === 'object' ? { context: filteredContext } : {}),
       ...(error && { 
         error: {
           name: error.name,
           message: error.message,
-          stack: error.stack
+          // Only include stack trace in development for non-sensitive errors
+          ...(this.isDevelopment && { stack: error.stack })
         }
       })
     };
@@ -195,6 +287,43 @@ class Logger {
       securityEvent: event,
       requiresReview: true
     });
+  }
+
+  /**
+   * SECURE: Log therapeutic operations without exposing sensitive data
+   * Use this instead of console.log for any therapeutic operations
+   */
+  therapeuticOperation(operation: string, metadata?: { [key: string]: string | number | boolean }): void {
+    this.info(`Therapeutic Operation: ${operation}`, {
+      operation,
+      operationType: 'therapeutic',
+      // Only log safe metadata (no patient data)
+      ...(metadata ? this.filterSensitiveData(metadata) || {} : {})
+    });
+  }
+
+  /**
+   * SECURE: Log session report operations without exposing content
+   * Use this instead of console.log for session reports
+   */
+  reportOperation(operation: string, reportId?: string, metadata?: { [key: string]: string | number }): void {
+    this.info(`Report Operation: ${operation}`, {
+      operation,
+      operationType: 'report',
+      ...(reportId && { reportId }),
+      // Only log safe metadata
+      ...(metadata ? this.filterSensitiveData(metadata) || {} : {})
+    });
+  }
+
+  /**
+   * SECURE: Development-only logging that filters sensitive data
+   * Use this instead of console.log for development debugging
+   */
+  secureDevLog(message: string, data?: unknown): void {
+    if (this.isDevelopment) {
+      this.debug(`DEV: ${message}`, data ? { debugData: this.filterSensitiveData(data) } : undefined);
+    }
   }
 }
 

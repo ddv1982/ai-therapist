@@ -3,7 +3,7 @@
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/lib/theme-context';
 import { Button } from '@/components/ui/button';
-import { therapeuticInteractive } from '@/lib/design-tokens';
+import { therapeuticInteractive } from '@/lib/ui/design-tokens';
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();

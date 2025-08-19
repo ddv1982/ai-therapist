@@ -1,17 +1,23 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Brain, Plus, Minus, Lightbulb } from 'lucide-react';
+import { TherapySlider } from '@/components/ui/therapy-slider';
+import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
+import { Brain, Plus, Minus, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
-import { loadCBTDraft, useDraftSaver, CBT_DRAFT_KEYS, clearCBTDraft } from '@/lib/utils/cbt-draft-utils';
+import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
+import type { ThoughtData } from '@/types/therapy';
+// Removed CBTFormValidationError import - validation errors not displayed
+// Removed chat bridge imports - individual data no longer sent during session
 
-export interface ThoughtData {
-  thought: string;
-  credibility: number;
-}
+// Remove local interface - use the one from cbtSlice
+// export interface ThoughtData {
+//   thought: string;
+//   credibility: number;
+// }
 
 interface ThoughtRecordProps {
   onComplete: (data: ThoughtData[]) => void;
@@ -23,66 +29,33 @@ interface ThoughtRecordProps {
   className?: string;
 }
 
-// Individual credibility slider component
-interface CredibilitySliderProps {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-  className?: string;
-}
-
-const CredibilitySlider: React.FC<CredibilitySliderProps> = ({ 
-  label, 
-  value, 
-  onChange, 
-  className 
-}) => {
-  return (
-    <div className={cn("space-y-2", className)}>
-      <div className="flex justify-between items-center">
-        <label className="text-sm font-medium text-foreground">{label}</label>
-        <span className="text-sm text-muted-foreground font-mono">{value}/10</span>
-      </div>
-      <input
-        type="range"
-        min="0"
-        max="10"
-        step="1"
-        value={value}
-        onChange={(e) => onChange(parseInt(e.target.value))}
-        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 slider-thumb:rounded-full slider-thumb:bg-primary slider-thumb:cursor-pointer slider-track:bg-muted slider-track:rounded-lg"
-      />
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>0 - Don&apos;t believe</span>
-        <span>5 - Somewhat</span>
-        <span>10 - Completely believe</span>
-      </div>
-    </div>
-  );
-};
 
 export function ThoughtRecord({ 
   onComplete, 
   initialData,
   title: _title = "What thoughts went through your mind?",
   subtitle: _subtitle = "Record the automatic thoughts that came up during this situation",
-  stepNumber,
-  totalSteps,
+  stepNumber: _stepNumber,
+  totalSteps: _totalSteps,
   className 
 }: ThoughtRecordProps) {
+  const { sessionData, thoughtActions } = useCBTDataManager();
+  
+  // Get thoughts data from unified CBT hook
+  const thoughtsData = sessionData.thoughts;
+  
   // Default thought data
   const defaultThoughts: ThoughtData[] = [{ thought: '', credibility: 5 }];
 
+  // Initialize local state for form
   const [thoughts, setThoughts] = useState<ThoughtData[]>(() => {
-    const draftData = loadCBTDraft(CBT_DRAFT_KEYS.THOUGHTS, defaultThoughts);
-    
-    // Use initialData if provided, otherwise use draft data
+    // Use initialData if provided, otherwise use Redux data or default
     if (initialData && initialData.length > 0) {
       return initialData;
     }
     
-    // Return draft data if it has content, otherwise default
-    return draftData.length > 0 ? draftData : defaultThoughts;
+    // Return Redux data if it has content, otherwise default
+    return thoughtsData.length > 0 ? thoughtsData : defaultThoughts;
   });
 
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>(() => 
@@ -92,8 +65,16 @@ export function ThoughtRecord({
     new Array(thoughts.length).fill('')
   );
 
-  // Auto-save draft as user types
-  const { isDraftSaved } = useDraftSaver(CBT_DRAFT_KEYS.THOUGHTS, thoughts);
+  // Auto-save to unified CBT state when thoughts change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      thoughtActions.updateThoughts(thoughts);
+    }, 500); // Debounce updates by 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [thoughts, thoughtActions]);
+  
+  // Note: Chat bridge no longer used - data sent only in final comprehensive summary
 
   // Common thought prompts to help users get started
   const thoughtPrompts = [
@@ -175,42 +156,44 @@ export function ThoughtRecord({
     return isValid;
   }, [thoughts]);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (validateThoughts()) {
       const validThoughts = thoughts.filter(t => t.thought.trim().length >= 3);
       
-      // Clear the draft since step is completed
-      clearCBTDraft(CBT_DRAFT_KEYS.THOUGHTS);
+      // Update unified CBT state with final data
+      thoughtActions.updateThoughts(validThoughts);
+      
+      // Note: Individual thoughts data is no longer sent to chat during session.
+      // All data will be included in the comprehensive summary at the end.
       
       onComplete(validThoughts);
     }
-  }, [thoughts, validateThoughts, onComplete]);
+  }, [thoughts, thoughtActions, validateThoughts, onComplete]);
 
   const hasValidThoughts = thoughts.some(t => t.thought.trim().length >= 3);
   const validThoughtCount = thoughts.filter(t => t.thought.trim().length >= 3).length;
 
-  return (
-    <div className={cn("max-w-2xl mx-auto", className)}>
-      {/* Conversational Header */}
-      <div className="mb-4 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-medium">
-          <Brain className="w-4 h-4" />
-          Step {stepNumber} of {totalSteps}: What thoughts went through your mind?
-        </div>
-        <div className={`mt-2 flex justify-center`}>
-          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
-            isDraftSaved 
-              ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
-              : 'opacity-0 scale-95'
-          }`}>
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            Saved
-          </div>
-        </div>
-      </div>
+  // Validation logic - keeps form functional without showing error messages
 
-      <Card className="p-4 border-border bg-card">
-        <div className="space-y-4 w-full max-w-full overflow-hidden">
+  const handleNext = useCallback(async () => {
+    await handleSubmit();
+  }, [handleSubmit]);
+
+  return (
+    <CBTStepWrapper
+      step="thoughts"
+      title="What thoughts went through your mind?"
+      subtitle="Record the automatic thoughts that came up during this situation"
+      icon={<Brain className="w-5 h-5" />}
+      isValid={hasValidThoughts}
+      validationErrors={[]} // No validation error display
+      onNext={handleNext}
+      nextButtonText={`Continue to Core Beliefs${validThoughtCount > 0 ? ` (${validThoughtCount} thoughts)` : ''}`}
+      helpText="Try to capture the exact words that went through your mind during this situation."
+      className={className}
+    >
+
+      <div className="space-y-6">
         {/* Thought Prompts */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -273,7 +256,8 @@ export function ThoughtRecord({
                   )}
                 </div>
 
-                <CredibilitySlider
+                <TherapySlider
+                  type="credibility"
                   label="How much do you believe this thought? (Credibility)"
                   value={thought.credibility}
                   onChange={(value) => handleCredibilityChange(index, value)}
@@ -297,32 +281,7 @@ export function ThoughtRecord({
           </div>
         )}
 
-        {/* Submit Button */}
-        <Button
-          onClick={handleSubmit}
-          disabled={!hasValidThoughts}
-          className="w-full h-12 text-base bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden disabled:opacity-50"
-          size="lg"
-        >
-          {/* Shimmer effect */}
-          <div className="shimmer-effect"></div>
-          <Send className="w-4 h-4 mr-2 relative z-10" />
-          <span className="relative z-10">Share My Thoughts ({validThoughtCount})</span>
-        </Button>
-
-        {/* Helper Text */}
-        <div className="text-center space-y-2">
-          {!hasValidThoughts && (
-            <p className="text-sm text-muted-foreground">
-              Please record at least one thought to continue
-            </p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            💭 Try to capture the exact words that went through your mind
-          </p>
-        </div>
-        </div>
-      </Card>
-    </div>
+      </div>
+    </CBTStepWrapper>
   );
 }

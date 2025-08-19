@@ -3,7 +3,7 @@ import { verifyTOTPToken, verifyBackupCode, isTOTPSetup, getTOTPDiagnostics } fr
 import { getOrCreateDevice, createAuthSession } from '@/lib/auth/device-fingerprint';
 import { getClientIP } from '@/lib/auth/auth-middleware';
 import { generateSecureRandomString } from '@/lib/utils/utils';
-import { devLog } from '@/lib/utils/logger';
+import { devLog, logger, createRequestLogger } from '@/lib/utils/logger';
 
 // POST /api/auth/verify - Verify TOTP token or backup code
 export async function POST(request: NextRequest) {
@@ -140,9 +140,11 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`[${requestId}] 🚨 EXCEPTION during verification (${duration}ms):`);
-    console.error(`Error: ${error}`);
-    console.error(`Stack: ${error instanceof Error ? error.stack : 'No stack trace'}`);
+    logger.apiError('/api/auth/verify', error as Error, {
+      ...createRequestLogger(request),
+      requestId,
+      processingTime: duration
+    });
     devLog(`=== AUTH REQUEST END [${requestId}] ERROR ===\n`);
     
     return NextResponse.json({ 

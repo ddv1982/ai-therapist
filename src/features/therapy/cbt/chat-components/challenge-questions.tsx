@@ -1,16 +1,14 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, HelpCircle, Plus, Minus } from 'lucide-react';
-import { cn } from '@/lib/utils/utils';
-import { loadCBTDraft, useDraftSaver, CBT_DRAFT_KEYS, clearCBTDraft } from '@/lib/utils/cbt-draft-utils';
-
-export interface ChallengeQuestionsData {
-  challengeQuestions: Array<{ question: string; answer: string }>;
-}
+import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
+import { HelpCircle, Plus, Minus } from 'lucide-react';
+import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
+import type { ChallengeQuestionsData } from '@/types/therapy';
+// Removed CBTFormValidationError import - validation errors not displayed
 
 interface ChallengeQuestionsProps {
   onComplete: (data: ChallengeQuestionsData) => void;
@@ -39,10 +37,15 @@ export function ChallengeQuestions({
   onComplete, 
   initialData,
   coreBeliefText,
-  stepNumber,
-  totalSteps,
+  stepNumber: _stepNumber,
+  totalSteps: _totalSteps,
   className 
 }: ChallengeQuestionsProps) {
+  const { sessionData, challengeActions } = useCBTDataManager();
+  
+  // Get challenge questions data from unified CBT hook
+  const challengeQuestionsData = sessionData.challengeQuestions;
+  
   // Default questions data
   const defaultQuestionsData: ChallengeQuestionsData = {
     challengeQuestions: [
@@ -52,18 +55,23 @@ export function ChallengeQuestions({
   };
 
   const [questionsData, setQuestionsData] = useState<ChallengeQuestionsData>(() => {
-    const draftData = loadCBTDraft(CBT_DRAFT_KEYS.CHALLENGE_QUESTIONS, defaultQuestionsData);
-    
-    // Use initialData if provided, otherwise use draft data
+    // Use initialData if provided, otherwise use Redux data or default
     if (initialData?.challengeQuestions) {
       return initialData;
     }
     
-    return draftData;
+    // Return Redux data if it has content, otherwise default
+    return challengeQuestionsData.length > 0 ? { challengeQuestions: challengeQuestionsData } : defaultQuestionsData;
   });
 
-  // Auto-save draft as user types
-  const { isDraftSaved } = useDraftSaver(CBT_DRAFT_KEYS.CHALLENGE_QUESTIONS, questionsData);
+  // Auto-save to unified CBT state when questions change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      challengeActions.updateChallengeQuestions(questionsData.challengeQuestions);
+    }, 500); // Debounce updates by 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [questionsData, challengeActions]);
 
   const handleQuestionChange = useCallback((index: number, field: 'question' | 'answer', value: string) => {
     setQuestionsData(prev => ({
@@ -102,43 +110,36 @@ export function ChallengeQuestions({
   const handleSubmit = useCallback(() => {
     const validQuestions = questionsData.challengeQuestions.filter(q => q.answer.trim());
     if (validQuestions.length > 0) {
-      // Clear the draft since step is completed
-      clearCBTDraft(CBT_DRAFT_KEYS.CHALLENGE_QUESTIONS);
+      // Update unified CBT state with final data
+      challengeActions.updateChallengeQuestions(validQuestions);
       
       onComplete({ challengeQuestions: validQuestions });
     }
-  }, [questionsData, onComplete]);
+  }, [questionsData, challengeActions, onComplete]);
 
   const answeredQuestions = questionsData.challengeQuestions.filter(q => q.answer.trim()).length;
   const isValid = answeredQuestions > 0;
 
-  return (
-    <div className={cn("max-w-2xl mx-auto", className)}>
-      {/* Conversational Header */}
-      <div className="mb-4 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-medium">
-          <HelpCircle className="w-4 h-4" />
-          Step {stepNumber} of {totalSteps}: Challenge your thoughts
-        </div>
-        {coreBeliefText && (
-          <p className="text-xs text-muted-foreground mt-2">
-            Examining: &ldquo;{coreBeliefText}&rdquo;
-          </p>
-        )}
-        <div className={`mt-2 flex justify-center`}>
-          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
-            isDraftSaved 
-              ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
-              : 'opacity-0 scale-95'
-          }`}>
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            Saved
-          </div>
-        </div>
-      </div>
+  // Validation logic - keeps form functional without showing error messages
 
-      <Card className="p-4 border-border bg-card">
-        <div className="space-y-4">
+  const handleNext = useCallback(async () => {
+    handleSubmit();
+  }, [handleSubmit]);
+
+  return (
+    <CBTStepWrapper
+      step="challenge-questions"
+      title="Challenge Your Thoughts"
+      subtitle={coreBeliefText ? `Examining: "${coreBeliefText}"` : "Question your beliefs with curiosity"}
+      icon={<HelpCircle className="w-5 h-5" />}
+      isValid={isValid}
+      validationErrors={[]} // No validation error display
+      onNext={handleNext}
+      nextButtonText={`Continue to Rational Thoughts${answeredQuestions > 0 ? ` (${answeredQuestions} answered)` : ''}`}
+      helpText="Challenge your thoughts by answering these questions with an open mind."
+      className={className}
+    >
+      <div className="space-y-6">
           {/* Questions */}
           <div className="space-y-4">
             {questionsData.challengeQuestions.map((questionData, index) => (
@@ -188,26 +189,7 @@ export function ChallengeQuestions({
               Add Another Question
             </Button>
           )}
-
-          {/* Submit Button */}
-          <Button
-            onClick={handleSubmit}
-            disabled={!isValid}
-            className="w-full h-10 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden disabled:opacity-50"
-          >
-            {/* Shimmer effect */}
-            <div className="shimmer-effect"></div>
-            <Send className="w-4 h-4 mr-2 relative z-10" />
-            <span className="relative z-10">{answeredQuestions > 0 ? `Share my ${answeredQuestions} insights` : "Continue to Rational Thoughts"}</span>
-          </Button>
-          
-          {!isValid && (
-            <p className="text-xs text-muted-foreground text-center">
-              Answer at least one question to continue
-            </p>
-          )}
-        </div>
-      </Card>
-    </div>
+      </div>
+    </CBTStepWrapper>
   );
 }

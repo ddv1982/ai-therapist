@@ -5,7 +5,7 @@
 
 // Base message structure - common to all message types
 export const messageBase = {
-  container: "flex items-start gap-4 mb-6 max-w-4xl mx-auto",
+  container: "flex items-start gap-0 md:gap-4 mb-6 max-w-4xl mx-auto",
   avatar: "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm",
   contentWrapper: "flex-1 min-w-0",
   bubble: "p-4 rounded-2xl shadow-sm break-words selectable-text transition-all duration-200 hover:shadow-md",
@@ -15,17 +15,17 @@ export const messageBase = {
 // Role-specific variants
 export const messageVariants = {
   user: {
-    container: "flex-row-reverse gap-reverse",
+    container: "flex-row md:flex-row-reverse md:gap-reverse",
     avatar: "bg-primary text-primary-foreground shadow-lg",
-    contentWrapper: "text-right",
-    bubble: "bg-primary text-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md shadow-sm hover:shadow-md transition-shadow duration-200 max-w-[min(80%,_42rem)] ml-auto",
-    timestamp: "text-white/80 text-right",
+    contentWrapper: "text-left md:text-right",
+    bubble: "bg-primary text-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md shadow-sm hover:shadow-md transition-shadow duration-200 max-w-none md:max-w-[min(80%,_42rem)] md:ml-auto",
+    timestamp: "text-white/80 text-left md:text-right",
   },
   assistant: {
     container: "flex-row",
     avatar: "bg-purple-600 shadow-lg",
     contentWrapper: "text-left", 
-    bubble: "bg-card/95 backdrop-blur-sm border border-border/20 text-foreground rounded-tl-2xl rounded-tr-2xl rounded-br-2xl rounded-bl-md shadow-md max-w-[min(85%,_45rem)] mr-auto",
+    bubble: "bg-card/95 backdrop-blur-sm border border-border/20 text-foreground rounded-tl-2xl rounded-tr-2xl rounded-br-2xl rounded-bl-md shadow-md max-w-none md:max-w-[min(85%,_45rem)] md:mr-auto",
     timestamp: "text-muted-foreground text-left",
   }
 } as const;

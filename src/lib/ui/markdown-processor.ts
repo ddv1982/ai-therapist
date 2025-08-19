@@ -2,6 +2,7 @@ import sanitizeHtml from 'sanitize-html';
 import MarkdownIt from 'markdown-it';
 // @ts-expect-error - No TypeScript definitions available for markdown-it-attrs
 import markdownItAttrs from 'markdown-it-attrs';
+import { logger } from '@/lib/utils/logger';
 
 // Configure markdown-it with therapeutic-friendly settings and enhanced table support
 const md = new MarkdownIt({
@@ -18,21 +19,25 @@ md.use(markdownItAttrs, {
 });
 
 /**
- * Enhanced table processing with 5-column rule and alternative views
- * 1-5 columns: Responsive table with container queries
- * 6+ columns: Transform to structured cards or definition lists
+ * Enhanced table processing with intelligent layout selection
+ * - 1-3 columns: Auto-responsive (cards on mobile, table on desktop)
+ * - 4-5 columns: Hybrid layout with card fallback
+ * - 6+ columns: Always transform to cards or definition lists
  */
 function enhanceTablesForTherapeuticUse(html: string): string {
   // Process each table individually to apply column-based logic
   return html.replace(/<table[^>]*>[\s\S]*?<\/table>/gi, (tableMatch) => {
     const columnCount = countTableColumns(tableMatch);
     
-    if (columnCount <= 5) {
-      // Standard responsive table for 1-5 columns
-      return processStandardTable(tableMatch, columnCount);
+    if (columnCount <= 3) {
+      // Simple tables: Auto-responsive with card support
+      return processResponsiveTable(tableMatch, columnCount);
+    } else if (columnCount <= 5) {
+      // Medium tables: Hybrid layout
+      return processHybridTable(tableMatch, columnCount);
     } else {
-      // Transform to alternative view for 6+ columns
-      return transformToAlternativeView(tableMatch, columnCount);
+      // Complex tables: Transform to cards or structured view
+      return transformToCardLayout(tableMatch, columnCount);
     }
   });
 }
@@ -56,349 +61,16 @@ function countTableColumns(tableHtml: string): number {
 }
 
 /**
- * Process standard tables (1-5 columns) with responsive container and streaming support
- */
-function processStandardTable(tableHtml: string, columnCount: number): string {
-  // Work with original table HTML first, then wrap in container at the end
-  let processedHtml = tableHtml;
-  
-  // Enhanced class application for standard tables
-  processedHtml = processedHtml.replace(
-    /<table([^>]*class="([^"]*)")([^>]*)>/gi,
-    (match, classAttr, existingClasses, rest) => {
-      const classes = existingClasses.trim();
-      
-      // Determine table variant and add column-specific optimizations
-      let baseClasses = 'therapeutic-table streaming-stable-table';
-      let variant = '';
-      
-      // Map therapeutic table types
-      if (classes.includes('table-cbt-report') || classes.includes('cbt')) {
-        variant = 'table-cbt-report';
-        baseClasses += ' table-striped';
-      } else if (classes.includes('table-progress') || classes.includes('progress')) {
-        variant = 'table-progress';
-      } else if (classes.includes('table-dashboard') || classes.includes('dashboard')) {
-        variant = 'table-dashboard';
-      } else if (classes.includes('table-comparison') || classes.includes('comparison')) {
-        variant = 'table-comparison';
-      } else if (classes.includes('table-compact') || classes.includes('compact')) {
-        variant = 'table-compact';
-      } else {
-        baseClasses += ' table-striped';
-      }
-      
-      // Add column-count specific optimization classes
-      if (columnCount === 4 || columnCount === 5) {
-        baseClasses += ' table-optimized-wide';
-      }
-      
-      // Add streaming layout stability
-      baseClasses += ' streaming-layout-stable';
-      
-      const allClasses = `${classes} ${baseClasses} ${variant}`.split(' ')
-        .filter((cls, index, arr) => cls && arr.indexOf(cls) === index)
-        .join(' ');
-        
-      return `<table class="${allClasses}" data-columns="${columnCount}" data-streaming-optimized="true"${rest}>`;
-    }
-  );
-  
-  // Handle tables without classes
-  let baseClassesNoExisting = 'therapeutic-table table-striped streaming-stable-table streaming-layout-stable';
-  if (columnCount === 4 || columnCount === 5) {
-    baseClassesNoExisting += ' table-optimized-wide';
-  }
-  
-  processedHtml = processedHtml.replace(
-    /<table(?![^>]*class=)([^>]*)>/gi, 
-    `<table class="${baseClassesNoExisting}" data-columns="${columnCount}" data-streaming-optimized="true"$1>`
-  );
-  
-  // Normalize table structure to ensure proper thead/tbody elements (skip if already has thead)
-  if (!processedHtml.includes('<thead')) {
-    processedHtml = normalizeTableStructure(processedHtml);
-  }
-  
-  // Add mobile data-label attributes and streaming attributes
-  processedHtml = enhanceTableCellsWithLabels(processedHtml);
-  processedHtml = addStreamingStabilityAttributes(processedHtml);
-  
-  // Finally, wrap in responsive container
-  processedHtml = '<div class="table-container table-system streaming-table-container">' + processedHtml + '</div>';
-  
-  return processedHtml;
-}
-
-/**
- * Transform tables with 6+ columns to structured cards or definition lists
- */
-function transformToAlternativeView(tableHtml: string, columnCount: number): string {
-  // Extract table data structure
-  const tableData = extractTableData(tableHtml);
-  
-  if (!tableData || tableData.headers.length === 0) {
-    // Fallback to standard table if extraction fails
-    return processStandardTable(tableHtml, columnCount);
-  }
-  
-  // Determine the best alternative view based on content type and complexity
-  const viewType = determineAlternativeViewType(tableData, columnCount);
-  
-  switch (viewType) {
-    case 'structured-cards':
-      return generateStructuredCards(tableData);
-    case 'definition-list':
-      return generateDefinitionList(tableData);
-    case 'expandable-rows':
-      return generateExpandableRows(tableData);
-    default:
-      // Fallback to cards for unknown types
-      return generateStructuredCards(tableData);
-  }
-}
-
-/**
- * Extract structured data from table HTML
- */
-function extractTableData(tableHtml: string): TableDataStructure | null {
-  try {
-    // Extract headers
-    const headerMatches = tableHtml.match(/<th[^>]*>([\s\S]*?)<\/th>/gi) || [];
-    const headers = headerMatches.map(th => 
-      th.replace(/<\/?[^>]+(>|$)/g, '').trim()
-    );
-    
-    if (headers.length === 0) return null;
-    
-    // Extract rows
-    const rowMatches = tableHtml.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi) || [];
-    const rows: string[][] = [];
-    
-    // Skip header row, process data rows
-    for (let i = 1; i < rowMatches.length; i++) {
-      const cellMatches = rowMatches[i].match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [];
-      const cells = cellMatches.map(td => 
-        td.replace(/<\/?[^>]+(>|$)/g, '').trim()
-      );
-      
-      if (cells.length > 0) {
-        rows.push(cells);
-      }
-    }
-    
-    return { headers, rows };
-  } catch (error) {
-    console.warn('Failed to extract table data:', error);
-    return null;
-  }
-}
-
-/**
- * Determine the best alternative view type based on table content
- */
-function determineAlternativeViewType(tableData: TableDataStructure, columnCount: number): AlternativeViewType {
-  const { headers } = tableData;
-  
-  // Check for key-value pair patterns (good for definition lists)
-  const hasKeyValuePattern = headers.some(header => 
-    /^(question|answer|problem|solution|before|after|input|output)$/i.test(header)
-  );
-  
-  // Check for therapeutic data patterns (good for cards)
-  const hasTherapeuticPattern = headers.some(header => 
-    /^(patient|session|date|mood|anxiety|depression|intervention|goal|progress)$/i.test(header)
-  );
-  
-  // Check for temporal/chronological data (good for expandable rows)
-  const hasTemporalPattern = headers.some(header => 
-    /^(date|time|session|week|day|before|during|after)$/i.test(header)
-  );
-  
-  // Decision logic
-  if (columnCount >= 10) {
-    return 'expandable-rows'; // Best for very complex data
-  } else if (hasKeyValuePattern && columnCount <= 8) {
-    return 'definition-list'; // Good for Q&A, before/after comparisons
-  } else if (hasTherapeuticPattern) {
-    return 'structured-cards'; // Best for patient/session data
-  } else if (hasTemporalPattern) {
-    return 'expandable-rows'; // Good for timeline data
-  } else {
-    return 'structured-cards'; // Default for general complex data
-  }
-}
-
-/**
- * Generate structured cards HTML for complex table data
- */
-function generateStructuredCards(tableData: TableDataStructure): string {
-  const { headers, rows } = tableData;
-  
-  let cardsHtml = '<div class="alternative-view-container structured-cards-container">';
-  cardsHtml += '<div class="alternative-view-header">Complex Data View</div>';
-  cardsHtml += '<div class="structured-cards-grid">';
-  
-  rows.forEach((row, rowIndex) => {
-    cardsHtml += `<div class="structured-card" data-row="${rowIndex}">`;
-    
-    // Group related fields together
-    const primaryFields: string[] = [];
-    const secondaryFields: string[] = [];
-    
-    row.forEach((cell, cellIndex) => {
-      if (cellIndex < headers.length) {
-        const header = headers[cellIndex];
-        const isPrimary = isPrimaryField(header, cell);
-        
-        const fieldHtml = `
-          <div class="card-field ${isPrimary ? 'primary-field' : 'secondary-field'}">
-            <div class="field-label">${header}</div>
-            <div class="field-value">${cell || '—'}</div>
-          </div>
-        `;
-        
-        if (isPrimary) {
-          primaryFields.push(fieldHtml);
-        } else {
-          secondaryFields.push(fieldHtml);
-        }
-      }
-    });
-    
-    // Render primary fields first, then secondary
-    cardsHtml += '<div class="card-primary-fields">' + primaryFields.join('') + '</div>';
-    if (secondaryFields.length > 0) {
-      cardsHtml += '<div class="card-secondary-fields">' + secondaryFields.join('') + '</div>';
-    }
-    
-    cardsHtml += '</div>';
-  });
-  
-  cardsHtml += '</div></div>';
-  
-  return cardsHtml;
-}
-
-/**
- * Generate definition list HTML for key-value table data
- */
-function generateDefinitionList(tableData: TableDataStructure): string {
-  const { headers, rows } = tableData;
-  
-  let listHtml = '<div class="alternative-view-container definition-list-container">';
-  listHtml += '<div class="alternative-view-header">Structured Information</div>';
-  
-  rows.forEach((row, rowIndex) => {
-    listHtml += `<dl class="therapeutic-definition-list" data-row="${rowIndex}">`;
-    
-    row.forEach((cell, cellIndex) => {
-      if (cellIndex < headers.length) {
-        const header = headers[cellIndex];
-        listHtml += `
-          <dt class="definition-term">${header}</dt>
-          <dd class="definition-description">${cell || '—'}</dd>
-        `;
-      }
-    });
-    
-    listHtml += '</dl>';
-    if (rowIndex < rows.length - 1) {
-      listHtml += '<hr class="row-separator">';
-    }
-  });
-  
-  listHtml += '</div>';
-  
-  return listHtml;
-}
-
-/**
- * Generate expandable rows HTML for very complex data
- */
-function generateExpandableRows(tableData: TableDataStructure): string {
-  const { headers, rows } = tableData;
-  
-  let expandableHtml = '<div class="alternative-view-container expandable-rows-container">';
-  expandableHtml += '<div class="alternative-view-header">Detailed Data Records</div>';
-  
-  rows.forEach((row, rowIndex) => {
-    // Show 2-3 most important fields as summary
-    const summaryFields: { header: string; value: string }[] = [];
-    const detailFields: { header: string; value: string }[] = [];
-    
-    row.forEach((cell, cellIndex) => {
-      if (cellIndex < headers.length) {
-        const header = headers[cellIndex];
-        const fieldHtml = { header, value: cell || '—' };
-        
-        if (cellIndex < 3 || isPrimaryField(header, cell)) {
-          summaryFields.push(fieldHtml);
-        } else {
-          detailFields.push(fieldHtml);
-        }
-      }
-    });
-    
-    expandableHtml += `<div class="expandable-row" data-row="${rowIndex}">`;
-    expandableHtml += '<div class="row-summary">';
-    
-    summaryFields.forEach(field => {
-      expandableHtml += `<span class="summary-field"><strong>${field.header}:</strong> ${field.value}</span>`;
-    });
-    
-    if (detailFields.length > 0) {
-      expandableHtml += '<button class="expand-button" aria-expanded="false">Show Details</button>';
-    }
-    
-    expandableHtml += '</div>';
-    
-    if (detailFields.length > 0) {
-      expandableHtml += '<div class="row-details" hidden>';
-      detailFields.forEach(field => {
-        expandableHtml += `<div class="detail-field"><strong>${field.header}:</strong> ${field.value}</div>`;
-      });
-      expandableHtml += '</div>';
-    }
-    
-    expandableHtml += '</div>';
-  });
-  
-  expandableHtml += '</div>';
-  
-  return expandableHtml;
-}
-
-/**
  * Determine if a field should be considered primary/important
  */
-function isPrimaryField(header: string, value: string): boolean {
-  // Primary field indicators
-  const primaryPatterns = [
-    /^(patient|name|id|title|session|date)$/i,
-    /^(primary|main|key|important)$/i,
-    /^(mood|anxiety|depression|score|rating)$/i
-  ];
-  
-  // Check header patterns
-  if (primaryPatterns.some(pattern => pattern.test(header))) {
-    return true;
-  }
-  
-  // Check value patterns (short, important-looking values)
-  if (value && value.length <= 20 && /^[0-9\/-]+$|high|medium|low|severe|mild/i.test(value)) {
-    return true;
-  }
-  
-  return false;
-}
-
 // Type definitions for the new system
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface TableDataStructure {
   headers: string[];
   rows: string[][];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type AlternativeViewType = 'structured-cards' | 'definition-list' | 'expandable-rows';
 
 /**
@@ -409,7 +81,9 @@ type AlternativeViewType = 'structured-cards' | 'definition-list' | 'expandable-
 /**
  * Normalize table structure to ensure proper thead/tbody elements
  * This fixes issues where markdown-it doesn't generate proper table structure
+ * @deprecated Legacy function - kept for compatibility but unused in new card system
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function normalizeTableStructure(html: string): string {
   return html.replace(/<table([^>]*)>([\s\S]*?)<\/table>/gi, (match, tableAttrs, tableContent) => {
     // Check if we already have proper thead/tbody structure
@@ -450,7 +124,9 @@ function normalizeTableStructure(html: string): string {
 
 /**
  * Add streaming stability attributes to prevent layout shifts during animation
+ * @deprecated Legacy function - kept for compatibility but unused in new card system
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function addStreamingStabilityAttributes(html: string): string {
   // Add container-level attributes for streaming optimization
   html = html.replace(
@@ -481,7 +157,9 @@ function addStreamingStabilityAttributes(html: string): string {
 /**
  * Add data-label attributes to table cells for mobile stacked layout
  * Extracts header text and applies it to corresponding cells
+ * @deprecated Legacy function - kept for compatibility but unused in new card system
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function enhanceTableCellsWithLabels(html: string): string {
   // Use a simple regex to find tables and process them
   return html.replace(/<table[^>]*>[\s\S]*?<\/table>/gi, (tableMatch) => {
@@ -570,7 +248,10 @@ export function processMarkdown(text: string, _isUser: boolean = false): string 
   try {
     html = md.render(processedText);
   } catch (error) {
-    console.warn('Markdown parsing failed:', error);
+    logger.warn('Markdown parsing failed', {
+      operation: 'markdownToHtml',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     html = `<p>${processedText}</p>`;
   }
 
@@ -650,3 +331,255 @@ export function processMarkdown(text: string, _isUser: boolean = false): string 
   
   return sanitizedHtml;
 }
+
+// New functions for card layout support
+
+/**
+ * Process responsive tables (1-3 columns) with auto card/table switching
+ */
+function processResponsiveTable(tableHtml: string, columnCount: number): string {
+  // Add responsive attributes that allow TherapeuticTable to switch modes
+  let processedHtml = tableHtml;
+  
+  // Add auto-responsive class
+  processedHtml = processedHtml.replace(
+    /<table([^>]*class="([^"]*)")([^>]*)>/gi,
+    (match, classAttr, existingClasses, rest) => {
+      const classes = `${existingClasses} therapeutic-table-auto responsive-cards-enabled`.trim();
+      return `<table class="${classes}" data-columns="${columnCount}" data-display-mode="auto"${rest}>`;
+    }
+  );
+  
+  // Handle tables without classes
+  processedHtml = processedHtml.replace(
+    /<table(?![^>]*class=)([^>]*)>/gi, 
+    `<table class="therapeutic-table-auto responsive-cards-enabled" data-columns="${columnCount}" data-display-mode="auto"$1>`
+  );
+  
+  // Wrap in container with card data attributes
+  const tableData = extractTableDataForCards(tableHtml);
+  const cardDataAttrs = generateCardDataAttributes(tableData, columnCount);
+  
+  return `<div class="therapeutic-table-container auto-responsive" ${cardDataAttrs}>${processedHtml}</div>`;
+}
+
+/**
+ * Process hybrid tables (4-5 columns) with smart layout selection
+ */
+function processHybridTable(tableHtml: string, columnCount: number): string {
+  let processedHtml = tableHtml;
+  
+  // Add hybrid layout class
+  processedHtml = processedHtml.replace(
+    /<table([^>]*class="([^"]*)")([^>]*)>/gi,
+    (match, classAttr, existingClasses, rest) => {
+      const classes = `${existingClasses} therapeutic-table-hybrid card-fallback-enabled`.trim();
+      return `<table class="${classes}" data-columns="${columnCount}" data-display-mode="hybrid"${rest}>`;
+    }
+  );
+  
+  processedHtml = processedHtml.replace(
+    /<table(?![^>]*class=)([^>]*)>/gi, 
+    `<table class="therapeutic-table-hybrid card-fallback-enabled" data-columns="${columnCount}" data-display-mode="hybrid"$1>`
+  );
+  
+  const tableData = extractTableDataForCards(tableHtml);
+  const cardDataAttrs = generateCardDataAttributes(tableData, columnCount);
+  
+  return `<div class="therapeutic-table-container hybrid-layout" ${cardDataAttrs}>${processedHtml}</div>`;
+}
+
+/**
+ * Transform complex tables (6+ columns) to card layout
+ */
+function transformToCardLayout(tableHtml: string, columnCount: number): string {
+  const tableData = extractTableDataForCards(tableHtml);
+  
+  // Generate pure card markup for complex tables
+  return generateCardOnlyMarkup(tableData, columnCount);
+}
+
+/**
+ * Extract structured data from table HTML for card layout
+ */
+function extractTableDataForCards(tableHtml: string): { headers: string[], rows: string[][] } {
+  const tempDiv = typeof document !== 'undefined' ? document.createElement('div') : null;
+  if (!tempDiv) {
+    // Fallback for server-side rendering
+    return parseTableDataFromHtml(tableHtml);
+  }
+  
+  tempDiv.innerHTML = tableHtml;
+  const table = tempDiv.querySelector('table');
+  if (!table) return { headers: [], rows: [] };
+  
+  // Extract headers
+  const headerCells = Array.from(table.querySelectorAll('thead th, tr:first-child th, tr:first-child td'));
+  const headers = headerCells.map(cell => cell.textContent?.trim() || '');
+  
+  // Extract data rows
+  const dataRows = Array.from(table.querySelectorAll('tbody tr, tr:not(:first-child)'));
+  const rows = dataRows.map(row => {
+    const cells = Array.from(row.querySelectorAll('td, th'));
+    return cells.map(cell => cell.textContent?.trim() || '');
+  });
+  
+  return { headers, rows };
+}
+
+/**
+ * Server-side fallback for table data parsing
+ */
+function parseTableDataFromHtml(tableHtml: string): { headers: string[], rows: string[][] } {
+  // Extract headers using regex
+  const headerMatch = tableHtml.match(/<thead[^>]*>[\s\S]*?<\/thead>/i) || 
+                     tableHtml.match(/<tr[^>]*>[\s\S]*?<\/tr>/i);
+  
+  let headers: string[] = [];
+  if (headerMatch) {
+    const headerCells = headerMatch[0].match(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi) || [];
+    headers = headerCells.map(cell => 
+      cell.replace(/<[^>]*>/g, '').trim()
+    );
+  }
+  
+  // Extract data rows
+  const rowMatches = tableHtml.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
+  const dataRows = rowMatches.slice(1); // Skip header row
+  
+  const rows = dataRows.map(row => {
+    const cells = row.match(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi) || [];
+    return cells.map(cell => 
+      cell.replace(/<[^>]*>/g, '').trim()
+    );
+  });
+  
+  return { headers, rows };
+}
+
+/**
+ * Generate data attributes for card configuration
+ */
+function generateCardDataAttributes(tableData: { headers: string[], rows: string[][] }, columnCount: number): string {
+  const attributes = [
+    `data-card-columns='${JSON.stringify(tableData.headers)}'`,
+    `data-card-rows='${JSON.stringify(tableData.rows)}'`,
+    `data-column-count="${columnCount}"`,
+    `data-card-variant="${determineCardVariant(tableData)}"`,
+    `data-card-layout="${determineCardLayout(columnCount)}"`
+  ];
+  
+  return attributes.join(' ');
+}
+
+/**
+ * Determine appropriate card variant based on table content
+ */
+function determineCardVariant(tableData: { headers: string[], rows: string[][] }): string {
+  const { headers } = tableData;
+  
+  // Check for therapeutic data patterns
+  const therapeuticPatterns = /^(patient|session|mood|anxiety|depression|therapy|treatment|progress)$/i;
+  if (headers.some(header => therapeuticPatterns.test(header))) {
+    return 'therapeutic';
+  }
+  
+  // Check for compact data patterns (many short fields)
+  const avgHeaderLength = headers.reduce((sum, h) => sum + h.length, 0) / headers.length;
+  if (avgHeaderLength < 10 && headers.length >= 4) {
+    return 'compact';
+  }
+  
+  // Check for detailed data patterns
+  if (headers.length <= 3 && tableData.rows.some(row => row.some(cell => cell.length > 50))) {
+    return 'detailed';
+  }
+  
+  return 'default';
+}
+
+/**
+ * Determine appropriate card layout based on column count
+ */
+function determineCardLayout(columnCount: number): string {
+  if (columnCount <= 2) return 'list';
+  if (columnCount >= 6) return 'masonry';
+  return 'grid';
+}
+
+/**
+ * Generate pure card markup for complex tables
+ */
+function generateCardOnlyMarkup(tableData: { headers: string[], rows: string[][] }, columnCount: number): string {
+  const variant = determineCardVariant(tableData);
+  const layout = determineCardLayout(columnCount);
+  
+  let cardHtml = `<div class="therapeutic-card-grid-generated" data-variant="${variant}" data-layout="${layout}">`;
+  
+  // Add caption if applicable
+  cardHtml += `<div class="card-grid-header">
+    <h3 class="text-lg font-semibold">Complex Data (${columnCount} columns)</h3>
+    <span class="text-sm text-muted-foreground">${tableData.rows.length} items</span>
+  </div>`;
+  
+  // Generate cards container
+  cardHtml += `<div class="card-grid-container ${layout}-layout">`;
+  
+  tableData.rows.forEach((row, index) => {
+    cardHtml += generateSingleCard(tableData.headers, row, index, variant);
+  });
+  
+  cardHtml += '</div></div>';
+  
+  return cardHtml;
+}
+
+/**
+ * Generate markup for a single card
+ */
+function generateSingleCard(headers: string[], row: string[], index: number, variant: string): string {
+  const primaryField = row[0] || `Item ${index + 1}`;
+  const secondaryFields = headers.slice(1).map((header, i) => ({ 
+    label: header, 
+    value: row[i + 1] || '' 
+  })).filter(field => field.value);
+  
+  let cardHtml = `<div class="therapeutic-card generated-card ${variant}-variant" data-index="${index}">`;
+  
+  // Card header
+  cardHtml += `<div class="card-header">
+    <h4 class="card-title">${primaryField}</h4>
+  </div>`;
+  
+  // Card content
+  cardHtml += `<div class="card-content">`;
+  
+  // Show first 3 fields prominently
+  secondaryFields.slice(0, 3).forEach(field => {
+    cardHtml += `<div class="card-field primary">
+      <span class="field-label">${field.label}:</span>
+      <span class="field-value">${field.value}</span>
+    </div>`;
+  });
+  
+  // Collapsible additional fields for complex data
+  if (secondaryFields.length > 3) {
+    cardHtml += `<details class="card-details">
+      <summary class="details-toggle">Show ${secondaryFields.length - 3} more fields</summary>
+      <div class="additional-fields">`;
+    
+    secondaryFields.slice(3).forEach(field => {
+      cardHtml += `<div class="card-field secondary">
+        <span class="field-label">${field.label}:</span>
+        <span class="field-value">${field.value}</span>
+      </div>`;
+    });
+    
+    cardHtml += `</div></details>`;
+  }
+  
+  cardHtml += `</div></div>`;
+  
+  return cardHtml;
+}
+

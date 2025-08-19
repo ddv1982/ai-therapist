@@ -19,7 +19,33 @@ jest.mock('@/lib/chat/message-encryption', () => ({
   }))
 }));
 
+// Import the mocked functions
+import { 
+  encryptSessionReportContent, 
+  decryptSessionReportContent,
+  encryptEnhancedAnalysisData 
+} from '@/lib/chat/message-encryption';
+
+const mockEncryptSessionReportContent = encryptSessionReportContent as jest.MockedFunction<typeof encryptSessionReportContent>;
+const mockDecryptSessionReportContent = decryptSessionReportContent as jest.MockedFunction<typeof decryptSessionReportContent>;
+const mockEncryptEnhancedAnalysisData = encryptEnhancedAnalysisData as jest.MockedFunction<typeof encryptEnhancedAnalysisData>;
+
 describe('Memory System Core Functionality', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    
+    // Reset mock implementations
+    mockEncryptSessionReportContent.mockImplementation((content: string) => `encrypted_${content}`);
+    mockDecryptSessionReportContent.mockImplementation((encryptedContent: string) => 
+      encryptedContent.replace('encrypted_', ''));
+    mockEncryptEnhancedAnalysisData.mockReturnValue({
+      cognitiveDistortions: 'encrypted_distortions',
+      schemaAnalysis: 'encrypted_schema',
+      therapeuticFrameworks: 'encrypted_frameworks',
+      recommendations: 'encrypted_recommendations'
+    });
+  });
+
   describe('Memory Context Integration', () => {
     it('should build memory-enhanced prompts correctly', () => {
       const memoryContext: MemoryContext[] = [
@@ -157,19 +183,15 @@ describe('Memory System Core Functionality', () => {
 
   describe('Encryption Integration', () => {
     it('should work with encrypted session report content', () => {
-      const { encryptSessionReportContent, decryptSessionReportContent } = require('@/lib/chat/message-encryption');
-
       const originalContent = 'This is a therapeutic session report with sensitive information.';
-      const encrypted = encryptSessionReportContent(originalContent);
-      const decrypted = decryptSessionReportContent(encrypted);
+      const encrypted = mockEncryptSessionReportContent(originalContent);
+      const decrypted = mockDecryptSessionReportContent(encrypted);
 
       expect(encrypted).toBe(`encrypted_${originalContent}`);
       expect(decrypted).toBe(originalContent);
     });
 
     it('should handle enhanced analysis data encryption', () => {
-      const { encryptEnhancedAnalysisData } = require('@/lib/chat/message-encryption');
-
       const analysisData = {
         cognitiveDistortions: [{ name: 'catastrophizing', severity: 'high' }],
         schemaAnalysis: { activeModes: ['vulnerable child'] },
@@ -177,7 +199,7 @@ describe('Memory System Core Functionality', () => {
         recommendations: [{ technique: 'thought records', urgency: 'high' }]
       };
 
-      const encrypted = encryptEnhancedAnalysisData(analysisData);
+      const encrypted = mockEncryptEnhancedAnalysisData(analysisData);
 
       expect(encrypted).toEqual({
         cognitiveDistortions: 'encrypted_distortions',

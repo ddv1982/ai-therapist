@@ -16,7 +16,7 @@ export function MessageAvatar({ role, className }: MessageAvatarProps) {
   const avatarClasses = buildMessageClasses(role, 'avatar');
   
   return (
-    <div className={cn(avatarClasses, className)}>
+    <div className={cn(avatarClasses, "hidden md:flex", className)}>
       {role === 'user' ? (
         <User className="w-4 h-4" />
       ) : (

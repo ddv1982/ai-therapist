@@ -10,16 +10,17 @@ import {
   ChallengeQuestions,
   RationalThoughts,
   SchemaModes,
-  ActionPlan,
+  ActionPlan
+} from '@/features/therapy/cbt/chat-components';
+import {
   type SituationData,
   type EmotionData,
   type ThoughtData,
-  type ActionPlanData
-} from '@/features/therapy/cbt/chat-components';
-import type { CoreBeliefData } from '@/features/therapy/cbt/chat-components/core-belief';
-import type { ChallengeQuestionsData } from '@/features/therapy/cbt/chat-components/challenge-questions';
-import type { RationalThoughtsData } from '@/features/therapy/cbt/chat-components/rational-thoughts';
-import type { SchemaModesData } from '@/features/therapy/cbt/chat-components/schema-modes';
+  type ActionPlanData,
+  type CoreBeliefData
+} from '@/store/slices/cbtSlice';
+// Use the types from the store instead of component types
+import type { ChallengeQuestionsData, RationalThoughtsData, SchemaModesData } from '@/types/therapy';
 
 interface VirtualizedMessageListProps {
   messages: MessageData[];
@@ -80,8 +81,6 @@ function VirtualizedMessageListComponent({
         return onCBTSituationComplete ? (
           <SituationPrompt
             onComplete={onCBTSituationComplete}
-            stepNumber={stepNumber}
-            totalSteps={totalSteps}
           />
         ) : null;
 
@@ -89,10 +88,6 @@ function VirtualizedMessageListComponent({
         return onCBTEmotionComplete ? (
           <EmotionScale
             onComplete={onCBTEmotionComplete}
-            stepNumber={stepNumber}
-            totalSteps={totalSteps}
-            title="How are you feeling right now?"
-            subtitle="Rate each emotion from 0 (not at all) to 10 (extremely intense)"
           />
         ) : null;
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTOTPDiagnostics, isTOTPSetup } from '@/lib/auth/totp-service';
 import { getClientIP } from '@/lib/auth/auth-middleware';
+import { logger, createRequestLogger } from '@/lib/utils/logger';
 
 // GET /api/auth/mobile-debug - Get detailed mobile debugging info
 export async function GET(request: NextRequest) {
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest) {
     
     return NextResponse.json(debugInfo);
   } catch (error) {
-    console.error('Mobile debug endpoint failed:', error);
+    logger.apiError('/api/auth/mobile-debug', error as Error, createRequestLogger(request));
     return NextResponse.json({ 
       error: 'Debug failed',
       details: error instanceof Error ? error.message : String(error)
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(debugResult);
   } catch (error) {
-    console.error('Mobile debug test failed:', error);
+    logger.apiError('/api/auth/mobile-debug', error as Error, createRequestLogger(request));
     return NextResponse.json({ 
       error: 'Debug test failed',
       details: error instanceof Error ? error.message : String(error)

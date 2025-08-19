@@ -13,9 +13,10 @@ export * from './memory/session-report-detail-modal';
 export * from './memory/session-report-viewer';
 
 // Therapeutic UI components
-export * from './ui/emotion-slider';
 export * from './ui/progress-indicator';
 export * from './ui/therapy-card';
 
 // Shared therapy components
 export * from './shared';
+
+// Legacy emotion-slider merged into unified TherapySlider

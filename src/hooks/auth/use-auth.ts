@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { handleClientError } from '@/lib/utils/error-utils';
+import { logger } from '@/lib/utils/logger';
 
 interface AuthStatus {
   isAuthenticated: boolean;
@@ -13,7 +14,7 @@ interface AuthStatus {
 
 // Global cache to prevent multiple simultaneous requests
 let authCache: { status: AuthStatus | null; timestamp: number } = { status: null, timestamp: 0 };
-const CACHE_DURATION = 30000; // 30 seconds cache
+const CACHE_DURATION = 15000; // 15 seconds cache (reduced for faster auth updates)
 
 // Function to clear auth cache (useful after login/logout)
 export function clearAuthCache() {
@@ -79,7 +80,9 @@ export function useAuth(): AuthStatus {
       });
       
       const fetchPromise = fetch('/api/auth/session', {
-        signal: abortControllerRef.current.signal
+        signal: abortControllerRef.current.signal,
+        cache: 'no-cache',
+        credentials: 'include'
       });
       
       const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
@@ -122,12 +125,13 @@ export function useAuth(): AuthStatus {
       
       // Log with enhanced error info (in development only)
       if (process.env.NODE_ENV === 'development') {
-        console.error('Auth status check failed:', {
-          error: (error as Error).message,
+        logger.error('Auth status check failed in development', {
+          component: 'useAuth',
+          operation: 'checkAuthStatus',
           category,
           shouldRetry,
           userMessage
-        });
+        }, error instanceof Error ? error : new Error(String(error)));
       }
       
       const errorStatus: AuthStatus = {

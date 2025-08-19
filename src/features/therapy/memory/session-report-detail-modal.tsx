@@ -15,6 +15,7 @@ import {
   type SessionReportDetail, 
   type MemoryDetailInfo 
 } from '@/lib/chat/memory-utils';
+import { logger } from '@/lib/utils/logger';
 import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 
 interface SessionReportDetailModalProps {
@@ -35,7 +36,23 @@ export function SessionReportDetailModal({
   const [error, setError] = useState<string | null>(null);
 
   const loadReportDetail = useCallback(async () => {
-    if (!reportInfo || !open) return;
+    if (!reportInfo || !open) {
+      logger.therapeuticOperation('Session report detail not loading', {
+        component: 'SessionReportDetailModal',
+        operation: 'loadReportDetail',
+        hasReportInfo: !!reportInfo,
+        isOpen: open
+      });
+      return;
+    }
+    
+    logger.therapeuticOperation('Starting to load session report detail', {
+      component: 'SessionReportDetailModal',
+      operation: 'loadReportDetail',
+      reportId: reportInfo.id,
+      sessionId: currentSessionId || 'unknown',
+      hasReportInfo: !!reportInfo
+    });
     
     setIsLoading(true);
     setError(null);
@@ -43,13 +60,39 @@ export function SessionReportDetailModal({
     try {
       const detail = await getSessionReportDetail(reportInfo.id, currentSessionId);
       
+      logger.therapeuticOperation('Received session report detail', {
+        component: 'SessionReportDetailModal',
+        operation: 'loadReportDetail',
+        reportId: reportInfo.id,
+        hasDetail: !!detail,
+        detailKeysCount: detail ? Object.keys(detail).length : 0,
+        hasStructuredCBTData: !!(detail as unknown as Record<string, unknown>)?.structuredCBTData,
+        detailSize: detail ? JSON.stringify(detail).length : 0
+      });
+      
       if (detail) {
         setReportDetail(detail);
+        logger.therapeuticOperation('Session report detail set successfully', {
+          component: 'SessionReportDetailModal',
+          operation: 'loadReportDetail',
+          reportId: reportInfo.id
+        });
       } else {
+        logger.warn('No session report detail returned from API', {
+          component: 'SessionReportDetailModal',
+          operation: 'loadReportDetail',
+          reportId: reportInfo.id,
+          sessionId: currentSessionId
+        });
         setError('Unable to load full session report content. The report may be encrypted or unavailable.');
       }
     } catch (error) {
-      console.error('Failed to load report detail:', error);
+      logger.error('Failed to load session report detail', {
+        component: 'SessionReportDetailModal',
+        operation: 'loadReportDetail',
+        reportId: reportInfo?.id,
+        sessionId: currentSessionId || 'unknown'
+      }, error instanceof Error ? error : new Error(String(error)));
       setError('Failed to load session report. Please try again.');
     } finally {
       setIsLoading(false);

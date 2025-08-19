@@ -26,7 +26,11 @@ export function createLazyComponent<T = object>(
       
       // Log performance metrics in development
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Component ${componentName} loaded in ${loadTime.toFixed(2)}ms`);
+        logger.debug('Component loaded', { 
+          componentName, 
+          loadTime: Math.round(loadTime),
+          operation: 'lazyLoading'
+        });
       }
       
       return component;
@@ -60,7 +64,10 @@ export function preloadComponent<T = Record<string, unknown>>(
   const preload = () => {
     importFn().then(() => {
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Preloaded component: ${componentName}`);
+        logger.debug('Component preloaded', { 
+          componentName,
+          operation: 'preloading'
+        });
       }
     }).catch((error) => {
       logger.warn(`Failed to preload component ${componentName}`, {
@@ -257,7 +264,10 @@ export class TherapeuticMessageCache {
     keysToDelete.forEach(key => this.cache.delete(key));
     
     if (process.env.NODE_ENV === 'development') {
-      console.log(`Cleaned up ${keysToDelete.length} stale cache entries`);
+      logger.debug('Message cache cleanup completed', {
+        cleanedSessions: keysToDelete.length,
+        operation: 'cacheCleanup'
+      });
     }
   }
 
@@ -384,10 +394,11 @@ if (process.env.NODE_ENV === 'development') {
     const cacheStats = messageCache.getCacheStats();
     
     if (Object.keys(report).length > 0) {
-      console.group('🚀 Therapeutic App Performance Report');
-      console.table(report);
-      console.log('💾 Cache Statistics:', cacheStats);
-      console.groupEnd();
+      logger.debug('Therapeutic app performance report', {
+        performanceReport: report,
+        cacheStatistics: cacheStats,
+        operation: 'performanceReporting'
+      });
     }
   }, 30000);
 }

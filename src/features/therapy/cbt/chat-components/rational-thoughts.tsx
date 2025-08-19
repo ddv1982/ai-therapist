@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Lightbulb, Plus, Minus } from 'lucide-react';
+import { TherapySlider } from '@/components/ui/therapy-slider';
+import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
+import { Lightbulb, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
-import { loadCBTDraft, useDraftSaver, CBT_DRAFT_KEYS, clearCBTDraft } from '@/lib/utils/cbt-draft-utils';
-
-export interface RationalThoughtsData {
-  rationalThoughts: Array<{ thought: string; confidence: number }>;
-}
+import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
+import type { RationalThoughtsData } from '@/types/therapy';
+// Removed CBTFormValidationError import - validation errors not displayed
 
 interface RationalThoughtsProps {
   onComplete: (data: RationalThoughtsData) => void;
@@ -23,52 +23,20 @@ interface RationalThoughtsProps {
   className?: string;
 }
 
-// Confidence slider component
-interface ConfidenceSliderProps {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-  className?: string;
-}
-
-const ConfidenceSlider: React.FC<ConfidenceSliderProps> = ({ 
-  label, 
-  value, 
-  onChange, 
-  className 
-}) => {
-  return (
-    <div className={cn("space-y-2", className)}>
-      <div className="flex justify-between items-center">
-        <label className="text-xs font-medium text-foreground">{label}</label>
-        <span className="text-xs text-muted-foreground font-mono">{value}/10</span>
-      </div>
-      <input
-        type="range"
-        min="1"
-        max="10"
-        step="1"
-        value={value}
-        onChange={(e) => onChange(parseInt(e.target.value))}
-        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 slider-thumb:rounded-full slider-thumb:bg-primary slider-thumb:cursor-pointer"
-      />
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>1 - Slightly</span>
-        <span>5 - Moderately</span>
-        <span>10 - Completely</span>
-      </div>
-    </div>
-  );
-};
 
 export function RationalThoughts({ 
   onComplete, 
   initialData,
   coreBeliefText,
-  stepNumber,
-  totalSteps,
+  stepNumber: _stepNumber,
+  totalSteps: _totalSteps,
   className 
 }: RationalThoughtsProps) {
+  const { sessionData, rationalActions } = useCBTDataManager();
+  
+  // Get rational thoughts data from unified CBT hook
+  const rationalThoughtsData = sessionData.rationalThoughts;
+  
   // Default rational thoughts data
   const defaultThoughtsData: RationalThoughtsData = {
     rationalThoughts: [
@@ -77,22 +45,28 @@ export function RationalThoughts({
   };
 
   const [thoughtsData, setThoughtsData] = useState<RationalThoughtsData>(() => {
-    const draftData = loadCBTDraft(CBT_DRAFT_KEYS.RATIONAL_THOUGHTS, defaultThoughtsData);
-    
-    // Use initialData if provided, otherwise use draft data
+    // Use initialData if provided, otherwise use Redux data or default
     if (initialData?.rationalThoughts) {
       return initialData;
     }
     
-    return draftData;
+    // Return Redux data if it has content, otherwise default  
+    return rationalThoughtsData.length > 0 ? { rationalThoughts: rationalThoughtsData } : defaultThoughtsData;
   });
 
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>(() =>
     new Array(thoughtsData.rationalThoughts.length).fill('')
   );
 
-  // Auto-save draft as user types
-  const { isDraftSaved } = useDraftSaver(CBT_DRAFT_KEYS.RATIONAL_THOUGHTS, thoughtsData);
+  // Auto-save to Redux when thoughts change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      rationalActions.updateRationalThoughts(thoughtsData.rationalThoughts);
+    }, 500); // Debounce updates by 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [thoughtsData, rationalActions]);
+
 
   const handleThoughtChange = useCallback((index: number, field: 'thought' | 'confidence', value: string | number) => {
     setThoughtsData(prev => ({
@@ -144,16 +118,22 @@ export function RationalThoughts({
   const handleSubmit = useCallback(() => {
     const validThoughts = thoughtsData.rationalThoughts.filter(t => t.thought.trim());
     if (validThoughts.length > 0) {
-      // Clear the draft since step is completed
-      clearCBTDraft(CBT_DRAFT_KEYS.RATIONAL_THOUGHTS);
+      // Update Redux store with final data
+      rationalActions.updateRationalThoughts(validThoughts);
       
       // Always complete the step first for normal CBT flow progression
       onComplete({ rationalThoughts: validThoughts });
     }
-  }, [thoughtsData, onComplete]);
+  }, [thoughtsData, rationalActions, onComplete]);
 
   const validThoughtCount = thoughtsData.rationalThoughts.filter(t => t.thought.trim()).length;
   const isValid = validThoughtCount > 0;
+
+  // Validation logic - keeps form functional without showing error messages
+
+  const handleNext = useCallback(async () => {
+    await handleSubmit();
+  }, [handleSubmit]);
 
   // Helper prompts
   const thoughtPrompts = [
@@ -166,32 +146,19 @@ export function RationalThoughts({
   ];
 
   return (
-    <div className={cn("max-w-2xl mx-auto", className)}>
-      {/* Conversational Header */}
-      <div className="mb-4 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-medium">
-          <Lightbulb className="w-4 h-4" />
-          Step {stepNumber} of {totalSteps}: Rational alternatives
-        </div>
-        {coreBeliefText && (
-          <p className="text-xs text-muted-foreground mt-2">
-            Alternative to: &ldquo;{coreBeliefText}&rdquo;
-          </p>
-        )}
-        <div className={`mt-2 flex justify-center`}>
-          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
-            isDraftSaved 
-              ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
-              : 'opacity-0 scale-95'
-          }`}>
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            Saved
-          </div>
-        </div>
-      </div>
-
-      <Card className="p-4 border-border bg-card">
-        <div className="space-y-4">
+    <CBTStepWrapper
+      step="rational-thoughts"
+      title="Rational Alternative Thoughts"
+      subtitle={coreBeliefText ? `Alternative to: "${coreBeliefText}"` : "Create balanced, helpful thoughts"}
+      icon={<Lightbulb className="w-5 h-5" />}
+      isValid={isValid}
+      validationErrors={[]} // No validation error display
+      onNext={handleNext}
+      nextButtonText={`Continue to Schema Modes${validThoughtCount > 0 ? ` (${validThoughtCount} thoughts)` : ''}`}
+      helpText="Replace negative thoughts with more balanced, realistic alternatives."
+      className={className}
+    >
+      <div className="space-y-6">
           {/* Quick Thought Prompts */}
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">Helpful starting points:</p>
@@ -248,7 +215,9 @@ export function RationalThoughts({
                   />
                   
                   {thoughtData.thought.trim() && (
-                    <ConfidenceSlider
+                    <TherapySlider
+                      type="confidence"
+                      labelSize="xs"
                       label="How confident do you feel in this alternative thought?"
                       value={thoughtData.confidence}
                       onChange={(value) => handleThoughtChange(index, 'confidence', value)}
@@ -276,25 +245,7 @@ export function RationalThoughts({
             </Button>
           )}
 
-          {/* Submit Button */}
-          <Button
-            onClick={handleSubmit}
-            disabled={!isValid}
-            className="w-full h-10 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden disabled:opacity-50"
-          >
-            {/* Shimmer effect */}
-            <div className="shimmer-effect"></div>
-            <Send className="w-4 h-4 mr-2 relative z-10" />
-            <span className="relative z-10">{validThoughtCount > 0 ? `Continue with ${validThoughtCount} thoughts` : "Continue to Schema Modes"}</span>
-          </Button>
-          
-          {!isValid && (
-            <p className="text-xs text-muted-foreground text-center">
-              Write at least one rational thought to continue
-            </p>
-          )}
-        </div>
-      </Card>
-    </div>
+      </div>
+    </CBTStepWrapper>
   );
 }

@@ -76,13 +76,13 @@ describe('Authentication Middleware', () => {
     
     // Reset environment variables
     delete process.env.BYPASS_AUTH;
-    process.env.NODE_ENV = 'test';
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'test', writable: true });
   });
 
   describe('checkAuth', () => {
     describe('Development Bypass', () => {
       it('should allow bypass in development with BYPASS_AUTH=true', async () => {
-        process.env.NODE_ENV = 'development';
+        Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
         process.env.BYPASS_AUTH = 'true';
 
         const request = createMockRequest('/');
@@ -97,7 +97,7 @@ describe('Authentication Middleware', () => {
       });
 
       it('should not allow bypass in production even with BYPASS_AUTH=true', async () => {
-        process.env.NODE_ENV = 'production';
+        Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
         process.env.BYPASS_AUTH = 'true';
         mockIsTOTPSetup.mockResolvedValue(true);
 
@@ -109,7 +109,7 @@ describe('Authentication Middleware', () => {
       });
 
       it('should not allow bypass in development without BYPASS_AUTH', async () => {
-        process.env.NODE_ENV = 'development';
+        Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
         // BYPASS_AUTH not set
         mockIsTOTPSetup.mockResolvedValue(true);
 
@@ -121,7 +121,7 @@ describe('Authentication Middleware', () => {
       });
 
       it('should not allow bypass in development with BYPASS_AUTH=false', async () => {
-        process.env.NODE_ENV = 'development';
+        Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
         process.env.BYPASS_AUTH = 'false';
         mockIsTOTPSetup.mockResolvedValue(true);
 
@@ -352,7 +352,7 @@ describe('Authentication Middleware', () => {
 
     it('should set secure cookie in production', () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
 
       const sessionToken = 'test-session-token';
       const response = createAuthResponse(sessionToken);
@@ -365,7 +365,7 @@ describe('Authentication Middleware', () => {
         path: '/',
       });
 
-      process.env.NODE_ENV = originalEnv;
+      Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, writable: true });
     });
 
     it('should handle long session tokens', () => {
@@ -590,7 +590,7 @@ describe('Authentication Middleware', () => {
     });
 
     it('should handle bypass mode correctly', async () => {
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       process.env.BYPASS_AUTH = 'true';
 
       const request = createMockRequest('/dashboard');
@@ -654,7 +654,7 @@ describe('Authentication Middleware', () => {
 
       for (const scenario of scenarios) {
         jest.clearAllMocks();
-        process.env.NODE_ENV = scenario.env;
+        Object.defineProperty(process.env, 'NODE_ENV', { value: scenario.env, writable: true });
         process.env.BYPASS_AUTH = scenario.bypass;
         mockIsTOTPSetup.mockResolvedValue(true);
 

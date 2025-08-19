@@ -1,8 +1,8 @@
 import { prisma } from '@/lib/database/db';
 import { createSessionSchema } from '@/lib/utils/validation';
 import { logger } from '@/lib/utils/logger';
-import { withValidation, withAuth, db, errorHandlers } from '@/lib/api-middleware';
-import { createSuccessResponse } from '@/lib/api-response';
+import { withValidation, withAuth, db, errorHandlers } from '@/lib/api/api-middleware';
+import { createSuccessResponse } from '@/lib/api/api-response';
 
 export const POST = withValidation(
   createSessionSchema,

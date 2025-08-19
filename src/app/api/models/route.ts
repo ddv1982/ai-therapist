@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/utils/logger';
 
 // Simple endpoint that returns hardcoded model information
 // Since we use fixed models now, no need to query Groq API
@@ -29,7 +30,7 @@ export async function GET() {
       note: 'Models are now automatically selected based on content type'
     });
   } catch (error) {
-    console.error('Failed to return model info:', error);
+    logger.apiError('/api/models', error as Error, { apiEndpoint: '/api/models' });
     return NextResponse.json(
       { error: 'Failed to get model information' },
       { status: 500 }

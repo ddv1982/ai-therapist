@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, Smartphone, Download, Copy } from 'lucide-react';
+import { logger } from '@/lib/utils/logger';
 
 interface TrustedDevice {
   id: string;
@@ -38,7 +39,11 @@ export function SecuritySettings() {
         setSecurityData(data);
       }
     } catch (error) {
-      console.error('Failed to fetch security data:', error);
+      logger.securityEvent('Failed to fetch security data', {
+        component: 'SecuritySettings',
+        operation: 'fetchSecurityData',
+        error: (error as Error).message
+      });
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +61,12 @@ export function SecuritySettings() {
         await fetchSecurityData();
       }
     } catch (error) {
-      console.error('Failed to revoke device:', error);
+      logger.securityEvent('Failed to revoke device', {
+        component: 'SecuritySettings',
+        operation: 'revokeDevice',
+        deviceId,
+        error: (error as Error).message
+      });
     }
   };
 
@@ -75,7 +85,11 @@ export function SecuritySettings() {
         await fetchSecurityData();
       }
     } catch (error) {
-      console.error('Failed to regenerate backup codes:', error);
+      logger.securityEvent('Failed to regenerate backup codes', {
+        component: 'SecuritySettings',
+        operation: 'regenerateBackupCodes',
+        error: (error as Error).message
+      });
     }
   };
 
@@ -108,7 +122,11 @@ export function SecuritySettings() {
         window.location.href = '/auth/verify';
       }
     } catch (error) {
-      console.error('Failed to logout:', error);
+      logger.securityEvent('Failed to logout', {
+        component: 'SecuritySettings',
+        operation: 'logout',
+        error: (error as Error).message
+      });
     }
   };
 

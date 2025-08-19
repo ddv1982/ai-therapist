@@ -1,75 +1,52 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Heart, Plus } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Heart, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
-import { loadCBTDraft, useDraftSaver, CBT_DRAFT_KEYS, clearCBTDraft } from '@/lib/utils/cbt-draft-utils';
+import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
+import { TherapySlider } from '@/components/ui/therapy-slider';
+import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
+import type { EmotionData } from '@/types/therapy';
 
-export interface EmotionData {
-  fear: number;
-  anger: number;
-  sadness: number;
-  joy: number;
-  anxiety: number;
-  shame: number;
-  guilt: number;
-  other?: string;
-  otherIntensity?: number;
-}
+// Remove local interface - use the one from cbtSlice
+// export interface EmotionData {
+//   fear: number;
+//   anger: number;
+//   sadness: number;
+//   joy: number;
+//   anxiety: number;
+//   shame: number;
+//   guilt: number;
+//   other?: string;
+//   otherIntensity?: number;
+// }
 
 interface EmotionScaleProps {
-  onComplete: (data: EmotionData) => void;
-  initialData?: EmotionData;
-  title?: string;
-  subtitle?: string;
-  stepNumber?: number;
-  totalSteps?: number;
+  onComplete?: (data: EmotionData) => void;
+  type?: 'initial' | 'final';
   className?: string;
 }
 
 
 export function EmotionScale({ 
-  onComplete, 
-  initialData,
-  stepNumber,
-  totalSteps,
+  onComplete,
+  type = 'initial',
   className 
 }: EmotionScaleProps) {
-  // Default emotion data
-  const defaultEmotionData: EmotionData = {
-    fear: 0,
-    anger: 0,
-    sadness: 0,
-    joy: 0,
-    anxiety: 0,
-    shame: 0,
-    guilt: 0,
-    other: '',
-    otherIntensity: 0
-  };
-
-  const [emotions, setEmotions] = useState<EmotionData>(() => {
-    const draftData = loadCBTDraft(CBT_DRAFT_KEYS.EMOTIONS, defaultEmotionData);
-    return {
-      fear: initialData?.fear || draftData.fear,
-      anger: initialData?.anger || draftData.anger,
-      sadness: initialData?.sadness || draftData.sadness,
-      joy: initialData?.joy || draftData.joy,
-      anxiety: initialData?.anxiety || draftData.anxiety,
-      shame: initialData?.shame || draftData.shame,
-      guilt: initialData?.guilt || draftData.guilt,
-      other: initialData?.other || draftData.other || '',
-      otherIntensity: initialData?.otherIntensity || draftData.otherIntensity || 0
-    };
-  });
-
-  const [showCustom, setShowCustom] = useState(Boolean(emotions.other));
-
-  // Auto-save draft as user interacts
-  const { isDraftSaved } = useDraftSaver(CBT_DRAFT_KEYS.EMOTIONS, emotions);
+  const { 
+    sessionData,
+    sessionActions 
+  } = useCBTDataManager();
+  
+  // Get current emotion data from unified state (sessionData stores current emotions)
+  const currentEmotions = useMemo(() => 
+    sessionData.emotions || { fear: 0, anger: 0, sadness: 0, joy: 0, anxiety: 0, shame: 0, guilt: 0 },
+    [sessionData.emotions]
+  );
+  const [showCustom, setShowCustom] = useState(Boolean(currentEmotions.other));
 
   // Core emotions with visual styling using fitting colors
   const coreEmotions = [
@@ -82,77 +59,76 @@ export function EmotionScale({
     { key: 'guilt', label: 'Guilt', emoji: '😔', color: 'bg-indigo-600' }
   ];
 
+  // Validation logic - keeps form functional without showing error messages
+
   const handleEmotionChange = useCallback((key: keyof EmotionData, value: number) => {
-    if (key === 'otherIntensity') {
-      setEmotions(prev => ({ ...prev, [key]: value }));
-    } else {
-      setEmotions(prev => ({ ...prev, [key]: value }));
-    }
-  }, []);
-
-  const handleCustomEmotionChange = useCallback((value: string) => {
-    setEmotions(prev => ({ ...prev, other: value }));
-  }, []);
-
-  const handleSubmit = useCallback(() => {
-    // Clear the draft since step is completed
-    clearCBTDraft(CBT_DRAFT_KEYS.EMOTIONS);
-    
-    onComplete(emotions);
-  }, [emotions, onComplete]);
+    const updatedEmotions = { ...currentEmotions, [key]: value };
+    sessionActions.updateEmotions(updatedEmotions);
+  }, [currentEmotions, sessionActions]);
 
   // Check if any emotions are selected
-  const hasSelectedEmotions = Object.entries(emotions).some(([key, value]) => {
+  const hasSelectedEmotions = Object.entries(currentEmotions).some(([key, value]) => {
     if (key === 'other') return false;
-    if (key === 'otherIntensity') return emotions.other && value > 0;
+    if (key === 'otherIntensity') return currentEmotions.other && typeof value === 'number' && value > 0;
     return typeof value === 'number' && value > 0;
   });
 
-  const selectedCount = Object.entries(emotions).filter(([key, value]) => {
+  const handleCustomEmotionChange = useCallback((value: string) => {
+    const updatedEmotions = { ...currentEmotions, other: value };
+    sessionActions.updateEmotions(updatedEmotions);
+  }, [currentEmotions, sessionActions]);
+
+  const handleNext = useCallback(async () => {
+    if (hasSelectedEmotions) {
+      // Ensure emotions are saved to session
+      sessionActions.updateEmotions(currentEmotions);
+      
+      // Call parent completion handler if provided
+      if (onComplete) {
+        onComplete(currentEmotions);
+      }
+    }
+  }, [hasSelectedEmotions, currentEmotions, sessionActions, onComplete]);
+
+  const selectedCount = Object.entries(currentEmotions).filter(([key, value]) => {
     if (key === 'other') return false;
-    if (key === 'otherIntensity') return emotions.other && value > 0;
+    if (key === 'otherIntensity') return currentEmotions.other && typeof value === 'number' && value > 0;
     return typeof value === 'number' && value > 0;
   }).length;
 
   return (
-    <div className={cn("max-w-4xl mx-auto w-full", className)}>
-      {/* Conversational Header */}
-      <div className="mb-6 text-center px-2">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-medium">
-          <Heart className="w-4 h-4" />
-          Step {stepNumber} of {totalSteps}: How are you feeling?
-        </div>
-        <p className="text-sm text-muted-foreground mt-2">
-          Select and rate the emotions you&apos;re experiencing (0-10 scale)
-        </p>
-        <div className="flex items-center justify-center gap-4 mt-2">
-          {hasSelectedEmotions && (
-            <p className="text-xs text-primary/70 font-medium">{selectedCount} emotions selected</p>
-          )}
-          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
-            isDraftSaved 
-              ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
-              : 'opacity-0 scale-95'
-          }`}>
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            Saved
+    <CBTStepWrapper
+      step="emotions"
+      title={type === 'initial' ? "How are you feeling?" : "How are you feeling now?"}
+      subtitle={type === 'initial' ? "Rate the emotions you're experiencing" : "Rate how your emotions have changed"}
+      icon={<Heart className="w-5 h-5" />}
+      isValid={hasSelectedEmotions}
+      validationErrors={[]} // No validation error display
+      onNext={handleNext}
+      nextButtonText={`Continue to Thoughts${selectedCount > 0 ? ` (${selectedCount} emotions)` : ''}`}
+      helpText="Click on emotions to select them, then adjust the intensity using the sliders (1-10 scale)."
+      hideProgressBar={true} // Parent page shows progress
+      className={className}
+    >
+      <div className="space-y-6">
+        {hasSelectedEmotions && (
+          <div className="text-center">
+            <p className="text-sm text-primary font-medium">{selectedCount} emotions selected</p>
           </div>
-        </div>
-      </div>
-
-      <Card className="p-4 border-border bg-card">
+        )}
+        
         <div className="space-y-4">
           {/* Emotion Cards Grid - 2 per row for compact layout */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {coreEmotions.map((emotion) => {
-            const value = emotions[emotion.key as keyof EmotionData] as number;
+            const value = currentEmotions[emotion.key as keyof EmotionData] as number;
             const isSelected = value > 0;
             
             return (
               <Card 
                 key={emotion.key} 
                 className={cn(
-                  "p-3 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-md",
+                  "p-3 cursor-pointer transition-colors duration-200",
                   isSelected 
                     ? "ring-2 ring-primary bg-primary/5 border-primary/30" 
                     : "hover:border-primary/20 bg-muted/30"
@@ -212,20 +188,16 @@ export function EmotionScale({
                   {/* Slider (only shown when selected) */}
                   {isSelected && (
                     <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="range"
-                        min="1"
-                        max="10"
-                        step="1"
+                      <TherapySlider
+                        type="intensity"
+                        label=""
                         value={value}
-                        onChange={(e) => handleEmotionChange(emotion.key as keyof EmotionData, parseInt(e.target.value))}
-                        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 slider-thumb:rounded-full slider-thumb:bg-primary slider-thumb:cursor-pointer"
+                        onChange={(newValue) => handleEmotionChange(emotion.key as keyof EmotionData, newValue)}
+                        min={1}
+                        max={10}
+                        className="w-full"
+                        labelSize="xs"
                       />
-                      <div className="flex justify-between text-xs text-muted-foreground px-1">
-                        <span>1</span>
-                        <span className="hidden sm:inline">5</span>
-                        <span>10</span>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -250,7 +222,7 @@ export function EmotionScale({
                 <div className="flex gap-2">
                   <Input
                     placeholder="Custom emotion (e.g., jealousy, excitement, grateful)"
-                    value={emotions.other || ''}
+                    value={currentEmotions.other || ''}
                     onChange={(e) => handleCustomEmotionChange(e.target.value)}
                     className="flex-1"
                   />
@@ -258,7 +230,7 @@ export function EmotionScale({
                     variant="ghost"
                     onClick={() => {
                       setShowCustom(false);
-                      setEmotions(prev => ({ ...prev, other: '', otherIntensity: 0 }));
+                      sessionActions.updateEmotions({ ...currentEmotions, other: '', otherIntensity: 0 });
                     }}
                     size="sm"
                     className="px-3 hover:bg-destructive/10 hover:text-destructive"
@@ -266,7 +238,7 @@ export function EmotionScale({
                     ✕
                   </Button>
                 </div>
-                {emotions.other && (
+                {currentEmotions.other && (
                   <Card className="p-3 bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -275,34 +247,29 @@ export function EmotionScale({
                             💭
                           </div>
                           <div>
-                            <h4 className="font-semibold text-sm text-foreground">{emotions.other}</h4>
+                            <h4 className="font-semibold text-sm text-foreground">{currentEmotions.other}</h4>
                             <p className="text-xs text-muted-foreground">
-                              {(emotions.otherIntensity || 0) === 0 && "Not present"}
-                              {(emotions.otherIntensity || 0) > 0 && (emotions.otherIntensity || 0) <= 2 && "Mild"}
-                              {(emotions.otherIntensity || 0) > 2 && (emotions.otherIntensity || 0) <= 5 && "Moderate"} 
-                              {(emotions.otherIntensity || 0) > 5 && (emotions.otherIntensity || 0) <= 7 && "Strong"}
-                              {(emotions.otherIntensity || 0) > 7 && (emotions.otherIntensity || 0) <= 9 && "Very strong"}
-                              {(emotions.otherIntensity || 0) === 10 && "Overwhelming"}
+                              {(currentEmotions.otherIntensity || 0) === 0 && "Not present"}
+                              {(currentEmotions.otherIntensity || 0) > 0 && (currentEmotions.otherIntensity || 0) <= 2 && "Mild"}
+                              {(currentEmotions.otherIntensity || 0) > 2 && (currentEmotions.otherIntensity || 0) <= 5 && "Moderate"} 
+                              {(currentEmotions.otherIntensity || 0) > 5 && (currentEmotions.otherIntensity || 0) <= 7 && "Strong"}
+                              {(currentEmotions.otherIntensity || 0) > 7 && (currentEmotions.otherIntensity || 0) <= 9 && "Very strong"}
+                              {(currentEmotions.otherIntensity || 0) === 10 && "Overwhelming"}
                             </p>
                           </div>
                         </div>
-                        <span className="text-sm font-medium text-primary">{emotions.otherIntensity || 0}/10</span>
+                        <span className="text-sm font-medium text-primary">{currentEmotions.otherIntensity || 0}/10</span>
                       </div>
                       <div className="space-y-1">
-                        <input
-                          type="range"
-                          min="1"
-                          max="10"
-                          step="1"
-                          value={emotions.otherIntensity || 1}
-                          onChange={(e) => handleEmotionChange('otherIntensity', parseInt(e.target.value))}
-                          className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 slider-thumb:rounded-full slider-thumb:bg-primary slider-thumb:cursor-pointer"
+                        <TherapySlider
+                          type="intensity"
+                          label=""
+                          value={currentEmotions.otherIntensity || 1}
+                          onChange={(value) => handleEmotionChange('otherIntensity', value)}
+                          min={1}
+                          max={10}
+                          className="w-full"
                         />
-                        <div className="flex justify-between text-xs text-muted-foreground px-1">
-                          <span>1</span>
-                          <span className="hidden sm:inline">5</span>
-                          <span>10</span>
-                        </div>
                       </div>
                     </div>
                   </Card>
@@ -310,28 +277,8 @@ export function EmotionScale({
               </div>
             )}
           </div>
-
-          {/* Submit Button */}
-          <div className="pt-2">
-            <Button
-              onClick={handleSubmit}
-              disabled={!hasSelectedEmotions}
-              className="w-full h-12 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden disabled:opacity-50"
-            >
-              {/* Shimmer effect */}
-              <div className="shimmer-effect"></div>
-              <Send className="w-4 h-4 mr-2 relative z-10" />
-              <span className="relative z-10">{selectedCount > 0 ? `Share My Emotions (${selectedCount} selected)` : "Continue to Thoughts"}</span>
-            </Button>
-            
-            {!hasSelectedEmotions && (
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                Adjust the sliders above to rate any emotions you&apos;re experiencing
-              </p>
-            )}
-          </div>
         </div>
-      </Card>
-    </div>
+      </div>
+    </CBTStepWrapper>
   );
 }

@@ -13,6 +13,7 @@ import type { ChatInterfaceProps } from '@/types/chat';
 import type { Session } from '@/types';
 import { Send } from 'lucide-react';
 import { generateSessionTitle } from '@/lib/utils/utils';
+import { logger } from '@/lib/utils/logger';
 
 export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatInterfaceProps) {
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
@@ -39,7 +40,7 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
       }
     }),
     onError: (error) => {
-      console.error('Chat error:', error);
+      logger.error('Chat stream error', { component: 'ChatInterface' }, error);
     },
     onFinish: async ({ message }) => {
       // Save the AI response to database after completion
@@ -62,7 +63,7 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
             }),
           });
         } catch (error) {
-          console.error('Failed to save assistant message:', error);
+          logger.error('Failed to save assistant message', { component: 'ChatInterface', operation: 'saveMessage' }, error as Error);
         }
       }
     }
@@ -130,7 +131,7 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
         // AI SDK will handle message management
       }
     } catch (error) {
-      console.error('Failed to start session:', error);
+      logger.error('Failed to start session', { component: 'ChatInterface', operation: 'startSession' }, error as Error);
     }
   };
 
@@ -160,7 +161,7 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
       setCurrentSession(null);
       setSessionDuration(0);
     } catch (error) {
-      console.error('Failed to end session:', error);
+      logger.error('Failed to end session', { component: 'ChatInterface', operation: 'endSession' }, error as Error);
     }
   };
 
@@ -188,7 +189,7 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
         }),
       });
     } catch (error) {
-      console.error('Failed to save user message:', error);
+      logger.error('Failed to save user message', { component: 'ChatInterface', operation: 'saveUserMessage' }, error as Error);
     }
 
     // Use AI SDK's sendMessage
@@ -307,9 +308,6 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
               >
                 <Send size={20} />
               </Button>
-            </div>
-            <div className="text-sm text-muted-foreground mt-2">
-              Press Enter to send, Shift+Enter for new line
             </div>
           </form>
         </div>

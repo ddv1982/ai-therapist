@@ -1,4 +1,5 @@
-import { encryptSensitiveData, decryptSensitiveData } from '@/lib/auth/crypto-utils';
+import { encryptSensitiveData, decryptSensitiveData, encryptSensitiveDataAsync, decryptSensitiveDataAsync } from '@/lib/auth/crypto-utils';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Message encryption service for therapeutic content
@@ -57,7 +58,10 @@ export function decryptMessage(encryptedMessage: {
       timestamp: encryptedMessage.timestamp,
     };
   } catch (error) {
-    console.error('Failed to decrypt message:', error);
+    logger.error('Failed to decrypt therapeutic message', {
+      operation: 'decryptMessage',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     // Return a safe fallback for corrupted/undecryptable messages
     return {
       role: encryptedMessage.role,
@@ -94,6 +98,87 @@ export function decryptMessages(encryptedMessages: Array<{
 }
 
 /**
+ * Encrypt a message asynchronously for better performance
+ */
+export async function encryptMessageAsync(message: { role: string; content: string; timestamp?: Date }): Promise<{
+  role: string;
+  content: string;
+  timestamp: Date;
+}> {
+  // Only encrypt the sensitive content, keep role and timestamp as-is
+  const encryptedContent = await encryptSensitiveDataAsync(message.content);
+  
+  return {
+    role: message.role,
+    content: encryptedContent,
+    timestamp: message.timestamp || new Date(),
+  };
+}
+
+/**
+ * Decrypt a message asynchronously for better performance
+ */
+export async function decryptMessageAsync(encryptedMessage: {
+  role: string;
+  content: string;
+  timestamp: Date;
+}): Promise<{
+  role: string;
+  content: string;
+  timestamp: Date;
+}> {
+  try {
+    const decryptedContent = await decryptSensitiveDataAsync(encryptedMessage.content);
+    
+    return {
+      role: encryptedMessage.role,
+      content: decryptedContent,
+      timestamp: encryptedMessage.timestamp,
+    };
+  } catch (error) {
+    logger.error('Message decryption failed', {
+      operation: 'decryptMessageAsync',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      hasContent: !!encryptedMessage.content,
+      contentLength: encryptedMessage.content?.length || 0
+    });
+    
+    // Return the message with a placeholder instead of throwing
+    return {
+      role: encryptedMessage.role,
+      content: '[Encrypted content - decryption failed]',
+      timestamp: encryptedMessage.timestamp,
+    };
+  }
+}
+
+/**
+ * Encrypt multiple messages asynchronously (bulk operation with better performance)
+ */
+export async function encryptMessagesAsync(messages: Array<{ role: string; content: string; timestamp?: Date }>): Promise<Array<{
+  role: string;
+  content: string;
+  timestamp: Date;
+}>> {
+  return Promise.all(messages.map(message => encryptMessageAsync(message)));
+}
+
+/**
+ * Decrypt multiple messages asynchronously (bulk operation with better performance)
+ */
+export async function decryptMessagesAsync(encryptedMessages: Array<{
+  role: string;
+  content: string;
+  timestamp: Date;
+}>): Promise<Array<{
+  role: string;
+  content: string;
+  timestamp: Date;
+}>> {
+  return Promise.all(encryptedMessages.map(message => decryptMessageAsync(message)));
+}
+
+/**
  * Encrypt session report content
  */
 export function encryptSessionReportContent(reportContent: string): string {
@@ -107,7 +192,32 @@ export function decryptSessionReportContent(encryptedReportContent: string): str
   try {
     return decryptSensitiveData(encryptedReportContent);
   } catch (error) {
-    console.error('Failed to decrypt session report content:', error);
+    logger.error('Failed to decrypt session report content', {
+      operation: 'decryptSessionReportContent',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+    return '[Report content unavailable]';
+  }
+}
+
+/**
+ * Encrypt session report content asynchronously for better performance
+ */
+export async function encryptSessionReportContentAsync(reportContent: string): Promise<string> {
+  return encryptSensitiveDataAsync(reportContent);
+}
+
+/**
+ * Decrypt session report content asynchronously for better performance
+ */
+export async function decryptSessionReportContentAsync(encryptedReportContent: string): Promise<string> {
+  try {
+    return await decryptSensitiveDataAsync(encryptedReportContent);
+  } catch (error) {
+    logger.error('Failed to decrypt session report content', {
+      operation: 'decryptSessionReportContentAsync',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     return '[Report content unavailable]';
   }
 }
@@ -186,7 +296,10 @@ export function decryptCognitiveDistortions(encryptedDistortions: string): unkno
     const decryptedData = decryptSensitiveData(encryptedDistortions);
     return JSON.parse(decryptedData) as unknown[];
   } catch (error) {
-    console.error('Failed to decrypt cognitive distortions data:', error);
+    logger.error('Failed to decrypt cognitive distortions data', {
+      operation: 'decryptCognitiveDistortions',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     return [];
   }
 }
@@ -206,7 +319,10 @@ export function decryptSchemaAnalysis(encryptedSchemaAnalysis: string): Record<s
     const decryptedData = decryptSensitiveData(encryptedSchemaAnalysis);
     return JSON.parse(decryptedData) as Record<string, unknown>;
   } catch (error) {
-    console.error('Failed to decrypt schema analysis data:', error);
+    logger.error('Failed to decrypt schema analysis data', {
+      operation: 'decryptSchemaAnalysis',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     return {
       activeModes: [],
       triggeredSchemas: [],
@@ -233,7 +349,10 @@ export function decryptTherapeuticFrameworks(encryptedFrameworks: string): unkno
     const decryptedData = decryptSensitiveData(encryptedFrameworks);
     return JSON.parse(decryptedData) as unknown[];
   } catch (error) {
-    console.error('Failed to decrypt therapeutic frameworks data:', error);
+    logger.error('Failed to decrypt therapeutic frameworks data', {
+      operation: 'decryptTherapeuticFrameworks',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     return [];
   }
 }
@@ -253,7 +372,10 @@ export function decryptTherapeuticRecommendations(encryptedRecommendations: stri
     const decryptedData = decryptSensitiveData(encryptedRecommendations);
     return JSON.parse(decryptedData) as unknown[];
   } catch (error) {
-    console.error('Failed to decrypt therapeutic recommendations data:', error);
+    logger.error('Failed to decrypt therapeutic recommendations data', {
+      operation: 'decryptTherapeuticRecommendations',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     return [];
   }
 }

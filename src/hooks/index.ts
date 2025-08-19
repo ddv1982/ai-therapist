@@ -9,8 +9,11 @@ export * as therapy from './therapy';
 
 // Direct exports for commonly used hooks
 export { useAuth } from './auth/use-auth';
-export { useCBTForm } from './therapy/use-cbt-form';
+
+// CBT DATA MANAGEMENT (Modern Architecture)
+export { useCBTDataManager } from './therapy/use-cbt-data-manager';
 
 // Backward compatible exports for easier migration
 export * from './auth/use-auth';
-export * from './therapy/use-cbt-form';
+
+// Legacy hooks removed - modernization complete

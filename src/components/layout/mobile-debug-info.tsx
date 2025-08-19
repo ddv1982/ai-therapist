@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Bug, X } from 'lucide-react';
+import { logger } from '@/lib/utils/logger';
 
 interface NetworkInformation {
   effectiveType?: string;
@@ -67,7 +68,7 @@ export function MobileDebugInfo() {
       setDebugInfo(info);
       
       // Make debug info available in console for developers
-      console.log('Mobile Debug Info Available:', info);
+      logger.secureDevLog('Mobile Debug Info Available', info);
       
       // Make debug info globally available for developer console access
       (window as unknown as Record<string, unknown>).__mobileDebugInfo = info;

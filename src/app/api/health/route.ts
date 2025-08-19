@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { checkDatabaseHealth } from '@/lib/database/db';
-import { withApiMiddleware } from '@/lib/api-middleware';
-import { createSuccessResponse, createErrorResponse } from '@/lib/api-response';
+import { withApiMiddleware } from '@/lib/api/api-middleware';
+import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 interface HealthCheckResponse {
   status: 'healthy' | 'degraded' | 'unhealthy';

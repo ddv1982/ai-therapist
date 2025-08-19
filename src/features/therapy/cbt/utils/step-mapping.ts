@@ -3,9 +3,9 @@
  * Single source of truth for step numbers to avoid DRY violations
  */
 
-import type { CBTStep } from '../hooks/use-cbt-chat-flow';
+import type { CBTStep } from '../hooks/use-cbt-chat-experience';
 
-// The canonical CBT steps in order - matches use-cbt-chat-flow.ts
+// The canonical CBT steps in order - matches use-cbt-chat-experience.ts
 export const CBT_STEPS: CBTStep[] = [
   'situation', 
   'emotions', 

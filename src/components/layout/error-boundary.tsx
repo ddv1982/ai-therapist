@@ -4,6 +4,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AlertTriangle, RefreshCw, Bug, Wifi } from 'lucide-react';
+import { logger } from '@/lib/utils/logger';
 
 interface Props {
   children: ReactNode;
@@ -57,7 +58,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    logger.error('ErrorBoundary caught React error', {
+      component: 'ErrorBoundary',
+      operation: 'componentDidCatch',
+      componentStack: errorInfo.componentStack?.split('\n')[1] || 'Unknown'
+    }, error);
     
     this.setState({
       errorInfo
@@ -72,10 +77,9 @@ export class ErrorBoundary extends Component<Props, State> {
         const isNetworkUrl = !window.location.hostname.match(/localhost|127\.0\.0\.1/);
         
         if (isSafari && isMobile && isNetworkUrl) {
-          console.error('MOBILE SAFARI NETWORK ERROR DETAILS:', {
-            error: error.message,
-            stack: error.stack,
-            componentStack: errorInfo.componentStack,
+          logger.error('Mobile Safari network error in React component', {
+            component: 'ErrorBoundary',
+            operation: 'mobileSafariErrorHandling',
             userAgent: navigator.userAgent,
             url: window.location.href,
             viewport: {
@@ -83,15 +87,19 @@ export class ErrorBoundary extends Component<Props, State> {
               height: window.innerHeight,
               devicePixelRatio: window.devicePixelRatio
             },
-            timestamp: new Date().toISOString()
-          });
+            componentStack: errorInfo.componentStack?.split('\n')[1] || 'Unknown',
+            isMobileSafari: true
+          }, error);
           
           // Enhanced error reporting with retry logic
           this.reportError(error, errorInfo);
         }
       } catch (envError) {
         // Ignore errors in error detection (likely SSR)
-        console.error('Error while handling error in ErrorBoundary:', envError);
+        logger.error('Error while handling error in ErrorBoundary', {
+          component: 'ErrorBoundary',
+          operation: 'errorHandlingException'
+        }, envError instanceof Error ? envError : new Error(String(envError)));
       }
     }
   }

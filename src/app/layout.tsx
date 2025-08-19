@@ -4,6 +4,7 @@ import './globals.css';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { ErrorBoundary } from '@/components/layout/error-boundary';
 import { ToastProvider } from '@/components/ui/toast';
+import { ReduxProvider } from '@/providers/redux-provider';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -42,13 +43,15 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body className="bg-background font-sans antialiased">
-        <ThemeProvider>
-          <ToastProvider>
-            <ErrorBoundary>
-              {children}
-            </ErrorBoundary>
-          </ToastProvider>
-        </ThemeProvider>
+        <ReduxProvider>
+          <ThemeProvider>
+            <ToastProvider>
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
+            </ToastProvider>
+          </ThemeProvider>
+        </ReduxProvider>
       </body>
     </html>
   );

@@ -10,7 +10,8 @@
       "WebFetch(domain:sdk.vercel.ai)",
       "WebFetch(domain:ai-sdk.dev)",
       "WebFetch(domain:ui.shadcn.com)",
-      "WebFetch(domain:react-day-picker.js.org)"
+      "WebFetch(domain:react-day-picker.js.org)",
+      "WebSearch"
     ],
     "deny": []
   }

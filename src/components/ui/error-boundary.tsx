@@ -3,6 +3,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { logger } from '@/lib/utils/logger';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 interface Props {
@@ -45,10 +46,12 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error Boundary caught an error:', error, errorInfo);
-    }
+    // Log error with structured logging
+    logger.error('Error Boundary caught an error', {
+      component: 'ErrorBoundary',
+      errorId: this.state.errorId,
+      componentStack: errorInfo.componentStack
+    }, error);
 
     this.setState({
       error,
@@ -114,7 +117,13 @@ export class ErrorBoundary extends Component<Props, State> {
       url: window.location.href
     };
 
-    console.log('Error Report:', errorReport);
+    logger.error('Error report generated for user feedback', {
+      component: 'ErrorBoundary',
+      operation: 'handleReportError',
+      errorId,
+      url: window.location.href,
+      userAgent: navigator.userAgent
+    });
     
     // Copy to clipboard for easy reporting
     navigator.clipboard?.writeText(JSON.stringify(errorReport, null, 2));
@@ -240,10 +249,13 @@ export function withErrorBoundary<P extends object>(
 // React Hook for error boundaries in functional components
 export function useErrorHandler() {
   return (error: Error, errorInfo?: ErrorInfo) => {
-    // In a real app, you'd report this to your error tracking service
-    console.error('Error caught by error handler:', error, errorInfo);
+    // Log error with structured logging
+    logger.error('Error caught by useErrorHandler hook', {
+      component: 'useErrorHandler',
+      componentStack: errorInfo?.componentStack
+    }, error);
     
-    // For now, just throw the error to trigger the nearest error boundary
+    // Throw the error to trigger the nearest error boundary
     throw error;
   };
 }

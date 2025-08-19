@@ -9,12 +9,14 @@ export interface DeviceInfo {
   name: string;
   userAgent: string;
   ipAddress: string;
+  isVerified?: boolean;
 }
 
 export interface AuthSessionData {
   sessionToken: string;
   expiresAt: Date;
   deviceId: string;
+  isActive?: boolean;
 }
 
 /**

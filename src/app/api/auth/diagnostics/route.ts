@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTOTPDiagnostics, isTOTPSetup } from '@/lib/auth/totp-service';
+import { logger, createRequestLogger } from '@/lib/utils/logger';
 
 // GET /api/auth/diagnostics - Get TOTP diagnostics for debugging
 export async function GET(_request: NextRequest) {
@@ -20,7 +21,7 @@ export async function GET(_request: NextRequest) {
       message: 'Use this information to debug time sync issues between devices'
     });
   } catch (error) {
-    console.error('TOTP diagnostics failed:', error);
+    logger.apiError('/api/auth/diagnostics', error as Error, { apiEndpoint: '/api/auth/diagnostics' });
     return NextResponse.json({ error: 'Diagnostics failed' }, { status: 500 });
   }
 }
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
         : 'Token is NOT valid with current server time - possible time sync issue'
     });
   } catch (error) {
-    console.error('TOTP diagnostics failed:', error);
+    logger.apiError('/api/auth/diagnostics', error as Error, createRequestLogger(request));
     return NextResponse.json({ error: 'Diagnostics failed' }, { status: 500 });
   }
 }

@@ -3,4 +3,8 @@
  * Custom hooks for CBT, therapy features, and therapeutic functionality
  */
 
-export * from './use-cbt-form';
+// CBT Data Management (modern architecture)
+export * from './use-cbt-data-manager';
+export * from './use-cbt-export';
+
+// Legacy hooks removed - migration to unified architecture complete

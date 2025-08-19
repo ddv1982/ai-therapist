@@ -51,6 +51,9 @@ describe('/api/chat Route - Simplified Architecture', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
+    // Reset model mock to return 'mock-model'
+    mockModel.languageModel.mockReturnValue('mock-model' as any);
+    
     // Default streaming response
     mockStreamText.mockReturnValue({
       toUIMessageStreamResponse: jest.fn().mockReturnValue({

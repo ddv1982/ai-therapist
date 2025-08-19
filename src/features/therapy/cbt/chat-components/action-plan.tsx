@@ -1,32 +1,39 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Send, CheckSquare, Heart, Plus, Minus, Target } from 'lucide-react';
+import { TherapySlider } from '@/components/ui/therapy-slider';
+import { CheckSquare, Heart, Plus, Minus, Target } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
-import { loadCBTDraft, useDraftSaver, CBT_DRAFT_KEYS, clearCBTDraft } from '@/lib/utils/cbt-draft-utils';
+import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
+import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
+// Removed CBTFormValidationError import - validation errors not displayed
+import type { ActionPlanData, EmotionData } from '@/types/therapy';
+// Removed chat bridge imports - individual data no longer sent during session
 
-export interface EmotionData {
-  fear: number;
-  anger: number;
-  sadness: number;
-  joy: number;
-  anxiety: number;
-  shame: number;
-  guilt: number;
-  other?: string;
-  otherIntensity?: number;
-}
+// Remove local interfaces - use the ones from cbtSlice
+// export interface EmotionData {
+//   fear: number;
+//   anger: number;
+//   sadness: number;
+//   joy: number;
+//   anxiety: number;
+//   shame: number;
+//   guilt: number;
+//   other?: string;
+//   otherIntensity?: number;
+// }
 
-export interface ActionPlanData {
-  finalEmotions: EmotionData;
-  originalThoughtCredibility: number;
-  newBehaviors: string;
-  alternativeResponses: Array<{ response: string }>;
-}
+// export interface ActionPlanData {
+//   finalEmotions: EmotionData;
+//   originalThoughtCredibility: number;
+//   newBehaviors: string;
+//   alternativeResponses: Array<{ response: string }>;
+// }
+
 
 interface ActionPlanProps {
   onComplete: (data: ActionPlanData) => void;
@@ -42,43 +49,6 @@ interface ActionPlanProps {
 }
 
 
-// Credibility slider component
-interface CredibilitySliderProps {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-  className?: string;
-}
-
-const CredibilitySlider: React.FC<CredibilitySliderProps> = ({ 
-  label, 
-  value, 
-  onChange, 
-  className 
-}) => {
-  return (
-    <div className={cn("space-y-2", className)}>
-      <div className="flex justify-between items-center">
-        <label className="text-sm font-medium text-foreground">{label}</label>
-        <span className="text-sm text-muted-foreground font-mono">{value}/10</span>
-      </div>
-      <input
-        type="range"
-        min="0"
-        max="10"
-        step="1"
-        value={value}
-        onChange={(e) => onChange(parseInt(e.target.value))}
-        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 slider-thumb:rounded-full slider-thumb:bg-primary slider-thumb:cursor-pointer slider-track:bg-muted slider-track:rounded-lg"
-      />
-      <div className="flex justify-between text-xs text-muted-foreground">
-        <span>0 - Don&apos;t believe</span>
-        <span>5 - Somewhat</span>
-        <span>10 - Completely believe</span>
-      </div>
-    </div>
-  );
-};
 
 export function ActionPlan({ 
   onComplete, 
@@ -88,10 +58,16 @@ export function ActionPlan({
   customEmotion,
   title = "How do you feel now?",
   subtitle = "Reflect on changes and plan for the future",
-  stepNumber,
-  totalSteps,
+  stepNumber: _stepNumber,
+  totalSteps: _totalSteps,
   className 
 }: ActionPlanProps) {
+  const { sessionData, actionActions } = useCBTDataManager();
+  
+  // Get action plan data from unified CBT hook
+  const actionPlanData = sessionData.actionPlan;
+  const lastModified = sessionData.lastModified;
+  
   const defaultEmotions: EmotionData = {
     fear: 0,
     anger: 0,
@@ -112,27 +88,45 @@ export function ActionPlan({
     alternativeResponses: [{ response: '' }]
   };
 
+  // Initialize local state for form
   const [actionData, setActionData] = useState<ActionPlanData>(() => {
-    const draftData = loadCBTDraft(CBT_DRAFT_KEYS.ACTION_PLAN, defaultActionData);
     
-    // Use initialData if provided, otherwise use draft data
+    // Use initialData if provided, otherwise use Redux data or default
     if (initialData) {
       return {
-        finalEmotions: initialData.finalEmotions || draftData.finalEmotions,
-        originalThoughtCredibility: initialData.originalThoughtCredibility || draftData.originalThoughtCredibility,
-        newBehaviors: initialData.newBehaviors || draftData.newBehaviors,
-        alternativeResponses: initialData.alternativeResponses || draftData.alternativeResponses
+        finalEmotions: initialData.finalEmotions || actionPlanData?.finalEmotions || defaultActionData.finalEmotions,
+        originalThoughtCredibility: initialData.originalThoughtCredibility || actionPlanData?.originalThoughtCredibility || defaultActionData.originalThoughtCredibility,
+        newBehaviors: initialData.newBehaviors || actionPlanData?.newBehaviors || defaultActionData.newBehaviors,
+        alternativeResponses: initialData.alternativeResponses || actionPlanData?.alternativeResponses || defaultActionData.alternativeResponses
+      };
+    }
+    
+    if (actionPlanData) {
+      return {
+        ...actionPlanData,
+        finalEmotions: { ...actionPlanData.finalEmotions, other: customEmotion } // Ensure custom emotion is preserved
       };
     }
     
     return {
-      ...draftData,
-      finalEmotions: { ...draftData.finalEmotions, other: customEmotion } // Ensure custom emotion is preserved
+      ...defaultActionData,
+      finalEmotions: { ...defaultActionData.finalEmotions, other: customEmotion } // Ensure custom emotion is preserved
     };
   });
 
-  // Auto-save draft as user interacts
-  const { isDraftSaved } = useDraftSaver(CBT_DRAFT_KEYS.ACTION_PLAN, actionData);
+  // Auto-save when action data changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      actionActions.updateActionPlan(actionData);
+    }, 500); // Debounce updates by 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [actionData, actionActions]);
+
+  // Visual indicator for auto-save (based on Redux lastModified)
+  const isDraftSaved = !!lastModified;
+  
+  // Note: Chat bridge no longer used - data sent only in final comprehensive summary
 
   // Core emotions with visual styling using fitting colors
   const coreEmotions = [
@@ -183,9 +177,12 @@ export function ActionPlan({
     }
   }, [actionData.alternativeResponses.length]);
 
-  const handleSubmit = useCallback(() => {
-    // Clear the draft since step is completed
-    clearCBTDraft(CBT_DRAFT_KEYS.ACTION_PLAN);
+  const handleSubmit = useCallback(async () => {
+    // Update store with final data
+    actionActions.updateActionPlan(actionData);
+    
+    // Note: Individual action plan data is no longer sent to chat during session.
+    // All data will be included in the comprehensive summary at the end.
     
     // If onSendToChat is provided (CBT diary flow), use that, otherwise complete normally
     if (onSendToChat) {
@@ -194,7 +191,7 @@ export function ActionPlan({
     } else {
       onComplete(actionData);
     }
-  }, [actionData, onComplete, onSendToChat]);
+  }, [actionData, actionActions, onComplete, onSendToChat]);
 
   // Check if emotions have been rated
   // const hasRatedEmotions = Object.entries(actionData.finalEmotions).some(([key, value]) => {
@@ -217,38 +214,53 @@ export function ActionPlan({
     }
   }, 0);
 
+  // Validation for basic requirements
+  const isBasicValid = actionData.newBehaviors.trim().length > 0 &&
+    actionData.alternativeResponses.some(response => response.response.trim().length > 0);
+
+  // Validation logic - keeps form functional without showing error messages
+
+  // Next handler for CBTStepWrapper
+  const handleNext = useCallback(async () => {
+    await handleSubmit();
+  }, [handleSubmit]);
+
   return (
-    <Card className={cn(
-      "p-4 border-border bg-card", 
-      className
-    )}>
-      <CardHeader className="p-0 pb-4">
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <CheckSquare className="w-5 h-5 text-primary" />
-          {title}
-          <Badge variant="secondary" className="ml-auto">
-            Step {stepNumber} of {totalSteps}
-          </Badge>
-        </CardTitle>
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
-          <div className="flex items-center gap-2">
-            {overallImprovement > 0 && (
-              <Badge variant="default" className="bg-primary/10 text-primary">
-                Improvement: +{overallImprovement}
-              </Badge>
-            )}
-            <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
-              isDraftSaved 
-                ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
-                : 'opacity-0 scale-95'
-            }`}>
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              Saved
+    <CBTStepWrapper
+      step="actions"
+      title={title}
+      subtitle={subtitle}
+      isValid={isBasicValid}
+      validationErrors={[]} // No validation error display
+      onNext={handleNext}
+      nextButtonText={onSendToChat ? "Send to Chat" : "Complete"}
+      className={className}
+    >
+      <Card className="border-border bg-card">
+        <CardHeader className="p-4 pb-4">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <CheckSquare className="w-5 h-5 text-primary" />
+            Action Plan & Reflection
+          </CardTitle>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Plan your future responses and reflect on progress</p>
+            <div className="flex items-center gap-2">
+              {overallImprovement > 0 && (
+                <Badge variant="default" className="bg-primary/10 text-primary">
+                  Improvement: +{overallImprovement}
+                </Badge>
+              )}
+              <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
+                isDraftSaved 
+                  ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
+                  : 'opacity-0 scale-95'
+              }`}>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                Saved
+              </div>
             </div>
           </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
       <CardContent className="p-0 space-y-6">
         {/* Reflection Questions First */}
@@ -260,7 +272,8 @@ export function ActionPlan({
           
           {/* Original thought credibility */}
           <div className="space-y-4">
-            <CredibilitySlider
+            <TherapySlider
+              type="credibility"
               label="How much do you believe your original automatic thoughts now?"
               value={actionData.originalThoughtCredibility}
               onChange={(value) => handleFieldChange('originalThoughtCredibility', value)}
@@ -364,7 +377,7 @@ export function ActionPlan({
                 <Card 
                   key={emotion.key} 
                   className={cn(
-                    "p-3 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-md",
+                    "p-3 cursor-pointer transition-colors duration-200",
                     isSelected 
                       ? "ring-2 ring-primary bg-primary/5 border-primary/30" 
                       : "hover:border-primary/20 bg-muted/30"
@@ -497,20 +510,6 @@ export function ActionPlan({
           </div>
         </div>
 
-        {/* Submit Button */}
-        <Button
-          onClick={handleSubmit}
-          className="w-full h-12 text-base bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
-          size="lg"
-        >
-          {/* Shimmer effect */}
-          <div className="shimmer-effect"></div>
-          <Send className="w-4 h-4 mr-2 relative z-10" />
-          <span className="relative z-10">
-            {onSendToChat ? "Send to Chat" : "Complete CBT Session"}
-          </span>
-        </Button>
-
         {/* Helper Text */}
         <div className="text-center space-y-2">
           <p className="text-xs text-muted-foreground">
@@ -522,7 +521,9 @@ export function ActionPlan({
             </p>
           )}
         </div>
+
       </CardContent>
     </Card>
+    </CBTStepWrapper>
   );
 }

@@ -169,6 +169,7 @@ This is a compassionate AI therapist application built with specific therapeutic
 - `DATABASE_URL` - SQLite database file path (e.g., `file:./prisma/dev.db`)
 - `GROQ_API_KEY` - Groq API key (auto-detected by frontend, hides manual input when present)
 - `NEXTAUTH_SECRET` - For authentication features
+- `ENCRYPTION_KEY` - 256-bit encryption key for therapeutic data (see setup below)
 
 **Optional Environment Variables (for Email Reports)**
 - Configure your preferred email service in `/app/api/reports/send/route.ts`
@@ -184,6 +185,39 @@ This is a compassionate AI therapist application built with specific therapeutic
 - Prisma handles all database operations
 - Schema supports cascading deletes for data integrity
 - Field-level encryption for sensitive therapeutic data
+
+**Encryption Key Setup (CRITICAL for Production)**
+For secure operation, the application requires a 256-bit encryption key:
+
+*Development Setup:*
+```bash
+# Generate and setup encryption key automatically
+npm run encryption:setup
+
+# Or generate key manually
+npm run encryption:generate
+```
+
+*Production Setup:*
+```bash
+# Generate a secure key
+npm run encryption:generate
+
+# Set as environment variable in your deployment
+export ENCRYPTION_KEY="your-generated-key-here"
+```
+
+*Key Management Commands:*
+- `npm run encryption:generate` - Generate a new secure key
+- `npm run encryption:setup` - Auto-setup for development (.env file)
+- `npm run encryption:validate <key>` - Validate a key's security
+
+**Security Requirements:**
+- Use different keys for development, staging, and production
+- Never commit encryption keys to version control
+- Store production keys in secure environment variables
+- Rotate keys periodically for enhanced security
+- Keep secure backups of production keys
 
 ## Recent Security Improvements (2024)
 

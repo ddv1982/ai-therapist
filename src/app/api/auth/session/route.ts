@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuthSession, revokeAuthSession } from '@/lib/auth/device-fingerprint';
 import { createLogoutResponse } from '@/lib/auth/auth-middleware';
 import { isTOTPSetup } from '@/lib/auth/totp-service';
+import { logger, createRequestLogger } from '@/lib/utils/logger';
 
 // GET /api/auth/session - Check session status
 export async function GET(request: NextRequest) {
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Failed to check session:', error);
+    logger.apiError('/api/auth/session', error as Error, createRequestLogger(request));
     return NextResponse.json({ error: 'Failed to check session' }, { status: 500 });
   }
 }
@@ -55,7 +56,7 @@ export async function DELETE(request: NextRequest) {
 
     return createLogoutResponse('/auth/verify');
   } catch (error) {
-    console.error('Failed to logout:', error);
+    logger.apiError('/api/auth/session', error as Error, createRequestLogger(request));
     return NextResponse.json({ error: 'Logout failed' }, { status: 500 });
   }
 }

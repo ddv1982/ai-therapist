@@ -12,7 +12,7 @@ import {
   createValidationErrorResponse,
   createForbiddenErrorResponse,
   ApiResponse
-} from '@/lib/api-response';
+} from '@/lib/api/api-response';
 
 // ============================================================================
 // ERROR TYPES AND INTERFACES
@@ -383,11 +383,12 @@ export function handleClientError(
   
   // Log client errors if in development
   if (process.env.NODE_ENV === 'development') {
-    console.error(`Client Error [${context.operation}]:`, {
-      error: errorMessage,
+    logger.error('Client error encountered', {
+      operation: context.operation,
+      errorMessage,
       category: classification.category,
       severity: classification.severity,
-      context
+      errorContext: context
     });
   }
   
@@ -486,12 +487,12 @@ export const ErrorMetrics = {
     additionalData?: Record<string, unknown>
   ) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('Error Metric:', {
+      logger.debug('Error metric recorded', {
         category,
         severity,
         operation,
-        timestamp: new Date().toISOString(),
-        ...additionalData,
+        additionalData,
+        metricType: 'errorTracking'
       });
     }
     

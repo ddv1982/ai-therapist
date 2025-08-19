@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { therapeuticInteractive } from '@/lib/design-tokens';
+import { useAuth } from '@/hooks/auth/use-auth';
+import { therapeuticInteractive } from '@/lib/ui/design-tokens';
+import { logger } from '@/lib/utils/logger';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -16,7 +17,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
   useEffect(() => {
     if (isLoading) {
       const timeout = setTimeout(() => {
-        console.warn('Auth loading timed out - redirecting to setup');
+        logger.warn('Auth loading timed out, redirecting to setup', {
+          component: 'AuthGuard',
+          operation: 'loadingTimeout',
+          timeout: 10000
+        });
         setLoadingTimeout(true);
       }, 15000); // 15 second timeout for loading
 

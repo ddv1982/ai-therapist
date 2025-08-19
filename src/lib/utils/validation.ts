@@ -103,7 +103,7 @@ export const messageSchema = z.object({
  * const result = validateRequest(chatRequestSchema, requestBody);
  * if (result.success) {
  *   // Use result.data which is now type-safe
- *   console.log(result.data.temperature);
+ *   logger.info('Validation successful', { temperature: result.data.temperature });
  * } else {
  *   // Handle validation error
  *   return NextResponse.json({ error: result.error }, { status: 400 });

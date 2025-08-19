@@ -3,6 +3,8 @@
  * For local network usage with improved memory management
  */
 
+import { logger } from '@/lib/utils/logger';
+
 interface RateLimitEntry {
   count: number;
   resetTime: number;
@@ -79,7 +81,7 @@ class NetworkRateLimiter {
     // Always allow exempt IPs (localhost, private networks)
     if (this.isExemptIP(ip)) {
       if (process?.env?.NODE_ENV === 'development') {
-        console.log(`[RATE_LIMITER] Allowing exempt IP: ${ip}`);
+        logger.debug('Rate limiter allowing exempt IP', { ip, operation: 'checkRateLimit' });
       }
       return { allowed: true };
     }
@@ -101,7 +103,13 @@ class NetworkRateLimiter {
       const blockExpiry = entry.resetTime + this.config.blockDuration;
       if (now < blockExpiry) {
         if (process?.env?.NODE_ENV === 'development') {
-          console.log(`[RATE_LIMITER] IP ${ip} blocked - ${entry.count}/${this.config.maxAttempts} attempts, retry in ${Math.ceil((blockExpiry - now) / 1000)}s`);
+          logger.warn('Rate limiter blocking IP', { 
+            ip, 
+            attempts: entry.count, 
+            maxAttempts: this.config.maxAttempts,
+            retryInSeconds: Math.ceil((blockExpiry - now) / 1000),
+            operation: 'checkRateLimit'
+          });
         }
         return { 
           allowed: false, 
@@ -169,7 +177,10 @@ class NetworkRateLimiter {
     
     // Optional logging in development
     if (typeof console !== 'undefined' && process?.env?.NODE_ENV === 'development') {
-      console.log(`[RATE_LIMITER] Cleaned up ${toDelete.length} expired entries`);
+      logger.debug('Rate limiter cleanup completed', { 
+        cleanedEntries: toDelete.length,
+        operation: 'cleanup'
+      });
     }
   }
 

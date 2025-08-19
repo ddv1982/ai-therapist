@@ -12,7 +12,7 @@ import {
   createErrorResponse,
   validateApiResponse,
   type ApiResponse 
-} from '@/lib/api-response';
+} from '@/lib/api/api-response';
 
 // Mock prisma for testing
 jest.mock('@/lib/database/db', () => ({

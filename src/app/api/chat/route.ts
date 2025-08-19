@@ -1,6 +1,7 @@
 import { model } from "@/ai/providers";
 import { streamText } from "ai";
 import { THERAPY_SYSTEM_PROMPT } from '@/lib/therapy/therapy-prompts';
+import { logger } from '@/lib/utils/logger';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -31,12 +32,12 @@ export async function POST(req: Request) {
         if (error instanceof Error && error.message.includes("Rate limit")) {
           return "Rate limit exceeded. Please try again later.";
         }
-        console.error(error);
+        logger.error('Chat stream error', { apiEndpoint: '/api/chat' }, error instanceof Error ? error : new Error(String(error)));
         return "An error occurred.";
       },
     });
   } catch (error) {
-    console.error("Chat API error:", error);
+    logger.apiError('/api/chat', error as Error, { apiEndpoint: '/api/chat' });
     return new Response(
       JSON.stringify({ error: "Failed to process request" }),
       { status: 500, headers: { "Content-Type": "application/json" } }

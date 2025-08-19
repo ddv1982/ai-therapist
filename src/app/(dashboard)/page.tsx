@@ -16,11 +16,12 @@ import {
   Trash2,
   X,
   Sparkles,
-  BookOpen
+  Brain
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { generateUUID } from '@/lib/utils/utils';
 import { useToast } from '@/components/ui/toast';
+import { logger } from '@/lib/utils/logger';
 import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/chat/memory-utils';
 // Removed handleStreamingResponse - AI SDK handles streaming automatically
 import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
@@ -28,6 +29,8 @@ import type { MessageData } from '@/features/chat/messages/message';
 import { MobileDebugInfo } from '@/components/layout/mobile-debug-info';
 import { MemoryManagementModal } from '@/features/therapy/memory/memory-management-modal';
 import { therapeuticInteractive, getTherapeuticIconButton } from '@/lib/ui/design-tokens';
+import { useChatMessages } from '@/hooks/use-chat-messages';
+import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 
 // Using MessageData from the new message system
 type Message = MessageData;
@@ -42,10 +45,19 @@ interface Session {
   };
 }
 
-export default function ChatPage() {
+function ChatPageContent() {
   const router = useRouter();
   const { showToast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([]);
+  
+  // Use the new chat messages hook
+  const {
+    messages,
+    loadMessages,
+    addMessageToChat,
+    clearMessages,
+    setMessages
+  } = useChatMessages();
+  
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSession, setCurrentSession] = useState<string | null>(null);
   const [input, setInput] = useState('');
@@ -71,7 +83,9 @@ export default function ChatPage() {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
       
-      console.error(`MOBILE SAFARI ERROR [${context}]:`, {
+      logger.error(`Mobile Safari error in ${context}`, {
+        component: 'ChatPage',
+        operation: context,
         error: errorMessage,
         stack: errorStack,
         userAgent: navigator.userAgent,
@@ -82,9 +96,8 @@ export default function ChatPage() {
           devicePixelRatio: window.devicePixelRatio
         },
         isNetworkUrl,
-        timestamp: new Date().toISOString(),
-        context
-      });
+        isMobileSafari: true
+      }, error instanceof Error ? error : new Error(String(error)));
       
       // Send to error logging endpoint
       try {
@@ -103,7 +116,11 @@ export default function ChatPage() {
           })
         });
       } catch (loggingError) {
-        console.error('Failed to log mobile error:', loggingError);
+        logger.error('Failed to log mobile error to API', {
+          component: 'ChatPage',
+          operation: 'logMobileError',
+          originalContext: context
+        }, loggingError instanceof Error ? loggingError : new Error(String(loggingError)));
       }
     }
   }, []);
@@ -122,7 +139,10 @@ export default function ChatPage() {
         throw new Error(`Failed to load sessions: ${response.status}`);
       }
     } catch (error) {
-      console.error('Failed to load sessions:', error);
+      logger.error('Failed to load chat sessions', {
+        component: 'ChatPage', 
+        operation: 'loadSessions'
+      }, error instanceof Error ? error : new Error(String(error)));
       await logMobileError(error, 'loadSessions');
       // Ensure sessions is always an array even on error
       setSessions([]);
@@ -135,41 +155,29 @@ export default function ChatPage() {
   }, [logMobileError, showToast]);
 
   // Load messages for a specific session (memoized)
-  const loadMessages = useCallback(async (sessionId: string) => {
+  // Enhanced loadMessages that uses the hook and also loads memory context
+  const loadMessagesWithMemory = useCallback(async (sessionId: string) => {
     try {
-      const response = await fetch(`/api/messages?sessionId=${sessionId}`);
-      if (response.ok) {
-        const messagesData = await response.json();
-        // Handle new standardized API response format
-        const messages = messagesData.success ? (messagesData.data || []) : messagesData;
-        const messageArray = Array.isArray(messages) ? messages : [];
-        
-        // Convert timestamp strings to Date objects
-        const formattedMessages = messageArray.map((msg: { id: string; role: string; content: string; timestamp: string }) => ({
-          ...msg,
-          role: msg.role as 'user' | 'assistant',
-          timestamp: new Date(msg.timestamp)
-        }));
-        setMessages(formattedMessages);
-        
-        // Check for memory context when loading session
-        const memoryInfo = await checkMemoryContext(sessionId);
-        setMemoryContext(memoryInfo);
-      } else {
-        throw new Error(`Failed to load messages: ${response.status}`);
-      }
+      // Load messages using the hook
+      await loadMessages(sessionId);
+      
+      // Check for memory context when loading session
+      const memoryInfo = await checkMemoryContext(sessionId);
+      setMemoryContext(memoryInfo);
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      logger.error('Failed to load messages with memory context', {
+        component: 'ChatPage',
+        operation: 'loadMessagesWithMemory',
+        sessionId
+      }, error instanceof Error ? error : new Error(String(error)));
       await logMobileError(error, 'loadMessages');
-      // Ensure messages is always an array even on error
-      setMessages([]);
       showToast({
         type: 'error',
         title: 'Loading Error',
         message: 'Failed to load chat messages. Please try again.'
       });
     }
-  }, [logMobileError, showToast]);
+  }, [loadMessages, logMobileError, showToast]);
 
   // Save message to database (memoized)
   const saveMessage = useCallback(async (sessionId: string, role: 'user' | 'assistant', content: string, modelUsed?: string) => {
@@ -192,11 +200,22 @@ export default function ChatPage() {
         // Handle new standardized API response format
         return result.success ? result.data : result;
       } else {
-        console.error('Failed to save message');
+        logger.error('Failed to save message to database', {
+          component: 'ChatPage',
+          operation: 'saveMessage',
+          sessionId,
+          role,
+          status: response.status
+        });
         return null;
       }
     } catch (error) {
-      console.error('Error saving message:', error);
+      logger.error('Error saving message to database', {
+        component: 'ChatPage',
+        operation: 'saveMessage',
+        sessionId,
+        role
+      }, error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }, []);
@@ -224,12 +243,17 @@ export default function ChatPage() {
         if (currentSessionData?.currentSession) {
           const sessionId = currentSessionData.currentSession.id;
           setCurrentSession(sessionId);
-          await loadMessages(sessionId);
+          await loadMessagesWithMemory(sessionId);
           
           // Save to localStorage for faster future loads
           localStorage.setItem('currentSessionId', sessionId);
           
-          console.log('Loaded current session:', sessionId, 'with', currentSessionData.currentSession.messageCount, 'messages');
+          logger.info('Loaded current session successfully', {
+            component: 'ChatPage',
+            operation: 'loadCurrentSession',
+            sessionId,
+            messageCount: currentSessionData.currentSession.messageCount
+          });
           return;
         }
       }
@@ -241,21 +265,32 @@ export default function ChatPage() {
           const verifyResponse = await fetch(`/api/sessions/${savedCurrentSession}`);
           if (verifyResponse.ok) {
             setCurrentSession(savedCurrentSession);
-            await loadMessages(savedCurrentSession);
-            console.log('Restored session from localStorage:', savedCurrentSession);
+            await loadMessagesWithMemory(savedCurrentSession);
+            logger.info('Restored session from localStorage', {
+              component: 'ChatPage',
+              operation: 'loadCurrentSession',
+              sessionId: savedCurrentSession
+            });
           } else {
             // Saved session no longer exists, clear localStorage
             localStorage.removeItem('currentSessionId');
           }
         } catch (error) {
-          console.error('Failed to verify saved session:', error);
+          logger.error('Failed to verify saved session from localStorage', {
+            component: 'ChatPage',
+            operation: 'loadCurrentSession',
+            sessionId: savedCurrentSession
+          }, error instanceof Error ? error : new Error(String(error)));
           localStorage.removeItem('currentSessionId');
         }
       }
     } catch (error) {
-      console.error('Failed to load current session:', error);
+      logger.error('Failed to load current session', {
+        component: 'ChatPage',
+        operation: 'loadCurrentSession'
+      }, error instanceof Error ? error : new Error(String(error)));
     }
-  }, [loadMessages]); // Removed currentSession dependency to avoid circular dependency
+  }, [loadMessagesWithMemory]); // Only depends on loadMessagesWithMemory
 
   // Load sessions and current session on component mount
   useEffect(() => {
@@ -354,20 +389,24 @@ export default function ChatPage() {
       
       setCurrentSession(sessionId);
       localStorage.setItem('currentSessionId', sessionId);
-      await loadMessages(sessionId);
+      await loadMessagesWithMemory(sessionId);
     } catch (error) {
-      console.error('Failed to sync current session:', error);
+      logger.error('Failed to sync current session across devices', {
+        component: 'ChatPage',
+        operation: 'setCurrentSessionAndSync',
+        sessionId
+      }, error instanceof Error ? error : new Error(String(error)));
       // Still set locally even if sync fails
       setCurrentSession(sessionId);
       localStorage.setItem('currentSessionId', sessionId);
-      await loadMessages(sessionId);
+      await loadMessagesWithMemory(sessionId);
     }
-  }, [loadMessages]);
+  }, [loadMessagesWithMemory]);
 
   const startNewSession = () => {
     // Just clear current session and messages - don't create DB session yet
     setCurrentSession(null);
-    setMessages([]);
+    clearMessages();
     localStorage.removeItem('currentSessionId');
     // Focus the input field after starting new session
     setTimeout(() => textareaRef.current?.focus(), 100);
@@ -383,14 +422,23 @@ export default function ChatPage() {
         setSessions(prev => prev.filter(session => session.id !== sessionId));
         if (currentSession === sessionId) {
           setCurrentSession(null);
-          setMessages([]);
+          clearMessages();
           localStorage.removeItem('currentSessionId');
         }
       } else {
-        console.error('Failed to delete session');
+        logger.error('Failed to delete session', {
+          component: 'ChatPage',
+          operation: 'deleteSession',
+          sessionId,
+          status: response.status
+        });
       }
     } catch (error) {
-      console.error('Error deleting session:', error);
+      logger.error('Error deleting session', {
+        component: 'ChatPage',
+        operation: 'deleteSession',
+        sessionId
+      }, error instanceof Error ? error : new Error(String(error)));
     }
   };
 
@@ -432,11 +480,19 @@ export default function ChatPage() {
           await setCurrentSessionAndSync(newSession.id);
           sessionId = newSession.id;
         } else {
-          console.error('Failed to create session');
+          logger.error('Failed to create new session', {
+          component: 'ChatPage',
+          operation: 'sendMessage',
+          title: title,
+          status: response.status
+        });
           return;
         }
       } catch (error) {
-        console.error('Error creating session:', error);
+        logger.error('Error creating new session', {
+          component: 'ChatPage',
+          operation: 'sendMessage'
+        }, error instanceof Error ? error : new Error(String(error)));
         return;
       }
     }
@@ -529,7 +585,12 @@ export default function ChatPage() {
           setIsLoading(false);
         } catch (error) {
           setIsLoading(false);
-          console.error('Streaming error:', error);
+          logger.error('Error processing AI response stream', {
+            component: 'ChatPage',
+            operation: 'sendMessage',
+            sessionId: sessionId!,
+            model: 'openai/gpt-oss-20b'
+          }, error instanceof Error ? error : new Error(String(error)));
           showToast({
             type: 'error',
             title: 'Streaming Error',
@@ -539,7 +600,12 @@ export default function ChatPage() {
       }
     } catch (error) {
       setIsLoading(false);
-      console.error('Error sending message:', error);
+      logger.error('Error sending message to AI', {
+        component: 'ChatPage',
+        operation: 'sendMessage',
+        sessionId: sessionId || 'none',
+        model: 'openai/gpt-oss-20b'
+      }, error instanceof Error ? error : new Error(String(error)));
       
       // Check if it's a model-related error with proper type handling
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -563,7 +629,7 @@ export default function ChatPage() {
         });
       }
     }
-  }, [input, isLoading, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions]);
+  }, [input, isLoading, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions, setMessages]);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -593,7 +659,10 @@ export default function ChatPage() {
       return;
     }
 
-    console.log('Generating report for session:', currentSession);
+    logger.therapeuticOperation('session_report_generation_started', {
+      sessionId: currentSession,
+      messageCount: messages.length
+    });
 
     setIsGeneratingReport(true);
     try {
@@ -631,7 +700,11 @@ export default function ChatPage() {
             // Reload sessions to update message count in sidebar
             await loadSessions();
           } catch (error) {
-            console.error('Failed to save report message:', error);
+            logger.error('Failed to save report message to database', {
+              component: 'ChatPage',
+              operation: 'generateReport',
+              sessionId: currentSession
+            }, error instanceof Error ? error : new Error(String(error)));
           }
         }
         
@@ -642,11 +715,13 @@ export default function ChatPage() {
         });
       } else {
         const error = await response.json();
-        console.error('Report generation failed:', {
+        logger.error('Session report generation failed', {
+          component: 'ChatPage',
+          operation: 'generateReport',
+          sessionId: currentSession,
+          messageCount: messages.length,
           status: response.status,
-          error: error,
-          currentSession: currentSession,
-          messagesLength: messages.length
+          error: error
         });
         
         showToast({
@@ -656,7 +731,11 @@ export default function ChatPage() {
         });
       }
     } catch (error) {
-      console.error('Error generating report:', error);
+      logger.error('Error during report generation', {
+        component: 'ChatPage',
+        operation: 'generateReport',
+        sessionId: currentSession
+      }, error instanceof Error ? error : new Error(String(error)));
       showToast({
         type: 'error',
         title: 'Report Failed',
@@ -671,7 +750,23 @@ export default function ChatPage() {
     router.push('/cbt-diary');
   }, [router]);
 
+  // Create the chat UI bridge for CBT components
+  const chatUIBridge: ChatUIBridge = {
+    addMessageToChat: async (message) => {
+      return await addMessageToChat({
+        content: message.content,
+        role: message.role,
+        sessionId: message.sessionId,
+        modelUsed: message.modelUsed,
+        source: message.source
+      });
+    },
+    currentSessionId: currentSession,
+    isLoading: isLoading
+  };
+
   return (
+    <ChatUIProvider bridge={chatUIBridge}>
     <AuthGuard>
       <div 
         className="flex bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20"
@@ -883,7 +978,7 @@ export default function ChatPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
               {currentSession && messages.length > 0 && (
                 <Button
                   variant="ghost"
@@ -912,10 +1007,10 @@ export default function ChatPage() {
                 style={{
                   WebkitTapHighlightColor: 'transparent'
                 }}
-                title="Open CBT diary for structured reflection"
+                title={isMobile ? "CBT diary & reports" : "Open CBT diary for structured reflection"}
               >
                 <div className="shimmer-effect"></div>
-                <BookOpen className="w-5 h-5 relative z-10" />
+                <Brain className="w-5 h-5 relative z-10" />
               </Button>
             </div>
           </div>
@@ -1035,13 +1130,6 @@ export default function ChatPage() {
                 <Send className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
               </Button>
             </form>
-            
-            <div className="mt-3 sm:mt-4 flex items-center justify-center gap-2 text-xs sm:text-sm text-muted-foreground">
-              <span id="input-help">Press Enter to send, Shift+Enter for new line</span>
-              <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
-              <span className="text-center">This AI provides support but is not a replacement for professional therapy</span>
-              <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-accent" />
-            </div>
           </div>
           {/* Decorative gradient line */}
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-accent/50 to-transparent"></div>
@@ -1061,5 +1149,11 @@ export default function ChatPage() {
       />
       </div>
     </AuthGuard>
+    </ChatUIProvider>
   );
+}
+
+// Main export with ChatUIProvider wrapper
+export default function ChatPage() {
+  return <ChatPageContent />;
 }

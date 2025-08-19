@@ -27,3 +27,22 @@ export * from './skeleton';
 export * from './slider';
 export * from './textarea';
 export * from './toast';
+
+// LEGACY therapeutic data display components (deprecated - use unified components)
+export * from './therapeutic-table';
+export * from './therapeutic-card-grid';
+export * from './therapeutic-card';
+export * from './card-field-display';
+
+// UNIFIED THERAPEUTIC COMPONENT LIBRARY
+// New consolidated components that replace multiple legacy patterns
+export * from './therapeutic-base-card';
+export * from './therapeutic-form-field';
+export * from './therapeutic-button';
+export * from './therapeutic-layout';
+export * from './therapeutic-modal';
+export * from './therapeutic-text';
+export * from './therapy-slider';
+
+// Design system
+export * from '../ui/sheet';

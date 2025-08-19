@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTrustedDevices, revokeDeviceTrust } from '@/lib/auth/device-fingerprint';
 import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
 import { regenerateBackupCodes, getUnusedBackupCodesCount } from '@/lib/auth/totp-service';
+import { logger, createRequestLogger } from '@/lib/utils/logger';
 
 // GET /api/auth/devices - Get trusted devices and backup codes info
 export async function GET(request: NextRequest) {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
       backupCodesCount: unusedBackupCodes,
     });
   } catch (error) {
-    console.error('Failed to get devices:', error);
+    logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
     return NextResponse.json({ error: 'Failed to get devices' }, { status: 500 });
   }
 }
@@ -67,7 +68,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to revoke device:', error);
+    logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
     return NextResponse.json({ error: 'Failed to revoke device' }, { status: 500 });
   }
 }
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    console.error('Failed to process device action:', error);
+    logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
     return NextResponse.json({ error: 'Failed to process action' }, { status: 500 });
   }
 }

@@ -14,12 +14,11 @@ import {
   type SituationData,
   type EmotionData,
   type ThoughtData,
-  type ActionPlanData
+  type ActionPlanData,
+  type CoreBeliefData
 } from './index';
-import type { CoreBeliefData } from './core-belief';
-import type { ChallengeQuestionsData } from './challenge-questions';
-import type { RationalThoughtsData } from './rational-thoughts';
-import type { CBTStep } from '../hooks/use-cbt-chat-flow';
+import type { ChallengeQuestionsData, RationalThoughtsData } from '@/types/therapy';
+import type { CBTStep } from '../hooks/use-cbt-chat-experience';
 
 interface CBTMessageProps {
   step: CBTStep;
@@ -53,7 +52,7 @@ export function CBTMessage({
   onChallengeQuestionsComplete,
   onRationalThoughtsComplete,
   onActionComplete,
-  initialSituationData,
+  initialSituationData: _initialSituationData,
   initialEmotionData,
   initialThoughtData,
   initialCoreBeliefData,
@@ -69,9 +68,6 @@ export function CBTMessage({
         return (
           <SituationPrompt
             onComplete={onSituationComplete!}
-            initialData={initialSituationData}
-            stepNumber={stepNumber}
-            totalSteps={totalSteps}
           />
         );
         
@@ -79,9 +75,6 @@ export function CBTMessage({
         return (
           <EmotionScale
             onComplete={onEmotionComplete!}
-            initialData={initialEmotionData}
-            stepNumber={stepNumber}
-            totalSteps={totalSteps}
           />
         );
         

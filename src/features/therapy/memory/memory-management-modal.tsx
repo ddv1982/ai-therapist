@@ -32,6 +32,7 @@ import {
   type MemoryManagementResponse,
   type MemoryContextInfo
 } from '@/lib/chat/memory-utils';
+import { logger } from '@/lib/utils/logger';
 import { SessionReportDetailModal } from './session-report-detail-modal';
 
 interface MemoryManagementModalProps {
@@ -75,7 +76,11 @@ export function MemoryManagementModal({
       const data = await getMemoryManagementData(currentSessionId);
       setMemoryData(data);
     } catch (error) {
-      console.error('Failed to load memory data:', error);
+      logger.error('Failed to load memory management data', {
+        component: 'MemoryManagementModal',
+        operation: 'loadMemoryData',
+        currentSessionId
+      }, error as Error);
       showToast({
         title: 'Error',
         message: 'Failed to load memory data',
@@ -146,7 +151,13 @@ export function MemoryManagementModal({
         });
       }
     } catch (error) {
-      console.error('Memory deletion error:', error);
+      logger.error('Memory deletion failed', {
+        component: 'MemoryManagementModal',
+        operation: 'handleDeleteMemory',
+        type,
+        currentSessionId,
+        selectedCount: selectedReports.size
+      }, error as Error);
       showToast({
         title: 'Error',
         message: 'Failed to delete memory',

@@ -13,7 +13,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils/utils';
 import { isCBTDiaryMessage, analyzeCBTMessage } from '@/lib/chat/cbt-message-detector';
-import { parseCBTFromMarkdown } from '@/lib/chat/cbt-data-parser';
+import { logger } from '@/lib/utils/logger';
+import { parseCBTFromMarkdown } from '@/lib/therapy/cbt-data-parser';
 import { useCBTExportActions } from '@/hooks/therapy/use-cbt-export';
 import { CBTExportFormat } from '@/lib/cbt/export-utils';
 
@@ -65,7 +66,12 @@ export function MessageActions({
       }, 2000);
     },
     onError: (error: Error, format: CBTExportFormat) => {
-      console.error(`Export error for ${format}:`, error);
+      logger.error('CBT export error', {
+        component: 'MessageActions',
+        operation: 'export',
+        format,
+        messageId: _messageId
+      }, error);
       setShowDropdown(false);
       
       // Clear error after 3 seconds

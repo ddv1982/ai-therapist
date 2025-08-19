@@ -53,6 +53,7 @@ function MessageComponent({
         <MessageContent 
           content={message.content} 
           role={message.role}
+          messageId={message.id}
         />
         
         {/* Timestamp */}

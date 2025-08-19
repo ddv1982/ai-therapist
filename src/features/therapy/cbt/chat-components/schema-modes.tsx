@@ -1,23 +1,14 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Send, Users } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
-import { loadCBTDraft, useDraftSaver, CBT_DRAFT_KEYS, clearCBTDraft } from '@/lib/utils/cbt-draft-utils';
+import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
+import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
+// Removed CBTFormValidationError import - validation errors not displayed
 
-export interface SchemaMode {
-  id: string;
-  name: string;
-  description: string;
-  selected: boolean;
-  intensity?: number;
-}
-
-export interface SchemaModesData {
-  selectedModes: SchemaMode[];
-}
+import type { SchemaMode, SchemaModesData } from '@/types/therapy';
 
 interface SchemaModesProps {
   onComplete: (data: SchemaModesData) => void;
@@ -79,28 +70,62 @@ const DEFAULT_SCHEMA_MODES: SchemaMode[] = [
 export function SchemaModes({ 
   onComplete, 
   initialData,
-  stepNumber,
-  totalSteps,
+  stepNumber: _stepNumber,
+  totalSteps: _totalSteps,
   className 
 }: SchemaModesProps) {
+  const { sessionData, schemaActions } = useCBTDataManager();
+  
+  // Get schema modes data from unified CBT hook
+  const schemaModesData = sessionData.schemaModes;
+  const lastModified = sessionData.lastModified;
+  
   // Default schema modes data
   const defaultModesData: SchemaModesData = {
     selectedModes: DEFAULT_SCHEMA_MODES
   };
 
   const [modesData, setModesData] = useState<SchemaModesData>(() => {
-    const draftData = loadCBTDraft(CBT_DRAFT_KEYS.SCHEMA_MODES, defaultModesData);
-    
-    // Use initialData if provided, otherwise use draft data
+    // Use initialData if provided, otherwise use Redux data or default
     if (initialData?.selectedModes) {
       return initialData;
     }
     
-    return draftData;
+    // Convert Redux schema modes to component format
+    if (schemaModesData.length > 0) {
+      const selectedModes = DEFAULT_SCHEMA_MODES.map(mode => ({
+        ...mode,
+        selected: schemaModesData.some(reduxMode => reduxMode.mode === mode.name && reduxMode.isActive),
+        intensity: schemaModesData.find(reduxMode => reduxMode.mode === mode.name)?.intensity || 5
+      }));
+      return { selectedModes };
+    }
+    
+    return defaultModesData;
   });
 
-  // Auto-save draft as user interacts
-  const { isDraftSaved } = useDraftSaver(CBT_DRAFT_KEYS.SCHEMA_MODES, modesData);
+  // Auto-save to Redux when modes change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      const reduxModes = modesData.selectedModes
+        .filter(mode => mode.selected)
+        .map(mode => ({
+          mode: mode.name,
+          description: mode.description,
+          intensity: mode.intensity || 5,
+          isActive: mode.selected
+        }));
+      schemaActions.updateSchemaModes(reduxModes);
+    }, 500); // Debounce updates by 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [modesData, schemaActions]);
+
+  // Visual indicator for auto-save (based on Redux lastModified)
+  const isDraftSaved = !!lastModified;
+  
+  // CBT chat bridge for sending data to session
+  // Note: Chat bridge no longer used - data sent only in final comprehensive summary
 
   const handleModeToggle = useCallback((modeId: string) => {
     setModesData(prev => ({
@@ -124,19 +149,28 @@ export function SchemaModes({
     }));
   }, []);
 
-  const handleSubmit = useCallback(() => {
+  const selectedModes = modesData.selectedModes.filter(mode => mode.selected);
+  const isValid = selectedModes.length > 0;
+
+  // Validation logic - keeps form functional without showing error messages
+
+  // Next handler for CBTStepWrapper
+  const handleNext = useCallback(async () => {
     const selectedModes = modesData.selectedModes.filter(mode => mode.selected);
     if (selectedModes.length > 0) {
-      // Clear the draft since step is completed
-      clearCBTDraft(CBT_DRAFT_KEYS.SCHEMA_MODES);
+      // Update store with final data
+      const reduxModes = selectedModes.map(mode => ({
+        mode: mode.name,
+        description: mode.description,
+        intensity: mode.intensity || 5,
+        isActive: mode.selected
+      }));
+      schemaActions.updateSchemaModes(reduxModes);
       
       // Complete the step and proceed to actions
       onComplete({ selectedModes });
     }
-  }, [modesData, onComplete]);
-
-  const selectedModes = modesData.selectedModes.filter(mode => mode.selected);
-  const isValid = selectedModes.length > 0;
+  }, [modesData, schemaActions, onComplete]);
 
   // Schema mode colors for visual differentiation - compatible with light/dark mode
   const getModeColor = (modeId: string) => {
@@ -152,28 +186,26 @@ export function SchemaModes({
   };
 
   return (
-    <div className={cn("max-w-4xl mx-auto w-full", className)}>
-      {/* Conversational Header */}
-      <div className="mb-6 text-center px-2">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-medium">
-          <Users className="w-4 h-4" />
-          Step {stepNumber} of {totalSteps}: Schema modes exploration
-        </div>
-        <p className="text-sm text-muted-foreground mt-2">
-          Which parts of yourself are most active in this situation?
-        </p>
-        <div className="flex items-center justify-center gap-4 mt-2">
-          {selectedModes.length > 0 && (
-            <p className="text-xs text-primary/70 font-medium">{selectedModes.length} modes selected</p>
-          )}
-          <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
-            isDraftSaved 
-              ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
-              : 'opacity-0 scale-95'
-          }`}>
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            Saved
-          </div>
+    <CBTStepWrapper
+      step="schema-modes"
+      title="Schema Modes Exploration"
+      subtitle="Which parts of yourself are most active in this situation?"
+      isValid={isValid}
+      validationErrors={[]} // No validation error display
+      onNext={handleNext}
+      className={className}
+    >
+      <div className="flex items-center justify-center gap-4 mb-4">
+        {selectedModes.length > 0 && (
+          <p className="text-xs text-primary/70 font-medium">{selectedModes.length} modes selected</p>
+        )}
+        <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
+          isDraftSaved 
+            ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
+            : 'opacity-0 scale-95'
+        }`}>
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          Saved
         </div>
       </div>
 
@@ -196,7 +228,7 @@ export function SchemaModes({
                 <Card 
                   key={mode.id} 
                   className={cn(
-                    "p-3 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-md",
+                    "p-3 cursor-pointer transition-colors duration-200",
                     isSelected 
                       ? "ring-2 ring-primary bg-primary/5 border-primary/30" 
                       : "hover:border-primary/20 bg-muted/30"
@@ -285,32 +317,8 @@ export function SchemaModes({
             </div>
           )}
 
-          {/* Submit Button */}
-          <div className="pt-2">
-            <Button
-              onClick={handleSubmit}
-              disabled={!isValid}
-              className="w-full h-12 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden disabled:opacity-50"
-            >
-              {/* Shimmer effect */}
-              <div className="shimmer-effect"></div>
-              <Send className="w-4 h-4 mr-2 relative z-10" />
-              <span className="relative z-10">
-                {selectedModes.length > 0 
-                  ? `Continue with ${selectedModes.length} active modes` 
-                  : "Continue to Action Plan"
-                }
-              </span>
-            </Button>
-            
-            {!isValid && (
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                Select at least one schema mode to continue
-              </p>
-            )}
-          </div>
         </div>
       </Card>
-    </div>
+    </CBTStepWrapper>
   );
 }

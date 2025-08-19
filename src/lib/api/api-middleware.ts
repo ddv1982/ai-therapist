@@ -9,7 +9,7 @@ import {
   createValidationErrorResponse,
   createServerErrorResponse,
   ApiResponse,
-} from '@/lib/api-response';
+} from '@/lib/api/api-response';
 import { prisma } from '@/lib/database/db';
 
 /**

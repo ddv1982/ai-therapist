@@ -242,30 +242,34 @@ export function analyzeTherapeuticContext(content: string): ContextualAnalysis {
   emotionalIntensity = Math.min(10, emotionalIntensity);
   therapeuticRelevance = Math.min(10, therapeuticRelevance);
   
-  // Determine context type with nuanced therapeutic priority logic
+  // More inclusive context type determination - favor therapeutic interpretation
   let contextType: ContextualAnalysis['contextType'];
   
-  // Strong therapeutic signals override any organizational context
-  if (emotionalIntensity >= 5 && therapeuticRelevance >= 4 && distressMatches > 0) {
+  // Lower thresholds for therapeutic classification
+  if (emotionalIntensity >= 3 && therapeuticRelevance >= 2 && distressMatches > 0) {
     contextType = 'therapeutic';
   }
-  // Mixed context: has both organizational and emotional elements
+  // Any emotional distress signals with moderate intensity = therapeutic
+  else if (emotionalIntensity >= 2 && distressMatches > 0) {
+    contextType = 'therapeutic';
+  }
+  // Mixed context: has both organizational and emotional elements - lean therapeutic if any emotion
   else if (organizationalMatches > 0 && distressMatches > 0) {
-    contextType = 'ambiguous';
+    contextType = emotionalIntensity >= 1 ? 'therapeutic' : 'ambiguous';
   }
   // Pure emotional distress without organizational elements
-  else if (emotionalIntensity >= 3 && distressMatches > 0 && organizationalMatches === 0) {
+  else if (emotionalIntensity >= 1 && distressMatches > 0 && organizationalMatches === 0) {
     contextType = 'therapeutic';
   }
-  // Pure organizational context only when NO emotional signals
-  else if (organizationalMatches > 0 && emotionalIntensity === 0 && distressMatches === 0) {
+  // Pure organizational context ONLY when absolutely NO emotional signals
+  else if (organizationalMatches > 0 && emotionalIntensity === 0 && distressMatches === 0 && therapeuticRelevance === 0) {
     contextType = 'organizational';
   }
-  // Neutral context for routine/factual with minimal emotion and no distress
-  else if (neutralMatches > 0 && emotionalIntensity < 2 && distressMatches === 0) {
+  // Neutral context ONLY for routine/factual with zero emotion and zero therapeutic relevance
+  else if (neutralMatches > 0 && emotionalIntensity === 0 && distressMatches === 0 && therapeuticRelevance === 0) {
     contextType = 'neutral';
   }
-  // Everything else is ambiguous
+  // Default to ambiguous instead of excluding - let confidence adjustment handle quality
   else {
     contextType = 'ambiguous';
   }
@@ -294,33 +298,47 @@ export function analyzeTherapeuticContext(content: string): ContextualAnalysis {
 export function validateTherapeuticContext(content: string): ValidationResult {
   const contextualAnalysis = analyzeTherapeuticContext(content);
   
-  // Determine if context is valid for therapeutic analysis with graduated thresholds
+  // More inclusive validation - err on the side of analyzing rather than excluding
   const isValidTherapeuticContext = 
     contextualAnalysis.contextType === 'therapeutic' ||
     (contextualAnalysis.contextType === 'ambiguous' && 
      (contextualAnalysis.emotionalIntensity >= 1 || 
-      contextualAnalysis.therapeuticRelevance >= 1));
+      contextualAnalysis.therapeuticRelevance >= 1)) ||
+    // Include content with ANY emotional indicators, even if classified as neutral
+    (contextualAnalysis.stressIndicators.length > 0) ||
+    // Include content that shows therapeutic keywords even if low intensity
+    /therapy|counseling|mental.*health|feeling|emotion|anxiety|depression|stress|cope|support/i.test(content);
   
-  // Calculate confidence adjustment multiplier
+  // Calculate confidence adjustment multiplier with less severe penalties
   let confidenceAdjustment = 1.0;
   
-  if (contextualAnalysis.contextType === 'therapeutic' && contextualAnalysis.emotionalIntensity >= 7) {
-    confidenceAdjustment = 1.2; // Boost confidence for clear therapeutic context
-  } else if (contextualAnalysis.contextType === 'neutral' || contextualAnalysis.contextType === 'organizational') {
-    confidenceAdjustment = 0.3; // Severely reduce confidence for neutral contexts
+  if (contextualAnalysis.contextType === 'therapeutic' && contextualAnalysis.emotionalIntensity >= 6) {
+    confidenceAdjustment = 1.3; // Higher boost for clear therapeutic context
+  } else if (contextualAnalysis.contextType === 'therapeutic' && contextualAnalysis.emotionalIntensity >= 3) {
+    confidenceAdjustment = 1.1; // Moderate boost for moderate therapeutic context
+  } else if (contextualAnalysis.contextType === 'neutral' && contextualAnalysis.stressIndicators.length === 0) {
+    confidenceAdjustment = 0.5; // Less severe penalty for pure neutral content
+  } else if (contextualAnalysis.contextType === 'organizational' && contextualAnalysis.emotionalIntensity === 0) {
+    confidenceAdjustment = 0.4; // Moderate penalty for pure organizational content
   } else if (contextualAnalysis.contextType === 'ambiguous') {
-    confidenceAdjustment = 0.7; // Moderate reduction for ambiguous contexts
+    confidenceAdjustment = 0.8; // Less harsh penalty for ambiguous contexts
   }
   
-  // Determine exclusion reason if applicable
+  // More restrictive exclusion criteria - only exclude clearly non-therapeutic content
   let exclusionReason: string | undefined;
   if (!isValidTherapeuticContext) {
-    if (contextualAnalysis.neutralContextFlags.includes('organizational')) {
-      exclusionReason = 'Content appears in organizational/planning context without emotional distress';
-    } else if (contextualAnalysis.neutralContextFlags.includes('routine_factual')) {
-      exclusionReason = 'Content appears to be routine/factual description without therapeutic relevance';
-    } else if (contextualAnalysis.emotionalIntensity < 3 && contextualAnalysis.therapeuticRelevance < 4) {
-      exclusionReason = 'Insufficient emotional intensity or therapeutic relevance for analysis';
+    if (contextualAnalysis.neutralContextFlags.includes('organizational') && 
+        contextualAnalysis.emotionalIntensity === 0 && 
+        contextualAnalysis.stressIndicators.length === 0) {
+      exclusionReason = 'Pure organizational/planning context with no emotional content';
+    } else if (contextualAnalysis.neutralContextFlags.includes('routine_factual') && 
+               contextualAnalysis.emotionalIntensity === 0 && 
+               contextualAnalysis.therapeuticRelevance === 0) {
+      exclusionReason = 'Pure routine/factual description with no therapeutic indicators';
+    } else if (contextualAnalysis.emotionalIntensity === 0 && 
+               contextualAnalysis.therapeuticRelevance === 0 && 
+               contextualAnalysis.stressIndicators.length === 0) {
+      exclusionReason = 'No emotional or therapeutic indicators detected';
     }
   }
   

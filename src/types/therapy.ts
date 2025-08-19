@@ -1,57 +1,53 @@
-// CBT (Cognitive Behavioral Therapy) Diary Types
-// Types for structured CBT diary entry form data and validation
+// =============================================================================
+// CBT (Cognitive Behavioral Therapy) Types - CONSOLIDATED ARCHITECTURE
+// =============================================================================
+// This file now imports from the consolidated types and maintains legacy compatibility
 
-// Core numeric emotion properties only  
-export type NumericEmotionKeys = 'fear' | 'anger' | 'sadness' | 'joy' | 'anxiety' | 'shame' | 'guilt';
+// Import all consolidated types
+export * from './therapy-consolidated';
 
-// Interface for just the numeric emotions (useful for emotion processing)
-export type NumericEmotions = Pick<CBTDiaryEmotions, NumericEmotionKeys>;
+// Re-export commonly used types with original names for compatibility
+export type {
+  EmotionData as CBTDiaryEmotions,
+  ThoughtData as CBTDiaryAutomaticThought,
+  SchemaMode as CBTDiarySchemaMode,
+  ChallengeQuestionData as CBTDiaryChallengeQuestion,
+  RationalThoughtData as CBTDiaryRationalThought
+} from './therapy-consolidated';
 
-// Complete emotion interface with metadata and special fields
-export interface CBTDiaryEmotions {
-  fear: number;
-  anger: number;
-  sadness: number;
-  joy: number;
-  anxiety: number;
-  shame: number;
-  guilt: number;
-  other?: string;
-  otherIntensity?: number;
-  [key: string]: number | string | undefined; // Allow dynamic property access
+// For legacy compatibility, CBTDiaryFormData should be the extended version
+export type CBTDiaryFormData = ExtendedCBTFormData;
+
+// Override ParsedCBTData to use extended form data
+export interface ParsedCBTData {
+  formData: ExtendedCBTFormData;
+  isComplete: boolean;
+  missingFields: string[];
+  parsingErrors: string[];
 }
 
-export interface CBTDiaryAutomaticThought {
-  thought: string;
-  credibility: number;
-}
+// Legacy numeric emotions type  
+import type { 
+  EmotionData, 
+  NumericEmotionKeys, 
+  ThoughtData, 
+  ChallengeQuestionData, 
+  RationalThoughtData, 
+  SchemaMode 
+} from './therapy-consolidated';
+import { createInitialCBTFormData } from './therapy-consolidated';
+export type NumericEmotions = Pick<EmotionData, NumericEmotionKeys>;
 
-export interface CBTDiarySchemaMode {
-  id: string;
-  name: string;
-  description: string;
-  selected: boolean;
-  intensity?: number;
-}
-
-export interface CBTDiaryChallengeQuestion {
-  question: string;
-  answer: string;
-}
-
-export interface CBTDiaryRationalThought {
-  thought: string;
-  confidence: number;
-}
-
+// Alternative response interface (still used in some legacy code)
 export interface CBTDiaryAlternativeResponse {
   response: string;
 }
 
 // ========================================
-// SCHEMA REFLECTION TYPES
+// EXTENDED LEGACY TYPES (Specialized features not yet consolidated)
 // ========================================
 
+// Schema reflection types (advanced feature)
 export type SchemaReflectionCategory = 'childhood' | 'schemas' | 'coping' | 'modes' | 'custom';
 
 export interface SchemaReflectionQuestion {
@@ -64,137 +60,55 @@ export interface SchemaReflectionQuestion {
 export interface SchemaReflectionData {
   enabled: boolean;
   questions: SchemaReflectionQuestion[];
-  selfAssessment: string; // Open-ended reflection space
+  selfAssessment: string;
 }
 
-export interface CBTDiaryFormData {
-  // Basic Information
+// Extended form data with schema reflection (for specialized CBT diary forms)
+export interface ExtendedCBTFormData {
+  // All base CBT form fields
   date: string;
   situation: string;
-  
-  // Initial Emotions (1-10 scale)
-  initialEmotions: CBTDiaryEmotions;
-  
-  // Automatic Thoughts
-  automaticThoughts: CBTDiaryAutomaticThought[];
-  
-  // Schema Information
+  initialEmotions: EmotionData;
+  finalEmotions: EmotionData;
+  automaticThoughts: ThoughtData[];
   coreBeliefText: string;
   coreBeliefCredibility: number;
+  challengeQuestions: ChallengeQuestionData[];
+  rationalThoughts: RationalThoughtData[];
+  schemaModes: SchemaMode[];
+  newBehaviors: string;
+  alternativeResponses: Array<{ response: string }>;
+  originalThoughtCredibility: number;
+  
+  // Additional schema behavior fields
   confirmingBehaviors: string;
   avoidantBehaviors: string;
   overridingBehaviors: string;
   
-  // Schema Modes (checkboxes)
-  schemaModes: CBTDiarySchemaMode[];
-  
-  // Schema Reflection (optional)
+  // Schema reflection (optional advanced feature)
   schemaReflection: SchemaReflectionData;
   
-  // Challenge Questions
-  challengeQuestions: CBTDiaryChallengeQuestion[];
-  additionalQuestions: CBTDiaryChallengeQuestion[];
-  
-  // Rational Thoughts
-  rationalThoughts: CBTDiaryRationalThought[];
-  
-  // Post-reflection Emotions
-  finalEmotions: CBTDiaryEmotions;
-  originalThoughtCredibility: number;
-  
-  // Results
-  newBehaviors: string;
-  alternativeResponses: CBTDiaryAlternativeResponse[];
+  // Additional challenge questions
+  additionalQuestions: ChallengeQuestionData[];
 }
 
+// Form state management
 export interface CBTDiaryFormState {
-  data: CBTDiaryFormData;
+  data: ExtendedCBTFormData;
   isDirty: boolean;
   isValid: boolean;
   lastSaved?: Date;
   errors: Record<string, string>;
 }
 
-export interface CBTFormValidationError {
-  field: string;
-  message: string;
+// Legacy 7-column thought record format
+export interface CBTEmotion {
+  name: string;
+  intensity: number;
 }
-
-// Default schema modes based on Schema Therapy
-export const DEFAULT_SCHEMA_MODES: CBTDiarySchemaMode[] = [
-  {
-    id: 'vulnerable-child',
-    name: 'The Vulnerable Child',
-    description: 'scared, helpless, needy',
-    selected: false
-  },
-  {
-    id: 'angry-child',
-    name: 'The Angry Child',
-    description: 'frustrated, defiant, rebellious',
-    selected: false
-  },
-  {
-    id: 'punishing-parent',
-    name: 'The Punishing Parent',
-    description: 'critical, harsh, demanding',
-    selected: false
-  },
-  {
-    id: 'demanding-parent',
-    name: 'The Demanding Parent',
-    description: 'controlling, entitled, impatient',
-    selected: false
-  },
-  {
-    id: 'detached-self-soother',
-    name: 'The Detached Self-Soother',
-    description: 'withdrawn, disconnected, avoiding',
-    selected: false
-  },
-  {
-    id: 'healthy-adult',
-    name: 'The Healthy Adult',
-    description: 'balanced, rational, caring',
-    selected: false
-  }
-];
-
-// Default challenge questions
-export const DEFAULT_CHALLENGE_QUESTIONS: CBTDiaryChallengeQuestion[] = [
-  {
-    question: "What does it say about me that I have this thought?",
-    answer: ""
-  },
-  {
-    question: "Are thoughts the same as actions?",
-    answer: ""
-  },
-  {
-    question: "What would I say to a friend in this situation?",
-    answer: ""
-  },
-  {
-    question: "Can I influence the future with my thoughts alone?",
-    answer: ""
-  },
-  {
-    question: "What is the effect of this thought on my life?",
-    answer: ""
-  },
-  {
-    question: "Is this thought in line with my values?",
-    answer: ""
-  },
-  {
-    question: "What would my healthy adult self say about this?",
-    answer: ""
-  }
-];
 
 // Default schema reflection questions
 export const DEFAULT_SCHEMA_REFLECTION_QUESTIONS: SchemaReflectionQuestion[] = [
-  // Childhood Patterns
   {
     question: "What does this situation remind you of from your childhood or past?",
     answer: "",
@@ -205,8 +119,6 @@ export const DEFAULT_SCHEMA_REFLECTION_QUESTIONS: SchemaReflectionQuestion[] = [
     answer: "",
     category: "childhood"
   },
-  
-  // Schema Domain Exploration
   {
     question: "Do you notice patterns of abandonment fears, perfectionism, or people-pleasing in this situation?",
     answer: "",
@@ -218,104 +130,34 @@ export const DEFAULT_SCHEMA_REFLECTION_QUESTIONS: SchemaReflectionQuestion[] = [
     category: "schemas"
   },
   {
-    question: "Are you feeling defective, unlovable, or like you don't belong?",
-    answer: "",
-    category: "schemas"
-  },
-  
-  // Coping Strategy Reflection
-  {
     question: "How are you trying to protect yourself in this situation?",
     answer: "",
     category: "coping"
   },
   {
-    question: "What behaviors help you feel safer, even if they might not be helpful long-term?",
-    answer: "",
-    category: "coping"
-  },
-  {
-    question: "Are you avoiding, surrendering, or overcompensating to cope with these feelings?",
-    answer: "",
-    category: "coping"
-  },
-  
-  // Mode Awareness
-  {
-    question: "Which 'part' of you is most active right now? (vulnerable child, critical parent, detached protector, etc.)",
-    answer: "",
-    category: "modes"
-  },
-  {
-    question: "What would your healthiest, most balanced self do in this situation?",
-    answer: "",
-    category: "modes"
-  },
-  {
-    question: "Are you being overly critical of yourself or others right now?",
+    question: "Which 'part' of you is most active right now?",
     answer: "",
     category: "modes"
   }
 ];
 
-// ========================================
-// CBT THOUGHT RECORD (7-Column Format)
-// ========================================
-
-// Single emotion entry with name and intensity (0-100)
-export interface CBTEmotion {
-  name: string;
-  intensity: number;
-}
-
-// Validation error type (used by useCBTForm hook)
-export interface CBTFormValidationError {
-  field: string;
-  message: string;
-}
-
-// ========================================
-// ORIGINAL COMPLEX CBT TYPES (Legacy)
-// ========================================
-
-// Initial empty form data
-export const getInitialCBTFormData = (): CBTDiaryFormData => {
-  const today = new Date().toISOString().split('T')[0];
+// Legacy form data creation (with extended features)
+export const getInitialCBTFormData = (): ExtendedCBTFormData => {
+  const baseData = createInitialCBTFormData();
   
-  const emptyEmotions: CBTDiaryEmotions = {
-    fear: 0,
-    anger: 0,
-    sadness: 0,
-    joy: 0,
-    anxiety: 0,
-    shame: 0,
-    guilt: 0,
-    other: '',
-    otherIntensity: 0
-  };
-
   return {
-    date: today,
-    situation: '',
-    initialEmotions: { ...emptyEmotions },
-    automaticThoughts: [{ thought: '', credibility: 0 }],
-    coreBeliefText: '',
-    coreBeliefCredibility: 0,
+    ...baseData,
     confirmingBehaviors: '',
     avoidantBehaviors: '',
     overridingBehaviors: '',
-    schemaModes: DEFAULT_SCHEMA_MODES.map(mode => ({ ...mode })),
     schemaReflection: {
-      enabled: false, // Schema reflection is optional and disabled by default
+      enabled: false,
       questions: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.map(q => ({ ...q })),
       selfAssessment: ''
     },
-    challengeQuestions: DEFAULT_CHALLENGE_QUESTIONS.map(q => ({ ...q })),
-    additionalQuestions: [{ question: '', answer: '' }],
-    rationalThoughts: [{ thought: '', confidence: 0 }],
-    finalEmotions: { ...emptyEmotions },
-    originalThoughtCredibility: 0,
-    newBehaviors: '',
-    alternativeResponses: [{ response: '' }]
+    additionalQuestions: [{ question: '', answer: '' }]
   };
 };
+
+// Note: All consolidated types are now imported from therapy-consolidated.ts
+// This file maintains backward compatibility for legacy code.

@@ -9,10 +9,15 @@ export { RationalThoughts } from './rational-thoughts';
 export { SchemaModes } from './schema-modes';
 export { ActionPlan } from './action-plan';
 
-// Component props types for convenience
-export type { SituationData } from './situation-prompt';
-export type { EmotionData } from './emotion-scale';
-export type { ThoughtData } from './thought-record';
-export type { SchemaModesData } from './schema-modes';
-export type { ActionPlanData } from './action-plan';
+// Component props types for convenience - now from Redux store
+export type { 
+  SituationData, 
+  EmotionData, 
+  ThoughtData, 
+  SchemaModeData,
+  ActionPlanData,
+  CoreBeliefData,
+  ChallengeQuestionData,
+  RationalThoughtData
+} from '@/store/slices/cbtSlice';
 

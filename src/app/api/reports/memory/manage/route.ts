@@ -123,6 +123,7 @@ export async function GET(request: NextRequest) {
           hasEncryptedContent: boolean;
           reportSize: number;
           fullContent?: string;
+          structuredCBTData?: unknown; // Add structured CBT data
         } = {
           id: report.id,
           sessionId: report.sessionId,
@@ -135,9 +136,39 @@ export async function GET(request: NextRequest) {
           reportSize: report.reportContent.length
         };
         
-        // Only include full content if requested
-        if (includeFullContent && fullContent !== undefined) {
-          reportDetail.fullContent = fullContent;
+        // Include full content and structured data if requested
+        if (includeFullContent) {
+          if (fullContent !== undefined) {
+            reportDetail.fullContent = fullContent;
+          }
+          
+          // Include structured CBT data if available
+          if (report.therapeuticInsights && typeof report.therapeuticInsights === 'object') {
+            const insights = report.therapeuticInsights as Record<string, unknown>;
+            if (insights.structuredAssessment) {
+              reportDetail.structuredCBTData = insights.structuredAssessment;
+              logger.info('Including structured CBT data in report detail', {
+                ...requestContext,
+                reportId: report.id.substring(0, 8),
+                hasCBTData: true,
+                cbtDataKeys: Object.keys(insights.structuredAssessment as Record<string, unknown>),
+                cbtDataSize: JSON.stringify(insights.structuredAssessment).length
+              });
+            } else {
+              logger.info('No structured CBT data found in therapeutic insights', {
+                ...requestContext,
+                reportId: report.id.substring(0, 8),
+                hasTherapeuticInsights: true,
+                insightKeys: Object.keys(insights)
+              });
+            }
+          } else {
+            logger.info('No therapeutic insights found for report', {
+              ...requestContext,
+              reportId: report.id.substring(0, 8),
+              hasTherapeuticInsights: false
+            });
+          }
         }
         
         memoryDetails.push(reportDetail);

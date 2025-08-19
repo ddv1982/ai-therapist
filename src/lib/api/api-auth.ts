@@ -5,6 +5,12 @@ import { isLocalhost } from '@/lib/utils/utils';
 
 export interface AuthValidationResult {
   isValid: boolean;
+  userId?: string;
+  sessionData?: {
+    sessionToken: string;
+    expiresAt: Date;
+    deviceId: string;
+  };
   deviceInfo?: {
     deviceId: string;
     name: string;

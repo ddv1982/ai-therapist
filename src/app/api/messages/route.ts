@@ -1,8 +1,8 @@
 import { prisma } from '@/lib/database/db';
 import { messageSchema, messagesQuerySchema } from '@/lib/utils/validation';
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
-import { withValidation, db, errorHandlers } from '@/lib/api-middleware';
-import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api-response';
+import { withValidation, db, errorHandlers } from '@/lib/api/api-middleware';
+import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 
 export const POST = withValidation(
