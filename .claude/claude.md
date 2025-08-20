@@ -14,13 +14,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run lint` - Run ESLint
 
 ### Database Management
+- `npm run db:setup` - Initialize database and run setup script
 - `npm run db:generate` - Generate Prisma client after schema changes
 - `npm run db:push` - Push schema changes to database without migrations
 - `npm run db:migrate` - Create and apply database migrations
 - `npm run db:studio` - Open Prisma Studio database GUI
 
 ### Testing Commands
-- `npm run test` - Run unit tests (773 tests, 98.3% pass rate, 760 passing)
+- `npm run test` - Run unit tests (40 test suites, 769 tests, 100% pass rate)
 - `npm run test:watch` - Run tests in watch mode for development
 - `npm run test:coverage` - Generate test coverage report
 - `npm run test:all` - Run all available tests (comprehensive test suite)
@@ -32,7 +33,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run dev` uses Turbopack for 10x faster development bundling
 - Both `dev` and `dev:local` use the same localhost configuration with Turbopack
 - Run `npm run test` to verify all security implementations work correctly
-- Target: 760+ tests passing (98.3%+ pass rate) before deploying changes
+- Target: 769 tests passing (100% pass rate) before deploying changes
 
 ## Architecture Overview
 
@@ -54,14 +55,15 @@ This is a compassionate AI therapist application built with specific therapeutic
 - API key is passed from frontend settings or environment variables for flexibility
 
 **Therapeutic System Design**
-- System prompts in `lib/therapy-prompts.ts` define AI personality and therapeutic approach
+- System prompts in `src/lib/therapy/therapy-prompts.ts` define AI personality and therapeutic approach
 - Session reports use AI to generate therapeutic insights and action items
 - Email report generation allows users to receive session summaries via email
 
 **Frontend State Management**
-- React Context + useState for chat state (no external state management) 
+- Redux Toolkit for global state management (CBT data, sessions, auth)
+- React Context for UI-specific state (chat interface, themes)
 - Real-time streaming implemented with ReadableStream API
-- **Streaming Message Diffusion System** - Advanced blur-to-reveal animations with layout stability
+- **Streaming Animation System** - Table processing with layout stability
 - Session management integrated into main chat interface
 - Email report modal with mobile-responsive design
 
@@ -127,8 +129,8 @@ This is a compassionate AI therapist application built with specific therapeutic
 - **Accessibility Compliant**: Respects `prefers-reduced-motion` setting
 
 **Key Components**:
-- `/src/components/messages/streaming-message-wrapper.tsx` - Main animation wrapper
 - `/src/types/streaming.ts` - TypeScript definitions for streaming system
+- `/src/components/ui/streaming-table-buffer.tsx` - Streaming table processing
 - `/src/lib/ui/markdown-processor.ts` - Enhanced table processing with streaming support
 - `/src/app/globals.css` - CSS animations and GPU optimizations
 
@@ -150,7 +152,7 @@ This is a compassionate AI therapist application built with specific therapeutic
 
 ### Component Structure
 
-**Main Chat Interface** (`app/page.tsx`)
+**Main Chat Interface** (`src/app/(dashboard)/page.tsx`)
 - Single-page application with sidebar for sessions and settings
 - Real-time streaming chat with typing indicators
 - Integrated session management with create/delete functionality
@@ -158,7 +160,7 @@ This is a compassionate AI therapist application built with specific therapeutic
 - Session titles auto-generated from first user message
 - API key configuration with environment variable detection
 
-**UI Components** (`components/ui/`)
+**UI Components** (`src/components/ui/`)
 - shadcn/ui based components adapted for therapeutic use
 - Custom Button, Card, Textarea components following design system
 - All components use consistent `cn()` utility for class merging
@@ -434,7 +436,7 @@ For list endpoints:
 
 ### Testing & Quality Assurance
 
-**Comprehensive Unit Test Suite (773 Tests, 98.3% Pass Rate):**
+**Comprehensive Unit Test Suite (40 Test Suites, 769 Tests, 100% Pass Rate):**
 - `__tests__/lib/markdown-processor.test.ts` - Markdown processing with streaming (33 tests)
 - `__tests__/security/crypto-security.test.ts` - Encryption and key management tests (17 tests)
 - `__tests__/security/auth-security.test.ts` - Authentication flow security tests (8 tests)
@@ -445,11 +447,11 @@ For list endpoints:
 - `__tests__/lib/db.test.ts` - Database operations tests (9 tests)
 - `__tests__/api/chat/route.test.ts` - Chat API endpoint tests
 - `__tests__/components/ui/` - UI component test suites (tables, forms, etc.)
-- **760 tests passing** out of 773 total (98.3% pass rate)
+- **769 tests passing** out of 769 total (100% pass rate)
 
 **Key Security Libraries:**
-- `lib/crypto-utils.ts` - AES-256-GCM encryption utilities
-- `lib/message-encryption.ts` - Message content encryption service
+- `src/lib/auth/crypto-utils.ts` - AES-256-GCM encryption utilities
+- `src/lib/chat/message-encryption.ts` - Message content encryption service
 - Content Security Policy headers - XSS attack prevention
 
 ### Completed Implementation Checklist
@@ -466,7 +468,7 @@ For list endpoints:
 - [x] Therapeutic message encryption added
 - [x] TypeScript strict mode enabled
 - [x] Component architecture verified
-- [x] Comprehensive unit test suite added (112 tests, 100% pass rate)
+- [x] Comprehensive unit test suite added (40 test suites, 769 tests, 100% pass rate)
 
 ✅ **Testing Infrastructure Completed:**
 - [x] Jest configuration optimized for ES6 modules and TypeScript
@@ -492,10 +494,10 @@ For list endpoints:
 All critical vulnerabilities have been addressed and the application now meets enterprise-grade security standards for handling sensitive therapeutic data.
 
 **Testing Status: ✅ COMPREHENSIVE COVERAGE**
-Complete unit test suite with 773 tests (760 passing, 98.3% pass rate) covering security, authentication, database operations, API endpoints, UI components, and streaming animation system. All critical functionality tested with proper mocking and isolation.
+Complete unit test suite with 40 test suites (769 tests passing, 100% pass rate) covering security, authentication, database operations, API endpoints, UI components, and streaming animation system. All critical functionality tested with proper mocking and isolation.
 
-**Streaming Status: ✅ FULLY IMPLEMENTED**
-Advanced streaming message diffusion system provides smooth, GPU-accelerated animations with layout stability, content analysis, and mobile optimization. Fully tested and compatible with all existing functionality.
+**Streaming Status: ✅ IMPLEMENTED**
+Streaming table processing system provides layout stability for real-time AI responses. Focused on table rendering optimization with proper TypeScript definitions. Fully tested and compatible with all existing functionality.
 
 ✅ **AI SDK 5 Migration Completed (August 2025):**
 - [x] **Simplified Architecture**: Migrated from complex custom Groq SDK to clean AI SDK 5 patterns
