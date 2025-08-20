@@ -262,7 +262,7 @@ export async function getUnusedBackupCodesCount(): Promise<number> {
     return 0;
   }
 
-  return backupCodes.filter(code => !code.used).length;
+  return backupCodes?.filter(code => !code.used).length || 0;
 }
 
 /**

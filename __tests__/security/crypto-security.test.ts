@@ -123,7 +123,7 @@ describe('Cryptographic Security Tests', () => {
 
     it('should have good entropy distribution', () => {
       const token = generateSecureRandomString(10000); // Larger sample for better distribution
-      const charCounts = {};
+      const charCounts: Record<string, number> = {};
       
       // Count character frequency
       for (const char of token) {
@@ -172,7 +172,6 @@ describe('Cryptographic Security Tests', () => {
 
     it('should maintain quality under load', () => {
       const tokens = [];
-      const startTime = Date.now();
       
       // Generate tokens rapidly
       for (let i = 0; i < 100; i++) {

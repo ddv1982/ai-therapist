@@ -1,9 +1,9 @@
-import type { Message } from './index';
+import type { MessageData } from '@/features/chat/messages/message';
 
 // Component-specific prop types for chat components
 export interface ChatInterfaceProps {
   sessionId: string;
-  initialMessages?: Message[];
+  initialMessages?: MessageData[];
 }
 
 

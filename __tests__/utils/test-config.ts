@@ -13,7 +13,6 @@
 import '@testing-library/jest-dom';
 import { configure } from '@testing-library/react';
 import { TextEncoder, TextDecoder } from 'util';
-import React from 'react';
 import { MockFactory, TestSetupUtils } from './test-utilities';
 
 // =============================================================================
@@ -34,8 +33,8 @@ configure({
  * Polyfill required APIs for Node.js test environment
  */
 if (typeof global.TextEncoder === 'undefined') {
-  global.TextEncoder = TextEncoder;
-  global.TextDecoder = TextDecoder;
+  (global as any).TextEncoder = TextEncoder;
+  (global as any).TextDecoder = TextDecoder;
 }
 
 // Mock performance API for Node.js
@@ -109,7 +108,7 @@ export function setupGlobalMocks() {
   }));
 
   // Mock environment variables
-  process.env.NODE_ENV = 'test';
+  Object.defineProperty(process.env, 'NODE_ENV', { value: 'test', writable: true });
   process.env.DATABASE_URL = 'file:./test.db';
   process.env.NEXTAUTH_SECRET = 'test-secret';
 }

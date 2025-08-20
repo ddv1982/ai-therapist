@@ -63,8 +63,7 @@ function ChatPageContent() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
-  const [apiKey, setApiKey] = useState('');
-  const [hasEnvApiKey, setHasEnvApiKey] = useState(false);
+  // Environment API key is configured server-side
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState('100vh');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -298,21 +297,7 @@ function ChatPageContent() {
     loadCurrentSession();
   }, [loadSessions, loadCurrentSession]);
 
-  // Check if environment variable is set
-  useEffect(() => {
-    const abortController = new AbortController();
-    
-    fetch('/api/env', { signal: abortController.signal })
-      .then(res => res.json())
-      .then(data => setHasEnvApiKey(data.hasGroqApiKey))
-      .catch((error) => {
-        if (error.name !== 'AbortError') {
-          setHasEnvApiKey(false);
-        }
-      });
-
-    return () => abortController.abort();
-  }, []);
+  // Environment API key is automatically configured
 
 
 
@@ -445,15 +430,7 @@ function ChatPageContent() {
   const sendMessage = useCallback(async () => {
     if (!input.trim() || isLoading) return;
     
-    // Check if environment API key is available
-    if (!hasEnvApiKey) {
-      showToast({
-        type: 'warning',
-        title: 'API Key Required',
-        message: 'Please set GROQ_API_KEY environment variable'
-      });
-      return;
-    }
+    // Environment API key is automatically handled by the server
 
     // Auto-create session if none exists, using first message as title
     let sessionId = currentSession;
@@ -629,7 +606,7 @@ function ChatPageContent() {
         });
       }
     }
-  }, [input, isLoading, hasEnvApiKey, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions, setMessages]);
+  }, [input, isLoading, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions, setMessages]);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -916,33 +893,13 @@ function ChatPageContent() {
           }
         </div>
 
-        {/* Simple API Key Input */}
-        {!hasEnvApiKey && (
-          <div className="p-4 border-t border-border/50 bg-gradient-to-t from-muted/30 to-transparent dark:from-muted/10">
-            <div className="space-y-2">
-              <label className="text-sm font-medium block">
-                Groq API Key
-              </label>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Enter your Groq API key"
-                className="w-full px-3 py-2 text-sm border border-border rounded-md bg-background"
-              />
-              {!apiKey && (
-                <div className="text-xs text-orange-600">
-                  ⚠ API key required for chat functionality
-                </div>
-              )}
-              {apiKey && (
-                <div className="text-xs text-green-600">
-                  ✓ API key provided
-                </div>
-              )}
-            </div>
+        {/* API Key Status */}
+        <div className="p-4 border-t border-border/50 bg-gradient-to-t from-green-50/30 to-transparent dark:from-green-900/10">
+          <div className="flex items-center space-x-2 text-sm text-green-700 dark:text-green-300">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span>✓ API Key Configured</span>
           </div>
-        )}
+        </div>
 
 
       </aside>

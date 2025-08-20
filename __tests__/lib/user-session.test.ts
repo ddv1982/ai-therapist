@@ -459,8 +459,8 @@ describe('User Session Management', () => {
         { 'user-agent': 'undefined' }
       ];
 
-      edgeCaseHeaders.forEach((headers, index) => {
-        const request = createMockRequest(headers);
+      edgeCaseHeaders.forEach((headers, _index) => {
+        const request = createMockRequest(headers as Record<string, string>);
         
         expect(() => {
           const singleUser = getSingleUserInfo(request);

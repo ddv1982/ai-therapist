@@ -29,12 +29,12 @@ jest.mock('@/lib/therapy/therapy-prompts', () => ({
 
 // Mock imports
 import { model } from '@/ai/providers';
-import { streamText, convertToModelMessages } from 'ai';
+import { streamText } from 'ai';
 
 // Type the mocked functions
 const mockModel = jest.mocked(model);
 const mockStreamText = jest.mocked(streamText);
-const mockConvertToModelMessages = jest.mocked(convertToModelMessages);
+// const _mockConvertToModelMessages = jest.mocked(convertToModelMessages);
 
 // Helper to create mock request
 function createMockRequest(body: any, options: { url?: string } = {}): NextRequest {
@@ -179,7 +179,7 @@ describe('/api/chat Route - Simplified Architecture', () => {
 
     it('should handle rate limit errors', async () => {
       const mockError = new Error('Rate limit exceeded');
-      const mockOnError = jest.fn().mockReturnValue('Rate limit exceeded. Please try again later.');
+      // const _mockOnError = jest.fn().mockReturnValue('Rate limit exceeded. Please try again later.');
 
       mockStreamText.mockReturnValue({
         toUIMessageStreamResponse: jest.fn().mockImplementation((options) => {

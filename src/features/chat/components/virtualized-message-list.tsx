@@ -1,6 +1,7 @@
 'use client';
 
 import React, { memo, useMemo } from 'react';
+import { Heart } from 'lucide-react';
 import { Message, type MessageData } from '@/features/chat/messages';
 import { 
   SituationPrompt,
@@ -166,7 +167,7 @@ function VirtualizedMessageListComponent({
                 <div className="flex items-center gap-4">
                   {/* Avatar placeholder */}
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 shadow-lg flex items-center justify-center">
-                    <div className="w-4 h-4 text-white">❤️</div>
+                    <Heart className="w-4 h-4 text-red-500 fill-red-500" />
                   </div>
                   {/* Typing dots */}
                   <div className="flex space-x-2 animate-pulse">

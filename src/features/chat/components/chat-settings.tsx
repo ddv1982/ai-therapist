@@ -13,7 +13,6 @@ interface ChatSettingsProps {
   settings: ChatSettingsType;
   onSettingsChange: (settings: Partial<ChatSettingsType>) => void;
   availableModels: ModelConfig[];
-  hasEnvApiKey: boolean;
 }
 
 export function ChatSettings({
@@ -21,8 +20,7 @@ export function ChatSettings({
   onClose,
   settings,
   onSettingsChange,
-  availableModels,
-  hasEnvApiKey
+  availableModels
 }: ChatSettingsProps) {
   if (!isOpen) return null;
 
@@ -59,31 +57,13 @@ export function ChatSettings({
           </div>
 
           <div className="space-y-6">
-            {/* API Key Section */}
+            {/* API Configuration Status */}
             <div className="space-y-3">
               <label className="text-base font-semibold text-foreground">API Configuration</label>
-              {hasEnvApiKey ? (
-                <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-green-700 dark:text-green-300">✓ API Key Configured</span>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <input
-                    type="password"
-                    placeholder="Enter your Groq API key"
-                    value={settings.apiKey}
-                    onChange={(e) => onSettingsChange({ apiKey: e.target.value })}
-                    className="w-full p-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Get your free API key at{' '}
-                    <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      console.groq.com/keys
-                    </a>
-                  </p>
-                </div>
-              )}
+              <div className="flex items-center space-x-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-green-700 dark:text-green-300">✓ API Key Configured via Environment</span>
+              </div>
             </div>
 
             {/* Model Selection */}

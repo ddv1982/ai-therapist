@@ -63,163 +63,16 @@ function countTableColumns(tableHtml: string): number {
 /**
  * Determine if a field should be considered primary/important
  */
-// Type definitions for the new system
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface TableDataStructure {
-  headers: string[];
-  rows: string[][];
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type AlternativeViewType = 'structured-cards' | 'definition-list' | 'expandable-rows';
+// Legacy types removed - these were unused in the new card system
 
 /**
  * Touch optimization is now handled entirely via CSS classes
  * This prevents React hydration mismatches with inline styles
  */
 
-/**
- * Normalize table structure to ensure proper thead/tbody elements
- * This fixes issues where markdown-it doesn't generate proper table structure
- * @deprecated Legacy function - kept for compatibility but unused in new card system
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function normalizeTableStructure(html: string): string {
-  return html.replace(/<table([^>]*)>([\s\S]*?)<\/table>/gi, (match, tableAttrs, tableContent) => {
-    // Check if we already have proper thead/tbody structure
-    if (tableContent.includes('<thead') && tableContent.includes('<tbody')) {
-      return match; // Already properly structured
-    }
-    
-    // Extract all table rows
-    const rows = tableContent.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi) || [];
-    
-    if (rows.length === 0) {
-      return match; // No rows found, return as is
-    }
-    
-    // First row should be the header if it contains <th> elements
-    const firstRow = rows[0];
-    const isHeaderRow = firstRow.includes('<th');
-    
-    let normalizedContent = '';
-    
-    if (isHeaderRow) {
-      // Wrap first row in thead
-      normalizedContent += `<thead>${firstRow}</thead>`;
-      
-      // Wrap remaining rows in tbody
-      if (rows.length > 1) {
-        const bodyRows = rows.slice(1).join('');
-        normalizedContent += `<tbody>${bodyRows}</tbody>`;
-      }
-    } else {
-      // No header row, wrap all rows in tbody
-      normalizedContent += `<tbody>${rows.join('')}</tbody>`;
-    }
-    
-    return `<table${tableAttrs}>${normalizedContent}</table>`;
-  });
-}
+// Legacy functions removed - these were deprecated and unused in the new card system
 
-/**
- * Add streaming stability attributes to prevent layout shifts during animation
- * @deprecated Legacy function - kept for compatibility but unused in new card system
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function addStreamingStabilityAttributes(html: string): string {
-  // Add container-level attributes for streaming optimization
-  html = html.replace(
-    /<div class="([^"]*table-container[^"]*)"([^>]*)>/gi,
-    '<div class="$1" data-streaming-container="true" data-layout-stable="true"$2>'
-  );
-  
-  // Add table-level streaming attributes
-  html = html.replace(
-    /<table([^>]*)>/gi,
-    '<table data-streaming-table="true" style="table-layout: fixed; width: 100%;"$1>'
-  );
-  
-  // Add header stability attributes
-  html = html.replace(
-    /<th([^>]*?)>([\s\S]*?)<\/th>/gi,
-    (match, attributes, content) => {
-      const cleanContent = content.replace(/<\/?[^>]+(>|$)/g, '').trim();
-      const estimatedWidth = Math.max(cleanContent.length * 0.6, 4); // Rough character-based width estimation
-      
-      return `<th${attributes} data-streaming-header="true" data-min-width="${estimatedWidth}em">${content}</th>`;
-    }
-  );
-  
-  return html;
-}
-
-/**
- * Add data-label attributes to table cells for mobile stacked layout
- * Extracts header text and applies it to corresponding cells
- * @deprecated Legacy function - kept for compatibility but unused in new card system
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function enhanceTableCellsWithLabels(html: string): string {
-  // Use a simple regex to find tables and process them
-  return html.replace(/<table[^>]*>[\s\S]*?<\/table>/gi, (tableMatch) => {
-    // Extract header text from th elements
-    const headerMatches = tableMatch.match(/<th[^>]*>([\s\S]*?)<\/th>/gi);
-    if (!headerMatches) return tableMatch;
-    
-    // Extract clean header text (strip HTML tags)
-    const headers = headerMatches.map(th => 
-      th.replace(/<\/?[^>]+(>|$)/g, '').trim()
-    );
-    
-    // Add data-label attributes to td elements
-    let processedTable = tableMatch;
-    let cellIndex = 0;
-    
-    processedTable = processedTable.replace(/<td([^>]*?)>([\s\S]*?)<\/td>/gi, (match, attributes, cellContent) => {
-      const headerIndex = cellIndex % headers.length;
-      const headerText = headers[headerIndex] || `Column ${headerIndex + 1}`;
-      cellIndex++;
-      
-      // Extract clean cell content for tooltip
-      const cleanContent = cellContent.replace(/<\/?[^>]+(>|$)/g, '').trim();
-      
-      // Don't duplicate attributes if they already exist
-      let newAttributes = attributes;
-      if (!attributes.includes('data-label')) {
-        newAttributes += ` data-label="${headerText}"`;
-      }
-      
-      // Add title attribute for tooltip on longer content
-      if (cleanContent.length > 50 && !attributes.includes('title')) {
-        newAttributes += ` title="${cleanContent.replace(/"/g, '&quot;')}"`;
-      }
-      
-      // Auto-detect column types for dynamic width optimization
-      if (!attributes.includes('data-type')) {
-        // Detect priority/numeric columns (short content, numbers, ratings)
-        if (cleanContent.match(/^(high|medium|low|\d+|[1-5]\/5|\d+%|[★⭐]+)$/i) || 
-            cleanContent.length <= 10) {
-          newAttributes += ` data-type="priority"`;
-        }
-        // Detect header/framework columns (specific therapeutic terms)
-        else if (headerText.toLowerCase().includes('framework') || 
-                headerText.toLowerCase().includes('approach') ||
-                headerText.toLowerCase().includes('method')) {
-          newAttributes += ` data-type="framework"`;
-        }
-        // Default to content type for longer descriptive text
-        else if (cleanContent.length > 20) {
-          newAttributes += ` data-type="content"`;
-        }
-      }
-      
-      return `<td${newAttributes}>${cellContent}</td>`;
-    });
-    
-    return processedTable;
-  });
-}
+// More legacy functions removed - these were deprecated and unused
 
 /**
  * Server-side table processing - no client-side detection needed
@@ -344,7 +197,7 @@ function processResponsiveTable(tableHtml: string, columnCount: number): string 
   // Add auto-responsive class
   processedHtml = processedHtml.replace(
     /<table([^>]*class="([^"]*)")([^>]*)>/gi,
-    (match, classAttr, existingClasses, rest) => {
+    (_match, _classAttr, existingClasses, rest) => {
       const classes = `${existingClasses} therapeutic-table-auto responsive-cards-enabled`.trim();
       return `<table class="${classes}" data-columns="${columnCount}" data-display-mode="auto"${rest}>`;
     }
@@ -372,7 +225,7 @@ function processHybridTable(tableHtml: string, columnCount: number): string {
   // Add hybrid layout class
   processedHtml = processedHtml.replace(
     /<table([^>]*class="([^"]*)")([^>]*)>/gi,
-    (match, classAttr, existingClasses, rest) => {
+    (_match, _classAttr, existingClasses, rest) => {
       const classes = `${existingClasses} therapeutic-table-hybrid card-fallback-enabled`.trim();
       return `<table class="${classes}" data-columns="${columnCount}" data-display-mode="hybrid"${rest}>`;
     }

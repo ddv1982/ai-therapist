@@ -7,7 +7,6 @@ import {
   SchemaReflectionCategory,
   SchemaReflectionQuestion,
   SchemaReflectionData,
-  CBTDiaryFormData,
   DEFAULT_SCHEMA_REFLECTION_QUESTIONS,
   getInitialCBTFormData
 } from '@/types/therapy';
@@ -108,14 +107,14 @@ describe('DEFAULT_SCHEMA_REFLECTION_QUESTIONS', () => {
       modes: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(q => q.category === 'modes').length
     };
 
-    // Verify we have reasonable number of questions per category
+    // Verify we have the refined question set per category
     expect(questionCounts.childhood).toBe(2);
-    expect(questionCounts.schemas).toBe(3);
-    expect(questionCounts.coping).toBe(3);
-    expect(questionCounts.modes).toBe(3);
+    expect(questionCounts.schemas).toBe(2);
+    expect(questionCounts.coping).toBe(1);
+    expect(questionCounts.modes).toBe(1);
     
-    // Total should be 11 questions
-    expect(DEFAULT_SCHEMA_REFLECTION_QUESTIONS.length).toBe(11);
+    // Total should be 6 refined questions (quality over quantity)
+    expect(DEFAULT_SCHEMA_REFLECTION_QUESTIONS.length).toBe(6);
   });
 
   describe('Question Content Quality', () => {
@@ -139,8 +138,9 @@ describe('DEFAULT_SCHEMA_REFLECTION_QUESTIONS', () => {
     it('should have practical coping strategy questions', () => {
       const copingQuestions = DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(q => q.category === 'coping');
       
+      // Should focus on protection mechanisms (refined from original question set)
       expect(copingQuestions.some(q => q.question.toLowerCase().includes('protect'))).toBe(true);
-      expect(copingQuestions.some(q => q.question.toLowerCase().includes('safer'))).toBe(true);
+      expect(copingQuestions.length).toBe(1); // Streamlined to one high-quality question
     });
 
     it('should have insightful mode awareness questions', () => {

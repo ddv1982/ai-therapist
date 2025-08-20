@@ -4,7 +4,22 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
 import { Message } from '@/features/chat/messages';
+
+// Mock store for Redux dependencies
+const mockStore = configureStore({
+  reducer: {
+    chat: (state = { isStreaming: false, streamingMessageId: null }, action) => state,
+    sessions: (state = { currentSessionId: null }, action) => state,
+  },
+});
+
+// Test wrapper with Redux provider
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Provider store={mockStore}>{children}</Provider>
+);
 
 describe('Message Component', () => {
   const mockMessage = {
@@ -15,7 +30,7 @@ describe('Message Component', () => {
   };
 
   it('renders message content correctly', () => {
-    render(<Message message={mockMessage} />);
+    render(<Message message={mockMessage} />, { wrapper: TestWrapper });
     
     // Text is split due to bold formatting, so search for parts
     expect(screen.getByText(/Hello, this is a test message with/)).toBeInTheDocument();
@@ -23,14 +38,14 @@ describe('Message Component', () => {
   });
 
   it('displays timestamp correctly', () => {
-    render(<Message message={mockMessage} />);
+    render(<Message message={mockMessage} />, { wrapper: TestWrapper });
     
     // Timestamp will show based on local timezone, so just check it's there
     expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument();
   });
 
   it('renders assistant avatar for assistant messages', () => {
-    render(<Message message={mockMessage} />);
+    render(<Message message={mockMessage} />, { wrapper: TestWrapper });
     
     const article = screen.getByRole('article');
     expect(article).toHaveAttribute('aria-label', 'Message from assistant');
@@ -38,7 +53,7 @@ describe('Message Component', () => {
 
   it('renders user avatar for user messages', () => {
     const userMessage = { ...mockMessage, role: 'user' as const };
-    render(<Message message={userMessage} />);
+    render(<Message message={userMessage} />, { wrapper: TestWrapper });
     
     const article = screen.getByRole('article');
     expect(article).toHaveAttribute('aria-label', 'Message from user');
@@ -50,7 +65,7 @@ describe('Message Component', () => {
       content: '## Heading\n\n- List item\n- Another item\n\n**Bold text**'
     };
     
-    render(<Message message={messageWithMarkdown} />);
+    render(<Message message={messageWithMarkdown} />, { wrapper: TestWrapper });
     
     expect(screen.getByText('Heading')).toBeInTheDocument();
     expect(screen.getByText('List item')).toBeInTheDocument();
@@ -59,7 +74,7 @@ describe('Message Component', () => {
 
   it('handles empty content gracefully', () => {
     const emptyMessage = { ...mockMessage, content: '' };
-    render(<Message message={emptyMessage} />);
+    render(<Message message={emptyMessage} />, { wrapper: TestWrapper });
     
     // Should not crash and should render a timestamp
     expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument();

@@ -6,7 +6,7 @@ import { createSuccessResponse } from '@/lib/api/api-response';
 
 export const POST = withValidation(
   createSessionSchema,
-  async (request, context, validatedData) => {
+  async (_request, context, validatedData) => {
     try {
       const { title } = validatedData;
 

@@ -48,9 +48,9 @@ describe('Authentication Flows Integration Tests', () => {
         deviceId: 'test-device-id',
         name: 'Test Device',
         fingerprint: 'test-fingerprint',
-        isVerified: true,
-        createdAt: new Date(),
-        lastUsed: new Date()
+        userAgent: 'Mozilla/5.0 Test',
+        ipAddress: '127.0.0.1',
+        isVerified: true
       });
 
       // Mock session creation
@@ -120,11 +120,15 @@ describe('Authentication Flows Integration Tests', () => {
       mockedValidateApiAuth.mockResolvedValue({
         isValid: true,
         userId: 'test-user-id',
-        deviceId: 'test-device-id',
         sessionData: {
           sessionToken: 'valid-token',
           expiresAt: new Date(Date.now() + 60 * 60 * 1000),
-          isActive: true
+          deviceId: 'test-device-id'
+        },
+        deviceInfo: {
+          deviceId: 'test-device-id',
+          name: 'Test Device',
+          fingerprint: 'test-fingerprint-hash'
         }
       });
 
@@ -132,7 +136,7 @@ describe('Authentication Flows Integration Tests', () => {
       
       expect(authResult.isValid).toBe(true);
       expect(authResult.userId).toBe('test-user-id');
-      expect(authResult.sessionData?.isActive).toBe(true);
+      expect(authResult.sessionData?.deviceId).toBe('test-device-id');
     });
 
     test('should reject invalid authentication', async () => {
@@ -180,9 +184,9 @@ describe('Authentication Flows Integration Tests', () => {
       deviceId: 'unique-device-id',
       name: 'Chrome on MacOS',
       fingerprint: 'fingerprint-hash-123',
-      isVerified: false,
-      createdAt: new Date(),
-      lastUsed: new Date()
+      userAgent: 'Mozilla/5.0 Chrome MacOS',
+      ipAddress: '192.168.1.100',
+      isVerified: false
     };
 
     test('should create new device on first visit', async () => {
@@ -271,9 +275,9 @@ describe('Authentication Flows Integration Tests', () => {
         deviceId: 'integration-device-id',
         name: 'Integration Test Device',
         fingerprint: 'integration-fingerprint',
-        isVerified: false,
-        createdAt: new Date(),
-        lastUsed: new Date()
+        userAgent: 'Mozilla/5.0 Integration Test',
+        ipAddress: '127.0.0.1',
+        isVerified: false
       });
 
       // Session creation
@@ -301,7 +305,11 @@ describe('Authentication Flows Integration Tests', () => {
       mockedValidateApiAuth.mockResolvedValue({
         isValid: true,
         userId: 'integration-user-id',
-        deviceId: 'integration-device-id'
+        sessionData: {
+          sessionToken: 'integration-session-token',
+          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          deviceId: 'integration-device-id'
+        }
       });
 
       // Execute complete flow

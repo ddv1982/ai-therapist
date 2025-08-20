@@ -1,17 +1,27 @@
 /**
  * CBT Data Manager - Unified Data Handling
  * 
- * Consolidates CBT data formatting, validation, and utility functions.
- * Eliminates the complex parser/formatter separation by providing:
- * - Chat message formatting (for user visibility)
+ * Consolidated CBT data formatting, validation, and utility functions.
+ * Provides:
+ * - Chat message formatting (structured cards for AI analysis)
  * - Data validation and sanitization
  * - Utility functions for data transformation
- * - Unified type definitions
- * 
- * New Architecture: Direct data flow with optional chat formatting
+ * - Session summary generation
  */
 
-// Re-export and import all CBT types from unified therapy types
+import type {
+  EmotionData,
+  CoreBeliefData,
+  SchemaModesData,
+  CBTSituationData,
+  CBTThoughtsData,
+  CBTChallengeData,
+  CBTRationalData,
+  CBTActionPlanData,
+  CBTCompleteSessionData
+} from '@/types/therapy';
+
+// Re-export types for convenience
 export type {
   EmotionData,
   CoreBeliefData,
@@ -25,17 +35,36 @@ export type {
   CBTCompleteSessionData
 } from '@/types/therapy';
 
-import type {
-  EmotionData,
-  CoreBeliefData,
-  SchemaModesData,
-  CBTSituationData,
-  CBTThoughtsData,
-  CBTChallengeData,
-  CBTRationalData,
-  CBTActionPlanData,
-  CBTCompleteSessionData
-} from '@/types/therapy';
+/**
+ * Helper Functions
+ */
+
+/**
+ * Convert EmotionData to array format for summary cards
+ */
+function convertEmotionsToArray(emotions: EmotionData): Array<{ emotion: string; rating: number }> {
+  const result = [];
+  const coreEmotions = ['fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt'] as const;
+  
+  for (const emotion of coreEmotions) {
+    const value = emotions[emotion];
+    if (value > 0) {
+      result.push({
+        emotion: emotion.charAt(0).toUpperCase() + emotion.slice(1),
+        rating: value
+      });
+    }
+  }
+  
+  if (emotions.other && emotions.otherIntensity && emotions.otherIntensity > 0) {
+    result.push({
+      emotion: emotions.other,
+      rating: emotions.otherIntensity
+    });
+  }
+  
+  return result;
+}
 
 /**
  * Chat Message Formatting Functions
@@ -56,26 +85,7 @@ export function formatSituationForChat(data: CBTSituationData): string {
 }
 
 export function formatEmotionsForChat(data: EmotionData): string {
-  // Convert EmotionData to array format for summary card
-  const emotions = [];
-  const coreEmotions = ['fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt'] as const;
-  
-  for (const emotion of coreEmotions) {
-    const value = data[emotion];
-    if (value > 0) {
-      emotions.push({
-        emotion: emotion.charAt(0).toUpperCase() + emotion.slice(1),
-        rating: value
-      });
-    }
-  }
-  
-  if (data.other && data.otherIntensity && data.otherIntensity > 0) {
-    emotions.push({
-      emotion: data.other,
-      rating: data.otherIntensity
-    });
-  }
+  const emotions = convertEmotionsToArray(data);
 
   // Create CBTSessionSummaryData for structured card display
   const summaryData = {
@@ -84,7 +94,6 @@ export function formatEmotionsForChat(data: EmotionData): string {
     completedSteps: ['Emotion Assessment']
   };
 
-  // Return structured card format instead of plain markdown
   return `<!-- CBT_SUMMARY_CARD:${JSON.stringify(summaryData)} -->
 <!-- END_CBT_SUMMARY_CARD -->`;
 }
@@ -185,26 +194,7 @@ export function formatSchemaModesForChat(data: SchemaModesData): string {
 }
 
 export function formatActionPlanForChat(data: CBTActionPlanData): string {
-  // Convert final emotions to array format for summary card
-  const finalEmotions = [];
-  const coreEmotions = ['fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt'] as const;
-  
-  for (const emotion of coreEmotions) {
-    const value = data.finalEmotions[emotion];
-    if (value > 0) {
-      finalEmotions.push({
-        emotion: emotion.charAt(0).toUpperCase() + emotion.slice(1),
-        rating: value
-      });
-    }
-  }
-  
-  if (data.finalEmotions.other && data.finalEmotions.otherIntensity && data.finalEmotions.otherIntensity > 0) {
-    finalEmotions.push({
-      emotion: data.finalEmotions.other,
-      rating: data.finalEmotions.otherIntensity
-    });
-  }
+  const finalEmotions = convertEmotionsToArray(data.finalEmotions);
 
   // Create CBTSessionSummaryData for structured card display
   const summaryData = {
@@ -215,7 +205,6 @@ export function formatActionPlanForChat(data: CBTActionPlanData): string {
     completedSteps: ['Action Plan Development']
   };
 
-  // Return structured card format instead of plain markdown
   return `<!-- CBT_SUMMARY_CARD:${JSON.stringify(summaryData)} -->
 <!-- END_CBT_SUMMARY_CARD -->`;
 }
@@ -307,27 +296,7 @@ export function generateCBTSessionSummary(data: CBTCompleteSessionData): string 
 
   // Add initial emotions if available
   if (data.emotions) {
-    const initialEmotions = [];
-    const coreEmotions = ['fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt'] as const;
-    
-    for (const emotion of coreEmotions) {
-      const value = data.emotions[emotion];
-      if (value > 0) {
-        initialEmotions.push({
-          emotion: emotion.charAt(0).toUpperCase() + emotion.slice(1),
-          rating: value
-        });
-      }
-    }
-    
-    if (data.emotions.other && data.emotions.otherIntensity && data.emotions.otherIntensity > 0) {
-      initialEmotions.push({
-        emotion: data.emotions.other,
-        rating: data.emotions.otherIntensity
-      });
-    }
-    
-    summaryData.initialEmotions = initialEmotions;
+    summaryData.initialEmotions = convertEmotionsToArray(data.emotions);
     (summaryData.completedSteps as string[]).push('Emotion Assessment');
   }
 
@@ -376,27 +345,7 @@ export function generateCBTSessionSummary(data: CBTCompleteSessionData): string 
     
     // Add final emotions
     if (data.actionPlan.finalEmotions) {
-      const finalEmotions = [];
-      const coreEmotions = ['fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt'] as const;
-      
-      for (const emotion of coreEmotions) {
-        const value = data.actionPlan.finalEmotions[emotion];
-        if (value > 0) {
-          finalEmotions.push({
-            emotion: emotion.charAt(0).toUpperCase() + emotion.slice(1),
-            rating: value
-          });
-        }
-      }
-      
-      if (data.actionPlan.finalEmotions.other && data.actionPlan.finalEmotions.otherIntensity && data.actionPlan.finalEmotions.otherIntensity > 0) {
-        finalEmotions.push({
-          emotion: data.actionPlan.finalEmotions.other,
-          rating: data.actionPlan.finalEmotions.otherIntensity
-        });
-      }
-      
-      summaryData.finalEmotions = finalEmotions;
+      summaryData.finalEmotions = convertEmotionsToArray(data.actionPlan.finalEmotions);
     }
     
     (summaryData.completedSteps as string[]).push('Action Plan Development');
@@ -408,31 +357,6 @@ export function generateCBTSessionSummary(data: CBTCompleteSessionData): string 
 }
 
 export function generateEmotionComparison(initial: EmotionData, final: EmotionData): string {
-  // Convert both initial and final emotions to array format
-  const convertEmotionsToArray = (emotions: EmotionData) => {
-    const result = [];
-    const coreEmotions = ['fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt'] as const;
-    
-    for (const emotion of coreEmotions) {
-      const value = emotions[emotion];
-      if (value > 0) {
-        result.push({
-          emotion: emotion.charAt(0).toUpperCase() + emotion.slice(1),
-          rating: value
-        });
-      }
-    }
-    
-    if (emotions.other && emotions.otherIntensity && emotions.otherIntensity > 0) {
-      result.push({
-        emotion: emotions.other,
-        rating: emotions.otherIntensity
-      });
-    }
-    
-    return result;
-  };
-
   const initialEmotions = convertEmotionsToArray(initial);
   const finalEmotions = convertEmotionsToArray(final);
 
@@ -444,7 +368,6 @@ export function generateEmotionComparison(initial: EmotionData, final: EmotionDa
     completedSteps: ['Emotional Progress Tracking']
   };
 
-  // Return structured card format instead of plain markdown
   return `<!-- CBT_SUMMARY_CARD:${JSON.stringify(summaryData)} -->
 <!-- END_CBT_SUMMARY_CARD -->`;
 }

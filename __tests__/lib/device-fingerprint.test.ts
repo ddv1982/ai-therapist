@@ -6,8 +6,7 @@
 import { 
   generateDeviceFingerprint, 
   generateBasicDeviceFingerprint,
-  generateDeviceName,
-  getOrCreateDevice
+  generateDeviceName
 } from '@/lib/auth/device-fingerprint';
 
 describe('Device Fingerprinting', () => {
@@ -246,7 +245,7 @@ describe('Device Fingerprinting', () => {
 
     it('should be deterministic across multiple calls', () => {
       const userAgent = 'Mozilla/5.0 (deterministic test)';
-      const additionalData = { test: 'data' };
+      const additionalData = { platform: 'test-data' };
       
       const results = Array.from({ length: 10 }, () => 
         generateDeviceFingerprint(userAgent, additionalData)

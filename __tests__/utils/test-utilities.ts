@@ -13,12 +13,25 @@
 import { render, RenderOptions, RenderResult, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ReactElement, ReactNode } from 'react';
 import React from 'react';
+import { NextRequest } from 'next/server';
+// Use compatible RequestInit type
+
+// Extend Performance interface for Chrome's memory API
+declare global {
+  interface Performance {
+    memory?: {
+      usedJSHeapSize: number;
+      totalJSHeapSize: number;
+      jsHeapSizeLimit: number;
+    };
+  }
+}
 import { jest } from '@jest/globals';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import chatSlice from '@/store/slices/chatSlice';
-import sessionsSlice from '@/store/slices/sessionsSlice';
-import cbtSlice from '@/store/slices/cbtSlice';
+import chatReducer from '@/store/slices/chatSlice';
+import sessionsReducer from '@/store/slices/sessionsSlice';
+import cbtReducer from '@/store/slices/cbtSlice';
 
 // =============================================================================
 // MOCK FACTORIES AND CONFIGURATIONS
@@ -54,7 +67,7 @@ export class MockFactory {
    */
   static createUtilsMock() {
     return {
-      ...jest.requireActual('@/lib/utils/utils'),
+      ...(jest.requireActual('@/lib/utils/utils') as Record<string, unknown>),
       generateSecureRandomString: jest.fn((length: number) => 
         'mock-secure-' + 'x'.repeat(Math.max(0, length - 12))
       ),
@@ -77,8 +90,8 @@ export class MockFactory {
         trustedDevice: MockFactory.createPrismaModelMock(),
         authSession: MockFactory.createPrismaModelMock(),
       },
-      checkDatabaseHealth: jest.fn().mockResolvedValue(true),
-      disconnectDatabase: jest.fn().mockResolvedValue(undefined),
+      checkDatabaseHealth: (jest.fn() as any).mockResolvedValue({ healthy: true, message: 'Test connection' }),
+      disconnectDatabase: (jest.fn() as any).mockResolvedValue(undefined),
     };
   }
 
@@ -103,39 +116,44 @@ export class MockFactory {
    * Enhanced API test mocks with proper setup for Next.js API routes
    */
   static createAPITestMocks() {
+    // Helper function to create type-safe mock functions
+    const createMockFn = <T>(): jest.MockedFunction<() => Promise<T>> =>
+      jest.fn() as jest.MockedFunction<() => Promise<T>>;
+
     return {
       // Database mocks
       prisma: {
         sessionReport: {
-          findMany: jest.fn().mockResolvedValue([]),
-          findFirst: jest.fn().mockResolvedValue(null),
-          findUnique: jest.fn().mockResolvedValue(null),
-          create: jest.fn().mockResolvedValue({}),
-          update: jest.fn().mockResolvedValue({}),
-          delete: jest.fn().mockResolvedValue({}),
+          findMany: createMockFn<unknown[]>().mockResolvedValue([]),
+          findFirst: createMockFn<unknown | null>().mockResolvedValue(null),
+          findUnique: createMockFn<unknown | null>().mockResolvedValue(null),
+          create: createMockFn<unknown>().mockResolvedValue({}),
+          update: createMockFn<unknown>().mockResolvedValue({}),
+          delete: createMockFn<unknown>().mockResolvedValue({}),
         },
         session: {
-          findMany: jest.fn().mockResolvedValue([]),
-          findFirst: jest.fn().mockResolvedValue(null),
-          findUnique: jest.fn().mockResolvedValue(null),
-          create: jest.fn().mockResolvedValue({}),
-          update: jest.fn().mockResolvedValue({}),
-          delete: jest.fn().mockResolvedValue({}),
+          findMany: createMockFn<unknown[]>().mockResolvedValue([]),
+          findFirst: createMockFn<unknown | null>().mockResolvedValue(null),
+          findUnique: createMockFn<unknown | null>().mockResolvedValue(null),
+          create: createMockFn<unknown>().mockResolvedValue({}),
+          update: createMockFn<unknown>().mockResolvedValue({}),
+          delete: createMockFn<unknown>().mockResolvedValue({}),
         },
         message: {
-          findMany: jest.fn().mockResolvedValue([]),
-          create: jest.fn().mockResolvedValue({}),
+          findMany: createMockFn<unknown[]>().mockResolvedValue([]),
+          create: createMockFn<unknown>().mockResolvedValue({}),
         },
         user: {
-          findFirst: jest.fn().mockResolvedValue(null),
-          findUnique: jest.fn().mockResolvedValue(null),
-          create: jest.fn().mockResolvedValue({}),
+          findFirst: createMockFn<unknown | null>().mockResolvedValue(null),
+          findUnique: createMockFn<unknown | null>().mockResolvedValue(null),
+          create: createMockFn<unknown>().mockResolvedValue({}),
         },
       },
       // Auth mocks
       apiAuth: {
-        validateApiAuth: jest.fn().mockResolvedValue({ isValid: true, userId: 'test-user' }),
-        createAuthErrorResponse: jest.fn().mockReturnValue(
+        validateApiAuth: createMockFn<{ isValid: boolean; userId: string }>()
+          .mockResolvedValue({ isValid: true, userId: 'test-user' }),
+        createAuthErrorResponse: jest.fn(() =>
           new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401 })
         ),
       },
@@ -194,7 +212,7 @@ export class MockFactory {
       requestUrl.searchParams.set(key, value);
     });
     
-    const requestInit: RequestInit = {
+    const requestInit = {
       method,
       headers: {
         'content-type': 'application/json',
@@ -206,7 +224,7 @@ export class MockFactory {
       requestInit.body = JSON.stringify(body);
     }
     
-    return new NextRequest(requestUrl, requestInit);
+    return new NextRequest(requestUrl, requestInit as ConstructorParameters<typeof NextRequest>[1]);
   }
 
   /**
@@ -253,7 +271,7 @@ export class MockFactory {
       },
       NextResponse: {
         json: jest.fn().mockImplementation((data, init) => ({ 
-          status: init?.status || 200, 
+          status: (init as any)?.status || 200, 
           body: data 
         })),
       }
@@ -479,9 +497,9 @@ export class ComponentTestUtils {
   static createTestStore(preloadedState?: any) {
     return configureStore({
       reducer: {
-        chat: chatSlice,
-        sessions: sessionsSlice,
-        cbt: cbtSlice,
+        chat: chatReducer,
+        sessions: sessionsReducer,
+        cbt: cbtReducer,
       },
       preloadedState,
     });
@@ -546,19 +564,19 @@ export class ComponentTestUtils {
       
       // Add Redux Provider first (innermost)
       if (withReduxProvider) {
-        content = React.createElement(Provider, { store }, content);
+        content = React.createElement(Provider, { store, children: content });
       }
       
       if (withToastProvider) {
-        const ToastProvider = ({ children }: { children: ReactNode }) => 
+        const ToastProvider = ({ children }: { children?: ReactNode }) => 
           React.createElement('div', { 'data-testid': 'toast-provider' }, children);
-        content = React.createElement(ToastProvider, {}, content);
+        content = React.createElement(ToastProvider, { children: content });
       }
       
       if (withThemeProvider) {
-        const ThemeProvider = ({ children }: { children: ReactNode }) => 
+        const ThemeProvider = ({ children }: { children?: ReactNode }) => 
           React.createElement('div', { 'data-testid': 'theme-provider' }, children);
-        content = React.createElement(ThemeProvider, {}, content);
+        content = React.createElement(ThemeProvider, { children: content });
       }
 
       return content;
@@ -572,7 +590,7 @@ export class ComponentTestUtils {
    */
   static renderWithRedux(ui: ReactElement, initialState?: any): RenderResult {
     const store = ComponentTestUtils.createTestStore(initialState);
-    const TestWrapper = ({ children }: { children: ReactNode }) => 
+    const TestWrapper = ({ children }: { children?: ReactNode }) => 
       React.createElement(Provider, { store }, children);
     
     return render(ui, { wrapper: TestWrapper });
@@ -590,13 +608,11 @@ export class ComponentTestUtils {
       document.body.innerHTML = '';
       
       // Mock fetch for API calls
-      global.fetch = jest.fn(() => 
-        Promise.resolve({
-          json: () => Promise.resolve({ success: false, memoryDetails: [] }),
-          ok: true,
-          status: 200,
-        })
-      ) as jest.Mock;
+      global.fetch = jest.fn().mockResolvedValue({
+        json: jest.fn().mockResolvedValue({ success: false, memoryDetails: [] }),
+        ok: true,
+        status: 200,
+      });
       
       // Setup common component and utility mocks
       ComponentTestUtils.setupCommonMocks();
@@ -760,7 +776,7 @@ export class SecurityTestUtils {
   /**
    * Test input sanitization
    */
-  static testInputSanitization(inputValue: string, expectedSanitized: string) {
+  static testInputSanitization(inputValue: string, _expectedSanitized: string) {
     // This would integrate with your actual sanitization function
     expect(typeof inputValue).toBe('string');
     expect(inputValue.length).toBeGreaterThan(0);
@@ -900,9 +916,22 @@ export class TestSetupUtils {
       localStorage.clear();
       sessionStorage.clear();
       
-      // Reset console methods
-      jest.spyOn(console, 'warn').mockImplementation(() => {});
-      jest.spyOn(console, 'error').mockImplementation(() => {});
+      // Reset console methods - check if already spied
+      try {
+        if (!jest.isMockFunction(console.warn)) {
+          jest.spyOn(console, 'warn').mockImplementation(() => {});
+        } else {
+          (console.warn as jest.Mock).mockImplementation(() => {});
+        }
+        
+        if (!jest.isMockFunction(console.error)) {
+          jest.spyOn(console, 'error').mockImplementation(() => {});
+        } else {
+          (console.error as jest.Mock).mockImplementation(() => {});
+        }
+      } catch (error) {
+        // Console methods already mocked, ignore
+      }
     });
 
     afterEach(() => {

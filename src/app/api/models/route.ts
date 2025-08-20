@@ -1,11 +1,32 @@
-import { NextResponse } from 'next/server';
-import { logger } from '@/lib/utils/logger';
+import { withApiMiddleware } from '@/lib/api/api-middleware';
+import { createSuccessResponse, createServerErrorResponse } from '@/lib/api/api-response';
 
-// Simple endpoint that returns hardcoded model information
-// Since we use fixed models now, no need to query Groq API
-export async function GET() {
+/**
+ * Available AI models for therapeutic conversations
+ */
+interface ModelInfo {
+  id: string;
+  name: string;
+  provider: string;
+  maxTokens: number;
+  category: 'production' | 'featured';
+  description: string;
+}
+
+interface ModelsResponse {
+  models: ModelInfo[];
+  total: number;
+  note: string;
+}
+
+/**
+ * GET /api/models - Returns available AI models
+ * 
+ * @returns {ModelsResponse} List of available models with metadata
+ */
+export const GET = withApiMiddleware(async (_request, context) => {
   try {
-    const availableModels = [
+    const availableModels: ModelInfo[] = [
       { 
         id: 'openai/gpt-oss-20b', 
         name: 'GPT OSS 20B (Fast)', 
@@ -24,16 +45,18 @@ export async function GET() {
       }
     ];
 
-    return NextResponse.json({
+    const response: ModelsResponse = {
       models: availableModels,
       total: availableModels.length,
       note: 'Models are now automatically selected based on content type'
-    });
+    };
+
+    return createSuccessResponse(response, { requestId: context.requestId });
   } catch (error) {
-    logger.apiError('/api/models', error as Error, { apiEndpoint: '/api/models' });
-    return NextResponse.json(
-      { error: 'Failed to get model information' },
-      { status: 500 }
+    return createServerErrorResponse(
+      error as Error, 
+      context.requestId,
+      { endpoint: '/api/models' }
     );
   }
-}
+});

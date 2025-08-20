@@ -25,8 +25,6 @@ export {
 export {
   ComponentTestTemplate,
   APITestTemplate,
-  SecurityTestTemplate,
-  TherapeuticTestTemplate,
 } from './utils/test-templates';
 
 export {

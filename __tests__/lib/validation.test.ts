@@ -177,7 +177,9 @@ describe('Validation Functions', () => {
 
       const result = validateRequest(messageSchema, messageWithLongContent)
       expect(result.success).toBe(false)
-      expect(result.error).toContain('Message content too long')
+      if (!result.success) {
+        expect(result.error).toContain('Message content too long')
+      }
     })
 
     it('should handle unicode and emoji content', () => {

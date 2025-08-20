@@ -33,7 +33,19 @@ jest.mock('@/features/chat/messages/message-timestamp', () => ({
 }));
 
 jest.mock('@/lib/design-system/message', () => ({
-  buildMessageClasses: jest.fn((role, type) => `mock-${role}-${type}-class`),
+  buildMessageClasses: jest.fn((role: string, type: string) => `mock-${role}-${type}-class`),
+}));
+
+// Mock lucide-react icons 
+jest.mock('lucide-react', () => ({
+  Calendar: () => <div data-testid="calendar-icon">📅</div>,
+  FileText: () => <div data-testid="file-icon">📄</div>,
+  CheckCircle: () => <div data-testid="check-icon">✅</div>,
+  Brain: () => <div data-testid="brain-icon">🧠</div>,
+  Heart: () => <div data-testid="heart-icon">❤️</div>,
+  Target: () => <div data-testid="target-icon">🎯</div>,
+  Users: () => <div data-testid="users-icon">👥</div>,
+  Activity: () => <div data-testid="activity-icon">📊</div>,
 }));
 
 const mockReportDetail: SessionReportDetail = {

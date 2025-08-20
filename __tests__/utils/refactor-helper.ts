@@ -453,13 +453,8 @@ ComponentTestTemplate.createTestSuite(
 }
 
 // =============================================================================
-// EXPORTS
+// EXPORTS - Classes already exported above with 'export class'
 // =============================================================================
-
-export {
-  TestRefactorHelper,
-  TestMigrationHelper,
-};
 
 // CLI usage example
 if (require.main === module) {

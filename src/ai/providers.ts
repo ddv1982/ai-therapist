@@ -2,6 +2,7 @@ import { groq } from "@ai-sdk/groq";
 import { customProvider } from "ai";
 
 // Define the language models available through Groq
+// The API key is automatically read from GROQ_API_KEY environment variable
 export const languageModels = {
   "openai/gpt-oss-20b": groq("openai/gpt-oss-20b"),
   "openai/gpt-oss-120b": groq("openai/gpt-oss-120b"),

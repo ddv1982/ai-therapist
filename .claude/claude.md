@@ -219,6 +219,197 @@ export ENCRYPTION_KEY="your-generated-key-here"
 - Rotate keys periodically for enhanced security
 - Keep secure backups of production keys
 
+## API Interface Standards & Documentation
+
+### Response Format Standards
+
+**Success Response**
+```typescript
+{
+  "success": true,
+  "data": T, // Generic response data
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00.000Z",
+    "requestId": "req-uuid-1234"
+  }
+}
+```
+
+**Error Response**
+```typescript
+{
+  "success": false,
+  "error": {
+    "message": "Human-readable error message",
+    "code": "MACHINE_READABLE_CODE",
+    "details": "Technical details for debugging",
+    "suggestedAction": "User-friendly next steps"
+  },
+  "meta": {
+    "timestamp": "2024-01-15T10:30:00.000Z",
+    "requestId": "req-uuid-1234"
+  }
+}
+```
+
+### Standardized Error Codes
+
+| Code | HTTP Status | Description |
+|------|------------|-------------|
+| `VALIDATION_ERROR` | 400 | Request data validation failed |
+| `AUTHENTICATION_ERROR` | 401 | Authentication required or failed |
+| `FORBIDDEN` | 403 | Access denied |
+| `NOT_FOUND` | 404 | Resource not found |
+| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests |
+| `DATABASE_ERROR` | 500 | Database operation failed |
+| `INTERNAL_SERVER_ERROR` | 500 | Unexpected server error |
+
+### API Endpoints Documentation
+
+**Core Endpoints**
+- **GET** `/api/models` - Get available AI models
+- **GET** `/api/env` - Get environment configuration
+- **GET** `/api/health` - System health check
+- **HEAD** `/api/health` - Liveness probe
+
+**Session Management**
+- **GET** `/api/sessions` - List user sessions
+- **POST** `/api/sessions` - Create new session
+- **GET** `/api/sessions/current` - Get current session
+- **GET** `/api/sessions/[sessionId]` - Get specific session
+- **DELETE** `/api/sessions/[sessionId]` - Delete session
+
+**Messages API**
+- **GET** `/api/messages?sessionId=xxx` - Get session messages
+- **POST** `/api/messages` - Create new message
+
+**AI Chat**
+- **POST** `/api/chat` - Stream chat completion (Server-Sent Events)
+
+**Reports**
+- **GET** `/api/reports` - List session reports
+- **POST** `/api/reports/generate` - Generate session report
+- **GET** `/api/reports/memory` - Get memory details
+- **POST** `/api/reports/memory/manage` - Manage memory
+
+**Authentication**
+- **GET** `/api/auth/setup` - Get setup status
+- **POST** `/api/auth/setup` - Complete TOTP setup
+- **POST** `/api/auth/verify` - Verify TOTP token
+- **POST** `/api/auth/session` - Create auth session
+- **DELETE** `/api/auth/session` - Logout
+- **GET** `/api/auth/devices` - List trusted devices
+- **DELETE** `/api/auth/devices/[deviceId]` - Remove device
+
+### Implementation Guidelines
+
+**Use Middleware Pattern**
+```typescript
+export const GET = withApiMiddleware(async (request, context) => {
+  // Your endpoint logic
+});
+```
+
+**Standardized Responses**
+```typescript
+import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
+
+// Success
+return createSuccessResponse(data, { requestId: context.requestId });
+
+// Error
+return createErrorResponse('Error message', 400, {
+  code: 'VALIDATION_ERROR',
+  requestId: context.requestId
+});
+```
+
+**Type Safety**
+```typescript
+interface YourResponse {
+  field1: string;
+  field2: number;
+}
+
+const response: YourResponse = {
+  field1: 'value',
+  field2: 123
+};
+
+return createSuccessResponse(response);
+```
+
+**Error Handling**
+```typescript
+try {
+  // Your logic
+} catch (error) {
+  return createServerErrorResponse(
+    error as Error, 
+    context.requestId,
+    { endpoint: '/api/your-endpoint' }
+  );
+}
+```
+
+**Request Validation**
+```typescript
+export const POST = withValidation(
+  yourSchema,
+  async (request, context, validatedData) => {
+    // validatedData is now type-safe
+  }
+);
+```
+
+### Migration Checklist
+
+For converting existing endpoints to the standard:
+
+- [ ] Replace `NextResponse.json()` with `createSuccessResponse()`
+- [ ] Replace custom error handling with `createErrorResponse()` helpers
+- [ ] Add `withApiMiddleware()` wrapper
+- [ ] Define TypeScript interfaces for responses
+- [ ] Add JSDoc documentation
+- [ ] Update error codes to standard format
+- [ ] Add request validation where needed
+- [ ] Test with standardized response format
+
+### Security Headers
+
+All responses automatically include:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-Therapeutic-Context: enabled`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+
+### Pagination Standard
+
+For list endpoints:
+```typescript
+{
+  "success": true,
+  "data": {
+    "items": [...],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 100,
+      "totalPages": 5,
+      "hasNext": true,
+      "hasPrev": false
+    }
+  }
+}
+```
+
+### Rate Limiting
+
+- **Default**: 100 requests per 15 minutes per IP
+- **Authenticated**: 1000 requests per 15 minutes per user
+- **Chat streaming**: 10 concurrent streams per user
+- **Error response**: Uses `createRateLimitErrorResponse()`
+
 ## Recent Security Improvements (2024)
 
 ### ✅ Implemented Security Enhancements
@@ -318,3 +509,6 @@ Advanced streaming message diffusion system provides smooth, GPU-accelerated ani
 
 **AI SDK Status: ✅ PRODUCTION READY**
 Complete migration to AI SDK 5 with clean architecture, Turbopack development, and all therapeutic functionality preserved. Development experience significantly improved with faster bundling and simplified configuration.
+
+**API Standards Status: ✅ FULLY DOCUMENTED**
+Complete API interface standards documentation with response formats, error codes, endpoint documentation, implementation guidelines, and migration checklist. All new endpoints MUST follow these standardized patterns for consistent developer experience.

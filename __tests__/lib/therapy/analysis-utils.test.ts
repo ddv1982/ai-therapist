@@ -21,12 +21,9 @@ import {
   detectIntrusiveThoughts,
   detectAvoidanceBehaviors,
   scoreThoughtActionFusion,
-  scoreUncertaintyIntolerance,
-  type UserRatingExtraction,
-  type ContentAnalysisMetrics,
-  type UserDataPriority,
-  type ERPAnalysisResult
+  scoreUncertaintyIntolerance
 } from '@/lib/therapy/analysis-utils';
+import type { UserDataPriority } from '@/lib/therapy/analysis-utils';
 
 describe('Analysis Utils - Consolidated Functionality', () => {
   

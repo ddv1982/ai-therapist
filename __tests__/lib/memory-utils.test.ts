@@ -5,12 +5,10 @@
 import {
   checkMemoryContext,
   formatMemoryInfo,
-  getMemoryManagementData,
   deleteMemory,
   refreshMemoryContext,
   getSessionReportDetail,
-  type MemoryContextInfo,
-  type MemoryManagementResponse,
+  type MemoryContextInfo
 } from '@/lib/chat/memory-utils';
 
 // Mock fetch

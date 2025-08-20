@@ -7,7 +7,7 @@ import { logger } from '@/lib/utils/logger';
 
 export const POST = withValidation(
   messageSchema,
-  async (request, context, validatedData) => {
+  async (_request, context, validatedData) => {
     try {
       const { sessionId, role, content, modelUsed } = validatedData;
 
@@ -68,7 +68,7 @@ export const POST = withValidation(
 
 export const GET = withValidation(
   messagesQuerySchema,
-  async (request, context, validatedData) => {
+  async (_request, context, validatedData) => {
     try {
       const { sessionId } = validatedData;
 

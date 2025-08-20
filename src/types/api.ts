@@ -10,8 +10,7 @@ export type {
   CreateSessionRequest,
   UpdateSessionRequest,
   SessionsResponse,
-  ApiError,
-  AppError 
+  ApiError
 } from './index';
 
 // Rate limiting types

@@ -3,10 +3,11 @@
  * Testing DELETE /api/reports/memory functionality
  */
 
-import { NextRequest } from 'next/server';
+// import { NextRequest } from 'next/server'; // unused after removing createMockRequest
 import { prisma } from '@/lib/database/db';
-import { DELETE } from '@/app/api/reports/memory/route';
-import { GET as GET_MANAGE } from '@/app/api/reports/memory/manage/route';
+// Unused imports for potential future use:
+// import { DELETE } from '@/app/api/reports/memory/route';
+// import { GET as GET_MANAGE } from '@/app/api/reports/memory/manage/route';
 
 // Mock the dependencies
 jest.mock('@/lib/database/db', () => ({
@@ -38,15 +39,7 @@ jest.mock('@/lib/chat/message-encryption', () => ({
   decryptSessionReportContent: jest.fn(),
 }));
 
-// Helper to create mock NextRequest
-const createMockRequest = (searchParams: Record<string, string> = {}): NextRequest => {
-  const url = new URL('http://localhost:3000/api/reports/memory');
-  Object.entries(searchParams).forEach(([key, value]) => {
-    url.searchParams.set(key, value);
-  });
-  
-  return new NextRequest(url, { method: 'DELETE' });
-};
+// Helper to create mock NextRequest - removed as unused
 
 const mockPrisma = prisma as any;
 
@@ -157,7 +150,7 @@ describe('Memory Deletion API', () => {
     it('should handle DELETE request with excludeSessionId', async () => {
       mockPrisma.sessionReport.deleteMany.mockResolvedValueOnce({ count: 3 });
 
-      const request = createMockRequest({ excludeSessionId: 'current-session-id' });
+      // const _request = createMockRequest({ excludeSessionId: 'current-session-id' });
       
       // Test the database operation directly since we're focusing on the core logic
       const result = await mockPrisma.sessionReport.deleteMany({

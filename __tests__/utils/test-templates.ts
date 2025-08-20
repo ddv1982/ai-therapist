@@ -12,13 +12,10 @@
 
 import { ReactElement } from 'react';
 import React from 'react';
-import { RenderResult } from '@testing-library/react';
 import { NextRequest } from 'next/server';
 import { 
   ComponentTestUtils, 
-  SecurityTestUtils, 
   PerformanceTestUtils,
-  TherapeuticDataFactory,
   MockFactory
 } from './test-utilities';
 
@@ -68,7 +65,7 @@ export class APITestTemplate {
       describe('Valid Requests', () => {
         testCases.validRequests.forEach(({ name, request, expectedResponse }) => {
           it(name, async () => {
-            const mockRequest = ComponentTestUtils.createMockRequest(
+            const mockRequest = (ComponentTestUtils as any).createMockRequest(
               request.url || 'http://localhost:3000/api/test',
               {
                 method: request.method || 'GET',
@@ -92,9 +89,9 @@ export class APITestTemplate {
       
       if (testCases.invalidRequests) {
         describe('Invalid Requests', () => {
-          testCases.invalidRequests.forEach(({ name, request, expectedStatus }) => {
+          testCases.invalidRequests?.forEach(({ name, request, expectedStatus }) => {
             it(name, async () => {
-              const mockRequest = ComponentTestUtils.createMockRequest(
+              const mockRequest = (ComponentTestUtils as any).createMockRequest(
                 request.url || 'http://localhost:3000/api/test',
                 request
               );
@@ -108,9 +105,9 @@ export class APITestTemplate {
       
       describe('Authentication', () => {
         it('should handle missing authentication', async () => {
-          mocks.apiAuth.validateApiAuth.mockResolvedValueOnce({ isValid: false });
+          (mocks.apiAuth.validateApiAuth as any).mockResolvedValueOnce({ isValid: false });
           
-          const mockRequest = ComponentTestUtils.createMockRequest(
+          const mockRequest = (ComponentTestUtils as any).createMockRequest(
             'http://localhost:3000/api/test'
           );
           
@@ -121,9 +118,9 @@ export class APITestTemplate {
       
       describe('Database Operations', () => {
         it('should handle database errors gracefully', async () => {
-          mocks.prisma.sessionReport.findMany.mockRejectedValueOnce(new Error('Database error'));
+          (mocks.prisma.sessionReport.findMany as any).mockRejectedValueOnce(new Error('Database error'));
           
-          const mockRequest = ComponentTestUtils.createMockRequest(
+          const mockRequest = (ComponentTestUtils as any).createMockRequest(
             'http://localhost:3000/api/test'
           );
           
@@ -205,7 +202,7 @@ export class ComponentTestTemplate {
       needsDatabase?: boolean;
     } = {}
   ) {
-    const { needsRedux = true, needsAuth = false, needsDatabase = false } = options;
+    const { needsRedux = true, needsAuth: _needsAuth = false, needsDatabase: _needsDatabase = false } = options;
     
     describe(`${componentName} Component`, () => {
       
@@ -389,7 +386,7 @@ export class ComponentTestTemplate {
             React.createElement(FormComponent, defaultProps)
           );
           
-          formFields.forEach(field => {
+          formFields.forEach(_field => {
             // Field existence checks would be here
           });
         });
@@ -404,7 +401,7 @@ export class ComponentTestTemplate {
           
           // Check for validation errors
           const requiredFields = formFields.filter(f => f.required);
-          requiredFields.forEach(field => {
+          requiredFields.forEach(_field => {
             // Validation error checks would be here
           });
         });

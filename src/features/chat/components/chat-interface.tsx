@@ -18,8 +18,6 @@ import { logger } from '@/lib/utils/logger';
 export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatInterfaceProps) {
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
-  const [apiKey, setApiKey] = useState('');
-  const [hasEnvApiKey, setHasEnvApiKey] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   
@@ -72,21 +70,8 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
   // Derived state for loading indicator
   const isLoading = status === 'streaming' || status === 'submitted';
 
-  // Check if environment variable is set
-  useEffect(() => {
-    const abortController = new AbortController();
-    
-    fetch('/api/env', { signal: abortController.signal })
-      .then(res => res.json())
-      .then(data => setHasEnvApiKey(data.hasGroqApiKey))
-      .catch((error) => {
-        if (error.name !== 'AbortError') {
-          setHasEnvApiKey(false);
-        }
-      });
-
-    return () => abortController.abort();
-  }, []);
+  // Environment API key is configured server-side
+  // No need to check or manage API keys on the client
 
   // Timer for session duration
   useEffect(() => {
@@ -252,40 +237,6 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
         </div>
       </ScrollArea>
       
-      {!hasEnvApiKey && !apiKey && (
-        <div className="border-t border-border p-4 bg-card">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-orange-800 dark:text-orange-300 mb-2">
-                API Key Required
-              </h3>
-              <p className="text-sm text-orange-700 dark:text-orange-400 mb-3">
-                Please enter your Groq API key to start chatting.
-              </p>
-              <div className="space-y-2">
-                <input
-                  type="password"
-                  placeholder="Enter your Groq API key"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="w-full p-3 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Get your free API key at{' '}
-                  <a 
-                    href="https://console.groq.com/keys" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-primary hover:underline"
-                  >
-                    console.groq.com/keys
-                  </a>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {currentSession && (
         <div className="border-t border-border p-4 bg-card">
@@ -303,7 +254,7 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
               <Button 
                 type="submit" 
                 size="icon" 
-                disabled={!input.trim() || isLoading || (!hasEnvApiKey && !apiKey)}
+                disabled={!input.trim() || isLoading}
                 className="h-[60px] w-[60px] shrink-0"
               >
                 <Send size={20} />

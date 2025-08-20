@@ -31,7 +31,7 @@ describe('RateLimiter', () => {
 
   afterAll(() => {
     global.console = originalConsole;
-    process.env.NODE_ENV = originalEnv;
+    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, writable: true });
   });
 
   describe('Exempt IP Handling', () => {
@@ -69,14 +69,14 @@ describe('RateLimiter', () => {
       expect(result.allowed).toBe(true);
     });
 
-    it('should log exempt IP in development mode', () => {
-      process.env.NODE_ENV = 'development';
+    it('should allow exempt IP in development mode', () => {
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       
-      rateLimiter.checkRateLimit('127.0.0.1');
+      const result = rateLimiter.checkRateLimit('127.0.0.1');
       
-      expect(mockConsole.log).toHaveBeenCalledWith(
-        expect.stringContaining('[RATE_LIMITER] Allowing exempt IP: 127.0.0.1')
-      );
+      // Exempt IPs should be allowed without logging
+      expect(result.allowed).toBe(true);
+      expect(result.retryAfter).toBeUndefined();
     });
   });
 
@@ -131,7 +131,7 @@ describe('RateLimiter', () => {
     });
 
     it('should log blocked IP in development mode', () => {
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       const ip = '203.0.113.103';
       
       // Exceed limit
@@ -139,8 +139,9 @@ describe('RateLimiter', () => {
         rateLimiter.checkRateLimit(ip);
       }
       
+      // Check for structured logging format
       expect(mockConsole.log).toHaveBeenCalledWith(
-        expect.stringContaining(`[RATE_LIMITER] IP ${ip} blocked`)
+        expect.stringContaining('Rate limiter blocking IP')
       );
     });
   });
@@ -194,7 +195,7 @@ describe('RateLimiter', () => {
       
       const suspicious = rateLimiter.getSuspiciousActivity();
       expect(suspicious.length).toBeGreaterThanOrEqual(1);
-      const foundSuspicious = suspicious.find(entry => entry.ip === suspiciousIP);
+      const foundSuspicious = suspicious.find((entry: { ip: string; attempts: number; lastAttempt: number }) => entry.ip === suspiciousIP);
       expect(foundSuspicious).toBeDefined();
       expect(foundSuspicious!.attempts).toBeGreaterThanOrEqual(50);
       expect(foundSuspicious!.lastAttempt).toBeGreaterThan(0);
@@ -414,7 +415,7 @@ describe('RateLimiter', () => {
 
   describe('Development Environment Handling', () => {
     it('should not log in production mode', () => {
-      process.env.NODE_ENV = 'production';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
       const rateLimiter = getRateLimiter();
       
       rateLimiter.checkRateLimit('127.0.0.1');

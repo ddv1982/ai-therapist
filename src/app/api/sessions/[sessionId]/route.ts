@@ -13,7 +13,7 @@ interface SessionUpdateData {
 
 export const PATCH = withValidationAndParams(
   updateSessionSchema,
-  async (request, context, validatedData, params) => {
+  async (_request, context, validatedData, params) => {
     try {
       const { sessionId } = params as { sessionId: string };
       const { status, endedAt, title } = validatedData;

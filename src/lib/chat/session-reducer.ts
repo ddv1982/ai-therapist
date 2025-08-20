@@ -2,9 +2,14 @@ import type { Message } from '@/types/index';
 
 export interface Session {
   id: string;
+  userId?: string;
   title: string;
-  lastMessage?: string;
   startedAt: Date;
+  endedAt?: Date | null;
+  status: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  lastMessage?: string;
   _count?: {
     messages: number;
   };

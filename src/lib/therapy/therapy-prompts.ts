@@ -413,8 +413,7 @@ Structure your response as a professional therapeutic report with clear sections
 
 **CBT DATA INTEGRATION**: When the session contains structured CBT data (marked with "CBT Session -" headers), prioritize this user-provided information for analysis. Include specific emotion ratings, thought records, core beliefs, and behavioral plans in your therapeutic assessment. This structured data represents the client's active therapeutic work and should be prominently featured in the report.
 
-**THERAPIST IDENTIFICATION**: When including any closing notes, signatures, or attribution in the report, always use "Therapeutic AI" as the therapist name. Never use placeholders like "[Your Therapist's Name]" or similar bracketed text. The attribution should read "Prepared by: Therapeutic AI
-Confidential – for client and therapist use only."
+**THERAPIST IDENTIFICATION**: When including any closing notes, signatures, or attribution in the report, always use "Therapeutic AI" as the therapist name.
 `;
 
 export const ANALYSIS_EXTRACTION_PROMPT = `

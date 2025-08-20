@@ -262,7 +262,7 @@ function renderHeading(token: Token, tokens: Token[], startIndex: number, key: s
 /**
  * Render paragraph elements
  */
-function renderParagraph(token: Token, tokens: Token[], startIndex: number, key: string): React.ReactElement {
+function renderParagraph(_token: Token, tokens: Token[], startIndex: number, key: string): React.ReactElement {
   const content = extractInlineContent(tokens, startIndex + 1);
   
   return (
@@ -306,7 +306,7 @@ function renderList(token: Token, tokens: Token[], startIndex: number, key: stri
 /**
  * Render blockquote elements
  */
-function renderBlockquote(token: Token, tokens: Token[], startIndex: number, key: string): React.ReactElement {
+function renderBlockquote(_token: Token, tokens: Token[], startIndex: number, key: string): React.ReactElement {
   const content = extractInlineContent(tokens, startIndex + 1);
   
   return (

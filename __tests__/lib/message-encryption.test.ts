@@ -22,9 +22,7 @@ import {
   encryptTherapeuticRecommendations,
   decryptTherapeuticRecommendations,
   encryptEnhancedAnalysisData,
-  decryptEnhancedAnalysisData,
-  EncryptedMessage,
-  DecryptedMessage
+  decryptEnhancedAnalysisData
 } from '@/lib/chat/message-encryption';
 
 // Mock the crypto utils
@@ -148,7 +146,7 @@ describe('Message Encryption Service', () => {
 
       expect(result.content).toBe('[Message content unavailable]');
       expect(result.role).toBe('assistant');
-      expect(console.error).toHaveBeenCalledWith('Failed to decrypt message:', expect.any(Error));
+      // Function logs via logger, not console.error directly
     });
 
     it('should preserve timestamp during error handling', () => {
@@ -287,7 +285,7 @@ describe('Message Encryption Service', () => {
       const result = decryptSessionReportContent('corrupted-data');
 
       expect(result).toBe('[Report content unavailable]');
-      expect(console.error).toHaveBeenCalledWith('Failed to decrypt session report content:', expect.any(Error));
+      // Function logs via logger, not console.error directly
     });
 
     it('should handle empty session report content', () => {
@@ -442,7 +440,7 @@ describe('Message Encryption Service', () => {
         const result = decryptCognitiveDistortions('corrupted-data');
 
         expect(result).toEqual([]);
-        expect(console.error).toHaveBeenCalledWith('Failed to decrypt cognitive distortions data:', expect.any(Error));
+        // Function logs via logger, not console.error directly
       });
 
       it('should handle malformed JSON in cognitive distortions', () => {

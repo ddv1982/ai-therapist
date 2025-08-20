@@ -7,6 +7,12 @@ import { encryptSensitiveData, decryptSensitiveData } from '@/lib/auth/crypto-ut
 import { generateSecureRandomString, generateUUID } from '@/lib/utils';
 import { generateDeviceFingerprint, generateBasicDeviceFingerprint } from '@/lib/auth/device-fingerprint';
 
+// Type declarations for global test utilities from jest.setup.js
+declare global {
+  var mockCrypto: (mockImplementation?: Crypto) => void;
+  var restoreCrypto: () => void;
+}
+
 // Mock environment variables for testing
 const originalEnv = process.env;
 
@@ -130,7 +136,7 @@ describe('Authentication Security Tests', () => {
 
     it('should fail when crypto is unavailable', () => {
       // Mock crypto as unavailable using the helper function
-      global.mockCrypto(undefined as any);
+      global.mockCrypto(undefined);
       
       expect(() => {
         generateSecureRandomString(16);
@@ -234,13 +240,13 @@ describe('Security Vulnerability Tests', () => {
   describe('Authentication Bypass Prevention', () => {
     it('should not allow localhost bypass in production', () => {
       const originalNodeEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'production', writable: true });
       
       // Import the auth middleware to test production behavior
       // Note: This would require mocking NextRequest which is complex
       // In real implementation, this would be tested with integration tests
       
-      process.env.NODE_ENV = originalNodeEnv;
+      Object.defineProperty(process.env, 'NODE_ENV', { value: originalNodeEnv, writable: true });
     });
 
     it('should require proper environment variables for bypass', () => {
@@ -248,13 +254,13 @@ describe('Security Vulnerability Tests', () => {
       const originalBypassAuth = process.env.BYPASS_AUTH;
       
       // Test that bypass is only allowed with explicit flag
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       process.env.BYPASS_AUTH = undefined;
       
       // This would need integration testing to properly validate
       // but the principle is that auth bypass should require explicit flag
       
-      process.env.NODE_ENV = originalNodeEnv;
+      Object.defineProperty(process.env, 'NODE_ENV', { value: originalNodeEnv, writable: true });
       process.env.BYPASS_AUTH = originalBypassAuth;
     });
   });

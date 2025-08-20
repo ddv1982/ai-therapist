@@ -14,6 +14,7 @@ const createMockSession = (overrides: Partial<Session> = {}): Session => ({
   title: 'Test Session',
   lastMessage: 'Hello world',
   startedAt: new Date('2024-01-01T00:00:00Z'),
+  status: 'active',
   _count: { messages: 5 },
   ...overrides
 });
@@ -403,13 +404,13 @@ describe('Session Reducer', () => {
   describe('State Immutability', () => {
     it('should not mutate original state', () => {
       // Deep clone with proper Date handling
-      const originalState = JSON.parse(JSON.stringify(mockState, (key, value) => {
+      const originalState = JSON.parse(JSON.stringify(mockState, (_key, value) => {
         if (value instanceof Date) {
           return value.toISOString();
         }
         return value;
-      }), (key, value) => {
-        if (key === 'timestamp' || key === 'startedAt') {
+      }), (_key, value) => {
+        if (_key === 'timestamp' || _key === 'startedAt') {
           return new Date(value);
         }
         return value;

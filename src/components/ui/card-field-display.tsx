@@ -109,7 +109,7 @@ export function CardFieldDisplay({
 
 // Utility function to determine appropriate variant based on column configuration
 export function getFieldVariant(
-  columnKey: string,
+  _columnKey: string,
   columnConfig?: { key: string; priority?: 'high' | 'medium' | 'low'; type?: 'badge' | 'status' | 'text' }
 ): 'primary' | 'secondary' | 'badge' | 'status' {
   if (!columnConfig) return 'secondary';

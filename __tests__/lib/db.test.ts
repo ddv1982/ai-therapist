@@ -38,7 +38,7 @@ jest.mock('@/lib/database/db', () => {
   };
 });
 
-const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+const mockPrisma = prisma as any;
 const mockCheckHealth = checkDatabaseHealth as jest.MockedFunction<typeof checkDatabaseHealth>;
 const mockDisconnect = disconnectDatabase as jest.MockedFunction<typeof disconnectDatabase>;
 

@@ -313,22 +313,8 @@ function CBTDiaryPageContent() {
     setIsStreaming(true);
     
     try {
-      // Check if environment API key is available
-      const envResponse = await fetch('/api/env');
-      const envData = await envResponse.json();
-      const hasEnvApiKey = envData.hasGroqApiKey;
+      // Environment API key is automatically handled by the server
       
-      if (!hasEnvApiKey) {
-        showToast({
-          type: 'warning',
-          title: 'API Key Required',
-          message: 'Please set GROQ_API_KEY environment variable to send to chat'
-        });
-        setIsLoading(false);
-        setIsStreaming(false);
-        return;
-      }
-
       // Generate comprehensive CBT summary using structured card format
       const summaryData = generateTherapeuticSummaryCard();
       const cbtSummary = `<!-- CBT_SUMMARY_CARD:${JSON.stringify(summaryData)} -->

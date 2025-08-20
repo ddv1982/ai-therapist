@@ -571,7 +571,7 @@ export function replaceTemplatePlaceholders(
   });
   
   // Replace any remaining placeholders with generic fallback
-  result = result.replace(/\{([^}]+)\}/g, (match, key) => `[${key} content]`);
+  result = result.replace(/\{([^}]+)\}/g, (_match, key) => `[${key} content]`);
   
   return result;
 }

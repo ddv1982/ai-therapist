@@ -3,7 +3,7 @@
  * Tests the actual API endpoints for security and functionality
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { validateApiAuth, createAuthErrorResponse } from '@/lib/api/api-auth';
 
 // Mock the dependencies
@@ -36,6 +36,29 @@ jest.mock('@/lib/database/db', () => ({
 
 jest.mock('@/lib/auth/totp-service');
 jest.mock('@/lib/auth/device-fingerprint');
+
+// Mock the localhost checker to return false for testing
+jest.mock('@/lib/utils/utils', () => ({
+  ...jest.requireActual('@/lib/utils/utils'),
+  isLocalhost: jest.fn(() => false),
+}));
+
+// Helper to create mock NextRequest with proper headers
+function createMockNextRequest(url: string, options: { method: string; headers?: Record<string, string> }) {
+  const mockHeaders = new Map(Object.entries(options.headers || {}));
+  
+  return {
+    url,
+    method: options.method,
+    headers: {
+      get: jest.fn().mockImplementation((key: string) => mockHeaders.get(key) || null),
+      has: jest.fn().mockImplementation((key: string) => mockHeaders.has(key)),
+      entries: jest.fn().mockReturnValue(mockHeaders.entries()),
+      keys: jest.fn().mockReturnValue(mockHeaders.keys()),
+      values: jest.fn().mockReturnValue(mockHeaders.values()),
+    }
+  } as unknown as NextRequest;
+}
 
 describe('Authentication API Endpoints Security', () => {
   beforeEach(() => {
@@ -81,8 +104,9 @@ describe('Authentication API Endpoints Security', () => {
 
   describe('API Authentication Middleware', () => {
     it('should reject requests without authentication', async () => {
-      const mockRequest = new NextRequest('http://localhost:3000/api/messages', {
+      const mockRequest = createMockNextRequest('http://localhost:3000/api/messages', {
         method: 'GET',
+        headers: {}
       });
 
       // Mock the auth validation to fail
@@ -104,9 +128,11 @@ describe('Authentication API Endpoints Security', () => {
     });
 
     it('should handle missing session tokens', async () => {
-      const mockRequest = new NextRequest('http://localhost:3000/api/messages', {
+      const mockRequest = createMockNextRequest('http://localhost:4000/api/messages', {
         method: 'GET',
-        headers: {},
+        headers: {
+          'host': 'localhost:4000'
+        },
       });
 
       const authResult = await validateApiAuth(mockRequest);
@@ -114,16 +140,17 @@ describe('Authentication API Endpoints Security', () => {
     });
 
     it('should validate device fingerprints', async () => {
-      const mockRequest = new NextRequest('http://localhost:3000/api/messages', {
+      const mockRequest = createMockNextRequest('http://localhost:4000/api/messages', {
         method: 'GET',
         headers: {
+          'host': 'localhost:4000',
           'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)',
           'cookie': 'auth-session-token=valid-token',
         },
       });
 
       // This would require mocking the full auth chain
-      const authResult = await validateApiAuth(mockRequest);
+      await validateApiAuth(mockRequest);
       // Test expectations would depend on mock setup
     });
   });
@@ -183,10 +210,11 @@ describe('Authentication API Endpoints Security', () => {
   describe('Rate Limiting', () => {
     it('should implement request rate limiting', () => {
       // Mock multiple requests from same IP
-      const requests = Array.from({ length: 10 }, (_, i) => 
-        new NextRequest(`http://localhost:3000/api/chat`, {
+      const requests = Array.from({ length: 10 }, (_) => 
+        createMockNextRequest(`http://localhost:4000/api/chat`, {
           method: 'POST',
           headers: {
+            'host': 'localhost:4000',
             'x-forwarded-for': '192.168.1.100',
             'content-type': 'application/json',
           },
@@ -203,9 +231,10 @@ describe('Authentication API Endpoints Security', () => {
       const ips = ['192.168.1.100', '192.168.1.101', '10.0.0.1'];
       
       const requests = ips.map(ip => 
-        new NextRequest(`http://localhost:3000/api/chat`, {
+        createMockNextRequest(`http://localhost:4000/api/chat`, {
           method: 'POST',
           headers: {
+            'host': 'localhost:4000',
             'x-forwarded-for': ip,
             'content-type': 'application/json',
           },
@@ -214,7 +243,8 @@ describe('Authentication API Endpoints Security', () => {
 
       // Each IP should be treated independently for rate limiting
       requests.forEach((request, index) => {
-        expect(request.headers.get('x-forwarded-for')).toBe(ips[index]);
+        const forwardedFor = request.headers.get('x-forwarded-for');
+        expect(forwardedFor).toBe(ips[index]);
       });
     });
   });
@@ -228,7 +258,7 @@ describe('Authentication API Endpoints Security', () => {
         'Stack trace: at Function.authenticate (/app/lib/auth.js:123:45)',
       ];
 
-      sensitiveErrors.forEach(error => {
+      sensitiveErrors.forEach(_error => {
         // Error responses should be sanitized
         const sanitizedError = 'Internal server error';
         expect(sanitizedError).not.toContain('postgres://');
@@ -248,7 +278,7 @@ describe('Authentication API Endpoints Security', () => {
         { scenario: 'server error', expectedStatus: 500 },
       ];
 
-      errorScenarios.forEach(({ scenario, expectedStatus }) => {
+      errorScenarios.forEach(({ scenario: _scenario, expectedStatus }) => {
         expect(typeof expectedStatus).toBe('number');
         expect(expectedStatus).toBeGreaterThanOrEqual(400);
         expect(expectedStatus).toBeLessThan(600);
