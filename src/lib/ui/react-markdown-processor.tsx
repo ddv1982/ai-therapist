@@ -247,7 +247,7 @@ function renderHeading(token: Token, tokens: Token[], startIndex: number, key: s
     6: 'text-sm font-semibold mb-2'
   };
 
-  const HeadingTag = token.tag as keyof JSX.IntrinsicElements;
+  const HeadingTag = token.tag as keyof React.JSX.IntrinsicElements;
   
   return (
     <HeadingTag 

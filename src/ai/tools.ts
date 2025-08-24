@@ -1,5 +1,10 @@
-import { tool } from "ai";
+import * as ai from "ai";
 import { z } from "zod";
+
+// Support test environments that mock 'ai' without exporting 'tool'
+// Fallback turns a tool definition into a no-op passthrough
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const tool: (def: any) => any = (ai as unknown as { tool?: (d: unknown) => unknown }).tool || ((def) => def);
 
 // Browser search tool for Groq models that support it
 export const browserSearchTool = tool({
@@ -7,7 +12,8 @@ export const browserSearchTool = tool({
   inputSchema: z.object({
     query: z.string().describe("The search query to find relevant information"),
   }),
-  execute: async ({ query }) => {
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  execute: async ({ query }: { query: string }) => {
     // This tool is handled by the Groq API when using models that support browser search
     // The actual search is performed server-side by Groq
     return {

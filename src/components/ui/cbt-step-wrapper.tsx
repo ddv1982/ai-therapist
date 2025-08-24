@@ -299,9 +299,9 @@ export function CBTStepWrapper({
     )}>
       <div className="flex items-center gap-3 mb-2">
         <div className="flex-shrink-0">
-          {React.cloneElement(stepIcon as React.ReactElement, { 
-            className: "w-5 h-5" 
-          })}
+          {React.isValidElement(stepIcon)
+            ? React.cloneElement(stepIcon as React.ReactElement<{ className?: string }>, { className: "w-5 h-5" })
+            : stepIcon}
         </div>
         <div className="flex-1">
           <h2 className="text-lg font-semibold">{title}</h2>

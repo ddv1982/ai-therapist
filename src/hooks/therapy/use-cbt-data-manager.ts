@@ -242,7 +242,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   const hasHydratedFromRHF = useRef<boolean>(false);
   
   // Auto-save management
-  const autoSaveTimeout = useRef<NodeJS.Timeout>();
+  const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
   const lastDataRef = useRef<string>('');
   
   // Chat integration
@@ -270,6 +270,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     return () => {
       if (autoSaveTimeout.current) {
         clearTimeout(autoSaveTimeout.current);
+        autoSaveTimeout.current = null;
       }
     };
   }, [currentDraft, autoSaveDelay, dispatch]);

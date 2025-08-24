@@ -13,7 +13,7 @@ export const maxDuration = 30;
 export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, context) => {
   try {
     // Parse request body with compatibility for tests/mocks
-    type ApiChatMessage = { role: 'user' | 'assistant'; content: string };
+    type ApiChatMessage = { role: 'user' | 'assistant'; content: string; id?: string };
     let messages: unknown;
     let fullBody: unknown = undefined;
     let bodySize = 0;
@@ -60,10 +60,10 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       const result: ApiChatMessage[] = [];
       for (const item of raw as unknown[]) {
         if (typeof item !== 'object' || item === null) return null;
-        const v = item as { role?: unknown; content?: unknown; parts?: unknown };
+        const v = item as { role?: unknown; content?: unknown; parts?: unknown; id?: unknown };
         if (v.role !== 'user' && v.role !== 'assistant') return null;
         if (typeof v.content === 'string') {
-          result.push({ role: v.role, content: v.content });
+          result.push({ role: v.role, content: v.content, id: typeof v.id === 'string' ? v.id : undefined });
           continue;
         }
         if (Array.isArray(v.parts)) {
@@ -71,7 +71,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
           const text = parts
             .map(p => (p && (p.type === 'text') && typeof p.text === 'string' ? p.text : ''))
             .join('');
-          result.push({ role: v.role, content: text });
+          result.push({ role: v.role, content: text, id: typeof v.id === 'string' ? v.id : undefined });
           continue;
         }
         return null;
@@ -97,15 +97,18 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     const { modelId } = parsedSelectedModel ? { modelId: parsedSelectedModel } : selectModel(String(lastContent));
     const tools = getToolsForModel(modelId, webSearchEnabled);
 
-    const result = streamText({
+    const streamParams: Record<string, unknown> = {
       model: model.languageModel(modelId),
       system: THERAPY_SYSTEM_PROMPT,
       messages: typedMessages, // AI SDK handles conversion automatically
-      tools,
       experimental_telemetry: {
         isEnabled: false,
       },
-    });
+    };
+    if (tools && Object.keys(tools).length > 0) {
+      streamParams.tools = tools;
+    }
+    const result = streamText(streamParams as unknown as Parameters<typeof streamText>[0]);
 
     return result.toUIMessageStreamResponse({
       onError: (error) => {
