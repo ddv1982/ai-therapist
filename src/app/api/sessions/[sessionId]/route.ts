@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/database/db';
 import { updateSessionSchema } from '@/lib/utils/validation';
-import { withAuth, withValidationAndParams, db, errorHandlers } from '@/lib/api/api-middleware';
+import { withAuth, withValidationAndParams, errorHandlers } from '@/lib/api/api-middleware';
+import { verifySessionOwnership, getSessionWithMessages } from '@/lib/database/queries';
 import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 
@@ -19,7 +20,7 @@ export const PATCH = withValidationAndParams(
       const { status, endedAt, title } = validatedData;
 
       // Verify session belongs to this user
-      const { valid } = await db.verifySessionOwnership(sessionId, context.userInfo.userId);
+      const { valid } = await verifySessionOwnership(sessionId, context.userInfo.userId);
       if (!valid) {
         return createNotFoundErrorResponse('Session', context.requestId);
       }
@@ -62,7 +63,7 @@ export const GET = withAuth(async (_request, context, params) => {
   try {
     const { sessionId } = params as { sessionId: string };
 
-    const session = await db.getSessionWithMessages(sessionId, context.userInfo.userId);
+    const session = await getSessionWithMessages(sessionId, context.userInfo.userId);
 
     if (!session) {
       return createNotFoundErrorResponse('Session', context.requestId);
@@ -90,7 +91,7 @@ export const DELETE = withAuth(async (_request, context, params) => {
     const { sessionId } = params as { sessionId: string };
 
     // Verify session belongs to this user before deleting
-    const { valid } = await db.verifySessionOwnership(sessionId, context.userInfo.userId);
+    const { valid } = await verifySessionOwnership(sessionId, context.userInfo.userId);
     if (!valid) {
       return createNotFoundErrorResponse('Session', context.requestId);
     }

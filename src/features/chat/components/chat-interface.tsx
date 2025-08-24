@@ -14,6 +14,8 @@ import type { Session } from '@/types';
 import { Send } from 'lucide-react';
 import { generateSessionTitle } from '@/lib/utils/utils';
 import { logger } from '@/lib/utils/logger';
+import { apiClient } from '@/lib/api/client';
+import type { components } from '@/types/api.generated';
 
 export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatInterfaceProps) {
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
@@ -41,6 +43,11 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
       logger.error('Chat stream error', { component: 'ChatInterface' }, error);
     },
     onFinish: async ({ message }) => {
+      // Decrement in-flight counter on finish
+      try {
+        const current = inflightSendsRef.current;
+        inflightSendsRef.current = current > 0 ? current - 1 : 0;
+      } catch {}
       // Save the AI response to database after completion
       if (currentSession) {
         try {
@@ -50,15 +57,10 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
             .map(part => part.text)
             .join('');
             
-          await fetch('/api/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              sessionId: currentSession.id,
-              role: 'assistant',
-              content: textContent,
-              modelUsed: 'ai-sdk', // We'll capture the actual model later
-            }),
+          await apiClient.postMessage(currentSession.id, {
+            role: 'assistant',
+            content: textContent,
+            modelUsed: 'ai-sdk',
           });
         } catch (error) {
           logger.error('Failed to save assistant message', { component: 'ChatInterface', operation: 'saveMessage' }, error as Error);
@@ -69,6 +71,12 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
   
   // Derived state for loading indicator
   const isLoading = status === 'streaming' || status === 'submitted';
+
+  // Client-side rate guard: cooldown and max concurrency
+  const lastSendAtRef = useRef<number>(0);
+  const inflightSendsRef = useRef<number>(0);
+  const MIN_COOLDOWN_MS = 500;
+  const MAX_CONCURRENT_SENDS = 2;
 
   // Environment API key is configured server-side
   // No need to check or manage API keys on the client
@@ -133,15 +141,14 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
         }),
       });
       
-      // Generate session report
-      await fetch('/api/reports', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: currentSession.id,
-          messages
-        }),
-      });
+      // Generate session report: map AI SDK messages to API Message schema
+      type TextPart = { type: 'text'; text: string };
+      const reportMessages: components['schemas']['Message'][] = messages.map((m) => ({
+        role: m.role as 'user' | 'assistant',
+        content: (m.parts as TextPart[] | undefined)?.filter((p) => p?.type === 'text').map((p) => p.text).join('') ?? '',
+        timestamp: new Date().toISOString(),
+      }));
+      await apiClient.generateReport({ sessionId: currentSession.id, messages: reportMessages });
       
       setCurrentSession(null);
       setSessionDuration(0);
@@ -161,17 +168,23 @@ export function ChatInterface({ initialMessages: _initialMessages = [] }: ChatIn
     if (!input.trim() || !currentSession || isLoading) return;
 
     const messageContent = input.trim();
+
+    // Cooldown and concurrency guard
+    const now = Date.now();
+    if (now - lastSendAtRef.current < MIN_COOLDOWN_MS) {
+      return;
+    }
+    if (inflightSendsRef.current >= MAX_CONCURRENT_SENDS) {
+      return;
+    }
+    lastSendAtRef.current = now;
+    inflightSendsRef.current = inflightSendsRef.current + 1;
     
     // Save user message to database before sending
     try {
-      await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: currentSession.id,
-          role: 'user',
-          content: messageContent,
-        }),
+      await apiClient.postMessage(currentSession.id, {
+        role: 'user',
+        content: messageContent,
       });
     } catch (error) {
       logger.error('Failed to save user message', { component: 'ChatInterface', operation: 'saveUserMessage' }, error as Error);

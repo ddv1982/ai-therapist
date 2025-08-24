@@ -61,6 +61,8 @@ import {
   type CBTDraft,
   cbtFormSchema,
 } from '@/store/slices/cbtSlice';
+import { loadCBTDraft } from '@/features/therapy/cbt/hooks/use-cbt-draft-persistence';
+import type { CBTFormInput } from '@/features/therapy/cbt/cbt-form-schema';
 import type {
   SituationData,
   EmotionData,
@@ -237,6 +239,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   const validationState = useSelector(selectCBTValidationState);
   const savedDrafts = useSelector(selectCBTSavedDrafts);
   const lastAutoSave = useSelector((state: RootState) => state.cbt.lastAutoSave);
+  const hasHydratedFromRHF = useRef<boolean>(false);
   
   // Auto-save management
   const autoSaveTimeout = useRef<NodeJS.Timeout>();
@@ -277,6 +280,74 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       dispatch(startCBTSession({ sessionId }));
     }
   }, [sessionId, sessionData.sessionId, dispatch]);
+
+  // Bridge: hydrate Redux session data from RHF localStorage draft (one-time)
+  useEffect(() => {
+    if (hasHydratedFromRHF.current) return;
+    try {
+      const draft = loadCBTDraft() as CBTFormInput | null;
+      if (!draft) return;
+
+      // Minimal guard to avoid clobbering existing populated state
+      const isEmpty = !sessionData.situation && !sessionData.emotions && sessionData.thoughts.length === 0;
+      if (!isEmpty) return;
+
+      // Situation
+      const situationData = { situation: draft.situation, date: draft.date };
+      dispatch(updateSituation(situationData));
+
+      // Emotions (use initial emotions for in-session work)
+      dispatch(updateEmotions(draft.initialEmotions as unknown as EmotionData));
+
+      // Thoughts
+      if (Array.isArray(draft.automaticThoughts) && draft.automaticThoughts.length > 0) {
+        dispatch(updateThoughts(draft.automaticThoughts as unknown as ThoughtData[]));
+      }
+
+      // Core beliefs (convert single text/credibility to array entry if available)
+      if (draft.coreBeliefText && draft.coreBeliefText.trim().length > 0) {
+        dispatch(updateCoreBeliefs([
+          { coreBeliefText: draft.coreBeliefText, coreBeliefCredibility: draft.coreBeliefCredibility }
+        ] as unknown as CoreBeliefData[]));
+      }
+
+      // Challenge questions
+      if (Array.isArray(draft.challengeQuestions)) {
+        dispatch(updateChallengeQuestions(draft.challengeQuestions as unknown as ChallengeQuestionData[]));
+      }
+
+      // Rational thoughts
+      if (Array.isArray(draft.rationalThoughts)) {
+        dispatch(updateRationalThoughts(draft.rationalThoughts as unknown as RationalThoughtData[]));
+      }
+
+      // Schema modes: map from consolidated SchemaMode[] -> SchemaModeData[]
+      if (Array.isArray(draft.schemaModes)) {
+        const mapped = draft.schemaModes.map((m) => ({
+          mode: m.name,
+          description: m.description,
+          intensity: typeof m.intensity === 'number' ? m.intensity : 5,
+          isActive: !!m.selected,
+        }));
+        dispatch(updateSchemaModes(mapped as unknown as SchemaModeData[]));
+      }
+
+      // Action plan (optional)
+      if (draft.newBehaviors || (draft.alternativeResponses && draft.alternativeResponses.length > 0)) {
+        const actionPlan = {
+          finalEmotions: draft.finalEmotions,
+          originalThoughtCredibility: draft.originalThoughtCredibility,
+          newBehaviors: draft.newBehaviors,
+          alternativeResponses: draft.alternativeResponses,
+        } as unknown as ActionPlanData;
+        dispatch(updateActionPlan(actionPlan));
+      }
+
+      hasHydratedFromRHF.current = true;
+    } catch {
+      // ignore hydration errors
+    }
+  }, [dispatch, sessionData]);
   
   // Draft Management Actions
   const draftActions = useMemo(() => ({

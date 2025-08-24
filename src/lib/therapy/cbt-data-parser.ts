@@ -7,19 +7,18 @@
 
 import { logger } from '@/lib/utils/logger';
 import type { ExtractedCBTData } from '@/types/therapy';
-import { 
-  CBTDiaryFormData, 
-  CBTDiaryEmotions,
-  NumericEmotionKeys, 
-  CBTDiaryAutomaticThought, 
-  CBTDiaryRationalThought,
-  CBTDiarySchemaMode,
-  CBTDiaryChallengeQuestion,
-  CBTDiaryAlternativeResponse,
+import {
+  CBTFormData,
+  EmotionData,
+  NumericEmotionKeys,
+  ThoughtData,
+  RationalThoughtData,
+  SchemaMode,
+  ChallengeQuestionData,
   SchemaReflectionData,
   SchemaReflectionCategory,
   ParsedCBTData,
-  DEFAULT_SCHEMA_MODES
+  DEFAULT_SCHEMA_MODES,
 } from '@/types/therapy';
 
 // Re-export for backward compatibility
@@ -611,17 +610,18 @@ export function parseCBTFromMarkdown(content: string): ParsedCBTData {
     const schemaData = extractSchemaAnalysisFromMarkdown(content);
     result.formData.coreBeliefText = schemaData.coreBeliefText;
     result.formData.coreBeliefCredibility = schemaData.coreBeliefCredibility;
-    result.formData.confirmingBehaviors = schemaData.confirmingBehaviors;
-    result.formData.avoidantBehaviors = schemaData.avoidantBehaviors;
-    result.formData.overridingBehaviors = schemaData.overridingBehaviors;
+    const formExt = result.formData as ExtendedForm;
+    formExt.confirmingBehaviors = schemaData.confirmingBehaviors;
+    formExt.avoidantBehaviors = schemaData.avoidantBehaviors;
+    formExt.overridingBehaviors = schemaData.overridingBehaviors;
     result.formData.schemaModes = extractSchemaModesFromMarkdown(content);
 
     // Extract schema reflection
-    result.formData.schemaReflection = extractSchemaReflectionFromMarkdown(content);
+    (result.formData as ExtendedForm).schemaReflection = extractSchemaReflectionFromMarkdown(content);
 
     // Extract challenge questions
     result.formData.challengeQuestions = extractChallengeQuestionsFromMarkdown(content);
-    result.formData.additionalQuestions = extractAdditionalQuestionsFromMarkdown(content);
+    (result.formData as ExtendedForm).additionalQuestions = extractAdditionalQuestionsFromMarkdown(content);
 
     // Extract final data
     result.formData.originalThoughtCredibility = extractOriginalThoughtCredibilityFromMarkdown(content);
@@ -642,7 +642,15 @@ export function parseCBTFromMarkdown(content: string): ParsedCBTData {
   return result;
 }
 
-function createEmptyFormData(): CBTDiaryFormData {
+type ExtendedForm = CBTFormData & {
+  confirmingBehaviors?: string;
+  avoidantBehaviors?: string;
+  overridingBehaviors?: string;
+  schemaReflection?: SchemaReflectionData;
+  additionalQuestions?: ChallengeQuestionData[];
+};
+
+function createEmptyFormData(): ExtendedForm {
   return {
     date: new Date().toISOString().split('T')[0],
     situation: '',
@@ -650,21 +658,12 @@ function createEmptyFormData(): CBTDiaryFormData {
     automaticThoughts: [],
     coreBeliefText: '',
     coreBeliefCredibility: 0,
-    confirmingBehaviors: '',
-    avoidantBehaviors: '',
-    overridingBehaviors: '',
     schemaModes: DEFAULT_SCHEMA_MODES.map(mode => ({ ...mode, selected: false })),
-    schemaReflection: {
-      enabled: false,
-      questions: [],
-      selfAssessment: ''
-    },
     challengeQuestions: [
       { question: '', answer: '' },
       { question: '', answer: '' },
       { question: '', answer: '' }
     ],
-    additionalQuestions: [],
     rationalThoughts: [],
     finalEmotions: createEmptyEmotions(),
     originalThoughtCredibility: 0,
@@ -673,7 +672,7 @@ function createEmptyFormData(): CBTDiaryFormData {
   };
 }
 
-function createEmptyEmotions(): CBTDiaryEmotions {
+function createEmptyEmotions(): EmotionData {
   return {
     fear: 0,
     anger: 0,
@@ -725,7 +724,7 @@ function extractSituationFromMarkdown(content: string): string {
   return '';
 }
 
-function extractEmotionsFromMarkdown(content: string, type: 'initial' | 'final'): CBTDiaryEmotions | null {
+function extractEmotionsFromMarkdown(content: string, type: 'initial' | 'final'): EmotionData | null {
   const sectionPatterns = type === 'initial' 
     ? [/##\s*💭\s*(Emotional\s+Landscape|Initial\s+Emotions)[\s\S]+?(?=\n##|\n---|$)/i]
     : [/###?\s*(Updated\s+Feelings|Final\s+Emotions)[\s\S]+?(?=\n##|\n---|$)/i];
@@ -776,8 +775,8 @@ function extractEmotionsFromMarkdown(content: string, type: 'initial' | 'final')
   return null;
 }
 
-function extractAutomaticThoughtsFromMarkdown(content: string): CBTDiaryAutomaticThought[] {
-  const thoughts: CBTDiaryAutomaticThought[] = [];
+function extractAutomaticThoughtsFromMarkdown(content: string): ThoughtData[] {
+  const thoughts: ThoughtData[] = [];
   
   // Look for section with automatic thoughts
   const sectionMatch = content.match(/##\s*🧠\s*Automatic\s+Thoughts[\s\S]+?(?=\n##|\n---|$)/i);
@@ -802,8 +801,8 @@ function extractAutomaticThoughtsFromMarkdown(content: string): CBTDiaryAutomati
   return thoughts;
 }
 
-function extractRationalThoughtsFromMarkdown(content: string): CBTDiaryRationalThought[] {
-  const thoughts: CBTDiaryRationalThought[] = [];
+function extractRationalThoughtsFromMarkdown(content: string): RationalThoughtData[] {
+  const thoughts: RationalThoughtData[] = [];
   
   // Look for rational thoughts section
   const sectionMatch = content.match(/##\s*🔄?\s*Rational\s+Thoughts[\s\S]+?(?=\n##|\n---|$)/i);
@@ -880,7 +879,7 @@ function extractSchemaAnalysisFromMarkdown(content: string): {
   return result;
 }
 
-function extractSchemaModesFromMarkdown(content: string): CBTDiarySchemaMode[] {
+function extractSchemaModesFromMarkdown(content: string): SchemaMode[] {
   const modes = DEFAULT_SCHEMA_MODES.map(mode => ({ ...mode, selected: false }));
   
   // Find active schema modes section
@@ -959,8 +958,8 @@ function extractSchemaReflectionFromMarkdown(content: string): SchemaReflectionD
   return reflection;
 }
 
-function extractChallengeQuestionsFromMarkdown(content: string): CBTDiaryChallengeQuestion[] {
-  const questions: CBTDiaryChallengeQuestion[] = [];
+function extractChallengeQuestionsFromMarkdown(content: string): ChallengeQuestionData[] {
+  const questions: ChallengeQuestionData[] = [];
   
   // Find challenge questions table
   const tableMatch = content.match(/##\s*Challenge\s+Questions[\s\S]*?\|[^|]+\|[^|]+\|([\s\S]*?)(?=\n##|\n---|$)/i);
@@ -989,8 +988,8 @@ function extractChallengeQuestionsFromMarkdown(content: string): CBTDiaryChallen
   return questions;
 }
 
-function extractAdditionalQuestionsFromMarkdown(content: string): CBTDiaryChallengeQuestion[] {
-  const questions: CBTDiaryChallengeQuestion[] = [];
+function extractAdditionalQuestionsFromMarkdown(content: string): ChallengeQuestionData[] {
+  const questions: ChallengeQuestionData[] = [];
   
   // Find additional questions table
   const tableMatch = content.match(/###\s*Additional\s+Questions[\s\S]*?\|[^|]+\|[^|]+\|([\s\S]*?)(?=\n##|\n---|$)/i);
@@ -1040,8 +1039,8 @@ function extractNewBehaviorsFromMarkdown(content: string): string {
   return '';
 }
 
-function extractAlternativeResponsesFromMarkdown(content: string): CBTDiaryAlternativeResponse[] {
-  const responses: CBTDiaryAlternativeResponse[] = [];
+function extractAlternativeResponsesFromMarkdown(content: string): Array<{ response: string }> {
+  const responses: Array<{ response: string }> = [];
   
   // Find alternative responses section
   const sectionMatch = content.match(/###\s*Alternative\s+Responses[\s\S]+?(?=\n##|\n---|$)/i);
@@ -1065,7 +1064,7 @@ function extractAlternativeResponsesFromMarkdown(content: string): CBTDiaryAlter
   return responses;
 }
 
-function validateParsedDataFromMarkdown(formData: CBTDiaryFormData): { isComplete: boolean; missingFields: string[] } {
+function validateParsedDataFromMarkdown(formData: CBTFormData): { isComplete: boolean; missingFields: string[] } {
   const missingFields: string[] = [];
   
   if (!formData.situation.trim()) {

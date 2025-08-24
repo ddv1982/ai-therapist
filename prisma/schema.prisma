@@ -37,6 +37,7 @@ model Session {
   reports  SessionReport[]
 
   @@map("sessions")
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 model Message {
@@ -51,6 +52,7 @@ model Message {
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@map("messages")
+  @@index([sessionId, timestamp(sort: Asc)])
 }
 
 model SessionReport {

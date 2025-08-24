@@ -31,6 +31,12 @@ import { MemoryManagementModal } from '@/features/therapy/memory/memory-manageme
 import { therapeuticInteractive, getTherapeuticIconButton } from '@/lib/ui/design-tokens';
 import { useChatMessages } from '@/hooks/use-chat-messages';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
+import { apiClient } from '@/lib/api/client';
+import type { components } from '@/types/api.generated';
+import { getApiData } from '@/lib/api/api-response';
+
+type ListSessionsResponse = import('@/lib/api/api-response').ApiResponse<components['schemas']['Session'][]>;
+type CreateSessionResponse = import('@/lib/api/api-response').ApiResponse<components['schemas']['Session']>;
 
 // Using MessageData from the new message system
 type Message = MessageData;
@@ -128,15 +134,17 @@ function ChatPageContent() {
   // Load sessions from database on component mount (memoized)
   const loadSessions = useCallback(async () => {
     try {
-      const response = await fetch('/api/sessions');
-      if (response.ok) {
-        const sessionsData = await response.json();
-        // Handle new standardized API response format
-        const sessions = sessionsData.success ? (sessionsData.data || []) : sessionsData;
-        setSessions(Array.isArray(sessions) ? sessions : []);
-      } else {
-        throw new Error(`Failed to load sessions: ${response.status}`);
-      }
+      const sessionsData: ListSessionsResponse = await apiClient.listSessions();
+      const sessions = getApiData(sessionsData);
+      // Map API date strings to UI Session type (which expects Date)
+      const uiSessions: Session[] = (sessions || []).map((s) => ({
+        ...s,
+        startedAt: s.startedAt ? new Date(s.startedAt as unknown as string) : undefined,
+        endedAt: s.endedAt ? new Date(s.endedAt as unknown as string) : undefined,
+        createdAt: s.createdAt ? new Date(s.createdAt as unknown as string) : undefined,
+        updatedAt: s.updatedAt ? new Date(s.updatedAt as unknown as string) : undefined,
+      })) as unknown as Session[];
+      setSessions(uiSessions);
     } catch (error) {
       logger.error('Failed to load chat sessions', {
         component: 'ChatPage', 
@@ -181,13 +189,12 @@ function ChatPageContent() {
   // Save message to database (memoized)
   const saveMessage = useCallback(async (sessionId: string, role: 'user' | 'assistant', content: string, modelUsed?: string) => {
     try {
-      const response = await fetch('/api/messages', {
+      const response = await fetch(`/api/sessions/${sessionId}/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sessionId,
           role,
           content,
           modelUsed,
@@ -364,13 +371,7 @@ function ChatPageContent() {
   const setCurrentSessionAndSync = useCallback(async (sessionId: string) => {
     try {
       // Update the backend to mark this as the current session
-      await fetch('/api/sessions/current', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ sessionId }),
-      });
+      await fetch('/api/sessions/current', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) });
       
       setCurrentSession(sessionId);
       localStorage.setItem('currentSessionId', sessionId);
@@ -399,11 +400,8 @@ function ChatPageContent() {
 
   const deleteSession = async (sessionId: string) => {
     try {
-      const response = await fetch(`/api/sessions/${sessionId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
+      const resp = await apiClient.deleteSession(sessionId);
+      if (resp) {
         setSessions(prev => prev.filter(session => session.id !== sessionId));
         if (currentSession === sessionId) {
           setCurrentSession(null);
@@ -414,8 +412,7 @@ function ChatPageContent() {
         logger.error('Failed to delete session', {
           component: 'ChatPage',
           operation: 'deleteSession',
-          sessionId,
-          status: response.status
+          sessionId
         });
       }
     } catch (error) {
@@ -437,20 +434,16 @@ function ChatPageContent() {
     if (!sessionId) {
       try {
         const title = input.slice(0, 50) + (input.length > 50 ? '...' : '');
-        const response = await fetch('/api/sessions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            title: title
-          }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          // Handle new standardized API response format
-          const newSession = result.success ? result.data : result;
+        const result: CreateSessionResponse = await apiClient.createSession({ title });
+        const created = getApiData(result);
+        const newSession: Session = {
+          ...created,
+          startedAt: created.startedAt ? new Date(created.startedAt as unknown as string) : undefined,
+          endedAt: created.endedAt ? new Date(created.endedAt as unknown as string) : undefined,
+          createdAt: created.createdAt ? new Date(created.createdAt as unknown as string) : undefined,
+          updatedAt: created.updatedAt ? new Date(created.updatedAt as unknown as string) : undefined,
+        } as unknown as Session;
+        if (newSession) {
           setSessions(prev => [newSession, ...prev]);
           
           // Set as current session and sync across devices
@@ -461,7 +454,7 @@ function ChatPageContent() {
           component: 'ChatPage',
           operation: 'sendMessage',
           title: title,
-          status: response.status
+          status: 500
         });
           return;
         }
@@ -643,20 +636,13 @@ function ChatPageContent() {
 
     setIsGeneratingReport(true);
     try {
-      const response = await fetch('/api/reports/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sessionId: currentSession,
-          messages: messages.filter(msg => !msg.content.startsWith('📊 **Session Report**')), // Exclude previous reports
-          model: 'openai/gpt-oss-120b'
-        }),
+      const result = await apiClient.generateReportDetailed({
+        sessionId: currentSession,
+        messages: messages.filter(msg => !msg.content.startsWith('📊 **Session Report**')).map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp.toISOString?.() })),
+        model: 'openai/gpt-oss-120b',
       });
 
-      if (response.ok) {
-        const result = await response.json();
+      if (result) {
         
         // Add the report content to the current chat
         if (result.reportContent && currentSession) {
@@ -691,13 +677,13 @@ function ChatPageContent() {
           message: 'Session report has been added to this chat!'
         });
       } else {
-        const error = await response.json();
+        const error: { error?: string } = (result as { error?: string }) || { error: 'Unknown error' };
         logger.error('Session report generation failed', {
           component: 'ChatPage',
           operation: 'generateReport',
           sessionId: currentSession,
           messageCount: messages.length,
-          status: response.status,
+          status: 500,
           error: error
         });
         

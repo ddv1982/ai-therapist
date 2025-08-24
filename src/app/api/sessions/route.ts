@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/database/db';
 import { createSessionSchema } from '@/lib/utils/validation';
 import { logger } from '@/lib/utils/logger';
-import { withValidation, withAuth, db, errorHandlers } from '@/lib/api/api-middleware';
+import { withValidation, withAuth, errorHandlers } from '@/lib/api/api-middleware';
+import { ensureUserExists, getUserSessions } from '@/lib/database/queries';
 import { createSuccessResponse } from '@/lib/api/api-response';
 
 export const POST = withValidation(
@@ -11,7 +12,7 @@ export const POST = withValidation(
       const { title } = validatedData;
 
       // Ensure user exists in database
-      const userExists = await db.ensureUserExists(context.userInfo);
+      const userExists = await ensureUserExists(context.userInfo);
       if (!userExists) {
         throw new Error('Failed to ensure user exists');
       }
@@ -45,7 +46,7 @@ export const GET = withAuth(async (_request, context) => {
   try {
     logger.debug('Fetching sessions', context);
 
-    const sessions = await db.getUserSessions(context.userInfo.userId);
+    const sessions = await getUserSessions(context.userInfo.userId);
 
     logger.info('Sessions fetched successfully', {
       requestId: context.requestId,

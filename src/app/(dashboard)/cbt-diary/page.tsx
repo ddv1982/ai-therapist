@@ -15,6 +15,9 @@ import { logger } from '@/lib/utils/logger';
 import type { MessageData } from '@/features/chat/messages/message';
 import { useCBTChatExperience } from '@/features/therapy/cbt/hooks/use-cbt-chat-experience';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
+import { CBTForm } from '@/features/therapy/cbt/cbt-form';
+import { loadCBTDraft, clearCBTDraft } from '@/features/therapy/cbt/hooks/use-cbt-draft-persistence';
+import type { CBTFormInput } from '@/features/therapy/cbt/cbt-form-schema';
 import { getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
 import type { 
   SituationData, 
@@ -28,9 +31,14 @@ import type {
 } from '@/types/therapy';
 import { REPORT_GENERATION_PROMPT } from '@/lib/therapy/therapy-prompts';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { startCBTSession as startReduxCBTSession } from '@/store/slices/cbtSlice';
+import { startCBTSession as startReduxCBTSession, updateSituation as updateReduxSituation, updateEmotions as updateReduxEmotions } from '@/store/slices/cbtSlice';
 import { useChatMessages } from '@/hooks/use-chat-messages';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
+import { apiClient } from '@/lib/api/client';
+import type { components } from '@/types/api.generated';
+import { getApiData, type ApiResponse } from '@/lib/api/api-response';
+
+type PostMessageResponse = ApiResponse<components['schemas']['Message']>;
 
 // Using MessageData from the message system
 type Message = MessageData;
@@ -49,11 +57,12 @@ function CBTDiaryPageContent() {
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Use CBT data manager hook for draft management
-  const {
-    status: dataManagerStatus,
-    draftActions
-  } = useCBTDataManager();
+  // Use CBT data manager hook for draft management (transition phase)
+  const { status: dataManagerStatus, draftActions } = useCBTDataManager();
+
+  // Load persisted draft for RHF form (non-disruptive)
+  const persistedDraft = React.useMemo(() => loadCBTDraft(), []);
+  const sessionBootstrappedRef = useRef<boolean>(false);
   
   // CBT Chat Flow
   const {
@@ -122,6 +131,7 @@ function CBTDiaryPageContent() {
   const handleStartFresh = useCallback(async () => {
     // Use unified CBT action to reset everything
     draftActions.reset();
+    clearCBTDraft();
     
     showToast({
       type: 'info',
@@ -514,35 +524,12 @@ function CBTDiaryPageContent() {
       setIsStreaming(false);
 
       // Save CBT summary to chat
-      const summaryResponse = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          role: 'user',
-          content: cbtSummary
-        }),
-      });
-
-      if (!summaryResponse.ok) {
-        throw new Error('Failed to save CBT summary to chat');
-      }
+      const summaryResponse: PostMessageResponse = await apiClient.postMessage(sessionId, { role: 'user', content: cbtSummary });
+      getApiData(summaryResponse);
 
       // Save therapeutic analysis to chat
-      const analysisMessageResponse = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          role: 'assistant',
-          content: therapeuticAnalysis,
-          modelUsed: 'openai/gpt-oss-120b'
-        }),
-      });
-
-      if (!analysisMessageResponse.ok) {
-        throw new Error('Failed to save therapeutic analysis to chat');
-      }
+      const analysisMessageResponse: PostMessageResponse = await apiClient.postMessage(sessionId, { role: 'assistant', content: therapeuticAnalysis, modelUsed: 'openai/gpt-oss-120b' });
+      getApiData(analysisMessageResponse);
 
       // Clear CBT session since it's complete - use unified CBT action
       draftActions.reset();
@@ -840,6 +827,32 @@ Your completed CBT session data has been processed and formatted for optimal rev
                 onCBTSendToChat={handleSendToChat}
                 onCBTActionComplete={handleCBTActionComplete}
               />
+              {/* New RHF-based quick form to capture situation + emotions early and persist */}
+              <div className="mt-6">
+                <CBTForm 
+                  defaultValues={persistedDraft || undefined}
+                  onDraftChange={(data: CBTFormInput) => {
+                    // Optionally reflect to Redux for live UI updates (situation & emotions)
+                    try {
+                      if (!reduxSessionId && !sessionBootstrappedRef.current) {
+                        dispatch(startReduxCBTSession({ sessionId: `session-${generateUUID()}` }));
+                        sessionBootstrappedRef.current = true;
+                      }
+                      // Keep legacy UI in sync for the early steps
+                      dispatch(updateReduxSituation({ situation: data.situation, date: data.date }));
+                      // Map initial emotions into Redux session emotions
+                      dispatch(updateReduxEmotions(data.initialEmotions as unknown as EmotionData));
+                    } catch {}
+                  }}
+                  onSubmit={(data: CBTFormInput) => {
+                    try {
+                      // eslint-disable-next-line no-undef
+                      localStorage.setItem('cbt-draft', JSON.stringify(data));
+                    } catch {}
+                    showToast({ type: 'success', title: 'Draft Saved', message: 'Your CBT draft has been saved.' });
+                  }} 
+                />
+              </div>
             </div>
           )}
           

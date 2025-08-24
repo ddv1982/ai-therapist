@@ -64,6 +64,11 @@ paths:
       responses:
         200:
           description: Streaming chat response
+          headers:
+            X-Request-Id:
+              description: Correlation ID for tracing this request
+              schema:
+                type: string
           content:
             text/event-stream:
               schema:
@@ -92,6 +97,11 @@ paths:
       responses:
         200:
           description: List of sessions
+          headers:
+            X-Request-Id:
+              description: Correlation ID for tracing this request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -120,6 +130,11 @@ paths:
       responses:
         200:
           description: Created session
+          headers:
+            X-Request-Id:
+              description: Correlation ID for tracing this request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -147,6 +162,11 @@ paths:
       responses:
         200:
           description: Session deleted successfully
+          headers:
+            X-Request-Id:
+              description: Correlation ID for tracing this request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -160,6 +180,11 @@ paths:
                     example: "Session deleted successfully"
         404:
           description: Session not found
+          headers:
+            X-Request-Id:
+              description: Correlation ID for tracing this request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -167,21 +192,117 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /messages:
+  /sessions/{sessionId}/messages:
+    get:
+      summary: List messages for a session
+      description: Retrieves messages for the specified session with pagination
+      tags:
+        - Messages
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID of the session
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (default 1)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Page size (default 50, max 100)
+      responses:
+        200:
+          description: Paginated list of messages
+          headers:
+            X-Request-Id:
+              description: Correlation ID for tracing this request
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Message'
+                      pagination:
+                        type: object
+                        properties:
+                          page:
+                            type: integer
+                          limit:
+                            type: integer
+                          total:
+                            type: integer
+                          totalPages:
+                            type: integer
+                          hasNext:
+                            type: boolean
+                          hasPrev:
+                            type: boolean
+        400:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
     post:
-      summary: Save a message to database
+      summary: Save a message to a session
       description: Saves a user or assistant message to the specified session
       tags:
         - Messages
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID of the session
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Message'
+              $ref: '#/components/schemas/NewMessage'
+            examples:
+              user_message:
+                summary: User message
+                value:
+                  role: user
+                  content: "I'm feeling anxious about work"
+              assistant_message:
+                summary: Assistant message
+                value:
+                  role: assistant
+                  content: "I hear you. Let's explore that together."
+                  modelUsed: "openai/gpt-oss-20b"
       responses:
         200:
           description: Message saved successfully
+          headers:
+            X-Request-Id:
+              description: Correlation ID for tracing this request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -233,6 +354,11 @@ paths:
       responses:
         200:
           description: Generated report
+          headers:
+            X-Request-Id:
+              description: Correlation ID for tracing this request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -286,6 +412,11 @@ paths:
       responses:
         200:
           description: Report sent successfully
+          headers:
+            X-Request-Id:
+              description: Correlation ID for tracing this request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -313,6 +444,11 @@ paths:
       responses:
         200:
           description: List of available models
+          headers:
+            X-Request-Id:
+              description: Correlation ID for tracing this request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -351,6 +487,11 @@ paths:
       responses:
         200:
           description: Environment status
+          headers:
+            X-Request-Id:
+              description: Correlation ID for tracing this request
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -377,7 +518,6 @@ components:
       required:
         - role
         - content
-        - sessionId
       properties:
         id:
           type: string
@@ -394,10 +534,6 @@ components:
           maxLength: 50000
           description: The message content
           example: "I'm struggling with anxiety and need some guidance"
-        sessionId:
-          type: string
-          format: uuid
-          description: UUID of the session this message belongs to
         timestamp:
           type: string
           format: date-time
@@ -406,6 +542,26 @@ components:
           type: string
           format: date-time
           description: Database creation timestamp
+
+    NewMessage:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+          description: The role of the message sender
+        content:
+          type: string
+          minLength: 1
+          maxLength: 50000
+          description: The message content
+        modelUsed:
+          type: string
+          maxLength: 100
+          description: Optional model identifier used for assistant messages
 
     Session:
       type: object
@@ -665,6 +821,11 @@ components:
   responses:
     BadRequest:
       description: Bad request - invalid input
+      headers:
+        X-Request-Id:
+          description: Correlation ID for tracing this request
+          schema:
+            type: string
       content:
         application/json:
           schema:
@@ -685,6 +846,11 @@ components:
 
     InternalServerError:
       description: Internal server error
+      headers:
+        X-Request-Id:
+          description: Correlation ID for tracing this request
+          schema:
+            type: string
       content:
         application/json:
           schema:

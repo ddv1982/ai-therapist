@@ -22,6 +22,7 @@ import {
   generateCBTSessionSummary,
   generateEmotionComparison
 } from './cbt-data-manager';
+import { apiClient } from '@/lib/api/client';
 import type { 
   EmotionData,
   CoreBeliefData,
@@ -47,17 +48,7 @@ export function useCBTChatBridge() {
     }
 
     try {
-      // Send message to chat API
-      await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          role: 'user',
-          content: content,
-          source: 'cbt-diary' // Tag to identify CBT-generated messages
-        }),
-      });
+      await apiClient.postMessage(sessionId, { role: 'user', content });
 
       return true;
     } catch (error) {

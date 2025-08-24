@@ -1,5 +1,53 @@
 import '@testing-library/jest-dom'
 
+// Polyfill getComputedStyle to avoid jsdom "Not implemented" when a pseudo-element argument is provided
+if (typeof window !== 'undefined' && typeof window.getComputedStyle === 'function') {
+  const __originalGetComputedStyle = window.getComputedStyle.bind(window);
+  Object.defineProperty(window, 'getComputedStyle', {
+    value: (elt) => {
+      try {
+        // Ignore the second pseudoElt argument to prevent jsdom from throwing
+        return __originalGetComputedStyle(elt);
+      } catch {
+        return {
+          getPropertyValue: () => '',
+          display: 'block',
+          visibility: 'visible',
+          opacity: '1',
+          content: 'none',
+        };
+      }
+    },
+    writable: true,
+    configurable: true,
+  });
+}
+
+// Ensure Zod v4 compatibility with @hookform/resolvers by mocking the resolver
+jest.mock('@hookform/resolvers/zod', () => {
+  return {
+    zodResolver: (schema, _schemaOptions, resolverOptions) => {
+      return async (values, _ctx, options) => {
+        try {
+          const parsed = await (schema.parseAsync ? schema.parseAsync(values) : schema.parse(values));
+          if (options && options.shouldUseNativeValidation) {
+            // no-op in tests
+          }
+          return { values: resolverOptions && resolverOptions.raw ? values : parsed, errors: {} };
+        } catch (e) {
+          const issues = (e && (e.issues || e.errors)) || [];
+          const errors = {};
+          for (const issue of issues) {
+            const path = Array.isArray(issue.path) ? issue.path.join('.') : String(issue.path || '');
+            if (!errors[path]) errors[path] = { message: issue.message, type: issue.code };
+          }
+          return { values: {}, errors };
+        }
+      };
+    },
+  };
+});
+
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter() {
@@ -241,4 +289,15 @@ global.console = {
   ...console,
   warn: jest.fn(),
   error: jest.fn(),
+}
+
+// Polyfill ResizeObserver for components that rely on it (e.g., Radix UI)
+if (typeof global.ResizeObserver === 'undefined') {
+  class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  // @ts-ignore
+  global.ResizeObserver = ResizeObserver;
 }

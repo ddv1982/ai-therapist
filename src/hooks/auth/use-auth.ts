@@ -88,15 +88,20 @@ export function useAuth(): AuthStatus {
       const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
       
       if (response.ok) {
-        const data = await response.json();
+        const raw = await response.json();
+        // Support both standardized { success, data } and legacy direct shape
+        const payload = (raw && typeof raw === 'object' && 'success' in raw)
+          ? (raw.success ? (raw.data ?? {}) : {})
+          : raw;
+
         const newStatus: AuthStatus = {
-          isAuthenticated: data.isAuthenticated,
-          needsSetup: data.needsSetup,
-          needsVerification: data.needsVerification,
+          isAuthenticated: Boolean(payload?.isAuthenticated),
+          needsSetup: Boolean(payload?.needsSetup),
+          needsVerification: Boolean(payload?.needsVerification),
           isLoading: false,
-          deviceName: data.device?.name,
+          deviceName: payload?.device?.name,
         };
-        
+
         // Update cache
         authCache = { status: newStatus, timestamp: now };
         setAuthStatus(newStatus);

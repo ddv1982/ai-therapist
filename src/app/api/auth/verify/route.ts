@@ -1,12 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { verifyTOTPToken, verifyBackupCode, isTOTPSetup, getTOTPDiagnostics } from '@/lib/auth/totp-service';
 import { getOrCreateDevice, createAuthSession } from '@/lib/auth/device-fingerprint';
 import { getClientIP } from '@/lib/auth/auth-middleware';
 import { generateSecureRandomString } from '@/lib/utils/utils';
 import { devLog, logger, createRequestLogger } from '@/lib/utils/logger';
+import { withAuthAndRateLimit } from '@/lib/api/api-middleware';
+import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // POST /api/auth/verify - Verify TOTP token or backup code
-export async function POST(request: NextRequest) {
+export const POST = withAuthAndRateLimit(async (request: NextRequest) => {
   const requestId = generateSecureRandomString(8, 'abcdefghijklmnopqrstuvwxyz0123456789');
   const startTime = Date.now();
   
@@ -41,7 +43,7 @@ export async function POST(request: NextRequest) {
     if (!token) {
       devLog(`[${requestId}] ❌ ERROR: No token provided`);
       devLog(`=== AUTH REQUEST END [${requestId}] FAILED ===\n`);
-      return NextResponse.json({ error: 'Token is required' }, { status: 400 });
+      return createErrorResponse('Token is required', 400);
     }
 
     // Check if TOTP is set up
@@ -49,7 +51,7 @@ export async function POST(request: NextRequest) {
     if (!isSetup) {
       devLog(`[${requestId}] ❌ ERROR: TOTP not configured`);
       devLog(`=== AUTH REQUEST END [${requestId}] FAILED ===\n`);
-      return NextResponse.json({ error: 'TOTP not configured' }, { status: 400 });
+      return createErrorResponse('TOTP not configured', 400);
     }
 
     let isValid = false;
@@ -88,14 +90,7 @@ export async function POST(request: NextRequest) {
       }
       
       devLog(`=== AUTH REQUEST END [${requestId}] FAILED ===\n`);
-      return NextResponse.json({ 
-        error: 'Invalid token',
-        debug: {
-          requestId,
-          isMobile,
-          processingTime: duration
-        }
-      }, { status: 401 });
+      return createErrorResponse('Invalid token', 401, { requestId });
     }
 
     const duration = Date.now() - startTime;
@@ -117,16 +112,11 @@ export async function POST(request: NextRequest) {
     devLog(`=== AUTH REQUEST END [${requestId}] SUCCESS ===\n`);
 
     // Return success with authentication (no redirect, let frontend handle it)
-    const response = NextResponse.json({ 
-      success: true,
+    const response = createSuccessResponse({ 
+      authenticated: true,
       redirectUrl: '/',
-      debug: {
-        requestId,
-        isMobile,
-        sessionCreated: true,
-        deviceName: device.name
-      }
-    });
+      deviceName: device.name
+    }, { requestId });
     
     // Set the authentication cookie
     response.cookies.set('auth-session-token', session.sessionToken, {
@@ -147,13 +137,6 @@ export async function POST(request: NextRequest) {
     });
     devLog(`=== AUTH REQUEST END [${requestId}] ERROR ===\n`);
     
-    return NextResponse.json({ 
-      error: 'Verification failed',
-      debug: {
-        requestId,
-        processingTime: duration,
-        errorMessage: error instanceof Error ? error.message : String(error)
-      }
-    }, { status: 500 });
+    return createErrorResponse('Verification failed', 500, { requestId });
   }
-}
+});

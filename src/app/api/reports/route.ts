@@ -1,34 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { generateSessionReport } from '@/lib/api/groq-client';
 import { REPORT_GENERATION_PROMPT } from '@/lib/therapy/therapy-prompts';
 import { prisma } from '@/lib/database/db';
-import { logger, createRequestLogger } from '@/lib/utils/logger';
+import { logger } from '@/lib/utils/logger';
 import type { Message } from '@/types';
+import { withAuthAndRateLimit } from '@/lib/api/api-middleware';
+import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
-export async function POST(request: NextRequest) {
+export const POST = withAuthAndRateLimit(async (request: NextRequest, context) => {
   try {
     const { sessionId, messages }: { sessionId: string; messages: Message[] } = await request.json();
 
     if (!sessionId || !messages?.length) {
-      return NextResponse.json(
-        { error: 'Session ID and messages are required' },
-        { status: 400 }
-      );
+      return createErrorResponse('Session ID and messages are required', 400, {
+        requestId: context.requestId,
+        code: 'VALIDATION_ERROR',
+        details: 'Missing sessionId or messages'
+      });
     }
 
-    // Generate report using Groq
     const reportContent = await generateSessionReport(messages, REPORT_GENERATION_PROMPT, 'openai/gpt-oss-120b');
 
     if (!reportContent) {
       throw new Error('Failed to generate report content');
     }
 
-    // Parse the JSON response from the AI
     let reportData;
     try {
       reportData = JSON.parse(reportContent);
     } catch (error) {
-      logger.error('Failed to parse report JSON', createRequestLogger(request), error as Error);
+      logger.error('Failed to parse report JSON', { ...context }, error as Error);
       // Fallback to basic report structure
       reportData = {
         keyPoints: ['Session completed successfully'],
@@ -40,11 +41,10 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // Save report to database
     const report = await prisma.sessionReport.create({
       data: {
         sessionId,
-        reportContent: 'Legacy report created via API', // Default content for legacy reports
+        reportContent: 'Legacy report created via API',
         keyPoints: reportData.keyPoints || [],
         therapeuticInsights: reportData.therapeuticInsights || [],
         patternsIdentified: reportData.patternsIdentified || [],
@@ -54,17 +54,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(report);
+    return createSuccessResponse(report, { requestId: context.requestId });
   } catch (error) {
-    logger.apiError('/api/reports', error as Error, createRequestLogger(request));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    logger.apiError('/api/reports', error as Error, { ...context });
+    return createErrorResponse('Internal server error', 500, { requestId: context.requestId });
   }
-}
+});
 
-export async function GET(request: NextRequest) {
+export const GET = withAuthAndRateLimit(async (_request: NextRequest, context) => {
   try {
     const reports = await prisma.sessionReport.findMany({
       include: {
@@ -80,12 +77,9 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json(reports);
+    return createSuccessResponse(reports, { requestId: context.requestId });
   } catch (error) {
-    logger.apiError('/api/reports', error as Error, createRequestLogger(request));
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    logger.apiError('/api/reports', error as Error, { ...context });
+    return createErrorResponse('Internal server error', 500, { requestId: context.requestId });
   }
-}
+});

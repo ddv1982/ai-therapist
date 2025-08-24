@@ -1,21 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getTrustedDevices, revokeDeviceTrust } from '@/lib/auth/device-fingerprint';
 import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
 import { regenerateBackupCodes, getUnusedBackupCodesCount } from '@/lib/auth/totp-service';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
+import { withAuthAndRateLimit } from '@/lib/api/api-middleware';
+import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // GET /api/auth/devices - Get trusted devices and backup codes info
-export async function GET(request: NextRequest) {
+export const GET = withAuthAndRateLimit(async (request: NextRequest) => {
   try {
     // Verify authentication
     const sessionToken = request.cookies.get('auth-session-token')?.value;
     if (!sessionToken) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return createErrorResponse('Not authenticated', 401);
     }
 
     const deviceInfo = await verifyAuthSession(sessionToken);
     if (!deviceInfo) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+      return createErrorResponse('Invalid session', 401);
     }
 
     // Get trusted devices
@@ -24,67 +26,67 @@ export async function GET(request: NextRequest) {
     // Get backup codes info
     const unusedBackupCodes = await getUnusedBackupCodesCount();
 
-    return NextResponse.json({
+    return createSuccessResponse({
       devices,
       backupCodesCount: unusedBackupCodes,
     });
   } catch (error) {
     logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
-    return NextResponse.json({ error: 'Failed to get devices' }, { status: 500 });
+    return createErrorResponse('Failed to get devices', 500);
   }
-}
+});
 
 // DELETE /api/auth/devices - Revoke device trust
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuthAndRateLimit(async (request: NextRequest) => {
   try {
     // Verify authentication
     const sessionToken = request.cookies.get('auth-session-token')?.value;
     if (!sessionToken) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return createErrorResponse('Not authenticated', 401);
     }
 
     const deviceInfo = await verifyAuthSession(sessionToken);
     if (!deviceInfo) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+      return createErrorResponse('Invalid session', 401);
     }
 
     const body = await request.json();
     const { deviceId } = body;
 
     if (!deviceId) {
-      return NextResponse.json({ error: 'Device ID is required' }, { status: 400 });
+      return createErrorResponse('Device ID is required', 400);
     }
 
     // Don't allow revoking the current device
     if (deviceId === deviceInfo.deviceId) {
-      return NextResponse.json({ error: 'Cannot revoke current device' }, { status: 400 });
+      return createErrorResponse('Cannot revoke current device', 400);
     }
 
     const success = await revokeDeviceTrust(deviceId);
     
     if (!success) {
-      return NextResponse.json({ error: 'Device not found' }, { status: 404 });
+      return createErrorResponse('Device not found', 404);
     }
 
-    return NextResponse.json({ success: true });
+    return createSuccessResponse({ success: true });
   } catch (error) {
     logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
-    return NextResponse.json({ error: 'Failed to revoke device' }, { status: 500 });
+    return createErrorResponse('Failed to revoke device', 500);
   }
-}
+});
 
 // POST /api/auth/devices/regenerate-backup-codes - Regenerate backup codes
-export async function POST(request: NextRequest) {
+export const POST = withAuthAndRateLimit(async (request: NextRequest) => {
   try {
     // Verify authentication
     const sessionToken = request.cookies.get('auth-session-token')?.value;
     if (!sessionToken) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      return createErrorResponse('Not authenticated', 401);
     }
 
     const deviceInfo = await verifyAuthSession(sessionToken);
     if (!deviceInfo) {
-      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+      return createErrorResponse('Invalid session', 401);
     }
 
     const body = await request.json();
@@ -92,12 +94,12 @@ export async function POST(request: NextRequest) {
 
     if (action === 'regenerate-backup-codes') {
       const newBackupCodes = await regenerateBackupCodes();
-      return NextResponse.json({ backupCodes: newBackupCodes });
+      return createSuccessResponse({ backupCodes: newBackupCodes });
     }
 
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    return createErrorResponse('Invalid action', 400);
   } catch (error) {
     logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
-    return NextResponse.json({ error: 'Failed to process action' }, { status: 500 });
+    return createErrorResponse('Failed to process action', 500);
   }
-}
+});

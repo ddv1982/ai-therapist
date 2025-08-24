@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { CBTDiaryFormData } from '@/types/therapy';
+import { CBTDiaryFormData, type SchemaReflectionData } from '@/types/therapy';
 
 // Export format types
 export type CBTExportFormat = 'pdf' | 'json' | 'markdown' | 'text';
@@ -96,6 +96,10 @@ export function exportAsMarkdown(formData: CBTDiaryFormData, markdownContent?: s
 
 // Generate markdown from form data (for modal export)
 function generateMarkdownFromFormData(formData: CBTDiaryFormData): string {
+  type OptionalReflectionFields = { schemaReflection?: SchemaReflectionData };
+  const formWithOptionalReflection = formData as CBTDiaryFormData & OptionalReflectionFields;
+  type OptionalBehaviorFields = Partial<{ confirmingBehaviors: string; avoidantBehaviors: string; overridingBehaviors: string }>;
+  const behaviorPatterns = formData as CBTDiaryFormData & OptionalBehaviorFields;
   const formatEmotions = (emotions: typeof formData.initialEmotions) => {
     const formatted = Object.entries(emotions)
       .filter(([key, value]) => key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0)
@@ -124,9 +128,11 @@ function generateMarkdownFromFormData(formData: CBTDiaryFormData): string {
     .map(mode => `- [x] ${mode.name} *(${mode.description})*`)
     .join('\n');
 
-  const hasReflectionContent = formData.schemaReflection.enabled && (
-    formData.schemaReflection.selfAssessment.trim() ||
-    formData.schemaReflection.questions.some(q => q.answer.trim())
+  const hasReflectionContent = Boolean(
+    formWithOptionalReflection.schemaReflection?.enabled && (
+      formWithOptionalReflection.schemaReflection.selfAssessment.trim() ||
+      formWithOptionalReflection.schemaReflection.questions.some(q => q.answer.trim())
+    )
   );
 
   return `# 🌟 CBT Diary Entry ${hasReflectionContent ? 'with Deep Reflection' : ''}
@@ -161,9 +167,9 @@ ${formatThoughts(formData.automaticThoughts) || '[No thoughts entered]'}
 **Core Belief:** ${formData.coreBeliefText || '[No core belief identified]'}
 
 ### Behavioral Patterns
-- **Confirming behaviors:** ${formData.confirmingBehaviors || '[Not specified]'}
-- **Avoidant behaviors:** ${formData.avoidantBehaviors || '[Not specified]'}  
-- **Overriding behaviors:** ${formData.overridingBehaviors || '[Not specified]'}
+- **Confirming behaviors:** ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}
+- **Avoidant behaviors:** ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}  
+- **Overriding behaviors:** ${behaviorPatterns.overridingBehaviors || '[Not specified]'}
 
 ### Active Schema Modes
 ${selectedModes || '[No schema modes selected]'}
@@ -173,11 +179,11 @@ ${hasReflectionContent ? `
 
 ## 🔍 Schema Reflection Insights
 
-${formData.schemaReflection.selfAssessment ? `### Personal Assessment
-"${formData.schemaReflection.selfAssessment}"
+${formWithOptionalReflection.schemaReflection?.selfAssessment ? `### Personal Assessment
+"${formWithOptionalReflection.schemaReflection.selfAssessment}"
 
-` : ''}${formData.schemaReflection.questions.filter(q => q.answer.trim()).length > 0 ? `### Reflection Questions
-${formData.schemaReflection.questions
+` : ''}${formWithOptionalReflection.schemaReflection && formWithOptionalReflection.schemaReflection.questions.filter(q => q.answer.trim()).length > 0 ? `### Reflection Questions
+${formWithOptionalReflection.schemaReflection.questions
   .filter(q => q.answer.trim())
   .map(q => `**${q.category.toUpperCase()}:** ${q.question}
 *Response:* ${q.answer}`)
@@ -225,6 +231,10 @@ export function exportAsText(formData: CBTDiaryFormData): Promise<void> {
       const validThoughts = formData.automaticThoughts.filter(t => t.thought.trim());
       const rationalThoughts = formData.rationalThoughts.filter(t => t.thought.trim());
       const selectedModes = formData.schemaModes.filter(mode => mode.selected);
+      type OptionalBehaviorFields = Partial<{ confirmingBehaviors: string; avoidantBehaviors: string; overridingBehaviors: string }>;
+      const behaviorPatterns = formData as CBTDiaryFormData & OptionalBehaviorFields;
+      type OptionalReflectionFields = { schemaReflection?: SchemaReflectionData };
+      const formWithOptionalReflection = formData as CBTDiaryFormData & OptionalReflectionFields;
       
       const textContent = `CBT DIARY ENTRY
 ${'='.repeat(50)}
@@ -250,21 +260,21 @@ ${formData.coreBeliefText || '[No core belief identified]'}
 
 BEHAVIORAL PATTERNS
 ${'-'.repeat(20)}
-Confirming: ${formData.confirmingBehaviors || '[Not specified]'}
-Avoidant: ${formData.avoidantBehaviors || '[Not specified]'}
-Overriding: ${formData.overridingBehaviors || '[Not specified]'}
+Confirming: ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}
+Avoidant: ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}
+Overriding: ${behaviorPatterns.overridingBehaviors || '[Not specified]'}
 
 ACTIVE SCHEMA MODES
 ${'-'.repeat(20)}
 ${selectedModes.map(mode => `${mode.name} (${mode.description})`).join('\n') || '[No schema modes selected]'}
 
-${formData.schemaReflection.enabled && (formData.schemaReflection.selfAssessment.trim() || formData.schemaReflection.questions.some(q => q.answer.trim())) ? `
+${(formWithOptionalReflection.schemaReflection?.enabled && (formWithOptionalReflection.schemaReflection.selfAssessment.trim() || formWithOptionalReflection.schemaReflection.questions.some(q => q.answer.trim()))) ? `
 SCHEMA REFLECTION
 ${'-'.repeat(20)}
-${formData.schemaReflection.selfAssessment ? `Personal Assessment: ${formData.schemaReflection.selfAssessment}
+${formWithOptionalReflection.schemaReflection?.selfAssessment ? `Personal Assessment: ${formWithOptionalReflection.schemaReflection.selfAssessment}
 
-` : ''}${formData.schemaReflection.questions.filter(q => q.answer.trim()).map(q => `${q.category.toUpperCase()}: ${q.question}
-Response: ${q.answer}`).join('\n\n')}
+` : ''}${formWithOptionalReflection.schemaReflection ? formWithOptionalReflection.schemaReflection.questions.filter(q => q.answer.trim()).map(q => `${q.category.toUpperCase()}: ${q.question}
+Response: ${q.answer}`).join('\n\n') : ''}
 ` : ''}
 
 RATIONAL THOUGHTS (with confidence 1-10)
@@ -322,6 +332,10 @@ export function exportAsPDF(formData: CBTDiaryFormData): Promise<void> {
       const validThoughts = formData.automaticThoughts.filter(t => t.thought.trim());
       const rationalThoughts = formData.rationalThoughts.filter(t => t.thought.trim());
       const selectedModes = formData.schemaModes.filter(mode => mode.selected);
+      type OptionalBehaviorFields = Partial<{ confirmingBehaviors: string; avoidantBehaviors: string; overridingBehaviors: string }>;
+      const behaviorPatterns = formData as CBTDiaryFormData & OptionalBehaviorFields;
+      type OptionalReflectionFields = { schemaReflection?: SchemaReflectionData };
+      const formWithOptionalReflection = formData as CBTDiaryFormData & OptionalReflectionFields;
       
       container.innerHTML = `
         <div style="max-width: 720px; margin: 0 auto;">
@@ -368,9 +382,9 @@ export function exportAsPDF(formData: CBTDiaryFormData): Promise<void> {
               
               <h4 style="margin: 15px 0 5px 0; font-size: 14px; color: #333;">Behavioral Patterns:</h4>
               <ul style="margin: 5px 0; padding-left: 20px;">
-                <li><strong>Confirming:</strong> ${formData.confirmingBehaviors || '[Not specified]'}</li>
-                <li><strong>Avoidant:</strong> ${formData.avoidantBehaviors || '[Not specified]'}</li>
-                <li><strong>Overriding:</strong> ${formData.overridingBehaviors || '[Not specified]'}</li>
+                <li><strong>Confirming:</strong> ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}</li>
+                <li><strong>Avoidant:</strong> ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}</li>
+                <li><strong>Overriding:</strong> ${behaviorPatterns.overridingBehaviors || '[Not specified]'}</li>
               </ul>
               
               ${selectedModes.length > 0 ? `
@@ -382,18 +396,18 @@ export function exportAsPDF(formData: CBTDiaryFormData): Promise<void> {
             </div>
           </div>
           
-          ${formData.schemaReflection.enabled && (formData.schemaReflection.selfAssessment.trim() || formData.schemaReflection.questions.some(q => q.answer.trim())) ? `
+          ${(formWithOptionalReflection.schemaReflection?.enabled && (formWithOptionalReflection.schemaReflection.selfAssessment.trim() || formWithOptionalReflection.schemaReflection.questions.some(q => q.answer.trim()))) ? `
           <div style="margin-bottom: 25px;">
             <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🔍 Schema Reflection Insights</h2>
             <div style="padding: 15px; background-color: #f3e5f5; border-radius: 8px; border-left: 4px solid #9c27b0;">
-              ${formData.schemaReflection.selfAssessment ? `
+              ${formWithOptionalReflection.schemaReflection?.selfAssessment ? `
                 <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">Personal Assessment</h3>
-                <p style="margin: 0 0 15px 0; font-style: italic;">"${formData.schemaReflection.selfAssessment}"</p>
+                <p style="margin: 0 0 15px 0; font-style: italic;">"${formWithOptionalReflection.schemaReflection.selfAssessment}"</p>
               ` : ''}
               
-              ${formData.schemaReflection.questions.filter(q => q.answer.trim()).length > 0 ? `
+              ${formWithOptionalReflection.schemaReflection && formWithOptionalReflection.schemaReflection.questions.filter(q => q.answer.trim()).length > 0 ? `
                 <h3 style="margin: 15px 0 10px 0; font-size: 16px; color: #333;">Reflection Questions</h3>
-                ${formData.schemaReflection.questions.filter(q => q.answer.trim()).map(q => `
+                ${formWithOptionalReflection.schemaReflection.questions.filter(q => q.answer.trim()).map(q => `
                   <div style="margin-bottom: 10px; padding: 10px; background-color: #ffffff; border-radius: 4px;">
                     <p style="margin: 0 0 5px 0; font-weight: bold; color: #9c27b0;">${q.category.toUpperCase()}: ${q.question}</p>
                     <p style="margin: 0; font-style: italic;">${q.answer}</p>

@@ -1,12 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { setupListeners } from '@reduxjs/toolkit/query';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 
 import chatSlice from './slices/chatSlice';
 import sessionsSlice from './slices/sessionsSlice';
 import cbtSlice from './slices/cbtSlice';
-import { apiSlice } from './api/apiSlice';
 
 const persistConfig = {
   key: 'therapeuticAI',
@@ -22,17 +20,14 @@ export const store = configureStore({
     chat: chatSlice,
     sessions: sessionsSlice,
     cbt: persistedCbtReducer,
-    api: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
       },
-    }).concat(apiSlice.middleware),
+    }),
 });
-
-setupListeners(store.dispatch);
 
 export const persistor = persistStore(store);
 

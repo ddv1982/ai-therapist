@@ -73,7 +73,8 @@ The complete API specification is available in OpenAPI 3.0 format:
 
 #### Chat Operations
 - `POST /api/chat` - Send message and receive streaming AI response
-- `POST /api/messages` - Save messages to database
+- `GET /api/sessions/:sessionId/messages` - List messages for a session (paginated)
+- `POST /api/sessions/:sessionId/messages` - Save a message to a session
 
 #### Session Management  
 - `GET /api/sessions` - List all chat sessions

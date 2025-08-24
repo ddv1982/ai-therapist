@@ -104,7 +104,7 @@ describe('Authentication API Endpoints Security', () => {
 
   describe('API Authentication Middleware', () => {
     it('should reject requests without authentication', async () => {
-      const mockRequest = createMockNextRequest('http://localhost:3000/api/messages', {
+      const mockRequest = createMockNextRequest('http://localhost:3000/api/sessions/00000000-0000-0000-0000-000000000000/messages', {
         method: 'GET',
         headers: {}
       });
@@ -128,7 +128,7 @@ describe('Authentication API Endpoints Security', () => {
     });
 
     it('should handle missing session tokens', async () => {
-      const mockRequest = createMockNextRequest('http://localhost:4000/api/messages', {
+      const mockRequest = createMockNextRequest('http://localhost:4000/api/sessions/00000000-0000-0000-0000-000000000000/messages', {
         method: 'GET',
         headers: {
           'host': 'localhost:4000'
@@ -140,7 +140,7 @@ describe('Authentication API Endpoints Security', () => {
     });
 
     it('should validate device fingerprints', async () => {
-      const mockRequest = createMockNextRequest('http://localhost:4000/api/messages', {
+      const mockRequest = createMockNextRequest('http://localhost:4000/api/sessions/00000000-0000-0000-0000-000000000000/messages', {
         method: 'GET',
         headers: {
           'host': 'localhost:4000',

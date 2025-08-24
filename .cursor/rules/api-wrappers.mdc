@@ -1,0 +1,15 @@
+---
+alwaysApply: false
+description: API wrappers for authentication, validation, and rate limiting
+---
+# API Wrapper Guidance
+
+- Use `withAuth` for private JSON routes.
+- Use `withValidation(schema, handler)` when request validation is needed.
+- Use `withAuthStreaming` for streaming routes that return a `Response`.
+- Use `withAuthAndRateLimitStreaming(handler)` for streaming routes that require auth + rate limit (default envs: `CHAT_MAX_REQS`, `CHAT_WINDOW_MS`, `CHAT_MAX_CONCURRENCY`, `CHAT_INPUT_MAX_BYTES`).
+- Use `withAuthAndRateLimit(handler)` for non‑streaming routes that need auth + rate limiting (default envs: `API_MAX_REQS`, `API_WINDOW_MS`).
+
+Reference implementations:
+- [api-middleware.ts](mdc:src/lib/api/api-middleware.ts)
+- [chat/route.ts](mdc:src/app/api/chat/route.ts)

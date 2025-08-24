@@ -11,6 +11,11 @@
 import { useState, useCallback } from 'react';
 import type { MessageData } from '@/features/chat/messages/message';
 import { logger } from '@/lib/utils/logger';
+import { apiClient } from '@/lib/api/client';
+import { getApiData } from '@/lib/api/api-response';
+import type { components } from '@/types/api.generated';
+
+type ListMessagesResponse = import('@/lib/api/api-response').ApiResponse<import('@/lib/api/api-response').PaginatedResponse<components['schemas']['Message']>>;
 
 // Using MessageData from the message system
 export type Message = MessageData;
@@ -34,15 +39,13 @@ export function useChatMessages() {
    */
   const loadMessages = useCallback(async (sessionId: string): Promise<void> => {
     try {
-      const response = await fetch(`/api/messages?sessionId=${sessionId}`);
-      if (response.ok) {
-        const messagesData = await response.json();
-        // Handle new standardized API response format
-        const messages = messagesData.success ? (messagesData.data || []) : messagesData;
-        const messageArray = Array.isArray(messages) ? messages : [];
+      const resp: ListMessagesResponse = await apiClient.listMessages(sessionId);
+      if (resp) {
+        const page = getApiData(resp);
+        const items = page.items as Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: string }>;
         
         // Convert timestamp strings to Date objects
-        const formattedMessages = messageArray.map((msg: { id: string; role: string; content: string; timestamp: string }) => ({
+        const formattedMessages = items.map((msg: { id: string; role: string; content: string; timestamp: string }) => ({
           id: msg.id,
           content: msg.content,
           role: msg.role as 'user' | 'assistant',
@@ -54,8 +57,8 @@ export function useChatMessages() {
           component: 'useChatMessages',
           operation: 'loadMessages',
           sessionId,
-          status: response.status,
-          statusText: response.statusText
+          status: 500,
+          statusText: 'Client wrapper error'
         });
         setMessages([]);
       }
@@ -98,50 +101,26 @@ export function useChatMessages() {
       setMessages(prev => [...prev, uiMessage]);
 
       // Save to database
-      const response = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: message.sessionId,
-          role: message.role,
-          content: message.content,
-          modelUsed: message.modelUsed
-          // Note: We don't send 'source' as it's not in the schema
-        }),
+      const saved = await apiClient.postMessage(message.sessionId, {
+        role: message.role,
+        content: message.content,
+        modelUsed: message.modelUsed,
       });
-
-      if (!response.ok) {
-        // If DB save failed, remove from UI and show error
+      if (!saved.success || !saved.data) {
         setMessages(prev => prev.filter(msg => msg.id !== tempId));
-        throw new Error(`Failed to save message: ${response.status} ${response.statusText}`);
+        throw new Error('Failed to save message');
       }
 
-      // Get the actual message data from the response
-      const savedMessage = await response.json();
-      
-      // Update the temporary message with the real ID from the database
-      if (savedMessage.success && savedMessage.data) {
-        setMessages(prev => prev.map(msg => 
-          msg.id === tempId 
-            ? { 
-                ...msg, 
-                id: savedMessage.data.id,
-                timestamp: new Date(savedMessage.data.timestamp)
-              } 
-            : msg
-        ));
-      } else if (savedMessage.id) {
-        // Handle different response format
-        setMessages(prev => prev.map(msg => 
-          msg.id === tempId 
-            ? { 
-                ...msg, 
-                id: savedMessage.id,
-                timestamp: new Date(savedMessage.timestamp)
-              } 
-            : msg
-        ));
-      }
+      const savedMessage = saved.data;
+      setMessages(prev => prev.map(msg => 
+        msg.id === tempId 
+          ? { 
+              ...msg, 
+              id: savedMessage.id as string,
+              timestamp: new Date(savedMessage.timestamp as string)
+            } 
+          : msg
+      ));
 
       return { success: true };
     } catch (error) {

@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { verifyAuthSession, revokeAuthSession } from '@/lib/auth/device-fingerprint';
-import { createLogoutResponse } from '@/lib/auth/auth-middleware';
 import { isTOTPSetup } from '@/lib/auth/totp-service';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
+import { withAuthAndRateLimit } from '@/lib/api/api-middleware';
+import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // GET /api/auth/session - Check session status
-export async function GET(request: NextRequest) {
+export const GET = withAuthAndRateLimit(async (request: NextRequest) => {
   try {
     // Check if TOTP is set up
     const isSetup = await isTOTPSetup();
@@ -13,24 +14,24 @@ export async function GET(request: NextRequest) {
     const sessionToken = request.cookies.get('auth-session-token')?.value;
     
     if (!sessionToken) {
-      return NextResponse.json({ 
-        isAuthenticated: false, 
+      return createSuccessResponse({
+        isAuthenticated: false,
         needsSetup: !isSetup,
-        needsVerification: isSetup 
+        needsVerification: isSetup
       });
     }
 
     const deviceInfo = await verifyAuthSession(sessionToken);
     
     if (!deviceInfo) {
-      return NextResponse.json({ 
-        isAuthenticated: false, 
+      return createSuccessResponse({
+        isAuthenticated: false,
         needsSetup: !isSetup,
-        needsVerification: isSetup 
+        needsVerification: isSetup
       });
     }
 
-    return NextResponse.json({
+    return createSuccessResponse({
       isAuthenticated: true,
       needsSetup: false,
       needsVerification: false,
@@ -41,22 +42,23 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.apiError('/api/auth/session', error as Error, createRequestLogger(request));
-    return NextResponse.json({ error: 'Failed to check session' }, { status: 500 });
+    return createErrorResponse('Failed to check session', 500);
   }
-}
+});
 
 // DELETE /api/auth/session - Logout (revoke session)
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuthAndRateLimit(async (request: NextRequest) => {
   try {
     const sessionToken = request.cookies.get('auth-session-token')?.value;
     
     if (sessionToken) {
       await revokeAuthSession(sessionToken);
     }
-
-    return createLogoutResponse('/auth/verify');
+    // createLogoutResponse returns a NextResponse, but our wrapper expects ApiResponse.
+    // For API consistency, respond with success and rely on client to redirect.
+    return createSuccessResponse({ success: true });
   } catch (error) {
     logger.apiError('/api/auth/session', error as Error, createRequestLogger(request));
-    return NextResponse.json({ error: 'Logout failed' }, { status: 500 });
+    return createErrorResponse('Logout failed', 500);
   }
-}
+});

@@ -6,6 +6,7 @@
     "dev": "npm run db:setup && next dev --turbo --port 4000",
     "dev:local": "npm run db:setup && next dev --turbo --port 4000",
     "build": "npm run db:setup && next build",
+    "api:types": "openapi-typescript docs/api.yaml -o src/types/api.generated.ts",
     "start": "npm run db:setup && node scripts/start-with-network.js",
     "start:local": "next start --port 4000",
     "lint": "next lint",
@@ -30,6 +31,7 @@
   "dependencies": {
     "@ai-sdk/groq": "^2.0.5",
     "@ai-sdk/react": "^2.0.9",
+    "@hookform/resolvers": "^3.9.0",
     "@prisma/client": "^6.13.0",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-label": "^2.1.7",
@@ -92,6 +94,7 @@
     "eslint-config-next": "^14.2.0",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
+    "openapi-typescript": "^7.9.1",
     "prisma": "^6.13.0",
     "tailwindcss": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",

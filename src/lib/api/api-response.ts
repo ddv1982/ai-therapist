@@ -27,7 +27,7 @@ export function createSuccessResponse<T>(
   data: T,
   meta?: Partial<ApiResponse['meta']>
 ): NextResponse<ApiResponse<T>> {
-  return NextResponse.json({
+  const response = NextResponse.json({
     success: true,
     data,
     meta: {
@@ -35,6 +35,10 @@ export function createSuccessResponse<T>(
       ...meta,
     },
   });
+  if (meta?.requestId) {
+    response.headers.set('X-Request-Id', String(meta.requestId));
+  }
+  return response;
 }
 
 // Error response helper
@@ -48,7 +52,7 @@ export function createErrorResponse(
     requestId?: string;
   } = {}
 ): NextResponse<ApiResponse> {
-  return NextResponse.json(
+  const response = NextResponse.json(
     {
       success: false,
       error: {
@@ -64,6 +68,10 @@ export function createErrorResponse(
     },
     { status }
   );
+  if (options.requestId) {
+    response.headers.set('X-Request-Id', String(options.requestId));
+  }
+  return response;
 }
 
 // Validation error response helper
@@ -261,7 +269,8 @@ export function createPaginatedResponse<T>(
   items: T[],
   page: number,
   limit: number,
-  total: number
+  total: number,
+  requestId?: string
 ): NextResponse<ApiResponse<PaginatedResponse<T>>> {
   const totalPages = Math.ceil(total / limit);
   
@@ -275,7 +284,16 @@ export function createPaginatedResponse<T>(
       hasNext: page < totalPages,
       hasPrev: page > 1,
     },
-  });
+  }, { requestId });
+}
+
+// Helper to unwrap standardized responses in clients/callers
+export function getApiData<T>(resp: ApiResponse<T>): T {
+  if (resp && resp.success) {
+    return resp.data as T;
+  }
+  const message = resp?.error?.details || resp?.error?.message || 'API error';
+  throw new Error(message);
 }
 // ============================================================================
 // THERAPEUTIC-SPECIFIC RESPONSE UTILITIES

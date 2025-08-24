@@ -51,6 +51,8 @@ export const sessionIdSchema = z.object({
 export const messagesQuerySchema = z.object({
   sessionId: z.string()
     .uuid('Invalid session ID format'),
+  page: z.coerce.number().min(1).default(1).optional(),
+  limit: z.coerce.number().min(1).max(100).default(50).optional(),
 });
 
 // Session update validation schema
