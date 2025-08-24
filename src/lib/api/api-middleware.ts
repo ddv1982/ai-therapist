@@ -219,6 +219,8 @@ export function withAuthAndRateLimitStreaming(
     }
     const baseContext = createRequestLogger(request);
     const start = Date.now();
+    const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
+    let didIncrement = false;
     try {
       // Auth check
       const authResult = await validateApiAuth(request);
@@ -237,21 +239,23 @@ export function withAuthAndRateLimitStreaming(
 
       // Rate limit check (global and per-route)
       const clientIP = getClientIPFromRequest(request);
-      const limiter = getRateLimiter();
-      const globalResult = limiter.checkRateLimit(clientIP);
-      if (!globalResult.allowed) {
-        const retryAfter = String(globalResult.retryAfter || Math.ceil((5 * 60)));
-        return new Response('Rate limit exceeded. Please try again later.', {
-          status: 429,
-          headers: { 'Content-Type': 'text/plain', 'Retry-After': retryAfter },
-        });
+      if (!rateLimitDisabled) {
+        const limiter = getRateLimiter();
+        const globalResult = limiter.checkRateLimit(clientIP);
+        if (!globalResult.allowed) {
+          const retryAfter = String(globalResult.retryAfter || Math.ceil((5 * 60)));
+          return new Response('Rate limit exceeded. Please try again later.', {
+            status: 429,
+            headers: { 'Content-Type': 'text/plain', 'Retry-After': retryAfter },
+          });
+        }
       }
 
       // Per-route limits (skipped in development to keep DX smooth)
       const maxRequests = Number(process.env.CHAT_MAX_REQS || options.maxRequests || 120);
       const windowMs = Number(process.env.CHAT_WINDOW_MS || options.windowMs || 5 * 60 * 1000);
       const maxConcurrent = Number(process.env.CHAT_MAX_CONCURRENCY || options.maxConcurrent || 2);
-      if (process.env.NODE_ENV !== 'development') {
+      if (!rateLimitDisabled && process.env.NODE_ENV !== 'development') {
         const now = Date.now();
         const entry = streamingCounters.get(clientIP);
         if (!entry || now > entry.resetTime) {
@@ -275,6 +279,7 @@ export function withAuthAndRateLimitStreaming(
           });
         }
         inflightCounters.set(clientIP, currentInflight + 1);
+        didIncrement = true;
       }
 
       // Authenticated context
@@ -305,11 +310,13 @@ export function withAuthAndRateLimitStreaming(
     }
     finally {
       // Decrement inflight concurrency
-      try {
-        const clientIP = getClientIPFromRequest(request);
-        const currentInflight = inflightCounters.get(clientIP) || 0;
-        if (currentInflight > 0) inflightCounters.set(clientIP, currentInflight - 1);
-      } catch {}
+      if (!rateLimitDisabled && didIncrement) {
+        try {
+          const clientIP = getClientIPFromRequest(request);
+          const currentInflight = inflightCounters.get(clientIP) || 0;
+          if (currentInflight > 0) inflightCounters.set(clientIP, currentInflight - 1);
+        } catch {}
+      }
     }
   };
 }
@@ -466,27 +473,30 @@ export function withAuthAndRateLimit<T = unknown>(
         ) as NextResponse<ApiResponse<T>>;
       }
 
+      const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
       const clientIP = getClientIPFromRequest(request);
       const limiter = getRateLimiter();
       const windowMs = Number(process.env.API_WINDOW_MS || options.windowMs || 5 * 60 * 1000);
 
-      // Use existing limiter; if needed, a named bucket system can be added
-      const result = limiter.checkRateLimit(clientIP);
-      if (!result.allowed) {
-        const retryAfter = String(result.retryAfter || Math.ceil(windowMs / 1000));
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              message: 'Rate limit exceeded',
-              code: 'RATE_LIMIT_EXCEEDED',
-              details: 'Too many requests made in a short period',
-              suggestedAction: 'Please wait a moment before making another request'
+      if (!rateLimitDisabled) {
+        // Use existing limiter; if needed, a named bucket system can be added
+        const result = limiter.checkRateLimit(clientIP);
+        if (!result.allowed) {
+          const retryAfter = String(result.retryAfter || Math.ceil(windowMs / 1000));
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                message: 'Rate limit exceeded',
+                code: 'RATE_LIMIT_EXCEEDED',
+                details: 'Too many requests made in a short period',
+                suggestedAction: 'Please wait a moment before making another request'
+              },
+              meta: { timestamp: new Date().toISOString(), requestId: baseContext.requestId }
             },
-            meta: { timestamp: new Date().toISOString(), requestId: baseContext.requestId }
-          },
-          { status: 429, headers: { 'Retry-After': retryAfter } }
-        ) as NextResponse<ApiResponse<T>>;
+            { status: 429, headers: { 'Retry-After': retryAfter } }
+          ) as NextResponse<ApiResponse<T>>;
+        }
       }
 
       const userInfo = getSingleUserInfo(request);

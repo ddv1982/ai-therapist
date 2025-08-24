@@ -40,6 +40,10 @@ class NetworkRateLimiter {
    * Check if IP should be exempt from rate limiting
    */
   private isExemptIP(ip: string): boolean {
+    // Do not exempt in production
+    if (process?.env?.NODE_ENV === 'production') {
+      return false;
+    }
     // Handle undefined or null IP
     if (!ip) {
       return false;

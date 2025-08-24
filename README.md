@@ -40,9 +40,16 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 2. **Set up environment**
    ```bash
-   cp .env.example .env.local
-   # Add your Groq API key to .env.local
+   # Create .env.local and add your keys
+   cat > .env.local <<'EOF'
+   DATABASE_URL="file:./prisma/dev.db"
    GROQ_API_KEY=your_groq_api_key_here
+   ENCRYPTION_KEY=your_32_character_encryption_key_here
+   NEXTAUTH_SECRET=your_nextauth_secret_here
+   # Local-only opts
+   BYPASS_AUTH=true
+   RATE_LIMIT_DISABLED=true
+   EOF
    ```
 
 3. **Initialize database**

@@ -35,11 +35,16 @@ cd ai-therapist
 npm install
 
 # Set up environment variables
-cp .env.example .env.local
-
-# Configure your environment
-echo "DATABASE_URL=postgresql://user:password@localhost:5432/ai_therapist" >> .env.local
-echo "GROQ_API_KEY=your_groq_api_key_here" >> .env.local
+cat > .env.local <<'EOF'
+# Local defaults (adjust for your setup)
+DATABASE_URL=postgresql://user:password@localhost:5432/ai_therapist
+GROQ_API_KEY=your_groq_api_key_here
+ENCRYPTION_KEY=your_32_character_encryption_key_here
+NEXTAUTH_SECRET=your_nextauth_secret_here
+# Local-only opts
+BYPASS_AUTH=true
+RATE_LIMIT_DISABLED=true
+EOF
 
 # Set up database
 npm run db:generate
