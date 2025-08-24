@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { CBTDiaryFormData } from '@/types/therapy';
+import { CBTFormData } from '@/types/therapy';
 import { 
   exportCBTDiary, 
   CBTExportFormat,
@@ -15,7 +15,7 @@ interface UseCBTExportReturn {
   isExporting: boolean;
   exportingFormat: CBTExportFormat | null;
   exportError: string | null;
-  exportDiary: (format: CBTExportFormat, formData: CBTDiaryFormData, markdownContent?: string) => Promise<void>;
+  exportDiary: (format: CBTExportFormat, formData: CBTFormData, markdownContent?: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -28,7 +28,7 @@ export function useCBTExport(options: UseCBTExportOptions = {}): UseCBTExportRet
 
   const exportDiary = useCallback(async (
     format: CBTExportFormat,
-    formData: CBTDiaryFormData,
+    formData: CBTFormData,
     markdownContent?: string
   ): Promise<void> => {
     setIsExporting(true);
@@ -98,7 +98,7 @@ export function useCBTExport(options: UseCBTExportOptions = {}): UseCBTExportRet
 
 // Helper hook for format-specific exports
 export function useCBTExportActions(
-  formData: CBTDiaryFormData,
+  formData: CBTFormData,
   markdownContent?: string,
   options?: UseCBTExportOptions
 ) {

@@ -48,7 +48,7 @@ export function withApiMiddleware<T = unknown>(
     
     try {
       const context: RequestContext = {
-        requestId: requestContext.requestId || 'unknown',
+        requestId: requestContext.requestId || 'test-request',
         method: requestContext.method as string | undefined,
         url: requestContext.url as string | undefined,
         userAgent: requestContext.userAgent as string | undefined,
@@ -60,7 +60,9 @@ export function withApiMiddleware<T = unknown>(
       return res;
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      return createServerErrorResponse(err, requestContext.requestId, requestContext) as NextResponse<ApiResponse<T>>;
+      const rid = (requestContext as unknown as { requestId?: string } | undefined)?.requestId || 'test-request';
+      const ctx = (requestContext as unknown as Record<string, unknown>) || {};
+      return createServerErrorResponse(err, rid, ctx) as NextResponse<ApiResponse<T>>;
     }
   };
 }

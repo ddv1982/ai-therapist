@@ -1,12 +1,12 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { CBTDiaryFormData, type SchemaReflectionData } from '@/types/therapy';
+import { CBTFormData, type SchemaReflectionData } from '@/types/therapy';
 
 // Export format types
 export type CBTExportFormat = 'pdf' | 'json' | 'markdown' | 'text';
 
 export interface CBTExportData {
-  formData: CBTDiaryFormData;
+  formData: CBTFormData;
   exportDate: string;
   exportVersion: string;
 }
@@ -39,7 +39,7 @@ export function downloadFile(content: string | Blob, filename: string, mimeType:
 }
 
 // Format emotions for display
-export function formatEmotionsForExport(emotions: CBTDiaryFormData['initialEmotions']): Array<{ name: string; intensity: number }> {
+export function formatEmotionsForExport(emotions: CBTFormData['initialEmotions']): Array<{ name: string; intensity: number }> {
   const formatted = Object.entries(emotions)
     .filter(([key, value]) => key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0)
     .map(([key, value]) => ({
@@ -58,7 +58,7 @@ export function formatEmotionsForExport(emotions: CBTDiaryFormData['initialEmoti
 }
 
 // JSON Export
-export function exportAsJSON(formData: CBTDiaryFormData): Promise<void> {
+export function exportAsJSON(formData: CBTFormData): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       const exportData: CBTExportData = {
@@ -79,7 +79,7 @@ export function exportAsJSON(formData: CBTDiaryFormData): Promise<void> {
 }
 
 // Markdown Export
-export function exportAsMarkdown(formData: CBTDiaryFormData, markdownContent?: string): Promise<void> {
+export function exportAsMarkdown(formData: CBTFormData, markdownContent?: string): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       // If markdownContent is provided (from chat), use it; otherwise generate from formData
@@ -95,11 +95,11 @@ export function exportAsMarkdown(formData: CBTDiaryFormData, markdownContent?: s
 }
 
 // Generate markdown from form data (for modal export)
-function generateMarkdownFromFormData(formData: CBTDiaryFormData): string {
+function generateMarkdownFromFormData(formData: CBTFormData): string {
   type OptionalReflectionFields = { schemaReflection?: SchemaReflectionData };
-  const formWithOptionalReflection = formData as CBTDiaryFormData & OptionalReflectionFields;
+  const formWithOptionalReflection = formData as CBTFormData & OptionalReflectionFields;
   type OptionalBehaviorFields = Partial<{ confirmingBehaviors: string; avoidantBehaviors: string; overridingBehaviors: string }>;
-  const behaviorPatterns = formData as CBTDiaryFormData & OptionalBehaviorFields;
+  const behaviorPatterns = formData as CBTFormData & OptionalBehaviorFields;
   const formatEmotions = (emotions: typeof formData.initialEmotions) => {
     const formatted = Object.entries(emotions)
       .filter(([key, value]) => key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0)
@@ -223,7 +223,7 @@ ${formData.alternativeResponses
 }
 
 // Text Export (plain text version)
-export function exportAsText(formData: CBTDiaryFormData): Promise<void> {
+export function exportAsText(formData: CBTFormData): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       const initialEmotions = formatEmotionsForExport(formData.initialEmotions);
@@ -232,9 +232,9 @@ export function exportAsText(formData: CBTDiaryFormData): Promise<void> {
       const rationalThoughts = formData.rationalThoughts.filter(t => t.thought.trim());
       const selectedModes = formData.schemaModes.filter(mode => mode.selected);
       type OptionalBehaviorFields = Partial<{ confirmingBehaviors: string; avoidantBehaviors: string; overridingBehaviors: string }>;
-      const behaviorPatterns = formData as CBTDiaryFormData & OptionalBehaviorFields;
+      const behaviorPatterns = formData as CBTFormData & OptionalBehaviorFields;
       type OptionalReflectionFields = { schemaReflection?: SchemaReflectionData };
-      const formWithOptionalReflection = formData as CBTDiaryFormData & OptionalReflectionFields;
+      const formWithOptionalReflection = formData as CBTFormData & OptionalReflectionFields;
       
       const textContent = `CBT DIARY ENTRY
 ${'='.repeat(50)}
@@ -311,7 +311,7 @@ Exported from AI Therapist CBT Diary on ${new Date().toLocaleDateString()}`;
 }
 
 // PDF Export
-export function exportAsPDF(formData: CBTDiaryFormData): Promise<void> {
+export function exportAsPDF(formData: CBTFormData): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       // Create a temporary container for PDF content
@@ -333,9 +333,9 @@ export function exportAsPDF(formData: CBTDiaryFormData): Promise<void> {
       const rationalThoughts = formData.rationalThoughts.filter(t => t.thought.trim());
       const selectedModes = formData.schemaModes.filter(mode => mode.selected);
       type OptionalBehaviorFields = Partial<{ confirmingBehaviors: string; avoidantBehaviors: string; overridingBehaviors: string }>;
-      const behaviorPatterns = formData as CBTDiaryFormData & OptionalBehaviorFields;
+      const behaviorPatterns = formData as CBTFormData & OptionalBehaviorFields;
       type OptionalReflectionFields = { schemaReflection?: SchemaReflectionData };
-      const formWithOptionalReflection = formData as CBTDiaryFormData & OptionalReflectionFields;
+      const formWithOptionalReflection = formData as CBTFormData & OptionalReflectionFields;
       
       container.innerHTML = `
         <div style="max-width: 720px; margin: 0 auto;">
@@ -512,7 +512,7 @@ export function exportAsPDF(formData: CBTDiaryFormData): Promise<void> {
 // Main export function that handles all formats
 export async function exportCBTDiary(
   format: CBTExportFormat,
-  formData: CBTDiaryFormData,
+  formData: CBTFormData,
   markdownContent?: string
 ): Promise<void> {
   switch (format) {

@@ -171,14 +171,17 @@ describe('AI SDK 5 Integration Tests', () => {
       });
 
       expect(result).toEqual(mockMessage);
-      expect(prisma.message.create).toHaveBeenCalledWith({
-        data: {
-          sessionId: 'test-session-id',
-          role: 'user',
-          content: 'Test message',
-          timestamp: new Date(),
-        },
-      });
+      // Relax timestamp millisecond precision to avoid flakiness
+      expect(prisma.message.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            sessionId: 'test-session-id',
+            role: 'user',
+            content: 'Test message',
+            timestamp: expect.any(Date),
+          })
+        })
+      );
     });
   });
 

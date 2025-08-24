@@ -13,12 +13,12 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils/utils';
-import { CBTDiaryFormData } from '@/types/therapy';
+import { CBTFormData } from '@/types/therapy';
 import { useCBTExportActions } from '@/hooks/therapy/use-cbt-export';
 import { CBTExportFormat } from '@/lib/cbt/export-utils';
 
 interface CBTExportButtonProps {
-  formData: CBTDiaryFormData;
+  formData: CBTFormData;
   markdownContent?: string;
   isValid?: boolean;
   disabled?: boolean;

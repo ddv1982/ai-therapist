@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/database/db';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
 import { decryptSessionReportContent } from '@/lib/chat/message-encryption';
-import { validateApiAuth, createAuthErrorResponse } from '@/lib/api/api-auth';
+import { validateApiAuth } from '@/lib/api/api-auth';
+import { withApiMiddleware, type RequestContext } from '@/lib/api/api-middleware';
+import { createSuccessResponse, createErrorResponse, createAuthenticationErrorResponse, type ApiResponse } from '@/lib/api/api-response';
 
 /**
  * Create therapeutic summary from structured session report data
@@ -70,7 +72,25 @@ function createTherapeuticSummary(
  * Retrieves recent session reports for therapeutic memory context.
  * Used by the chat system to provide continuity across sessions.
  */
-export async function GET(request: NextRequest) {
+type MemoryContextEntry = {
+  sessionTitle: string;
+  sessionDate: string;
+  reportDate: string;
+  content: string;
+  summary: string;
+};
+type MemoryStats = {
+  totalReportsFound: number;
+  successfullyDecrypted: number;
+  failedDecryptions: number;
+};
+type MemoryData = {
+  memoryContext: MemoryContextEntry[];
+  reportCount: number;
+  stats: MemoryStats;
+};
+
+export const GET = withApiMiddleware<MemoryData>(async (request: NextRequest, context: RequestContext) => {
   const requestContext = createRequestLogger(request);
   
   try {
@@ -119,7 +139,7 @@ export async function GET(request: NextRequest) {
     });
     
     // Process reports with graceful error handling
-    const memoryContext = [];
+    const memoryContext: MemoryContextEntry[] = [];
     let successfulReports = 0;
     let failedDecryptions = 0;
     
@@ -179,16 +199,15 @@ export async function GET(request: NextRequest) {
       totalSummaryLength: memoryContext.reduce((acc, r) => acc + r.summary.length, 0)
     });
     
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse<MemoryData>({
       memoryContext,
       reportCount: memoryContext.length,
       stats: {
         totalReportsFound: reports.length,
         successfullyDecrypted: successfulReports,
-        failedDecryptions: failedDecryptions
-      }
-    });
+        failedDecryptions: failedDecryptions,
+      },
+    }, { requestId: context.requestId });
     
   } catch (error) {
     logger.error('Error retrieving session reports for memory', {
@@ -197,16 +216,13 @@ export async function GET(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined
     });
     
-    return NextResponse.json(
-      { 
-        error: 'Failed to retrieve memory context',
-        success: false,
-        memoryContext: [] // Return empty context instead of undefined
-      },
-      { status: 500 }
-    );
+    return createErrorResponse(
+      'Failed to retrieve memory context',
+      500,
+      { requestId: context.requestId }
+    ) as import('next/server').NextResponse<ApiResponse<MemoryData>>;
   }
-}
+});
 
 /**
  * DELETE /api/reports/memory
@@ -218,7 +234,13 @@ export async function GET(request: NextRequest) {
  * - Recent N reports: ?limit=3
  * - Exclude current: ?excludeSessionId=currentId&limit=N
  */
-export async function DELETE(request: NextRequest) {
+type DeleteResponseData = {
+  deletedCount: number;
+  message: string;
+  deletionType: 'specific' | 'recent' | 'all-except-current' | 'all';
+};
+
+export const DELETE = withApiMiddleware<DeleteResponseData>(async (request: NextRequest, context: RequestContext) => {
   const requestContext = createRequestLogger(request);
   
   try {
@@ -226,7 +248,7 @@ export async function DELETE(request: NextRequest) {
     const authResult = await validateApiAuth(request);
     if (!authResult.isValid) {
       logger.warn('Unauthorized memory deletion request', { ...requestContext, error: authResult.error });
-      return createAuthErrorResponse(authResult.error || 'Authentication required');
+      return createAuthenticationErrorResponse(authResult.error || 'Authentication required', context.requestId) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
     }
     
     logger.info('Memory deletion request received', requestContext);
@@ -263,11 +285,11 @@ export async function DELETE(request: NextRequest) {
       
       if (reportsToDelete.length === 0) {
         logger.info('No reports found to delete', { ...requestContext, limit, excludeSessionId });
-        return NextResponse.json({
-          success: true,
+        return createSuccessResponse<DeleteResponseData>({
           deletedCount: 0,
-          message: 'No reports found matching deletion criteria'
-        });
+          message: 'No reports found matching deletion criteria',
+          deletionType: limit ? 'recent' : excludeSessionId ? 'all-except-current' : 'all',
+        }, { requestId: context.requestId });
       }
       
       deletionCriteria = {
@@ -307,12 +329,11 @@ export async function DELETE(request: NextRequest) {
       deletedCount: deleteResult.count
     });
     
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse<DeleteResponseData>({
       deletedCount: deleteResult.count,
       message: `Successfully deleted ${deleteResult.count} session reports (${deletionDescription})`,
-      deletionType: sessionIds ? 'specific' : limit ? 'recent' : excludeSessionId ? 'all-except-current' : 'all'
-    });
+      deletionType: sessionIds ? 'specific' : limit ? 'recent' : excludeSessionId ? 'all-except-current' : 'all',
+    }, { requestId: context.requestId });
     
   } catch (error) {
     logger.error('Error deleting memory context', {
@@ -321,13 +342,10 @@ export async function DELETE(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined
     });
     
-    return NextResponse.json(
-      { 
-        error: 'Failed to delete memory context',
-        success: false,
-        deletedCount: 0
-      },
-      { status: 500 }
-    );
+    return createErrorResponse(
+      'Failed to delete memory context',
+      500,
+      { requestId: context.requestId }
+    ) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
   }
-}
+});

@@ -93,6 +93,30 @@ export class ApiClient {
     });
     return await parseJsonSafe(res);
   }
+
+  // Current session
+  async getCurrentSession(): Promise<{ success?: boolean; data?: { currentSession?: { id: string; messageCount?: number } }; currentSession?: { id: string; messageCount?: number } } | null> {
+    const res = await fetch(this.withBase('/api/sessions/current'), { credentials: 'include' });
+    return await parseJsonSafe(res);
+  }
+
+  async setCurrentSession(sessionId: string): Promise<{ success?: boolean } | null> {
+    const res = await fetch(this.withBase('/api/sessions/current'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId }),
+      credentials: 'include',
+    });
+    return await parseJsonSafe(res);
+  }
+
+  // Single session
+  async getSessionById(sessionId: string): Promise<ApiResponse<components['schemas']['Session']>> {
+    type Resp = ApiResponse<components['schemas']['Session']>;
+    const res = await fetch(this.withBase(`/api/sessions/${sessionId}`), { credentials: 'include' });
+    const json = await parseJsonSafe(res);
+    return json as Resp;
+  }
 }
 
 export const apiClient = new ApiClient('');

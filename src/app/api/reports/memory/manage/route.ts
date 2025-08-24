@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/database/db';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
 import { decryptSessionReportContent } from '@/lib/chat/message-encryption';
-import { validateApiAuth, createAuthErrorResponse } from '@/lib/api/api-auth';
+import { withAuth, type AuthenticatedRequestContext } from '@/lib/api/api-middleware';
+import { createSuccessResponse, createErrorResponse, type ApiResponse } from '@/lib/api/api-response';
 
 /**
  * GET /api/reports/memory/manage
@@ -10,17 +11,36 @@ import { validateApiAuth, createAuthErrorResponse } from '@/lib/api/api-auth';
  * Retrieves detailed session report information for memory management.
  * Shows titles, dates, content summaries for user to make informed deletion decisions.
  */
-export async function GET(request: NextRequest) {
+
+type MemoryReportDetail = {
+  id: string;
+  sessionId: string;
+  sessionTitle: string;
+  sessionDate: string;
+  reportDate: string;
+  contentPreview: string;
+  keyInsights: string[];
+  hasEncryptedContent: boolean;
+  reportSize: number;
+  fullContent?: string;
+  structuredCBTData?: unknown;
+};
+
+type MemoryManageData = {
+  memoryDetails: MemoryReportDetail[];
+  reportCount: number;
+  stats: {
+    totalReportsFound: number;
+    successfullyProcessed: number;
+    failedDecryptions: number;
+    hasMemory: boolean;
+  };
+};
+
+export const GET = withAuth<MemoryManageData>(async (request: NextRequest, context: AuthenticatedRequestContext) => {
   const requestContext = createRequestLogger(request);
   
   try {
-    // Validate authentication first
-    const authResult = await validateApiAuth(request);
-    if (!authResult.isValid) {
-      logger.warn('Unauthorized memory management request', { ...requestContext, error: authResult.error });
-      return createAuthErrorResponse(authResult.error || 'Authentication required');
-    }
-    
     logger.info('Memory management request received', requestContext);
     
     const { searchParams } = new URL(request.url);
@@ -62,7 +82,7 @@ export async function GET(request: NextRequest) {
     });
     
     // Process reports with detailed information for management
-    const memoryDetails = [];
+    const memoryDetails: MemoryReportDetail[] = [];
     let successfulReports = 0;
     let failedDecryptions = 0;
     
@@ -112,19 +132,7 @@ export async function GET(request: NextRequest) {
           }
         }
         
-        const reportDetail: {
-          id: string;
-          sessionId: string;
-          sessionTitle: string;
-          sessionDate: string;
-          reportDate: string;
-          contentPreview: string;
-          keyInsights: string[];
-          hasEncryptedContent: boolean;
-          reportSize: number;
-          fullContent?: string;
-          structuredCBTData?: unknown; // Add structured CBT data
-        } = {
+        const reportDetail: MemoryReportDetail = {
           id: report.id,
           sessionId: report.sessionId,
           sessionTitle: report.session.title,
@@ -191,17 +199,16 @@ export async function GET(request: NextRequest) {
       memoryDetailsCount: memoryDetails.length
     });
     
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse<MemoryManageData>({
       memoryDetails,
       reportCount: memoryDetails.length,
       stats: {
         totalReportsFound: reports.length,
         successfullyProcessed: successfulReports,
         failedDecryptions: failedDecryptions,
-        hasMemory: memoryDetails.length > 0
+        hasMemory: memoryDetails.length > 0,
       }
-    });
+    }, { requestId: context.requestId });
     
   } catch (error) {
     logger.error('Error retrieving memory management data', {
@@ -210,13 +217,10 @@ export async function GET(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined
     });
     
-    return NextResponse.json(
-      { 
-        error: 'Failed to retrieve memory management data',
-        success: false,
-        memoryDetails: []
-      },
-      { status: 500 }
-    );
+    return createErrorResponse(
+      'Failed to retrieve memory management data',
+      500,
+      { requestId: context.requestId }
+    ) as import('next/server').NextResponse<ApiResponse<MemoryManageData>>;
   }
-}
+})

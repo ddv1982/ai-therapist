@@ -153,9 +153,7 @@ export class MockFactory {
       apiAuth: {
         validateApiAuth: createMockFn<{ isValid: boolean; userId: string }>()
           .mockResolvedValue({ isValid: true, userId: 'test-user' }),
-        createAuthErrorResponse: jest.fn(() =>
-          new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401 })
-        ),
+        // createAuthErrorResponse removed in favor of standardized helpers
       },
       // Logger mocks
       logger: {

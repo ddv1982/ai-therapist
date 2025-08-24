@@ -15,9 +15,7 @@ import { logger } from '@/lib/utils/logger';
 import type { MessageData } from '@/features/chat/messages/message';
 import { useCBTChatExperience } from '@/features/therapy/cbt/hooks/use-cbt-chat-experience';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import { CBTForm } from '@/features/therapy/cbt/cbt-form';
-import { loadCBTDraft, clearCBTDraft } from '@/features/therapy/cbt/hooks/use-cbt-draft-persistence';
-import type { CBTFormInput } from '@/features/therapy/cbt/cbt-form-schema';
+import { clearCBTDraft } from '@/features/therapy/cbt/hooks/use-cbt-draft-persistence';
 import { getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
 import type { 
   SituationData, 
@@ -31,7 +29,7 @@ import type {
 } from '@/types/therapy';
 import { REPORT_GENERATION_PROMPT } from '@/lib/therapy/therapy-prompts';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { startCBTSession as startReduxCBTSession, updateSituation as updateReduxSituation, updateEmotions as updateReduxEmotions } from '@/store/slices/cbtSlice';
+import { startCBTSession as startReduxCBTSession } from '@/store/slices/cbtSlice';
 import { useChatMessages } from '@/hooks/use-chat-messages';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { apiClient } from '@/lib/api/client';
@@ -60,9 +58,9 @@ function CBTDiaryPageContent() {
   // Use CBT data manager hook for draft management (transition phase)
   const { status: dataManagerStatus, draftActions } = useCBTDataManager();
 
-  // Load persisted draft for RHF form (non-disruptive)
-  const persistedDraft = React.useMemo(() => loadCBTDraft(), []);
-  const sessionBootstrappedRef = useRef<boolean>(false);
+  // Removed inline quick draft form to keep classic guided flow experience
+  
+  // Quick draft form removed; state is managed by the guided CBT flow only
   
   // CBT Chat Flow
   const {
@@ -150,35 +148,21 @@ function CBTDiaryPageContent() {
       
       if (!sessionId) {
         // Try to get current session first
-        const sessionResponse = await fetch('/api/sessions/current');
-        if (sessionResponse.ok) {
-          const sessionData = await sessionResponse.json();
-          const currentSessionData = sessionData.success ? sessionData.data : sessionData;
-          if (currentSessionData?.currentSession) {
-            sessionId = currentSessionData.currentSession.id;
-          }
+        const sessionData = await apiClient.getCurrentSession();
+        const currentSessionData = (sessionData && sessionData.success) ? sessionData.data : sessionData;
+        if (currentSessionData?.currentSession) {
+          sessionId = currentSessionData.currentSession.id;
         }
         
         // If still no session, create one
         if (!sessionId) {
           const title = 'CBT Session - ' + new Date().toLocaleDateString();
-          const createResponse = await fetch('/api/sessions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title }),
-          });
-          
-          if (createResponse.ok) {
-            const result = await createResponse.json();
-            const newSession = result.success ? result.data : result;
+          const createResp = await apiClient.createSession({ title });
+          if (createResp && createResp.success && createResp.data) {
+            const newSession = createResp.data as components['schemas']['Session'];
             sessionId = newSession.id;
-            
             // Set as current session
-            await fetch('/api/sessions/current', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ sessionId }),
-            });
+            await apiClient.setCurrentSession(newSession.id);
           }
         }
         
@@ -341,8 +325,34 @@ function CBTDiaryPageContent() {
         sessionContent ? `\n\nSession Context:\n${sessionContent}` : ''
       ].filter(Boolean).join('\n');
 
-      // Use session ID from Redux
-      const sessionId = reduxSessionId;
+      // Ensure a session ID exists (fetch or create if Redux is empty)
+      let sessionId = reduxSessionId;
+      if (!sessionId) {
+        try {
+          // Try to get current session first
+          const sessionData = await apiClient.getCurrentSession();
+          const currentSessionData = (sessionData && (sessionData as { success?: boolean }).success)
+            ? (sessionData as { data: { currentSession?: { id: string } } }).data
+            : (sessionData as { currentSession?: { id: string } } | null) || {};
+          if (currentSessionData?.currentSession) {
+            sessionId = currentSessionData.currentSession.id;
+          }
+          // If still no session, create one
+          if (!sessionId) {
+            const title = 'CBT Session - ' + new Date().toLocaleDateString();
+            const createResp = await apiClient.createSession({ title });
+            if (createResp && createResp.success && createResp.data) {
+              const newSession = createResp.data as components['schemas']['Session'];
+              sessionId = newSession.id;
+              await apiClient.setCurrentSession(newSession.id);
+            }
+          }
+          // Initialize Redux with the session ID if found/created
+          if (sessionId) {
+            dispatch(startReduxCBTSession({ sessionId }));
+          }
+        } catch {}
+      }
       if (!sessionId) {
         throw new Error('No session available - please start a CBT session first');
       }
@@ -565,7 +575,7 @@ function CBTDiaryPageContent() {
       setIsLoading(false);
       setIsStreaming(false);
     }
-  }, [hasStarted, isCBTActive, generateTherapeuticSummaryCard, messages, router, showToast, draftActions, reduxSessionId]);
+  }, [hasStarted, isCBTActive, generateTherapeuticSummaryCard, messages, router, showToast, draftActions, reduxSessionId, dispatch]);
 
   const handleCBTRationalThoughtsComplete = useCallback(async (data: RationalThoughtsData) => {
     completeRationalThoughtsStep(data);
@@ -827,32 +837,7 @@ Your completed CBT session data has been processed and formatted for optimal rev
                 onCBTSendToChat={handleSendToChat}
                 onCBTActionComplete={handleCBTActionComplete}
               />
-              {/* New RHF-based quick form to capture situation + emotions early and persist */}
-              <div className="mt-6">
-                <CBTForm 
-                  defaultValues={persistedDraft || undefined}
-                  onDraftChange={(data: CBTFormInput) => {
-                    // Optionally reflect to Redux for live UI updates (situation & emotions)
-                    try {
-                      if (!reduxSessionId && !sessionBootstrappedRef.current) {
-                        dispatch(startReduxCBTSession({ sessionId: `session-${generateUUID()}` }));
-                        sessionBootstrappedRef.current = true;
-                      }
-                      // Keep legacy UI in sync for the early steps
-                      dispatch(updateReduxSituation({ situation: data.situation, date: data.date }));
-                      // Map initial emotions into Redux session emotions
-                      dispatch(updateReduxEmotions(data.initialEmotions as unknown as EmotionData));
-                    } catch {}
-                  }}
-                  onSubmit={(data: CBTFormInput) => {
-                    try {
-                      // eslint-disable-next-line no-undef
-                      localStorage.setItem('cbt-draft', JSON.stringify(data));
-                    } catch {}
-                    showToast({ type: 'success', title: 'Draft Saved', message: 'Your CBT draft has been saved.' });
-                  }} 
-                />
-              </div>
+              {/* Inline quick draft form removed */}
             </div>
           )}
           
@@ -892,37 +877,26 @@ export default function CBTDiaryPage() {
   const ensureSession = useCallback(async (): Promise<string | null> => {
     try {
       // Try to get current session first
-      const sessionResponse = await fetch('/api/sessions/current');
-      if (sessionResponse.ok) {
-        const sessionData = await sessionResponse.json();
-        const currentSessionData = sessionData.success ? sessionData.data : sessionData;
-        if (currentSessionData?.currentSession) {
-          const sessionId = currentSessionData.currentSession.id;
-          setCurrentSession(sessionId);
-          return sessionId;
-        }
+      const current = await apiClient.getCurrentSession();
+      const currentSessionData: { currentSession?: { id: string } } = (current && (current as { success?: boolean }).success)
+        ? (current as { data: { currentSession?: { id: string } } }).data
+        : (current as { currentSession?: { id: string } } | null) || {};
+      if (currentSessionData?.currentSession) {
+        const sessionId = currentSessionData.currentSession.id;
+        setCurrentSession(sessionId);
+        return sessionId;
       }
 
       // If no current session, create a new one for CBT diary
       const title = 'CBT Session - ' + new Date().toLocaleDateString();
-      const createResponse = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title }),
-      });
-
-      if (createResponse.ok) {
-        const result = await createResponse.json();
-        const newSession = result.success ? result.data : result;
+      const createResp = await apiClient.createSession({ title });
+      if (createResp && createResp.success && createResp.data) {
+        const newSession = createResp.data as components['schemas']['Session'];
         const sessionId = newSession.id;
         setCurrentSession(sessionId);
         
         // Set as current session
-        await fetch('/api/sessions/current', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId }),
-        });
+        await apiClient.setCurrentSession(sessionId);
         
         return sessionId;
       }

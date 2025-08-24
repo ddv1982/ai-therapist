@@ -5,7 +5,7 @@
 
 import { ReactNode } from 'react';
 import { ModelConfig, Message, Session } from './index';
-import type { CBTDiaryFormData } from './therapy';
+import type { CBTFormData } from './therapy';
 
 // ============================================================================
 // COMMON PROP PATTERNS
@@ -272,9 +272,9 @@ export interface AuthFormProps extends LoadingComponentProps, ErrorComponentProp
  */
 export interface CBTDiaryProps {
   sessionId?: string;
-  onSave: (entry: CBTDiaryFormData) => Promise<void>;
+  onSave: (entry: CBTFormData) => Promise<void>;
   onCancel: () => void;
-  initialData?: Partial<CBTDiaryFormData>;
+  initialData?: Partial<CBTFormData>;
 }
 
 /**
@@ -295,7 +295,7 @@ export interface EmotionScaleProps {
 export interface TherapeuticToolProps {
   sessionId?: string;
   toolType: 'cbt_diary' | 'mood_tracker' | 'thought_record' | 'progress_notes';
-  onComplete: (data: CBTDiaryFormData | Record<string, unknown>) => void;
+  onComplete: (data: CBTFormData | Record<string, unknown>) => void;
   onCancel: () => void;
 }
 

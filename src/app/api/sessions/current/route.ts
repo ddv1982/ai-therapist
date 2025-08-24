@@ -1,21 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/database/db';
-import { logger, createRequestLogger } from '@/lib/utils/logger';
+import { logger } from '@/lib/utils/logger';
+import { withAuth } from '@/lib/api/api-middleware';
+import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
-export async function GET(request: NextRequest) {
-  const requestContext = createRequestLogger(request);
-  
+export const GET = withAuth(async (_request, context) => {
   try {
-    logger.debug('Fetching current active session', requestContext);
+    logger.debug('Fetching current active session', context);
     
     // Get unified user ID for cross-device session access
-    const { getSingleUserInfo } = await import('@/lib/auth/user-session');
-    const userInfo = getSingleUserInfo(request);
+    const userId = context.userInfo.userId;
 
     // Find the most recent active session with messages
     const currentSession = await prisma.session.findFirst({
       where: { 
-        userId: userInfo.userId,
+        userId: userId,
         status: 'active'
       },
       orderBy: [
@@ -34,8 +33,8 @@ export async function GET(request: NextRequest) {
     });
 
     if (!currentSession) {
-      logger.info('No active session found', requestContext);
-      return NextResponse.json({ currentSession: null });
+      logger.info('No active session found', context);
+      return createSuccessResponse({ currentSession: null }, { requestId: context.requestId });
     }
 
     // Return session info without all messages (for performance)
@@ -49,52 +48,31 @@ export async function GET(request: NextRequest) {
     };
 
     logger.info('Current session found', {
-      ...requestContext,
+      ...context,
       sessionId: currentSession.id,
       messageCount: currentSession._count.messages
     });
 
-    return NextResponse.json({ currentSession: sessionInfo });
-  } catch (error) {
-    const err = error as Error;
-    logger.databaseError('fetch current session', err, requestContext);
-    
-    return NextResponse.json(
-      { 
-        error: 'Failed to fetch current session',
-        details: 'Unable to retrieve your current therapy session. Please refresh the page.',
-        code: 'CURRENT_SESSION_FETCH_ERROR'
-      },
-      { status: 500 }
-    );
+    return createSuccessResponse({ currentSession: sessionInfo }, { requestId: context.requestId });
+  } catch {
+    return createErrorResponse('Failed to fetch current session', 500, { requestId: context.requestId });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
-  const requestContext = createRequestLogger(request);
-  
+export const POST = withAuth(async (request: NextRequest, context) => {
   try {
-    logger.debug('Setting current active session', requestContext);
-    
+    logger.debug('Setting current active session', context);
     const body = await request.json();
-    const { sessionId } = body;
-    
+    const { sessionId } = body as { sessionId?: string };
     if (!sessionId) {
-      return NextResponse.json(
-        { error: 'Session ID is required' },
-        { status: 400 }
-      );
+      return createErrorResponse('Session ID is required', 400, { requestId: context.requestId });
     }
-
-    // Get unified user ID for cross-device session access
-    const { getSingleUserInfo } = await import('@/lib/auth/user-session');
-    const userInfo = getSingleUserInfo(request);
 
     // Update the session's updatedAt to mark it as current
     const session = await prisma.session.update({
       where: { 
         id: sessionId,
-        userId: userInfo.userId // Ensure user can only update their own sessions
+        userId: context.userInfo.userId
       },
       data: {
         updatedAt: new Date(),
@@ -103,29 +81,16 @@ export async function POST(request: NextRequest) {
     });
 
     logger.info('Current session updated', {
-      ...requestContext,
+      ...context,
       sessionId: session.id
     });
 
-    return NextResponse.json({ success: true, session });
+    return createSuccessResponse({ success: true, session }, { requestId: context.requestId });
   } catch (error) {
     const err = error as Error;
-    logger.databaseError('set current session', err, requestContext);
-    
-    if (err.message.includes('Record to update not found')) {
-      return NextResponse.json(
-        { error: 'Session not found or access denied' },
-        { status: 404 }
-      );
+    if (typeof err.message === 'string' && err.message.includes('Record to update not found')) {
+      return createErrorResponse('Session not found or access denied', 404, { requestId: context.requestId });
     }
-    
-    return NextResponse.json(
-      { 
-        error: 'Failed to set current session',
-        details: 'Unable to set your current therapy session. Please try again.',
-        code: 'CURRENT_SESSION_SET_ERROR'
-      },
-      { status: 500 }
-    );
+    return createErrorResponse('Failed to set current session', 500, { requestId: context.requestId });
   }
-}
+});

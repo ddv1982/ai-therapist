@@ -21,9 +21,6 @@ jest.mock('@/lib/database/db', () => ({
 
 jest.mock('@/lib/api/api-auth', () => ({
   validateApiAuth: jest.fn(() => Promise.resolve({ isValid: true })),
-  createAuthErrorResponse: jest.fn(() => 
-    Response.json({ error: 'Authentication required' }, { status: 401 })
-  ),
 }));
 
 jest.mock('@/lib/utils/logger', () => ({

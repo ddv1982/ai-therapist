@@ -189,32 +189,18 @@ function ChatPageContent() {
   // Save message to database (memoized)
   const saveMessage = useCallback(async (sessionId: string, role: 'user' | 'assistant', content: string, modelUsed?: string) => {
     try {
-      const response = await fetch(`/api/sessions/${sessionId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          role,
-          content,
-          modelUsed,
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        // Handle new standardized API response format
-        return result.success ? result.data : result;
-      } else {
-        logger.error('Failed to save message to database', {
-          component: 'ChatPage',
-          operation: 'saveMessage',
-          sessionId,
-          role,
-          status: response.status
-        });
-        return null;
+      const resp = await apiClient.postMessage(sessionId, { role, content, modelUsed });
+      if (resp && resp.success && resp.data) {
+        return resp.data as components['schemas']['Message'];
       }
+      logger.error('Failed to save message to database', {
+        component: 'ChatPage',
+        operation: 'saveMessage',
+        sessionId,
+        role,
+        status: resp && resp.success === false ? 400 : 500
+      });
+      return null;
     } catch (error) {
       logger.error('Error saving message to database', {
         component: 'ChatPage',
@@ -241,13 +227,10 @@ function ChatPageContent() {
       // First try to get from localStorage for faster loading
       const savedCurrentSession = localStorage.getItem('currentSessionId');
       
-      const response = await fetch('/api/sessions/current');
-      if (response.ok) {
-        const data = await response.json();
-        // Handle new standardized API response format
-        const currentSessionData = data.success ? data.data : data;
-        if (currentSessionData?.currentSession) {
-          const sessionId = currentSessionData.currentSession.id;
+      const data = await apiClient.getCurrentSession();
+      const currentSessionData: { currentSession?: { id: string; messageCount?: number } } = (data && (data as { success?: boolean }).success) ? (data as { data: { currentSession?: { id: string; messageCount?: number } } }).data : (data as { currentSession?: { id: string; messageCount?: number } });
+      if (currentSessionData?.currentSession) {
+        const sessionId = currentSessionData.currentSession.id;
           setCurrentSession(sessionId);
           await loadMessagesWithMemory(sessionId);
           
@@ -262,14 +245,13 @@ function ChatPageContent() {
           });
           return;
         }
-      }
       
       // Fallback: if no current session from API but we have one saved locally
       if (savedCurrentSession) {
         try {
           // Verify the saved session still exists
-          const verifyResponse = await fetch(`/api/sessions/${savedCurrentSession}`);
-          if (verifyResponse.ok) {
+          const verifyResp = await apiClient.getSessionById(savedCurrentSession);
+          if (verifyResp && verifyResp.success && verifyResp.data) {
             setCurrentSession(savedCurrentSession);
             await loadMessagesWithMemory(savedCurrentSession);
             logger.info('Restored session from localStorage', {
@@ -371,7 +353,7 @@ function ChatPageContent() {
   const setCurrentSessionAndSync = useCallback(async (sessionId: string) => {
     try {
       // Update the backend to mark this as the current session
-      await fetch('/api/sessions/current', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId }) });
+      await apiClient.setCurrentSession(sessionId);
       
       setCurrentSession(sessionId);
       localStorage.setItem('currentSessionId', sessionId);

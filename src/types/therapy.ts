@@ -367,30 +367,7 @@ export const createInitialCBTFormData = (): CBTFormData => ({
   originalThoughtCredibility: 5
 });
 
-// =============================================================================
-// LEGACY COMPATIBILITY EXPORTS
-// =============================================================================
-// These maintain backward compatibility while migrating to consolidated types
-
-/** @deprecated Use EmotionData instead */
-export type CBTDiaryEmotions = EmotionData;
-
-/** @deprecated Use ThoughtData instead */
-export type CBTDiaryAutomaticThought = ThoughtData;
-
-/** @deprecated Use ChallengeQuestionData instead */
-export type CBTDiaryChallengeQuestion = ChallengeQuestionData;
-
-/** @deprecated Use RationalThoughtData instead */
-export type CBTDiaryRationalThought = RationalThoughtData;
-
-/** @deprecated Use SchemaMode instead */
-export type CBTDiarySchemaMode = SchemaMode;
-
-/** @deprecated Use CBTFormData instead */
-export type CBTDiaryFormData = CBTFormData;
-
-/** @deprecated Use createInitialCBTFormData() instead */
+// Legacy CBTDiary* aliases have been removed. Use consolidated types above.
 // =============================================================================
 // EXTENDED LEGACY TYPES (Schema Reflection Support)
 // =============================================================================

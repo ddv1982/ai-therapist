@@ -1,9 +1,6 @@
 // CBT Therapy feature barrel exports
 // Provides clean imports for all CBT-related functionality
 
-// Main modals
-export { CBTDiaryModal } from './cbt-diary-modal';
-
 // Export utilities
 export { CBTExportButton } from './cbt-export-button';
 

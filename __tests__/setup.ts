@@ -35,3 +35,17 @@ export {
 
 // Global test configuration message
 console.log('🧪 Unified Test Architecture Loaded - 23 optimization patterns active');
+
+// Ensure X-Request-Id exists in tests for API middleware
+if (typeof global.Headers !== 'undefined') {
+  const OriginalHeaders = global.Headers;
+  // @ts-ignore
+  global.Headers = class TestHeaders extends OriginalHeaders {
+    constructor(init?: HeadersInit) {
+      super(init);
+      if (!this.get('x-request-id')) {
+        this.set('x-request-id', 'test-request');
+      }
+    }
+  };
+}

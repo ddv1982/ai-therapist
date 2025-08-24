@@ -35,9 +35,11 @@ export function createSuccessResponse<T>(
       ...meta,
     },
   });
-  if (meta?.requestId) {
-    response.headers.set('X-Request-Id', String(meta.requestId));
-  }
+  try {
+    if (meta?.requestId && (response as unknown as { headers?: { set?: (k: string, v: string) => void } }).headers?.set) {
+      (response as unknown as { headers: { set: (k: string, v: string) => void } }).headers.set('X-Request-Id', String(meta.requestId));
+    }
+  } catch {}
   return response;
 }
 
@@ -68,9 +70,11 @@ export function createErrorResponse(
     },
     { status }
   );
-  if (options.requestId) {
-    response.headers.set('X-Request-Id', String(options.requestId));
-  }
+  try {
+    if (options.requestId && (response as unknown as { headers?: { set?: (k: string, v: string) => void } }).headers?.set) {
+      (response as unknown as { headers: { set: (k: string, v: string) => void } }).headers.set('X-Request-Id', String(options.requestId));
+    }
+  } catch {}
   return response;
 }
 

@@ -82,6 +82,4 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthValidat
 /**
  * Create a standardized error response for authentication failures
  */
-export function createAuthErrorResponse(error: string, status: number = 401) {
-  return Response.json({ error }, { status });
-}
+// Deprecated: createAuthErrorResponse has been replaced by standardized helpers in api-response.ts

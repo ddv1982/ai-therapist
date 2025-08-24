@@ -3,8 +3,6 @@
  * Comprehensive therapeutic support components
  */
 
-// CBT (Cognitive Behavioral Therapy) components
-export * from './cbt/cbt-diary-modal';
 export * from './cbt/cbt-export-button';
 
 // Memory and session management
