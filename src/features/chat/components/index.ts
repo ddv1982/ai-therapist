@@ -3,7 +3,6 @@
  * Components for chat interface, sessions, and messaging functionality
  */
 
-export * from './chat-interface';
 export * from './chat-settings';
 export * from './session-controls';
 export * from './session-sidebar';

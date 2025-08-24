@@ -34,6 +34,8 @@ import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { apiClient } from '@/lib/api/client';
 import type { components } from '@/types/api.generated';
 import { getApiData } from '@/lib/api/api-response';
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 
 type ListSessionsResponse = import('@/lib/api/api-response').ApiResponse<components['schemas']['Session'][]>;
 type CreateSessionResponse = import('@/lib/api/api-response').ApiResponse<components['schemas']['Session']>;
@@ -77,6 +79,52 @@ function ChatPageContent() {
   const [showMemoryModal, setShowMemoryModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const aiPlaceholderIdRef = useRef<string | null>(null);
+
+  // AI SDK: single transport for chat streaming through /api/chat
+  const { sendMessage: sendAiMessage } = useChat({
+    id: currentSession ?? 'default',
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+      body: {
+        selectedModel: 'openai/gpt-oss-20b',
+        sessionId: currentSession ?? undefined,
+      },
+    }),
+    onError: (error) => {
+      setIsLoading(false);
+      logger.error('Chat stream error', { component: 'ChatPage' }, error);
+    },
+    onFinish: async ({ message }) => {
+      try {
+        // Extract text from AI SDK message parts
+        const textContent = (message.parts ?? [])
+          .reduce((acc, part) => acc + (part.type === 'text' ? (part.text ?? '') : ''), '');
+
+        // Update the last placeholder message content
+        if (aiPlaceholderIdRef.current) {
+          const placeholderId = aiPlaceholderIdRef.current;
+          setMessages(prev => prev.map(m => (
+            m.id === placeholderId ? { ...m, content: textContent } : m
+          )));
+        }
+
+        // Persist assistant message
+        if (currentSession) {
+          await saveMessage(currentSession, 'assistant', textContent, 'openai/gpt-oss-20b');
+          await loadSessions();
+        }
+      } catch (err) {
+        logger.error('Failed to finalize assistant message', {
+          component: 'ChatPage',
+          operation: 'onFinish'
+        }, err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        aiPlaceholderIdRef.current = null;
+        setIsLoading(false);
+      }
+    }
+  });
   
   // Mobile Safari debugging
   const logMobileError = useCallback(async (error: unknown, context: string) => {
@@ -460,96 +508,31 @@ function ChatPageContent() {
     setInput('');
     setIsLoading(true);
 
-    // Save user message to database
-    await saveMessage(sessionId!, 'user', userMessage.content);
+    // Save user message to database (defensive guard for session)
+    if (!sessionId) {
+      logger.error('Attempted to send message without a session', { component: 'ChatPage', operation: 'sendMessage' });
+      return;
+    }
+    await saveMessage(sessionId, 'user', userMessage.content);
     
     // Reload sessions to update message count in sidebar
     await loadSessions();
-
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [...messages, userMessage].map(msg => ({
-            role: msg.role,
-            content: msg.content
-          })),
-          selectedModel: 'openai/gpt-oss-20b',
-          sessionId: sessionId
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send message');
-      }
-
-      // Create AI message placeholder
+      // Create AI message placeholder (typing indicator)
       const aiMessage: Message = {
         id: generateUUID(),
         role: 'assistant',
         content: '',
         timestamp: new Date()
       };
+      aiPlaceholderIdRef.current = aiMessage.id;
       setMessages(prev => [...prev, aiMessage]);
 
-      // Handle AI SDK streaming response
-      if (response.body) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullContent = '';
-        
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n');
-            
-            for (const line of lines) {
-              if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-                try {
-                  const data = JSON.parse(line.slice(6));
-                  if (data.type === 'text-delta' && data.delta) {
-                    fullContent += data.delta;
-                    setMessages(prev => prev.map(msg => 
-                      msg.id === aiMessage.id 
-                        ? { ...msg, content: fullContent }
-                        : msg
-                    ));
-                  }
-                } catch {
-                  // Skip invalid JSON lines
-                }
-              }
-            }
-          }
-          
-          // Save AI response to database with model information
-          await saveMessage(sessionId!, 'assistant', fullContent, 'openai/gpt-oss-20b');
-          
-          // Reload sessions to update message count in sidebar
-          await loadSessions();
-          
-          setIsLoading(false);
-        } catch (error) {
-          setIsLoading(false);
-          logger.error('Error processing AI response stream', {
-            component: 'ChatPage',
-            operation: 'sendMessage',
-            sessionId: sessionId!,
-            model: 'openai/gpt-oss-20b'
-          }, error instanceof Error ? error : new Error(String(error)));
-          showToast({
-            type: 'error',
-            title: 'Streaming Error',
-            message: 'Failed to process AI response. Please try again.'
-          });
-        }
-      }
+      // Use AI SDK React to stream via /api/chat
+      await sendAiMessage({
+        role: 'user',
+        parts: [{ type: 'text', text: userMessage.content }]
+      });
     } catch (error) {
       setIsLoading(false);
       logger.error('Error sending message to AI', {
@@ -581,7 +564,7 @@ function ChatPageContent() {
         });
       }
     }
-  }, [input, isLoading, messages, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions, setMessages]);
+  }, [input, isLoading, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions, setMessages, sendAiMessage]);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {

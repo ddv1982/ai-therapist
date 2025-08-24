@@ -12,7 +12,6 @@ export const API_ENDPOINTS = {
   CHAT: '/api/chat',
   SESSIONS: '/api/sessions',
   SESSION_MESSAGES: (id: string) => `/api/sessions/${id}/messages`,
-  REPORTS: '/api/reports',
   AUTH: '/api/auth',
   MODELS: '/api/models',
 } as const;

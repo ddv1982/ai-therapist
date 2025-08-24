@@ -5,6 +5,7 @@ import { THERAPY_SYSTEM_PROMPT } from '@/lib/therapy/therapy-prompts';
 import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
 import { selectModel } from '@/lib/model-utils';
+import { getToolsForModel } from '@/ai/tools';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -53,30 +54,54 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       );
     }
 
-    // Validate and narrow message types
-    const isApiChatMessage = (value: unknown): value is ApiChatMessage => {
-      if (typeof value !== 'object' || value === null) return false;
-      const v = value as { role?: unknown; content?: unknown };
-      return (v.role === 'user' || v.role === 'assistant') && typeof v.content === 'string';
+    // Accept both legacy { role, content } and AI SDK UI message { role, parts } shapes
+    const normalizeMessages = (raw: unknown): ApiChatMessage[] | null => {
+      if (!Array.isArray(raw)) return null;
+      const result: ApiChatMessage[] = [];
+      for (const item of raw as unknown[]) {
+        if (typeof item !== 'object' || item === null) return null;
+        const v = item as { role?: unknown; content?: unknown; parts?: unknown };
+        if (v.role !== 'user' && v.role !== 'assistant') return null;
+        if (typeof v.content === 'string') {
+          result.push({ role: v.role, content: v.content });
+          continue;
+        }
+        if (Array.isArray(v.parts)) {
+          const parts = v.parts as Array<{ type?: unknown; text?: unknown }>;
+          const text = parts
+            .map(p => (p && (p.type === 'text') && typeof p.text === 'string' ? p.text : ''))
+            .join('');
+          result.push({ role: v.role, content: text });
+          continue;
+        }
+        return null;
+      }
+      return result;
     };
-    if (!Array.isArray(messages) || !messages.every(isApiChatMessage)) {
+
+    const typedMessages = normalizeMessages(messages);
+    if (!typedMessages) {
       return new Response(
         JSON.stringify({ error: "Invalid messages format" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
-    const typedMessages: ApiChatMessage[] = messages;
     const lastContent = typedMessages.length > 0 ? typedMessages[typedMessages.length - 1].content : '';
     // Respect explicit selectedModel when provided, otherwise auto-select
     const parsedSelectedModel = typeof (fullBody as { selectedModel?: unknown } | undefined)?.selectedModel === 'string'
       ? (fullBody as { selectedModel: string }).selectedModel
       : undefined;
+    const webSearchEnabled = typeof (fullBody as { webSearchEnabled?: unknown } | undefined)?.webSearchEnabled === 'boolean'
+      ? (fullBody as { webSearchEnabled?: boolean }).webSearchEnabled
+      : false;
     const { modelId } = parsedSelectedModel ? { modelId: parsedSelectedModel } : selectModel(String(lastContent));
+    const tools = getToolsForModel(modelId, webSearchEnabled);
 
     const result = streamText({
       model: model.languageModel(modelId),
       system: THERAPY_SYSTEM_PROMPT,
       messages: typedMessages, // AI SDK handles conversion automatically
+      tools,
       experimental_telemetry: {
         isEnabled: false,
       },

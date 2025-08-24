@@ -70,18 +70,7 @@ export class ApiClient {
     return json as Resp;
   }
 
-  // Reports
-  async generateReport(body: paths['/reports']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<unknown>> {
-    type Resp = ApiResponse<unknown>;
-    const res = await fetch(this.withBase('/api/reports'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-      credentials: 'include',
-    });
-    const json = await parseJsonSafe(res);
-    return json as Resp;
-  }
+  // Reports (legacy POST /api/reports removed)
 
   // Reports (detailed generate endpoint)
   async generateReportDetailed(body: { sessionId: string; messages: Array<{ role: string; content: string; timestamp?: string }>; model?: string }) {

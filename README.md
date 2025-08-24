@@ -82,19 +82,23 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - `npm run db:studio` - Open Prisma Studio
 
 ### Testing
-- `npm run test` - Run unit tests (945 tests, 100% pass rate)
+- `npm run test` - Run unit tests
 - `npm run test:coverage` - Generate coverage report
 
 ## 🧠 AI Model System
 
+### Unified AI SDK 5 + Groq
+- Client streaming uses `@ai-sdk/react` `useChat` with `DefaultChatTransport` to `/api/chat`.
+- Server streaming uses AI SDK 5 `streamText` with Groq models from `src/ai/providers.ts`.
+- Reports use AI SDK 5 `generateText` via `src/lib/api/groq-client.ts`.
+- A single source of truth for models is defined in `src/ai/providers.ts`.
+
 ### Stateless 3-Tier Selection
-The app automatically selects the optimal AI model for each message:
+The app auto-selects an optimal model where not explicitly set:
 
-- **🧠 Deep Thinking** - Complex analysis with `openai/gpt-oss-120b`
-- **🔍 Web Search** - Current research with browser tools  
-- **💬 Regular Chat** - Fast responses with `openai/gpt-oss-20b`
-
-Triggers like "think hard", "search for", or CBT content automatically select the appropriate model.
+- **🧠 Deep Thinking**: `openai/gpt-oss-120b`
+- **🔍 Web Search**: enabled tools when supported
+- **💬 Regular Chat**: `openai/gpt-oss-20b`
 
 ## 🎯 Therapeutic Features
 
@@ -131,8 +135,7 @@ BYPASS_AUTH="true"  # localhost only
 ```
 
 ### API Key Setup
-- **Environment Variable** (recommended): Set `GROQ_API_KEY`
-- **UI Configuration**: Enter in sidebar if env var not set
+- Server-side only via `GROQ_API_KEY` (used by AI SDK Groq provider); never sent to client.
 
 ## 📱 Mobile Experience
 
