@@ -12,6 +12,7 @@ interface ChatState {
     temperature: number;
     maxTokens: number;
     topP: number;
+    webSearchEnabled: boolean; // Add websearch toggle
   };
 }
 
@@ -26,6 +27,7 @@ const initialState: ChatState = {
     temperature: 0.7,
     maxTokens: 4096,
     topP: 0.9,
+    webSearchEnabled: false, // Default to disabled
   },
 };
 

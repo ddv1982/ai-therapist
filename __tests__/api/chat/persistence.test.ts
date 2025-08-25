@@ -23,6 +23,10 @@ jest.mock('@/ai/providers', () => ({
   model: {
     languageModel: jest.fn().mockReturnValue('mock-model')
   },
+  languageModels: {
+    'openai/gpt-oss-20b': 'mock-model-20b',
+    'openai/gpt-oss-120b': 'mock-model-120b'
+  },
 }));
 
 // Mock DB and queries

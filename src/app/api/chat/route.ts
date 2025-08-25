@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server';
-import { model } from "@/ai/providers";
+import { languageModels, ModelID } from "@/ai/providers";
 import { streamText } from "ai";
+import { groq } from "@ai-sdk/groq";
 import { THERAPY_SYSTEM_PROMPT } from '@/lib/therapy/therapy-prompts';
 import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
-import { selectModel } from '@/lib/model-utils';
-import { getToolsForModel } from '@/ai/tools';
+
 import { prisma } from '@/lib/database/db';
 import { verifySessionOwnership } from '@/lib/database/queries';
 import { encryptMessage } from '@/lib/chat/message-encryption';
@@ -89,7 +89,6 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
-    const lastContent = typedMessages.length > 0 ? typedMessages[typedMessages.length - 1].content : '';
     // Extract sessionId for server-side persistence of assistant messages
     const sessionId = typeof (fullBody as { sessionId?: unknown } | undefined)?.sessionId === 'string'
       ? (fullBody as { sessionId: string }).sessionId
@@ -101,28 +100,89 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     const webSearchEnabled = typeof (fullBody as { webSearchEnabled?: unknown } | undefined)?.webSearchEnabled === 'boolean'
       ? (fullBody as { webSearchEnabled?: boolean }).webSearchEnabled
       : false;
-    const { modelId } = parsedSelectedModel ? { modelId: parsedSelectedModel } : selectModel(String(lastContent));
-    const tools = getToolsForModel(modelId, webSearchEnabled);
-
-    const streamParams: Record<string, unknown> = {
-      model: model.languageModel(modelId),
-      system: THERAPY_SYSTEM_PROMPT,
-      messages: typedMessages, // AI SDK handles conversion automatically
-      experimental_telemetry: {
-        isEnabled: false,
-      },
-    };
-    if (tools && Object.keys(tools).length > 0) {
-      streamParams.tools = tools;
+    
+    // Simple toggle-based model selection: 120B for web search, 20B for fast responses
+    const modelId = webSearchEnabled ? 'openai/gpt-oss-120b' : (parsedSelectedModel || 'openai/gpt-oss-20b');
+    const hasWebSearch = webSearchEnabled;
+    
+    if (hasWebSearch) {
+      logger.info('Browser search ACTIVE - will search web', { 
+        apiEndpoint: '/api/chat', 
+        requestId: context.requestId, 
+        modelId,
+        webSearchEnabled,
+        toolChoice: 'required'
+      });
     }
-    const result = streamText(streamParams as unknown as Parameters<typeof streamText>[0]);
+
+    // Build system prompt for use in streamText and error handling
+    const systemPrompt = hasWebSearch 
+      ? THERAPY_SYSTEM_PROMPT + `
+
+**WEB SEARCH CAPABILITIES ACTIVE:**
+You have access to browser search tools. When users ask for current information, research, or resources that would support their therapeutic journey, USE the browser search tool actively to provide helpful, up-to-date information. Web searches can enhance therapy by finding evidence-based resources, current research, mindfulness videos, support groups, or practical tools. After searching, integrate the findings therapeutically and relate them back to the client's needs and goals.`
+      : THERAPY_SYSTEM_PROMPT;
+
+    // Single streamText call with conditional properties
+    const result = streamText({
+      model: languageModels[modelId as ModelID],
+      system: systemPrompt,
+      messages: typedMessages,
+      ...(hasWebSearch && { tools: { browser_search: groq.tools.browserSearch({}) } }),
+      toolChoice: hasWebSearch ? 'required' : 'none',
+      experimental_telemetry: { isEnabled: false },
+    });
 
     const uiResponse = result.toUIMessageStreamResponse({
       onError: (error) => {
         if (error instanceof Error && error.message.includes("Rate limit")) {
           return "Rate limit exceeded. Please try again later.";
         }
-        logger.error('Chat stream error', { apiEndpoint: '/api/chat', requestId: context.requestId, userId: context.userInfo.userId }, error instanceof Error ? error : new Error(String(error)));
+        
+        // Handle tool choice conflicts and web search specific errors
+        if (error instanceof Error) {
+          const errorMessage = error.message.toLowerCase();
+          
+          // Handle tool choice conflicts specifically
+          if (errorMessage.includes("tool choice is none, but model called a tool") ||
+              errorMessage.includes("tool choice is required, but model did not call a tool")) {
+            logger.error('Tool choice conflict detected', { 
+              apiEndpoint: '/api/chat', 
+              requestId: context.requestId, 
+              userId: context.userInfo.userId,
+              webSearchEnabled,
+              modelId,
+              errorMessage: error.message,
+              promptIncludes: systemPrompt.includes('WEB SEARCH CAPABILITIES ACTIVE'),
+              errorType: 'tool_choice_conflict'
+            });
+            return "I encountered a configuration issue. Let me try again without additional tools.";
+          }
+          
+          // Handle other web search related errors
+          if (errorMessage.includes("browser_search") || 
+              errorMessage.includes("web search") || 
+              errorMessage.includes("tool")) {
+            logger.error('Web search tool error detected', { 
+              apiEndpoint: '/api/chat', 
+              requestId: context.requestId, 
+              userId: context.userInfo.userId,
+              webSearchEnabled,
+              modelId,
+              errorMessage: error.message,
+              errorType: 'web_search_error'
+            });
+            return "I encountered an issue with web search functionality. Let me help you with the information I have available.";
+          }
+        }
+        
+        // Improve error detail logging for provider/tool issues
+        try {
+          const serialized = typeof error === 'object' ? JSON.stringify(error as unknown as Record<string, unknown>) : String(error);
+          logger.error('Chat stream error', { apiEndpoint: '/api/chat', requestId: context.requestId, userId: context.userInfo.userId, detail: serialized });
+        } catch {
+          logger.error('Chat stream error', { apiEndpoint: '/api/chat', requestId: context.requestId, userId: context.userInfo.userId }, error instanceof Error ? error : new Error(String(error)));
+        }
         return "An error occurred.";
       },
     });

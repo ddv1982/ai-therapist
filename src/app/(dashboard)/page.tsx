@@ -36,6 +36,8 @@ import type { components } from '@/types/api.generated';
 import { getApiData } from '@/lib/api/api-response';
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { updateSettings } from '@/store/slices/chatSlice';
 
 type ListSessionsResponse = import('@/lib/api/api-response').ApiResponse<components['schemas']['Session'][]>;
 type CreateSessionResponse = import('@/lib/api/api-response').ApiResponse<components['schemas']['Session']>;
@@ -56,6 +58,8 @@ interface Session {
 function ChatPageContent() {
   const router = useRouter();
   const { showToast } = useToast();
+  const dispatch = useAppDispatch();
+  const settings = useAppSelector(state => state.chat.settings);
   
   // Use the new chat messages hook
   const {
@@ -88,8 +92,8 @@ function ChatPageContent() {
     transport: new DefaultChatTransport({
       api: '/api/chat',
       body: {
-        selectedModel: 'openai/gpt-oss-20b',
         sessionId: currentSession ?? undefined,
+        // webSearchEnabled will be passed dynamically in sendMessage
       },
     }),
     onError: (error) => {
@@ -120,14 +124,14 @@ function ChatPageContent() {
             const items = (page?.items || []) as Array<{ role: string; content: string }>;
             const alreadySaved = items.some(it => it.role === 'assistant' && it.content === textContent);
             if (!alreadySaved) {
-              await saveMessage(sid, 'assistant', textContent, 'openai/gpt-oss-20b');
+              await saveMessage(sid, 'assistant', textContent, settings.webSearchEnabled ? 'openai/gpt-oss-120b' : settings.model);
             }
           } catch {
             logger.warn('Assistant persistence fallback check failed; attempting save', {
               component: 'ChatPage',
               operation: 'assistantFallbackPersist'
             });
-            await saveMessage(sid, 'assistant', textContent, 'openai/gpt-oss-20b');
+            await saveMessage(sid, 'assistant', textContent, settings.webSearchEnabled ? 'openai/gpt-oss-120b' : settings.model);
           }
           await loadMessages(sid);
           await loadSessions();
@@ -557,6 +561,11 @@ function ChatPageContent() {
       await sendAiMessage({
         role: 'user',
         parts: [{ type: 'text', text: userMessage.content }]
+      }, {
+        body: {
+          sessionId: currentSession ?? undefined,
+          webSearchEnabled: settings.webSearchEnabled
+        }
       });
     } catch (error) {
       setIsLoading(false);
@@ -564,7 +573,7 @@ function ChatPageContent() {
         component: 'ChatPage',
         operation: 'sendMessage',
         sessionId: sessionId || 'none',
-        model: 'openai/gpt-oss-20b'
+        model: settings.webSearchEnabled ? 'openai/gpt-oss-120b' : settings.model
       }, error instanceof Error ? error : new Error(String(error)));
       
       // Check if it's a model-related error with proper type handling
@@ -589,7 +598,7 @@ function ChatPageContent() {
         });
       }
     }
-  }, [input, isLoading, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions, setMessages, sendAiMessage]);
+  }, [input, isLoading, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions, setMessages, sendAiMessage, settings.webSearchEnabled, settings.model]);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -702,6 +711,13 @@ function ChatPageContent() {
   const openCBTDiary = useCallback(() => {
     router.push('/cbt-diary');
   }, [router]);
+
+  const handleWebSearchToggle = () => {
+    const newWebSearchEnabled = !settings.webSearchEnabled;
+    dispatch(updateSettings({ 
+      webSearchEnabled: newWebSearchEnabled,
+    }));
+  };
 
   // Create the chat UI bridge for CBT components
   const chatUIBridge: ChatUIBridge = {
@@ -869,12 +885,35 @@ function ChatPageContent() {
           }
         </div>
 
-        {/* API Key Status */}
-        <div className="p-4 border-t border-border/50 bg-gradient-to-t from-green-50/30 to-transparent dark:from-green-900/10">
-          <div className="flex items-center space-x-2 text-sm text-green-700 dark:text-green-300">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>✓ API Key Configured</span>
+        {/* Web Search Toggle (replaces API Key Status) */}
+        <div className="p-4 border-t border-border/50 bg-gradient-to-t from-blue-50/30 to-transparent dark:from-blue-900/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 text-sm text-blue-700 dark:text-blue-300">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span>Web Search</span>
+            </div>
+            <button
+              onClick={handleWebSearchToggle}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                settings.webSearchEnabled 
+                  ? 'bg-blue-600' 
+                  : 'bg-gray-200 dark:bg-gray-700'
+              }`}
+              aria-label={`Web search ${settings.webSearchEnabled ? 'enabled' : 'disabled'}`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  settings.webSearchEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
           </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {settings.webSearchEnabled 
+              ? 'Using 120B model with web search enabled' 
+              : 'Using 20B model for faster responses'
+            }
+          </p>
         </div>
 
 

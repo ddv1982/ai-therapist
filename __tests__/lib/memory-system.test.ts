@@ -171,7 +171,6 @@ describe('Memory System Core Functionality', () => {
       expect(prompt).toContain('You are a compassionate, professional AI therapist');
       expect(prompt).toContain('THERAPEUTIC MEMORY CONTEXT:');
       expect(prompt).toContain('Remember: Your primary role is to listen deeply');
-      expect(prompt).toContain('Web Search Guidelines:');
       expect(prompt).toContain('Response Guidelines:');
 
       // Memory section should be properly inserted

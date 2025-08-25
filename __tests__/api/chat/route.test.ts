@@ -6,6 +6,10 @@ jest.mock('@/ai/providers', () => ({
   model: {
     languageModel: jest.fn().mockReturnValue('mock-model')
   },
+  languageModels: {
+    'openai/gpt-oss-20b': 'mock-model-20b',
+    'openai/gpt-oss-120b': 'mock-model-120b'
+  },
   defaultModel: 'openai/gpt-oss-20b'
 }));
 
@@ -28,7 +32,7 @@ jest.mock('@/lib/therapy/therapy-prompts', () => ({
 }));
 
 // Mock imports
-import { model } from '@/ai/providers';
+import { model, languageModels } from '@/ai/providers';
 import { streamText } from 'ai';
 
 // Type the mocked functions
@@ -50,9 +54,6 @@ function createMockRequest(body: any, options: { url?: string } = {}): NextReque
 describe('/api/chat Route - Simplified Architecture', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Reset model mock to return 'mock-model'
-    mockModel.languageModel.mockReturnValue('mock-model' as any);
     
     // Default streaming response
     mockStreamText.mockReturnValue({
@@ -80,19 +81,17 @@ describe('/api/chat Route - Simplified Architecture', () => {
 
       // Verify AI SDK streamText was called with correct parameters
       expect(mockStreamText).toHaveBeenCalledWith({
-        model: 'mock-model',
+        model: 'mock-model-20b', // Direct model from languageModels
         system: 'Mock therapeutic system prompt',
         messages: [
           { id: '1', role: 'user', content: 'Hello' },
           { id: '2', role: 'assistant', content: 'Hi there!' }
         ],
+        toolChoice: 'none',
         experimental_telemetry: {
           isEnabled: false
         }
       });
-
-      // Verify model selection
-      expect(mockModel.languageModel).toHaveBeenCalledWith('openai/gpt-oss-20b');
 
       // Verify response structure
       expect(response).toBeTruthy();
@@ -107,7 +106,10 @@ describe('/api/chat Route - Simplified Architecture', () => {
 
       await POST(request);
 
-      expect(mockModel.languageModel).toHaveBeenCalledWith('openai/gpt-oss-20b');
+      // Verify streamText was called with correct model (default 20B model)
+      expect(mockStreamText).toHaveBeenCalledWith(expect.objectContaining({
+        model: 'mock-model-20b'
+      }));
     });
 
     it('should handle requests without sessionId', async () => {
@@ -118,11 +120,12 @@ describe('/api/chat Route - Simplified Architecture', () => {
 
       await POST(request);
 
-      expect(mockModel.languageModel).toHaveBeenCalledWith('openai/gpt-oss-120b');
+      // Verify streamText was called with correct model and parameters
       expect(mockStreamText).toHaveBeenCalledWith({
-        model: 'mock-model',
+        model: 'mock-model-120b',
         system: 'Mock therapeutic system prompt',
         messages: [{ id: '1', role: 'user', content: 'Hello without session' }],
+        toolChoice: 'none',
         experimental_telemetry: {
           isEnabled: false
         }
@@ -143,9 +146,10 @@ describe('/api/chat Route - Simplified Architecture', () => {
 
       // Should pass messages directly to streamText without conversion
       expect(mockStreamText).toHaveBeenCalledWith({
-        model: 'mock-model',
+        model: 'mock-model-20b', // Uses default 20B model
         system: 'Mock therapeutic system prompt',
         messages: messages,
+        toolChoice: 'none',
         experimental_telemetry: {
           isEnabled: false
         }
@@ -246,7 +250,11 @@ describe('/api/chat Route - Simplified Architecture', () => {
 
         await POST(request);
 
-        expect(mockModel.languageModel).toHaveBeenCalledWith(modelId);
+        // Verify streamText was called with the correct model from languageModels
+        const expectedModel = modelId === 'openai/gpt-oss-20b' ? 'mock-model-20b' : 'mock-model-120b';
+        expect(mockStreamText).toHaveBeenCalledWith(expect.objectContaining({
+          model: expectedModel
+        }));
       });
     });
   });

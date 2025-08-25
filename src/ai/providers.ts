@@ -1,5 +1,4 @@
 import { groq } from "@ai-sdk/groq";
-import { customProvider } from "ai";
 
 // Define the language models available through Groq
 // The API key is automatically read from GROQ_API_KEY environment variable
@@ -24,10 +23,10 @@ export const models = {
   },
 };
 
-// Create custom provider for therapeutic AI
-export const model = customProvider({
-  languageModels,
-});
+// Direct access to Groq models (preserves native capabilities)
+export const model = {
+  languageModel: (modelId: ModelID) => languageModels[modelId],
+};
 
 // TypeScript types for model IDs
 export type ModelID = keyof typeof languageModels;

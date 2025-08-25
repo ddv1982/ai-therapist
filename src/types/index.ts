@@ -63,6 +63,7 @@ export interface ChatSettings {
   temperature: number;
   topP: number;
   systemPrompt?: string;
+  webSearchEnabled: boolean; // Add websearch toggle
 }
 
 // Component prop types
