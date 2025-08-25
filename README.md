@@ -16,6 +16,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Schema Therapy** - Deep pattern recognition and healing approaches
 - **Crisis Intervention** - Automatic safety responses
 - **Session Reports** - AI-generated insights and progress tracking
+- **Web Search Integration** - Real-time access to therapeutic resources and current information
 
 ### 🔒 Enterprise Security
 - **AES-256-GCM Encryption** - All sensitive data encrypted
@@ -65,25 +66,39 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 5. **Open browser**
    - Navigate to `http://localhost:4000`
-   - Complete TOTP setup for secure access
+   - Complete TOTP setup for secure access (or use `BYPASS_AUTH=true` for development)
+   - Enable web search in chat settings for access to current information
    - Start your first therapeutic conversation
 
 ## 🛠 Development Commands
 
 ### Core Development
-- `npm run dev` - Start development server with Turbopack
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
+- `npm run dev` - Start development server with Turbopack on port 4000 (network accessible)
+- `npm run dev:local` - Start development server on localhost only
+- `npm run build` - Build for production (includes database setup)
+- `npm run start` - Start production server (network accessible)
+- `npm run lint` - Run ESLint for code quality
+- `npm run api:types` - Generate TypeScript types from OpenAPI spec
 
-### Database Management  
+### Database Management
+- `npm run db:setup` - Initialize and setup database (runs automatically in dev/build)
 - `npm run db:generate` - Generate Prisma client
-- `npm run db:push` - Push schema changes
-- `npm run db:studio` - Open Prisma Studio
+- `npm run db:push` - Push schema changes to database
+- `npm run db:migrate` - Create and apply migration
+- `npm run db:studio` - Open Prisma Studio for database inspection
 
 ### Testing
-- `npm run test` - Run unit tests
-- `npm run test:coverage` - Generate coverage report
+- `npm run test` - Run unit tests with Jest
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:coverage` - Generate test coverage report
+- `npm run test:e2e` - Run Playwright end-to-end tests
+- `npm run test:e2e:ui` - Run E2E tests with Playwright UI
+- `npm run test:e2e:debug` - Debug E2E tests
+
+### Security & Encryption
+- `npm run encryption:generate` - Generate new encryption keys
+- `npm run encryption:setup` - Setup encryption configuration
+- `npm run encryption:validate` - Validate encryption setup
 
 ## 🧠 AI Model System
 
@@ -93,12 +108,12 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - Reports use AI SDK 5 `generateText` via `src/lib/api/groq-client.ts`.
 - A single source of truth for models is defined in `src/ai/providers.ts`.
 
-### Stateless 3-Tier Selection
-The app auto-selects an optimal model where not explicitly set:
+### Smart Model Selection
+The app automatically selects the optimal model based on features:
 
-- **🧠 Deep Thinking**: `openai/gpt-oss-120b`
-- **🔍 Web Search**: enabled tools when supported
-- **💬 Regular Chat**: `openai/gpt-oss-20b`
+- **🔍 Web Search Enabled**: `openai/gpt-oss-120b` with browser search tools
+- **💬 Regular Chat**: `openai/gpt-oss-20b` for fast responses
+- **⚙️ Manual Override**: Users can explicitly select any available model
 
 ## 🎯 Therapeutic Features
 
@@ -130,8 +145,12 @@ GROQ_API_KEY="your_groq_api_key"
 NEXTAUTH_SECRET="your_secret"
 ENCRYPTION_KEY="your_32_char_key"
 
+# Optional Configuration
+CHAT_INPUT_MAX_BYTES="131072"  # Request size limit (default: 128KB)
+
 # Development only
-BYPASS_AUTH="true"  # localhost only
+BYPASS_AUTH="true"           # Skip authentication (localhost only)
+RATE_LIMIT_DISABLED="true"   # Disable API rate limiting
 ```
 
 ### API Key Setup
@@ -161,11 +180,11 @@ BYPASS_AUTH="true"  # localhost only
 ## 📊 Testing & Quality
 
 ### Comprehensive Test Suite
-- **945 Total Tests** with 100% pass rate
+- **772+ Total Tests** with 100% pass rate
 - **Security Testing** - Encryption and authentication validation
 - **Component Testing** - React Testing Library coverage
 - **API Testing** - Complete endpoint validation
-- **ERP Framework** - 48 tests for therapeutic patterns
+- **Therapeutic Framework Testing** - CBT, ERP, and schema therapy validation
 
 ### Test Organization
 ```
