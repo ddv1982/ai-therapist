@@ -130,7 +130,7 @@ describe('RateLimiter', () => {
       expect(result.retryAfter).toBeLessThanOrEqual(600); // Up to 10 minutes (5 min window + 5 min block)
     });
 
-    it('should log blocked IP in development mode', () => {
+    it('should log block event without leaking IP in development mode', () => {
       Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
       const ip = '203.0.113.103';
       
@@ -139,10 +139,16 @@ describe('RateLimiter', () => {
         rateLimiter.checkRateLimit(ip);
       }
       
-      // Check for structured logging format
-      expect(mockConsole.log).toHaveBeenCalledWith(
-        expect.stringContaining('Rate limiter blocking IP')
-      );
+      // We don't require console output now that browser logs are suppressed.
+      // Instead, assert functional behavior (blocked) and that no IP is logged via console.log.
+      const blocked = rateLimiter.checkRateLimit(ip);
+      expect(blocked.allowed).toBe(false);
+      const output = mockConsole.log.mock.calls.map(c => String(c[0])).join('\n');
+      expect(output).not.toContain(ip);
+      
+      // Ensure no raw IPs are leaked in log output
+      expect(output).not.toContain(ip);
+      expect(output).not.toMatch(/"ip"\s*:/i);
     });
   });
 

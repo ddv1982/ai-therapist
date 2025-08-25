@@ -6,6 +6,9 @@ import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
 import { selectModel } from '@/lib/model-utils';
 import { getToolsForModel } from '@/ai/tools';
+import { prisma } from '@/lib/database/db';
+import { verifySessionOwnership } from '@/lib/database/queries';
+import { encryptMessage } from '@/lib/chat/message-encryption';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -87,6 +90,10 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       );
     }
     const lastContent = typedMessages.length > 0 ? typedMessages[typedMessages.length - 1].content : '';
+    // Extract sessionId for server-side persistence of assistant messages
+    const sessionId = typeof (fullBody as { sessionId?: unknown } | undefined)?.sessionId === 'string'
+      ? (fullBody as { sessionId: string }).sessionId
+      : undefined;
     // Respect explicit selectedModel when provided, otherwise auto-select
     const parsedSelectedModel = typeof (fullBody as { selectedModel?: unknown } | undefined)?.selectedModel === 'string'
       ? (fullBody as { selectedModel: string }).selectedModel
@@ -110,7 +117,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     }
     const result = streamText(streamParams as unknown as Parameters<typeof streamText>[0]);
 
-    return result.toUIMessageStreamResponse({
+    const uiResponse = result.toUIMessageStreamResponse({
       onError: (error) => {
         if (error instanceof Error && error.message.includes("Rate limit")) {
           return "Rate limit exceeded. Please try again later.";
@@ -119,6 +126,142 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
         return "An error occurred.";
       },
     });
+
+    // Helper to persist from a full SSE text payload
+    const persistFromSseText = async (sseText: string) => {
+      try {
+        const { valid } = await verifySessionOwnership(sessionId!, context.userInfo.userId);
+        if (!valid) return;
+        let accumulated = '';
+        for (const rawLine of sseText.split('\n')) {
+          const line = rawLine.trim();
+          if (!line.startsWith('data:')) continue;
+          const payload = line.slice(5).trim();
+          try {
+            const obj = JSON.parse(payload);
+            if (typeof obj?.text === 'string') {
+              accumulated += obj.text;
+            } else if (Array.isArray(obj?.parts)) {
+              for (const part of obj.parts) {
+                if (part && part.type === 'text' && typeof part.text === 'string') {
+                  accumulated += part.text;
+                }
+              }
+            } else if (typeof obj?.delta?.text === 'string') {
+              accumulated += obj.delta.text;
+            }
+          } catch {
+            // ignore parse errors
+          }
+        }
+        if (accumulated) {
+          const encrypted = encryptMessage({ role: 'assistant', content: accumulated, timestamp: new Date() });
+          await prisma.message.create({
+            data: {
+              sessionId: sessionId!,
+              role: encrypted.role,
+              content: encrypted.content,
+              timestamp: encrypted.timestamp,
+              modelUsed: parsedSelectedModel,
+            },
+          });
+          logger.info('Assistant message persisted after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId });
+        }
+      } catch (persistError) {
+        logger.error('Failed to persist assistant message after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId }, persistError instanceof Error ? persistError : new Error(String(persistError)));
+      }
+    };
+
+    // If no session, just return the UI response
+    if (!sessionId) return uiResponse as Response;
+
+    // Prefer streaming tee when available
+    if ('body' in uiResponse && (uiResponse as Response).body && typeof (uiResponse as Response).body!.tee === 'function') {
+      try {
+        const [clientStream, serverStream] = (uiResponse as Response).body!.tee();
+        const consumeAndPersist = async () => {
+          const reader = serverStream.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+          let accumulated = '';
+          const processBuffer = () => {
+            let newlineIndex = buffer.indexOf('\n');
+            while (newlineIndex !== -1) {
+              const line = buffer.slice(0, newlineIndex);
+              buffer = buffer.slice(newlineIndex + 1);
+              const trimmed = line.trim();
+              if (trimmed.startsWith('data:')) {
+                const payload = trimmed.slice(5).trim();
+                try {
+                  const obj = JSON.parse(payload);
+                  if (typeof obj?.text === 'string') {
+                    accumulated += obj.text;
+                  } else if (Array.isArray(obj?.parts)) {
+                    for (const part of obj.parts) {
+                      if (part && part.type === 'text' && typeof part.text === 'string') {
+                        accumulated += part.text;
+                      }
+                    }
+                  } else if (typeof obj?.delta?.text === 'string') {
+                    accumulated += obj.delta.text;
+                  }
+                } catch {
+                  // ignore parse errors
+                }
+              }
+              newlineIndex = buffer.indexOf('\n');
+            }
+          };
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            processBuffer();
+          }
+          if (buffer.length > 0) processBuffer();
+          if (accumulated) {
+            const encrypted = encryptMessage({ role: 'assistant', content: accumulated, timestamp: new Date() });
+            await prisma.message.create({
+              data: {
+                sessionId,
+                role: encrypted.role,
+                content: encrypted.content,
+                timestamp: encrypted.timestamp,
+                modelUsed: parsedSelectedModel,
+              },
+            });
+            logger.info('Assistant message persisted after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId });
+          }
+        };
+
+        if (process.env.NODE_ENV === 'test') {
+          await consumeAndPersist();
+        } else {
+          void consumeAndPersist();
+        }
+        return new Response(clientStream, { status: (uiResponse as Response).status, headers: (uiResponse as Response).headers });
+      } catch {
+        // fall through to non-streaming fallback
+      }
+    }
+
+    // Fallback: if tee or web streams unavailable, clone and read full text
+    try {
+      const clone = (uiResponse as Response).clone?.() ?? uiResponse;
+      const sseText = await (clone as Response).text?.();
+      if (typeof sseText === 'string') {
+        if (process.env.NODE_ENV === 'test') {
+          // In tests, await to ensure deterministic persistence
+          await persistFromSseText(sseText);
+        } else {
+          // Fire-and-forget so we don't delay the response
+          void persistFromSseText(sseText);
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return uiResponse as Response;
   } catch (error) {
     logger.apiError('/api/chat', error as Error, { apiEndpoint: '/api/chat', requestId: context.requestId });
     return new Response(

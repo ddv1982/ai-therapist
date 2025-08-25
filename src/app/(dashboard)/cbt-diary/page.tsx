@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft,
   ChevronRight,
-  Brain
+  Brain,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
@@ -56,7 +57,7 @@ function CBTDiaryPageContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Use CBT data manager hook for draft management (transition phase)
-  const { status: dataManagerStatus, draftActions } = useCBTDataManager();
+  const { draftActions, savedDrafts, currentDraft } = useCBTDataManager();
 
   // Removed inline quick draft form to keep classic guided flow experience
   
@@ -89,9 +90,35 @@ function CBTDiaryPageContent() {
     scrollToBottom();
   }, [messages]);
 
-  // Check for existing draft using CBT data manager status
-  const hasDraft = dataManagerStatus.isDraftSaved;
-  const draftLastSaved: string | undefined = dataManagerStatus.lastAutoSave || undefined;
+  // Check for existing draft using saved drafts for immediate UI updates
+  const hasDraft = (savedDrafts?.length || 0) > 0 || !!currentDraft;
+  const draftLastSaved: string | undefined = (savedDrafts && savedDrafts[0]) ? savedDrafts[0].lastSaved : undefined;
+  
+  // Delete existing draft from Redux/localStorage
+  const handleDeleteDraft = useCallback(() => {
+    try {
+      // Remove any saved drafts
+      if (savedDrafts && savedDrafts.length > 0) {
+        for (const d of savedDrafts) {
+          draftActions.delete(d.id);
+        }
+      }
+      // Clear current unsaved draft state and local storage bridge
+      draftActions.reset();
+      clearCBTDraft();
+      showToast({
+        type: 'success',
+        title: 'Draft Deleted',
+        message: 'Your previous CBT draft has been removed.'
+      });
+    } catch {
+      showToast({
+        type: 'error',
+        title: 'Unable to delete draft',
+        message: 'Please try again.'
+      });
+    }
+  }, [draftActions, savedDrafts, showToast]);
 
   // Mobile detection
   useEffect(() => {
@@ -774,13 +801,24 @@ Your completed CBT session data has been processed and formatted for optimal rev
                   <div className="space-y-4">
                     {/* Draft info */}
                     <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold">📝 Previous Session Found</h3>
-                        {dataManagerStatus.isDraftSaved && (
-                          <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
-                            Saved
-                          </span>
-                        )}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold">📝 Previous Session Found</h3>
+                          {hasDraft && (
+                            <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                              Saved
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Delete draft"
+                          title="Delete draft"
+                          onClick={handleDeleteDraft}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                       <p className="text-sm opacity-90">
                         You have an unfinished CBT session from {draftLastSaved ? new Date(draftLastSaved).toLocaleDateString() : 'recently'}.

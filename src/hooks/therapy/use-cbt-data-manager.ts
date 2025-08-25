@@ -78,16 +78,9 @@ import { useChatUI } from '@/contexts/chat-ui-context';
 import { useCBTChatBridge } from '@/lib/therapy/use-cbt-chat-bridge';
 import { generateUUID } from '@/lib/utils/utils';
 
-// Performance optimized selectors using createSelector for memoization
-const selectCBTCurrentDraft = createSelector(
-  [(state: RootState) => state.cbt.currentDraft],
-  (currentDraft) => currentDraft
-);
-
-const selectCBTSessionData = createSelector(
-  [(state: RootState) => state.cbt.sessionData],
-  (sessionData) => sessionData
-);
+// Selectors: avoid identity result functions to prevent memoization warnings
+const selectCBTCurrentDraft = (state: RootState) => state.cbt.currentDraft;
+const selectCBTSessionData = (state: RootState) => state.cbt.sessionData;
 
 const selectCBTValidationState = createSelector(
   [
@@ -102,10 +95,7 @@ const selectCBTValidationState = createSelector(
   })
 );
 
-const selectCBTSavedDrafts = createSelector(
-  [(state: RootState) => state.cbt.savedDrafts],
-  (savedDrafts) => savedDrafts
-);
+const selectCBTSavedDrafts = (state: RootState) => state.cbt.savedDrafts;
 
 interface UseCBTDataManagerOptions {
   sessionId?: string;

@@ -108,7 +108,7 @@ class NetworkRateLimiter {
       if (now < blockExpiry) {
         if (process?.env?.NODE_ENV === 'development') {
           logger.warn('Rate limiter blocking IP', { 
-            ip, 
+            // do not include raw IP to respect no-IP logging policy
             attempts: entry.count, 
             maxAttempts: this.config.maxAttempts,
             retryInSeconds: Math.ceil((blockExpiry - now) / 1000),

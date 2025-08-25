@@ -80,6 +80,7 @@ function ChatPageContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const aiPlaceholderIdRef = useRef<string | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
 
   // AI SDK: single transport for chat streaming through /api/chat
   const { sendMessage: sendAiMessage } = useChat({
@@ -109,9 +110,26 @@ function ChatPageContent() {
           )));
         }
 
-        // Persist assistant message
-        if (currentSession) {
-          await saveMessage(currentSession, 'assistant', textContent, 'openai/gpt-oss-20b');
+        // Server is expected to persist the assistant message. As a fallback, if it hasn't,
+        // we will persist it client-side to ensure durability and then reload.
+        const sid = sessionIdRef.current;
+        if (sid) {
+          try {
+            const recent = await apiClient.listMessages(sid, { limit: 5 });
+            const page = recent ? getApiData(recent) : undefined;
+            const items = (page?.items || []) as Array<{ role: string; content: string }>;
+            const alreadySaved = items.some(it => it.role === 'assistant' && it.content === textContent);
+            if (!alreadySaved) {
+              await saveMessage(sid, 'assistant', textContent, 'openai/gpt-oss-20b');
+            }
+          } catch {
+            logger.warn('Assistant persistence fallback check failed; attempting save', {
+              component: 'ChatPage',
+              operation: 'assistantFallbackPersist'
+            });
+            await saveMessage(sid, 'assistant', textContent, 'openai/gpt-oss-20b');
+          }
+          await loadMessages(sid);
           await loadSessions();
         }
       } catch (err) {
@@ -125,6 +143,11 @@ function ChatPageContent() {
       }
     }
   });
+
+  // Keep a live ref of the current session for streaming callbacks
+  useEffect(() => {
+    sessionIdRef.current = currentSession;
+  }, [currentSession]);
   
   // Mobile Safari debugging
   const logMobileError = useCallback(async (error: unknown, context: string) => {
@@ -514,6 +537,8 @@ function ChatPageContent() {
       return;
     }
     await saveMessage(sessionId, 'user', userMessage.content);
+    // Ensure onFinish sees the latest session id
+    sessionIdRef.current = sessionId;
     
     // Reload sessions to update message count in sidebar
     await loadSessions();

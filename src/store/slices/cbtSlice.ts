@@ -158,6 +158,8 @@ const cbtSlice = createSlice({
         state.currentDraft = null;
         state.currentStep = 1;
       }
+      // Clear auto-save indicator when draft is deleted
+      state.lastAutoSave = null;
     },
     completeCBTEntry: (state, action: PayloadAction<CBTFormData>) => {
       state.completedEntries.push(action.payload);
@@ -183,6 +185,8 @@ const cbtSlice = createSlice({
       state.currentStep = 1;
       state.validationErrors = {};
       state.isSubmitting = false;
+      // Also clear auto-save indicator so UI updates immediately
+      state.lastAutoSave = null;
     },
     // Session-scoped actions for Redux-only draft management
     startCBTSession: (state, action: PayloadAction<{ sessionId: string }>) => {
