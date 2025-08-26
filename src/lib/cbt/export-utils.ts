@@ -209,12 +209,6 @@ ${formatEmotions(formData.finalEmotions) || '[No final emotions rated]'}
 ### New Behaviors
 ${formData.newBehaviors || '[No new behaviors identified]'}
 
-### Alternative Responses
-${formData.alternativeResponses
-  .filter(r => r.response.trim())
-  .map(r => `- ${r.response}`)
-  .join('\n') || '[No alternative responses identified]'}
-
 ---
 
 *This reflection is a tool for self-awareness and growth. Be patient and compassionate with yourself throughout this process.*
@@ -290,10 +284,6 @@ Original Thought Credibility: ${formData.originalThoughtCredibility}/10
 NEW BEHAVIORS
 ${'-'.repeat(20)}
 ${formData.newBehaviors || '[No new behaviors identified]'}
-
-ALTERNATIVE RESPONSES
-${'-'.repeat(20)}
-${formData.alternativeResponses.filter(r => r.response.trim()).map(r => `- ${r.response}`).join('\n') || '[No alternative responses identified]'}
 
 ${'='.repeat(50)}
 This reflection is a tool for self-awareness and growth.
@@ -448,12 +438,7 @@ export function exportAsPDF(formData: CBTFormData): Promise<void> {
             <h3 style="margin: 15px 0 5px 0; font-size: 16px; color: #333;">New Behaviors</h3>
             <p style="margin: 5px 0 15px 0; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">${formData.newBehaviors || '[No new behaviors identified]'}</p>
             
-            <h3 style="margin: 15px 0 5px 0; font-size: 16px; color: #333;">Alternative Responses</h3>
-            ${formData.alternativeResponses.filter(r => r.response.trim()).length > 0 ? `
-              <ul style="margin: 5px 0; padding-left: 20px;">
-                ${formData.alternativeResponses.filter(r => r.response.trim()).map(r => `<li>${r.response}</li>`).join('')}
-              </ul>
-            ` : '<p style="color: #666; font-style: italic;">No alternative responses identified</p>'}
+            
           </div>
           
           <div style="margin-top: 30px; padding: 20px; background-color: #e3f2fd; border-radius: 8px; text-align: center;">

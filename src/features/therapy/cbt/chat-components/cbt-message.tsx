@@ -10,6 +10,7 @@ import {
   CoreBelief,
   ChallengeQuestions,
   RationalThoughts,
+  FinalEmotionReflection,
   ActionPlan,
   type SituationData,
   type EmotionData,
@@ -117,6 +118,13 @@ export function CBTMessage({
             coreBeliefText={initialCoreBeliefData?.coreBeliefText}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+          />
+        );
+      
+      case 'final-emotions':
+        return (
+          <FinalEmotionReflection
+            onComplete={() => {}}
           />
         );
         

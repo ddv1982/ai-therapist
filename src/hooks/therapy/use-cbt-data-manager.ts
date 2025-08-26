@@ -324,12 +324,11 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       }
 
       // Action plan (optional)
-      if (draft.newBehaviors || (draft.alternativeResponses && draft.alternativeResponses.length > 0)) {
+      if (draft.newBehaviors) {
         const actionPlan = {
           finalEmotions: draft.finalEmotions,
           originalThoughtCredibility: draft.originalThoughtCredibility,
           newBehaviors: draft.newBehaviors,
-          alternativeResponses: draft.alternativeResponses,
         } as unknown as ActionPlanData;
         dispatch(updateActionPlan(actionPlan));
       }

@@ -102,6 +102,7 @@ export interface CBTStepWrapperProps {
 const STEP_ICONS: Record<CBTStepType, ReactNode> = {
   'situation': <MessageCircle className="w-5 h-5" />,
   'emotions': <Heart className="w-5 h-5" />,
+  'final-emotions': <Heart className="w-5 h-5" />,
   'thoughts': <Brain className="w-5 h-5" />,
   'core-belief': <Target className="w-5 h-5" />,
   'challenge-questions': <HelpCircle className="w-5 h-5" />,
@@ -114,6 +115,7 @@ const STEP_ICONS: Record<CBTStepType, ReactNode> = {
 const STEP_COLORS: Record<CBTStepType, string> = {
   'situation': 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300',
   'emotions': 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300',
+  'final-emotions': 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300',
   'thoughts': 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300',
   'core-belief': 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300',
   'challenge-questions': 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300',
@@ -135,6 +137,7 @@ const STEP_ORDER: CBTStepType[] = [
   'challenge-questions',
   'rational-thoughts',
   'schema-modes',
+  'final-emotions',
   'actions'
 ];
 
@@ -460,6 +463,17 @@ export function EmotionStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'ti
   );
 }
 
+export function FinalEmotionStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
+  return (
+    <CBTStepWrapper
+      step="final-emotions"
+      title="How do you feel now?"
+      subtitle="Rate how your emotions have changed"
+      {...props}
+    />
+  );
+}
+
 export function ThoughtStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
   return (
     <CBTStepWrapper
@@ -532,6 +546,7 @@ export function ActionStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'tit
 
 CBTStepWrapper.Situation = SituationStepWrapper;
 CBTStepWrapper.Emotion = EmotionStepWrapper;
+CBTStepWrapper.FinalEmotion = FinalEmotionStepWrapper;
 CBTStepWrapper.Thought = ThoughtStepWrapper;
 CBTStepWrapper.CoreBelief = CoreBeliefStepWrapper;
 CBTStepWrapper.Challenge = ChallengeStepWrapper;

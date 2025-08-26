@@ -54,7 +54,7 @@ export const cbtRHFSchema = z.object({
     })
   ),
   newBehaviors: z.string().optional().default(''),
-  alternativeResponses: z.array(z.object({ response: z.string().min(0) })),
+  // alternativeResponses removed from current UX
   originalThoughtCredibility: z.number().min(0).max(10),
 });
 

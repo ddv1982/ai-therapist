@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { setCurrentStep, updateDraft, completeCBTEntry } from '@/store/slices/cbtSlice';
-import { SituationPrompt, EmotionScale, ThoughtRecord, ActionPlan } from '@/features/therapy/cbt/chat-components';
+import { SituationPrompt, EmotionScale, ThoughtRecord, FinalEmotionReflection, ActionPlan } from '@/features/therapy/cbt/chat-components';
 import { Progress } from "@/components/ui/progress";
 import { Brain } from 'lucide-react';
 import { logger } from '@/lib/utils/logger';
@@ -25,6 +25,7 @@ const CBT_STEPS = [
   { id: 2, name: 'Emotions', component: 'emotions' },
   { id: 3, name: 'Thoughts', component: 'thoughts' },
   { id: 4, name: 'Action Plan', component: 'actions' },
+  { id: 5, name: 'Final Emotions', component: 'final-emotions' },
 ];
 
 export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
@@ -65,13 +66,19 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
     dispatch(setCurrentStep(4));
   };
 
+  const handleFinalEmotionsComplete = (_data: import('@/store/slices/cbtSlice').EmotionData) => {
+    // In mobile flow, store final emotions in draft or session slice if needed; advance to actions
+    // Here we only advance steps. ActionPlan will persist as part of session actions.
+    dispatch(setCurrentStep(5));
+  };
+
   const handleActionComplete = (data: import('@/store/slices/cbtSlice').ActionPlanData) => {
     if (currentDraft) {
       // Convert ActionPlanData to CBT schema structure
       const actionPlan = {
-        actions: [data.newBehaviors, ...data.alternativeResponses.map(resp => resp.response)],
-        timeframe: 'As planned', // Default timeframe
-        resources: [] // No specific resources from ActionPlanData
+        actions: [data.newBehaviors],
+        timeframe: 'As planned',
+        resources: []
       };
       
       const completeEntry = {
@@ -133,11 +140,18 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
           />
         );
       
+      case 'final-emotions':
+        return (
+          <FinalEmotionReflection
+            onComplete={handleFinalEmotionsComplete}
+            onSendToChat={handleSendToChat}
+          />
+        );
+
       case 'actions':
         return (
           <ActionPlan
             onComplete={handleActionComplete}
-            onSendToChat={handleSendToChat}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
           />

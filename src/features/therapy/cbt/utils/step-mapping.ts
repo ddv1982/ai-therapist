@@ -14,7 +14,8 @@ export const CBT_STEPS: CBTStep[] = [
   'challenge-questions', 
   'rational-thoughts', 
   'schema-modes',
-  'actions'
+  'actions',
+  'final-emotions'
 ];
 
 // Total number of steps (excluding 'complete' which is not a user-facing step)

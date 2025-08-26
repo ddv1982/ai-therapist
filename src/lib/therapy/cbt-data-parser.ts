@@ -201,14 +201,12 @@ export function extractSchemaModesData(content: string): ExtractedCBTData['schem
  * Extract action plan from message content
  */
 export function extractActionPlanData(content: string): ExtractedCBTData['actionPlan'] | null {
-  const actionMatch = content.match(/\*\*CBT Session - Action Plan & Final Assessment\*\*[\s\S]*?🎯 \*\*New Behaviors to Practice\*\*:\n([\s\S]*?)(?:\n🔄 \*\*Alternative Response Strategies\*\*:\n([\s\S]*?)(?:\n😌|\*\*Final|$))/);
+  const actionMatch = content.match(/\*\*CBT Session - Action Plan & Final Assessment\*\*[\s\S]*?🎯 \*\*New Behaviors to Practice\*\*:\n([\s\S]*?)(?:\n😌|\*\*Final|$)/);
   
   if (actionMatch) {
     const behaviorLines = actionMatch[1].trim().split('\n');
-    const responseLines = actionMatch[2]?.trim().split('\n') || [];
     
     const newBehaviors: string[] = [];
-    const alternativeResponses: string[] = [];
     
     for (const line of behaviorLines) {
       const match = line.match(/\d+\. (.+)/);
@@ -217,16 +215,9 @@ export function extractActionPlanData(content: string): ExtractedCBTData['action
       }
     }
     
-    for (const line of responseLines) {
-      const match = line.match(/\d+\. (.+)/);
-      if (match) {
-        alternativeResponses.push(match[1]);
-      }
-    }
-    
     return {
       newBehaviors,
-      alternativeResponses
+      
     };
   }
   
@@ -357,13 +348,9 @@ function extractCBTDataFromCardFormat(content: string): ExtractedCBTData | null 
         }));
       }
       
-      if (Array.isArray(cardData.newBehaviors) || Array.isArray(cardData.alternativeResponses)) {
+      if (Array.isArray(cardData.newBehaviors)) {
         extractedData.actionPlan = {
-          newBehaviors: Array.isArray(cardData.newBehaviors) ? cardData.newBehaviors : [],
-          alternativeResponses: Array.isArray(cardData.alternativeResponses) ? 
-            cardData.alternativeResponses.map((r: string | { response: string }) => 
-              typeof r === 'string' ? r : r.response
-            ) : []
+          newBehaviors: cardData.newBehaviors,
         };
       }
       
@@ -491,7 +478,7 @@ export function parseAllCBTData(messages: Array<{ content: string; role: string 
       if (actionData) {
         extractedData.actionPlan = actionData;
         parsedSections++;
-        logger.therapeuticOperation('CBT action plan parsed', { behaviorCount: actionData.newBehaviors?.length || 0, responseCount: actionData.alternativeResponses?.length || 0 });
+        logger.therapeuticOperation('CBT action plan parsed', { behaviorCount: actionData.newBehaviors?.length || 0 });
       }
     }
     
@@ -626,7 +613,7 @@ export function parseCBTFromMarkdown(content: string): ParsedCBTData {
     // Extract final data
     result.formData.originalThoughtCredibility = extractOriginalThoughtCredibilityFromMarkdown(content);
     result.formData.newBehaviors = extractNewBehaviorsFromMarkdown(content);
-    result.formData.alternativeResponses = extractAlternativeResponsesFromMarkdown(content);
+    // alternativeResponses removed from current UX
 
     // Validate completeness
     const validation = validateParsedDataFromMarkdown(result.formData);
@@ -667,8 +654,7 @@ function createEmptyFormData(): ExtendedForm {
     rationalThoughts: [],
     finalEmotions: createEmptyEmotions(),
     originalThoughtCredibility: 0,
-    newBehaviors: '',
-    alternativeResponses: []
+    newBehaviors: ''
   };
 }
 
@@ -1039,31 +1025,6 @@ function extractNewBehaviorsFromMarkdown(content: string): string {
   return '';
 }
 
-function extractAlternativeResponsesFromMarkdown(content: string): Array<{ response: string }> {
-  const responses: Array<{ response: string }> = [];
-  
-  // Find alternative responses section
-  const sectionMatch = content.match(/###\s*Alternative\s+Responses[\s\S]+?(?=\n##|\n---|$)/i);
-  if (sectionMatch) {
-    const section = sectionMatch[0];
-    
-    // Extract list items: "- Response text"
-    const responseMatches = section.match(/^-\s+([^\n\r]+)/gm);
-    if (responseMatches) {
-      responseMatches.forEach(match => {
-        const [, response] = match.match(/-\s+([^\n\r]+)/) || [];
-        if (response && response.trim() !== '[No alternative responses identified]') {
-          responses.push({
-            response: response.trim()
-          });
-        }
-      });
-    }
-  }
-  
-  return responses;
-}
-
 function validateParsedDataFromMarkdown(formData: CBTFormData): { isComplete: boolean; missingFields: string[] } {
   const missingFields: string[] = [];
   
@@ -1081,18 +1042,6 @@ function validateParsedDataFromMarkdown(formData: CBTFormData): { isComplete: bo
     missingFields.push('initialEmotions');
   }
   
-  // Check for at least one thought
-  const hasThoughts = formData.automaticThoughts.some(t => t.thought.trim().length > 0);
-  if (!hasThoughts) {
-    missingFields.push('automaticThoughts');
-  }
-  
-  if (!formData.coreBeliefText.trim()) {
-    missingFields.push('coreBeliefText');
-  }
-  
-  return {
-    isComplete: missingFields.length === 0,
-    missingFields
-  };
+  const isComplete = missingFields.length === 0;
+  return { isComplete, missingFields };
 }

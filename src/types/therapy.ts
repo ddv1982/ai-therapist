@@ -93,7 +93,7 @@ export interface ActionPlanData {
   finalEmotions: EmotionData;
   originalThoughtCredibility: number;
   newBehaviors: string;
-  alternativeResponses: Array<{ response: string }>;
+  // alternativeResponses removed from current UX; kept out of type
 }
 
 // =============================================================================
@@ -149,7 +149,7 @@ export interface CBTFormData {
   
   // Action Planning
   newBehaviors: string;
-  alternativeResponses: Array<{ response: string }>;
+  // alternativeResponses removed from current UX
   originalThoughtCredibility: number;
 }
 
@@ -194,7 +194,7 @@ export type NumericEmotionKeys = 'fear' | 'anger' | 'sadness' | 'joy' | 'anxiety
 /**
  * CBT step types for flow control
  */
-export type CBTStepType = 'situation' | 'emotions' | 'thoughts' | 'core-belief' | 'challenge-questions' | 'rational-thoughts' | 'schema-modes' | 'actions' | 'complete';
+export type CBTStepType = 'situation' | 'emotions' | 'thoughts' | 'core-belief' | 'challenge-questions' | 'rational-thoughts' | 'schema-modes' | 'final-emotions' | 'actions' | 'complete';
 
 /**
  * Generic CBT step data container
@@ -363,7 +363,6 @@ export const createInitialCBTFormData = (): CBTFormData => ({
   rationalThoughts: [{ thought: '', confidence: 5 }],
   schemaModes: DEFAULT_SCHEMA_MODES.map(mode => ({ ...mode })),
   newBehaviors: '',
-  alternativeResponses: [{ response: '' }],
   originalThoughtCredibility: 5
 });
 
@@ -462,7 +461,6 @@ export interface CBTRationalData {
 export interface CBTActionPlanData {
   finalEmotions: EmotionData;
   newBehaviors: string[];
-  alternativeResponses: string[];
 }
 
 /** @deprecated Use CBTSessionState instead */
@@ -511,7 +509,7 @@ export interface ExtractedCBTData {
   }>;
   actionPlan?: {
     newBehaviors: string[];
-    alternativeResponses: string[];
+    // alternativeResponses removed from current UX
   };
   emotionComparison?: {
     changes: Array<{

@@ -16,7 +16,6 @@ export interface CBTSessionSummaryData {
   schemaModes?: Array<{ name: string; intensity?: number }>;
   finalEmotions?: Array<{ emotion: string; rating: number }>;
   newBehaviors?: string[];
-  alternativeResponses?: Array<{ response: string }>;
   completedSteps?: string[];
 }
 
@@ -194,7 +193,6 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
         {/* Action Plan Summary with More Detail */}
         {((data.newBehaviors && data.newBehaviors.length > 0) || 
-          (data.alternativeResponses && data.alternativeResponses.length > 0) ||
           (data.finalEmotions && data.finalEmotions.length > 0)) && (
           <div className="space-y-3 pt-2 border-t border-blue-200/60 dark:border-blue-800/30">
             <div className="flex items-center gap-2">
@@ -221,24 +219,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                 </div>
               )}
               
-              {data.alternativeResponses && data.alternativeResponses.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">Alternative Responses:</p>
-                  <div className="space-y-1">
-                    {data.alternativeResponses.slice(0, 3).map((response, index) => (
-                      <div key={index} className="flex items-start gap-2 text-xs text-blue-800 dark:text-blue-200">
-                        <div className="w-1 h-1 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0"></div>
-                        {typeof response === 'string' ? response : response.response}
-                      </div>
-                    ))}
-                    {data.alternativeResponses.length > 3 && (
-                      <p className="text-xs text-blue-600 dark:text-blue-400 italic pl-2">
-                        +{data.alternativeResponses.length - 3} more responses
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
+              
               
               {data.finalEmotions && data.finalEmotions.length > 0 && (
                 <div>

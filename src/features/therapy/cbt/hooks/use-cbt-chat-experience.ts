@@ -22,6 +22,7 @@ export type CBTStep =
   | 'challenge-questions'
   | 'rational-thoughts'
   | 'schema-modes'
+  | 'final-emotions'
   | 'actions' 
   | 'complete';
 
@@ -71,6 +72,7 @@ interface UseCBTChatExperienceReturn {
   completeRationalThoughtsStep: (data: RationalThoughtsData) => void;
   completeSchemaModesStep: (data: SchemaModesData) => void;
   completeActionStep: (data: ActionPlanData) => void;
+  completeFinalEmotionsStep: (data: EmotionData) => void;
   generateFinalSummary: () => string;
   generateTherapeuticSummaryCard: () => import('@/components/ui/cbt-session-summary-card').CBTSessionSummaryData;
   resetSession: () => void;
@@ -80,12 +82,13 @@ interface UseCBTChatExperienceReturn {
 const STEP_TITLES = {
   situation: 'What happened?',
   emotions: 'How are you feeling?',
+  'final-emotions': 'How do you feel now?',
   thoughts: 'What thoughts went through your mind?',
   'core-belief': 'What\'s the core belief?',
   'challenge-questions': 'Challenge the belief',
   'rational-thoughts': 'Rational alternatives',
   'schema-modes': 'Schema modes',
-  actions: 'How do you feel now?'
+  actions: 'Future Action Plan'
 };
 
 const AI_RESPONSES = {
@@ -95,8 +98,9 @@ const AI_RESPONSES = {
   'core-belief': "I can see the core belief you've identified. This insight is really valuable - recognizing these deep patterns is the first step toward change. Now let's challenge this belief together.",
   'challenge-questions': "Excellent work examining your belief from different angles. Those challenge questions help us see beyond our automatic thinking patterns. Now let's develop some more balanced, rational thoughts.",
   'rational-thoughts': "These rational alternatives you've developed are really insightful. Having these balanced thoughts ready can be incredibly helpful when the old patterns try to resurface. Now let's explore which schema modes feel most active for you right now.",
-  'schema-modes': "Thank you for identifying those schema modes. Understanding which parts of yourself are most active can provide valuable insights into your emotional patterns. Now let's see how you're feeling after this reflection and plan for the future.",
-  actions: "Wonderful work! You've completed a comprehensive CBT exploration. This kind of structured reflection can be incredibly helpful for understanding patterns and developing new ways of responding to challenging situations."
+  'schema-modes': "Thank you for identifying those schema modes. Understanding which parts of yourself are most active can provide valuable insights into your emotional patterns. Next, let's outline a concrete action plan for future situations.",
+  actions: "Great plan. Now, as a final step, please reflect on how you feel after this whole process. When you're ready, you can send your session to chat for analysis.",
+  'final-emotions': "Wonderful work! You've completed a comprehensive CBT exploration. This kind of structured reflection can be incredibly helpful for understanding patterns and developing new ways of responding to challenging situations."
 };
 
 export function useCBTChatExperience(): UseCBTChatExperienceReturn {
@@ -141,7 +145,7 @@ export function useCBTChatExperience(): UseCBTChatExperienceReturn {
     setSessionData(prev => ({
       ...prev,
       currentStep: nextStep || 'complete',
-      isComplete: nextStep === 'complete'
+      isComplete: !nextStep ? true : nextStep === 'complete'
     }));
 
     return nextStep;
@@ -259,21 +263,42 @@ export function useCBTChatExperience(): UseCBTChatExperienceReturn {
   }, [progressToNextStep, addCBTMessage]);
 
   const completeActionStep = useCallback((data: ActionPlanData) => {
+    // Save action plan and progress to final emotions
     setSessionData(prev => ({ 
       ...prev, 
-      actionData: data,
-      isComplete: true,
-      currentStep: 'complete'
+      actionData: data
     }));
-    
-    // Add final AI response
+
+    const nextStep = progressToNextStep('actions');
+    if (nextStep) {
+      addCBTMessage({
+        type: 'cbt-component',
+        step: nextStep,
+        content: STEP_TITLES[nextStep as keyof typeof STEP_TITLES]
+      });
+    }
+  }, [addCBTMessage, progressToNextStep]);
+
+  const completeFinalEmotionsStep = useCallback((data: EmotionData) => {
+    // Persist final emotions into action data and mark complete
+    setSessionData(prev => ({
+      ...prev,
+      actionData: {
+        finalEmotions: data,
+        originalThoughtCredibility: prev.actionData?.originalThoughtCredibility ?? 5,
+        newBehaviors: prev.actionData?.newBehaviors ?? ''
+      },
+      currentStep: 'complete',
+      isComplete: true
+    }));
+
+    // Add final AI response for completion
     addCBTMessage({
       type: 'ai-response',
-      step: 'actions',
-      content: AI_RESPONSES.actions
+      step: 'final-emotions',
+      content: AI_RESPONSES['final-emotions']
     });
 
-    // Mark session as complete
     setIsActive(false);
   }, [addCBTMessage]);
 
@@ -355,13 +380,7 @@ export function useCBTChatExperience(): UseCBTChatExperienceReturn {
         summary += `**New Behaviors/Strategies:** ${sessionData.actionData.newBehaviors}\n\n`;
       }
       
-      if (sessionData.actionData.alternativeResponses && sessionData.actionData.alternativeResponses.length > 0) {
-        summary += `**Alternative Responses:**\n`;
-        sessionData.actionData.alternativeResponses.forEach((response, index) => {
-          summary += `${index + 1}. ${response.response}\n`;
-        });
-        summary += '\n';
-      }
+      // alternativeResponses removed from current UX
     }
     
     summary += `*This CBT session was completed on ${date} and included comprehensive work on situation analysis, emotion tracking, thought examination, core belief exploration, rational thought development, and action planning.*`;
@@ -433,7 +452,7 @@ export function useCBTChatExperience(): UseCBTChatExperienceReturn {
 
     // Format action plan data
     const newBehaviors = sessionData.actionData?.newBehaviors ? [sessionData.actionData.newBehaviors] : [];
-    const alternativeResponses = sessionData.actionData?.alternativeResponses || [];
+    // alternativeResponses removed from current UX
 
     return {
       date,
@@ -445,7 +464,7 @@ export function useCBTChatExperience(): UseCBTChatExperienceReturn {
       schemaModes,
       finalEmotions,
       newBehaviors,
-      alternativeResponses,
+      
       completedSteps
     };
   }, [sessionData]);
@@ -478,6 +497,7 @@ export function useCBTChatExperience(): UseCBTChatExperienceReturn {
     completeRationalThoughtsStep,
     completeSchemaModesStep,
     completeActionStep,
+    completeFinalEmotionsStep,
     generateFinalSummary,
     generateTherapeuticSummaryCard,
     resetSession

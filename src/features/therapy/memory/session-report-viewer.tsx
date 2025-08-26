@@ -238,27 +238,7 @@ function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCB
                 </div>
               )}
 
-              {structuredData.actionPlan.alternativeResponses && structuredData.actionPlan.alternativeResponses.length > 0 && (
-                <div>
-                  <h5 className="text-sm font-medium text-foreground mb-3">Alternative Response Strategies</h5>
-                  <table className="w-full border border-border/50 rounded-lg overflow-hidden">
-                    <thead className="bg-muted/50">
-                      <tr>
-                        <th className="text-left p-4 font-medium text-sm text-foreground w-16">#</th>
-                        <th className="text-left p-4 font-medium text-sm text-foreground">Response Strategy</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {structuredData.actionPlan.alternativeResponses.map((response: unknown, index: number) => (
-                        <tr key={index} className="border-t border-border/50">
-                          <td className="p-4 text-sm font-medium">{index + 1}</td>
-                          <td className="p-4 text-sm">{typeof response === 'string' ? response : String(response || '')}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              {/* Alternative responses removed from current UX */}
             </div>
           </div>
         )}

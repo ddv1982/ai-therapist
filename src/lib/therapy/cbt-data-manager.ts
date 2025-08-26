@@ -201,7 +201,6 @@ export function formatActionPlanForChat(data: CBTActionPlanData): string {
     date: new Date().toLocaleDateString(),
     finalEmotions,
     newBehaviors: data.newBehaviors,
-    alternativeResponses: data.alternativeResponses.map(response => ({ response })),
     completedSteps: ['Action Plan Development']
   };
 
@@ -341,7 +340,6 @@ export function generateCBTSessionSummary(data: CBTCompleteSessionData): string 
   // Add action plan data if available
   if (data.actionPlan) {
     summaryData.newBehaviors = data.actionPlan.newBehaviors;
-    summaryData.alternativeResponses = data.actionPlan.alternativeResponses.map(response => ({ response }));
     
     // Add final emotions
     if (data.actionPlan.finalEmotions) {

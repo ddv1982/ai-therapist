@@ -78,6 +78,7 @@ function CBTDiaryPageContent() {
     completeRationalThoughtsStep,
     completeSchemaModesStep,
     completeActionStep,
+    completeFinalEmotionsStep,
     generateTherapeuticSummaryCard
   } = useCBTChatExperience();
 
@@ -174,25 +175,15 @@ function CBTDiaryPageContent() {
       let sessionId = reduxSessionId;
       
       if (!sessionId) {
-        // Try to get current session first
-        const sessionData = await apiClient.getCurrentSession();
-        const currentSessionData = (sessionData && sessionData.success) ? sessionData.data : sessionData;
-        if (currentSessionData?.currentSession) {
-          sessionId = currentSessionData.currentSession.id;
+        // Create a fresh session explicitly for this CBT run (avoid picking previous/current implicitly)
+        const title = 'CBT Session - ' + new Date().toLocaleDateString();
+        const createResp = await apiClient.createSession({ title });
+        if (createResp && createResp.success && createResp.data) {
+          const newSession = createResp.data as components['schemas']['Session'];
+          sessionId = newSession.id;
+          await apiClient.setCurrentSession(newSession.id);
         }
-        
-        // If still no session, create one
-        if (!sessionId) {
-          const title = 'CBT Session - ' + new Date().toLocaleDateString();
-          const createResp = await apiClient.createSession({ title });
-          if (createResp && createResp.success && createResp.data) {
-            const newSession = createResp.data as components['schemas']['Session'];
-            sessionId = newSession.id;
-            // Set as current session
-            await apiClient.setCurrentSession(newSession.id);
-          }
-        }
-        
+
         // Initialize Redux with the session ID
         if (sessionId) {
           dispatch(startReduxCBTSession({ sessionId }));
@@ -352,33 +343,17 @@ function CBTDiaryPageContent() {
         sessionContent ? `\n\nSession Context:\n${sessionContent}` : ''
       ].filter(Boolean).join('\n');
 
-      // Ensure a session ID exists (fetch or create if Redux is empty)
+      // Ensure a session ID exists (create if Redux is empty). Do NOT pick prior current session implicitly.
       let sessionId = reduxSessionId;
       if (!sessionId) {
-        try {
-          // Try to get current session first
-          const sessionData = await apiClient.getCurrentSession();
-          const currentSessionData = (sessionData && (sessionData as { success?: boolean }).success)
-            ? (sessionData as { data: { currentSession?: { id: string } } }).data
-            : (sessionData as { currentSession?: { id: string } } | null) || {};
-          if (currentSessionData?.currentSession) {
-            sessionId = currentSessionData.currentSession.id;
-          }
-          // If still no session, create one
-          if (!sessionId) {
-            const title = 'CBT Session - ' + new Date().toLocaleDateString();
-            const createResp = await apiClient.createSession({ title });
-            if (createResp && createResp.success && createResp.data) {
-              const newSession = createResp.data as components['schemas']['Session'];
-              sessionId = newSession.id;
-              await apiClient.setCurrentSession(newSession.id);
-            }
-          }
-          // Initialize Redux with the session ID if found/created
-          if (sessionId) {
-            dispatch(startReduxCBTSession({ sessionId }));
-          }
-        } catch {}
+        const title = 'CBT Session - ' + new Date().toLocaleDateString();
+        const createResp = await apiClient.createSession({ title });
+        if (createResp && createResp.success && createResp.data) {
+          const newSession = createResp.data as components['schemas']['Session'];
+          sessionId = newSession.id;
+          await apiClient.setCurrentSession(newSession.id);
+          dispatch(startReduxCBTSession({ sessionId }));
+        }
       }
       if (!sessionId) {
         throw new Error('No session available - please start a CBT session first');
@@ -387,37 +362,33 @@ function CBTDiaryPageContent() {
       // Try using the report generation API first as it's more stable
       let therapeuticAnalysis = '';
       let useStreamingFallback = false;
+      let reportApiSucceeded = false;
+      // Precompute report messages payload so we can reuse it (for success or fallback persistence)
+      const reportMessagesPayload = [
+        { role: 'user', content: cbtSummary, timestamp: new Date().toISOString() },
+        ...messages.filter(msg => !msg.metadata?.step).map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp.toISOString()
+        }))
+      ];
       
       try {
-        // First attempt: Use report generation API
-        const reportResponse = await fetch('/api/reports/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: sessionId, // Use the actual session ID
-            messages: [
-              { role: 'user', content: cbtSummary, timestamp: new Date().toISOString() },
-              ...messages.filter(msg => !msg.metadata?.step).map(msg => ({
-                role: msg.role,
-                content: msg.content,
-                timestamp: msg.timestamp.toISOString()
-              }))
-            ]
-          }),
+        // First attempt: Use report generation API via typed client
+        const reportData = await apiClient.generateReportDetailed({
+          sessionId: sessionId,
+          messages: reportMessagesPayload.map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp })),
+          model: 'openai/gpt-oss-120b'
         });
 
-        if (reportResponse.ok) {
-          const reportData = await reportResponse.json();
-          if (reportData.success && reportData.reportContent) {
-            therapeuticAnalysis = reportData.reportContent;
-            logger.info('Using report generation API for CBT analysis', {
-              component: 'CBTDiaryPage',
-              operation: 'handleSendToChat',
-              sessionId
-            });
-          } else {
-            useStreamingFallback = true;
-          }
+        if (reportData && (reportData as { success?: boolean; reportContent?: string }).success && (reportData as { reportContent?: string }).reportContent) {
+          therapeuticAnalysis = (reportData as { reportContent: string }).reportContent;
+          reportApiSucceeded = true;
+          logger.info('Using report generation API for CBT analysis', {
+            component: 'CBTDiaryPage',
+            operation: 'handleSendToChat',
+            sessionId
+          });
         } else {
           useStreamingFallback = true;
         }
@@ -564,9 +535,35 @@ function CBTDiaryPageContent() {
       const summaryResponse: PostMessageResponse = await apiClient.postMessage(sessionId, { role: 'user', content: cbtSummary });
       getApiData(summaryResponse);
 
-      // Save therapeutic analysis to chat
-      const analysisMessageResponse: PostMessageResponse = await apiClient.postMessage(sessionId, { role: 'assistant', content: therapeuticAnalysis, modelUsed: 'openai/gpt-oss-120b' });
+      // Save therapeutic analysis to chat, prefixed as a clear Session Report
+      const prefixedReportContent = `📊 **Session Report**\n\n${therapeuticAnalysis}`;
+      const analysisMessageResponse: PostMessageResponse = await apiClient.postMessage(sessionId, { role: 'assistant', content: prefixedReportContent, modelUsed: 'openai/gpt-oss-120b' });
       getApiData(analysisMessageResponse);
+
+      // If we had to fall back to streaming, persist a SessionReport in the background for memory/reports
+      if (useStreamingFallback && !reportApiSucceeded) {
+        (async () => {
+          try {
+            await apiClient.generateReportDetailed({
+              sessionId: sessionId,
+              messages: reportMessagesPayload.map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp })),
+              model: 'openai/gpt-oss-120b'
+            });
+            logger.info('Persisted session report after streaming fallback', {
+              component: 'CBTDiaryPage',
+              operation: 'handleSendToChat',
+              sessionId
+            });
+          } catch (persistError) {
+            logger.warn('Failed to persist session report after streaming fallback', {
+              component: 'CBTDiaryPage',
+              operation: 'handleSendToChat',
+              sessionId,
+              error: persistError instanceof Error ? persistError.message : String(persistError)
+            });
+          }
+        })();
+      }
 
       // Clear CBT session since it's complete - use unified CBT action
       draftActions.reset();
@@ -635,36 +632,27 @@ function CBTDiaryPageContent() {
 
   const handleCBTActionComplete = useCallback(async (data: ActionPlanData) => {
     completeActionStep(data);
-    
-    // Generate therapeutic summary card data
-    const summaryData = generateTherapeuticSummaryCard();
-    
-    // Create special markdown format that will be processed into a CBT summary card
-    const cbtSummaryMarkdown = `<!-- CBT_SUMMARY_CARD:${JSON.stringify(summaryData)} -->
-
-## CBT Session Summary - ${summaryData.date}
-
-Your completed CBT session data has been processed and formatted for optimal review.
-
-<!-- END_CBT_SUMMARY_CARD -->`;
-
-    const summaryMessage: Message = {
-      id: generateUUID(),
-      role: 'user',
-      content: cbtSummaryMarkdown,
-      timestamp: new Date()
-    };
-    
-    const completionMessage: Message = {
+    const aiMessage: Message = {
       id: generateUUID(),
       role: 'assistant',
-      content: "🌟 **Congratulations!** You've completed a full CBT session! 🎉\n\nThis kind of structured reflection is incredibly valuable for understanding patterns and developing new ways of responding to challenging situations.\n\nI've generated a complete summary of your CBT session above. You can:\n• **Review** your insights anytime\n• **Practice** your new rational thoughts\n• **Follow** your action plan\n• **Return** to these techniques whenever you need them\n\nYou should feel proud of the thoughtful work you've done today. Remember, building these skills takes practice, so be patient and kind with yourself! 💙",
+      content: "Great work creating a practical action plan! ✅ As a final step, please reflect on how you feel now. When you're ready, click ‘Send to Chat’ to analyze your full session.",
       timestamp: new Date(),
       modelUsed: 'therapeutic-assistant'
     };
-    
-    setMessages(prev => [...prev, summaryMessage, completionMessage]);
-  }, [completeActionStep, generateTherapeuticSummaryCard]);
+    setMessages(prev => [...prev, aiMessage]);
+  }, [completeActionStep]);
+
+  const handleCBTFinalEmotionsComplete = useCallback(async (data: EmotionData) => {
+    completeFinalEmotionsStep(data);
+    const aiMessage: Message = {
+      id: generateUUID(),
+      role: 'assistant',
+      content: "Wonderful reflection. 🎉 You’ve completed your CBT session. You can now send your session to chat for therapeutic analysis.",
+      timestamp: new Date(),
+      modelUsed: 'therapeutic-assistant'
+    };
+    setMessages(prev => [...prev, aiMessage]);
+  }, [completeFinalEmotionsStep]);
 
 
   return (
@@ -761,6 +749,7 @@ Your completed CBT session data has been processed and formatted for optimal rev
                 <span>Rational</span>
                 <span>Schema</span>
                 <span>Actions</span>
+                <span>Final Emotions</span>
               </div>
             )}
           </div>
@@ -873,6 +862,7 @@ Your completed CBT session data has been processed and formatted for optimal rev
                 onCBTRationalThoughtsComplete={handleCBTRationalThoughtsComplete}
                 onCBTSchemaModesComplete={handleCBTSchemaModesComplete}
                 onCBTSendToChat={handleSendToChat}
+                onCBTFinalEmotionsComplete={handleCBTFinalEmotionsComplete}
                 onCBTActionComplete={handleCBTActionComplete}
               />
               {/* Inline quick draft form removed */}
@@ -890,10 +880,10 @@ Your completed CBT session data has been processed and formatted for optimal rev
           <div className="text-xs text-muted-foreground">
             {isStreaming ? (
               <span>🔄 Analyzing your CBT session and preparing for chat...</span>
-            ) : isCBTActive && cbtCurrentStep !== 'complete' && cbtCurrentStep !== 'actions' ? (
+            ) : isCBTActive && cbtCurrentStep !== 'complete' && cbtCurrentStep !== 'final-emotions' ? (
               <span>💙 Complete the {cbtCurrentStep.replace('-', ' ')} exercise above to continue your CBT journey</span>
-            ) : isCBTActive && cbtCurrentStep === 'actions' ? (
-              <span>💙 Complete your action plan above, then click &quot;Send to Chat&quot; for AI analysis</span>
+            ) : isCBTActive && cbtCurrentStep === 'final-emotions' ? (
+              <span>💙 Reflect on your emotions, then click &quot;Send to Chat&quot; for AI analysis</span>
             ) : hasStarted ? (
               <span>💙 Your progress is automatically saved in each step - no additional input needed</span>
             ) : (

@@ -11,6 +11,7 @@ import {
   ChallengeQuestions,
   RationalThoughts,
   SchemaModes,
+  FinalEmotionReflection,
   ActionPlan
 } from '@/features/therapy/cbt/chat-components';
 import {
@@ -35,7 +36,8 @@ interface VirtualizedMessageListProps {
   onCBTChallengeQuestionsComplete?: (data: ChallengeQuestionsData) => void;
   onCBTRationalThoughtsComplete?: (data: RationalThoughtsData) => void;
   onCBTSchemaModesComplete?: (data: SchemaModesData) => void;
-  onCBTSendToChat?: () => void; // For triggering send to chat from rational thoughts step
+  onCBTSendToChat?: () => void; // For triggering send to chat from final emotions step
+  onCBTFinalEmotionsComplete?: (data: EmotionData) => void;
   onCBTActionComplete?: (data: ActionPlanData) => void;
 }
 
@@ -52,6 +54,7 @@ function VirtualizedMessageListComponent({
   onCBTRationalThoughtsComplete,
   onCBTSchemaModesComplete,
   onCBTSendToChat,
+  onCBTFinalEmotionsComplete,
   onCBTActionComplete
 }: VirtualizedMessageListProps) {
   // For conversations with many messages, only render the most recent ones to improve performance
@@ -137,11 +140,18 @@ function VirtualizedMessageListComponent({
           />
         ) : null;
 
+      case 'final-emotions':
+        return (
+          <FinalEmotionReflection 
+            onComplete={onCBTFinalEmotionsComplete}
+            onSendToChat={onCBTSendToChat}
+          />
+        );
+
       case 'actions':
         return onCBTActionComplete ? (
           <ActionPlan
             onComplete={onCBTActionComplete}
-            onSendToChat={onCBTSendToChat}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
           />
