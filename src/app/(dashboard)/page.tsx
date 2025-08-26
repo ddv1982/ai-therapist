@@ -471,6 +471,19 @@ function ChatPageContent() {
     localStorage.removeItem('currentSessionId');
     // Focus the input field after starting new session
     setTimeout(() => textareaRef.current?.focus(), 100);
+
+    // Proactively load global memory context so the banner shows immediately
+    ;(async () => {
+      try {
+        const info = await checkMemoryContext();
+        setMemoryContext(info);
+      } catch {
+        logger.warn('Failed to prefetch global memory context after starting new session', {
+          component: 'ChatPage',
+          operation: 'startNewSession:prefetchMemory'
+        });
+      }
+    })();
   };
 
   const deleteSession = async (sessionId: string) => {

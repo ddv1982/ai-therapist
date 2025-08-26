@@ -66,15 +66,18 @@ export async function checkMemoryContext(sessionId?: string): Promise<MemoryCont
     const response = await fetch(url);
     
     if (response.ok) {
-      const data = await response.json();
-      if (data.success && data.memoryContext && data.memoryContext.length > 0) {
-        const sortedMemory = data.memoryContext.sort((a: { reportDate: string }, b: { reportDate: string }) => 
+      const raw = await response.json();
+      // Support both standardized ApiResponse<T> and legacy plain responses
+      const data = (raw && typeof raw === 'object' && 'data' in raw) ? (raw as { data: { memoryContext?: Array<{ reportDate: string }> } }).data : raw;
+      const memoryList = (data && (data as { memoryContext?: Array<{ reportDate: string }> }).memoryContext) || [];
+      if (Array.isArray(memoryList) && memoryList.length > 0) {
+        const sortedMemory = memoryList.sort((a: { reportDate: string }, b: { reportDate: string }) => 
           new Date(b.reportDate).getTime() - new Date(a.reportDate).getTime()
         );
         
         return {
           hasMemory: true,
-          reportCount: data.memoryContext.length,
+          reportCount: memoryList.length,
           lastReportDate: sortedMemory[0]?.reportDate
         };
       }
@@ -118,8 +121,10 @@ export async function getMemoryManagementData(sessionId?: string): Promise<Memor
     const response = await fetch(`/api/reports/memory/manage${excludeParam}`);
     
     if (response.ok) {
-      const data = await response.json();
-      return data;
+      const raw = await response.json();
+      const payload = (raw && typeof raw === 'object' && 'data' in raw) ? (raw as { success?: boolean; data: MemoryManagementResponse }).data : raw;
+      const success = (raw && typeof raw === 'object' && 'success' in raw) ? Boolean((raw as { success: boolean }).success) : true;
+      return { success, ...(payload as Omit<MemoryManagementResponse, 'success'>) };
     } else {
       logger.error('Failed to fetch memory management data', {
         operation: 'getMemoryManagementData',
@@ -238,16 +243,17 @@ export async function getSessionReportDetail(reportId: string, sessionId?: strin
     logger.reportOperation('Session report API response received', reportId, { status: response.status });
     
     if (response.ok) {
-      const data = await response.json();
+      const raw = await response.json();
+      const data = (raw && typeof raw === 'object' && 'data' in raw) ? (raw as { data: { memoryDetails?: MemoryDetailInfo[]; reportCount?: number } }).data : raw;
       logger.reportOperation('Session report data processed', reportId, {
-        success: data.success ? 'true' : 'false',
-        memoryDetailsCount: data.memoryDetails?.length || 0,
-        hasMemoryDetails: !!data.memoryDetails ? 'true' : 'false'
+        success: (raw && typeof raw === 'object' && 'success' in raw) ? ((raw as { success: boolean }).success ? 'true' : 'false') : 'true',
+        memoryDetailsCount: (data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails?.length || 0,
+        hasMemoryDetails: !!(data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails ? 'true' : 'false'
       });
       
-      if (data.success && data.memoryDetails) {
+      if ((data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails) {
         // Find the specific report
-        const report = data.memoryDetails.find((r: MemoryDetailInfo) => r.id === reportId);
+        const report = (data as { memoryDetails: MemoryDetailInfo[] }).memoryDetails.find((r: MemoryDetailInfo) => r.id === reportId);
         logger.reportOperation('Session report located', reportId, {
           reportFound: !!report ? 'true' : 'false',
           hasFullContent: !!(report as MemoryDetailInfo)?.fullContent ? 'true' : 'false',
