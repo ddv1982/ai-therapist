@@ -1,0 +1,39 @@
+---
+alwaysApply: true
+---
+# Project Structure Guide
+
+- The app uses Next.js App Router. The root layout is
+  [`src/app/layout.tsx`](mdc:src/app/layout.tsx). The dashboard layout is
+  [`src/app/(dashboard)/layout.tsx`](mdc:src/app/(dashboard)/layout.tsx).
+
+- API routes live under [`src/app/api`](mdc:src/app/api). Core chat route is nested:
+  [`src/app/api/sessions/[sessionId]/messages/route.ts`](mdc:src/app/api/sessions/[sessionId]/messages/route.ts).
+
+- State management uses Redux. Provider:
+  [`src/providers/redux-provider.tsx`](mdc:src/providers/redux-provider.tsx).
+  Store and slices:
+  - [`src/store/index.ts`](mdc:src/store/index.ts)
+  - [`src/store/slices/chatSlice.ts`](mdc:src/store/slices/chatSlice.ts)
+  - [`src/store/slices/sessionsSlice.ts`](mdc:src/store/slices/sessionsSlice.ts)
+
+- API layer utilities and wrappers:
+  - [`src/lib/api/api-middleware.ts`](mdc:src/lib/api/api-middleware.ts)
+  - [`src/lib/api/api-auth.ts`](mdc:src/lib/api/api-auth.ts)
+  - [`src/lib/api/rate-limiter.ts`](mdc:src/lib/api/rate-limiter.ts)
+  - [`src/lib/api/api-response.ts`](mdc:src/lib/api/api-response.ts)
+  - [`src/lib/api/client.ts`](mdc:src/lib/api/client.ts)
+
+- OpenAPI types and API typing:
+  - Generated types: [`src/types/api.generated.ts`](mdc:src/types/api.generated.ts)
+  - API helpers: [`src/types/api.ts`](mdc:src/types/api.ts)
+
+- API documentation source of truth:
+  - [`docs/api.yaml`](mdc:docs/api.yaml)
+
+- Key conventions:
+  - Use standardized `ApiResponse<T>` and `getApiData` for server and client
+    responses (see [`src/lib/api/api-response.ts`](mdc:src/lib/api/api-response.ts)).
+  - Include `X-Request-Id` headers in requests/responses where applicable and
+    ensure they are reflected in the OpenAPI spec (`docs/api.yaml`).
+

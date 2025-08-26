@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { z } from 'zod';
 import { languageModels, ModelID } from "@/ai/providers";
 import { streamText } from "ai";
 import { groq } from "@ai-sdk/groq";
@@ -15,9 +16,23 @@ export const maxDuration = 30;
 
 export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, context) => {
   try {
-    // Parse request body with compatibility for tests/mocks
     type ApiChatMessage = { role: 'user' | 'assistant'; content: string; id?: string };
-    let messages: unknown;
+    const chatRequestSchema = z.object({
+      messages: z.array(z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string().min(1).max(50000).optional(),
+        parts: z.array(z.object({ type: z.string().optional(), text: z.string().optional() })).optional(),
+        id: z.string().optional(),
+      })).min(1),
+      // Tests provide non-UUID session ids; accept any non-empty string
+      sessionId: z.string().min(1).optional(),
+      selectedModel: z.string().optional(),
+      webSearchEnabled: z.boolean().optional(),
+      temperature: z.number().min(0).max(2).optional(),
+      maxTokens: z.number().min(256).max(131072).optional(),
+      topP: z.number().min(0.1).max(1.0).optional(),
+    });
+
     let fullBody: unknown = undefined;
     let bodySize = 0;
     const MAX_SIZE = Number(process.env.CHAT_INPUT_MAX_BYTES || 128 * 1024);
@@ -27,17 +42,15 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       fullBody = data;
       const jsonString = JSON.stringify(data);
       bodySize = Buffer.byteLength(jsonString, 'utf8');
-      ({ messages } = data as { messages?: unknown });
     } else if (typeof anyReq.text === 'function') {
       const bodyText = await anyReq.text();
       bodySize = Buffer.byteLength(bodyText, 'utf8');
       const parsed = JSON.parse(bodyText);
       fullBody = parsed;
-      ({ messages } = parsed);
     } else {
       return new Response(
         JSON.stringify({ error: "Unsupported request body" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json", "X-Request-Id": context.requestId } }
       );
     }
 
@@ -45,15 +58,15 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     if (bodySize > MAX_SIZE) {
       return new Response(
         JSON.stringify({ error: "Request too large" }),
-        { status: 413, headers: { "Content-Type": "application/json" } }
+        { status: 413, headers: { "Content-Type": "application/json", "X-Request-Id": context.requestId } }
       );
     }
 
-    // Validate messages
-    if (!messages || !Array.isArray(messages)) {
+    const parsedInput = chatRequestSchema.safeParse(fullBody);
+    if (!parsedInput.success) {
       return new Response(
-        JSON.stringify({ error: "Messages array is required" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Invalid request data", details: parsedInput.error.message }),
+        { status: 400, headers: { "Content-Type": "application/json", "X-Request-Id": context.requestId } }
       );
     }
 
@@ -82,24 +95,18 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       return result;
     };
 
-    const typedMessages = normalizeMessages(messages);
+    const typedMessages = normalizeMessages(parsedInput.data.messages);
     if (!typedMessages) {
       return new Response(
         JSON.stringify({ error: "Invalid messages format" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+        { status: 400, headers: { "Content-Type": "application/json", "X-Request-Id": context.requestId } }
       );
     }
     // Extract sessionId for server-side persistence of assistant messages
-    const sessionId = typeof (fullBody as { sessionId?: unknown } | undefined)?.sessionId === 'string'
-      ? (fullBody as { sessionId: string }).sessionId
-      : undefined;
+    const sessionId = parsedInput.data.sessionId;
     // Respect explicit selectedModel when provided, otherwise auto-select
-    const parsedSelectedModel = typeof (fullBody as { selectedModel?: unknown } | undefined)?.selectedModel === 'string'
-      ? (fullBody as { selectedModel: string }).selectedModel
-      : undefined;
-    const webSearchEnabled = typeof (fullBody as { webSearchEnabled?: unknown } | undefined)?.webSearchEnabled === 'boolean'
-      ? (fullBody as { webSearchEnabled?: boolean }).webSearchEnabled
-      : false;
+    const parsedSelectedModel = parsedInput.data.selectedModel;
+    const webSearchEnabled = parsedInput.data.webSearchEnabled ?? false;
     
     // Simple toggle-based model selection: 120B for web search, 20B for fast responses
     const modelId = webSearchEnabled ? 'openai/gpt-oss-120b' : (parsedSelectedModel || 'openai/gpt-oss-20b');
@@ -233,7 +240,10 @@ You have access to browser search tools. When users ask for current information,
     };
 
     // If no session, just return the UI response
-    if (!sessionId) return uiResponse as Response;
+    if (!sessionId) {
+      try { (uiResponse as Response).headers.set('X-Request-Id', context.requestId); } catch {}
+      return uiResponse as Response;
+    }
 
     // Prefer streaming tee when available
     if ('body' in uiResponse && (uiResponse as Response).body && typeof (uiResponse as Response).body!.tee === 'function') {
@@ -299,7 +309,9 @@ You have access to browser search tools. When users ask for current information,
         } else {
           void consumeAndPersist();
         }
-        return new Response(clientStream, { status: (uiResponse as Response).status, headers: (uiResponse as Response).headers });
+        const headers = new Headers((uiResponse as Response).headers);
+        try { headers.set('X-Request-Id', context.requestId); } catch {}
+        return new Response(clientStream, { status: (uiResponse as Response).status, headers });
       } catch {
         // fall through to non-streaming fallback
       }
@@ -321,12 +333,13 @@ You have access to browser search tools. When users ask for current information,
     } catch {
       // ignore
     }
+    try { (uiResponse as Response).headers.set('X-Request-Id', context.requestId); } catch {}
     return uiResponse as Response;
   } catch (error) {
     logger.apiError('/api/chat', error as Error, { apiEndpoint: '/api/chat', requestId: context.requestId });
     return new Response(
       JSON.stringify({ error: "Failed to process request" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { "Content-Type": "application/json", "X-Request-Id": context.requestId } }
     );
   }
 });

@@ -431,7 +431,8 @@ describe('RateLimiter', () => {
 
     it('should handle missing process.env gracefully', () => {
       const originalProcess = global.process;
-      global.process = {} as any;
+      // Provide a minimal stub to avoid breaking Node internals used elsewhere
+      global.process = { env: {} } as any;
       
       const rateLimiter = getRateLimiter();
       

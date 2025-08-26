@@ -241,7 +241,7 @@ export function withAuthAndRateLimitStreaming(
       const clientIP = getClientIPFromRequest(request);
       if (!rateLimitDisabled) {
         const limiter = getRateLimiter();
-        const globalResult = limiter.checkRateLimit(clientIP);
+        const globalResult = limiter.checkRateLimit(clientIP, 'chat');
         if (!globalResult.allowed) {
           const retryAfter = String(globalResult.retryAfter || Math.ceil((5 * 60)));
           return new Response('Rate limit exceeded. Please try again later.', {
@@ -479,8 +479,8 @@ export function withAuthAndRateLimit<T = unknown>(
       const windowMs = Number(process.env.API_WINDOW_MS || options.windowMs || 5 * 60 * 1000);
 
       if (!rateLimitDisabled) {
-        // Use existing limiter; if needed, a named bucket system can be added
-        const result = limiter.checkRateLimit(clientIP);
+        // Use api bucket for general API limits
+        const result = limiter.checkRateLimit(clientIP, 'api');
         if (!result.allowed) {
           const retryAfter = String(result.retryAfter || Math.ceil(windowMs / 1000));
           return NextResponse.json(

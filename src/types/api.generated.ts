@@ -35,8 +35,7 @@ export interface paths {
                 /** @description Streaming chat response */
                 200: {
                     headers: {
-                        /** @description Correlation ID for tracing this request */
-                        "X-Request-Id"?: string;
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
                         [name: string]: unknown;
                     };
                     content: {
@@ -76,8 +75,7 @@ export interface paths {
                 /** @description List of sessions */
                 200: {
                     headers: {
-                        /** @description Correlation ID for tracing this request */
-                        "X-Request-Id"?: string;
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
                         [name: string]: unknown;
                     };
                     content: {
@@ -108,8 +106,7 @@ export interface paths {
                 /** @description Created session */
                 200: {
                     headers: {
-                        /** @description Correlation ID for tracing this request */
-                        "X-Request-Id"?: string;
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
                         [name: string]: unknown;
                     };
                     content: {
@@ -158,8 +155,7 @@ export interface paths {
                 /** @description Session deleted successfully */
                 200: {
                     headers: {
-                        /** @description Correlation ID for tracing this request */
-                        "X-Request-Id"?: string;
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
                         [name: string]: unknown;
                     };
                     content: {
@@ -174,8 +170,7 @@ export interface paths {
                 /** @description Session not found */
                 404: {
                     headers: {
-                        /** @description Correlation ID for tracing this request */
-                        "X-Request-Id"?: string;
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
                         [name: string]: unknown;
                     };
                     content: {
@@ -780,7 +775,10 @@ export interface components {
     };
     parameters: never;
     requestBodies: never;
-    headers: never;
+    headers: {
+        /** @description Correlation ID for tracing this request */
+        "X-Request-Id": string;
+    };
     pathItems: never;
 }
 export type $defs = Record<string, never>;

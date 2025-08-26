@@ -1,0 +1,22 @@
+---
+description: api-wrappers
+---
+# API Wrappers and Middleware
+
+Use the standardized API middleware and helpers for all new and refactored API routes.
+
+- Prefer `withApiMiddleware` and `withAuthAndRateLimit` from
+  [`src/lib/api/api-middleware.ts`](mdc:src/lib/api/api-middleware.ts).
+- Use `ApiResponse<T>` and `getApiData` from
+  [`src/lib/api/api-response.ts`](mdc:src/lib/api/api-response.ts) to enforce
+  consistent response shapes.
+- Use `requireApiAuth` from [`src/lib/api/api-auth.ts`](mdc:src/lib/api/api-auth.ts)
+  for authenticated endpoints.
+- Apply rate limiting via [`src/lib/api/rate-limiter.ts`](mdc:src/lib/api/rate-limiter.ts)
+  or the combined middleware.
+
+Notes:
+- Error endpoints and reports routes have been refactored to use these wrappers.
+- Memory routes may retain legacy response shapes temporarily to avoid breaking
+  tests/consumers. Prefer the wrappers when possible without breaking changes.
+

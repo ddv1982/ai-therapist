@@ -641,14 +641,14 @@ function ChatPageContent() {
         model: 'openai/gpt-oss-120b',
       });
 
-      if (result) {
+      if (result && typeof (result as { reportContent?: unknown }).reportContent === 'string') {
         
         // Add the report content to the current chat
-        if (result.reportContent && currentSession) {
+        if (currentSession) {
           const reportMessage = {
             id: Date.now().toString(),
             role: 'assistant' as const,
-            content: `📊 **Session Report**\n\n${result.reportContent}`,
+            content: `📊 **Session Report**\n\n${(result as { reportContent: string }).reportContent}`,
             timestamp: new Date(),
             modelUsed: 'openai/gpt-oss-120b' // Reports use the larger model
           };

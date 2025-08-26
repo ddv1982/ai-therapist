@@ -19,92 +19,85 @@ export class ApiClient {
     return `${this.baseUrl}${path}`;
   }
 
+  private generateRequestId(): string {
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+
+  private async request<T>(path: string, init: RequestInit = {}, timeoutMs: number = 20000): Promise<T> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    const headers = new Headers(init.headers || {});
+    if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+    if (!headers.has('X-Request-Id')) headers.set('X-Request-Id', this.generateRequestId());
+
+    const res = await fetch(this.withBase(path), {
+      credentials: 'include',
+      ...init,
+      headers,
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
+
+    return (await parseJsonSafe(res)) as T;
+  }
+
   // Sessions
   async listSessions(): Promise<ApiResponse<components['schemas']['Session'][]>> {
-    type Resp = ApiResponse<components['schemas']['Session'][]>;
-    const res = await fetch(this.withBase('/api/sessions'));
-    const json = await parseJsonSafe(res);
-    return json as Resp;
+    return this.request<ApiResponse<components['schemas']['Session'][]>>('/api/sessions');
   }
 
   async createSession(body: paths['/sessions']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<components['schemas']['Session']>> {
-    type Resp = ApiResponse<components['schemas']['Session']>;
-    const res = await fetch(this.withBase('/api/sessions'), {
+    return this.request<ApiResponse<components['schemas']['Session']>>('/api/sessions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      credentials: 'include',
     });
-    const json = await parseJsonSafe(res);
-    return json as Resp;
   }
 
   async deleteSession(sessionId: string): Promise<ApiResponse<{ success: true }>> {
-    type Resp = ApiResponse<{ success: true }>;
-    const res = await fetch(this.withBase(`/api/sessions/${sessionId}`), { method: 'DELETE', credentials: 'include' });
-    const json = await parseJsonSafe(res);
-    return json as Resp;
+    return this.request<ApiResponse<{ success: true }>>(`/api/sessions/${sessionId}`, { method: 'DELETE' });
   }
 
   // Messages
   async listMessages(sessionId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<PaginatedResponse<components['schemas']['Message']>>> {
-    type Resp = ApiResponse<PaginatedResponse<components['schemas']['Message']>>;
     const qs = new URLSearchParams();
     if (params?.page) qs.set('page', String(params.page));
     if (params?.limit) qs.set('limit', String(params.limit));
     const url = this.withBase(`/api/sessions/${sessionId}/messages${qs.toString() ? `?${qs.toString()}` : ''}`);
-    const res = await fetch(url, { credentials: 'include' });
-    const json = await parseJsonSafe(res);
-    return json as Resp;
+    return this.request<ApiResponse<PaginatedResponse<components['schemas']['Message']>>>(url);
   }
 
   async postMessage(sessionId: string, body: paths['/sessions/{sessionId}/messages']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<components['schemas']['Message']>> {
-    type Resp = ApiResponse<components['schemas']['Message']>;
-    const res = await fetch(this.withBase(`/api/sessions/${sessionId}/messages`), {
+    return this.request<ApiResponse<components['schemas']['Message']>>(`/api/sessions/${sessionId}/messages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      credentials: 'include',
     });
-    const json = await parseJsonSafe(res);
-    return json as Resp;
   }
 
   // Reports (legacy POST /api/reports removed)
 
   // Reports (detailed generate endpoint)
   async generateReportDetailed(body: { sessionId: string; messages: Array<{ role: string; content: string; timestamp?: string }>; model?: string }) {
-    const res = await fetch(this.withBase('/api/reports/generate'), {
+    return this.request('/api/reports/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-      credentials: 'include',
     });
-    return await parseJsonSafe(res);
   }
 
   // Current session
   async getCurrentSession(): Promise<{ success?: boolean; data?: { currentSession?: { id: string; messageCount?: number } }; currentSession?: { id: string; messageCount?: number } } | null> {
-    const res = await fetch(this.withBase('/api/sessions/current'), { credentials: 'include' });
-    return await parseJsonSafe(res);
+    return this.request('/api/sessions/current');
   }
 
   async setCurrentSession(sessionId: string): Promise<{ success?: boolean } | null> {
-    const res = await fetch(this.withBase('/api/sessions/current'), {
+    return this.request('/api/sessions/current', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId }),
-      credentials: 'include',
     });
-    return await parseJsonSafe(res);
   }
 
   // Single session
   async getSessionById(sessionId: string): Promise<ApiResponse<components['schemas']['Session']>> {
-    type Resp = ApiResponse<components['schemas']['Session']>;
-    const res = await fetch(this.withBase(`/api/sessions/${sessionId}`), { credentials: 'include' });
-    const json = await parseJsonSafe(res);
-    return json as Resp;
+    return this.request<ApiResponse<components['schemas']['Session']>>(`/api/sessions/${sessionId}`);
   }
 }
 

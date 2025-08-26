@@ -18,14 +18,18 @@ interface RateLimitConfig {
 }
 
 class NetworkRateLimiter {
-  private store = new Map<string, RateLimitEntry>();
+  private buckets = new Map<string, { store: Map<string, RateLimitEntry>; config: RateLimitConfig }>();
   private cleanupInterval: NodeJS.Timeout | null = null;
-  
-  private readonly config: RateLimitConfig = {
-    windowMs: 5 * 60 * 1000, // 5 minutes - shorter window for better UX
-    maxAttempts: 50, // Much higher limit for therapeutic single-user context
-    blockDuration: 5 * 60 * 1000, // 5 minutes for blocked IPs - shorter recovery time
-  };
+
+  // Safe accessor for environment without using `any`
+  private getNodeEnv(): string | undefined {
+    try {
+      const maybeProcess = (globalThis as unknown as { process?: { env?: { NODE_ENV?: string } } }).process;
+      return typeof maybeProcess?.env?.NODE_ENV === 'string' ? maybeProcess.env.NODE_ENV : undefined;
+    } catch {
+      return undefined;
+    }
+  }
 
   constructor() {
     // Clean up expired entries every 5 minutes (only if setInterval is available)
@@ -34,14 +38,46 @@ class NetworkRateLimiter {
         this.cleanup();
       }, 5 * 60 * 1000);
     }
+    // Initialize default buckets
+    this.ensureBucket('default');
+    this.ensureBucket('api');
+    this.ensureBucket('chat');
+  }
+
+  private getConfigForBucket(name: string): RateLimitConfig {
+    const blockMs = Number(process.env.RATE_LIMIT_BLOCK_MS || 5 * 60 * 1000);
+    if (name === 'chat') {
+      const windowMs = Number(process.env.CHAT_WINDOW_MS || 5 * 60 * 1000);
+      const maxAttempts = Number(process.env.CHAT_MAX_REQS || 120);
+      return { windowMs, maxAttempts, blockDuration: blockMs };
+    }
+    if (name === 'api') {
+      const windowMs = Number(process.env.API_WINDOW_MS || 5 * 60 * 1000);
+      const maxAttempts = Number(process.env.API_MAX_REQS || 300);
+      return { windowMs, maxAttempts, blockDuration: blockMs };
+    }
+    // Default bucket matches legacy behavior: 50 in 5 minutes
+    const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS || 5 * 60 * 1000);
+    const maxAttempts = Number(process.env.RATE_LIMIT_MAX_REQS || 50);
+    return { windowMs, maxAttempts, blockDuration: blockMs };
+  }
+
+  private ensureBucket(name: string): void {
+    if (!this.buckets.has(name)) {
+      this.buckets.set(name, { store: new Map<string, RateLimitEntry>(), config: this.getConfigForBucket(name) });
+    } else {
+      const bucket = this.buckets.get(name)!;
+      bucket.config = this.getConfigForBucket(name);
+    }
   }
 
   /**
    * Check if IP should be exempt from rate limiting
    */
   private isExemptIP(ip: string): boolean {
-    // Do not exempt in production
-    if (process?.env?.NODE_ENV === 'production') {
+    // Do not exempt in production (guard process/env for tests that null process)
+    const nodeEnv = this.getNodeEnv();
+    if (nodeEnv === 'production') {
       return false;
     }
     // Handle undefined or null IP
@@ -81,38 +117,41 @@ class NetworkRateLimiter {
   /**
    * Check if IP is allowed to make a request
    */
-  checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  checkRateLimit(ip: string, bucketName: 'default' | 'api' | 'chat' = 'default'): { allowed: boolean; retryAfter?: number } {
+    this.ensureBucket(bucketName);
+    const bucket = this.buckets.get(bucketName)!;
     // Always allow exempt IPs (localhost, private networks)
     if (this.isExemptIP(ip)) {
-      if (process?.env?.NODE_ENV === 'development') {
-        logger.debug('Rate limiter allowing exempt IP', { ip, operation: 'checkRateLimit' });
+      if (this.getNodeEnv() === 'development') {
+        logger.debug('Rate limiter allowing exempt IP', { operation: 'checkRateLimit', bucket: bucketName });
       }
       return { allowed: true };
     }
     const now = Date.now();
-    const entry = this.store.get(ip);
+    const entry = bucket.store.get(ip);
 
     // No previous attempts
     if (!entry || now > entry.resetTime) {
-      this.store.set(ip, {
+      bucket.store.set(ip, {
         count: 1,
-        resetTime: now + this.config.windowMs,
+        resetTime: now + bucket.config.windowMs,
         attempts: [{ timestamp: now, ip }]
       });
       return { allowed: true };
     }
 
     // Check if currently blocked
-    if (entry.count >= this.config.maxAttempts) {
-      const blockExpiry = entry.resetTime + this.config.blockDuration;
+    if (entry.count >= bucket.config.maxAttempts) {
+      const blockExpiry = entry.resetTime + bucket.config.blockDuration;
       if (now < blockExpiry) {
-        if (process?.env?.NODE_ENV === 'development') {
+        if (this.getNodeEnv() === 'development') {
           logger.warn('Rate limiter blocking IP', { 
             // do not include raw IP to respect no-IP logging policy
             attempts: entry.count, 
-            maxAttempts: this.config.maxAttempts,
+            maxAttempts: bucket.config.maxAttempts,
             retryInSeconds: Math.ceil((blockExpiry - now) / 1000),
-            operation: 'checkRateLimit'
+            operation: 'checkRateLimit',
+            bucket: bucketName
           });
         }
         return { 
@@ -121,9 +160,9 @@ class NetworkRateLimiter {
         };
       }
       // Block expired, reset
-      this.store.set(ip, {
+      bucket.store.set(ip, {
         count: 1,
-        resetTime: now + this.config.windowMs,
+        resetTime: now + bucket.config.windowMs,
         attempts: [{ timestamp: now, ip }]
       });
       return { allowed: true };
@@ -135,30 +174,32 @@ class NetworkRateLimiter {
     
     // Keep only recent attempts for analysis
     entry.attempts = entry.attempts.filter(
-      attempt => attempt.timestamp > now - this.config.windowMs
+      attempt => attempt.timestamp > now - bucket.config.windowMs
     );
 
-    return { allowed: entry.count <= this.config.maxAttempts };
+    return { allowed: entry.count <= bucket.config.maxAttempts };
   }
 
   /**
    * Get current rate limit status for IP
    */
-  getStatus(ip: string): { count: number; remaining: number; resetTime: number } {
-    const entry = this.store.get(ip);
+  getStatus(ip: string, bucketName: 'default' | 'api' | 'chat' = 'default'): { count: number; remaining: number; resetTime: number } {
+    this.ensureBucket(bucketName);
+    const bucket = this.buckets.get(bucketName)!;
+    const entry = bucket.store.get(ip);
     const now = Date.now();
 
     if (!entry || now > entry.resetTime) {
       return {
         count: 0,
-        remaining: this.config.maxAttempts,
-        resetTime: now + this.config.windowMs
+        remaining: bucket.config.maxAttempts,
+        resetTime: now + bucket.config.windowMs
       };
     }
 
     return {
       count: entry.count,
-      remaining: Math.max(0, this.config.maxAttempts - entry.count),
+      remaining: Math.max(0, bucket.config.maxAttempts - entry.count),
       resetTime: entry.resetTime
     };
   }
@@ -168,24 +209,18 @@ class NetworkRateLimiter {
    */
   private cleanup(): void {
     const now = Date.now();
-    const toDelete: string[] = [];
-
-    for (const [ip, entry] of Array.from(this.store.entries())) {
-      // Remove entries that are fully expired (including block time)
-      if (now > entry.resetTime + this.config.blockDuration) {
-        toDelete.push(ip);
-      }
-    }
-
-    toDelete.forEach(ip => this.store.delete(ip));
-    
-    // Optional logging in development
-    if (typeof console !== 'undefined' && process?.env?.NODE_ENV === 'development') {
-      logger.debug('Rate limiter cleanup completed', { 
-        cleanedEntries: toDelete.length,
-        operation: 'cleanup'
+    this.buckets.forEach((bucket, bucketName) => {
+      const toDelete: string[] = [];
+      bucket.store.forEach((entry, ip) => {
+        if (now > entry.resetTime + bucket.config.blockDuration) {
+          toDelete.push(ip);
+        }
       });
-    }
+      toDelete.forEach(ip => bucket.store.delete(ip));
+      if (typeof console !== 'undefined' && this.getNodeEnv() === 'development') {
+        logger.debug('Rate limiter cleanup completed', { cleanedEntries: toDelete.length, operation: 'cleanup', bucket: bucketName });
+      }
+    });
   }
 
   /**
@@ -193,19 +228,16 @@ class NetworkRateLimiter {
    */
   getSuspiciousActivity(): Array<{ ip: string; attempts: number; lastAttempt: number }> {
     const suspicious: Array<{ ip: string; attempts: number; lastAttempt: number }> = [];
-
-    for (const [ip, entry] of Array.from(this.store.entries())) {
-      if (entry.count >= this.config.maxAttempts) {
-        const lastAttempt = Math.max(...entry.attempts.map(a => a.timestamp));
-        suspicious.push({
-          ip,
-          attempts: entry.count,
-          lastAttempt
-        });
-      }
-    }
-
-    return suspicious.sort((a: { lastAttempt: number }, b: { lastAttempt: number }) => b.lastAttempt - a.lastAttempt);
+    // Aggregate across all buckets
+    this.buckets.forEach((bucket) => {
+      bucket.store.forEach((entry, ip) => {
+        if (entry.count >= bucket.config.maxAttempts) {
+          const lastAttempt = Math.max(...entry.attempts.map(a => a.timestamp));
+          suspicious.push({ ip, attempts: entry.count, lastAttempt });
+        }
+      });
+    });
+    return suspicious.sort((a, b) => b.lastAttempt - a.lastAttempt);
   }
 
   /**
@@ -216,7 +248,9 @@ class NetworkRateLimiter {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
     }
-    this.store.clear();
+    this.buckets.forEach((bucket) => {
+      bucket.store.clear();
+    });
   }
 }
 

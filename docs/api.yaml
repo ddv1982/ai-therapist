@@ -66,9 +66,7 @@ paths:
           description: Streaming chat response
           headers:
             X-Request-Id:
-              description: Correlation ID for tracing this request
-              schema:
-                type: string
+              $ref: '#/components/headers/X-Request-Id'
           content:
             text/event-stream:
               schema:
@@ -99,9 +97,7 @@ paths:
           description: List of sessions
           headers:
             X-Request-Id:
-              description: Correlation ID for tracing this request
-              schema:
-                type: string
+              $ref: '#/components/headers/X-Request-Id'
           content:
             application/json:
               schema:
@@ -132,9 +128,7 @@ paths:
           description: Created session
           headers:
             X-Request-Id:
-              description: Correlation ID for tracing this request
-              schema:
-                type: string
+              $ref: '#/components/headers/X-Request-Id'
           content:
             application/json:
               schema:
@@ -164,9 +158,7 @@ paths:
           description: Session deleted successfully
           headers:
             X-Request-Id:
-              description: Correlation ID for tracing this request
-              schema:
-                type: string
+              $ref: '#/components/headers/X-Request-Id'
           content:
             application/json:
               schema:
@@ -182,9 +174,7 @@ paths:
           description: Session not found
           headers:
             X-Request-Id:
-              description: Correlation ID for tracing this request
-              schema:
-                type: string
+              $ref: '#/components/headers/X-Request-Id'
           content:
             application/json:
               schema:
@@ -512,6 +502,11 @@ paths:
                     hasGroqApiKey: false
 
 components:
+  headers:
+    X-Request-Id:
+      description: Correlation ID for tracing this request
+      schema:
+        type: string
   schemas:
     Message:
       type: object
