@@ -348,9 +348,13 @@ function extractCBTDataFromCardFormat(content: string): ExtractedCBTData | null 
         }));
       }
       
-      if (Array.isArray(cardData.newBehaviors)) {
+      if (Array.isArray(cardData.newBehaviors) || Array.isArray(cardData.alternativeResponses)) {
         extractedData.actionPlan = {
-          newBehaviors: cardData.newBehaviors,
+          newBehaviors: Array.isArray(cardData.newBehaviors) ? cardData.newBehaviors : [],
+          ...(Array.isArray(cardData.alternativeResponses)
+            ? { alternativeResponses: (cardData.alternativeResponses as Array<{ response: string }>).
+                map((r) => typeof r?.response === 'string' ? r.response : String(r || '')) }
+            : {})
         };
       }
       

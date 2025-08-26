@@ -509,7 +509,8 @@ export interface ExtractedCBTData {
   }>;
   actionPlan?: {
     newBehaviors: string[];
-    // alternativeResponses removed from current UX
+    // Keep optional for compatibility with older UX; parser may populate when present
+    alternativeResponses?: string[];
   };
   emotionComparison?: {
     changes: Array<{

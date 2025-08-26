@@ -28,7 +28,6 @@ import type {
   RationalThoughtsData,
   SchemaModesData
 } from '@/types/therapy';
-import { REPORT_GENERATION_PROMPT } from '@/lib/therapy/therapy-prompts';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { startCBTSession as startReduxCBTSession } from '@/store/slices/cbtSlice';
 import { useChatMessages } from '@/hooks/use-chat-messages';
@@ -332,38 +331,23 @@ function CBTDiaryPageContent() {
       const cbtSummary = `<!-- CBT_SUMMARY_CARD:${JSON.stringify(summaryData)} -->
 <!-- END_CBT_SUMMARY_CARD -->`;
       
-      // Prepare session content for analysis
-      const sessionContent = messages
-        .filter(msg => !msg.metadata?.step) // Exclude CBT component messages
-        .map(msg => `${msg.role}: ${msg.content}`)
-        .join('\n\n');
-      
-      const fullSessionContent = [
-        cbtSummary,
-        sessionContent ? `\n\nSession Context:\n${sessionContent}` : ''
-      ].filter(Boolean).join('\n');
-
-      // Ensure a session ID exists (create if Redux is empty). Do NOT pick prior current session implicitly.
-      let sessionId = reduxSessionId;
-      if (!sessionId) {
-        const title = 'CBT Session - ' + new Date().toLocaleDateString();
-        const createResp = await apiClient.createSession({ title });
-        if (createResp && createResp.success && createResp.data) {
-          const newSession = createResp.data as components['schemas']['Session'];
-          sessionId = newSession.id;
-          await apiClient.setCurrentSession(newSession.id);
-          dispatch(startReduxCBTSession({ sessionId }));
-        }
+      // Always create a NEW session for each CBT send
+      let sessionId: string | null = null;
+      const now = new Date();
+      const title = 'CBT Session - ' + now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+      const createResp = await apiClient.createSession({ title });
+      if (createResp && createResp.success && createResp.data) {
+        const newSession = createResp.data as components['schemas']['Session'];
+        sessionId = newSession.id;
+        await apiClient.setCurrentSession(newSession.id);
+        // Initialize Redux CBT session context with the new session id for bookkeeping
+        dispatch(startReduxCBTSession({ sessionId }));
       }
       if (!sessionId) {
-        throw new Error('No session available - please start a CBT session first');
+        throw new Error('Failed to create a new session for CBT');
       }
 
-      // Try using the report generation API first as it's more stable
-      let therapeuticAnalysis = '';
-      let useStreamingFallback = false;
-      let reportApiSucceeded = false;
-      // Precompute report messages payload so we can reuse it (for success or fallback persistence)
+      // Precompute report messages payload (summary + contextual messages)
       const reportMessagesPayload = [
         { role: 'user', content: cbtSummary, timestamp: new Date().toISOString() },
         ...messages.filter(msg => !msg.metadata?.step).map(msg => ({
@@ -373,160 +357,22 @@ function CBTDiaryPageContent() {
         }))
       ];
       
-      try {
-        // First attempt: Use report generation API via typed client
-        const reportData = await apiClient.generateReportDetailed({
-          sessionId: sessionId,
-          messages: reportMessagesPayload.map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp })),
-          model: 'openai/gpt-oss-120b'
-        });
-
-        if (reportData && (reportData as { success?: boolean; reportContent?: string }).success && (reportData as { reportContent?: string }).reportContent) {
-          therapeuticAnalysis = (reportData as { reportContent: string }).reportContent;
-          reportApiSucceeded = true;
-          logger.info('Using report generation API for CBT analysis', {
-            component: 'CBTDiaryPage',
-            operation: 'handleSendToChat',
-            sessionId
-          });
-        } else {
-          useStreamingFallback = true;
-        }
-      } catch (reportError) {
-        logger.warn('Report generation API failed, falling back to streaming', {
-          component: 'CBTDiaryPage',
-          operation: 'handleSendToChat',
-          sessionId,
-          error: reportError instanceof Error ? reportError.message : String(reportError)
-        });
-        useStreamingFallback = true;
-      }
-
-      // Fallback: Use streaming chat API if report generation failed
-      if (useStreamingFallback) {
-        logger.info('Using streaming chat API as fallback for CBT analysis', {
+      // Generate the session report using the detailed API (single path)
+      let therapeuticAnalysis = '';
+      const reportData = await apiClient.generateReportDetailed({
+        sessionId: sessionId,
+        messages: reportMessagesPayload.map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp })),
+        model: 'openai/gpt-oss-120b'
+      });
+      if (reportData && (reportData as { success?: boolean; reportContent?: string }).success && (reportData as { reportContent?: string }).reportContent) {
+        therapeuticAnalysis = (reportData as { reportContent: string }).reportContent;
+        logger.info('Generated CBT session report via API', {
           component: 'CBTDiaryPage',
           operation: 'handleSendToChat',
           sessionId
         });
-        
-        const analysisResponse = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: [
-              { role: 'system', content: REPORT_GENERATION_PROMPT },
-              { role: 'user', content: fullSessionContent }
-            ],
-            selectedModel: 'openai/gpt-oss-120b' // Use analytical model for comprehensive analysis
-          }),
-        });
-
-        if (!analysisResponse.ok) {
-          throw new Error('Failed to generate therapeutic analysis');
-        }
-
-        // Handle streaming response with improved error handling
-        if (analysisResponse.body) {
-          const reader = analysisResponse.body.getReader();
-          const decoder = new TextDecoder();
-          
-          try {
-            let buffer = '';
-            
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              
-              // Decode chunk and add to buffer
-              const chunk = decoder.decode(value, { stream: true });
-              buffer += chunk;
-              
-              // Process complete lines
-              const lines = buffer.split('\n');
-              // Keep the last incomplete line in buffer
-              buffer = lines.pop() || '';
-              
-              for (const line of lines) {
-                if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-                  try {
-                    const jsonStr = line.slice(6).trim();
-                    if (jsonStr) {
-                      const data = JSON.parse(jsonStr);
-                      if (data.type === 'text-delta' && data.delta) {
-                        therapeuticAnalysis += data.delta;
-                      }
-                    }
-                  } catch (parseError) {
-                    logger.warn('Failed to parse streaming data line during CBT analysis', {
-                      component: 'CBTDiaryPage',
-                      operation: 'handleSendToChat',
-                      line: line.substring(0, 100) + '...',
-                      sessionId,
-                      error: parseError instanceof Error ? parseError.message : String(parseError)
-                    });
-                    // Continue processing other lines
-                  }
-                }
-              }
-            }
-          
-            // Process any remaining buffer content
-            if (buffer.trim()) {
-              const line = buffer.trim();
-              if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-                try {
-                  const jsonStr = line.slice(6).trim();
-                  if (jsonStr) {
-                    const data = JSON.parse(jsonStr);
-                    if (data.type === 'text-delta' && data.delta) {
-                      therapeuticAnalysis += data.delta;
-                    }
-                  }
-                } catch (parseError) {
-                  logger.warn('Failed to parse final buffer data during CBT analysis', {
-                    component: 'CBTDiaryPage',
-                    operation: 'handleSendToChat',
-                    line: line.substring(0, 100) + '...',
-                    sessionId,
-                    error: parseError instanceof Error ? parseError.message : String(parseError)
-                  });
-                }
-              }
-            }
-          
-          } catch (streamError) {
-            logger.error('Streaming error during CBT analysis', {
-              component: 'CBTDiaryPage',
-              operation: 'handleSendToChat',
-              sessionId,
-              hasPartialContent: !!therapeuticAnalysis.trim()
-            }, streamError instanceof Error ? streamError : new Error(String(streamError)));
-            
-            // If we have some content, use it instead of failing completely
-            if (therapeuticAnalysis.trim()) {
-              logger.warn('Stream interrupted but partial content available, continuing analysis', {
-                component: 'CBTDiaryPage',
-                operation: 'handleSendToChat',
-                sessionId,
-                contentLength: therapeuticAnalysis.length
-              });
-            } else {
-              throw new Error('Failed to process streaming analysis: ' + (streamError instanceof Error ? streamError.message : 'Unknown error'));
-            }
-          } finally {
-            // Ensure reader is properly released
-            try {
-              reader.releaseLock();
-            } catch {
-              // Ignore lock release errors
-            }
-          }
-        }
-      }
-
-      if (!therapeuticAnalysis) {
-        throw new Error('No analysis content received');
+      } else {
+        throw new Error('Failed to generate session report');
       }
 
       setIsStreaming(false);
@@ -539,31 +385,6 @@ function CBTDiaryPageContent() {
       const prefixedReportContent = `📊 **Session Report**\n\n${therapeuticAnalysis}`;
       const analysisMessageResponse: PostMessageResponse = await apiClient.postMessage(sessionId, { role: 'assistant', content: prefixedReportContent, modelUsed: 'openai/gpt-oss-120b' });
       getApiData(analysisMessageResponse);
-
-      // If we had to fall back to streaming, persist a SessionReport in the background for memory/reports
-      if (useStreamingFallback && !reportApiSucceeded) {
-        (async () => {
-          try {
-            await apiClient.generateReportDetailed({
-              sessionId: sessionId,
-              messages: reportMessagesPayload.map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp })),
-              model: 'openai/gpt-oss-120b'
-            });
-            logger.info('Persisted session report after streaming fallback', {
-              component: 'CBTDiaryPage',
-              operation: 'handleSendToChat',
-              sessionId
-            });
-          } catch (persistError) {
-            logger.warn('Failed to persist session report after streaming fallback', {
-              component: 'CBTDiaryPage',
-              operation: 'handleSendToChat',
-              sessionId,
-              error: persistError instanceof Error ? persistError.message : String(persistError)
-            });
-          }
-        })();
-      }
 
       // Clear CBT session since it's complete - use unified CBT action
       draftActions.reset();
