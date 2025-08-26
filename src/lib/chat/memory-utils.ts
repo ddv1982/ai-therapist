@@ -59,12 +59,11 @@ export interface MemoryDeletionResponse {
  * Check if memory context is available for a session
  */
 export async function checkMemoryContext(sessionId?: string): Promise<MemoryContextInfo> {
-  if (!sessionId) {
-    return { hasMemory: false, reportCount: 0 };
-  }
-  
   try {
-    const response = await fetch(`/api/reports/memory?excludeSessionId=${sessionId}&limit=3`);
+    const url = sessionId
+      ? `/api/reports/memory?excludeSessionId=${sessionId}&limit=3`
+      : `/api/reports/memory?limit=3`;
+    const response = await fetch(url);
     
     if (response.ok) {
       const data = await response.json();

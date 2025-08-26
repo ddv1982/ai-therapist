@@ -361,6 +361,24 @@ function ChatPageContent() {
     loadCurrentSession();
   }, [loadSessions, loadCurrentSession]);
 
+  // When no current session is selected (brand-new chat), fetch global memory context
+  useEffect(() => {
+    const loadGlobalMemory = async () => {
+      try {
+        if (!currentSession) {
+          const info = await checkMemoryContext();
+          setMemoryContext(info);
+        }
+      } catch {
+        logger.warn('Failed to load global memory context', {
+          component: 'ChatPage',
+          operation: 'loadGlobalMemory'
+        });
+      }
+    };
+    loadGlobalMemory();
+  }, [currentSession]);
+
   // Environment API key is automatically configured
 
 
@@ -1004,7 +1022,7 @@ function ChatPageContent() {
           aria-atomic="false"
         >
           {/* Memory Context Indicator */}
-          {memoryContext.hasMemory && currentSession && (
+          {memoryContext.hasMemory && (
             <div className={`mb-4 ${isMobile ? 'mx-1' : 'mx-2'}`}>
               <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
                 <div className="flex items-center justify-between">

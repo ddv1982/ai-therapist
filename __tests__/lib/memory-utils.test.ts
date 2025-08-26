@@ -21,14 +21,27 @@ describe('Memory Utils', () => {
   });
 
   describe('checkMemoryContext', () => {
-    it('should return no memory when sessionId is not provided', async () => {
+    it('should fetch global memory when sessionId is not provided', async () => {
+      const mockResponse = {
+        success: true,
+        memoryContext: [
+          { sessionTitle: 'Session A', reportDate: '2024-01-01' },
+        ],
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      } as Response);
+
       const result = await checkMemoryContext();
 
+      expect(mockFetch).toHaveBeenCalledWith('/api/reports/memory?limit=3');
       expect(result).toEqual({
-        hasMemory: false,
-        reportCount: 0,
+        hasMemory: true,
+        reportCount: 1,
+        lastReportDate: '2024-01-01',
       });
-      expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it('should fetch and return memory context info', async () => {

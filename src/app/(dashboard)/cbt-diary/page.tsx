@@ -168,37 +168,9 @@ function CBTDiaryPageContent() {
   // Start CBT session when user clicks start button
   const handleStartCBT = useCallback(async () => {
     setHasStarted(true);
-    
-    // Get or create a session and initialize Redux
-    try {
-      let sessionId = reduxSessionId;
-      
-      if (!sessionId) {
-        // Create a fresh session explicitly for this CBT run (avoid picking previous/current implicitly)
-        const title = 'CBT Session - ' + new Date().toLocaleDateString();
-        const createResp = await apiClient.createSession({ title });
-        if (createResp && createResp.success && createResp.data) {
-          const newSession = createResp.data as components['schemas']['Session'];
-          sessionId = newSession.id;
-          await apiClient.setCurrentSession(newSession.id);
-        }
-
-        // Initialize Redux with the session ID
-        if (sessionId) {
-          dispatch(startReduxCBTSession({ sessionId }));
-        }
-      }
-    } catch (error) {
-      logger.error('Failed to initialize CBT session', {
-        component: 'CBTDiaryPage',
-        operation: 'handleStartCBT',
-        reduxSessionId
-      }, error instanceof Error ? error : new Error(String(error)));
-    }
-    
-    // Start the CBT flow
+    // Do NOT create a chat session at start. We only create one on "Send to Chat".
     startCBTFlow();
-  }, [reduxSessionId, dispatch, startCBTFlow]);
+  }, [startCBTFlow]);
 
   // Handle CBT session start and add situation component
   useEffect(() => {
@@ -320,6 +292,9 @@ function CBTDiaryPageContent() {
       return;
     }
 
+    // Guard against accidental double-clicks or rapid re-submissions
+    if (isLoading || isStreaming) return;
+
     setIsLoading(true);
     setIsStreaming(true);
     
@@ -420,7 +395,7 @@ function CBTDiaryPageContent() {
       setIsLoading(false);
       setIsStreaming(false);
     }
-  }, [hasStarted, isCBTActive, generateTherapeuticSummaryCard, messages, router, showToast, draftActions, reduxSessionId, dispatch]);
+  }, [hasStarted, isCBTActive, isLoading, isStreaming, generateTherapeuticSummaryCard, messages, router, showToast, draftActions, reduxSessionId, dispatch]);
 
   const handleCBTRationalThoughtsComplete = useCallback(async (data: RationalThoughtsData) => {
     completeRationalThoughtsStep(data);
