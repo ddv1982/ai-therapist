@@ -9,7 +9,6 @@ import { validateTherapeuticContext, calculateContextualConfidence } from '@/lib
 import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/cbt-data-parser';
 import type { Prisma } from '@prisma/client';
 
-
 // Note: CognitiveDistortion interface removed - using types from report.ts instead
 
 interface ParsedAnalysis {
@@ -649,7 +648,6 @@ export async function POST(request: NextRequest) {
       reportGenerationStep: 'completed_successfully',
       cbtDataSource: dataSource
     });
-
 
     return NextResponse.json({ 
       success: true, 

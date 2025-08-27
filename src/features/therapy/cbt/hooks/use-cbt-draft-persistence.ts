@@ -48,5 +48,3 @@ export function loadCBTDraft(): CBTFormInput | null {
 export function clearCBTDraft() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
 }
-
-

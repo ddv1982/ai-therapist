@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils/utils';
+import {useTranslations} from 'next-intl';
 
 export type SliderType = 'credibility' | 'confidence' | 'intensity' | 'generic';
 
@@ -45,42 +46,43 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
   className,
   labelSize = 'sm'
 }) => {
+  const t = useTranslations('cbt');
   // Default configurations for different slider types
   const typeConfigs = {
     credibility: {
       min: 0,
       max: 10,
       labels: {
-        left: "0 - Don't believe",
-        center: "5 - Somewhat",
-        right: "10 - Completely believe"
+        left: t('slider.credLeft'),
+        center: t('slider.credCenter'),
+        right: t('slider.credRight')
       }
     },
     confidence: {
       min: 1,
       max: 10,
       labels: {
-        left: "1 - Slightly",
-        center: "5 - Moderately", 
-        right: "10 - Completely"
+        left: t('slider.confLeft'),
+        center: t('slider.confCenter'), 
+        right: t('slider.confRight')
       }
     },
     intensity: {
       min: 1,
       max: 10,
       labels: {
-        left: "1 - Mild",
-        center: "5 - Moderate",
-        right: "10 - Intense"
+        left: t('slider.intLeft'),
+        center: t('slider.intCenter'),
+        right: t('slider.intRight')
       }
     },
     generic: {
       min: 0,
       max: 10,
       labels: {
-        left: "0",
-        center: "5",
-        right: "10"
+        left: '0',
+        center: '5',
+        right: '10'
       }
     }
   };

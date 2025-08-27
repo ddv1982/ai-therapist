@@ -63,5 +63,3 @@ export type CBTFormInput = z.infer<typeof cbtRHFSchema>;
 export function getDefaultCBTValues(): ConsolidatedCBTFormData {
   return createInitialCBTFormData();
 }
-
-

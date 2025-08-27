@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { cn, generateSecureRandomString } from '@/lib/utils/utils';
+import {useTranslations} from 'next-intl';
 
 export interface Toast {
   id: string;
@@ -71,7 +72,17 @@ function ToastContainer({ toasts, removeToast }: { toasts: Toast[]; removeToast:
   );
 }
 
+// Provide a safe translation accessor for tests/environments without NextIntl provider
+function useSafeUiTranslations() {
+  try {
+    return useTranslations('ui');
+  } catch {
+    return ((key: string) => (key === 'close' ? 'Close notification' : key)) as unknown as (key: string) => string;
+  }
+}
+
 function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
+  const t = useSafeUiTranslations();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -132,7 +143,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
         <button
           onClick={onClose}
           className="flex-shrink-0 ml-2 p-1 rounded-full hover:bg-muted transition-colors"
-          aria-label="Close notification"
+          aria-label={t('close')}
         >
           <X className="h-4 w-4 text-muted-foreground" />
         </button>
@@ -140,4 +151,3 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
     </div>
   );
 }
-

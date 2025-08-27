@@ -78,7 +78,6 @@ interface UseCBTChatExperienceReturn {
   resetSession: () => void;
 }
 
-
 const STEP_TITLES = {
   situation: 'What happened?',
   emotions: 'How are you feeling?',

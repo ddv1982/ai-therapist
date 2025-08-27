@@ -87,5 +87,3 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
     </Card>
   );
 }
-
-

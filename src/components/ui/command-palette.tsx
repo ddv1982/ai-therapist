@@ -20,6 +20,7 @@ import { clearMessages } from '@/store/slices/chatSlice';
 import { createDraft } from '@/store/slices/cbtSlice';
 import { MessageSquare, Brain, Plus, Settings, Moon, Search, Clock } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import {useTranslations} from 'next-intl';
 
 interface CommandPaletteProps {
   onCBTOpen?: () => void;
@@ -32,6 +33,7 @@ export function CommandPalette({
   onSettingsOpen, 
   onThemeToggle 
 }: CommandPaletteProps) {
+  const t = useTranslations('ui');
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -100,35 +102,35 @@ export function CommandPalette({
         <DialogContent className="overflow-hidden p-0 shadow-2xl max-w-2xl">
           <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground">
             <CommandInput 
-              placeholder="Type a command or search..." 
+              placeholder={t('command.placeholder')}
               className="h-12"
             />
             <CommandList className="max-h-[400px] overflow-y-auto">
-              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandEmpty>{t('command.noResults')}</CommandEmpty>
               
               {/* Quick Actions */}
-              <CommandGroup heading="Quick Actions">
+              <CommandGroup heading={t('command.quick')}>
                 <CommandItem onSelect={() => handleSelect(createNewSession)}>
                   <Plus className="mr-2 h-4 w-4" />
-                  New Chat Session
+                  {t('command.newChat')}
                 </CommandItem>
                 <CommandItem onSelect={() => handleSelect(openCBTDiary)}>
                   <Brain className="mr-2 h-4 w-4" />
-                  Start CBT Diary
+                  {t('command.cbt')}
                 </CommandItem>
                 <CommandItem onSelect={() => handleSelect(() => onSettingsOpen?.())}>
                   <Settings className="mr-2 h-4 w-4" />
-                  Open Settings
+                  {t('command.settings')}
                 </CommandItem>
                 <CommandItem onSelect={() => handleSelect(() => onThemeToggle?.())}>
                   <Moon className="mr-2 h-4 w-4" />
-                  Toggle Theme
+                  {t('command.theme')}
                 </CommandItem>
               </CommandGroup>
 
               {/* Recent Sessions */}
               {sessions.length > 0 && (
-                <CommandGroup heading="Recent Sessions">
+                <CommandGroup heading={t('command.recent')}>
                   {sessions.slice(0, 6).map((session) => (
                     <CommandItem
                       key={session.id}
@@ -140,7 +142,7 @@ export function CommandPalette({
                           {session.title}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {session.messageCount} messages
+                          {session.messageCount} {t('command.messages')}
                         </div>
                       </div>
                       {currentSessionId === session.id && (
@@ -152,14 +154,14 @@ export function CommandPalette({
               )}
 
               {/* Navigation */}
-              <CommandGroup heading="Navigation">
+              <CommandGroup heading={t('command.nav')}>
                 <CommandItem onSelect={() => handleSelect(() => router.push('/'))}>
                   <MessageSquare className="mr-2 h-4 w-4" />
-                  Go to Chat
+                  {t('command.gotoChat')}
                 </CommandItem>
                 <CommandItem onSelect={() => handleSelect(() => router.push('/reports'))}>
                   <Clock className="mr-2 h-4 w-4" />
-                  Session Reports
+                  {t('command.reports')}
                 </CommandItem>
               </CommandGroup>
             </CommandList>

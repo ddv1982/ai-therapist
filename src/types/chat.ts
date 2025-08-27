@@ -6,7 +6,6 @@ export interface ChatInterfaceProps {
   initialMessages?: MessageData[];
 }
 
-
 export interface TypingIndicatorProps {
   isVisible: boolean;
 }

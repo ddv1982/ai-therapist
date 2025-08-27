@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils/utils';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 // Removed CBTFormValidationError import - validation errors not displayed
+import {useTranslations} from 'next-intl';
 
 import type { SchemaMode, SchemaModesData } from '@/types/therapy';
 
@@ -66,7 +67,6 @@ const DEFAULT_SCHEMA_MODES: SchemaMode[] = [
   }
 ];
 
-
 export function SchemaModes({ 
   onComplete, 
   initialData,
@@ -75,6 +75,7 @@ export function SchemaModes({
   className 
 }: SchemaModesProps) {
   const { sessionData, schemaActions } = useCBTDataManager();
+  const t = useTranslations('cbt');
   
   // Get schema modes data from unified CBT hook
   const schemaModesData = sessionData.schemaModes;
@@ -188,8 +189,8 @@ export function SchemaModes({
   return (
     <CBTStepWrapper
       step="schema-modes"
-      title="Schema Modes Exploration"
-      subtitle="Which parts of yourself are most active in this situation?"
+      title={t('schema.title')}
+      subtitle={t('schema.subtitle')}
       isValid={isValid}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
@@ -197,7 +198,7 @@ export function SchemaModes({
     >
       <div className="flex items-center justify-center gap-4 mb-4">
         {selectedModes.length > 0 && (
-          <p className="text-xs text-primary/70 font-medium">{selectedModes.length} modes selected</p>
+          <p className="text-xs text-primary/70 font-medium">{selectedModes.length} {t('schema.selected')}</p>
         )}
         <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
           isDraftSaved 
@@ -205,7 +206,7 @@ export function SchemaModes({
             : 'opacity-0 scale-95'
         }`}>
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-          Saved
+          {t('status.saved')}
         </div>
       </div>
 
@@ -214,8 +215,7 @@ export function SchemaModes({
           {/* Information */}
           <div className="p-3 bg-muted/30 rounded-lg border border-border/30">
             <p className="text-sm text-muted-foreground">
-              <strong>Schema modes</strong> are different emotional states or &ldquo;parts&rdquo; of ourselves that become active in different situations. 
-              Select the modes that feel most present for you right now, and adjust their intensity.
+              <strong>{t('schema.modes')}</strong> {t('schema.desc')}
             </p>
           </div>
 
@@ -305,12 +305,12 @@ export function SchemaModes({
           {/* Selected Modes Summary */}
           {selectedModes.length > 0 && (
             <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-              <h4 className="text-sm font-medium text-primary mb-2">Active Schema Modes:</h4>
+              <h4 className="text-sm font-medium text-primary mb-2">{t('schema.active')}</h4>
               <div className="space-y-1">
                 {selectedModes.map((mode) => (
                   <div key={mode.id} className="flex justify-between items-center text-xs">
                     <span className="text-foreground">{mode.name}</span>
-                    <span className="text-muted-foreground">Intensity: {mode.intensity}/10</span>
+                    <span className="text-muted-foreground">{t('schema.intensity')}: {mode.intensity}/10</span>
                   </div>
                 ))}
               </div>

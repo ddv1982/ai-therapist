@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { RationalThoughtsData } from '@/types/therapy';
 // Removed CBTFormValidationError import - validation errors not displayed
+import {useTranslations} from 'next-intl';
 
 interface RationalThoughtsProps {
   onComplete: (data: RationalThoughtsData) => void;
@@ -23,7 +24,6 @@ interface RationalThoughtsProps {
   className?: string;
 }
 
-
 export function RationalThoughts({ 
   onComplete, 
   initialData,
@@ -32,6 +32,7 @@ export function RationalThoughts({
   totalSteps: _totalSteps,
   className 
 }: RationalThoughtsProps) {
+  const t = useTranslations('cbt');
   const { sessionData, rationalActions } = useCBTDataManager();
   
   // Get rational thoughts data from unified CBT hook
@@ -66,7 +67,6 @@ export function RationalThoughts({
 
     return () => clearTimeout(timeoutId);
   }, [thoughtsData, rationalActions]);
-
 
   const handleThoughtChange = useCallback((index: number, field: 'thought' | 'confidence', value: string | number) => {
     setThoughtsData(prev => ({
@@ -136,32 +136,25 @@ export function RationalThoughts({
   }, [handleSubmit]);
 
   // Helper prompts
-  const thoughtPrompts = [
-    "Maybe I'm being too hard on myself",
-    "I've overcome challenges before",
-    "Nobody is perfect, and that's okay",
-    "I can learn and grow from this experience",
-    "There might be other explanations",
-    "I have people who care about me"
-  ];
+  const thoughtPrompts = t.raw('rational.prompts') as string[];
 
   return (
     <CBTStepWrapper
       step="rational-thoughts"
-      title="Rational Alternative Thoughts"
-      subtitle={coreBeliefText ? `Alternative to: "${coreBeliefText}"` : "Create balanced, helpful thoughts"}
+      title={t('rational.title')}
+      subtitle={coreBeliefText ? t('rational.subtitleAlt', { belief: coreBeliefText }) : t('rational.subtitle')}
       icon={<Lightbulb className="w-5 h-5" />}
       isValid={isValid}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      nextButtonText={`Continue to Schema Modes${validThoughtCount > 0 ? ` (${validThoughtCount} thoughts)` : ''}`}
-      helpText="Replace negative thoughts with more balanced, realistic alternatives."
+      nextButtonText={`${t('rational.next')}${validThoughtCount > 0 ? ` (${validThoughtCount} ${t('rational.countLabel')})` : ''}`}
+      helpText={t('rational.help')}
       className={className}
     >
       <div className="space-y-6">
           {/* Quick Thought Prompts */}
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Helpful starting points:</p>
+            <p className="text-xs text-muted-foreground">{t('rational.promptLabel')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {thoughtPrompts.slice(0, 4).map((prompt, index) => {
                 const isSelected = selectedPrompts[0] === prompt;
@@ -207,7 +200,7 @@ export function RationalThoughts({
                   </div>
                   
                   <Textarea
-                    placeholder="What's a more balanced, realistic way to think about this?"
+                    placeholder={t('rational.placeholder')}
                     value={thoughtData.thought}
                     onChange={(e) => handleThoughtChange(index, 'thought', e.target.value)}
                     className="min-h-[60px] resize-none"
@@ -218,7 +211,7 @@ export function RationalThoughts({
                     <TherapySlider
                       type="confidence"
                       labelSize="xs"
-                      label="How confident do you feel in this alternative thought?"
+                      label={t('rational.confidence')}
                       value={thoughtData.confidence}
                       onChange={(value) => handleThoughtChange(index, 'confidence', value)}
                     />

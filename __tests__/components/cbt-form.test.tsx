@@ -18,5 +18,3 @@ describe('CBTForm', () => {
     expect(button).not.toBeDisabled();
   });
 });
-
-

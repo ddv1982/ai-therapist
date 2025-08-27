@@ -1112,8 +1112,6 @@
     animation: streaming-reveal 300ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
   }
 
-
-
   /* Mobile-Specific Optimizations */
   @media (max-width: 768px) {
     /* Reduce animation intensity on mobile for better performance */
@@ -1483,4 +1481,3 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
-

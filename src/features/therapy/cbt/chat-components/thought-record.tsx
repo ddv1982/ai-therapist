@@ -12,6 +12,7 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { ThoughtData } from '@/types/therapy';
 // Removed CBTFormValidationError import - validation errors not displayed
 // Removed chat bridge imports - individual data no longer sent during session
+import {useTranslations} from 'next-intl';
 
 // Remove local interface - use the one from cbtSlice
 // export interface ThoughtData {
@@ -29,16 +30,16 @@ interface ThoughtRecordProps {
   className?: string;
 }
 
-
 export function ThoughtRecord({ 
   onComplete, 
   initialData,
-  title: _title = "What thoughts went through your mind?",
-  subtitle: _subtitle = "Record the automatic thoughts that came up during this situation",
+  title: _title = "",
+  subtitle: _subtitle = "",
   stepNumber: _stepNumber,
   totalSteps: _totalSteps,
   className 
 }: ThoughtRecordProps) {
+  const t = useTranslations('cbt');
   const { sessionData, thoughtActions } = useCBTDataManager();
   
   // Get thoughts data from unified CBT hook
@@ -77,18 +78,7 @@ export function ThoughtRecord({
   // Note: Chat bridge no longer used - data sent only in final comprehensive summary
 
   // Common thought prompts to help users get started
-  const thoughtPrompts = [
-    "I'm not good enough",
-    "Something bad will happen",
-    "I can't handle this",
-    "People will judge me",
-    "I always mess things up",
-    "I should be perfect",
-    "No one cares about me",
-    "I'm in danger",
-    "I can't trust anyone",
-    "This is all my fault"
-  ];
+  const thoughtPrompts = t.raw('thoughts.prompts') as string[];
 
   const handleThoughtChange = useCallback((index: number, newThought: string) => {
     const updatedThoughts = [...thoughts];
@@ -182,14 +172,14 @@ export function ThoughtRecord({
   return (
     <CBTStepWrapper
       step="thoughts"
-      title="What thoughts went through your mind?"
-      subtitle="Record the automatic thoughts that came up during this situation"
+      title={_title || t('thoughts.title')}
+      subtitle={_subtitle || t('thoughts.subtitle')}
       icon={<Brain className="w-5 h-5" />}
       isValid={hasValidThoughts}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      nextButtonText={`Continue to Core Beliefs${validThoughtCount > 0 ? ` (${validThoughtCount} thoughts)` : ''}`}
-      helpText="Try to capture the exact words that went through your mind during this situation."
+      nextButtonText={`${t('thoughts.next')}${validThoughtCount > 0 ? ` (${validThoughtCount} ${t('thoughts.countLabel')})` : ''}`}
+      helpText={t('thoughts.help')}
       className={className}
     >
 
@@ -198,7 +188,7 @@ export function ThoughtRecord({
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Lightbulb className="w-4 h-4" />
-            <span>Common thoughts (tap to use):</span>
+            <span>{t('thoughts.promptLabel')}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {thoughtPrompts.map((prompt, index) => {
@@ -230,7 +220,7 @@ export function ThoughtRecord({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <label className="text-base font-medium text-foreground">
-                    Automatic Thought {index + 1}
+                    {t('thoughts.entryLabel')} {index + 1}
                   </label>
                   {thoughts.length > 1 && (
                     <Button
@@ -246,7 +236,7 @@ export function ThoughtRecord({
                 
                 <div className="space-y-2">
                   <Textarea
-                    placeholder="What thoughts immediately came to mind? What was I telling myself?"
+                    placeholder={t('thoughts.placeholder')}
                     value={thought.thought}
                     onChange={(e) => handleThoughtChange(index, e.target.value)}
                     className="min-h-[100px] resize-none w-full max-w-full break-words overflow-hidden"
@@ -258,7 +248,7 @@ export function ThoughtRecord({
 
                 <TherapySlider
                   type="credibility"
-                  label="How much do you believe this thought? (Credibility)"
+                  label={t('thoughts.credibility')}
                   value={thought.credibility}
                   onChange={(value) => handleCredibilityChange(index, value)}
                 />

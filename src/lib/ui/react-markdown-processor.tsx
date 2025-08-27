@@ -36,8 +36,6 @@ md.use(markdownItAttrs, {
   allowedAttributes: ['class', 'id']
 });
 
-
-
 /**
  * Extract CBT summary data from markdown comments
  */
@@ -478,4 +476,3 @@ function findClosingToken(
   
   return index;
 }
-

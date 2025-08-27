@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRateLimiter } from '@/lib/api/rate-limiter';
+import createMiddleware from 'next-intl/middleware';
+import { locales, defaultLocale } from './src/i18n/config';
 
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for');
@@ -16,6 +18,13 @@ function getClientIP(request: NextRequest): string {
   return request.ip || 'unknown';
 }
 
+const handleI18n = createMiddleware({
+  locales,
+  defaultLocale,
+  localePrefix: 'as-needed',
+  localeDetection: true
+});
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const clientIP = getClientIP(request);
@@ -24,6 +33,10 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/api')) {
     return NextResponse.next();
   }
+
+  // Let next-intl handle locale-prefixing for non-API/static paths
+  const i18nResponse = handleI18n(request);
+  if (i18nResponse) return i18nResponse;
   
   // Skip middleware for static files, authentication pages, and Next.js internals
   if (
@@ -56,13 +69,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)  
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!api|_next|static|.*\\..*).*)'],
 };

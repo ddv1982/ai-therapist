@@ -9,6 +9,7 @@ import { HelpCircle, Plus, Minus } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { ChallengeQuestionsData } from '@/types/therapy';
 // Removed CBTFormValidationError import - validation errors not displayed
+import {useTranslations} from 'next-intl';
 
 interface ChallengeQuestionsProps {
   onComplete: (data: ChallengeQuestionsData) => void;
@@ -41,6 +42,7 @@ export function ChallengeQuestions({
   totalSteps: _totalSteps,
   className 
 }: ChallengeQuestionsProps) {
+  const t = useTranslations('cbt');
   const { sessionData, challengeActions } = useCBTDataManager();
   
   // Get challenge questions data from unified CBT hook
@@ -129,14 +131,14 @@ export function ChallengeQuestions({
   return (
     <CBTStepWrapper
       step="challenge-questions"
-      title="Challenge Your Thoughts"
-      subtitle={coreBeliefText ? `Examining: "${coreBeliefText}"` : "Question your beliefs with curiosity"}
+      title={t('challenge.title')}
+      subtitle={coreBeliefText ? t('challenge.subtitleAlt', { belief: coreBeliefText }) : t('challenge.subtitle')}
       icon={<HelpCircle className="w-5 h-5" />}
       isValid={isValid}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      nextButtonText={`Continue to Rational Thoughts${answeredQuestions > 0 ? ` (${answeredQuestions} answered)` : ''}`}
-      helpText="Challenge your thoughts by answering these questions with an open mind."
+      nextButtonText={`${t('challenge.next')}${answeredQuestions > 0 ? ` (${answeredQuestions} ${t('challenge.answeredLabel')})` : ''}`}
+      helpText={t('challenge.help')}
       className={className}
     >
       <div className="space-y-6">
@@ -162,7 +164,7 @@ export function ChallengeQuestions({
                   </div>
                   
                   <Textarea
-                    placeholder="Take your time to really think about this..."
+                    placeholder={t('challenge.placeholder')}
                     value={questionData.answer}
                     onChange={(e) => handleQuestionChange(index, 'answer', e.target.value)}
                     className="min-h-[60px] resize-none"

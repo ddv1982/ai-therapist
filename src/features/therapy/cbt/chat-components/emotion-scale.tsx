@@ -10,6 +10,7 @@ import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { TherapySlider } from '@/components/ui/therapy-slider';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { EmotionData } from '@/types/therapy';
+import {useTranslations} from 'next-intl';
 
 // Remove local interface - use the one from cbtSlice
 // export interface EmotionData {
@@ -30,7 +31,6 @@ interface EmotionScaleProps {
   className?: string;
 }
 
-
 export function EmotionScale({ 
   onComplete,
   type = 'initial',
@@ -40,6 +40,7 @@ export function EmotionScale({
     sessionData,
     sessionActions 
   } = useCBTDataManager();
+  const t = useTranslations('cbt');
   
   // Get current emotion data from unified state (sessionData stores current emotions)
   const currentEmotions = useMemo(() => 
@@ -99,21 +100,21 @@ export function EmotionScale({
   return (
     <CBTStepWrapper
       step="emotions"
-      title={type === 'initial' ? "How are you feeling?" : "How are you feeling now?"}
-      subtitle={type === 'initial' ? "Rate the emotions you're experiencing" : "Rate how your emotions have changed"}
+      title={type === 'initial' ? t('emotions.title') : t('emotions.titleNow')}
+      subtitle={type === 'initial' ? t('emotions.subtitle') : t('emotions.subtitleNow')}
       icon={<Heart className="w-5 h-5" />}
       isValid={hasSelectedEmotions}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      nextButtonText={`Continue to Thoughts${selectedCount > 0 ? ` (${selectedCount} emotions)` : ''}`}
-      helpText="Click on emotions to select them, then adjust the intensity using the sliders (1-10 scale)."
+      nextButtonText={`${t('emotions.next')}${selectedCount > 0 ? ` (${selectedCount} ${t('finalEmotions.emotions')})` : ''}`}
+      helpText={t('emotions.help')}
       hideProgressBar={true} // Parent page shows progress
       className={className}
     >
       <div className="space-y-6">
         {hasSelectedEmotions && (
           <div className="text-center">
-            <p className="text-sm text-primary font-medium">{selectedCount} emotions selected</p>
+            <p className="text-sm text-primary font-medium">{selectedCount} {t('finalEmotions.selected')}</p>
           </div>
         )}
         

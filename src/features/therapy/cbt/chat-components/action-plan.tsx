@@ -11,6 +11,7 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 // Removed CBTFormValidationError import - validation errors not displayed
 import type { ActionPlanData, EmotionData } from '@/types/therapy';
 // Removed chat bridge imports - individual data no longer sent during session
+import {useTranslations} from 'next-intl';
 
 // Remove local interfaces - use the ones from cbtSlice
 // export interface EmotionData {
@@ -32,7 +33,6 @@ import type { ActionPlanData, EmotionData } from '@/types/therapy';
 //   alternativeResponses: Array<{ response: string }>;
 // }
 
-
 interface ActionPlanProps {
   onComplete: (data: ActionPlanData) => void;
   initialData?: ActionPlanData;
@@ -45,19 +45,18 @@ interface ActionPlanProps {
   className?: string;
 }
 
-
-
 export function ActionPlan({ 
   onComplete, 
   initialData,
   initialEmotions,
   customEmotion,
-  title = "Future Action Plan",
-  subtitle = "Plan your responses for similar situations",
+  title,
+  subtitle,
   stepNumber: _stepNumber,
   totalSteps: _totalSteps,
   className 
 }: ActionPlanProps) {
+  const t = useTranslations('cbt');
   const { sessionData, actionActions } = useCBTDataManager();
   
   // Get action plan data from unified CBT hook
@@ -181,26 +180,26 @@ export function ActionPlan({
   return (
     <CBTStepWrapper
       step="actions"
-      title={title}
-      subtitle={subtitle}
+      title={title ?? t('actionPlan.title')}
+      subtitle={subtitle ?? t('actionPlan.subtitle')}
       isValid={isBasicValid}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      nextButtonText={"Continue to Reflection"}
+      nextButtonText={t('actionPlan.nextToReflection')}
       className={className}
     >
       <Card className="border-border bg-card">
         <CardHeader className="p-4 pb-4">
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <CheckSquare className="w-5 h-5 text-primary" />
-            Action Plan & Reflection
+            {t('actionPlan.header')}
           </CardTitle>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Plan your future responses and reflect on progress</p>
+            <p className="text-sm text-muted-foreground">{t('actionPlan.headerDesc')}</p>
             <div className="flex items-center gap-2">
               {overallImprovement > 0 && (
                 <Badge variant="default" className="bg-primary/10 text-primary">
-                  Improvement: +{overallImprovement}
+                  {t('actionPlan.improvement')}: +{overallImprovement}
                 </Badge>
               )}
               <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
@@ -209,7 +208,7 @@ export function ActionPlan({
                   : 'opacity-0 scale-95'
               }`}>
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                Saved
+                {t('status.saved')}
               </div>
             </div>
           </div>
@@ -220,14 +219,14 @@ export function ActionPlan({
         <div className="space-y-4">
           <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
             <Target className="w-4 h-4" />
-            Reflection & Action Planning
+            {t('actionPlan.reflectionTitle')}
           </h4>
           
           {/* Original thought credibility */}
           <div className="space-y-4">
             <TherapySlider
               type="credibility"
-              label="How much do you believe your original automatic thoughts now?"
+              label={t('actionPlan.originalThoughtCredibility')}
               value={actionData.originalThoughtCredibility}
               onChange={(value) => handleFieldChange('originalThoughtCredibility', value)}
             />
@@ -238,14 +237,14 @@ export function ActionPlan({
         <div className="space-y-4">
           <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
             <Target className="w-4 h-4" />
-            Future Action Plan
+            {t('actionPlan.futureActionTitle')}
           </h4>
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
-              What will you do differently next time this situation arises?
+              {t('actionPlan.futureActionLabel')}
             </label>
             <Textarea
-              placeholder="Describe new behaviors or responses you want to try. Be specific about what you'll do, say, or think differently..."
+              placeholder={t('actionPlan.futureActionPlaceholder')}
               value={actionData.newBehaviors}
               onChange={(e) => handleFieldChange('newBehaviors', e.target.value)}
               className="min-h-[100px] resize-none"
@@ -260,11 +259,11 @@ export function ActionPlan({
         {/* Helper Text */}
         <div className="text-center space-y-2">
           <p className="text-xs text-muted-foreground">
-            🎉 Great work completing this CBT reflection! You&apos;ve made important insights.
+            {t('actionPlan.successMessage')}
           </p>
           {overallImprovement > 0 && (
             <p className="text-xs text-green-600 font-medium">
-              Your emotional state has improved through this process
+              {t('actionPlan.improvedState')}
             </p>
           )}
         </div>

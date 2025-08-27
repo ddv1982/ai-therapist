@@ -9,6 +9,7 @@ import { Calendar, MapPin, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { SituationData } from '@/types/therapy';
+import {useTranslations} from 'next-intl';
 
 interface SituationPromptProps {
   onComplete?: (data: SituationData) => void;
@@ -19,6 +20,7 @@ export function SituationPrompt({
   onComplete,
   className 
 }: SituationPromptProps) {
+  const t = useTranslations('cbt');
   const { sessionData, sessionActions } = useCBTDataManager();
   
   // Local state for UI interaction
@@ -40,18 +42,7 @@ export function SituationPrompt({
   }, [currentDate]);
   
   // Common situation prompts for quick selection
-  const situationPrompts = [
-    "A conflict with someone important to me",
-    "Feeling overwhelmed at work or school", 
-    "Anxiety about an upcoming event",
-    "A recent disappointment or setback",
-    "Family or relationship stress",
-    "Health or medical concerns",
-    "Social anxiety in a group setting",
-    "Making an important decision",
-    "Financial worries or concerns",
-    "Dealing with change or uncertainty"
-  ];
+  const situationPrompts = t.raw('situation.prompts') as string[];
 
   // Validation logic - keeps form functional without showing error messages
   const isValid = currentSituation.trim().length >= 5;
@@ -112,12 +103,12 @@ export function SituationPrompt({
         <div className="flex items-center gap-3 mb-2">
           <MapPin className="w-5 h-5 flex-shrink-0" />
           <div className="flex-1">
-            <h2 className="text-lg font-semibold">Describe the Situation</h2>
-            <p className="text-sm opacity-80 mt-1">Tell me about what happened</p>
+            <h2 className="text-lg font-semibold">{t('situation.title')}</h2>
+            <p className="text-sm opacity-80 mt-1">{t('situation.subtitle')}</p>
           </div>
         </div>
         <p className="text-sm opacity-70 mt-2">
-          Start by describing the situation that led to your current feelings. Be as specific as you can.
+          {t('situation.helper')}
         </p>
       </div>
 
@@ -126,12 +117,12 @@ export function SituationPrompt({
         {/* Date Selection */}
         <div className="flex items-center gap-3">
           <Calendar className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">When:</span>
+          <span className="text-sm text-muted-foreground">{t('situation.when')}</span>
           <div className="flex-1">
             <DatePicker
               value={selectedDate}
               onChange={handleDateChange}
-              placeholder="Select date"
+              placeholder={t('situation.datePlaceholder')}
               className="w-full"
               maxDate={new Date()}
             />
@@ -140,7 +131,7 @@ export function SituationPrompt({
 
         {/* Quick Prompts */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">Quick options:</p>
+          <p className="text-sm font-medium text-foreground">{t('situation.quick')}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {situationPrompts.slice(0, 4).map((prompt, index) => {
               const isSelected = selectedPrompt === prompt;
@@ -167,7 +158,7 @@ export function SituationPrompt({
         {/* Main Description */}
         <div className="space-y-2">
           <Textarea
-            placeholder="Tell me what happened..."
+            placeholder={t('situation.placeholder')}
             value={currentSituation}
             onChange={(e) => handleDescriptionChange(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -176,7 +167,7 @@ export function SituationPrompt({
           />
           
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{charCount < 5 ? "Need a few more details" : "Looking good!"}</span>
+            <span>{charCount < 5 ? t('situation.moreDetails') : t('situation.lookingGood')}</span>
             <span>{charCount}/1000</span>
           </div>
         </div>
@@ -189,7 +180,7 @@ export function SituationPrompt({
           disabled={!isValid}
           className="flex items-center gap-2"
         >
-          Continue to Emotions
+          {t('situation.next')}
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>

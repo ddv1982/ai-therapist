@@ -42,7 +42,6 @@ interface MemoryManagementModalProps {
   onMemoryUpdated: (newMemoryContext: MemoryContextInfo) => void;
 }
 
-
 export function MemoryManagementModal({ 
   open, 
   onOpenChange, 
@@ -236,7 +235,7 @@ export function MemoryManagementModal({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-5xl h-[85vh] overflow-hidden flex flex-col bg-card border border-border">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg text-foreground">
+            <DialogTitle className="flex items-center gap-2 text-lg text-foreground" title="Therapeutic Memory Management">
               <Brain className="w-5 h-5 text-primary" />
               Therapeutic Memory Management
             </DialogTitle>

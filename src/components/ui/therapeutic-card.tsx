@@ -67,7 +67,6 @@ export function TherapeuticCard({
   // Animation delay for stagger effect
   const animationDelay = `${index * 50}ms`;
 
-
   return (
     <Card 
       className={cn(

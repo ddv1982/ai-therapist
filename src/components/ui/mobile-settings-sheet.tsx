@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { updateSettings } from '@/store/slices/chatSlice';
 import { Settings, Zap, Brain, Gauge, Target } from 'lucide-react';
+import {useTranslations} from 'next-intl';
 
 interface MobileSettingsSheetProps {
   children?: React.ReactNode;
@@ -28,6 +29,7 @@ export function MobileSettingsSheet({
   isOpen, 
   onOpenChange 
 }: MobileSettingsSheetProps) {
+  const t = useTranslations('ui');
   const dispatch = useAppDispatch();
   const settings = useAppSelector(state => state.chat.settings);
 
@@ -59,20 +61,20 @@ export function MobileSettingsSheet({
         <SheetHeader className="space-y-4">
           <div className="flex items-center gap-2">
             <Settings className="h-5 w-5 text-primary" />
-            <SheetTitle>AI Settings</SheetTitle>
+            <SheetTitle>{t('settings.title')}</SheetTitle>
           </div>
           <SheetDescription>
-            Configure your AI therapist&apos;s behavior and response style.
+            {t('settings.subtitle')}
           </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-8">
           {/* Model Selection */}
           <div className="space-y-3">
-            <Label className="text-base font-medium">AI Model</Label>
+            <Label className="text-base font-medium">{t('settings.model')}</Label>
             <Select value={settings.model} onValueChange={handleModelChange}>
               <SelectTrigger>
-                <SelectValue placeholder="Select AI model" />
+                <SelectValue placeholder={t('settings.modelPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {modelOptions.map((option) => (
@@ -87,8 +89,8 @@ export function MobileSettingsSheet({
             </Select>
             <p className="text-sm text-muted-foreground">
               {settings.model === 'openai/gpt-oss-20b' 
-                ? 'Optimized for quick responses and general conversation'
-                : 'Best for complex therapeutic analysis and deep insights'
+                ? t('settings.modelFast')
+                : t('settings.modelAnalytical')
               }
             </p>
           </div>
@@ -97,7 +99,7 @@ export function MobileSettingsSheet({
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Gauge className="h-4 w-4 text-primary" />
-              <Label className="text-base font-medium">Creativity</Label>
+              <Label className="text-base font-medium">{t('settings.creativity')}</Label>
               <span className="ml-auto text-sm text-muted-foreground">
                 {settings.temperature.toFixed(1)}
               </span>
@@ -111,16 +113,16 @@ export function MobileSettingsSheet({
               className="w-full"
             />
             <div className="grid grid-cols-3 text-xs text-muted-foreground">
-              <span>Focused</span>
-              <span className="text-center">Balanced</span>
-              <span className="text-right">Creative</span>
+              <span>{t('settings.creativityLow')}</span>
+              <span className="text-center">{t('settings.creativityMid')}</span>
+              <span className="text-right">{t('settings.creativityHigh')}</span>
             </div>
             <p className="text-sm text-muted-foreground">
               {settings.temperature < 0.5 
-                ? 'More focused and consistent responses'
+                ? t('settings.creativityLowDesc')
                 : settings.temperature < 1.0
-                ? 'Balanced creativity and consistency'
-                : 'More creative and varied responses'
+                ? t('settings.creativityMidDesc')
+                : t('settings.creativityHighDesc')
               }
             </p>
           </div>
@@ -129,7 +131,7 @@ export function MobileSettingsSheet({
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-primary" />
-              <Label className="text-base font-medium">Response Length</Label>
+              <Label className="text-base font-medium">{t('settings.length')}</Label>
               <span className="ml-auto text-sm text-muted-foreground">
                 {settings.maxTokens.toLocaleString()}
               </span>
@@ -143,12 +145,12 @@ export function MobileSettingsSheet({
               className="w-full"
             />
             <div className="grid grid-cols-3 text-xs text-muted-foreground">
-              <span>Brief</span>
-              <span className="text-center">Standard</span>
-              <span className="text-right">Detailed</span>
+              <span>{t('settings.lengthBrief')}</span>
+              <span className="text-center">{t('settings.lengthStandard')}</span>
+              <span className="text-right">{t('settings.lengthDetailed')}</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Controls the maximum length of AI responses
+              {t('settings.lengthHelp')}
             </p>
           </div>
 
@@ -156,7 +158,7 @@ export function MobileSettingsSheet({
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Brain className="h-4 w-4 text-primary" />
-              <Label className="text-base font-medium">Focus</Label>
+              <Label className="text-base font-medium">{t('settings.focus')}</Label>
               <span className="ml-auto text-sm text-muted-foreground">
                 {settings.topP.toFixed(1)}
               </span>
@@ -170,18 +172,18 @@ export function MobileSettingsSheet({
               className="w-full"
             />
             <div className="grid grid-cols-3 text-xs text-muted-foreground">
-              <span>Narrow</span>
-              <span className="text-center">Balanced</span>
-              <span className="text-right">Broad</span>
+              <span>{t('settings.focusNarrow')}</span>
+              <span className="text-center">{t('settings.focusBalanced')}</span>
+              <span className="text-right">{t('settings.focusBroad')}</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Controls how focused the AI&apos;s word choices are
+              {t('settings.focusHelp')}
             </p>
           </div>
 
           {/* Preset Buttons */}
           <div className="space-y-3">
-            <Label className="text-base font-medium">Quick Presets</Label>
+            <Label className="text-base font-medium">{t('settings.presets')}</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
@@ -193,7 +195,7 @@ export function MobileSettingsSheet({
                 }))}
                 className="text-xs"
               >
-                Clinical Focus
+                {t('settings.presetClinical')}
               </Button>
               <Button
                 variant="outline"
@@ -205,7 +207,7 @@ export function MobileSettingsSheet({
                 }))}
                 className="text-xs"
               >
-                Balanced Care
+                {t('settings.presetBalanced')}
               </Button>
               <Button
                 variant="outline"
@@ -217,7 +219,7 @@ export function MobileSettingsSheet({
                 }))}
                 className="text-xs"
               >
-                Creative Support
+                {t('settings.presetCreative')}
               </Button>
               <Button
                 variant="outline"
@@ -229,7 +231,7 @@ export function MobileSettingsSheet({
                 }))}
                 className="text-xs"
               >
-                Quick Responses
+                {t('settings.presetQuick')}
               </Button>
             </div>
           </div>

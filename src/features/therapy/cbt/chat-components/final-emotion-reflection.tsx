@@ -10,6 +10,7 @@ import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { TherapySlider } from '@/components/ui/therapy-slider';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { EmotionData, ActionPlanData } from '@/types/therapy';
+import {useTranslations} from 'next-intl';
 
 interface FinalEmotionReflectionProps {
   onComplete?: (data: EmotionData) => void;
@@ -19,6 +20,7 @@ interface FinalEmotionReflectionProps {
 
 export function FinalEmotionReflection({ onComplete, onSendToChat, className }: FinalEmotionReflectionProps) {
   const { sessionData, actionActions } = useCBTDataManager();
+  const t = useTranslations('cbt');
 
   // Pull final emotions from action plan if present, else start from zeros
   const currentFinalEmotions = useMemo<EmotionData>(() => (
@@ -93,20 +95,20 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
   return (
     <CBTStepWrapper
       step="final-emotions"
-      title="How do you feel after this reflection?"
-      subtitle="Rate your current emotional state"
+      title={t('finalEmotions.title')}
+      subtitle={t('finalEmotions.subtitle')}
       icon={<Heart className="w-5 h-5" />}
       isValid={hasSelectedEmotions}
       validationErrors={[]}
       onNext={handleNext}
-      nextButtonText={`Send to Chat${selectedCount > 0 ? ` (${selectedCount} emotions)` : ''}`}
+      nextButtonText={`${t('actions.sendToChat')}${selectedCount > 0 ? ` (${selectedCount} ${t('finalEmotions.emotions')})` : ''}`}
       hideProgressBar={true}
       className={className}
     >
       <div className="space-y-6">
         {hasSelectedEmotions && (
           <div className="text-center">
-            <p className="text-sm text-primary font-medium">{selectedCount} emotions selected</p>
+            <p className="text-sm text-primary font-medium">{selectedCount} {t('finalEmotions.selected')}</p>
           </div>
         )}
 
@@ -136,12 +138,12 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
                           <h4 className="font-semibold text-sm text-foreground">{emotion.label}</h4>
                           {isSelected && (
                             <p className="text-xs text-muted-foreground">
-                              {value === 0 && "Not present"}
-                              {value > 0 && value <= 2 && "Mild"}
-                              {value > 2 && value <= 5 && "Moderate"}
-                              {value > 5 && value <= 7 && "Strong"}
-                              {value > 7 && value <= 9 && "Very strong"}
-                              {value === 10 && "Overwhelming"}
+                              {value === 0 && t('emotionIntensity.none')}
+                              {value > 0 && value <= 2 && t('emotionIntensity.mild')}
+                              {value > 2 && value <= 5 && t('emotionIntensity.moderate')}
+                              {value > 5 && value <= 7 && t('emotionIntensity.strong')}
+                              {value > 7 && value <= 9 && t('emotionIntensity.veryStrong')}
+                              {value === 10 && t('emotionIntensity.overwhelming')}
                             </p>
                           )}
                         </div>
@@ -193,13 +195,13 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
                 className="w-full border-dashed hover:bg-accent hover:text-accent-foreground h-10"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Custom Emotion
+                {t('finalEmotions.addCustom')}
               </Button>
             ) : (
               <div className="space-y-3">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Custom emotion (e.g., jealousy, excitement, grateful)"
+                    placeholder={t('finalEmotions.customPlaceholder')}
                     value={localFinal.other || ''}
                     onChange={(e) => handleCustomEmotionLabel(e.target.value)}
                     className="flex-1"
@@ -222,12 +224,12 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
                           <div>
                             <h4 className="font-semibold text-sm text-foreground">{localFinal.other}</h4>
                             <p className="text-xs text-muted-foreground">
-                              {(localFinal.otherIntensity || 0) === 0 && "Not present"}
-                              {(localFinal.otherIntensity || 0) > 0 && (localFinal.otherIntensity || 0) <= 2 && "Mild"}
-                              {(localFinal.otherIntensity || 0) > 2 && (localFinal.otherIntensity || 0) <= 5 && "Moderate"}
-                              {(localFinal.otherIntensity || 0) > 5 && (localFinal.otherIntensity || 0) <= 7 && "Strong"}
-                              {(localFinal.otherIntensity || 0) > 7 && (localFinal.otherIntensity || 0) <= 9 && "Very strong"}
-                              {(localFinal.otherIntensity || 0) === 10 && "Overwhelming"}
+                              {(localFinal.otherIntensity || 0) === 0 && t('emotionIntensity.none')}
+                              {(localFinal.otherIntensity || 0) > 0 && (localFinal.otherIntensity || 0) <= 2 && t('emotionIntensity.mild')}
+                              {(localFinal.otherIntensity || 0) > 2 && (localFinal.otherIntensity || 0) <= 5 && t('emotionIntensity.moderate')}
+                              {(localFinal.otherIntensity || 0) > 5 && (localFinal.otherIntensity || 0) <= 7 && t('emotionIntensity.strong')}
+                              {(localFinal.otherIntensity || 0) > 7 && (localFinal.otherIntensity || 0) <= 9 && t('emotionIntensity.veryStrong')}
+                              {(localFinal.otherIntensity || 0) === 10 && t('emotionIntensity.overwhelming')}
                             </p>
                           </div>
                         </div>
@@ -255,5 +257,3 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
     </CBTStepWrapper>
   );
 }
-
-

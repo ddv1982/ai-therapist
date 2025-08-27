@@ -25,5 +25,3 @@ export const POST = withApiMiddleware(async (request: NextRequest, context) => {
 
   return createSuccessResponse({ reset: true }, { requestId: context.requestId });
 });
-
-

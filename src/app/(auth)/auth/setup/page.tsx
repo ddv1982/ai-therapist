@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { therapeuticInteractive } from '@/lib/ui/design-tokens';
+import {useTranslations} from 'next-intl';
 
 interface SetupData {
   qrCodeUrl: string;
@@ -15,6 +16,7 @@ interface SetupData {
 }
 
 export default function TOTPSetupPage() {
+  const t = useTranslations();
   const [setupData, setSetupData] = useState<SetupData | null>(null);
   const [verificationToken, setVerificationToken] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -24,14 +26,7 @@ export default function TOTPSetupPage() {
   const [backupCodesSaved, setBackupCodesSaved] = useState(false);
   const hasFetched = useRef(false);
 
-  useEffect(() => {
-    // Prevent double execution in development mode
-    if (hasFetched.current) return;
-    hasFetched.current = true;
-    fetchSetupData();
-  }, []);
-
-  const fetchSetupData = async () => {
+  const fetchSetupData = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/setup');
       const payload = await response.json().catch(() => null);
@@ -51,10 +46,19 @@ export default function TOTPSetupPage() {
       setSetupData(data);
       setIsLoading(false);
     } catch {
-      setError('Failed to load setup data');
+      setError(t('auth.setup.error.load'));
       setIsLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    // Prevent double execution in development mode
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+    fetchSetupData();
+  }, [fetchSetupData]);
+
+  
 
   const handleVerification = async () => {
     if (!setupData || !verificationToken) {
@@ -86,7 +90,7 @@ export default function TOTPSetupPage() {
         setError(errorMessage);
       }
     } catch {
-      setError('Failed to verify token');
+      setError(t('auth.setup.error.verify'));
     } finally {
       setIsVerifying(false);
     }
@@ -122,7 +126,7 @@ export default function TOTPSetupPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading setup...</p>
+          <p className="text-muted-foreground">{t('auth.setup.loading')}</p>
         </div>
       </div>
     );
@@ -133,9 +137,9 @@ export default function TOTPSetupPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-center">Setup Failed</CardTitle>
+            <CardTitle className="text-center">{t('auth.setup.failed.title')}</CardTitle>
             <CardDescription className="text-center">
-              Unable to generate setup data. Please try again.
+              {t('auth.setup.failed.desc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -143,7 +147,7 @@ export default function TOTPSetupPage() {
               onClick={() => window.location.reload()} 
               className="w-full"
             >
-              Retry
+              {t('auth.setup.retry')}
             </Button>
           </CardContent>
         </Card>
@@ -160,23 +164,23 @@ export default function TOTPSetupPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
             </svg>
           </div>
-          <h1 className="text-3xl font-semibold mb-2">Set Up Two-Factor Authentication</h1>
-          <p className="text-muted-foreground">Secure your AI Therapist with TOTP authentication</p>
+          <h1 className="text-3xl font-semibold mb-2">{t('auth.setup.title')}</h1>
+          <p className="text-muted-foreground">{t('auth.setup.subtitle')}</p>
         </div>
 
         {step === 1 && (
           <Card>
             <CardHeader>
-              <CardTitle>Step 1: Scan QR Code</CardTitle>
+              <CardTitle>{t('auth.setup.step1.title')}</CardTitle>
               <CardDescription>
-                Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+                {t('auth.setup.step1.desc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="text-center">
                 <Image 
                   src={setupData.qrCodeUrl} 
-                  alt="TOTP QR Code" 
+                  alt={t('auth.setup.qrAlt', { default: 'TOTP QR Code' })} 
                   width={200} 
                   height={200}
                   className="mx-auto border rounded-lg"
@@ -184,19 +188,19 @@ export default function TOTPSetupPage() {
               </div>
               
               <div className="space-y-2">
-                <p className="text-sm font-medium">Can&apos;t scan? Enter this key manually:</p>
+                <p className="text-sm font-medium">{t('auth.setup.step1.cantScan')}</p>
                 <div className="flex items-center space-x-2">
                   <code className="flex-1 p-2 bg-muted rounded text-sm font-mono break-all">
                     {setupData.manualEntryKey}
                   </code>
                   <Button size="sm" variant="outline" onClick={copyManualKey}>
-                    Copy
+                    {t('auth.setup.copy')}
                   </Button>
                 </div>
               </div>
 
               <Button onClick={() => setStep(2)} className="w-full">
-                I&apos;ve Added the Account
+                {t('auth.setup.addedAccount')}
               </Button>
             </CardContent>
           </Card>
@@ -205,9 +209,9 @@ export default function TOTPSetupPage() {
         {step === 2 && (
           <Card>
             <CardHeader>
-              <CardTitle>Step 2: Save Backup Codes</CardTitle>
+              <CardTitle>{t('auth.setup.step2.title')}</CardTitle>
               <CardDescription>
-                Store these codes safely. You can use them to access your account if you lose your device.
+                {t('auth.setup.step2.desc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -221,10 +225,10 @@ export default function TOTPSetupPage() {
 
               <div className="flex space-x-2">
                 <Button variant="outline" onClick={downloadBackupCodes} className="flex-1">
-                  Download
+                  {t('auth.setup.download')}
                 </Button>
                 <Button variant="outline" onClick={copyBackupCodes} className="flex-1">
-                  Copy All
+                  {t('auth.setup.copyAll')}
                 </Button>
               </div>
 
@@ -237,7 +241,7 @@ export default function TOTPSetupPage() {
                   className="rounded"
                 />
                 <label htmlFor="saved-codes" className="text-sm">
-                  I have safely stored these backup codes
+                  {t('auth.setup.confirmSaved')}
                 </label>
               </div>
 
@@ -246,7 +250,7 @@ export default function TOTPSetupPage() {
                 disabled={!backupCodesSaved}
                 className="w-full"
               >
-                Continue to Verification
+                {t('auth.setup.continueVerification')}
               </Button>
             </CardContent>
           </Card>
@@ -255,18 +259,18 @@ export default function TOTPSetupPage() {
         {step === 3 && (
           <Card>
             <CardHeader>
-              <CardTitle>Step 3: Verify Setup</CardTitle>
+              <CardTitle>{t('auth.setup.step3.title')}</CardTitle>
               <CardDescription>
-                Enter the 6-digit code from your authenticator app to complete setup
+                {t('auth.setup.step3.desc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Input
                   type="text"
-                  placeholder="000000"
+                  placeholder={t('auth.setup.placeholder')}
                   value={verificationToken}
-                  onChange={(e) => setVerificationToken(e.target.value.replace(/\\D/g, '').slice(0, 6))}
+                  onChange={(e) => setVerificationToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   className="text-center text-lg font-mono"
                   maxLength={6}
                 />
@@ -283,7 +287,7 @@ export default function TOTPSetupPage() {
                 disabled={isVerifying || verificationToken.length !== 6}
                 className="w-full"
               >
-                {isVerifying ? 'Verifying...' : 'Complete Setup'}
+                {isVerifying ? t('auth.setup.verifying') : t('auth.setup.completeSetup')}
               </Button>
             </CardContent>
           </Card>

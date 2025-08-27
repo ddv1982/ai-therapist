@@ -44,5 +44,3 @@ describe('CBT hydration bridge', () => {
     expect(state.emotions?.fear).toBe(1);
   });
 });
-
-

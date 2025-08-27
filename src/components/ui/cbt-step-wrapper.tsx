@@ -49,6 +49,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import {useTranslations} from 'next-intl';
 
 // =============================================================================
 // TYPES & INTERFACES
@@ -156,8 +157,8 @@ export function CBTStepWrapper({
   customValidation,
   canSkip = false,
   hideNavigation = false,
-  nextButtonText = 'Continue',
-  previousButtonText = 'Back',
+  nextButtonText,
+  previousButtonText,
   onNext,
   onPrevious,
   onSkip,
@@ -172,6 +173,7 @@ export function CBTStepWrapper({
   ariaLabel,
   helpText
 }: CBTStepWrapperProps) {
+  const t = useTranslations('cbt');
   
   // =============================================================================
   // HOOKS & STATE
@@ -283,10 +285,10 @@ export function CBTStepWrapper({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-muted-foreground">
-            Step {currentStepIndex + 1} of {STEP_ORDER.length}
+            {t('progress.step', { current: currentStepIndex + 1, total: STEP_ORDER.length })}
           </span>
           <span className="text-sm text-muted-foreground">
-            {Math.round(progressPercentage)}% Complete
+            {t('progress.complete', { percent: Math.round(progressPercentage) })}
           </span>
         </div>
         <Progress value={progressPercentage} className="h-2" />
@@ -348,15 +350,15 @@ export function CBTStepWrapper({
         {status.isDraftSaved ? (
           <>
             <Save className="w-3 h-3" />
-            <span>Saved</span>
+            <span>{t('status.saved')}</span>
             {lastSaveTime && (
-              <span>at {lastSaveTime.toLocaleTimeString()}</span>
+              <span>{t('status.at', { time: lastSaveTime.toLocaleTimeString() })}</span>
             )}
           </>
         ) : (
           <>
             <Clock className="w-3 h-3 animate-pulse" />
-            <span>Saving...</span>
+            <span>{t('status.saving')}</span>
           </>
         )}
       </div>
@@ -377,7 +379,7 @@ export function CBTStepWrapper({
               className="flex items-center gap-2"
             >
               <ChevronLeft className="w-4 h-4" />
-              {previousButtonText}
+              {previousButtonText || t('nav.back')}
             </Button>
           )}
           
@@ -388,7 +390,7 @@ export function CBTStepWrapper({
               disabled={isProcessing}
               className="text-muted-foreground"
             >
-              Skip
+              {t('nav.skip')}
             </Button>
           )}
         </div>
@@ -402,7 +404,7 @@ export function CBTStepWrapper({
               disabled={isProcessing || (!isStepValid && !allowPartialCompletion)}
               className="flex items-center gap-2"
             >
-              {nextButtonText}
+              {nextButtonText || t('nav.next')}
               <ChevronRight className="w-4 h-4" />
             </Button>
           )}

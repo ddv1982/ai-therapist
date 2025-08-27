@@ -79,5 +79,3 @@ describe('Assistant message persistence (server-side)', () => {
     // assert that the API responded successfully and did not throw.
   });
 });
-
-

@@ -9,6 +9,7 @@ import { Target } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { CoreBeliefData } from '@/types/therapy';
 // Removed chat bridge imports - individual data no longer sent during session
+import {useTranslations} from 'next-intl';
 
 // Remove local interface - use the one from cbtSlice
 // export interface CoreBeliefData {
@@ -26,7 +27,6 @@ interface CoreBeliefProps {
   className?: string;
 }
 
-
 export function CoreBelief({ 
   onComplete, 
   initialData,
@@ -34,6 +34,7 @@ export function CoreBelief({
   totalSteps: _totalSteps,
   className 
 }: CoreBeliefProps) {
+  const t = useTranslations('cbt');
   const { sessionData, beliefActions } = useCBTDataManager();
   
   // Get core beliefs data from unified CBT hook
@@ -96,31 +97,26 @@ export function CoreBelief({
 
   // Common belief prompts
   const beliefPrompts = [
-    "I'm not good enough",
-    "I'm unlovable", 
-    "I'm powerless",
-    "The world is dangerous",
-    "I must be perfect",
-    "I can't trust anyone"
+    ...((t.raw('coreBelief.prompts') as string[]) || [])
   ];
 
   return (
     <CBTStepWrapper
       step="core-belief"
-      title="Core Belief Exploration"
-      subtitle="What deeper belief might be behind these thoughts?"
+      title={t('coreBelief.title')}
+      subtitle={t('coreBelief.subtitle')}
       icon={<Target className="w-5 h-5" />}
       isValid={isValid}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      nextButtonText="Continue to Challenge Questions"
-      helpText="Identify the underlying belief that drives your automatic thoughts."
+      nextButtonText={t('coreBelief.next')}
+      helpText={t('coreBelief.help')}
       className={className}
     >
       <div className="space-y-6">
           {/* Quick Belief Prompts */}
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Common core beliefs:</p>
+            <p className="text-xs text-muted-foreground">{t('coreBelief.promptLabel')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {beliefPrompts.map((prompt, index) => (
                 <Button
@@ -139,14 +135,14 @@ export function CoreBelief({
           {/* Core Belief Input */}
           <div className="space-y-2">
             <Textarea
-              placeholder="What core belief about yourself, others, or the world might be driving these thoughts?"
+              placeholder={t('coreBelief.placeholder')}
               value={beliefData.coreBeliefText}
               onChange={(e) => handleBeliefChange(e.target.value)}
               className="min-h-[80px] resize-none"
               maxLength={500}
             />
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{beliefData.coreBeliefText.length < 3 ? "Identify the core belief" : "Good insight!"}</span>
+              <span>{beliefData.coreBeliefText.length < 3 ? t('coreBelief.moreDetails') : t('coreBelief.lookingGood')}</span>
               <span>{beliefData.coreBeliefText.length}/500</span>
             </div>
           </div>
@@ -155,7 +151,7 @@ export function CoreBelief({
           {isValid && (
             <TherapySlider
               type="credibility"
-              label="How much do you believe this core belief right now?"
+              label={t('coreBelief.credibility')}
               value={beliefData.coreBeliefCredibility}
               onChange={handleCredibilityChange}
             />

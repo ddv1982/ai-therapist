@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Minus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {useTranslations} from 'next-intl';
 
 // Type definitions for better type safety
 type FormFieldValue = string | number | Array<unknown> | Record<string, unknown>;
@@ -137,6 +138,7 @@ export function TherapeuticFormField({
   mobileOptimized: _mobileOptimized = true,
   ...props
 }: TherapeuticFormFieldProps) {
+  const t = useTranslations('ui');
   
   const [, setDraftTimeout] = useState<NodeJS.Timeout | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -432,14 +434,14 @@ export function TherapeuticFormField({
                 : 'opacity-0 scale-95'
             )}>
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              Saved
+              {t('saved')}
             </div>
           )}
           
           {/* Validation indicator */}
           {isValid !== undefined && (
             <Badge variant={fieldIsValid ? 'default' : 'destructive'} size="sm">
-              {fieldIsValid ? 'Valid' : 'Invalid'}
+              {fieldIsValid ? t('valid') : t('invalid')}
             </Badge>
           )}
         </div>

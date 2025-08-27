@@ -21,5 +21,3 @@ export type {
   ChallengeQuestionData,
   RationalThoughtData
 } from '@/store/slices/cbtSlice';
-
-

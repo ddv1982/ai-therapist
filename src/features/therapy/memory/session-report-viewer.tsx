@@ -15,13 +15,6 @@ interface SessionReportViewerProps {
   className?: string;
 }
 
-
-
-
-
-
-
-
 // Component to display detailed CBT data in tables
 function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCBTData }) {
   const hasAnyData = structuredData.situation || 
@@ -247,7 +240,6 @@ function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCB
   );
 }
 
-
 // Component to render CBT data when available
 function DetailedCBTDataDisplay({ reportDetail }: { reportDetail: SessionReportDetail }) {
   // Only show detailed CBT data if we have structured data
@@ -327,8 +319,6 @@ export function SessionReportViewer({ reportDetail, className }: SessionReportVi
           </div>
         )}
       </div>
-
-
 
       {/* Therapeutic Content Display */}
       <div className="bg-card border border-border rounded-lg spacing-sm">

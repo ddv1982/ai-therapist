@@ -295,7 +295,6 @@ class Logger {
     }, error);
   }
 
-
   validationError(endpoint: string, validationErrors: string, context?: LogContext): void {
     this.warn(`Validation failed: ${endpoint}`, {
       ...context,

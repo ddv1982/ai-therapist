@@ -9,6 +9,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {useTranslations} from 'next-intl';
 import { useToast } from '@/components/ui/toast';
 import { generateUUID, cn } from '@/lib/utils/utils';
 import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
@@ -45,6 +46,7 @@ function CBTDiaryPageContent() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
+  const t = useTranslations('cbt');
   
   // Get session ID from Redux
   const reduxSessionId = useAppSelector(state => state.cbt.sessionData.sessionId);
@@ -450,7 +452,6 @@ function CBTDiaryPageContent() {
     setMessages(prev => [...prev, aiMessage]);
   }, [completeFinalEmotionsStep]);
 
-
   return (
     <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20 flex flex-col" style={{ height: '100dvh' }}>
       {/* Header */}
@@ -462,10 +463,10 @@ function CBTDiaryPageContent() {
               onClick={() => router.push('/')}
               className="hover:text-foreground transition-colors"
             >
-              Chat
+              {t('nav.chat')}
             </button>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-foreground font-medium">CBT Session</span>
+            <span className="text-foreground font-medium">{t('nav.session')}</span>
             {isCBTActive && cbtCurrentStep !== 'complete' && (
               <>
                 <ChevronRight className="w-4 h-4" />
@@ -485,8 +486,8 @@ function CBTDiaryPageContent() {
                 className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Back to Chat</span>
-                <span className="sm:hidden">Back</span>
+                <span className="hidden sm:inline">{t('nav.backToChat')}</span>
+                <span className="sm:hidden">{t('nav.back')}</span>
               </Button>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
@@ -563,21 +564,21 @@ function CBTDiaryPageContent() {
                     <Brain className="w-8 h-8 sm:w-12 sm:h-12 text-primary animate-pulse" />
                   </div>
                   <h2 className="text-xl sm:text-2xl mb-4 gradient-text">
-                    Welcome to CBT Session
+                    {t('welcome.title')}
                   </h2>
                   <p className="text-muted-foreground mb-8 leading-relaxed">
-                    A guided journey to understand your thoughts, feelings, and behaviors through proven CBT techniques.
+                    {t('welcome.subtitle')}
                   </p>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                   <div className="p-4 rounded-xl bg-card/50 border border-border/50 text-left">
-                    <h3 className="text-lg text-primary mb-2">🧠 Evidence-Based</h3>
-                    <p className="text-sm text-muted-foreground">Using proven CBT techniques for lasting change</p>
+                    <h3 className="text-lg text-primary mb-2">🧠 {t('welcome.evidenceTitle')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('welcome.evidenceDesc')}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-card/50 border border-border/50 text-left">
-                    <h3 className="text-lg text-accent mb-2">💡 Interactive</h3>
-                    <p className="text-sm text-muted-foreground">Step-by-step guidance through your reflection</p>
+                    <h3 className="text-lg text-accent mb-2">💡 {t('welcome.interactiveTitle')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('welcome.interactiveDesc')}</p>
                   </div>
                 </div>
                 
@@ -591,15 +592,15 @@ function CBTDiaryPageContent() {
                           <h3 className="font-semibold">📝 Previous Session Found</h3>
                           {hasDraft && (
                             <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
-                              Saved
+                              {t('status.saved')}
                             </span>
                           )}
                         </div>
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="Delete draft"
-                          title="Delete draft"
+                          aria-label={t('actions.deleteDraft')}
+                          title={t('actions.deleteDraft')}
                           onClick={handleDeleteDraft}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -609,7 +610,7 @@ function CBTDiaryPageContent() {
                         You have an unfinished CBT session from {draftLastSaved ? new Date(draftLastSaved).toLocaleDateString() : 'recently'}.
                       </p>
                       <p className="text-xs opacity-75 mt-1">
-                        Choose to continue where you left off or start fresh.
+                        {t('draft.choice')}
                       </p>
                     </div>
 
@@ -620,14 +621,14 @@ function CBTDiaryPageContent() {
                         className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold"
                       >
                         <Brain className="w-5 h-5 mr-2" />
-                        Resume Previous Session
+                        {t('actions.resume')}
                       </Button>
                       <Button
                         onClick={handleStartFresh}
                         variant="outline"
                         className="border-2 hover:bg-accent hover:text-accent-foreground px-6 py-3 text-base font-semibold"
                       >
-                        Start New Session
+                        {t('actions.startNew')}
                       </Button>
                     </div>
                   </div>
@@ -638,7 +639,7 @@ function CBTDiaryPageContent() {
                       className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-8 py-3 text-lg font-semibold"
                     >
                       <Brain className="w-5 h-5 mr-2" />
-                      Begin CBT Session
+                      {t('actions.begin')}
                     </Button>
                   </div>
                 )}
@@ -668,7 +669,6 @@ function CBTDiaryPageContent() {
           <div ref={messagesEndRef} />
         </div>
       </div>
-
 
       {/* Progress Information */}
       <div className="border-t bg-card/50 backdrop-blur-md">

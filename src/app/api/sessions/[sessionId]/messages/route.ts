@@ -102,5 +102,3 @@ export const GET = withAuth(async (request: NextRequest, context, params) => {
     return errorHandlers.handleDatabaseError(error as Error, 'fetch messages (nested)', context);
   }
 });
-
-

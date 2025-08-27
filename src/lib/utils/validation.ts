@@ -91,7 +91,6 @@ export const messageSchema = z.object({
     .optional(),
 });
 
-
 /**
  * Validates request data against a Zod schema with comprehensive error handling
  * 
@@ -132,7 +131,6 @@ export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown):
     return { success: false, error: errorMsg };
   }
 }
-
 
 // Simple message schema for report generation (only needs role and content)
 export const reportMessageSchema = z.object({

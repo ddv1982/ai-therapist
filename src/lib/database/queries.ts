@@ -69,5 +69,3 @@ export async function getSessionWithMessages(sessionId: string, userId: string) 
     },
   });
 }
-
-

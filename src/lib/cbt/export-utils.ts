@@ -11,6 +11,85 @@ export interface CBTExportData {
   exportVersion: string;
 }
 
+// Localizable strings used across exports
+export interface ExportLocaleStrings {
+  diaryTitle: string;
+  deepReflectionSuffix: string;
+  dateLabel: string;
+  exportDateLabel: string;
+  situationTitle: string;
+  noSituation: string;
+  initialEmotionsTitle: string;
+  emotionsSubtitle: string;
+  noEmotions: string;
+  automaticThoughtsTitle: string;
+  automaticThoughtsSubtitle: string;
+  noThoughts: string;
+  coreSchemaTitle: string;
+  credibilityLabel: string;
+  coreBeliefLabel: string;
+  noCoreBelief: string;
+  behavioralPatternsTitle: string;
+  confirmingBehaviors: string;
+  avoidantBehaviors: string;
+  overridingBehaviors: string;
+  activeSchemaModesTitle: string;
+  noSchemaModes: string;
+  schemaReflectionTitle: string;
+  personalAssessmentTitle: string;
+  reflectionQuestionsTitle: string;
+  responseLabel: string;
+  rationalThoughtsTitle: string;
+  rationalSubtitle: string;
+  noRationalThoughts: string;
+  finalReflectionTitle: string;
+  updatedEmotionsTitle: string;
+  originalThoughtCredibilityLabel: string;
+  newBehaviorsTitle: string;
+  noNewBehaviors: string;
+  footerNote: string;
+  exportedFooter: (date: string) => string;
+}
+
+const defaultExportStrings: ExportLocaleStrings = {
+  diaryTitle: 'CBT Diary Entry',
+  deepReflectionSuffix: 'with Deep Reflection',
+  dateLabel: 'Date:',
+  exportDateLabel: 'Export Date:',
+  situationTitle: 'Situation Context',
+  noSituation: '[No situation described]',
+  initialEmotionsTitle: 'Initial Emotions',
+  emotionsSubtitle: 'Emotional intensity ratings (1-10)',
+  noEmotions: '[No emotions rated]',
+  automaticThoughtsTitle: 'Automatic Thoughts',
+  automaticThoughtsSubtitle: 'Cognitive patterns and credibility ratings (1-10)',
+  noThoughts: '[No thoughts entered]',
+  coreSchemaTitle: 'Core Schema Analysis',
+  credibilityLabel: 'Credibility',
+  coreBeliefLabel: 'Core Belief',
+  noCoreBelief: '[No core belief identified]',
+  behavioralPatternsTitle: 'Behavioral Patterns',
+  confirmingBehaviors: 'Confirming behaviors:',
+  avoidantBehaviors: 'Avoidant behaviors:',
+  overridingBehaviors: 'Overriding behaviors:',
+  activeSchemaModesTitle: 'Active Schema Modes',
+  noSchemaModes: '[No schema modes selected]',
+  schemaReflectionTitle: 'Schema Reflection Insights',
+  personalAssessmentTitle: 'Personal Assessment',
+  reflectionQuestionsTitle: 'Reflection Questions',
+  responseLabel: 'Response:',
+  rationalThoughtsTitle: 'Rational Thoughts',
+  rationalSubtitle: 'Confidence ratings (1-10)',
+  noRationalThoughts: '[No rational thoughts developed]',
+  finalReflectionTitle: 'Final Reflection',
+  updatedEmotionsTitle: 'Updated Emotions',
+  originalThoughtCredibilityLabel: 'Original Thought Credibility:',
+  newBehaviorsTitle: 'New Behaviors',
+  noNewBehaviors: '[No new behaviors identified]',
+  footerNote: 'This reflection is a tool for self-awareness and growth. Be patient and compassionate with yourself throughout this process.',
+  exportedFooter: (date: string) => `Exported from AI Therapist CBT Diary on ${date}`
+};
+
 // File naming utility
 export function generateFileName(format: CBTExportFormat, date?: string): string {
   const timestamp = date || new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-').replace(/-/g, '');
@@ -79,11 +158,12 @@ export function exportAsJSON(formData: CBTFormData): Promise<void> {
 }
 
 // Markdown Export
-export function exportAsMarkdown(formData: CBTFormData, markdownContent?: string): Promise<void> {
+export function exportAsMarkdown(formData: CBTFormData, markdownContent?: string, localeStrings?: Partial<ExportLocaleStrings>): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       // If markdownContent is provided (from chat), use it; otherwise generate from formData
-      const content = markdownContent || generateMarkdownFromFormData(formData);
+      const strings = { ...defaultExportStrings, ...(localeStrings || {}) };
+      const content = markdownContent || generateMarkdownFromFormData(formData, strings);
       const filename = generateFileName('markdown');
       
       downloadFile(content, filename, 'text/markdown');
@@ -95,7 +175,7 @@ export function exportAsMarkdown(formData: CBTFormData, markdownContent?: string
 }
 
 // Generate markdown from form data (for modal export)
-function generateMarkdownFromFormData(formData: CBTFormData): string {
+function generateMarkdownFromFormData(formData: CBTFormData, strings: ExportLocaleStrings): string {
   type OptionalReflectionFields = { schemaReflection?: SchemaReflectionData };
   const formWithOptionalReflection = formData as CBTFormData & OptionalReflectionFields;
   type OptionalBehaviorFields = Partial<{ confirmingBehaviors: string; avoidantBehaviors: string; overridingBehaviors: string }>;
@@ -135,91 +215,92 @@ function generateMarkdownFromFormData(formData: CBTFormData): string {
     )
   );
 
-  return `# 🌟 CBT Diary Entry ${hasReflectionContent ? 'with Deep Reflection' : ''}
+  return `# 🌟 ${strings.diaryTitle} ${hasReflectionContent ? strings.deepReflectionSuffix : ''}
 
-**Date:** ${formData.date}
-**Export Date:** ${new Date().toLocaleDateString()}
-
----
-
-## 📍 Situation Context
-${formData.situation || '[No situation described]'}
+**${strings.dateLabel}** ${formData.date}
+**${strings.exportDateLabel}** ${new Date().toLocaleDateString()}
 
 ---
 
-## 💭 Initial Emotions
-*Emotional intensity ratings (1-10)*
-
-${formatEmotions(formData.initialEmotions) || '[No emotions rated]'}
+## 📍 ${strings.situationTitle}
+${formData.situation || strings.noSituation}
 
 ---
 
-## 🧠 Automatic Thoughts
-*Cognitive patterns and credibility ratings (1-10)*
+## 💭 ${strings.initialEmotionsTitle}
+*${strings.emotionsSubtitle}*
 
-${formatThoughts(formData.automaticThoughts) || '[No thoughts entered]'}
+${formatEmotions(formData.initialEmotions) || strings.noEmotions}
 
 ---
 
-## 🎯 Core Schema Analysis
-*Credibility: ${formData.coreBeliefCredibility}/10*
+## 🧠 ${strings.automaticThoughtsTitle}
+*${strings.automaticThoughtsSubtitle}*
 
-**Core Belief:** ${formData.coreBeliefText || '[No core belief identified]'}
+${formatThoughts(formData.automaticThoughts) || strings.noThoughts}
 
-### Behavioral Patterns
-- **Confirming behaviors:** ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}
-- **Avoidant behaviors:** ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}  
-- **Overriding behaviors:** ${behaviorPatterns.overridingBehaviors || '[Not specified]'}
+---
 
-### Active Schema Modes
-${selectedModes || '[No schema modes selected]'}
+## 🎯 ${strings.coreSchemaTitle}
+*${strings.credibilityLabel} ${formData.coreBeliefCredibility}/10*
+
+**${strings.coreBeliefLabel}** ${formData.coreBeliefText || strings.noCoreBelief}
+
+### ${strings.behavioralPatternsTitle}
+- **${strings.confirmingBehaviors}** ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}
+- **${strings.avoidantBehaviors}** ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}  
+- **${strings.overridingBehaviors}** ${behaviorPatterns.overridingBehaviors || '[Not specified]'}
+
+### ${strings.activeSchemaModesTitle}
+${selectedModes || strings.noSchemaModes}
 
 ${hasReflectionContent ? `
 ---
 
-## 🔍 Schema Reflection Insights
+## 🔍 ${strings.schemaReflectionTitle}
 
-${formWithOptionalReflection.schemaReflection?.selfAssessment ? `### Personal Assessment
+${formWithOptionalReflection.schemaReflection?.selfAssessment ? `### ${strings.personalAssessmentTitle}
 "${formWithOptionalReflection.schemaReflection.selfAssessment}"
 
-` : ''}${formWithOptionalReflection.schemaReflection && formWithOptionalReflection.schemaReflection.questions.filter(q => q.answer.trim()).length > 0 ? `### Reflection Questions
+` : ''}${formWithOptionalReflection.schemaReflection && formWithOptionalReflection.schemaReflection.questions.filter(q => q.answer.trim()).length > 0 ? `### ${strings.reflectionQuestionsTitle}
 ${formWithOptionalReflection.schemaReflection.questions
   .filter(q => q.answer.trim())
   .map(q => `**${q.category.toUpperCase()}:** ${q.question}
-*Response:* ${q.answer}`)
+*${strings.responseLabel}* ${q.answer}`)
   .join('\n\n')}` : ''}
 ` : ''}
 
 ---
 
-## 🔄 Rational Thoughts
-*Confidence ratings (1-10)*
+## 🔄 ${strings.rationalThoughtsTitle}
+*${strings.rationalSubtitle}*
 
-${formatThoughts(formData.rationalThoughts) || '[No rational thoughts developed]'}
-
----
-
-## ✨ Final Reflection
-
-### Updated Emotions
-${formatEmotions(formData.finalEmotions) || '[No final emotions rated]'}
-
-**Original Thought Credibility:** ${formData.originalThoughtCredibility}/10
-
-### New Behaviors
-${formData.newBehaviors || '[No new behaviors identified]'}
+${formatThoughts(formData.rationalThoughts) || strings.noRationalThoughts}
 
 ---
 
-*This reflection is a tool for self-awareness and growth. Be patient and compassionate with yourself throughout this process.*
+## ✨ ${strings.finalReflectionTitle}
 
-**Exported from AI Therapist CBT Diary on ${new Date().toLocaleDateString()}**`;
+### ${strings.updatedEmotionsTitle}
+${formatEmotions(formData.finalEmotions) || strings.noEmotions}
+
+**${strings.originalThoughtCredibilityLabel}** ${formData.originalThoughtCredibility}/10
+
+### ${strings.newBehaviorsTitle}
+${formData.newBehaviors || strings.noNewBehaviors}
+
+---
+
+*${strings.footerNote}*
+
+**${strings.exportedFooter(new Date().toLocaleDateString())}**`;
 }
 
 // Text Export (plain text version)
-export function exportAsText(formData: CBTFormData): Promise<void> {
+export function exportAsText(formData: CBTFormData, localeStrings?: Partial<ExportLocaleStrings>): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
+      const s = { ...defaultExportStrings, ...(localeStrings || {}) };
       const initialEmotions = formatEmotionsForExport(formData.initialEmotions);
       const finalEmotions = formatEmotionsForExport(formData.finalEmotions);
       const validThoughts = formData.automaticThoughts.filter(t => t.thought.trim());
@@ -230,66 +311,65 @@ export function exportAsText(formData: CBTFormData): Promise<void> {
       type OptionalReflectionFields = { schemaReflection?: SchemaReflectionData };
       const formWithOptionalReflection = formData as CBTFormData & OptionalReflectionFields;
       
-      const textContent = `CBT DIARY ENTRY
+      const textContent = `${s.diaryTitle.toUpperCase()}
 ${'='.repeat(50)}
 
-Date: ${formData.date}
-Export Date: ${new Date().toLocaleDateString()}
+${s.dateLabel} ${formData.date}
+${s.exportDateLabel} ${new Date().toLocaleDateString()}
 
-SITUATION
+${s.situationTitle.toUpperCase()}
 ${'-'.repeat(20)}
-${formData.situation || '[No situation described]'}
+${formData.situation || s.noSituation}
 
-INITIAL EMOTIONS (1-10 scale)
+${s.initialEmotionsTitle.toUpperCase()} (1-10)
 ${'-'.repeat(20)}
-${initialEmotions.map(e => `${e.name}: ${e.intensity}/10`).join('\n') || '[No emotions rated]'}
+${initialEmotions.map(e => `${e.name}: ${e.intensity}/10`).join('\n') || s.noEmotions}
 
-AUTOMATIC THOUGHTS (with credibility 1-10)
+${s.automaticThoughtsTitle.toUpperCase()} (with ${s.credibilityLabel.toLowerCase()} 1-10)
 ${'-'.repeat(20)}
-${validThoughts.map(t => `"${t.thought}" (${t.credibility}/10)`).join('\n') || '[No thoughts entered]'}
+${validThoughts.map(t => `"${t.thought}" (${t.credibility}/10)`).join('\n') || s.noThoughts}
 
-CORE BELIEF (${formData.coreBeliefCredibility}/10 credibility)
+${s.coreBeliefLabel.toUpperCase()} (${formData.coreBeliefCredibility}/10 ${s.credibilityLabel.toLowerCase()})
 ${'-'.repeat(20)}
-${formData.coreBeliefText || '[No core belief identified]'}
+${formData.coreBeliefText || s.noCoreBelief}
 
-BEHAVIORAL PATTERNS
+${s.behavioralPatternsTitle.toUpperCase()}
 ${'-'.repeat(20)}
-Confirming: ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}
-Avoidant: ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}
-Overriding: ${behaviorPatterns.overridingBehaviors || '[Not specified]'}
+${s.confirmingBehaviors} ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}
+${s.avoidantBehaviors} ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}
+${s.overridingBehaviors} ${behaviorPatterns.overridingBehaviors || '[Not specified]'}
 
-ACTIVE SCHEMA MODES
+${s.activeSchemaModesTitle.toUpperCase()}
 ${'-'.repeat(20)}
-${selectedModes.map(mode => `${mode.name} (${mode.description})`).join('\n') || '[No schema modes selected]'}
+${selectedModes.map(mode => `${mode.name} (${mode.description})`).join('\n') || s.noSchemaModes}
 
 ${(formWithOptionalReflection.schemaReflection?.enabled && (formWithOptionalReflection.schemaReflection.selfAssessment.trim() || formWithOptionalReflection.schemaReflection.questions.some(q => q.answer.trim()))) ? `
-SCHEMA REFLECTION
+${s.schemaReflectionTitle.toUpperCase()}
 ${'-'.repeat(20)}
-${formWithOptionalReflection.schemaReflection?.selfAssessment ? `Personal Assessment: ${formWithOptionalReflection.schemaReflection.selfAssessment}
+${formWithOptionalReflection.schemaReflection?.selfAssessment ? `${s.personalAssessmentTitle}: ${formWithOptionalReflection.schemaReflection.selfAssessment}
 
 ` : ''}${formWithOptionalReflection.schemaReflection ? formWithOptionalReflection.schemaReflection.questions.filter(q => q.answer.trim()).map(q => `${q.category.toUpperCase()}: ${q.question}
-Response: ${q.answer}`).join('\n\n') : ''}
+${s.responseLabel} ${q.answer}`).join('\n\n') : ''}
 ` : ''}
 
-RATIONAL THOUGHTS (with confidence 1-10)
+${s.rationalThoughtsTitle.toUpperCase()} (with confidence 1-10)
 ${'-'.repeat(20)}
-${rationalThoughts.map(t => `"${t.thought}" (${t.confidence}/10)`).join('\n') || '[No rational thoughts developed]'}
+${rationalThoughts.map(t => `"${t.thought}" (${t.confidence}/10)`).join('\n') || s.noRationalThoughts}
 
-FINAL EMOTIONS (1-10 scale)
+${s.updatedEmotionsTitle.toUpperCase()} (1-10)
 ${'-'.repeat(20)}
-${finalEmotions.map(e => `${e.name}: ${e.intensity}/10`).join('\n') || '[No final emotions rated]'}
+${finalEmotions.map(e => `${e.name}: ${e.intensity}/10`).join('\n') || s.noEmotions}
 
-Original Thought Credibility: ${formData.originalThoughtCredibility}/10
+${s.originalThoughtCredibilityLabel} ${formData.originalThoughtCredibility}/10
 
-NEW BEHAVIORS
+${s.newBehaviorsTitle.toUpperCase()}
 ${'-'.repeat(20)}
-${formData.newBehaviors || '[No new behaviors identified]'}
+${formData.newBehaviors || s.noNewBehaviors}
 
 ${'='.repeat(50)}
-This reflection is a tool for self-awareness and growth.
-Be patient and compassionate with yourself throughout this process.
+${s.footerNote}
 
-Exported from AI Therapist CBT Diary on ${new Date().toLocaleDateString()}`;
+${s.exportedFooter(new Date().toLocaleDateString())}`;
 
       const filename = generateFileName('text');
       downloadFile(textContent, filename, 'text/plain');
@@ -301,9 +381,10 @@ Exported from AI Therapist CBT Diary on ${new Date().toLocaleDateString()}`;
 }
 
 // PDF Export
-export function exportAsPDF(formData: CBTFormData): Promise<void> {
+export function exportAsPDF(formData: CBTFormData, localeStrings?: Partial<ExportLocaleStrings>): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
+      const s = { ...defaultExportStrings, ...(localeStrings || {}) };
       // Create a temporary container for PDF content
       const container = document.createElement('div');
       container.style.position = 'absolute';
@@ -330,18 +411,18 @@ export function exportAsPDF(formData: CBTFormData): Promise<void> {
       container.innerHTML = `
         <div style="max-width: 720px; margin: 0 auto;">
           <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #4A90E2; padding-bottom: 20px;">
-            <h1 style="color: #4A90E2; margin: 0 0 10px 0; font-size: 28px;">🌟 CBT Diary Entry</h1>
-            <p style="margin: 5px 0; color: #666; font-size: 14px;">Date: ${formData.date}</p>
-            <p style="margin: 5px 0; color: #666; font-size: 12px;">Exported on ${new Date().toLocaleDateString()}</p>
+            <h1 style="color: #4A90E2; margin: 0 0 10px 0; font-size: 28px;">🌟 ${s.diaryTitle}</h1>
+            <p style="margin: 5px 0; color: #666; font-size: 14px;">${s.dateLabel} ${formData.date}</p>
+            <p style="margin: 5px 0; color: #666; font-size: 12px;">${s.exportedFooter(new Date().toLocaleDateString())}</p>
           </div>
           
           <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">📍 Situation Context</h2>
-            <p style="margin: 0; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #e3f2fd;">${formData.situation || '[No situation described]'}</p>
+            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">📍 ${s.situationTitle}</h2>
+            <p style="margin: 0; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #e3f2fd;">${formData.situation || s.noSituation}</p>
           </div>
           
           <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">💭 Initial Emotions</h2>
+            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">💭 ${s.initialEmotionsTitle}</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
               ${initialEmotions.map(e => `
                 <div style="padding: 10px; background-color: #f8f9fa; border-radius: 6px; border-left: 3px solid #ff6b6b;">
@@ -355,30 +436,30 @@ export function exportAsPDF(formData: CBTFormData): Promise<void> {
           </div>
           
           <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🧠 Automatic Thoughts</h2>
+            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🧠 ${s.automaticThoughtsTitle}</h2>
             ${validThoughts.map(t => `
               <div style="margin-bottom: 10px; padding: 12px; background-color: #f8f9fa; border-radius: 6px; border-left: 3px solid #ffa726;">
                 <p style="margin: 0 0 5px 0; font-style: italic;">"${t.thought}"</p>
-                <small style="color: #666;">Credibility: ${t.credibility}/10</small>
+                <small style="color: #666;">${s.credibilityLabel} ${t.credibility}/10</small>
               </div>
             `).join('') || '<p style="color: #666; font-style: italic;">No thoughts entered</p>'}
           </div>
           
           <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🎯 Core Schema Analysis</h2>
+            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🎯 ${s.coreSchemaTitle}</h2>
             <div style="padding: 15px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #ab47bc;">
-              <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">Core Belief (${formData.coreBeliefCredibility}/10)</h3>
-              <p style="margin: 0 0 15px 0; font-style: italic;">${formData.coreBeliefText || '[No core belief identified]'}</p>
+              <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">${s.coreBeliefLabel} (${formData.coreBeliefCredibility}/10)</h3>
+              <p style="margin: 0 0 15px 0; font-style: italic;">${formData.coreBeliefText || s.noCoreBelief}</p>
               
-              <h4 style="margin: 15px 0 5px 0; font-size: 14px; color: #333;">Behavioral Patterns:</h4>
+              <h4 style="margin: 15px 0 5px 0; font-size: 14px; color: #333;">${s.behavioralPatternsTitle}:</h4>
               <ul style="margin: 5px 0; padding-left: 20px;">
-                <li><strong>Confirming:</strong> ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}</li>
-                <li><strong>Avoidant:</strong> ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}</li>
-                <li><strong>Overriding:</strong> ${behaviorPatterns.overridingBehaviors || '[Not specified]'}</li>
+                <li><strong>${s.confirmingBehaviors}</strong> ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}</li>
+                <li><strong>${s.avoidantBehaviors}</strong> ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}</li>
+                <li><strong>${s.overridingBehaviors}</strong> ${behaviorPatterns.overridingBehaviors || '[Not specified]'}</li>
               </ul>
               
               ${selectedModes.length > 0 ? `
-                <h4 style="margin: 15px 0 5px 0; font-size: 14px; color: #333;">Active Schema Modes:</h4>
+                <h4 style="margin: 15px 0 5px 0; font-size: 14px; color: #333;">${s.activeSchemaModesTitle}:</h4>
                 <ul style="margin: 5px 0; padding-left: 20px;">
                   ${selectedModes.map(mode => `<li><strong>${mode.name}</strong> (${mode.description})</li>`).join('')}
                 </ul>
@@ -388,15 +469,15 @@ export function exportAsPDF(formData: CBTFormData): Promise<void> {
           
           ${(formWithOptionalReflection.schemaReflection?.enabled && (formWithOptionalReflection.schemaReflection.selfAssessment.trim() || formWithOptionalReflection.schemaReflection.questions.some(q => q.answer.trim()))) ? `
           <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🔍 Schema Reflection Insights</h2>
+            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🔍 ${s.schemaReflectionTitle}</h2>
             <div style="padding: 15px; background-color: #f3e5f5; border-radius: 8px; border-left: 4px solid #9c27b0;">
               ${formWithOptionalReflection.schemaReflection?.selfAssessment ? `
-                <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">Personal Assessment</h3>
+                <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">${s.personalAssessmentTitle}</h3>
                 <p style="margin: 0 0 15px 0; font-style: italic;">"${formWithOptionalReflection.schemaReflection.selfAssessment}"</p>
               ` : ''}
               
               ${formWithOptionalReflection.schemaReflection && formWithOptionalReflection.schemaReflection.questions.filter(q => q.answer.trim()).length > 0 ? `
-                <h3 style="margin: 15px 0 10px 0; font-size: 16px; color: #333;">Reflection Questions</h3>
+                <h3 style="margin: 15px 0 10px 0; font-size: 16px; color: #333;">${s.reflectionQuestionsTitle}</h3>
                 ${formWithOptionalReflection.schemaReflection.questions.filter(q => q.answer.trim()).map(q => `
                   <div style="margin-bottom: 10px; padding: 10px; background-color: #ffffff; border-radius: 4px;">
                     <p style="margin: 0 0 5px 0; font-weight: bold; color: #9c27b0;">${q.category.toUpperCase()}: ${q.question}</p>
@@ -409,19 +490,19 @@ export function exportAsPDF(formData: CBTFormData): Promise<void> {
           ` : ''}
           
           <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🔄 Rational Thoughts</h2>
+            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🔄 ${s.rationalThoughtsTitle}</h2>
             ${rationalThoughts.map(t => `
               <div style="margin-bottom: 10px; padding: 12px; background-color: #e8f5e8; border-radius: 6px; border-left: 3px solid #4caf50;">
                 <p style="margin: 0 0 5px 0; font-style: italic;">"${t.thought}"</p>
-                <small style="color: #666;">Confidence: ${t.confidence}/10</small>
+                <small style="color: #666;">${s.rationalSubtitle.replace(' (1-10)', '')}: ${t.confidence}/10</small>
               </div>
-            `).join('') || '<p style="color: #666; font-style: italic;">No rational thoughts developed</p>'}
+            `).join('') || `<p style=\"color: #666; font-style: italic;\">${s.noRationalThoughts}</p>`}
           </div>
           
           <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">✨ Final Reflection</h2>
+            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">✨ ${s.finalReflectionTitle}</h2>
             
-            <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">Updated Emotions</h3>
+            <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">${s.updatedEmotionsTitle}</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 15px;">
               ${finalEmotions.map(e => `
                 <div style="padding: 10px; background-color: #e8f5e8; border-radius: 6px; border-left: 3px solid #4caf50;">
@@ -433,16 +514,16 @@ export function exportAsPDF(formData: CBTFormData): Promise<void> {
               `).join('') || '<p style="color: #666; font-style: italic;">No final emotions rated</p>'}
             </div>
             
-            <p style="margin: 10px 0;"><strong>Original Thought Credibility:</strong> ${formData.originalThoughtCredibility}/10</p>
+            <p style="margin: 10px 0;"><strong>${s.originalThoughtCredibilityLabel}</strong> ${formData.originalThoughtCredibility}/10</p>
             
-            <h3 style="margin: 15px 0 5px 0; font-size: 16px; color: #333;">New Behaviors</h3>
-            <p style="margin: 5px 0 15px 0; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">${formData.newBehaviors || '[No new behaviors identified]'}</p>
+            <h3 style="margin: 15px 0 5px 0; font-size: 16px; color: #333;">${s.newBehaviorsTitle}</h3>
+            <p style="margin: 5px 0 15px 0; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">${formData.newBehaviors || s.noNewBehaviors}</p>
             
             
           </div>
           
           <div style="margin-top: 30px; padding: 20px; background-color: #e3f2fd; border-radius: 8px; text-align: center;">
-            <p style="margin: 0; font-style: italic; color: #1565c0;">This reflection is a tool for self-awareness and growth.<br>Be patient and compassionate with yourself throughout this process.</p>
+            <p style="margin: 0; font-style: italic; color: #1565c0;">${s.footerNote.replace('. ', '.<br>')}</p>
           </div>
         </div>
       `;
@@ -498,17 +579,18 @@ export function exportAsPDF(formData: CBTFormData): Promise<void> {
 export async function exportCBTDiary(
   format: CBTExportFormat,
   formData: CBTFormData,
-  markdownContent?: string
+  markdownContent?: string,
+  localeStrings?: Partial<ExportLocaleStrings>
 ): Promise<void> {
   switch (format) {
     case 'pdf':
-      return exportAsPDF(formData);
+      return exportAsPDF(formData, localeStrings);
     case 'json':
       return exportAsJSON(formData);
     case 'markdown':
-      return exportAsMarkdown(formData, markdownContent);
+      return exportAsMarkdown(formData, markdownContent, localeStrings);
     case 'text':
-      return exportAsText(formData);
+      return exportAsText(formData, localeStrings);
     default:
       throw new Error(`Unsupported export format: ${format}`);
   }

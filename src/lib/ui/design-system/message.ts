@@ -65,7 +65,6 @@ export function getMessageTokens(role: MessageRole) {
   };
 }
 
-
 /**
  * Utility function to build message classes
  */

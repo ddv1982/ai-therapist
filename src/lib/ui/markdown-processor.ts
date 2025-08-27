@@ -435,4 +435,3 @@ function generateSingleCard(headers: string[], row: string[], index: number, var
   
   return cardHtml;
 }
-

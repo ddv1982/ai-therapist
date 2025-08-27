@@ -21,6 +21,7 @@ import {
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { generateUUID } from '@/lib/utils/utils';
 import { useToast } from '@/components/ui/toast';
+import {useTranslations} from 'next-intl';
 import { logger } from '@/lib/utils/logger';
 import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/chat/memory-utils';
 // Removed handleStreamingResponse - AI SDK handles streaming automatically
@@ -60,6 +61,7 @@ function ChatPageContent() {
   const { showToast } = useToast();
   const dispatch = useAppDispatch();
   const settings = useAppSelector(state => state.chat.settings);
+  const t = useTranslations('chat');
   
   // Use the new chat messages hook
   const {
@@ -204,7 +206,6 @@ function ChatPageContent() {
       }
     }
   }, []);
-
 
   // Load sessions from database on component mount (memoized)
   const loadSessions = useCallback(async () => {
@@ -381,10 +382,6 @@ function ChatPageContent() {
 
   // Environment API key is automatically configured
 
-
-
-
-
   // Mobile detection with dynamic resize handling and iOS viewport fixes
   useEffect(() => {
     const updateViewport = () => {
@@ -440,7 +437,6 @@ function ChatPageContent() {
       clearTimeout(resizeTimeout);
     };
   }, []);
-
 
   // Set current session for cross-device continuity (memoized)
   const setCurrentSessionAndSync = useCallback(async (sessionId: string) => {
@@ -648,7 +644,6 @@ function ChatPageContent() {
     sendMessage();
   }, [sendMessage]);
 
-
   const generateReport = async () => {
     if (!currentSession || messages.length === 0) {
       showToast({
@@ -771,7 +766,7 @@ function ChatPageContent() {
       <div 
         className="flex bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20"
         role="application"
-        aria-label="AI Therapist Chat Application"
+        aria-label={t('app.aria')}
       style={{
         height: viewportHeight,
         minHeight: viewportHeight,
@@ -800,7 +795,7 @@ function ChatPageContent() {
         id="chat-sidebar"
         className={`${showSidebar ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${showSidebar ? 'fixed md:relative' : ''} ${showSidebar ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} transition-all duration-500 ease-in-out overflow-hidden bg-card/80 dark:bg-card/80 backdrop-blur-md border-r border-border/50 flex flex-col shadow-xl animate-slide-in`}
         role="navigation"
-        aria-label="Chat sessions"
+        aria-label={t('sidebar.aria')}
         aria-hidden={!showSidebar}
         style={{
           background: 'var(--sidebar-background)',
@@ -817,8 +812,8 @@ function ChatPageContent() {
                 <Heart className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg gradient-text">Therapeutic AI</h2>
-                <p className="text-sm text-muted-foreground">Your compassionate companion</p>
+                <h2 className="text-lg gradient-text">{t('sidebar.brandName')}</h2>
+                <p className="text-sm text-muted-foreground">{t('sidebar.tagline')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -843,7 +838,7 @@ function ChatPageContent() {
             <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
               <Plus className="w-4 h-4" />
             </div>
-            <span className="font-medium">Start New Session</span>
+            <span className="font-medium">{t('sidebar.startNew')}</span>
             <Sparkles className="w-4 h-4 ml-auto opacity-60 group-hover:opacity-100 transition-opacity" />
           </Button>
         </div>
@@ -853,8 +848,8 @@ function ChatPageContent() {
           {sessions.length === 0 ? (
             <div className="text-center py-12">
               <MessageSquare className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">No sessions yet</p>
-              <p className="text-sm text-muted-foreground/70">Start a conversation to begin</p>
+              <p className="text-sm text-muted-foreground">{t('sidebar.noSessions')}</p>
+              <p className="text-sm text-muted-foreground/70">{t('sidebar.startPrompt')}</p>
             </div>
           ) : (
             sessions.map((session, index) => (
@@ -890,7 +885,7 @@ function ChatPageContent() {
                   </h3>
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-muted-foreground truncate">
-                      {session._count?.messages ? `${session._count.messages} messages` : 'No messages yet'}
+                      {session._count?.messages ? `${session._count.messages} ${t('sidebar.messages')}` : t('sidebar.noMessages')}
                     </p>
                     <div className="h-1 w-1 rounded-full bg-muted-foreground/30"></div>
                     <p className="text-sm text-muted-foreground">
@@ -921,7 +916,7 @@ function ChatPageContent() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 text-sm text-blue-700 dark:text-blue-300">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span>Web Search</span>
+              <span>{t('sidebar.webSearchLabel')}</span>
             </div>
             <button
               onClick={handleWebSearchToggle}
@@ -930,7 +925,7 @@ function ChatPageContent() {
                   ? 'bg-blue-600' 
                   : 'bg-gray-200 dark:bg-gray-700'
               }`}
-              aria-label={`Web search ${settings.webSearchEnabled ? 'enabled' : 'disabled'}`}
+              aria-label={settings.webSearchEnabled ? t('sidebar.webSearchEnabled') : t('sidebar.webSearchDisabled')}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -941,17 +936,16 @@ function ChatPageContent() {
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             {settings.webSearchEnabled 
-              ? 'Using 120B model with web search enabled' 
-              : 'Using 20B model for faster responses'
+              ? t('sidebar.webSearchOn') 
+              : t('sidebar.webSearchOff')
             }
           </p>
         </div>
 
-
       </aside>
 
       {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col relative min-h-0" role="main" aria-label="Chat conversation">
+      <main className="flex-1 flex flex-col relative min-h-0" role="main" aria-label={t('main.aria')}>
         {/* Header */}
         <div className={`${isMobile ? 'p-3' : 'p-6'} border-b border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`}>
           <div className="flex items-center justify-between">
@@ -965,7 +959,7 @@ function ChatPageContent() {
                 style={{
                   WebkitTapHighlightColor: 'transparent'
                 }}
-                aria-label="Toggle session sidebar"
+                aria-label={t('main.toggleSidebar')}
                 aria-expanded={showSidebar}
                 aria-controls="chat-sidebar"
               >
@@ -974,10 +968,10 @@ function ChatPageContent() {
               </Button>
               <div>
                 <h1 className="text-lg md:text-xl">
-                  {currentSession ? 'Therapeutic Session' : 'New Conversation'}
+                  {currentSession ? t('main.sessionTitle') : t('main.newConversation')}
                 </h1>
                 <p className="text-sm text-muted-foreground hidden sm:block">
-                  {currentSession ? 'Safe space for healing and growth' : 'Start typing to begin your session'}
+                  {currentSession ? t('main.sessionSubtitle') : t('main.newSubtitle')}
                 </p>
               </div>
             </div>
@@ -992,7 +986,7 @@ function ChatPageContent() {
                   style={{
                     WebkitTapHighlightColor: 'transparent'
                   }}
-                  title="Generate session report"
+                  title={t('main.generateReport')}
                 >
                   <div className="shimmer-effect"></div>
                   {isGeneratingReport ? (
@@ -1010,7 +1004,7 @@ function ChatPageContent() {
                 style={{
                   WebkitTapHighlightColor: 'transparent'
                 }}
-                title={isMobile ? "CBT diary & reports" : "Open CBT diary for structured reflection"}
+                title={isMobile ? t('main.cbtMobile') : t('main.cbtOpen')}
               >
                 <div className="shimmer-effect"></div>
                 <Brain className="w-5 h-5 relative z-10" />
@@ -1030,7 +1024,7 @@ function ChatPageContent() {
             overscrollBehavior: 'contain'
           }}
           role="log"
-          aria-label="Chat messages"
+          aria-label={t('main.messagesAria')}
           aria-live="polite"
           aria-atomic="false"
         >
@@ -1064,23 +1058,21 @@ function ChatPageContent() {
                     <Heart className="w-8 h-8 sm:w-12 sm:h-12 text-primary animate-pulse" />
                   </div>
                   <h2 className="text-lg sm:text-xl mb-3 sm:mb-4 gradient-text">
-                    Welcome to Your Therapeutic Space
+                    {t('empty.welcome')}
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 leading-relaxed">
-                    This is a safe, judgment-free environment where you can explore your thoughts 
-                    and feelings with compassionate AI support. Take your time, breathe deeply, 
-                    and know that you&apos;re in a space designed for healing and growth.
+                    {t('empty.intro')}
                   </p>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                   <div className="p-4 rounded-xl bg-card/50 border border-border/50 text-left">
-                    <h3 className="text-lg text-primary mb-2">🌟 Compassionate Support</h3>
-                    <p className="text-sm text-muted-foreground">Receive empathetic, non-judgmental guidance tailored to your needs</p>
+                    <h3 className="text-lg text-primary mb-2">🌟 {t('empty.compassionTitle')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('empty.compassionDesc')}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-card/50 border border-border/50 text-left">
-                    <h3 className="text-lg text-accent mb-2">🔒 Private & Secure</h3>
-                    <p className="text-sm text-muted-foreground">Your conversations are confidential and stored securely</p>
+                    <h3 className="text-lg text-accent mb-2">🔒 {t('empty.privateTitle')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('empty.privateDesc')}</p>
                   </div>
                 </div>
               </div>
@@ -1107,14 +1099,14 @@ function ChatPageContent() {
                   value={input}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
-                  placeholder="Share what's on your mind... 💙"
+                  placeholder={t('input.placeholder')}
                   className="min-h-[52px] sm:min-h-[80px] max-h-[120px] sm:max-h-[200px] resize-none rounded-xl sm:rounded-2xl border-border/50 bg-background/80 backdrop-blur-sm px-3 sm:px-6 py-3 sm:py-4 text-base placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all duration-300 touch-manipulation"
                   disabled={isLoading}
                   style={{
                     fontSize: isMobile ? '16px' : undefined, // Prevent zoom on iOS
                     WebkitTapHighlightColor: 'transparent'
                   }}
-                  aria-label="Type your message"
+                  aria-label={t('input.ariaLabel')}
                   aria-describedby="input-help"
                 />
               </div>
@@ -1125,7 +1117,7 @@ function ChatPageContent() {
                 style={{
                   WebkitTapHighlightColor: 'transparent'
                 }}
-                aria-label={isLoading ? 'Sending message...' : 'Send message'}
+                aria-label={isLoading ? t('input.sending') : t('input.send')}
                 aria-disabled={isLoading || !input.trim()}
               >
                 {/* Shimmer effect */}
@@ -1135,7 +1127,7 @@ function ChatPageContent() {
             </form>
           </div>
           {/* Decorative gradient line */}
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-accent/50 to-transparent"></div>
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent/50 to-transparent"></div>
         </div>
       </main>
 
