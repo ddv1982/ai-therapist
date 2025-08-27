@@ -16,13 +16,10 @@ test.describe('Language toggle', () => {
     await expect(page.getByText('AI Settings')).toBeVisible();
 
     // Open sidebar if hidden (mobile). Toggle button exists in header to close; ensure sidebar visible by reloading root
-    // Try to locate the language switcher select trigger near theme toggle; using role=combobox
-    const combobox = page.locator('div[role="combobox"]');
-    await expect(combobox.first()).toBeVisible();
-
-    // Open and choose Nederlands
-    await combobox.first().click();
-    await page.getByRole('option', { name: 'Nederlands' }).click();
+    // Click NL on the compact language toggle
+    const nlButton = page.getByRole('button', { name: /Nederlands|Switch language to Nederlands/ });
+    await expect(nlButton).toBeVisible();
+    await nlButton.click();
 
     // The page should refresh and labels should be in Dutch
     await expect(page.getByText('AI-instellingen')).toBeVisible({ timeout: 5000 });

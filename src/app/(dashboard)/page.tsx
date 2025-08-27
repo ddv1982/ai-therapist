@@ -16,10 +16,11 @@ import {
   Trash2,
   X,
   Sparkles,
-  Brain
+  Brain,
+  Globe
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
-import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { LanguageToggle } from '@/components/ui/language-switcher';
 import { generateUUID } from '@/lib/utils/utils';
 import { useToast } from '@/components/ui/toast';
 import {useTranslations} from 'next-intl';
@@ -108,6 +109,7 @@ function ChatPageContent() {
         // Extract text from AI SDK message parts
         const textContent = (message.parts ?? [])
           .reduce((acc, part) => acc + (part.type === 'text' ? (part.text ?? '') : ''), '');
+        const trimmedContent = textContent.trim();
 
         // Update the last placeholder message content
         if (aiPlaceholderIdRef.current) {
@@ -117,24 +119,23 @@ function ChatPageContent() {
           )));
         }
 
-        // Server is expected to persist the assistant message. As a fallback, if it hasn't,
-        // we will persist it client-side to ensure durability and then reload.
+        // Only persist if there is any assistant text content. Tool-only responses may be empty.
         const sid = sessionIdRef.current;
-        if (sid) {
+        if (sid && trimmedContent.length > 0) {
           try {
             const recent = await apiClient.listMessages(sid, { limit: 5 });
             const page = recent ? getApiData(recent) : undefined;
             const items = (page?.items || []) as Array<{ role: string; content: string }>;
-            const alreadySaved = items.some(it => it.role === 'assistant' && it.content === textContent);
+            const alreadySaved = items.some(it => it.role === 'assistant' && it.content === trimmedContent);
             if (!alreadySaved) {
-              await saveMessage(sid, 'assistant', textContent, settings.webSearchEnabled ? 'openai/gpt-oss-120b' : settings.model);
+              await saveMessage(sid, 'assistant', trimmedContent, settings.webSearchEnabled ? 'openai/gpt-oss-120b' : settings.model);
             }
           } catch {
             logger.warn('Assistant persistence fallback check failed; attempting save', {
               component: 'ChatPage',
               operation: 'assistantFallbackPersist'
             });
-            await saveMessage(sid, 'assistant', textContent, settings.webSearchEnabled ? 'openai/gpt-oss-120b' : settings.model);
+            await saveMessage(sid, 'assistant', trimmedContent, settings.webSearchEnabled ? 'openai/gpt-oss-120b' : settings.model);
           }
           await loadMessages(sid);
           await loadSessions();
@@ -818,7 +819,6 @@ function ChatPageContent() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <LanguageSwitcher className="w-[120px]" />
               <ThemeToggle />
               <Button
                 variant="ghost"
@@ -913,35 +913,23 @@ function ChatPageContent() {
           }
         </div>
 
-        {/* Web Search Toggle (replaces API Key Status) */}
+        {/* Web Search (icon) and Language Toggles */}
         <div className="p-4 border-t border-border/50 bg-gradient-to-t from-blue-50/30 to-transparent dark:from-blue-900/10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 text-sm text-blue-700 dark:text-blue-300">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <span>{t('sidebar.webSearchLabel')}</span>
-            </div>
+          <div className="flex items-center justify-end gap-3">
             <button
               onClick={handleWebSearchToggle}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                 settings.webSearchEnabled 
-                  ? 'bg-blue-600' 
-                  : 'bg-gray-200 dark:bg-gray-700'
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
               }`}
               aria-label={settings.webSearchEnabled ? t('sidebar.webSearchEnabled') : t('sidebar.webSearchDisabled')}
+              title={settings.webSearchEnabled ? t('sidebar.webSearchEnabled') : t('sidebar.webSearchDisabled')}
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  settings.webSearchEnabled ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
+              <Globe className="w-4 h-4" />
             </button>
+            <LanguageToggle />
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {settings.webSearchEnabled 
-              ? t('sidebar.webSearchOn') 
-              : t('sidebar.webSearchOff')
-            }
-          </p>
         </div>
 
       </aside>

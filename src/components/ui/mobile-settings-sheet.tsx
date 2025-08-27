@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { LanguageToggle } from '@/components/ui/language-switcher';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { updateSettings } from '@/store/slices/chatSlice';
 import { Settings, Zap, Brain, Gauge, Target } from 'lucide-react';
@@ -73,7 +73,7 @@ export function MobileSettingsSheet({
           {/* Language */}
           <div className="space-y-3">
             <Label className="text-base font-medium">{t('settings.language')}</Label>
-            <LanguageSwitcher />
+            <LanguageToggle />
           </div>
           {/* Model Selection */}
           <div className="space-y-3">
