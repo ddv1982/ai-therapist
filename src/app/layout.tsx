@@ -19,6 +19,7 @@ const inter = Inter({
   adjustFontFallback: false,
 });
 
+
 export const metadata: Metadata = {
   title: 'Therapist AI - Compassionate AI Therapy Support',
   description: 'A professional, judgment-free AI therapist application providing therapeutic support with session continuity and progress tracking.',
@@ -75,7 +76,7 @@ export default async function RootLayout({
   };
   const messages = expandDotNotation(flat) as AbstractIntlMessages;
   return (
-    <html lang={resolvedLocale} className={inter.variable}>
+    <html lang={resolvedLocale} className={`${inter.variable}`}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
         <meta name="mobile-web-app-capable" content="yes" />

@@ -111,16 +111,18 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     // Simple toggle-based model selection: 120B for web search, 20B for fast responses
     const modelId = webSearchEnabled ? 'openai/gpt-oss-120b' : (parsedSelectedModel || 'openai/gpt-oss-20b');
     const hasWebSearch = webSearchEnabled;
-    
-    if (hasWebSearch) {
-      logger.info('Browser search ACTIVE - will search web', { 
-        apiEndpoint: '/api/chat', 
-        requestId: context.requestId, 
-        modelId,
-        webSearchEnabled,
-        toolChoice: 'required'
-      });
-    }
+    const toolChoice = hasWebSearch ? 'required' : 'none';
+
+    // Informational log: final model selection and tool choice (no sensitive data)
+    logger.info('Model selection for chat request', {
+      apiEndpoint: '/api/chat',
+      requestId: context.requestId,
+      modelId,
+      toolChoice: hasWebSearch ? 'required' : 'none',
+      webSearchEnabled,
+      selectedModelProvided: Boolean(parsedSelectedModel)
+    });
+
 
     // Locale directive for response language
     const { getApiRequestLocale } = await import('@/i18n/request');
@@ -155,7 +157,7 @@ ${languageDirective}`
       system: systemPrompt,
       messages: typedMessages,
       ...(hasWebSearch && { tools: { browser_search: groq.tools.browserSearch({}) } }),
-      toolChoice: hasWebSearch ? 'required' : 'none',
+      toolChoice: toolChoice,
       experimental_telemetry: { isEnabled: false },
     });
 
@@ -260,7 +262,11 @@ ${languageDirective}`
 
     // If no session, just return the UI response
     if (!sessionId) {
-      try { (uiResponse as Response).headers.set('X-Request-Id', context.requestId); } catch {}
+      try {
+        (uiResponse as Response).headers.set('X-Request-Id', context.requestId);
+        (uiResponse as Response).headers.set('X-Model-Id', modelId);
+        (uiResponse as Response).headers.set('X-Tool-Choice', toolChoice);
+      } catch {}
       return uiResponse as Response;
     }
 
@@ -329,7 +335,11 @@ ${languageDirective}`
           void consumeAndPersist();
         }
         const headers = new Headers((uiResponse as Response).headers);
-        try { headers.set('X-Request-Id', context.requestId); } catch {}
+        try {
+          headers.set('X-Request-Id', context.requestId);
+          headers.set('X-Model-Id', modelId);
+          headers.set('X-Tool-Choice', toolChoice);
+        } catch {}
         return new Response(clientStream, { status: (uiResponse as Response).status, headers });
       } catch {
         // fall through to non-streaming fallback
@@ -352,7 +362,11 @@ ${languageDirective}`
     } catch {
       // ignore
     }
-    try { (uiResponse as Response).headers.set('X-Request-Id', context.requestId); } catch {}
+    try {
+      (uiResponse as Response).headers.set('X-Request-Id', context.requestId);
+      (uiResponse as Response).headers.set('X-Model-Id', modelId);
+      (uiResponse as Response).headers.set('X-Tool-Choice', toolChoice);
+    } catch {}
     return uiResponse as Response;
   } catch (error) {
     logger.apiError('/api/chat', error as Error, { apiEndpoint: '/api/chat', requestId: context.requestId });

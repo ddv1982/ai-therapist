@@ -181,15 +181,9 @@ const config: Config = {
         "pulse-therapy": "pulse-therapy 2s ease-in-out infinite",
       },
       fontFamily: {
+        // Use the chat font (Inter) everywhere for consistency
         sans: [
-          "Inter",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Segoe UI",
-          "Roboto",
-          "Oxygen",
-          "Ubuntu",
-          "Cantarell",
+          "var(--font-inter)",
           "system-ui",
           "sans-serif"
         ],

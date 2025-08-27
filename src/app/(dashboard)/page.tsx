@@ -10,14 +10,14 @@ import {
   Send, 
   FileText,
   Menu,
-  Heart,
   Plus,
   MessageSquare,
   Trash2,
   X,
   Sparkles,
   Brain,
-  Globe
+  Globe,
+  Lock
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { LanguageToggle } from '@/components/ui/language-switcher';
@@ -593,7 +593,8 @@ function ChatPageContent() {
       }, {
         body: {
           sessionId: currentSession ?? undefined,
-          webSearchEnabled: settings.webSearchEnabled
+          webSearchEnabled: settings.webSearchEnabled,
+          selectedModel: settings.model
         }
       });
     } catch (error) {
@@ -744,6 +745,19 @@ function ChatPageContent() {
     const newWebSearchEnabled = !settings.webSearchEnabled;
     dispatch(updateSettings({ 
       webSearchEnabled: newWebSearchEnabled,
+      // If enabling web search, ensure smart model is disabled by switching to fast model
+      ...(newWebSearchEnabled ? { model: 'openai/gpt-oss-20b' } : {})
+    }));
+  };
+
+  const handleSmartModelToggle = () => {
+    const nextModel = settings.model === 'openai/gpt-oss-120b'
+      ? 'openai/gpt-oss-20b'
+      : 'openai/gpt-oss-120b';
+    dispatch(updateSettings({ 
+      model: nextModel,
+      // If enabling smart model, force web search off
+      ...(nextModel === 'openai/gpt-oss-120b' ? { webSearchEnabled: false } : {})
     }));
   };
 
@@ -811,7 +825,7 @@ function ChatPageContent() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                <Heart className="w-5 h-5 text-white" />
+                <Brain className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h2 className="text-lg gradient-text">{t('sidebar.brandName')}</h2>
@@ -913,9 +927,22 @@ function ChatPageContent() {
           }
         </div>
 
-        {/* Web Search (icon) and Language Toggles */}
+        {/* Smart Model and Web Search (icon) and Language Toggles */}
         <div className="p-4 border-t border-border/50 bg-gradient-to-t from-blue-50/30 to-transparent dark:from-blue-900/10">
           <div className="flex items-center justify-end gap-3">
+            <button
+              onClick={handleSmartModelToggle}
+              className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 ${
+                (!settings.webSearchEnabled && settings.model === 'openai/gpt-oss-120b')
+                  ? 'bg-violet-600 text-white'
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+              }`}
+              aria-pressed={!settings.webSearchEnabled && settings.model === 'openai/gpt-oss-120b'}
+              aria-label={(!settings.webSearchEnabled && settings.model === 'openai/gpt-oss-120b') ? t('sidebar.smartEnabled') : t('sidebar.smartDisabled')}
+              title={(!settings.webSearchEnabled && settings.model === 'openai/gpt-oss-120b') ? t('sidebar.smartEnabled') : t('sidebar.smartDisabled')}
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
             <button
               onClick={handleWebSearchToggle}
               className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
@@ -923,6 +950,7 @@ function ChatPageContent() {
                   ? 'bg-blue-600 text-white' 
                   : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
               }`}
+              aria-pressed={settings.webSearchEnabled}
               aria-label={settings.webSearchEnabled ? t('sidebar.webSearchEnabled') : t('sidebar.webSearchDisabled')}
               title={settings.webSearchEnabled ? t('sidebar.webSearchEnabled') : t('sidebar.webSearchDisabled')}
             >
@@ -1041,28 +1069,34 @@ function ChatPageContent() {
           )}
           
           {messages.length === 0 ? (
-            <div className={`${isMobile ? 'min-h-full' : 'h-full'} flex items-center justify-center`}>
-              <div className={`text-center max-w-2xl animate-fade-in ${isMobile ? 'px-3' : 'px-4'}`}>
-                <div className="mb-6 sm:mb-8">
-                  <div className="h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
-                    <Heart className="w-8 h-8 sm:w-12 sm:h-12 text-primary animate-pulse" />
+            <div className={`flex items-center justify-center ${isMobile ? 'py-12' : 'py-16'}`}>
+              <div className={`text-center max-w-2xl animate-fade-in ${isMobile ? 'px-3' : 'px-6'}`}>
+                <div className="mb-8 sm:mb-10">
+                  <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 flex items-center justify-center mx-auto mb-4 shadow-md">
+                    <Brain className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
                   </div>
-                  <h2 className="text-lg sm:text-xl mb-3 sm:mb-4 gradient-text">
+                  <h2 className="text-2xl sm:text-3xl mb-4 tracking-tight gradient-text">
                     {t('empty.welcome')}
                   </h2>
-                  <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 leading-relaxed">
+                  <p className="text-sm sm:text-base text-muted-foreground mb-8 leading-relaxed">
                     {t('empty.intro')}
                   </p>
                 </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                  <div className="p-4 rounded-xl bg-card/50 border border-border/50 text-left">
-                    <h3 className="text-lg text-primary mb-2">🌟 {t('empty.compassionTitle')}</h3>
-                    <p className="text-sm text-muted-foreground">{t('empty.compassionDesc')}</p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+                  <div className="p-5 rounded-xl bg-card/70 border border-border text-left flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow">
+                    <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-base font-medium text-foreground mb-1">{t('empty.compassionTitle')}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{t('empty.compassionDesc')}</p>
+                    </div>
                   </div>
-                  <div className="p-4 rounded-xl bg-card/50 border border-border/50 text-left">
-                    <h3 className="text-lg text-accent mb-2">🔒 {t('empty.privateTitle')}</h3>
-                    <p className="text-sm text-muted-foreground">{t('empty.privateDesc')}</p>
+                  <div className="p-5 rounded-xl bg-card/70 border border-border text-left flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow">
+                    <Lock className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="text-base font-medium text-foreground mb-1">{t('empty.privateTitle')}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{t('empty.privateDesc')}</p>
+                    </div>
                   </div>
                 </div>
               </div>

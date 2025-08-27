@@ -227,6 +227,8 @@
   "chat.sidebar.noMessages": "No messages yet",
   "chat.sidebar.webSearchEnabled": "Web search enabled",
   "chat.sidebar.webSearchDisabled": "Web search disabled",
+  "chat.sidebar.smartEnabled": "Smart 120B enabled",
+  "chat.sidebar.smartDisabled": "Smart 120B disabled",
   
   "chat.sidebar.startNew": "Start New Session",
   "chat.sidebar.noSessions": "No sessions yet",

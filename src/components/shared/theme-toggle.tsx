@@ -11,23 +11,23 @@ export function ThemeToggle() {
   return (
     <Button
       variant="ghost"
-      size="sm"
+      size="icon"
       onClick={toggleTheme}
-      className={therapeuticInteractive.iconButtonMedium}
+      className={therapeuticInteractive.iconButtonMedium + ' items-center justify-center'}
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       {/* Shimmer effect */}
       <div className="shimmer-effect"></div>
-      <div className="relative h-5 w-5 z-10">
+      <div className="relative h-5 w-5 z-10 flex items-center justify-center">
         <Sun 
-          className={`absolute h-5 w-5 transition-all duration-500 ease-in-out ${
+          className={`absolute inset-0 m-auto h-5 w-5 transition-all duration-500 ease-in-out ${
             theme === 'light' 
               ? 'rotate-0 scale-100 opacity-100 text-primary' 
               : 'rotate-90 scale-0 opacity-0'
           }`}
         />
         <Moon 
-          className={`absolute h-5 w-5 transition-all duration-500 ease-in-out ${
+          className={`absolute inset-0 m-auto h-5 w-5 transition-all duration-500 ease-in-out ${
             theme === 'dark' 
               ? 'rotate-0 scale-100 opacity-100 text-primary' 
               : '-rotate-90 scale-0 opacity-0'

@@ -108,7 +108,7 @@
   }
   
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
     font-feature-settings: "rlig" 1, "calt" 1;
     transition: background-color 0.3s ease, color 0.3s ease;
     height: 100%;
@@ -363,14 +363,11 @@
   
   /* Custom scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 0; /* hide by default */
-    height: 0;
+    width: 0; /* always hidden */
+    height: 0; /* always hidden */
   }
-
-  .custom-scrollbar:hover::-webkit-scrollbar {
-    width: 6px; /* reveal on hover */
-    height: 6px;
-  }
+  /* Never reveal scrollbars on hover */
+  .custom-scrollbar:hover::-webkit-scrollbar { width: 0; height: 0; }
   
   .custom-scrollbar::-webkit-scrollbar-track {
     @apply bg-transparent;
@@ -394,14 +391,8 @@
   }
   
   /* Firefox scrollbar */
-  .custom-scrollbar {
-    scrollbar-width: none; /* hide by default */
-  }
-
-  .custom-scrollbar:hover {
-    scrollbar-width: thin; /* reveal on hover */
-    scrollbar-color: rgba(var(--muted-foreground), 0.2) transparent;
-  }
+  .custom-scrollbar { scrollbar-width: none; /* Firefox - always hidden */ }
+  .custom-scrollbar:hover { scrollbar-width: none; scrollbar-color: transparent transparent; }
   
   /* Mobile-specific scrolling improvements */
   @media (max-width: 768px) {
@@ -489,6 +480,8 @@
   .gradient-text {
     color: hsl(var(--primary));
   }
+
+  /* Remove display font to keep Inter universally */
   
   /* Consistent shimmer effect */
   .shimmer-effect {
@@ -1413,6 +1406,27 @@
   line-height: var(--line-height-relaxed);
   word-wrap: break-word;
   overflow-wrap: break-word;
+}
+
+/* Ensure links are visible and readable inside user bubbles (which use primary background) */
+.message-content-user a {
+  @apply underline;
+  /* Use foreground color for contrast on primary background */
+  color: hsl(var(--primary-foreground));
+  /* Wrap long URLs nicely */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.message-content-user a:hover {
+  opacity: 0.9;
+}
+
+/* Improve assistant link wrapping without changing the established color utility */
+.message-content-assistant a {
+  @apply underline;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* Better handling of long therapy technique names */

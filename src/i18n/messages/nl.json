@@ -253,6 +253,8 @@
   "chat.sidebar.noMessages": "Nog geen berichten",
   "chat.sidebar.webSearchEnabled": "Webzoekopdracht ingeschakeld",
   "chat.sidebar.webSearchDisabled": "Webzoekopdracht uitgeschakeld",
+  "chat.sidebar.smartEnabled": "Smart 120B ingeschakeld",
+  "chat.sidebar.smartDisabled": "Smart 120B uitgeschakeld",
   
   "chat.sidebar.startNew": "Nieuwe sessie starten",
   "chat.sidebar.noSessions": "Nog geen sessies",

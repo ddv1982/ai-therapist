@@ -84,6 +84,7 @@ export interface LogEntry {
 
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development';
+  private minLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || LogLevel.INFO;
 
   /**
    * Filter sensitive therapeutic data from any object
@@ -174,6 +175,16 @@ class Logger {
    * @param error - Optional error object for detailed error logging
    */
   private log(level: LogLevel, message: string, context?: LogContext, error?: Error): void {
+    // Drop logs below configured minimum level on the server
+    const levelOrder: Record<LogLevel, number> = {
+      [LogLevel.ERROR]: 0,
+      [LogLevel.WARN]: 1,
+      [LogLevel.INFO]: 2,
+      [LogLevel.DEBUG]: 3,
+    };
+    if (typeof window === 'undefined' && levelOrder[level] > levelOrder[this.minLevel]) {
+      return;
+    }
     const entry: LogEntry = {
       level,
       message,
