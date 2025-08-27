@@ -38,7 +38,8 @@ export default getRequestConfig(async ({requestLocale}) => {
 
 // Resolve locale for API routes from cookie or Accept-Language header
 export function getApiRequestLocale(request: NextRequest): AppLocale {
-  const cookieVal = request.cookies.get('NEXT_LOCALE')?.value;
+  // Be tolerant of mocked requests without cookies (e.g., unit tests)
+  const cookieVal = request.cookies?.get('NEXT_LOCALE')?.value;
   if (cookieVal && (locales as readonly string[]).includes(cookieVal)) {
     return cookieVal as AppLocale;
   }
