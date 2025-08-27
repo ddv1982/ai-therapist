@@ -363,7 +363,12 @@
   
   /* Custom scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 0; /* hide by default */
+    height: 0;
+  }
+
+  .custom-scrollbar:hover::-webkit-scrollbar {
+    width: 6px; /* reveal on hover */
     height: 6px;
   }
   
@@ -380,7 +385,7 @@
   }
   
   /* Dark mode scrollbar - more visible */
-  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  .dark .custom-scrollbar:hover::-webkit-scrollbar-thumb {
     @apply bg-muted-foreground/40;
   }
   
@@ -390,12 +395,12 @@
   
   /* Firefox scrollbar */
   .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(var(--muted-foreground), 0.2) transparent;
+    scrollbar-width: none; /* hide by default */
   }
-  
-  .dark .custom-scrollbar {
-    scrollbar-color: rgba(var(--muted-foreground), 0.4) transparent;
+
+  .custom-scrollbar:hover {
+    scrollbar-width: thin; /* reveal on hover */
+    scrollbar-color: rgba(var(--muted-foreground), 0.2) transparent;
   }
   
   /* Mobile-specific scrolling improvements */
@@ -410,7 +415,8 @@
     }
     
     .custom-scrollbar::-webkit-scrollbar {
-      width: 3px;
+      width: 0; /* keep hidden on mobile */
+      height: 0;
     }
     
     .custom-scrollbar::-webkit-scrollbar-thumb {
