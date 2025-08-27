@@ -215,7 +215,7 @@ export function ActionPlan({
           </div>
         </CardHeader>
 
-      <CardContent className="p-0 space-y-6">
+      <CardContent className="p-4 pt-0 space-y-6">
         {/* Reflection Questions First */}
         <div className="space-y-4">
           <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
@@ -241,7 +241,7 @@ export function ActionPlan({
             Future Action Plan
           </h4>
           <div className="space-y-2">
-            <label className="text-base font-medium text-foreground">
+            <label className="text-sm font-medium text-foreground">
               What will you do differently next time this situation arises?
             </label>
             <Textarea
