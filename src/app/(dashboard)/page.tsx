@@ -1043,7 +1043,7 @@ function ChatPageContent() {
         {/* Messages */}
         <div 
           ref={messagesContainerRef}
-          className={`flex-1 overflow-y-auto custom-scrollbar ${isMobile ? 'p-3 pb-0 prevent-bounce' : 'p-3 sm:p-6'}`} 
+          className={`flex-1 overflow-y-auto custom-scrollbar ${isMobile ? (messages.length === 0 ? 'p-2 pb-0 prevent-bounce' : 'p-3 pb-0 prevent-bounce') : 'p-3 sm:p-6'}`} 
           style={{
             minHeight: 0,
             WebkitOverflowScrolling: 'touch',
@@ -1056,8 +1056,8 @@ function ChatPageContent() {
           aria-live="polite"
           aria-atomic="false"
         >
-          {/* Memory Context Indicator */}
-          {memoryContext.hasMemory && (
+          {/* Memory Context Indicator (hidden on empty/welcome state) */}
+          {memoryContext.hasMemory && messages.length > 0 && (
             <div className={`mb-4 ${isMobile ? 'mx-1' : 'mx-2'}`}>
               <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
                 <div className="flex items-center justify-between">
@@ -1079,21 +1079,21 @@ function ChatPageContent() {
           )}
           
           {messages.length === 0 ? (
-            <div className={`flex items-center justify-center ${isMobile ? 'py-12' : 'py-16'}`}>
+            <div className={`flex items-center justify-center ${isMobile ? 'py-2' : 'py-16'}`}>
               <div className={`text-center max-w-2xl animate-fade-in ${isMobile ? 'px-3' : 'px-6'}`}>
-                <div className="mb-8 sm:mb-10">
+                <div className={`${isMobile ? 'mb-4' : 'mb-8 sm:mb-10'}`}>
                   <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 flex items-center justify-center mx-auto mb-4 shadow-md">
                     <Brain className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
                   </div>
                   <h2 className="text-2xl sm:text-3xl mb-4 tracking-tight gradient-text">
                     {t('empty.welcome')}
                   </h2>
-                  <p className="text-sm sm:text-base text-muted-foreground mb-8 leading-relaxed">
+                  <p className={`text-sm sm:text-base text-muted-foreground ${isMobile ? 'mb-6' : 'mb-8'} leading-relaxed`}>
                     {t('empty.intro')}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-10">
+                <div className={`grid grid-cols-1 sm:grid-cols-2 ${isMobile ? 'gap-4 mb-6' : 'gap-6 mb-10'}`}>
                   <div className="p-5 rounded-xl bg-card/70 border border-border text-left flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow">
                     <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                     <div>
