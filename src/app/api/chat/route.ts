@@ -122,13 +122,27 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       });
     }
 
+    // Locale directive for response language
+    const { getApiRequestLocale } = await import('@/i18n/request');
+    const locale = getApiRequestLocale(req);
+    const languageDirective =
+      locale === 'nl'
+        ? `LANGUAGE REQUIREMENT:
+Provide all responses in Dutch (Nederlands). Use natural Dutch phrasing. Preserve any code blocks, special markers (e.g., "CBT_SUMMARY_CARD"), and JSON keys exactly as-is.`
+        : `LANGUAGE REQUIREMENT:
+Provide all responses in English. Preserve any code blocks, special markers (e.g., "CBT_SUMMARY_CARD"), and JSON keys exactly as-is.`;
+
     // Build system prompt for use in streamText and error handling
-    const systemPrompt = hasWebSearch 
+    const basePrompt = hasWebSearch 
       ? THERAPY_SYSTEM_PROMPT + `
 
 **WEB SEARCH CAPABILITIES ACTIVE:**
 You have access to browser search tools. When users ask for current information, research, or resources that would support their therapeutic journey, USE the browser search tool actively to provide helpful, up-to-date information. Web searches can enhance therapy by finding evidence-based resources, current research, mindfulness videos, support groups, or practical tools. After searching, integrate the findings therapeutically and relate them back to the client's needs and goals.`
       : THERAPY_SYSTEM_PROMPT;
+
+    const systemPrompt = `${basePrompt}
+
+${languageDirective}`;
 
     // Single streamText call with conditional properties
     const result = streamText({

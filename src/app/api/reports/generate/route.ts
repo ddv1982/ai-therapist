@@ -375,8 +375,21 @@ export async function POST(request: NextRequest) {
       messageCount: messages.length,
       reportGenerationStep: 'ai_generation'
     });
-    
-    const completion = await generateSessionReport(messages as ReportMessage[], REPORT_GENERATION_PROMPT, reportModel);
+
+    // Locale-aware report prompt
+    const { getApiRequestLocale } = await import('@/i18n/request');
+    const locale = getApiRequestLocale(request);
+    const languageDirective =
+      locale === 'nl'
+        ? `LANGUAGE REQUIREMENT:
+Write the entire therapeutic report in Dutch (Nederlands) with natural phrasing. Keep any code blocks, special markers, and JSON keys exactly as-is.`
+        : `LANGUAGE REQUIREMENT:
+Write the entire therapeutic report in English. Keep any code blocks, special markers, and JSON keys exactly as-is.`;
+    const reportPrompt = `${REPORT_GENERATION_PROMPT}
+
+${languageDirective}`;
+
+    const completion = await generateSessionReport(messages as ReportMessage[], reportPrompt, reportModel);
     
     if (!completion) {
       return NextResponse.json(
