@@ -21,7 +21,8 @@ function getClientIP(request: NextRequest): string {
 const handleI18n = createMiddleware({
   locales,
   defaultLocale,
-  localePrefix: 'as-needed',
+  // Do not prefix locale in the URL; rely on cookie/headers only
+  localePrefix: 'never',
   localeDetection: true
 });
 
@@ -38,13 +39,11 @@ export async function middleware(request: NextRequest) {
   const i18nResponse = handleI18n(request);
   if (i18nResponse) return i18nResponse;
   
-  // Skip middleware for static files, authentication pages, and Next.js internals
+  // Skip middleware for static files and Next.js internals
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
-    pathname.startsWith('/auth/') || // Skip auth pages to prevent redirect loops
-    pathname.includes('.') ||
-    pathname === '/auth'
+    pathname.includes('.')
   ) {
     return NextResponse.next();
   }

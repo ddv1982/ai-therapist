@@ -26,8 +26,8 @@ export default getRequestConfig(async ({requestLocale}) => {
   const resolved = locale ?? 'en';
   const flat = (await import(`./messages/${resolved}.json`)).default as Record<string, unknown>;
   const nested = expandDotNotation(flat) as AbstractIntlMessages;
-  // Provide both nested and flat keys to be resilient during migration
-  const messages: AbstractIntlMessages = { ...(flat as AbstractIntlMessages), ...nested };
+  // Return only nested keys; dot keys are invalid in next-intl v3
+  const messages: AbstractIntlMessages = nested;
   return {
     locale: resolved,
     messages

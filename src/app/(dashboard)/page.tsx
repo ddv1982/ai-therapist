@@ -19,6 +19,7 @@ import {
   Brain
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { generateUUID } from '@/lib/utils/utils';
 import { useToast } from '@/components/ui/toast';
 import {useTranslations} from 'next-intl';
@@ -817,6 +818,7 @@ function ChatPageContent() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <LanguageSwitcher className="w-[120px]" />
               <ThemeToggle />
               <Button
                 variant="ghost"
