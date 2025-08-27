@@ -3,11 +3,12 @@ import { generateTOTPSetup, saveTOTPConfig, isTOTPSetup } from '@/lib/auth/totp-
 import { getOrCreateDevice, createAuthSession } from '@/lib/auth/device-fingerprint';
 import { getClientIP } from '@/lib/auth/auth-middleware';
 import { handleApiError } from '@/lib/utils/error-utils';
-import { withAuthAndRateLimit } from '@/lib/api/api-middleware';
+import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // GET /api/auth/setup - Get setup data (QR code, backup codes)
-export const GET = withAuthAndRateLimit(async () => {
+// Note: This endpoint must be accessible before authentication during initial setup
+export const GET = withRateLimitUnauthenticated(async (_request: NextRequest) => {
   try {
     // Check if TOTP is already set up
     const isSetup = await isTOTPSetup();
@@ -35,7 +36,8 @@ export const GET = withAuthAndRateLimit(async () => {
 });
 
 // POST /api/auth/setup - Complete TOTP setup with verification
-export const POST = withAuthAndRateLimit(async (request: NextRequest) => {
+// Note: Also accessible pre-auth; guarded by isTOTPSetup() to prevent reconfiguration
+export const POST = withRateLimitUnauthenticated(async (request: NextRequest) => {
   try {
     const body = await request.json();
     const { secret, backupCodes, verificationToken } = body;

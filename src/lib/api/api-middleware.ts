@@ -441,6 +441,51 @@ export function withRateLimit(
 }
 
 /**
+ * Unauthenticated rate limit wrapper using the shared limiter and API bucket
+ */
+export function withRateLimitUnauthenticated<T = unknown>(
+  handler: (
+    request: NextRequest,
+    context: RequestContext,
+    params?: unknown
+  ) => Promise<NextResponse<ApiResponse<T>>>,
+  options: { bucket?: 'api' | 'chat' | 'default'; windowMs?: number } = {}
+) {
+  return withApiMiddleware<T>(async (request, context, params) => {
+    const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
+    if (!rateLimitDisabled) {
+      const clientIP = getClientIPFromRequest(request);
+      const limiter = getRateLimiter();
+      const bucket = options.bucket || 'api';
+      const windowMs = Number(
+        (bucket === 'chat' ? process.env.CHAT_WINDOW_MS : bucket === 'api' ? process.env.API_WINDOW_MS : process.env.RATE_LIMIT_WINDOW_MS) ||
+        options.windowMs ||
+        5 * 60 * 1000
+      );
+      const result = limiter.checkRateLimit(clientIP, bucket);
+      if (!result.allowed) {
+        const retryAfter = String(result.retryAfter || Math.ceil(windowMs / 1000));
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              message: 'Rate limit exceeded',
+              code: 'RATE_LIMIT_EXCEEDED',
+              details: 'Too many requests made in a short period',
+              suggestedAction: 'Please wait a moment before making another request'
+            },
+            meta: { timestamp: new Date().toISOString(), requestId: context.requestId }
+          },
+          { status: 429, headers: { 'Retry-After': retryAfter } }
+        ) as NextResponse<ApiResponse<T>>;
+      }
+    }
+
+    return handler(request, context, params);
+  });
+}
+
+/**
  * Auth + Rate limit wrapper for standard (non-streaming) routes
  */
 export function withAuthAndRateLimit<T = unknown>(

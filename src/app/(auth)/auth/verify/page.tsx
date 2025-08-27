@@ -37,8 +37,9 @@ export default function TOTPVerifyPage() {
       });
 
       // Handle response
+      const payload = await response.json().catch(() => null);
       if (response.ok) {
-        const data = await response.json();
+        const data = (payload && payload.data) || {};
         
         logger.securityEvent('totp_verification_success', {
           component: 'TOTPVerifyPage',
@@ -78,19 +79,20 @@ export default function TOTPVerifyPage() {
                 });
                 
                 if (authCheck.ok) {
-                  const authData = await authCheck.json();
+                  const authPayload = await authCheck.json().catch(() => null);
+                  const authData = (authPayload && authPayload.data) || {};
                   logger.securityEvent('auth_session_check', {
                     component: 'TOTPVerifyPage',
                     attempt,
-                    isAuthenticated: authData.isAuthenticated
+                    isAuthenticated: (authData as { isAuthenticated?: boolean }).isAuthenticated
                   });
                   
-                  if (authData.isAuthenticated) {
+                  if ((authData as { isAuthenticated?: boolean }).isAuthenticated) {
                     logger.securityEvent('auth_redirect_success', {
                       component: 'TOTPVerifyPage',
-                      redirectUrl: data.redirectUrl || '/'
+                      redirectUrl: (data as { redirectUrl?: string }).redirectUrl || '/'
                     });
-                    window.location.replace(data.redirectUrl || '/');
+                    window.location.replace(((data as { redirectUrl?: string }).redirectUrl) || '/');
                     return; // Success!
                   }
                 } else {
@@ -132,12 +134,8 @@ export default function TOTPVerifyPage() {
         await redirectToApp();
       } else {
         // Handle error responses
-        try {
-          const data = await response.json();
-          setError(data.error || 'Verification failed');
-        } catch {
-          setError('Verification failed');
-        }
+        const errorMessage = (payload && (payload.error?.message || payload.error)) || 'Verification failed';
+        setError(errorMessage);
         setIsVerifying(false);
       }
     } catch (error) {

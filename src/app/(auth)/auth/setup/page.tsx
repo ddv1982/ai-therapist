@@ -34,16 +34,20 @@ export default function TOTPSetupPage() {
   const fetchSetupData = async () => {
     try {
       const response = await fetch('/api/auth/setup');
+      const payload = await response.json().catch(() => null);
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorMessage = (payload && (payload.error?.message || payload.error)) || '';
         // If TOTP is already configured, redirect to verification
-        if (response.status === 400 && errorData.error === 'TOTP already configured') {
+        if (response.status === 400 && errorMessage === 'TOTP already configured') {
           window.location.href = '/auth/verify';
           return;
         }
-        throw new Error('Failed to fetch setup data');
+        throw new Error(errorMessage || 'Failed to fetch setup data');
       }
-      const data = await response.json();
+      const data = (payload && payload.data) || null;
+      if (!data) {
+        throw new Error('Invalid setup response');
+      }
       setSetupData(data);
       setIsLoading(false);
     } catch {
@@ -73,12 +77,13 @@ export default function TOTPSetupPage() {
         }),
       });
 
+      const payload = await response.json().catch(() => null);
       if (response.ok) {
         // Redirect to main app
         window.location.href = '/';
       } else {
-        const data = await response.json();
-        setError(data.error || 'Verification failed');
+        const errorMessage = (payload && (payload.error?.message || payload.error)) || 'Verification failed';
+        setError(errorMessage);
       }
     } catch {
       setError('Failed to verify token');

@@ -4,11 +4,11 @@ import { getOrCreateDevice, createAuthSession } from '@/lib/auth/device-fingerpr
 import { getClientIP } from '@/lib/auth/auth-middleware';
 import { generateSecureRandomString } from '@/lib/utils/utils';
 import { devLog, logger, createRequestLogger } from '@/lib/utils/logger';
-import { withAuthAndRateLimit } from '@/lib/api/api-middleware';
+import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // POST /api/auth/verify - Verify TOTP token or backup code
-export const POST = withAuthAndRateLimit(async (request: NextRequest) => {
+export const POST = withRateLimitUnauthenticated(async (request: NextRequest) => {
   const requestId = generateSecureRandomString(8, 'abcdefghijklmnopqrstuvwxyz0123456789');
   const startTime = Date.now();
   

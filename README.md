@@ -177,6 +177,15 @@ RATE_LIMIT_DISABLED="true"   # Disable API rate limiting
 - **Content Security Policy** - XSS attack prevention
 - **No External Sharing** - Data only sent to Groq API
 
+### Rate Limiting
+- **Defaults (per IP)**
+  - API: 300 requests / 5 minutes
+  - Chat streaming: 120 requests / 5 minutes, max concurrency 2
+- **Environment overrides**
+  - `API_MAX_REQS`, `API_WINDOW_MS`, `CHAT_MAX_REQS`, `CHAT_WINDOW_MS`, `CHAT_MAX_CONCURRENCY`, `RATE_LIMIT_BLOCK_MS`
+  - `RATE_LIMIT_DISABLED=true` disables limits (development only)
+- **Development**: localhost and private LAN IPs are exempt; production enforces limits.
+
 ## 📊 Testing & Quality
 
 ### Comprehensive Test Suite
@@ -204,6 +213,17 @@ __tests__/
 - Check time sync for TOTP
 - Clear cookies to reset device trust
 - Verify `ENCRYPTION_KEY` is set
+
+### Reset authentication (development)
+
+If you lose access to your authenticator or need to re-enroll during development, you can reset TOTP configuration and sessions:
+
+```bash
+# Dev-only: resets TOTP config and clears sessions; accessible only from localhost
+curl -X POST http://localhost:4000/api/auth/setup/reset
+```
+
+Then open `http://localhost:4000/auth/setup` to scan a new QR and complete verification.
 
 **API Key Issues**  
 - Confirm Groq API key validity
