@@ -32,10 +32,6 @@
   "ui.settings.modelPlaceholder": "Select AI model",
   "ui.settings.modelFast": "Optimized for quick responses and general conversation",
   "ui.settings.modelAnalytical": "Best for complex therapeutic analysis and deep insights",
-  
-  "ui.settings.language": "Language",
-  "ui.settings.english": "English",
-  "ui.settings.dutch": "Dutch",
   "ui.notFound.title": "Page not found",
   "ui.notFound.desc": "The page you are looking for does not exist.",
   "ui.datePick": "Pick a date",
@@ -231,9 +227,7 @@
   "chat.sidebar.noMessages": "No messages yet",
   "chat.sidebar.webSearchEnabled": "Web search enabled",
   "chat.sidebar.webSearchDisabled": "Web search disabled",
-  "chat.sidebar.webSearchOn": "Using 120B model with web search enabled",
-  "chat.sidebar.webSearchOff": "Using 20B model for faster responses",
-  "chat.sidebar.webSearchLabel": "Web Search",
+  
   "chat.sidebar.startNew": "Start New Session",
   "chat.sidebar.noSessions": "No sessions yet",
   "chat.sidebar.startPrompt": "Start a conversation to begin",

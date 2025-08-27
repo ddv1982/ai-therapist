@@ -32,10 +32,6 @@
   "ui.settings.modelPlaceholder": "Selecteer AI-model",
   "ui.settings.modelFast": "Geoptimaliseerd voor snelle reacties en algemene gesprekken",
   "ui.settings.modelAnalytical": "Beste voor complexe therapeutische analyses en diepe inzichten",
-  
-  "ui.settings.language": "Taal",
-  "ui.settings.english": "Engels",
-  "ui.settings.dutch": "Nederlands",
   "ui.notFound.title": "Pagina niet gevonden",
   "ui.notFound.desc": "De pagina die je zoekt bestaat niet.",
   "ui.datePick": "Kies een datum",
@@ -257,9 +253,7 @@
   "chat.sidebar.noMessages": "Nog geen berichten",
   "chat.sidebar.webSearchEnabled": "Webzoekopdracht ingeschakeld",
   "chat.sidebar.webSearchDisabled": "Webzoekopdracht uitgeschakeld",
-  "chat.sidebar.webSearchOn": "120B-model met webzoekopdracht ingeschakeld",
-  "chat.sidebar.webSearchOff": "20B-model voor snellere reacties",
-  "chat.sidebar.webSearchLabel": "Webzoekopdracht",
+  
   "chat.sidebar.startNew": "Nieuwe sessie starten",
   "chat.sidebar.noSessions": "Nog geen sessies",
   "chat.sidebar.startPrompt": "Begin een gesprek om te starten",
