@@ -4,7 +4,6 @@
  */
 
 // Chat interface components
-export * from './components/chat-settings';
 export * from './components/session-controls';
 export * from './components/session-sidebar';
 export * from './components/typing-indicator';

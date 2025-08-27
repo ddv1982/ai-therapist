@@ -48,15 +48,10 @@ export interface ModelConfig {
   name: string;
   provider: string;
   maxTokens: number;
-  temperature: number;
-  topP: number;
 }
 
 export interface ChatSettings {
   model: string; // Model ID
-  maxTokens: number;
-  temperature: number;
-  topP: number;
   systemPrompt?: string;
   webSearchEnabled: boolean; // Add websearch toggle
 }

@@ -9,9 +9,6 @@ interface ChatState {
   error: string | null;
   settings: {
     model: string;
-    temperature: number;
-    maxTokens: number;
-    topP: number;
     webSearchEnabled: boolean; // Add websearch toggle
   };
 }
@@ -24,9 +21,6 @@ const initialState: ChatState = {
   error: null,
   settings: {
     model: 'openai/gpt-oss-20b',
-    temperature: 0.7,
-    maxTokens: 4096,
-    topP: 0.9,
     webSearchEnabled: false, // Default to disabled
   },
 };
