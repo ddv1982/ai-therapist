@@ -24,6 +24,16 @@ export const metadata: Metadata = {
   title: 'Therapist AI - Compassionate AI Therapy Support',
   description: 'A professional, judgment-free AI therapist application providing therapeutic support with session continuity and progress tracking.',
   keywords: ['therapy', 'mental health', 'AI therapist', 'counseling', 'support'],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black',
+    title: 'AI Therapist',
+  },
+  icons: {
+    apple: [
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180' },
+    ],
+  },
 };
 
 export const viewport = {
@@ -32,6 +42,7 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
+  themeColor: '#000000',
 };
 
 export const dynamic = 'force-dynamic';
@@ -80,8 +91,11 @@ export default async function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
         <meta name="format-detection" content="telephone=no" />
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body className="bg-background font-sans antialiased">
         <ReduxProvider>

@@ -87,8 +87,11 @@ function ChatPageContent() {
   const [showMemoryModal, setShowMemoryModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const inputContainerRef = useRef<HTMLDivElement>(null);
   const aiPlaceholderIdRef = useRef<string | null>(null);
   const sessionIdRef = useRef<string | null>(null);
+  const [, setInputHeight] = useState(0);
 
   // AI SDK: single transport for chat streaming through /api/chat
   const { sendMessage: sendAiMessage } = useChat({
@@ -402,6 +405,7 @@ function ChatPageContent() {
         setViewportHeight('100vh');
         document.documentElement.style.removeProperty('--app-height');
         document.documentElement.style.removeProperty('--vh');
+        setInputHeight(0);
       }
     };
 
@@ -420,24 +424,26 @@ function ChatPageContent() {
       setTimeout(updateViewport, 300); // Longer delay for orientation change
     });
 
-    // iOS-specific viewport change detection
-    if (typeof window !== 'undefined' && 'visualViewport' in window) {
-      const visualViewport = window.visualViewport!;
-      visualViewport.addEventListener('resize', updateViewport);
-      
-      return () => {
-        window.removeEventListener('resize', debouncedResize);
-        window.removeEventListener('orientationchange', updateViewport);
-        visualViewport.removeEventListener('resize', updateViewport);
-        clearTimeout(resizeTimeout);
-      };
-    }
-
     return () => {
       window.removeEventListener('resize', debouncedResize);
       window.removeEventListener('orientationchange', updateViewport);
       clearTimeout(resizeTimeout);
+    }; 
+  }, []);
+
+  // Observe input container height and write to scroll container as CSS var
+  useEffect(() => {
+    if (!inputContainerRef.current || !messagesContainerRef.current) return;
+    const target = inputContainerRef.current;
+    const update = () => {
+      const h = target.offsetHeight || 0;
+      setInputHeight(h);
+      messagesContainerRef.current!.style.setProperty('--input-h', `${h}px`);
     };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(target);
+    return () => ro.disconnect();
   }, []);
 
   // Set current session for cross-device continuity (memoized)
@@ -792,6 +798,7 @@ function ChatPageContent() {
         top: 0,
         left: 0,
         right: 0,
+        bottom: 0,
         backgroundImage: `
           radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
           radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.05) 0%, transparent 50%)
@@ -1035,11 +1042,14 @@ function ChatPageContent() {
 
         {/* Messages */}
         <div 
+          ref={messagesContainerRef}
           className={`flex-1 overflow-y-auto custom-scrollbar ${isMobile ? 'p-3 pb-0 prevent-bounce' : 'p-3 sm:p-6'}`} 
           style={{
             minHeight: 0,
             WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain'
+            overscrollBehavior: 'contain',
+            // ensure scrollIntoView anchors account for footer height and safe area
+            scrollPaddingBottom: isMobile ? `calc(var(--input-h, 0px) + env(safe-area-inset-bottom) + 12px)` : undefined,
           }}
           role="log"
           aria-label={t('main.messagesAria')}
@@ -1114,7 +1124,7 @@ function ChatPageContent() {
         </div>
 
         {/* Input Area */}
-        <div className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} border-t border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`} role="form" aria-label="Send message">
+        <div ref={inputContainerRef} className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} border-t border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`} role="form" aria-label="Send message">
           <div className="max-w-4xl mx-auto">
             <form onSubmit={handleFormSubmit} className="flex gap-3 items-end">
               <div className="flex-1 relative">
@@ -1123,6 +1133,16 @@ function ChatPageContent() {
                   value={input}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
+                  onFocus={() => {
+                    // Ensure input is visible above keyboard on iOS
+                    if (isMobile) {
+                      setTimeout(() => {
+                        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        // Additionally ensure the input itself is visible
+                        textareaRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                      }, 100);
+                    }
+                  }}
                   placeholder={t('input.placeholder')}
                   className="min-h-[52px] sm:min-h-[80px] max-h-[120px] sm:max-h-[200px] resize-none rounded-xl sm:rounded-2xl border-border/50 bg-background/80 backdrop-blur-sm px-3 sm:px-6 py-3 sm:py-4 text-base placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all duration-300 touch-manipulation"
                   disabled={isLoading}
