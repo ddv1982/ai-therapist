@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm run db:setup && next dev --turbo --port 4000",
-    "dev:local": "npm run db:setup && next dev --turbo --port 4000",
+    "dev": "npm run db:setup && node scripts/dev-with-network.js",
+    "dev:local": "npm run db:setup && node scripts/dev-with-network.js",
     "build": "npm run db:setup && next build",
     "api:types": "openapi-typescript docs/api.yaml -o src/types/api.generated.ts",
     "start": "npm run db:setup && node scripts/start-with-network.js",
