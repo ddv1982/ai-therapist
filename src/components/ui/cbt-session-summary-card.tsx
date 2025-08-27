@@ -3,7 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Calendar, Heart, MessageSquare, Target, Users, Activity, Lightbulb } from 'lucide-react';
+import { Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface CBTSessionSummaryData {
@@ -63,25 +63,23 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
       <CardContent className="space-y-6">
         {/* Situation */}
         {data.situation && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h4 className="font-medium text-blue-900 dark:text-blue-100">Situation:</h4>
+          <div className="grid grid-cols-1 md:grid-cols-[220px,1fr] gap-x-4 gap-y-2 items-start">
+            <div className="text-blue-900 dark:text-blue-100">
+              <h4 className="font-medium">Situation</h4>
             </div>
-            <p className="text-blue-800 dark:text-blue-200 pl-6">{data.situation}</p>
+            <p className="text-blue-800 dark:text-blue-200 break-words">{data.situation}</p>
           </div>
         )}
 
         {/* Initial Emotions */}
         {data.initialEmotions && data.initialEmotions.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Heart className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h4 className="font-medium text-blue-900 dark:text-blue-100">Initial Emotions:</h4>
+          <div className="grid grid-cols-1 md:grid-cols-[220px,1fr] gap-x-4 gap-y-2 items-start">
+            <div className="text-blue-900 dark:text-blue-100">
+              <h4 className="font-medium">Initial Emotions</h4>
             </div>
-            <div className="flex flex-wrap gap-2 pl-6">
+            <div className="flex flex-wrap gap-2">
               {data.initialEmotions.map((emotion, index) => (
-                <Badge key={index} variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                <Badge key={index} variant="secondary" className="px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
                   {emotion.emotion}: {emotion.rating}/10
                 </Badge>
               ))}
@@ -91,27 +89,23 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
         {/* Automatic Thoughts */}
         {data.automaticThoughts && data.automaticThoughts.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h4 className="font-medium text-blue-900 dark:text-blue-100">Automatic Thoughts:</h4>
+          <div className="grid grid-cols-1 md:grid-cols-[220px,1fr] gap-x-4 gap-y-2 items-start">
+            <div className="text-blue-900 dark:text-blue-100">
+              <h4 className="font-medium">Automatic Thoughts</h4>
             </div>
-            <div className="space-y-2 pl-6">
+            <div className="rounded-md border border-blue-200/60 dark:border-blue-800/40 divide-y divide-blue-200/60 dark:divide-blue-800/40 bg-blue-50/20 dark:bg-blue-950/10">
               {data.automaticThoughts.slice(0, 3).map((thought, index) => (
-                <div key={index} className="flex items-start gap-2 text-sm">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
-                  <div className="text-blue-800 dark:text-blue-200">
-                    &ldquo;{thought.thought}&rdquo; 
-                    <Badge variant="secondary" className="ml-2 text-xs bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-300">
-                      {thought.credibility}/10
-                    </Badge>
-                  </div>
+                <div key={index} className="flex items-start justify-between gap-3 py-2 px-3 text-sm">
+                  <div className="text-blue-800 dark:text-blue-200 break-words">&ldquo;{thought.thought}&rdquo;</div>
+                  <Badge variant="secondary" className="ml-2 text-xs bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-300">
+                    {thought.credibility}/10
+                  </Badge>
                 </div>
               ))}
               {data.automaticThoughts.length > 3 && (
-                <p className="text-xs text-blue-600 dark:text-blue-400 italic">
-                  +{data.automaticThoughts.length - 3} more thoughts
-                </p>
+                <div className="py-2 px-3">
+                  <p className="text-xs text-blue-600 dark:text-blue-400 italic">+{data.automaticThoughts.length - 3} more thoughts</p>
+                </div>
               )}
             </div>
           </div>
@@ -119,43 +113,36 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
         {/* Core Belief */}
         {data.coreBelief && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h4 className="font-medium text-blue-900 dark:text-blue-100">Core Belief:</h4>
+          <div className="grid grid-cols-1 md:grid-cols-[220px,1fr] gap-x-4 gap-y-2 items-start">
+            <div className="text-blue-900 dark:text-blue-100">
+              <h4 className="font-medium">Core Belief</h4>
             </div>
-            <div className="pl-6">
-              <p className="text-blue-800 dark:text-blue-200">&ldquo;{data.coreBelief.belief}&rdquo;</p>
-              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                (Credibility: {data.coreBelief.credibility}/10)
-              </p>
+            <div>
+              <p className="text-blue-800 dark:text-blue-200 break-words">&ldquo;{data.coreBelief.belief}&rdquo;</p>
+              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">Credibility: {data.coreBelief.credibility}/10</p>
             </div>
           </div>
         )}
 
         {/* Rational Alternative Thoughts */}
         {data.rationalThoughts && data.rationalThoughts.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Lightbulb className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h4 className="font-medium text-blue-900 dark:text-blue-100">Rational Alternative Thoughts:</h4>
+          <div className="grid grid-cols-1 md:grid-cols-[220px,1fr] gap-x-4 gap-y-2 items-start">
+            <div className="text-blue-900 dark:text-blue-100">
+              <h4 className="font-medium">Rational Alternative Thoughts</h4>
             </div>
-            <div className="space-y-2 pl-6">
+            <div className="rounded-md border border-blue-200/60 dark:border-blue-800/40 divide-y divide-blue-200/60 dark:divide-blue-800/40 bg-blue-50/20 dark:bg-blue-950/10">
               {data.rationalThoughts.slice(0, 2).map((thought, index) => (
-                <div key={index} className="flex items-start gap-2 text-sm">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-2 flex-shrink-0"></div>
-                  <div className="text-blue-800 dark:text-blue-200">
-                    &ldquo;{thought.thought}&rdquo; 
-                    <Badge variant="outline" className="ml-2 text-xs border-green-300 text-green-700 dark:border-green-600 dark:text-green-300">
-                      {thought.confidence}/10
-                    </Badge>
-                  </div>
+                <div key={index} className="flex items-start justify-between gap-3 py-2 px-3 text-sm">
+                  <div className="text-blue-800 dark:text-blue-200 break-words">&ldquo;{thought.thought}&rdquo;</div>
+                  <Badge variant="outline" className="ml-2 text-xs border-green-300 text-green-700 dark:border-green-600 dark:text-green-300">
+                    {thought.confidence}/10
+                  </Badge>
                 </div>
               ))}
               {data.rationalThoughts.length > 2 && (
-                <p className="text-xs text-blue-600 dark:text-blue-400 italic">
-                  +{data.rationalThoughts.length - 2} more rational thoughts
-                </p>
+                <div className="py-2 px-3">
+                  <p className="text-xs text-blue-600 dark:text-blue-400 italic">+{data.rationalThoughts.length - 2} more rational thoughts</p>
+                </div>
               )}
             </div>
           </div>
@@ -163,29 +150,25 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
         {/* Active Schema Modes */}
         {data.schemaModes && data.schemaModes.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h4 className="font-medium text-blue-900 dark:text-blue-100">Active Schema Modes:</h4>
+          <div className="grid grid-cols-1 md:grid-cols-[220px,1fr] gap-x-4 gap-y-2 items-start">
+            <div className="text-blue-900 dark:text-blue-100">
+              <h4 className="font-medium">Active Schema Modes</h4>
             </div>
-            <div className="space-y-2 pl-6">
+            <div className="rounded-md border border-blue-200/60 dark:border-blue-800/40 divide-y divide-blue-200/60 dark:divide-blue-800/40 bg-blue-50/20 dark:bg-blue-950/10">
               {data.schemaModes.slice(0, 3).map((mode, index) => (
-                <div key={index} className="flex items-start gap-2 text-sm">
-                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-2 flex-shrink-0"></div>
-                  <div className="text-blue-800 dark:text-blue-200">
-                    {mode.name}
-                    {mode.intensity && (
-                      <Badge variant="outline" className="ml-2 text-xs border-purple-300 text-purple-700 dark:border-purple-600 dark:text-purple-300">
-                        {mode.intensity}/10
-                      </Badge>
-                    )}
-                  </div>
+                <div key={index} className="flex items-start justify-between gap-3 py-2 px-3 text-sm">
+                  <div className="text-blue-800 dark:text-blue-200">{mode.name}</div>
+                  {mode.intensity && (
+                    <Badge variant="outline" className="ml-2 text-xs border-purple-300 text-purple-700 dark:border-purple-600 dark:text-purple-300">
+                      {mode.intensity}/10
+                    </Badge>
+                  )}
                 </div>
               ))}
               {data.schemaModes.length > 3 && (
-                <p className="text-xs text-blue-600 dark:text-blue-400 italic">
-                  +{data.schemaModes.length - 3} more modes
-                </p>
+                <div className="py-2 px-3">
+                  <p className="text-xs text-blue-600 dark:text-blue-400 italic">+{data.schemaModes.length - 3} more modes</p>
+                </div>
               )}
             </div>
           </div>
@@ -195,25 +178,24 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
         {((data.newBehaviors && data.newBehaviors.length > 0) || 
           (data.finalEmotions && data.finalEmotions.length > 0)) && (
           <div className="space-y-3 pt-2 border-t border-blue-200/60 dark:border-blue-800/30">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <h4 className="font-medium text-blue-900 dark:text-blue-100">Action Plan & Next Steps:</h4>
-            </div>
-            <div className="pl-6 space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-[220px,1fr] gap-x-4 gap-y-2 items-start">
+              <div className="text-blue-900 dark:text-blue-100">
+                <h4 className="font-medium">Action Plan & Next Steps</h4>
+              </div>
+              <div className="space-y-3">
               {data.newBehaviors && data.newBehaviors.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">New Behaviors to Practice:</p>
-                  <div className="space-y-1">
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">New Behaviors to Practice</p>
+                  <div className="rounded-md border border-blue-200/60 dark:border-blue-800/40 divide-y divide-blue-200/60 dark:divide-blue-800/40 bg-blue-50/20 dark:bg-blue-950/10">
                     {data.newBehaviors.slice(0, 3).map((behavior, index) => (
-                      <div key={index} className="flex items-start gap-2 text-xs text-blue-800 dark:text-blue-200">
-                        <div className="w-1 h-1 rounded-full bg-green-500 mt-1.5 flex-shrink-0"></div>
-                        {behavior}
+                      <div key={index} className="flex items-center justify-between gap-3 py-2 px-3 text-xs text-blue-800 dark:text-blue-200">
+                        <span className="truncate">{behavior}</span>
                       </div>
                     ))}
                     {data.newBehaviors.length > 3 && (
-                      <p className="text-xs text-blue-600 dark:text-blue-400 italic pl-2">
-                        +{data.newBehaviors.length - 3} more strategies
-                      </p>
+                      <div className="py-2 px-3">
+                        <p className="text-[11px] text-blue-600 dark:text-blue-400 italic">+{data.newBehaviors.length - 3} more strategies</p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -223,23 +205,24 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
               
               {data.finalEmotions && data.finalEmotions.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">Emotional Progress:</p>
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">Emotional Progress</p>
                   <div className="flex flex-wrap gap-2">
                     {data.finalEmotions.map((emotion, index) => (
-                      <Badge key={index} variant="outline" className="text-xs border-blue-300 text-blue-700 dark:border-blue-600 dark:text-blue-300">
+                      <Badge key={index} variant="outline" className="px-2 py-0.5 text-xs border-blue-300 text-blue-700 dark:border-blue-600 dark:text-blue-300">
                         {emotion.emotion}: {emotion.rating}/10
                       </Badge>
                     ))}
                   </div>
                 </div>
               )}
+              </div>
             </div>
           </div>
         )}
 
         {/* Session Completion Note */}
         <div className="pt-3 border-t border-blue-200/60 dark:border-blue-800/30">
-          <p className="text-xs text-blue-600/80 dark:text-blue-400/80 italic">
+          <p className="text-xs leading-relaxed text-blue-600/80 dark:text-blue-400/80 italic">
             This CBT session was completed on {data.date} and included comprehensive work on 
             situation analysis, emotion tracking, thought examination, core belief exploration, 
             rational thought development, and action planning.
