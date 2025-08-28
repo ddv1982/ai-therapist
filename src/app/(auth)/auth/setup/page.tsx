@@ -25,10 +25,27 @@ export default function TOTPSetupPage() {
   const [step, setStep] = useState(1);
   const [backupCodesSaved, setBackupCodesSaved] = useState(false);
   const hasFetched = useRef(false);
+  const STORAGE_KEY = 'totp-setup-data';
+  const STORAGE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
   const fetchSetupData = useCallback(async () => {
     try {
-      const response = await fetch('/api/auth/setup');
+      // First try sessionStorage to avoid regenerating QR on refresh
+      if (typeof window !== 'undefined') {
+        const raw = sessionStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw) as { data: SetupData; savedAt: number };
+            if (parsed && parsed.data && Date.now() - parsed.savedAt < STORAGE_TTL_MS) {
+              setSetupData(parsed.data);
+              setIsLoading(false);
+              return;
+            }
+          } catch {}
+        }
+      }
+
+      const response = await fetch('/api/auth/setup', { cache: 'no-store' });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
         const errorMessage = (payload && (payload.error?.message || payload.error)) || '';
@@ -44,12 +61,18 @@ export default function TOTPSetupPage() {
         throw new Error('Invalid setup response');
       }
       setSetupData(data);
+      // Persist in session storage to keep QR stable across accidental refreshes
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ data, savedAt: Date.now() }));
+        } catch {}
+      }
       setIsLoading(false);
     } catch {
       setError(t('auth.setup.error.load'));
       setIsLoading(false);
     }
-  }, [t]);
+  }, [t, STORAGE_TTL_MS]);
 
   useEffect(() => {
     // Prevent double execution in development mode
@@ -84,6 +107,10 @@ export default function TOTPSetupPage() {
       const payload = await response.json().catch(() => null);
       if (response.ok) {
         // Redirect to main app
+        // Cleanup cached setup data once completed
+        if (typeof window !== 'undefined') {
+          try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+        }
         window.location.href = '/';
       } else {
         const errorMessage = (payload && (payload.error?.message || payload.error)) || 'Verification failed';
