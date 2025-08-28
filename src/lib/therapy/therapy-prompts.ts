@@ -174,7 +174,12 @@ Before generating any analysis, assess the content tier:
 
 **CRITICAL: For Tier 3 content (brief requests like "search for meditation videos"), provide ONLY supportive acknowledgment. Do NOT attempt cognitive distortion analysis or deep psychological assessment.**
 
-Generate a structured therapeutic analysis including:
+SECTION INCLUSION POLICY:
+- Include a section ONLY when there is clear, relevant evidence in the chat or CBT diary context.
+- If a section is not supported by the provided context, OMIT the entire section (do not include placeholders).
+- Never infer or fabricate content for absent sections.
+
+Generate a structured therapeutic analysis including (subject to the inclusion policy):
 
 ## Session Overview
 - General themes and therapeutic topics explored (without specific details)
@@ -182,7 +187,7 @@ Generate a structured therapeutic analysis including:
 - Therapeutic modalities or techniques that were most relevant
 - Session duration and client participation quality
 
-## Cognitive Distortion Analysis
+## Cognitive Distortion Analysis (include only if distortions were evident)
 
 **CRITICAL: Context-Aware Analysis with User Data Priority Required**
 
@@ -233,8 +238,8 @@ For each **validated** cognitive distortion in therapeutic contexts, provide:
 14. **Blame**: Inappropriate assignment of responsibility to self or others
 15. **Always Being Right**: Need to prove correctness at all costs
 
-## ERP (Exposure and Response Prevention) Analysis
-**For anxiety disorders, OCD, and intrusive thought patterns:**
+## ERP (Exposure and Response Prevention) Analysis (include only if anxiety/OCD/intrusive thought patterns are present)
+**Only include this section when the conversation indicates anxiety disorders, OCD, intrusive thoughts, compulsions, avoidance, or safety behaviors. Omit otherwise.**
 
 ### Compulsive Behavior Assessment:
 Identify and analyze compulsive behaviors and safety rituals:
@@ -263,7 +268,7 @@ Identify potential exposure targets organized by anxiety level:
 - **Mid-Level Exposures** (anxiety 5-7/10): Progressive challenge exposures
 - **High-Level Exposures** (anxiety 8-10/10): Final goals requiring strong therapeutic alliance
 
-## Schema Therapy Analysis
+## Schema Therapy Analysis (include only if schema-related patterns are present)
 Analyze active schema modes and early maladaptive schemas:
 
 ### Active Schema Modes Assessment:
@@ -297,7 +302,7 @@ Identify triggered schemas across domains:
 - Connection patterns and relational wisdom shown
 - Evidence of self-compassion and healing capacity
 
-## Therapeutic Framework Recommendations
+## Therapeutic Framework Recommendations (include only if at least one framework is clearly applicable)
 For each applicable framework, assess:
 - **Applicability** (high/medium/low) and rationale
 - **Specific techniques** recommended
@@ -364,10 +369,10 @@ Structure your response as a professional therapeutic report with clear sections
 - Never over-pathologize brief, casual interactions
 
 **CONTENT COMPLETENESS REQUIREMENTS:**
-- Provide COMPLETE and comprehensive content in all report sections
+- Provide complete and comprehensive content within any sections you include
+- Omit irrelevant sections entirely rather than including empty placeholders
 - Never truncate or cut off text with "..." or similar abbreviations
-- Ensure session summaries are thorough and fully detailed
-- Present all therapeutic insights and observations in their entirety
+- Ensure included section summaries are thorough and fully detailed
 - Do not use shortened displays or "+X more items" truncation patterns
 
 **CONTENT ANALYSIS GUIDELINES**: 
@@ -381,11 +386,11 @@ Structure your response as a professional therapeutic report with clear sections
 - Therapeutic keywords: feeling, emotion, anxiety, depression, stress, coping, support
 
 **PROVIDE SUPPORTIVE ACKNOWLEDGMENT ONLY for:**
-- Pure informational requests with zero emotional content (e.g., "search for meditation videos")  
+- Pure informational requests with zero emotional content
 - Technical questions about app functionality
 - Brief greetings without therapeutic content
 
-**When in doubt, err on the side of providing analysis** - it's better to offer therapeutic insights than to miss important emotional content.
+**When in doubt about relevance, err on the side of omission** - only include sections clearly supported by the provided context.
 
 **CBT DATA INTEGRATION**: When the session contains structured CBT data (marked with "CBT Session -" headers), prioritize this user-provided information for analysis. Include specific emotion ratings, thought records, core beliefs, and behavioral plans in your therapeutic assessment. This structured data represents the client's active therapeutic work and should be prominently featured in the report.
 
