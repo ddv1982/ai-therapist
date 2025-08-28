@@ -162,6 +162,32 @@ RATE_LIMIT_DISABLED="true"   # Disable API rate limiting
 ### API Key Setup
 - Server-side only via `GROQ_API_KEY` (used by AI SDK Groq provider); never sent to client.
 
+### Encryption Key Setup
+- Generate and save locally:
+  ```bash
+  npm run encryption:setup
+  ```
+  Writes `ENCRYPTION_KEY` to `.env.local` (or `.env` if `.env.local` is missing).
+- Generate only (copy manually):
+  ```bash
+  npm run encryption:generate
+  ```
+  Copy the printed `ENCRYPTION_KEY` into `.env.local`.
+- Validate a key:
+  ```bash
+  npm run encryption:validate
+  # or
+  ENCRYPTION_KEY="your_key" npm run encryption:validate
+  ```
+- Notes: use different keys per env (dev/staging/prod); keep `.env.local` out of git; rotate keys periodically.
+
+### Bootstrap .env.local
+If you need to scaffold a local env file with defaults (including an empty `ENCRYPTION_KEY`):
+```bash
+npm run env:init
+```
+This creates `.env.local` with common variables so you can paste your keys.
+
 ## 📱 Mobile Experience
 
 - **Touch Optimized** - All interactions designed for mobile
