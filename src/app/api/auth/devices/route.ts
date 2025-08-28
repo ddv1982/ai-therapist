@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getTrustedDevices, revokeDeviceTrust } from '@/lib/auth/device-fingerprint';
 import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
-import { regenerateBackupCodes, getUnusedBackupCodesCount } from '@/lib/auth/totp-service';
+import { getUnusedBackupCodesCount } from '@/lib/auth/totp-service';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
 import { withAuthAndRateLimit } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
@@ -75,7 +75,7 @@ export const DELETE = withAuthAndRateLimit(async (request: NextRequest) => {
   }
 });
 
-// POST /api/auth/devices/regenerate-backup-codes - Regenerate backup codes
+// POST /api/auth/devices - Device management (backup code regeneration removed for security)
 export const POST = withAuthAndRateLimit(async (request: NextRequest) => {
   try {
     // Verify authentication
@@ -89,17 +89,9 @@ export const POST = withAuthAndRateLimit(async (request: NextRequest) => {
       return createErrorResponse('Invalid session', 401);
     }
 
-    const body = await request.json();
-    const { action } = body;
-
-    if (action === 'regenerate-backup-codes') {
-      const newBackupCodes = await regenerateBackupCodes();
-      return createSuccessResponse({ backupCodes: newBackupCodes });
-    }
-
-    return createErrorResponse('Invalid action', 400);
+    return createErrorResponse('Action not supported. Use server-side scripts for TOTP management.', 400);
   } catch (error) {
     logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
-    return createErrorResponse('Failed to process action', 500);
+    return createErrorResponse('Failed to process request', 500);
   }
 });

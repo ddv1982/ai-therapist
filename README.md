@@ -2,6 +2,20 @@
 
 A modern therapeutic AI application providing compassionate mental health support through AI-powered conversations with enterprise-grade security and professional therapeutic frameworks.
 
+## 🚀 Recent Improvements
+
+### 🔐 Enhanced TOTP Authentication System
+- **Server-Side Management**: Complete TOTP operations now handled server-side only
+- **Health Monitoring**: Comprehensive diagnostics for database, encryption, and time sync
+- **Improved Error Handling**: Better resilience against decryption failures and edge cases
+- **Unified CLI**: Single `npm run totp` command for all TOTP operations
+- **Enhanced Security**: Removed external API access to sensitive authentication operations
+
+### 🛠️ Developer Experience
+- **Simplified Scripts**: Unified TOTP management with `totp-manager.js`
+- **Better Diagnostics**: Health checks and troubleshooting tools
+- **Cleaner Repository**: Removed obsolete files and scripts
+
 ## ✨ Features
 
 ### 🎨 Beautiful Experience
@@ -20,7 +34,9 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ### 🔒 Enterprise Security
 - **AES-256-GCM Encryption** - All sensitive data encrypted
-- **TOTP Authentication** - Secure two-factor authentication with backup codes
+- **Enhanced TOTP Authentication** - Secure two-factor authentication with health monitoring, improved error handling, and server-side management
+- **Server-Side TOTP Management** - No external API access to sensitive authentication operations
+- **Comprehensive Health Checks** - Database, encryption, and time synchronization monitoring
 - **Cross-Device Sessions** - Access sessions on any authenticated device
 - **Database Transactions** - Race condition prevention with ACID compliance
 - **Device Fingerprinting** - Enhanced unique device identification
@@ -109,7 +125,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - `npm run encryption:setup` - Setup encryption configuration
 - `npm run encryption:validate` - Validate encryption setup
 - `npm run env:init` - Bootstrap .env.local file with default variables
-- `node scripts/regenerate-auth.js` - Server-side TOTP regeneration (lost authenticator recovery)
+- `npm run totp` - Complete TOTP management (setup, reset, health checks, diagnostics)
 
 ### Health & Monitoring
 - `curl http://localhost:4000/api/health` - Get comprehensive system health status
@@ -286,69 +302,96 @@ __tests__/
 ### Common Issues
 
 **Authentication Problems**
-- Check time sync for TOTP
+- Run `npm run totp health` to diagnose TOTP issues and time sync
 - Clear cookies to reset device trust
 - Verify `ENCRYPTION_KEY` is set
 - Database constraint errors: Remove `prisma/dev.db` and run `npm run db:setup`
 
 ### Authentication Recovery
 
-#### Lost Authenticator Device (Server-side Recovery)
+#### 🔐 TOTP Authentication Management
 
-If a user loses access to their authenticator app, you can regenerate new auth codes directly on the server without network exposure:
+The improved TOTP system provides comprehensive management through a unified command-line interface:
 
 ```bash
-# Run from project root with server filesystem access
-npx tsx scripts/regenerate-auth.js
+npm run totp [command]
 ```
 
-**What this script does:**
-- ✅ Verifies TOTP is currently configured
-- 🔄 Generates new TOTP secret and QR code  
-- 💾 Updates database with new encrypted credentials
-- 🔑 Provides new manual entry key and backup codes
-- 📱 Optionally saves QR code as PNG file
-- 🧹 Clears all trusted devices and sessions for security
+#### Available Commands:
 
-**Usage example:**
+**Health Check & Diagnostics:**
 ```bash
-🔄 AI Therapist - Regenerate Authentication Setup
-============================================================
-✅ Current TOTP configuration found.
+npm run totp health    # Comprehensive system health check with diagnostics
+npm run totp status    # Quick status overview
+```
 
-⚠️  WARNING: This will generate a NEW authenticator secret.
-   - Current authenticator app will stop working
-   - All trusted devices will be logged out
-   - New backup codes will be generated
+**TOTP Setup & Management:**
+```bash
+npm run totp setup     # Set up new TOTP configuration with QR code
+npm run totp reset     # Reset TOTP (server-side only, removes all config)
+npm run totp test      # Test TOTP functionality with diagnostics
+```
 
-❓ Do you want to continue? (y/n): y
+#### What the system provides:
+- ✅ **Comprehensive Health Monitoring** - Database, encryption, time sync, and configuration checks
+- 🔄 **Secure Server-Side Operations** - No external API access to sensitive operations
+- 💾 **Automatic Backup Codes** - 10 secure backup codes generated automatically
+- 🔑 **Manual Entry Support** - Manual key for devices without camera
+- 📱 **QR Code Generation** - Scannable QR codes for easy authenticator setup
+- 🛡️ **Enhanced Error Handling** - Graceful handling of decryption failures and edge cases
+- ⏰ **Improved Time Tolerance** - 4-time-window support for multi-device reliability
 
-🔄 Generating new authentication setup...
-✅ New authentication setup generated successfully!
+#### Example Usage:
 
-🔑 Manual Entry Key: ABCD1234EFGH5678...
-📱 QR Code Data URL: data:image/png;base64,iVBOR...
-💾 New Backup Codes:
-   01. ABCD1234
-   02. EFGH5678
+**Check system health:**
+```bash
+npm run totp health
+```
+Output:
+```
+🏥 TOTP Health Check
+──────────────────────────────────────────────────
+Overall Health: ✅ Healthy
+Database: ✅ Accessible
+Configuration: ✅ Set up
+Encryption: ✅ Working
+Time Sync: ✅ In sync
+Current Token: 223943
+Server Time: 2025-08-28T22:03:22.806Z
+──────────────────────────────────────────────────
+```
+
+**Set up new TOTP (when locked out):**
+```bash
+npm run totp setup
+```
+Output:
+```
+🔄 Setting up new TOTP configuration...
+✅ TOTP configuration saved successfully!
+
+🔑 Manual Entry Key: EFTSSJRPEUWGI5B2ENCXITCUPBFT4TKWLV5SCXJTHIYUYJTMG5JQ
+📱 QR Code URL: data:image/png;base64,...
+💾 Backup Codes:
+   1. FQHRC3AC
+   2. GEF9DPQ1
    ...
-
-❓ Save QR code to file? (y/n): y
-💾 QR code saved to: new-auth-qr.png
-
-🎉 Regeneration complete!
 ```
 
-#### Reset authentication (development)
-
-For development environments, you can reset TOTP configuration completely:
-
+**Reset TOTP completely:**
 ```bash
-# Dev-only: resets TOTP config and clears sessions; accessible only from localhost
-curl -X DELETE http://localhost:4000/api/auth/setup
+npm run totp reset
 ```
+Output:
+```
+⚠️  WARNING: This will completely reset TOTP authentication!
+   - All TOTP configuration will be deleted
+   - All sessions and trusted devices will be cleared
+   - You will need to set up TOTP again
 
-Then open `http://localhost:4000/auth/setup` to scan a new QR and complete verification.
+❓ Are you sure you want to reset TOTP? (type "RESET" to confirm): RESET
+✅ TOTP configuration reset successfully!
+```
 
 **API Key Issues**  
 - Confirm Groq API key validity
