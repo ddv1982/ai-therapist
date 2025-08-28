@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
-import { useCBTDraftPersistence } from './hooks/use-cbt-draft-persistence';
+import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
+import type { EmotionData } from '@/types/therapy';
 
 interface CBTFormProps {
   onSubmit: (data: CBTFormInput) => void;
@@ -25,12 +26,31 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
 
   const { control, handleSubmit, formState } = form;
   const current = useWatch({ control });
-  useCBTDraftPersistence(current as CBTFormInput, true, 600);
+
+  // Redux auto-save integration
+  const { sessionActions } = useCBTDataManager({
+    autoSaveDelay: 600, // Match the original debounce timing
+    enableValidation: false // Disable validation to avoid conflicts with RHF
+  });
+
+  // Auto-save to Redux on form changes
   React.useEffect(() => {
+    // Convert RHF form data to Redux-compatible format and update session
+    if (current?.situation) {
+      sessionActions.updateSituation({
+        situation: current.situation,
+        date: current.date || new Date().toISOString().split('T')[0]
+      });
+    }
+
+    if (current?.initialEmotions) {
+      sessionActions.updateEmotions(current.initialEmotions as EmotionData);
+    }
+
     if (onDraftChange) {
       onDraftChange(current as CBTFormInput);
     }
-  }, [current, onDraftChange]);
+  }, [current, sessionActions, onDraftChange]);
 
   const isSituationValid = (String((current as Partial<CBTFormInput>)?.situation || '').trim().length) >= 5;
 

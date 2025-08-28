@@ -61,8 +61,7 @@ import {
   type CBTDraft,
   cbtFormSchema,
 } from '@/store/slices/cbtSlice';
-import { loadCBTDraft } from '@/features/therapy/cbt/hooks/use-cbt-draft-persistence';
-import type { CBTFormInput } from '@/features/therapy/cbt/cbt-form-schema';
+
 import type {
   SituationData,
   EmotionData,
@@ -74,6 +73,7 @@ import type {
   ActionPlanData,
   CBTFormValidationError,
 } from '@/types/therapy';
+import type { CBTFormInput } from '@/features/therapy/cbt/cbt-form-schema';
 import { useChatUI } from '@/contexts/chat-ui-context';
 import { useCBTChatBridge } from '@/lib/therapy/use-cbt-chat-bridge';
 import { generateUUID } from '@/lib/utils/utils';
@@ -229,7 +229,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   const validationState = useSelector(selectCBTValidationState);
   const savedDrafts = useSelector(selectCBTSavedDrafts);
   const lastAutoSave = useSelector((state: RootState) => state.cbt.lastAutoSave);
-  const hasHydratedFromRHF = useRef<boolean>(false);
   
   // Auto-save management
   const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -272,47 +271,67 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     }
   }, [sessionId, sessionData.sessionId, dispatch]);
 
-  // Bridge: hydrate Redux session data from RHF localStorage draft (one-time)
+  // One-time migration from localStorage to Redux (if needed)
   useEffect(() => {
-    if (hasHydratedFromRHF.current) return;
+    const migrationKey = 'cbt-migration-completed';
+    const hasMigrated = localStorage.getItem(migrationKey);
+
+    if (hasMigrated) return;
+
     try {
-      const draft = loadCBTDraft() as CBTFormInput | null;
-      if (!draft) return;
+      const rawDraft = localStorage.getItem('cbt-draft');
+      if (!rawDraft) {
+        localStorage.setItem(migrationKey, 'true');
+        return;
+      }
 
-      // Minimal guard to avoid clobbering existing populated state
+      const draft = JSON.parse(rawDraft) as CBTFormInput;
+
+      // Only migrate if there's no existing Redux state
       const isEmpty = !sessionData.situation && !sessionData.emotions && sessionData.thoughts.length === 0;
-      if (!isEmpty) return;
+      if (!isEmpty) {
+        localStorage.setItem(migrationKey, 'true');
+        return;
+      }
 
-      // Situation
-      const situationData = { situation: draft.situation, date: draft.date };
-      dispatch(updateSituation(situationData));
+      // Create a new draft in Redux with migrated data
+      const draftId = `cbt-draft-${generateUUID()}`;
+      dispatch(createDraft({ id: draftId }));
 
-      // Emotions (use initial emotions for in-session work)
-      dispatch(updateEmotions(draft.initialEmotions as unknown as EmotionData));
+      // Migrate situation
+      if (draft.situation) {
+        const situationData = { situation: draft.situation, date: draft.date };
+        dispatch(updateSituation(situationData));
+      }
 
-      // Thoughts
+      // Migrate emotions (use initial emotions for in-session work)
+      if (draft.initialEmotions) {
+        dispatch(updateEmotions(draft.initialEmotions as unknown as EmotionData));
+      }
+
+      // Migrate thoughts
       if (Array.isArray(draft.automaticThoughts) && draft.automaticThoughts.length > 0) {
         dispatch(updateThoughts(draft.automaticThoughts as unknown as ThoughtData[]));
       }
 
-      // Core beliefs (convert single text/credibility to array entry if available)
+      // Migrate core beliefs (convert single text/credibility to array entry if available)
       if (draft.coreBeliefText && draft.coreBeliefText.trim().length > 0) {
         dispatch(updateCoreBeliefs([
           { coreBeliefText: draft.coreBeliefText, coreBeliefCredibility: draft.coreBeliefCredibility }
         ] as unknown as CoreBeliefData[]));
       }
 
-      // Challenge questions
+      // Migrate challenge questions
       if (Array.isArray(draft.challengeQuestions)) {
         dispatch(updateChallengeQuestions(draft.challengeQuestions as unknown as ChallengeQuestionData[]));
       }
 
-      // Rational thoughts
+      // Migrate rational thoughts
       if (Array.isArray(draft.rationalThoughts)) {
         dispatch(updateRationalThoughts(draft.rationalThoughts as unknown as RationalThoughtData[]));
       }
 
-      // Schema modes: map from consolidated SchemaMode[] -> SchemaModeData[]
+      // Migrate schema modes: map from consolidated SchemaMode[] -> SchemaModeData[]
       if (Array.isArray(draft.schemaModes)) {
         const mapped = draft.schemaModes.map((m) => ({
           mode: m.name,
@@ -323,7 +342,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         dispatch(updateSchemaModes(mapped as unknown as SchemaModeData[]));
       }
 
-      // Action plan (optional)
+      // Migrate action plan (optional)
       if (draft.newBehaviors) {
         const actionPlan = {
           finalEmotions: draft.finalEmotions,
@@ -333,11 +352,27 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         dispatch(updateActionPlan(actionPlan));
       }
 
-      hasHydratedFromRHF.current = true;
-    } catch {
-      // ignore hydration errors
+      // Clean up old localStorage data
+      localStorage.removeItem('cbt-draft');
+      localStorage.setItem(migrationKey, 'true');
+
+      logger.info('Successfully migrated CBT draft from localStorage to Redux', {
+        component: 'useCBTDataManager',
+        operation: 'migration',
+        draftId
+      });
+    } catch (error) {
+      logger.error('Failed to migrate CBT draft from localStorage', {
+        component: 'useCBTDataManager',
+        operation: 'migration',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      // Still mark as completed to avoid repeated attempts
+      localStorage.setItem(migrationKey, 'true');
     }
   }, [dispatch, sessionData]);
+
+
   
   // Draft Management Actions
   const draftActions = useMemo(() => ({

@@ -17,7 +17,7 @@ import { logger } from '@/lib/utils/logger';
 import type { MessageData } from '@/features/chat/messages/message';
 import { useCBTChatExperience } from '@/features/therapy/cbt/hooks/use-cbt-chat-experience';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import { clearCBTDraft } from '@/features/therapy/cbt/hooks/use-cbt-draft-persistence';
+
 import { getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
 import type { 
   SituationData, 
@@ -96,7 +96,7 @@ function CBTDiaryPageContent() {
   const hasDraft = (savedDrafts?.length || 0) > 0 || !!currentDraft;
   const draftLastSaved: string | undefined = (savedDrafts && savedDrafts[0]) ? savedDrafts[0].lastSaved : undefined;
   
-  // Delete existing draft from Redux/localStorage
+  // Delete existing draft from Redux
   const handleDeleteDraft = useCallback(() => {
     try {
       // Remove any saved drafts
@@ -105,9 +105,8 @@ function CBTDiaryPageContent() {
           draftActions.delete(d.id);
         }
       }
-      // Clear current unsaved draft state and local storage bridge
+      // Clear current unsaved draft state
       draftActions.reset();
-      clearCBTDraft();
       showToast({
         type: 'success',
         title: 'Draft Deleted',
@@ -158,8 +157,7 @@ function CBTDiaryPageContent() {
   const handleStartFresh = useCallback(async () => {
     // Use unified CBT action to reset everything
     draftActions.reset();
-    clearCBTDraft();
-    
+
     showToast({
       type: 'info',
       title: 'New Session Started',
