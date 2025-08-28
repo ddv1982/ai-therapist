@@ -445,8 +445,32 @@ function CBTDiaryPageContent() {
 
       // Clear CBT session since it's complete - use unified CBT action
       draftActions.reset();
-      
-      // Reset component state  
+
+      // Mark the session as completed with the session ID
+      draftActions.markAsCompleted(sessionId);
+
+      // Clear localStorage to ensure no draft persistence
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('cbt-draft-current');
+          localStorage.removeItem('cbt-draft-session');
+          localStorage.removeItem('cbt-session-data');
+          // Also clear any React Hook Form persisted data
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('cbt-') || key.includes('cbt')) {
+              localStorage.removeItem(key);
+            }
+          });
+        } catch (error) {
+          logger.warn('Failed to clear localStorage during CBT completion', {
+            component: 'CBTDiaryPage',
+            operation: 'handleSendToChat',
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+      }
+
+      // Reset component state
       setHasStarted(false);
       setMessages([]);
       

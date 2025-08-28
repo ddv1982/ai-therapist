@@ -11,6 +11,12 @@ import type {
   SituationData
 } from '@/types/therapy';
 
+// Re-export draft actions for unified access
+export {
+  markAsCompleted,
+  resetCompletionStatus,
+} from './cbt-drafts.slice';
+
 // CBT Form Schema with Zod validation
 export const cbtFormSchema = z.object({
   situation: z.string().min(10, 'Please describe the situation in at least 10 characters'),
