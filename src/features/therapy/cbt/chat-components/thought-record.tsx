@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Brain } from 'lucide-react';
+import { Brain, Plus, Minus } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import { ThoughtInput } from '@/components/cbt/primitives/thought-input';
 import { FormStep } from '@/components/cbt/form-step';
@@ -115,20 +115,24 @@ export function ThoughtRecord({
           ))}
         </div>
 
-        <div className="flex justify-between items-center pt-4">
+        <div className="flex justify-center items-center pt-4 gap-4">
           <button
             onClick={handleAddThought}
-            className="text-sm text-primary hover:text-primary/80 underline"
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+            aria-label="Add another thought"
           >
-            {t('thoughts.addAnother')}
+            <Plus className="w-4 h-4" />
+            Add Thought
           </button>
 
           {thoughts.length > 1 && (
             <button
               onClick={() => handleRemoveThought(thoughts.length - 1)}
-              className="text-sm text-destructive hover:text-destructive/80 underline"
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors"
+              aria-label="Remove last thought"
             >
-              {t('thoughts.remove')}
+              <Minus className="w-4 h-4" />
+              Remove
             </button>
           )}
         </div>
