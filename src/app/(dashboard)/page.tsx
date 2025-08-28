@@ -217,13 +217,13 @@ function ChatPageContent() {
     try {
       const sessionsData: ListSessionsResponse = await apiClient.listSessions();
       const sessions = getApiData(sessionsData);
-      // Map API date values to UI Session type (which expects Date)
+      // Map API date strings to UI Session type (which expects Date)
       const uiSessions: Session[] = (sessions || []).map((s) => ({
         ...s,
-        startedAt: s.startedAt ? new Date(s.startedAt) : undefined,
-        endedAt: s.endedAt ? new Date(s.endedAt) : undefined,
-        createdAt: s.createdAt ? new Date(s.createdAt) : undefined,
-        updatedAt: s.updatedAt ? new Date(s.updatedAt) : undefined,
+        startedAt: s.startedAt ? new Date(s.startedAt as unknown as string) : undefined,
+        endedAt: s.endedAt ? new Date(s.endedAt as unknown as string) : undefined,
+        createdAt: s.createdAt ? new Date(s.createdAt as unknown as string) : undefined,
+        updatedAt: s.updatedAt ? new Date(s.updatedAt as unknown as string) : undefined,
       })) as unknown as Session[];
       setSessions(uiSessions);
     } catch (error) {
@@ -880,7 +880,7 @@ function ChatPageContent() {
         aria-label={t('sidebar.aria')}
         aria-hidden={!showSidebar}
         style={{
-          background: 'hsl(var(--sidebar-background))',
+          background: 'var(--sidebar-background)',
           backgroundImage: `
             linear-gradient(180deg, transparent 0%, hsl(var(--accent) / 0.03) 100%),
             radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 50%)
@@ -891,7 +891,7 @@ function ChatPageContent() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                <Brain className="w-5 h-5 text-primary-foreground" />
+                <Brain className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h2 className="text-lg gradient-text">{t('sidebar.brandName')}</h2>
@@ -911,13 +911,13 @@ function ChatPageContent() {
               </Button>
             </div>
           </div>
-          <Button
+          <Button 
             onClick={startNewSession}
-            className="w-full justify-start gap-3 h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
+            className="w-full justify-start gap-3 h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
           >
             {/* Shimmer effect */}
             <div className="shimmer-effect"></div>
-            <div className="h-6 w-6 rounded-full bg-primary-foreground/20 flex items-center justify-center group-hover:bg-primary-foreground/30 transition-colors">
+            <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
               <Plus className="w-4 h-4" />
             </div>
             <span className="font-medium">{t('sidebar.startNew')}</span>
@@ -938,9 +938,9 @@ function ChatPageContent() {
             <Card 
               key={session.id}
               className={`p-4 mb-3 group transition-all duration-300 hover:shadow-lg cursor-pointer animate-fade-in ${
-                currentSession === session.id
-                  ? 'ring-2 ring-primary/50 bg-primary/5 border-primary/30 shadow-md'
-                  : 'hover:border-primary/20 bg-background/50 hover:bg-background/80'
+                currentSession === session.id 
+                  ? 'ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/5 border-primary/30 shadow-md' 
+                  : 'hover:border-primary/20 bg-white/50 dark:bg-card/50 hover:bg-white/80 dark:hover:bg-card/70'
               }`}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -994,14 +994,14 @@ function ChatPageContent() {
         </div>
 
         {/* Smart Model and Web Search (icon) and Language Toggles */}
-        <div className="p-4 border-t border-border/50 bg-gradient-to-t from-muted/30 to-transparent">
+        <div className="p-4 border-t border-border/50 bg-gradient-to-t from-blue-50/30 to-transparent dark:from-blue-900/10">
           <div className="flex items-center justify-end gap-3">
             <button
               onClick={handleSmartModelToggle}
               className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 ${
                 (!settings.webSearchEnabled && settings.model === 'openai/gpt-oss-120b')
-                  ? 'bg-violet-600 text-primary-foreground'
-                  : 'bg-muted text-muted-foreground'
+                  ? 'bg-violet-600 text-white'
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
               }`}
               aria-pressed={!settings.webSearchEnabled && settings.model === 'openai/gpt-oss-120b'}
               aria-label={(!settings.webSearchEnabled && settings.model === 'openai/gpt-oss-120b') ? t('sidebar.smartEnabled') : t('sidebar.smartDisabled')}
@@ -1012,9 +1012,9 @@ function ChatPageContent() {
             <button
               onClick={handleWebSearchToggle}
               className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                settings.webSearchEnabled
-                  ? 'bg-blue-600 text-primary-foreground'
-                  : 'bg-muted text-muted-foreground'
+                settings.webSearchEnabled 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
               }`}
               aria-pressed={settings.webSearchEnabled}
               aria-label={settings.webSearchEnabled ? t('sidebar.webSearchEnabled') : t('sidebar.webSearchDisabled')}
@@ -1216,7 +1216,7 @@ function ChatPageContent() {
               <Button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 text-primary-foreground shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex-shrink-0`}
+                className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 text-white shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex-shrink-0`}
                 style={{
                   WebkitTapHighlightColor: 'transparent'
                 }}

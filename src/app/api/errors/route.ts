@@ -1,28 +1,28 @@
-import { NextRequest } from 'next/server';
+import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 
-export const POST = async (request: NextRequest) => {
+export const POST = withApiMiddleware(async (request, context) => {
   try {
     const errorData = await request.json();
 
     logger.error('Client error report', {
+      ...context,
       clientErrorData: errorData,
-      apiEndpoint: '/api/errors',
-      userAgent: request.headers.get('user-agent') || undefined
+      apiEndpoint: '/api/errors'
     });
 
     return createSuccessResponse(
       { message: 'Error logged successfully' },
-      { requestId: 'error-report' }
+      { requestId: context.requestId }
     );
   } catch (error) {
-    logger.error('Failed to log client error', { error: (error as Error).message });
-    return createErrorResponse('Failed to log error', 500, { requestId: 'error-report' });
+    logger.apiError('/api/errors', error as Error, context);
+    return createErrorResponse('Failed to log error', 500, { requestId: context.requestId });
   }
-};
+});
 
-export const GET = async (_request: NextRequest) => {
+export const GET = withApiMiddleware(async (_request, context) => {
   return createSuccessResponse(
     {
       timestamp: new Date().toISOString(),
@@ -31,6 +31,6 @@ export const GET = async (_request: NextRequest) => {
       arch: process.arch,
       env: process.env.NODE_ENV
     },
-    { requestId: 'system-info' }
+    { requestId: context.requestId }
   );
-};
+});

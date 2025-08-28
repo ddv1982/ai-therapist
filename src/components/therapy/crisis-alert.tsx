@@ -159,7 +159,7 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
           </h4>
           <div className="grid gap-3 sm:grid-cols-2">
             {crisisResult.emergencyResources.slice(0, isExpanded ? undefined : 2).map((resource, index) => (
-              <div key={index} className="p-3 bg-background border rounded-lg">
+              <div key={index} className="p-3 bg-white border rounded-lg">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h5 className="font-medium text-sm">{resource.name}</h5>
@@ -269,7 +269,7 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
                 <h4 className="font-semibold mb-3">Additional Resources</h4>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {crisisResult.emergencyResources.slice(2).map((resource, index) => (
-                    <div key={index} className="p-3 bg-background border rounded-lg">
+                    <div key={index} className="p-3 bg-white border rounded-lg">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h5 className="font-medium text-sm">{resource.name}</h5>

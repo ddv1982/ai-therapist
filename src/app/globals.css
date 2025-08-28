@@ -98,7 +98,7 @@
 
 @layer base {
   * {
-    @apply border-muted;
+    @apply border-border;
   }
   
   html {
@@ -224,27 +224,27 @@
 
   /* Professional 8pt Grid System - Strict adherence to 8px multiples */
   .spacing-therapy-xs {
-    @apply p-2; /* 8px */
+    @apply p-therapy-xs; /* 8px */
   }
-
+  
   .spacing-therapy-sm {
-    @apply p-4; /* 16px */
+    @apply p-therapy-sm; /* 16px */
   }
-
+  
   .spacing-therapy-md {
-    @apply p-6; /* 24px */
+    @apply p-therapy-md; /* 24px */
   }
-
+  
   .spacing-therapy-lg {
-    @apply p-8; /* 32px */
+    @apply p-therapy-lg; /* 32px */
   }
-
+  
   .spacing-therapy-xl {
-    @apply p-12; /* 48px */
+    @apply p-therapy-xl; /* 48px */
   }
-
+  
   .spacing-therapy-2xl {
-    @apply p-16; /* 64px */
+    @apply p-therapy-2xl; /* 64px */
   }
 
   /* Modern Therapeutic Color Variants */
@@ -265,7 +265,7 @@
   }
   
   .therapy-card {
-    @apply bg-background text-foreground border border-muted rounded-lg shadow-sm;
+    @apply bg-card text-card-foreground border border-border rounded-therapy-md shadow-sm;
   }
   
   .therapy-success {
@@ -285,30 +285,30 @@
 
   /* Professional Component Patterns */
   .therapy-modal {
-    @apply bg-background border border-muted rounded-lg shadow-xl backdrop-blur-sm;
+    @apply bg-background border border-border rounded-therapy-lg shadow-xl backdrop-blur-sm;
   }
   
   .therapy-modal-content {
-    @apply p-4 max-h-[90vh] overflow-y-auto;
+    @apply spacing-therapy-md max-h-[90vh] overflow-y-auto;
   }
   
   .therapy-modal-header {
-    @apply p-4 border-b border-muted flex items-center justify-between;
+    @apply spacing-therapy-md border-b border-border flex items-center justify-between;
   }
   
   .therapy-modal-footer {
-    @apply p-4 border-t border-muted flex items-center justify-end gap-2;
+    @apply spacing-therapy-md border-t border-border flex items-center justify-end gap-therapy-sm;
   }
   
   .therapy-input {
-    @apply w-full px-3 py-2 bg-background border border-muted rounded-lg text-base;
+    @apply w-full px-therapy-sm py-therapy-xs bg-background border border-input rounded-therapy-sm text-base;
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
     @apply placeholder:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed;
     @apply transition-colors duration-200;
   }
   
   .therapy-button {
-    @apply inline-flex items-center justify-center px-4 py-2 rounded-md text-base font-medium;
+    @apply inline-flex items-center justify-center px-therapy-md py-therapy-xs rounded-therapy-sm text-base font-medium;
     @apply transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
     @apply disabled:opacity-50 disabled:pointer-events-none;
   }
@@ -330,7 +330,7 @@
   }
   
   .therapy-form-group {
-    @apply space-y-2;
+    @apply space-y-therapy-xs;
   }
   
   .therapy-form-label {
@@ -358,7 +358,7 @@
   
   /* Glassmorphism effects */
   .glass-card {
-    @apply bg-background/80 backdrop-blur-md border border-muted/50 shadow-lg;
+    @apply bg-card/80 backdrop-blur-md border border-border/50 shadow-lg;
   }
   
   /* Smooth animations */
@@ -487,10 +487,7 @@
   
   /* Simple gradient text */
   .gradient-text {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: hsl(var(--primary));
   }
 
   /* Remove display font to keep Inter universally */
@@ -714,7 +711,7 @@
     }
 
     .therapeutic-card.generated-card {
-      @apply bg-background border border-muted rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-4;
+      @apply bg-card border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-4;
 
       &.therapeutic-variant {
         @apply bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 hover:border-primary/40;
@@ -729,7 +726,7 @@
       }
 
       .card-header {
-        @apply mb-3 pb-2 border-b border-muted/50;
+        @apply mb-3 pb-2 border-b border-border/50;
 
         .card-title {
           @apply text-lg font-semibold text-foreground truncate;
@@ -772,7 +769,7 @@
         }
 
         .card-details {
-          @apply mt-3 pt-2 border-t border-muted/30;
+          @apply mt-3 pt-2 border-t border-border/30;
 
           .details-toggle {
             @apply text-xs text-primary cursor-pointer hover:text-primary/80 transition-colors;
@@ -956,11 +953,11 @@
   
   /* Alternative view styling for 6+ column tables */
   .alternative-view-container {
-    @apply bg-background border border-muted rounded-lg p-6 mb-4;
+    @apply bg-card border border-border rounded-lg p-6 mb-4;
   }
   
   .alternative-view-header {
-    @apply text-lg font-semibold text-primary mb-4 pb-2 border-b border-muted;
+    @apply text-lg font-semibold text-primary mb-4 pb-2 border-b border-border;
   }
   
   .structured-cards-grid {
@@ -969,7 +966,7 @@
   }
   
   .structured-card {
-    @apply bg-muted/30 border border-muted rounded-md p-4;
+    @apply bg-muted/30 border border-border rounded-md p-4;
   }
   
   .card-field {
@@ -1002,7 +999,7 @@
   }
   
   .row-separator {
-    @apply my-4 border-t border-muted;
+    @apply my-4 border-t border-border;
   }
 
   /* ========================================

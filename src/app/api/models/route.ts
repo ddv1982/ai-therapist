@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createServerErrorResponse } from '@/lib/api/api-response';
 
 /**
@@ -24,22 +24,22 @@ interface ModelsResponse {
  * 
  * @returns {ModelsResponse} List of available models with metadata
  */
-export const GET = async (_request: NextRequest) => {
+export const GET = withApiMiddleware(async (_request, context) => {
   try {
     const availableModels: ModelInfo[] = [
-      {
-        id: 'openai/gpt-oss-20b',
-        name: 'GPT OSS 20B (Fast)',
-        provider: 'OpenAI',
-        maxTokens: 30000,
+      { 
+        id: 'openai/gpt-oss-20b', 
+        name: 'GPT OSS 20B (Fast)', 
+        provider: 'OpenAI', 
+        maxTokens: 30000, 
         category: 'production',
         description: 'Fast model for regular conversations'
       },
-      {
-        id: 'openai/gpt-oss-120b',
-        name: 'GPT OSS 120B (Deep Analysis)',
-        provider: 'OpenAI',
-        maxTokens: 30000,
+      { 
+        id: 'openai/gpt-oss-120b', 
+        name: 'GPT OSS 120B (Deep Analysis)', 
+        provider: 'OpenAI', 
+        maxTokens: 30000, 
         category: 'featured',
         description: 'Advanced model for CBT analysis and session reports'
       }
@@ -51,12 +51,12 @@ export const GET = async (_request: NextRequest) => {
       note: 'Models are now automatically selected based on content type'
     };
 
-    return createSuccessResponse(response, { requestId: 'models-request' });
+    return createSuccessResponse(response, { requestId: context.requestId });
   } catch (error) {
     return createServerErrorResponse(
-      error as Error,
-      'models-request',
+      error as Error, 
+      context.requestId,
       { endpoint: '/api/models' }
     );
   }
-};
+});

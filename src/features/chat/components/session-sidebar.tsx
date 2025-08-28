@@ -48,7 +48,7 @@ export function SessionSidebar({
         aria-label="Chat sessions"
         aria-hidden={!showSidebar}
         style={{
-          background: 'hsl(var(--sidebar-background))',
+          background: 'var(--sidebar-background)',
           backgroundImage: `
             linear-gradient(180deg, transparent 0%, hsl(var(--accent) / 0.03) 100%),
             radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 50%)
@@ -59,7 +59,7 @@ export function SessionSidebar({
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                <Heart className="w-5 h-5 text-primary-foreground" />
+                <Heart className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h2 className="text-lg gradient-text">Therapeutic AI</h2>
@@ -79,13 +79,13 @@ export function SessionSidebar({
               </Button>
             </div>
           </div>
-          <Button
+          <Button 
             onClick={startNewSession}
-            className="w-full justify-start gap-3 h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
+            className="w-full justify-start gap-3 h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
           >
             {/* Shimmer effect */}
             <div className="shimmer-effect"></div>
-            <div className="h-6 w-6 rounded-full bg-primary-foreground/20 flex items-center justify-center group-hover:bg-primary-foreground/30 transition-colors">
+            <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
               <Plus className="w-4 h-4" />
             </div>
             <span className="font-medium">Start New Session</span>
@@ -106,9 +106,9 @@ export function SessionSidebar({
             <Card 
               key={session.id}
               className={`p-4 mb-3 group transition-all duration-300 hover:shadow-lg cursor-pointer animate-fade-in ${
-                currentSession === session.id
-                  ? 'ring-2 ring-primary/50 bg-primary/5 border-primary/30 shadow-md'
-                  : 'hover:border-primary/20 bg-background/50 hover:bg-background/80'
+                currentSession === session.id 
+                  ? 'ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/5 border-primary/30 shadow-md' 
+                  : 'hover:border-primary/20 bg-white/50 dark:bg-card/50 hover:bg-white/80 dark:hover:bg-card/70'
               }`}
               style={{ animationDelay: `${index * 0.1}s` }}
             >

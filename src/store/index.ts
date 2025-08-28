@@ -4,31 +4,22 @@ import storage from 'redux-persist/lib/storage';
 
 import chatSlice from './slices/chatSlice';
 import sessionsSlice from './slices/sessionsSlice';
-
-import cbtSessionSlice from './slices/cbt-session.slice';
-import cbtDraftsSlice from './slices/cbt-drafts.slice';
-import cbtFormSlice from './slices/cbt-form.slice';
+import cbtSlice from './slices/cbtSlice';
 
 const persistConfig = {
   key: 'therapeuticAI',
   storage,
-  whitelist: ['cbtDrafts', 'cbtSession', 'sessions'], // Persist drafts and session data
-  blacklist: ['chat', 'cbtForm'], // Don't persist real-time chat state or form state
+  whitelist: ['cbt', 'sessions'], // Persist drafts and session data
+  blacklist: ['chat'], // Don't persist real-time chat state
 };
 
-const persistedCbtDraftsReducer = persistReducer(persistConfig, cbtDraftsSlice);
-const persistedCbtSessionReducer = persistReducer(persistConfig, cbtSessionSlice);
+const persistedCbtReducer = persistReducer(persistConfig, cbtSlice);
 
 export const store = configureStore({
   reducer: {
     chat: chatSlice,
     sessions: sessionsSlice,
-    // New focused slices
-    cbtSession: persistedCbtSessionReducer,
-    cbtDrafts: persistedCbtDraftsReducer,
-    cbtForm: cbtFormSlice,
-    // Legacy slice for backward compatibility (to be removed)
-    // cbt: persistReducer(persistConfig, cbtSlice),
+    cbt: persistedCbtReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

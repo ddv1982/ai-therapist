@@ -59,7 +59,6 @@ export type {
   ActionPlanData
 } from '@/types/therapy';
 
-// Legacy interface for backward compatibility - DEPRECATED
 interface CBTState {
   currentDraft: CBTDraft | null;
   savedDrafts: CBTDraft[];

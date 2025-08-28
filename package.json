@@ -20,7 +20,6 @@
     "encryption:setup": "node scripts/setup-encryption.js setup",
     "encryption:validate": "node scripts/setup-encryption.js validate",
     "env:init": "node scripts/setup-env-local.js",
-    "analyze-bundle": "node scripts/analyze-bundle.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

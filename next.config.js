@@ -3,39 +3,9 @@ const createNextIntlPlugin = require('next-intl/plugin');
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 const nextConfig = {
-  // Performance optimizations
-  swcMinify: true,
   experimental: {
     serverComponentsExternalPackages: ['prisma'],
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
-
-  // Image optimization
-  images: {
-    formats: ['image/webp', 'image/avif'],
-  },
-
-  // Bundle optimization
-  webpack: (config, { dev }) => {
-    if (!dev) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              priority: 10,
-            },
-          },
-        },
-      };
-    }
-    return config;
-  },
-
   // Only expose client-safe environment variables
   env: {
     // Remove server-only secrets from client bundle

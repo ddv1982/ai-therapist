@@ -9,7 +9,7 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 // Removed CBTFormValidationError import - validation errors not displayed
 import {useTranslations} from 'next-intl';
 
-import type { SchemaMode, SchemaModesData, SchemaModeData } from '@/types/therapy';
+import type { SchemaMode, SchemaModesData } from '@/types/therapy';
 
 interface SchemaModesProps {
   onComplete: (data: SchemaModesData) => void;
@@ -96,8 +96,8 @@ export function SchemaModes({
     if (schemaModesData.length > 0) {
       const selectedModes = DEFAULT_SCHEMA_MODES.map(mode => ({
         ...mode,
-        selected: schemaModesData.some((reduxMode: SchemaModeData) => reduxMode.mode === mode.name && reduxMode.isActive),
-        intensity: schemaModesData.find((reduxMode: SchemaModeData) => reduxMode.mode === mode.name)?.intensity || 5
+        selected: schemaModesData.some(reduxMode => reduxMode.mode === mode.name && reduxMode.isActive),
+        intensity: schemaModesData.find(reduxMode => reduxMode.mode === mode.name)?.intensity || 5
       }));
       return { selectedModes };
     }

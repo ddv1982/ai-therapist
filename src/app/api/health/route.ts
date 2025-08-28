@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { checkDatabaseHealth } from '@/lib/database/db';
-
+import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 interface HealthCheckResponse {
@@ -21,7 +21,8 @@ interface HealthCheckResponse {
   uptime: number;
 }
 
-export const GET = async (_request: NextRequest) => {
+export const GET = withApiMiddleware(async (_request, context) => {
+  
   try {
     // Check database health
     const dbStart = Date.now();
@@ -51,7 +52,7 @@ export const GET = async (_request: NextRequest) => {
 
     // Return appropriate status code based on health
     if (overallStatus === 'healthy') {
-      return createSuccessResponse(healthResponse, { requestId: 'health-check' });
+      return createSuccessResponse(healthResponse, { requestId: context.requestId });
     } else {
       return createErrorResponse(
         'System health check failed',
@@ -59,7 +60,7 @@ export const GET = async (_request: NextRequest) => {
         {
           code: 'HEALTH_CHECK_FAILED',
           details: 'Some system components are not healthy',
-          requestId: 'health-check',
+          requestId: context.requestId,
         }
       );
     }
@@ -72,11 +73,11 @@ export const GET = async (_request: NextRequest) => {
       {
         code: 'HEALTH_CHECK_ERROR',
         details: errorMessage,
-        requestId: 'health-check',
+        requestId: context.requestId,
       }
     );
   }
-};
+});
 
 /**
  * Liveness probe - simple endpoint to check if the API is responsive
