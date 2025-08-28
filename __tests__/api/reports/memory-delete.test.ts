@@ -7,7 +7,7 @@
 import { prisma } from '@/lib/database/db';
 // Unused imports for potential future use:
 // import { DELETE } from '@/app/api/reports/memory/route';
-// import { GET as GET_MANAGE } from '@/app/api/reports/memory/manage/route';
+// import { GET as GET_MANAGE } from '@/app/api/reports/memory/route';
 
 // Mock the dependencies
 jest.mock('@/lib/database/db', () => ({
@@ -323,7 +323,7 @@ describe('Memory Deletion API', () => {
   });
 });
 
-describe('/api/reports/memory/manage Database Operations', () => {
+describe('/api/reports/memory Database Operations', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });

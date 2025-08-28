@@ -23,6 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test` - Run unit tests with Jest
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:coverage` - Generate test coverage report
+- `jest path/to/test.test.ts` - Run single test file
 - `npm run test:e2e` - Run Playwright end-to-end tests
 - `npm run test:e2e:ui` - Run E2E tests with Playwright UI
 - `npm run test:e2e:debug` - Debug E2E tests
@@ -31,6 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run encryption:generate` - Generate new encryption keys
 - `npm run encryption:setup` - Setup encryption configuration
 - `npm run encryption:validate` - Validate encryption setup
+- `npm run env:init` - Bootstrap .env.local file with default variables
 
 ## Architecture Overview
 
@@ -167,6 +169,14 @@ RATE_LIMIT_DISABLED="true"                 # Disable rate limiting
 - **Testing**: Jest for unit tests, Playwright for E2E, React Testing Library for components
 - **Streaming**: Server-sent events for real-time AI responses
 
+### Code Style Guidelines (from .cursor/rules)
+- **Function signatures**: Prefer explicit function signatures for exported APIs
+- **Type safety**: Avoid unsafe casts or `any` - use precise types
+- **Naming**: Use meaningful, descriptive names (avoid 1-2 character identifiers)
+- **Error handling**: Use guard clauses and handle errors early - don't catch without meaningful handling
+- **Code clarity**: Prefer multi-line over overly clever one-liners and deep nesting
+- **Formatting**: Match existing formatting and avoid unrelated reformatting
+
 ### Therapeutic AI Integration
 - **System prompts**: Comprehensive therapeutic prompts in `src/lib/therapy/therapy-prompts.ts`
 - **Memory-enhanced prompting**: Previous session context integration
@@ -182,7 +192,7 @@ RATE_LIMIT_DISABLED="true"                 # Disable rate limiting
 ## Testing Strategy
 
 ### Comprehensive Test Coverage
-- **945+ tests** across unit, integration, and E2E suites
+- **46 test files** across unit, integration, and E2E suites
 - **Security testing**: Authentication, encryption, and data protection
 - **API testing**: Complete endpoint validation with error scenarios
 - **Component testing**: React components with user interaction testing

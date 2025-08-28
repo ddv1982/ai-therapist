@@ -90,14 +90,198 @@ type MemoryData = {
   stats: MemoryStats;
 };
 
-export const GET = withApiMiddleware<MemoryData>(async (request: NextRequest, context: RequestContext) => {
+// Management view types (consolidated from memory/manage)
+type MemoryReportDetail = {
+  id: string;
+  sessionId: string;
+  sessionTitle: string;
+  sessionDate: string;
+  reportDate: string;
+  contentPreview: string;
+  keyInsights: string[];
+  hasEncryptedContent: boolean;
+  reportSize: number;
+  fullContent?: string;
+  structuredCBTData?: unknown;
+};
+
+type MemoryManageData = {
+  memoryDetails: MemoryReportDetail[];
+  reportCount: number;
+  stats: {
+    totalReportsFound: number;
+    successfullyProcessed: number;
+    failedDecryptions: number;
+    hasMemory: boolean;
+  };
+};
+
+/**
+ * Handle memory management mode - consolidated from /memory/manage
+ */
+async function handleMemoryManagement(
+  context: RequestContext, 
+  requestContext: Record<string, unknown>,
+  limit: number,
+  excludeSessionId: string | null,
+  includeFullContent: boolean
+) {
+  logger.info('Memory management request received', requestContext);
+  
+  // Get detailed session reports for management
+  const reports = await prisma.sessionReport.findMany({
+    where: excludeSessionId ? {
+      sessionId: {
+        not: excludeSessionId
+      }
+    } : undefined,
+    select: {
+      id: true,
+      sessionId: true,
+      reportContent: true,
+      keyPoints: true,
+      therapeuticInsights: true,
+      patternsIdentified: true,
+      createdAt: true,
+      session: {
+        select: {
+          title: true,
+          startedAt: true
+        }
+      }
+    },
+    orderBy: {
+      createdAt: 'desc'
+    },
+    take: Math.min(limit, 20) // Cap at 20 reports for performance
+  });
+  
+  logger.info('Found session reports for memory management', {
+    ...requestContext,
+    reportCount: reports.length
+  });
+  
+  // Process reports with detailed information for management
+  const memoryDetails: MemoryReportDetail[] = [];
+  let successfulReports = 0;
+  let failedDecryptions = 0;
+  
+  for (const report of reports) {
+    try {
+      // Attempt to decrypt content for preview and optionally full content
+      let contentPreview = '';
+      let fullContent: string | undefined = undefined;
+      let hasEncryptedContent = false;
+      
+      try {
+        const decryptedContent = decryptSessionReportContent(report.reportContent);
+        contentPreview = decryptedContent.length > 200 
+          ? decryptedContent.substring(0, 200) + '...'
+          : decryptedContent;
+        
+        // Include full content if requested
+        if (includeFullContent) {
+          fullContent = decryptedContent;
+        }
+        
+        hasEncryptedContent = true;
+        successfulReports++;
+      } catch {
+        // Use structured data as fallback
+        contentPreview = 'Encrypted content (unable to decrypt for preview)';
+        hasEncryptedContent = false;
+        failedDecryptions++;
+      }
+      
+      // Extract key insights from structured data
+      const keyInsights: string[] = [];
+      
+      if (Array.isArray(report.keyPoints)) {
+        keyInsights.push(...report.keyPoints.filter(p => typeof p === 'string').slice(0, 3));
+      }
+      
+      if (report.therapeuticInsights && typeof report.therapeuticInsights === 'object') {
+        const insights = report.therapeuticInsights as Record<string, unknown>;
+        if (Array.isArray(insights.primaryInsights)) {
+          keyInsights.push(...insights.primaryInsights.filter(i => typeof i === 'string').slice(0, 2));
+        }
+      }
+      
+      const reportDetail: MemoryReportDetail = {
+        id: report.id,
+        sessionId: report.sessionId,
+        sessionTitle: report.session.title,
+        sessionDate: report.session.startedAt.toISOString().split('T')[0],
+        reportDate: report.createdAt.toISOString().split('T')[0],
+        contentPreview,
+        keyInsights: keyInsights.slice(0, 5), // Limit to top 5 insights
+        hasEncryptedContent,
+        reportSize: report.reportContent.length
+      };
+      
+      // Include full content and structured data if requested
+      if (includeFullContent) {
+        if (fullContent !== undefined) {
+          reportDetail.fullContent = fullContent;
+        }
+        
+        // Include structured CBT data if available
+        if (report.therapeuticInsights && typeof report.therapeuticInsights === 'object') {
+          const insights = report.therapeuticInsights as Record<string, unknown>;
+          if (insights.structuredAssessment) {
+            reportDetail.structuredCBTData = insights.structuredAssessment;
+          }
+        }
+      }
+      
+      memoryDetails.push(reportDetail);
+      
+    } catch (error) {
+      logger.warn('Failed to process session report for management', {
+        ...requestContext,
+        reportId: report.id.substring(0, 8),
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      continue;
+    }
+  }
+  
+  logger.info('Memory management processing completed', {
+    ...requestContext,
+    totalReports: reports.length,
+    successfulReports,
+    failedDecryptions,
+    memoryDetailsCount: memoryDetails.length
+  });
+  
+  return createSuccessResponse<MemoryManageData>({
+    memoryDetails,
+    reportCount: memoryDetails.length,
+    stats: {
+      totalReportsFound: reports.length,
+      successfullyProcessed: successfulReports,
+      failedDecryptions: failedDecryptions,
+      hasMemory: memoryDetails.length > 0,
+    }
+  }, { requestId: context.requestId });
+}
+
+export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (request: NextRequest, context: RequestContext) => {
   const requestContext = createRequestLogger(request);
   
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '5', 10);
     const excludeSessionId = searchParams.get('excludeSessionId');
+    const manage = searchParams.get('manage') === 'true'; // New parameter for management view
+    const includeFullContent = searchParams.get('includeFullContent') === 'true';
     
+    if (manage) {
+      // Management mode - return detailed report information
+      return await handleMemoryManagement(context, requestContext, limit, excludeSessionId, includeFullContent);
+    }
+
+    // Standard memory context mode
     logger.info('Retrieving session reports for memory context', {
       ...requestContext,
       limit,

@@ -115,10 +115,14 @@ export function formatMemoryInfo(memoryInfo: MemoryContextInfo): string {
  * Get detailed memory information for management
  */
 export async function getMemoryManagementData(sessionId?: string): Promise<MemoryManagementResponse> {
-  const excludeParam = sessionId ? `?excludeSessionId=${sessionId}` : '';
+  const params = new URLSearchParams();
+  params.set('manage', 'true');
+  if (sessionId) {
+    params.set('excludeSessionId', sessionId);
+  }
   
   try {
-    const response = await fetch(`/api/reports/memory/manage${excludeParam}`);
+    const response = await fetch(`/api/reports/memory?${params.toString()}`);
     
     if (response.ok) {
       const raw = await response.json();
@@ -229,16 +233,21 @@ export async function deleteMemory(options: {
  * Get full content for a specific session report
  */
 export async function getSessionReportDetail(reportId: string, sessionId?: string): Promise<SessionReportDetail | null> {
-  const excludeParam = sessionId ? `?excludeSessionId=${sessionId}&includeFullContent=true` : '?includeFullContent=true';
+  const params = new URLSearchParams();
+  params.set('manage', 'true');
+  params.set('includeFullContent', 'true');
+  if (sessionId) {
+    params.set('excludeSessionId', sessionId);
+  }
   
   logger.reportOperation('Session report API call initiated', reportId, {
     sessionId: '[FILTERED_SESSION_ID]',
     hasReportId: !!reportId ? 'true' : 'false',
-    hasExcludeParam: !!excludeParam ? 'true' : 'false'
+    hasParams: 'true'
   });
   
   try {
-    const response = await fetch(`/api/reports/memory/manage${excludeParam}`);
+    const response = await fetch(`/api/reports/memory?${params.toString()}`);
     
     logger.reportOperation('Session report API response received', reportId, { status: response.status });
     

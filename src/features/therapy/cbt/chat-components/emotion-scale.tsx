@@ -44,8 +44,8 @@ export function EmotionScale({
   
   // Get current emotion data from unified state (sessionData stores current emotions)
   const currentEmotions = useMemo(() => 
-    sessionData.emotions || { fear: 0, anger: 0, sadness: 0, joy: 0, anxiety: 0, shame: 0, guilt: 0 },
-    [sessionData.emotions]
+    sessionData?.emotions || { fear: 0, anger: 0, sadness: 0, joy: 0, anxiety: 0, shame: 0, guilt: 0 },
+    [sessionData?.emotions]
   );
   const [showCustom, setShowCustom] = useState(Boolean(currentEmotions.other));
 

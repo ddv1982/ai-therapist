@@ -102,6 +102,7 @@ export function generateDeviceName(userAgent: string): string {
 
 /**
  * Get or create device information with enhanced fingerprinting
+ * Uses upsert to prevent race conditions during concurrent device creation
  */
 export async function getOrCreateDevice(
   userAgent: string, 
@@ -119,35 +120,24 @@ export async function getOrCreateDevice(
     : generateBasicDeviceFingerprint(userAgent);
     
   const deviceName = generateDeviceName(userAgent);
+  const deviceId = generateSecureRandomString(32);
   
-  // Look for existing device with same fingerprint
-  let device = await prisma.trustedDevice.findFirst({
+  // Use upsert to atomically get or create device, preventing race conditions
+  const device = await prisma.trustedDevice.upsert({
     where: { fingerprint },
+    create: {
+      deviceId,
+      name: deviceName,
+      fingerprint,
+      ipAddress,
+      userAgent,
+      lastSeen: new Date(),
+    },
+    update: {
+      lastSeen: new Date(),
+      ipAddress, // Update IP address as it might change
+    },
   });
-  
-  if (!device) {
-    // Create new device entry
-    const deviceId = generateSecureRandomString(32);
-    device = await prisma.trustedDevice.create({
-      data: {
-        deviceId,
-        name: deviceName,
-        fingerprint,
-        ipAddress,
-        userAgent,
-        lastSeen: new Date(),
-      },
-    });
-  } else {
-    // Update last seen and IP (IP might change)
-    device = await prisma.trustedDevice.update({
-      where: { id: device.id },
-      data: {
-        lastSeen: new Date(),
-        ipAddress,
-      },
-    });
-  }
   
   return {
     deviceId: device.deviceId,
@@ -159,44 +149,46 @@ export async function getOrCreateDevice(
 }
 
 /**
- * Create authentication session for a device
+ * Create authentication session for a device with transaction protection
  */
 export async function createAuthSession(deviceId: string, ipAddress: string): Promise<AuthSessionData> {
   const sessionToken = generateSecureRandomString(64);
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
   
-  // Find the device record
-  const device = await prisma.trustedDevice.findUnique({
-    where: { deviceId },
-  });
-  
-  if (!device) {
-    throw new Error('Device not found');
-  }
-  
-  // Clean up old sessions for this device
-  await prisma.authSession.deleteMany({
-    where: {
-      deviceId: device.id,
-      expiresAt: { lt: new Date() },
-    },
-  });
-  
-  // Create new session
-  await prisma.authSession.create({
-    data: {
+  return await prisma.$transaction(async (tx) => {
+    // Find the device record
+    const device = await tx.trustedDevice.findUnique({
+      where: { deviceId },
+    });
+    
+    if (!device) {
+      throw new Error('Device not found');
+    }
+    
+    // Clean up old sessions for this device and create new session atomically
+    await tx.authSession.deleteMany({
+      where: {
+        deviceId: device.id,
+        expiresAt: { lt: new Date() },
+      },
+    });
+    
+    // Create new session
+    await tx.authSession.create({
+      data: {
+        sessionToken,
+        deviceId: device.id,
+        ipAddress,
+        expiresAt,
+      },
+    });
+    
+    return {
       sessionToken,
-      deviceId: device.id,
-      ipAddress,
       expiresAt,
-    },
+      deviceId,
+    };
   });
-  
-  return {
-    sessionToken,
-    expiresAt,
-    deviceId,
-  };
 }
 
 /**

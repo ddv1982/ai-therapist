@@ -47,16 +47,9 @@ export async function generateTOTPSetup(): Promise<TOTPSetupData> {
 
 /**
  * Save TOTP configuration to database with encryption
+ * Uses transaction to prevent race conditions during concurrent setup attempts
  */
 export async function saveTOTPConfig(secret: string, backupCodes: string[]): Promise<void> {
-  // First check if config already exists and remove it
-  const existingConfig = await prisma.authConfig.findFirst();
-  if (existingConfig) {
-    await prisma.authConfig.delete({
-      where: { id: existingConfig.id }
-    });
-  }
-
   // Create backup codes with metadata
   const backupCodesData: BackupCode[] = backupCodes.map(code => ({
     code,
@@ -67,12 +60,24 @@ export async function saveTOTPConfig(secret: string, backupCodes: string[]): Pro
   const encryptedSecret = encryptSensitiveData(secret);
   const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
 
-  await prisma.authConfig.create({
-    data: {
-      secret: encryptedSecret,
-      backupCodes: encryptedBackupCodes,
-      isSetup: true,
-    },
+  // Use transaction to atomically handle delete+create to prevent race conditions
+  await prisma.$transaction(async (tx) => {
+    // Remove any existing config first
+    const existingConfig = await tx.authConfig.findFirst();
+    if (existingConfig) {
+      await tx.authConfig.delete({
+        where: { id: existingConfig.id }
+      });
+    }
+
+    // Create new config
+    await tx.authConfig.create({
+      data: {
+        secret: encryptedSecret,
+        backupCodes: encryptedBackupCodes,
+        isSetup: true,
+      },
+    });
   });
 }
 
@@ -198,44 +203,46 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
 }
 
 /**
- * Verify backup code
+ * Verify backup code with concurrent access protection
  */
 export async function verifyBackupCode(code: string): Promise<boolean> {
-  const config = await prisma.authConfig.findFirst();
-  if (!config || !config.isSetup) {
-    return false;
-  }
+  return await prisma.$transaction(async (tx) => {
+    const config = await tx.authConfig.findFirst();
+    if (!config || !config.isSetup) {
+      return false;
+    }
 
-  let backupCodes: BackupCode[];
-  try {
-    backupCodes = decryptBackupCodes(config.backupCodes);
-  } catch {
-    return false;
-  }
+    let backupCodes: BackupCode[];
+    try {
+      backupCodes = decryptBackupCodes(config.backupCodes);
+    } catch {
+      return false;
+    }
 
-  // Find and verify the backup code
-  const codeIndex = backupCodes.findIndex(
-    backup => backup.code === code.toUpperCase() && !backup.used
-  );
+    // Find and verify the backup code
+    const codeIndex = backupCodes.findIndex(
+      backup => backup.code === code.toUpperCase() && !backup.used
+    );
 
-  if (codeIndex === -1) {
-    return false;
-  }
+    if (codeIndex === -1) {
+      return false;
+    }
 
-  // Mark the backup code as used
-  backupCodes[codeIndex].used = true;
-  backupCodes[codeIndex].usedAt = new Date();
+    // Mark the backup code as used
+    backupCodes[codeIndex].used = true;
+    backupCodes[codeIndex].usedAt = new Date();
 
-  // Re-encrypt and update the database
-  const encryptedBackupCodes = encryptBackupCodes(backupCodes);
-  await prisma.authConfig.update({
-    where: { id: config.id },
-    data: {
-      backupCodes: encryptedBackupCodes,
-    },
+    // Re-encrypt and update the database within the transaction
+    const encryptedBackupCodes = encryptBackupCodes(backupCodes);
+    await tx.authConfig.update({
+      where: { id: config.id },
+      data: {
+        backupCodes: encryptedBackupCodes,
+      },
+    });
+
+    return true;
   });
-
-  return true;
 }
 
 /**
@@ -266,34 +273,36 @@ export async function getUnusedBackupCodesCount(): Promise<number> {
 }
 
 /**
- * Generate new backup codes (for regeneration)
+ * Generate new backup codes (for regeneration) with transaction protection
  */
 export async function regenerateBackupCodes(): Promise<string[]> {
-  const config = await prisma.authConfig.findFirst();
-  if (!config || !config.isSetup) {
-    throw new Error('TOTP not set up');
-  }
+  return await prisma.$transaction(async (tx) => {
+    const config = await tx.authConfig.findFirst();
+    if (!config || !config.isSetup) {
+      throw new Error('TOTP not set up');
+    }
 
-  const newBackupCodes = Array.from({ length: 10 }, () => 
-    generateSecureRandomString(8).toUpperCase()
-  );
+    const newBackupCodes = Array.from({ length: 10 }, () => 
+      generateSecureRandomString(8).toUpperCase()
+    );
 
-  const backupCodesData: BackupCode[] = newBackupCodes.map(code => ({
-    code,
-    used: false,
-  }));
+    const backupCodesData: BackupCode[] = newBackupCodes.map(code => ({
+      code,
+      used: false,
+    }));
 
-  // Encrypt the backup codes before storage
-  const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
+    // Encrypt the backup codes before storage
+    const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
 
-  await prisma.authConfig.update({
-    where: { id: config.id },
-    data: {
-      backupCodes: encryptedBackupCodes,
-    },
+    await tx.authConfig.update({
+      where: { id: config.id },
+      data: {
+        backupCodes: encryptedBackupCodes,
+      },
+    });
+
+    return newBackupCodes;
   });
-
-  return newBackupCodes;
 }
 
 /**

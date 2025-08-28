@@ -7,6 +7,7 @@ import { reportGenerationSchema, validateRequest } from '@/lib/utils/validation'
 import { encryptSessionReportContent, encryptEnhancedAnalysisData } from '@/lib/chat/message-encryption';
 import { validateTherapeuticContext, calculateContextualConfidence } from '@/lib/therapy/context-validator';
 import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/cbt-data-parser';
+import { deduplicateRequest } from '@/lib/utils/request-deduplication';
 import type { Prisma } from '@prisma/client';
 
 // Note: CognitiveDistortion interface removed - using types from report.ts instead
@@ -342,11 +343,16 @@ export async function POST(request: NextRequest) {
 
     const { sessionId, messages } = validation.data;
 
-    // Check for CBT data in chat messages
-    devLog('Checking messages for CBT content...');
-    let cbtData = null;
-    let cbtSummary = '';
-    let dataSource = 'none';
+    // Deduplicate report generation to prevent multiple concurrent generations for same session
+    return await deduplicateRequest(
+      sessionId, // Use sessionId as userId since this endpoint doesn't have auth
+      'generate_report',
+      async () => {
+        // Check for CBT data in chat messages
+        devLog('Checking messages for CBT content...');
+        let cbtData = null;
+        let cbtSummary = '';
+        let dataSource = 'none';
     
     const hasCBTContent = hasCBTData(messages);
     
@@ -662,15 +668,19 @@ ${languageDirective}`;
       cbtDataSource: dataSource
     });
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Report generated successfully',
-      reportContent: completion,
-      modelUsed: reportModel, // Include model info in response
-      modelDisplayName: 'GPT OSS 120B (Deep Analysis)',
-      cbtDataSource: dataSource, // Indicate data source for debugging
-      cbtDataAvailable: dataSource !== 'none'
-    });
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Report generated successfully',
+          reportContent: completion,
+          modelUsed: reportModel, // Include model info in response
+          modelDisplayName: 'GPT OSS 120B (Deep Analysis)',
+          cbtDataSource: dataSource, // Indicate data source for debugging
+          cbtDataAvailable: dataSource !== 'none'
+        });
+      },
+      undefined, // No additional resource identifier needed
+      30000 // 30 second TTL for report generation deduplication
+    );
 
   } catch (error) {
     logger.apiError('/api/reports/generate', error as Error, createRequestLogger(request));

@@ -34,7 +34,7 @@ jest.mock('@/lib/utils/logger', () => ({
     requestId: 'test-request-id',
     timestamp: new Date().toISOString(),
     method: 'GET',
-    url: '/api/reports/memory/manage',
+    url: '/api/reports/memory',
   })),
 }));
 
@@ -43,7 +43,7 @@ jest.mock('@/lib/chat/message-encryption', () => ({
 }));
 
 // Import the route handler after mocks are set up
-const { GET } = require('@/app/api/reports/memory/manage/route');
+const { GET } = require('@/app/api/reports/memory/route');
 
 // Access mocked modules
 const { prisma } = require('@/lib/database/db');
@@ -54,7 +54,7 @@ const mockDecrypt = decryptSessionReportContent;
 
 // Helper to create mock NextRequest
 const createMockRequest = (searchParams: Record<string, string> = {}): NextRequest => {
-  const url = new URL('http://localhost:3000/api/reports/memory/manage');
+  const url = new URL('http://localhost:3000/api/reports/memory');
   Object.entries(searchParams).forEach(([key, value]) => {
     url.searchParams.set(key, value);
   });
@@ -95,7 +95,7 @@ describe('Memory Management API - Full Content Support', () => {
 
   describe('Basic functionality tests', () => {
     it('should return successful response with memory details', async () => {
-      const request = createMockRequest({ includeFullContent: 'true' });
+      const request = createMockRequest({ manage: 'true', includeFullContent: 'true' });
       
       try {
         const response = await GET(request);
@@ -114,7 +114,7 @@ describe('Memory Management API - Full Content Support', () => {
     });
 
     it('should validate authentication (returns 200 when auth passes)', async () => {
-      const request = createMockRequest({ includeFullContent: 'true' });
+      const request = createMockRequest({ manage: 'true', includeFullContent: 'true' });
       try {
         const response = await GET(request);
         expect(response).toBeDefined();
@@ -128,6 +128,7 @@ describe('Memory Management API - Full Content Support', () => {
 
     it('should handle request parameters', async () => {
       const request = createMockRequest({ 
+        manage: 'true',
         excludeSessionId: 'current-session',
         includeFullContent: 'true' 
       });

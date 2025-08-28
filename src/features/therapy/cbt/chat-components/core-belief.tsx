@@ -38,7 +38,7 @@ export function CoreBelief({
   const { sessionData, beliefActions } = useCBTDataManager();
   
   // Get core beliefs data from unified CBT hook
-  const coreBelifsData = sessionData.coreBeliefs;
+  const coreBelifsData = sessionData?.coreBeliefs;
   
   // Default core belief data
   const defaultBeliefData: CoreBeliefData = {
@@ -53,7 +53,7 @@ export function CoreBelief({
     }
     
     // Return first Redux core belief if it exists, otherwise default
-    return coreBelifsData.length > 0 ? coreBelifsData[0] : defaultBeliefData;
+    return coreBelifsData && coreBelifsData.length > 0 ? coreBelifsData[0] : defaultBeliefData;
   });
 
   // Auto-save to unified CBT state when belief data changes

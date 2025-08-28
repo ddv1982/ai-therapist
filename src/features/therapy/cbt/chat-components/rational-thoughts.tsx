@@ -36,7 +36,7 @@ export function RationalThoughts({
   const { sessionData, rationalActions } = useCBTDataManager();
   
   // Get rational thoughts data from unified CBT hook
-  const rationalThoughtsData = sessionData.rationalThoughts;
+  const rationalThoughtsData = sessionData?.rationalThoughts;
   
   // Default rational thoughts data
   const defaultThoughtsData: RationalThoughtsData = {
@@ -52,7 +52,7 @@ export function RationalThoughts({
     }
     
     // Return Redux data if it has content, otherwise default  
-    return rationalThoughtsData.length > 0 ? { rationalThoughts: rationalThoughtsData } : defaultThoughtsData;
+    return rationalThoughtsData && rationalThoughtsData.length > 0 ? { rationalThoughts: rationalThoughtsData } : defaultThoughtsData;
   });
 
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>(() =>

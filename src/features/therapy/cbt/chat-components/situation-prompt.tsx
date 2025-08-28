@@ -27,8 +27,8 @@ export function SituationPrompt({
   const [selectedPrompt, setSelectedPrompt] = useState<string>('');
   
   // Get current situation data
-  const currentSituation = sessionData.situation?.situation || '';
-  const currentDate = sessionData.situation?.date || new Date().toISOString().split('T')[0];
+  const currentSituation = sessionData?.situation?.situation || '';
+  const currentDate = sessionData?.situation?.date || new Date().toISOString().split('T')[0];
   
   // Convert string date to Date object for DatePicker
   const selectedDate = React.useMemo(() => {

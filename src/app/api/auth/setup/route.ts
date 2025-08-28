@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
-import { generateTOTPSetup, saveTOTPConfig, isTOTPSetup } from '@/lib/auth/totp-service';
+import { generateTOTPSetup, saveTOTPConfig, isTOTPSetup, resetTOTPConfig } from '@/lib/auth/totp-service';
 import { getOrCreateDevice, createAuthSession } from '@/lib/auth/device-fingerprint';
 import { getClientIP } from '@/lib/auth/auth-middleware';
 import { handleApiError } from '@/lib/utils/error-utils';
-import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
-import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
+import { withRateLimitUnauthenticated, withApiMiddleware } from '@/lib/api/api-middleware';
+import { createSuccessResponse, createErrorResponse, createForbiddenErrorResponse } from '@/lib/api/api-response';
 
 // GET /api/auth/setup - Get setup data (QR code, backup codes)
 // Note: This endpoint must be accessible before authentication during initial setup
@@ -91,6 +91,39 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
       category: 'authentication',
       severity: 'high',
       userMessage: 'Failed to complete authentication setup. Please try again.'
+    });
+  }
+});
+
+// DELETE /api/auth/setup - Reset TOTP setup (development only)
+// Consolidates the reset functionality from /auth/setup/reset
+export const DELETE = withApiMiddleware(async (request: NextRequest, context) => {
+  try {
+    // Only allow in development
+    if (process.env.NODE_ENV !== 'development') {
+      return createForbiddenErrorResponse('Reset allowed only in development environment', context.requestId);
+    }
+
+    // Restrict to localhost access for security
+    const headerHost = request.headers.get('host') || '';
+    const forwardedHost = request.headers.get('x-forwarded-host') || '';
+    const host = headerHost.split(':')[0];
+    const fwd = forwardedHost.split(':')[0];
+    const isLocal = (h: string) => h === 'localhost' || h === '127.0.0.1' || h === '';
+
+    if (!isLocal(host) || (forwardedHost && !isLocal(fwd))) {
+      return createForbiddenErrorResponse('Reset endpoint is restricted to localhost access', context.requestId);
+    }
+
+    await resetTOTPConfig();
+
+    return createSuccessResponse({ reset: true }, { requestId: context.requestId });
+  } catch (error) {
+    return handleApiError(error, {
+      operation: 'totp_setup_reset',
+      category: 'authentication',
+      severity: 'medium',
+      userMessage: 'Failed to reset authentication setup. Please try again.'
     });
   }
 });

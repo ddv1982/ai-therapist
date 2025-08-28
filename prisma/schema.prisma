@@ -99,7 +99,7 @@ model TrustedDevice {
   id          String   @id @default(uuid())
   deviceId    String   @unique @map("device_id") // Cryptographically secure device identifier
   name        String // User-friendly device name
-  fingerprint String // SHA-256 device fingerprint hash (64 hex chars)
+  fingerprint String   @unique // SHA-256 device fingerprint hash (64 hex chars) - should be unique per device
   ipAddress   String   @map("ip_address") // IPv6 max length
   userAgent   String   @map("user_agent") // User agent can be long
   lastSeen    DateTime @map("last_seen")

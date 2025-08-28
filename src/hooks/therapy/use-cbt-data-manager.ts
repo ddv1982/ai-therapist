@@ -79,14 +79,14 @@ import { useCBTChatBridge } from '@/lib/therapy/use-cbt-chat-bridge';
 import { generateUUID } from '@/lib/utils/utils';
 
 // Selectors: avoid identity result functions to prevent memoization warnings
-const selectCBTCurrentDraft = (state: RootState) => state.cbt.currentDraft;
-const selectCBTSessionData = (state: RootState) => state.cbt.sessionData;
+const selectCBTCurrentDraft = (state: RootState) => state.cbt?.currentDraft;
+const selectCBTSessionData = (state: RootState) => state.cbt?.sessionData;
 
 const selectCBTValidationState = createSelector(
   [
-    (state: RootState) => state.cbt.validationErrors,
-    (state: RootState) => state.cbt.isSubmitting,
-    (state: RootState) => state.cbt.currentStep,
+    (state: RootState) => state.cbt?.validationErrors,
+    (state: RootState) => state.cbt?.isSubmitting,
+    (state: RootState) => state.cbt?.currentStep,
   ],
   (validationErrors, isSubmitting, currentStep) => ({
     validationErrors,
@@ -95,7 +95,7 @@ const selectCBTValidationState = createSelector(
   })
 );
 
-const selectCBTSavedDrafts = (state: RootState) => state.cbt.savedDrafts;
+const selectCBTSavedDrafts = (state: RootState) => state.cbt?.savedDrafts;
 
 interface UseCBTDataManagerOptions {
   sessionId?: string;
@@ -228,7 +228,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   const sessionData = useSelector(selectCBTSessionData);
   const validationState = useSelector(selectCBTValidationState);
   const savedDrafts = useSelector(selectCBTSavedDrafts);
-  const lastAutoSave = useSelector((state: RootState) => state.cbt.lastAutoSave);
+  const lastAutoSave = useSelector((state: RootState) => state.cbt?.lastAutoSave);
   
   // Auto-save management
   const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -266,10 +266,10 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   
   // Initialize session if sessionId provided
   useEffect(() => {
-    if (sessionId && sessionId !== sessionData.sessionId) {
+    if (sessionId && sessionId !== sessionData?.sessionId) {
       dispatch(startCBTSession({ sessionId }));
     }
-  }, [sessionId, sessionData.sessionId, dispatch]);
+  }, [sessionId, sessionData?.sessionId, dispatch]);
 
   // One-time migration from localStorage to Redux (if needed)
   useEffect(() => {
@@ -288,7 +288,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       const draft = JSON.parse(rawDraft) as CBTFormInput;
 
       // Only migrate if there's no existing Redux state
-      const isEmpty = !sessionData.situation && !sessionData.emotions && sessionData.thoughts.length === 0;
+      const isEmpty = !sessionData?.situation && !sessionData?.emotions && sessionData?.thoughts.length === 0;
       if (!isEmpty) {
         localStorage.setItem(migrationKey, 'true');
         return;
@@ -510,7 +510,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   
   // Navigation Logic
   const navigation = useMemo(() => {
-    const currentStep = validationState.currentStep;
+    const currentStep = validationState?.currentStep || 1;
     const maxSteps = 8; // Total CBT steps
     
     return {
@@ -535,7 +535,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         return false;
       },
     };
-  }, [validationState.currentStep, dispatch]);
+  }, [validationState?.currentStep, dispatch]);
   
   // Validation Logic
   const validation = useMemo(() => {
@@ -555,38 +555,38 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     
     return {
       validateForm,
-      isFormValid: Object.keys(validationState.validationErrors).length === 0,
-      errors: validationState.validationErrors,
+      isFormValid: Object.keys(validationState?.validationErrors || {}).length === 0,
+      errors: validationState?.validationErrors || {},
       clearErrors: () => dispatch(clearValidationErrors()),
     };
-  }, [currentDraft, validationState.validationErrors, enableValidation, dispatch]);
+  }, [currentDraft, validationState?.validationErrors, enableValidation, dispatch]);
   
   // Status & Progress
   const status = useMemo(() => {
     const completedSteps = sessionData ? [
-      sessionData.situation,
-      sessionData.emotions, 
-      sessionData.thoughts.length > 0,
-      sessionData.coreBeliefs.length > 0,
-      sessionData.challengeQuestions.length > 0,
-      sessionData.rationalThoughts.length > 0,
-      sessionData.schemaModes.length > 0,
-      sessionData.actionPlan,
+      sessionData?.situation,
+      sessionData?.emotions, 
+      sessionData?.thoughts.length > 0,
+      sessionData?.coreBeliefs.length > 0,
+      sessionData?.challengeQuestions.length > 0,
+      sessionData?.rationalThoughts.length > 0,
+      sessionData?.schemaModes.length > 0,
+      sessionData?.actionPlan,
     ].filter(Boolean).length : 0;
     
     const totalSteps = 8;
     
     return {
-      isSubmitting: validationState.isSubmitting,
+      isSubmitting: validationState?.isSubmitting || false,
       isDraftSaved: !!lastAutoSave && (new Date().getTime() - new Date(lastAutoSave).getTime()) < 5000,
-      lastAutoSave,
+      lastAutoSave: lastAutoSave || null,
       progress: {
         completedSteps,
         totalSteps,
         percentage: Math.round((completedSteps / totalSteps) * 100),
       },
     };
-  }, [validationState.isSubmitting, lastAutoSave, sessionData]);
+  }, [validationState?.isSubmitting, lastAutoSave, sessionData]);
   
   // Chat Integration
   const chatIntegration = useMemo(() => ({
@@ -620,12 +620,12 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       
       const sections = [];
       
-      if (sessionData.situation) {
-        sections.push(`**Situation:** ${sessionData.situation.situation}`);
+      if (sessionData?.situation) {
+        sections.push(`**Situation:** ${sessionData?.situation.situation}`);
       }
       
-      if (sessionData.emotions) {
-        const emotions = Object.entries(sessionData.emotions)
+      if (sessionData?.emotions) {
+        const emotions = Object.entries(sessionData?.emotions)
           .filter(([key, value]) => key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0)
           .map(([emotion, intensity]) => `${emotion}: ${intensity}/10`);
         if (emotions.length > 0) {
@@ -633,8 +633,8 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         }
       }
       
-      if (sessionData.thoughts.length > 0) {
-        sections.push(`**Thoughts:** ${sessionData.thoughts.map(t => t.thought).join('; ')}`);
+      if (sessionData?.thoughts.length > 0) {
+        sections.push(`**Thoughts:** ${sessionData?.thoughts.map(t => t.thought).join('; ')}`);
       }
       
       return sections.join('\n\n');
@@ -651,10 +651,10 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   
   return {
     // Current State
-    currentDraft,
+    currentDraft: currentDraft || null,
     sessionData,
     validationState,
-    savedDrafts,
+    savedDrafts: savedDrafts || [],
     
     // Actions
     draftActions,

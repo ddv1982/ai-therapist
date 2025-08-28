@@ -43,7 +43,7 @@ export function ThoughtRecord({
   const { sessionData, thoughtActions } = useCBTDataManager();
   
   // Get thoughts data from unified CBT hook
-  const thoughtsData = sessionData.thoughts;
+  const thoughtsData = sessionData?.thoughts;
   
   // Default thought data
   const defaultThoughts: ThoughtData[] = [{ thought: '', credibility: 5 }];
@@ -56,7 +56,7 @@ export function ThoughtRecord({
     }
     
     // Return Redux data if it has content, otherwise default
-    return thoughtsData.length > 0 ? thoughtsData : defaultThoughts;
+    return thoughtsData && thoughtsData.length > 0 ? thoughtsData : defaultThoughts;
   });
 
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>(() => 

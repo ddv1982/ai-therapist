@@ -38,8 +38,8 @@ export function CommandPalette({
   const router = useRouter();
   const dispatch = useAppDispatch();
   
-  const sessions = useAppSelector(state => state.sessions.sessions);
-  const currentSessionId = useAppSelector(state => state.sessions.currentSessionId);
+  const sessions = useAppSelector(state => state.sessions?.sessions || []);
+  const currentSessionId = useAppSelector(state => state.sessions?.currentSessionId);
   
   // Keyboard shortcut to open command palette
   useEffect(() => {

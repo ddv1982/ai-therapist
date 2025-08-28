@@ -20,9 +20,18 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ### 🔒 Enterprise Security
 - **AES-256-GCM Encryption** - All sensitive data encrypted
-- **TOTP Authentication** - Secure two-factor authentication
+- **TOTP Authentication** - Secure two-factor authentication with backup codes
 - **Cross-Device Sessions** - Access sessions on any authenticated device
+- **Database Transactions** - Race condition prevention with ACID compliance
+- **Device Fingerprinting** - Enhanced unique device identification
 - **HIPAA-Compliant Logging** - No sensitive data exposure
+
+### ⚡ Performance & Resilience
+- **Circuit Breaker Pattern** - Automatic failover for external services
+- **Request Deduplication** - Prevents duplicate operations from rapid clicks
+- **Storage Management** - Automatic quota monitoring and cleanup
+- **Enhanced Redux Persist** - Timeout handling and corruption recovery
+- **Health Monitoring** - Comprehensive system health checks
 
 ## 🚀 Quick Start
 
@@ -99,6 +108,11 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - `npm run encryption:generate` - Generate new encryption keys
 - `npm run encryption:setup` - Setup encryption configuration
 - `npm run encryption:validate` - Validate encryption setup
+- `npm run env:init` - Bootstrap .env.local file with default variables
+
+### Health & Monitoring
+- `curl http://localhost:4000/api/health` - Get comprehensive system health status
+- Monitor circuit breaker status, storage usage, and database performance
 
 ## 🧠 AI Model System
 
@@ -208,19 +222,35 @@ This creates `.env.local` with common variables so you can paste your keys.
 - Safe areas applied via `env(safe-area-inset-*)` in `globals.css`.
 - Messages list sets `scroll-padding-bottom` based on the input/footer height (ResizeObserver) so `scrollIntoView` keeps the input visible above the keyboard.
 
-## 🛡️ Security Features
+## 🛡️ Security & Resilience Features
 
 ### Authentication
 - **QR Code Setup** - Easy authenticator app configuration
-- **Device Trust** - 30-day authenticated sessions
-- **Enhanced Fingerprinting** - Multiple entropy sources
-- **Backup Codes** - Encrypted recovery options
+- **Device Trust** - 30-day authenticated sessions with unique fingerprinting
+- **Enhanced Fingerprinting** - Multiple entropy sources with database constraints
+- **Backup Codes** - Encrypted recovery options with usage tracking
+- **Transaction Protection** - ACID compliance prevents race conditions in auth flows
 
 ### Data Protection
 - **Field-level Encryption** - Database encryption for sensitive data
 - **CSRF Protection** - Signed tokens prevent attacks
 - **Content Security Policy** - XSS attack prevention
 - **No External Sharing** - Data only sent to Groq API
+- **Database Constraints** - Unique indexes prevent duplicate device registrations
+
+### Resilience & Performance
+- **Circuit Breaker** - Automatic failover when external services fail
+  - Configurable failure threshold (default: 3 failures)
+  - Automatic reset after timeout (default: 60 seconds)
+  - Graceful fallback responses
+- **Request Deduplication** - Prevents duplicate operations
+  - 5-second TTL for rapid-fire requests
+  - Key-based deduplication by user and operation
+  - Automatic cleanup of expired entries
+- **Storage Management** - Intelligent localStorage monitoring
+  - Quota usage tracking and warnings
+  - Automatic cleanup of old/large items
+  - Corruption detection and repair
 
 ### Rate Limiting
 - **Defaults (per IP)**
@@ -258,6 +288,7 @@ __tests__/
 - Check time sync for TOTP
 - Clear cookies to reset device trust
 - Verify `ENCRYPTION_KEY` is set
+- Database constraint errors: Remove `prisma/dev.db` and run `npm run db:setup`
 
 ### Reset authentication (development)
 
@@ -279,6 +310,16 @@ Then open `http://localhost:4000/auth/setup` to scan a new QR and complete verif
 - Run `npm run db:generate && npm run db:push`
 - Database auto-created at `prisma/dev.db`
 
+**Storage Issues**
+- High localStorage usage: Check browser DevTools > Application > Storage
+- Redux persist hangs: Clear browser storage or check console for errors
+- Storage quota exceeded: App will automatically cleanup old data
+
+**Performance Issues**
+- Circuit breaker activated: Check `/api/health` endpoint for service status
+- Duplicate requests: Request deduplication will prevent within 5-second window
+- Slow responses: Monitor health endpoint for degraded services
+
 **Build Issues**
 - Clear `.next` folder: `rm -rf .next`
 - Reinstall: `rm -rf node_modules && npm install`
@@ -298,10 +339,25 @@ Then open `http://localhost:4000/auth/setup` to scan a new QR and complete verif
 src/
 ├── app/             # Next.js App Router
 ├── components/      # React components by domain
-├── lib/            # Utilities by domain
-├── types/          # TypeScript definitions
-└── hooks/          # Custom React hooks
+├── lib/             # Utilities by domain
+│   ├── auth/        # Authentication & device management
+│   ├── api/         # API clients and middleware
+│   ├── utils/       # Core utilities
+│   │   ├── graceful-degradation.ts    # Circuit breaker pattern
+│   │   ├── request-deduplication.ts   # Duplicate request prevention
+│   │   └── storage-management.ts      # localStorage monitoring
+│   ├── chat/        # Chat functionality
+│   └── therapy/     # Therapeutic frameworks
+├── types/           # TypeScript definitions
+└── hooks/           # Custom React hooks
 ```
+
+### Key Architectural Improvements
+- **Database Transactions** - All auth operations use ACID transactions
+- **Circuit Breaker Pattern** - External service failure handling
+- **Request Deduplication** - Prevents race conditions from rapid user actions
+- **Storage Monitoring** - Proactive localStorage management
+- **Enhanced Error Handling** - Graceful degradation throughout the stack
 
 ## 📄 License
 

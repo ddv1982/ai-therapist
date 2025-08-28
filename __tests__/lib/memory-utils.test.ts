@@ -218,7 +218,7 @@ describe('Memory Utils', () => {
       const result = await getSessionReportDetail('report-1', 'current-session');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/reports/memory/manage?excludeSessionId=current-session&includeFullContent=true'
+        '/api/reports/memory?manage=true&includeFullContent=true&excludeSessionId=current-session'
       );
 
       expect(result).toEqual({
@@ -259,7 +259,7 @@ describe('Memory Utils', () => {
       const result = await getSessionReportDetail('report-1');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/reports/memory/manage?includeFullContent=true'
+        '/api/reports/memory?manage=true&includeFullContent=true'
       );
 
       expect(result).toBeDefined();

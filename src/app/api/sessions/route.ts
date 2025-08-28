@@ -2,8 +2,9 @@ import { prisma } from '@/lib/database/db';
 import { createSessionSchema } from '@/lib/utils/validation';
 import { logger } from '@/lib/utils/logger';
 import { withValidation, withAuth, errorHandlers } from '@/lib/api/api-middleware';
-import { ensureUserExists, getUserSessions } from '@/lib/database/queries';
+import { getUserSessions } from '@/lib/database/queries';
 import { createSuccessResponse } from '@/lib/api/api-response';
+import { deduplicateRequest } from '@/lib/utils/request-deduplication';
 
 export const POST = withValidation(
   createSessionSchema,
@@ -11,19 +12,37 @@ export const POST = withValidation(
     try {
       const { title } = validatedData;
 
-      // Ensure user exists in database
-      const userExists = await ensureUserExists(context.userInfo);
-      if (!userExists) {
-        throw new Error('Failed to ensure user exists');
-      }
+      // Deduplicate session creation to prevent double-clicks creating multiple sessions
+      const session = await deduplicateRequest(
+        context.userInfo.userId,
+        'create_session',
+        async () => {
+          // Use transaction to ensure user creation + session creation are atomic
+          return await prisma.$transaction(async (tx) => {
+            // Ensure user exists in database within transaction
+            await tx.user.upsert({
+              where: { id: context.userInfo.userId },
+              update: {},
+              create: {
+                id: context.userInfo.userId,
+                email: context.userInfo.email,
+                name: context.userInfo.name,
+              },
+            });
 
-      const session = await prisma.session.create({
-        data: {
-          userId: context.userInfo.userId,
-          title,
-          status: 'active',
+            // Create session within the same transaction
+            return await tx.session.create({
+              data: {
+                userId: context.userInfo.userId,
+                title,
+                status: 'active',
+              },
+            });
+          });
         },
-      });
+        title, // Use title as additional resource identifier
+        10000 // 10 second TTL for session creation
+      );
 
       logger.info('Session created successfully', {
         requestId: context.requestId,

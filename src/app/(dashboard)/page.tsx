@@ -62,7 +62,7 @@ function ChatPageContent() {
   const router = useRouter();
   const { showToast } = useToast();
   const dispatch = useAppDispatch();
-  const settings = useAppSelector(state => state.chat.settings);
+  const settings = useAppSelector(state => state.chat?.settings || { webSearchEnabled: false, model: 'openai/gpt-oss-20b' });
   const t = useTranslations('chat');
   
   // Use the new chat messages hook

@@ -78,8 +78,8 @@ export function SchemaModes({
   const t = useTranslations('cbt');
   
   // Get schema modes data from unified CBT hook
-  const schemaModesData = sessionData.schemaModes;
-  const lastModified = sessionData.lastModified;
+  const schemaModesData = sessionData?.schemaModes;
+  const lastModified = sessionData?.lastModified;
   
   // Default schema modes data
   const defaultModesData: SchemaModesData = {
@@ -93,7 +93,7 @@ export function SchemaModes({
     }
     
     // Convert Redux schema modes to component format
-    if (schemaModesData.length > 0) {
+    if (schemaModesData && schemaModesData.length > 0) {
       const selectedModes = DEFAULT_SCHEMA_MODES.map(mode => ({
         ...mode,
         selected: schemaModesData.some(reduxMode => reduxMode.mode === mode.name && reduxMode.isActive),

@@ -8,14 +8,14 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
 // Convenience selectors
 export const selectCurrentSession = (state: RootState) => 
-  state.sessions.sessions.find(s => s.id === state.sessions.currentSessionId);
+  state.sessions?.sessions?.find(s => s.id === state.sessions?.currentSessionId);
 
-export const selectChatMessages = (state: RootState) => state.chat.messages;
+export const selectChatMessages = (state: RootState) => state.chat?.messages || [];
 
-export const selectCurrentCBTDraft = (state: RootState) => state.cbt.currentDraft;
+export const selectCurrentCBTDraft = (state: RootState) => state.cbt?.currentDraft;
 
-export const selectCBTValidationErrors = (state: RootState) => state.cbt.validationErrors;
+export const selectCBTValidationErrors = (state: RootState) => state.cbt?.validationErrors || {};
 
-export const selectIsStreaming = (state: RootState) => state.chat.isStreaming;
+export const selectIsStreaming = (state: RootState) => state.chat?.isStreaming || false;
 
-export const selectChatSettings = (state: RootState) => state.chat.settings;
+export const selectChatSettings = (state: RootState) => state.chat?.settings || { webSearchEnabled: false, model: 'openai/gpt-oss-20b' };

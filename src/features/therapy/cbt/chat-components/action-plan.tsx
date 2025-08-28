@@ -60,8 +60,8 @@ export function ActionPlan({
   const { sessionData, actionActions } = useCBTDataManager();
   
   // Get action plan data from unified CBT hook
-  const actionPlanData = sessionData.actionPlan;
-  const lastModified = sessionData.lastModified;
+  const actionPlanData = sessionData?.actionPlan;
+  const lastModified = sessionData?.lastModified;
   
   const defaultEmotions: EmotionData = {
     fear: 0,

@@ -27,6 +27,7 @@ jest.mock('@/lib/database/db', () => ({
       update: jest.fn(),
       delete: jest.fn(),
     },
+    $transaction: jest.fn(),
   },
 }));
 
@@ -62,6 +63,11 @@ describe('TOTP Service Comprehensive Tests', () => {
     // Default mocks
     mockEncryptSensitiveData.mockReturnValue('encrypted-secret');
     mockEncryptBackupCodes.mockReturnValue('encrypted-backup-codes');
+    
+    // Mock $transaction to execute the callback with the same prisma mock object
+    mockPrisma.$transaction.mockImplementation(async (callback) => {
+      return await callback(mockPrisma);
+    });
   });
 
   describe('generateTOTPSetup', () => {

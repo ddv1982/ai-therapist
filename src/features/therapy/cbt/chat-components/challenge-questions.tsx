@@ -46,7 +46,7 @@ export function ChallengeQuestions({
   const { sessionData, challengeActions } = useCBTDataManager();
   
   // Get challenge questions data from unified CBT hook
-  const challengeQuestionsData = sessionData.challengeQuestions;
+  const challengeQuestionsData = sessionData?.challengeQuestions;
   
   // Default questions data
   const defaultQuestionsData: ChallengeQuestionsData = {
@@ -63,7 +63,7 @@ export function ChallengeQuestions({
     }
     
     // Return Redux data if it has content, otherwise default
-    return challengeQuestionsData.length > 0 ? { challengeQuestions: challengeQuestionsData } : defaultQuestionsData;
+    return (challengeQuestionsData && challengeQuestionsData.length > 0) ? { challengeQuestions: challengeQuestionsData } : defaultQuestionsData;
   });
 
   // Auto-save to unified CBT state when questions change

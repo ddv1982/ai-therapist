@@ -36,8 +36,9 @@ function detectCBTSessionReport(content: string): boolean {
 
 export function MessageContent({ content, role, messageId, className }: MessageContentProps) {
   // Get streaming state from Redux
-  const { isStreaming, streamingMessageId } = useSelector((state: RootState) => state.chat);
-  const { currentSessionId } = useSelector((state: RootState) => state.sessions);
+  const isStreaming = useSelector((state: RootState) => state.chat?.isStreaming || false);
+  const streamingMessageId = useSelector((state: RootState) => state.chat?.streamingMessageId);
+  const currentSessionId = useSelector((state: RootState) => state.sessions?.currentSessionId);
   
   // State for CBT diagnostic data
   const [cbtReportData, setCbtReportData] = useState<Record<string, unknown> | undefined>(undefined);
@@ -59,7 +60,7 @@ export function MessageContent({ content, role, messageId, className }: MessageC
       // Load CBT data silently
       
       // Try to fetch session report data (don't require Redux session ID)
-      fetch('/api/reports/memory/manage?includeFullContent=true')
+      fetch('/api/reports/memory?manage=true&includeFullContent=true')
         .then(response => response.json())
         .then(data => {
           if (data.success && data.memoryDetails && data.memoryDetails.length > 0) {

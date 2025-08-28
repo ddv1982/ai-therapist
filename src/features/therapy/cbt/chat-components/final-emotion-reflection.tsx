@@ -24,7 +24,7 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
 
   // Pull final emotions from action plan if present, else start from zeros
   const currentFinalEmotions = useMemo<EmotionData>(() => (
-    sessionData.actionPlan?.finalEmotions || {
+    sessionData?.actionPlan?.finalEmotions || {
       fear: 0,
       anger: 0,
       sadness: 0,
@@ -32,10 +32,10 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
       anxiety: 0,
       shame: 0,
       guilt: 0,
-      other: sessionData.emotions?.other || '',
+      other: sessionData?.emotions?.other || '',
       otherIntensity: 0
     }
-  ), [sessionData.actionPlan?.finalEmotions, sessionData.emotions?.other]);
+  ), [sessionData?.actionPlan?.finalEmotions, sessionData?.emotions?.other]);
 
   const [localFinal, setLocalFinal] = useState<EmotionData>(currentFinalEmotions);
   const [showCustom, setShowCustom] = useState(Boolean(localFinal.other));
@@ -79,7 +79,7 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
 
     // Persist into action plan
     const nextActionPlan: ActionPlanData = {
-      ...(sessionData.actionPlan || { originalThoughtCredibility: 5, newBehaviors: '' }),
+      ...(sessionData?.actionPlan || { originalThoughtCredibility: 5, newBehaviors: '' }),
       finalEmotions: localFinal,
     } as ActionPlanData;
     actionActions.updateActionPlan(nextActionPlan);
@@ -90,7 +90,7 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
     if (onSendToChat) {
       onSendToChat();
     }
-  }, [hasSelectedEmotions, localFinal, sessionData.actionPlan, actionActions, onComplete, onSendToChat]);
+  }, [hasSelectedEmotions, localFinal, sessionData?.actionPlan, actionActions, onComplete, onSendToChat]);
 
   return (
     <CBTStepWrapper
