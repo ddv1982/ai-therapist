@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -11,6 +11,7 @@ import {
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { setCurrentStep, updateDraft, completeCBTEntry } from '@/store/slices/cbtSlice';
 import { SituationPrompt, EmotionScale, ThoughtRecord, FinalEmotionReflection, ActionPlan } from '@/features/therapy/cbt/chat-components';
+import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import { Progress } from "@/components/ui/progress";
 import { Brain } from 'lucide-react';
 import { logger } from '@/lib/utils/logger';
@@ -30,12 +31,24 @@ const CBT_STEPS = [
 
 export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
   const dispatch = useAppDispatch();
-  const currentDraft = useAppSelector(state => state.cbt.currentDraft);
-  const currentStep = useAppSelector(state => state.cbt.currentStep);
+  const currentDraft = useAppSelector(state => state.cbtDrafts.currentDraft);
+  const currentStep = useAppSelector(state => state.cbtForm.currentStep);
+
+  // Initialize CBT data manager for session management
+  const { sessionActions } = useCBTDataManager();
   // const isSubmitting = useAppSelector(state => state.cbt.isSubmitting);
 
   const progressPercentage = (currentStep / CBT_STEPS.length) * 100;
   const currentStepData = CBT_STEPS.find(step => step.id === currentStep);
+
+  // Initialize CBT session when sheet opens
+  useEffect(() => {
+    if (isOpen) {
+      // Generate a unique session ID for this CBT session
+      const sessionId = `cbt-mobile-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      sessionActions.start(sessionId);
+    }
+  }, [isOpen, sessionActions]);
 
   const handleSituationComplete = (data: import('@/store/slices/cbtSlice').SituationData) => {
     dispatch(updateDraft({ situation: data.situation }));

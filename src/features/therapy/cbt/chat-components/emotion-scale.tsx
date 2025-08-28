@@ -12,55 +12,48 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { EmotionData } from '@/types/therapy';
 import {useTranslations} from 'next-intl';
 
-// Remove local interface - use the one from cbtSlice
-// export interface EmotionData {
-//   fear: number;
-//   anger: number;
-//   sadness: number;
-//   joy: number;
-//   anxiety: number;
-//   shame: number;
-//   guilt: number;
-//   other?: string;
-//   otherIntensity?: number;
-// }
-
 interface EmotionScaleProps {
   onComplete?: (data: EmotionData) => void;
   type?: 'initial' | 'final';
   className?: string;
 }
 
-export function EmotionScale({ 
+export function EmotionScale({
   onComplete,
   type = 'initial',
-  className 
+  className
 }: EmotionScaleProps) {
-  const { 
+  const {
     sessionData,
-    sessionActions 
+    sessionActions
   } = useCBTDataManager();
   const t = useTranslations('cbt');
-  
+
   // Get current emotion data from unified state (sessionData stores current emotions)
-  const currentEmotions = useMemo(() => 
+  const currentEmotions = useMemo(() =>
     sessionData.emotions || { fear: 0, anger: 0, sadness: 0, joy: 0, anxiety: 0, shame: 0, guilt: 0 },
     [sessionData.emotions]
   );
+
+  // Initialize emotions if they don't exist
+  React.useEffect(() => {
+    if (!sessionData.emotions) {
+      const defaultEmotions = { fear: 0, anger: 0, sadness: 0, joy: 0, anxiety: 0, shame: 0, guilt: 0 };
+      sessionActions.updateEmotions(defaultEmotions);
+    }
+  }, [sessionData.emotions, sessionActions]);
   const [showCustom, setShowCustom] = useState(Boolean(currentEmotions.other));
 
   // Core emotions with visual styling using fitting colors
   const coreEmotions = [
-    { key: 'fear', label: 'Fear', emoji: '😨', color: 'bg-slate-600' },
-    { key: 'anger', label: 'Anger', emoji: '😠', color: 'bg-red-600' },
-    { key: 'sadness', label: 'Sadness', emoji: '😢', color: 'bg-blue-600' },
-    { key: 'joy', label: 'Joy', emoji: '😊', color: 'bg-yellow-500' },
-    { key: 'anxiety', label: 'Anxiety', emoji: '😰', color: 'bg-orange-500' },
-    { key: 'shame', label: 'Shame', emoji: '😳', color: 'bg-pink-600' },
-    { key: 'guilt', label: 'Guilt', emoji: '😔', color: 'bg-indigo-600' }
+    { key: 'fear' as keyof EmotionData, label: 'Fear', emoji: '😨', color: 'bg-slate-600' },
+    { key: 'anger' as keyof EmotionData, label: 'Anger', emoji: '😠', color: 'bg-red-600' },
+    { key: 'sadness' as keyof EmotionData, label: 'Sadness', emoji: '😢', color: 'bg-blue-600' },
+    { key: 'joy' as keyof EmotionData, label: 'Joy', emoji: '😊', color: 'bg-yellow-500' },
+    { key: 'anxiety' as keyof EmotionData, label: 'Anxiety', emoji: '😰', color: 'bg-orange-500' },
+    { key: 'shame' as keyof EmotionData, label: 'Shame', emoji: '😳', color: 'bg-pink-600' },
+    { key: 'guilt' as keyof EmotionData, label: 'Guilt', emoji: '😔', color: 'bg-indigo-600' }
   ];
-
-  // Validation logic - keeps form functional without showing error messages
 
   const handleEmotionChange = useCallback((key: keyof EmotionData, value: number) => {
     const updatedEmotions = { ...currentEmotions, [key]: value };
@@ -83,7 +76,7 @@ export function EmotionScale({
     if (hasSelectedEmotions) {
       // Ensure emotions are saved to session
       sessionActions.updateEmotions(currentEmotions);
-      
+
       // Call parent completion handler if provided
       if (onComplete) {
         onComplete(currentEmotions);
@@ -106,32 +99,32 @@ export function EmotionScale({
       isValid={hasSelectedEmotions}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      nextButtonText={`${t('emotions.next')}${selectedCount > 0 ? ` (${selectedCount} ${t('finalEmotions.emotions')})` : ''}`}
-      helpText={t('emotions.help')}
+      nextButtonText={`Continue to Thoughts${selectedCount > 0 ? ` (${selectedCount} emotions)` : ''}`}
+      helpText="Click on emotions to select them, then adjust the intensity using the sliders (1-10 scale)."
       hideProgressBar={true} // Parent page shows progress
       className={className}
     >
       <div className="space-y-6">
         {hasSelectedEmotions && (
           <div className="text-center">
-            <p className="text-sm text-primary font-medium">{selectedCount} {t('finalEmotions.selected')}</p>
+            <p className="text-sm text-primary font-medium">{selectedCount} emotions selected</p>
           </div>
         )}
-        
+
         <div className="space-y-4">
           {/* Emotion Cards Grid - 2 per row for compact layout */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {coreEmotions.map((emotion) => {
             const value = currentEmotions[emotion.key as keyof EmotionData] as number;
             const isSelected = value > 0;
-            
+
             return (
-              <Card 
-                key={emotion.key} 
+              <Card
+                key={emotion.key}
                 className={cn(
                   "p-3 cursor-pointer transition-colors duration-200",
-                  isSelected 
-                    ? "ring-2 ring-primary bg-primary/5 border-primary/30" 
+                  isSelected
+                    ? "ring-2 ring-primary bg-primary/5 border-primary/30"
                     : "hover:border-primary/20 bg-muted/30"
                 )}
                 onClick={() => {
@@ -156,7 +149,7 @@ export function EmotionScale({
                           <p className="text-xs text-muted-foreground">
                             {value === 0 && "Not present"}
                             {value > 0 && value <= 2 && "Mild"}
-                            {value > 2 && value <= 5 && "Moderate"} 
+                            {value > 2 && value <= 5 && "Moderate"}
                             {value > 5 && value <= 7 && "Strong"}
                             {value > 7 && value <= 9 && "Very strong"}
                             {value === 10 && "Overwhelming"}
@@ -185,7 +178,7 @@ export function EmotionScale({
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Slider (only shown when selected) */}
                   {isSelected && (
                     <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
@@ -252,7 +245,7 @@ export function EmotionScale({
                             <p className="text-xs text-muted-foreground">
                               {(currentEmotions.otherIntensity || 0) === 0 && "Not present"}
                               {(currentEmotions.otherIntensity || 0) > 0 && (currentEmotions.otherIntensity || 0) <= 2 && "Mild"}
-                              {(currentEmotions.otherIntensity || 0) > 2 && (currentEmotions.otherIntensity || 0) <= 5 && "Moderate"} 
+                              {(currentEmotions.otherIntensity || 0) > 2 && (currentEmotions.otherIntensity || 0) <= 5 && "Moderate"}
                               {(currentEmotions.otherIntensity || 0) > 5 && (currentEmotions.otherIntensity || 0) <= 7 && "Strong"}
                               {(currentEmotions.otherIntensity || 0) > 7 && (currentEmotions.otherIntensity || 0) <= 9 && "Very strong"}
                               {(currentEmotions.otherIntensity || 0) === 10 && "Overwhelming"}
@@ -283,3 +276,4 @@ export function EmotionScale({
     </CBTStepWrapper>
   );
 }
+

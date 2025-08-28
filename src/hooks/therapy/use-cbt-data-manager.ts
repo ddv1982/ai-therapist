@@ -23,8 +23,8 @@ import {
   createSelector
 } from '@reduxjs/toolkit';
 import { type RootState } from '@/store';
-import { 
-  // CBT Redux Actions
+import {
+  // Draft/Form actions (legacy slice still manages drafts and form state)
   createDraft,
   updateDraft,
   setCurrentStep,
@@ -35,8 +35,14 @@ import {
   setSubmitting,
   clearValidationErrors,
   resetCurrentDraft,
-  // Session-scoped actions
-  startCBTSession,
+  // Types
+  type CBTFormData,
+  type CBTDraft,
+  cbtFormSchema,
+} from '@/store/slices/cbtSlice';
+// Session-scoped actions (single source of truth for in-session CBT data)
+import {
+  startSession,
   updateSituation,
   updateEmotions,
   clearEmotions,
@@ -55,12 +61,8 @@ import {
   updateSchemaModes,
   toggleSchemaMode,
   updateActionPlan,
-  clearCBTSession,
-  // Types
-  type CBTFormData,
-  type CBTDraft,
-  cbtFormSchema,
-} from '@/store/slices/cbtSlice';
+  clearSession,
+} from '@/store/slices/cbt-session.slice';
 import { loadCBTDraft } from '@/features/therapy/cbt/hooks/use-cbt-draft-persistence';
 import type { CBTFormInput } from '@/features/therapy/cbt/cbt-form-schema';
 import type {
@@ -79,14 +81,14 @@ import { useCBTChatBridge } from '@/lib/therapy/use-cbt-chat-bridge';
 import { generateUUID } from '@/lib/utils/utils';
 
 // Selectors: avoid identity result functions to prevent memoization warnings
-const selectCBTCurrentDraft = (state: RootState) => state.cbt.currentDraft;
-const selectCBTSessionData = (state: RootState) => state.cbt.sessionData;
+const selectCBTCurrentDraft = (state: RootState) => state.cbtDrafts.currentDraft;
+const selectCBTSessionData = (state: RootState) => state.cbtSession;
 
 const selectCBTValidationState = createSelector(
   [
-    (state: RootState) => state.cbt.validationErrors,
-    (state: RootState) => state.cbt.isSubmitting,
-    (state: RootState) => state.cbt.currentStep,
+    (state: RootState) => state.cbtForm.validationErrors,
+    (state: RootState) => state.cbtForm.isSubmitting,
+    (state: RootState) => state.cbtForm.currentStep,
   ],
   (validationErrors, isSubmitting, currentStep) => ({
     validationErrors,
@@ -95,7 +97,7 @@ const selectCBTValidationState = createSelector(
   })
 );
 
-const selectCBTSavedDrafts = (state: RootState) => state.cbt.savedDrafts;
+const selectCBTSavedDrafts = (state: RootState) => state.cbtDrafts.savedDrafts;
 
 interface UseCBTDataManagerOptions {
   sessionId?: string;
@@ -228,7 +230,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   const sessionData = useSelector(selectCBTSessionData);
   const validationState = useSelector(selectCBTValidationState);
   const savedDrafts = useSelector(selectCBTSavedDrafts);
-  const lastAutoSave = useSelector((state: RootState) => state.cbt.lastAutoSave);
+  const lastAutoSave = useSelector((state: RootState) => state.cbtDrafts.lastAutoSave);
   const hasHydratedFromRHF = useRef<boolean>(false);
   
   // Auto-save management
@@ -268,7 +270,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   // Initialize session if sessionId provided
   useEffect(() => {
     if (sessionId && sessionId !== sessionData.sessionId) {
-      dispatch(startCBTSession({ sessionId }));
+      dispatch(startSession({ sessionId }));
     }
   }, [sessionId, sessionData.sessionId, dispatch]);
 
@@ -375,11 +377,11 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   const sessionActions = useMemo(() => ({
     start: (sessionId?: string) => {
       const id = sessionId || currentSessionId || `session-${generateUUID()}`;
-      dispatch(startCBTSession({ sessionId: id }));
+      dispatch(startSession({ sessionId: id }));
     },
     
     clear: () => {
-      dispatch(clearCBTSession());
+      dispatch(clearSession());
     },
     
     updateSituation: (data: SituationData) => {
@@ -672,8 +674,8 @@ export function useUnifiedCBTActions() {
     deleteDraft: (id: string) => dispatch(deleteDraft(id)),
     
     // Session actions
-    startSession: (sessionId: string) => dispatch(startCBTSession({ sessionId })),
-    clearSession: () => dispatch(clearCBTSession()),
+    startSession: (sessionId: string) => dispatch(startSession({ sessionId })),
+    clearSession: () => dispatch(clearSession()),
     
     // Content actions
     updateSituation: (data: SituationData) => dispatch(updateSituation(data)),

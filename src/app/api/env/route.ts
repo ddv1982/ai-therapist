@@ -1,4 +1,4 @@
-import { withApiMiddleware } from '@/lib/api/api-middleware';
+import { NextRequest } from 'next/server';
 import { createSuccessResponse } from '@/lib/api/api-response';
 
 /**
@@ -11,14 +11,14 @@ interface EnvironmentResponse {
 
 /**
  * GET /api/env - Returns environment configuration
- * 
+ *
  * @returns {EnvironmentResponse} Environment configuration details
  */
-export const GET = withApiMiddleware(async (_request, context) => {
+export const GET = async (_request: NextRequest) => {
   const response: EnvironmentResponse = {
     hasGroqApiKey: !!process.env.GROQ_API_KEY,
     environment: process.env.NODE_ENV || 'development'
   };
 
-  return createSuccessResponse(response, { requestId: context.requestId });
-});
+  return createSuccessResponse(response, { requestId: 'env-request' });
+};

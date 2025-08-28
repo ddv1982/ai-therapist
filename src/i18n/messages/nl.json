@@ -167,6 +167,9 @@
   "cbt.thoughts.entryLabel": "Automatische gedachte",
   "cbt.thoughts.placeholder": "Wat kwam er meteen in je op? Wat zei ik tegen mezelf?",
   "cbt.thoughts.credibility": "In hoeverre geloof je deze gedachte? (Geloofwaardigheid)",
+  "cbt.thoughts.credibilityLabel": "Geloofwaardigheid",
+  "cbt.thoughts.scaleLeft": "Niet geloofwaardig",
+  "cbt.thoughts.scaleRight": "Volledig geloofwaardig",
   "cbt.thoughts.prompts": [
     "Ik ben niet goed genoeg",
     "Er gaat iets ergs gebeuren",

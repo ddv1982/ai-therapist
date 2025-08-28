@@ -12,9 +12,9 @@ export const selectCurrentSession = (state: RootState) =>
 
 export const selectChatMessages = (state: RootState) => state.chat.messages;
 
-export const selectCurrentCBTDraft = (state: RootState) => state.cbt.currentDraft;
+export const selectCurrentCBTDraft = (state: RootState) => state.cbtDrafts.currentDraft;
 
-export const selectCBTValidationErrors = (state: RootState) => state.cbt.validationErrors;
+export const selectCBTValidationErrors = (state: RootState) => state.cbtForm.validationErrors;
 
 export const selectIsStreaming = (state: RootState) => state.chat.isStreaming;
 

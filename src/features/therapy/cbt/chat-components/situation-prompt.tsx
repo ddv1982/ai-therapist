@@ -16,20 +16,30 @@ interface SituationPromptProps {
   className?: string;
 }
 
-export function SituationPrompt({ 
+export function SituationPrompt({
   onComplete,
-  className 
+  className
 }: SituationPromptProps) {
   const t = useTranslations('cbt');
   const { sessionData, sessionActions } = useCBTDataManager();
-  
+
   // Local state for UI interaction
   const [selectedPrompt, setSelectedPrompt] = useState<string>('');
-  
-  // Get current situation data
-  const currentSituation = sessionData.situation?.situation || '';
-  const currentDate = sessionData.situation?.date || new Date().toISOString().split('T')[0];
-  
+
+  // Get current situation data from Redux
+  const reduxSituation = sessionData.situation?.situation || '';
+  const reduxDate = sessionData.situation?.date || new Date().toISOString().split('T')[0];
+
+  // Local state for form inputs
+  const [currentSituation, setCurrentSituation] = useState<string>(reduxSituation);
+  const [currentDate, setCurrentDate] = useState<string>(reduxDate);
+
+  // Sync local state with Redux when Redux data changes
+  React.useEffect(() => {
+    setCurrentSituation(reduxSituation);
+    setCurrentDate(reduxDate);
+  }, [reduxSituation, reduxDate]);
+
   // Convert string date to Date object for DatePicker
   const selectedDate = React.useMemo(() => {
     if (!currentDate) return undefined;
@@ -40,7 +50,7 @@ export function SituationPrompt({
     const day = parseInt(parts[2], 10);
     return new Date(year, month, day);
   }, [currentDate]);
-  
+
   // Common situation prompts for quick selection
   const situationPrompts = t.raw('situation.prompts') as string[];
 
@@ -48,15 +58,19 @@ export function SituationPrompt({
   const isValid = currentSituation.trim().length >= 5;
 
   const handlePromptSelect = useCallback((prompt: string) => {
+    setCurrentSituation(prompt);
+    setSelectedPrompt(prompt);
+    // Update Redux state
     const situationData = { situation: prompt, date: currentDate };
     sessionActions.updateSituation(situationData);
-    setSelectedPrompt(prompt);
   }, [sessionActions, currentDate]);
 
   const handleDescriptionChange = useCallback((value: string) => {
+    setCurrentSituation(value);
+    setSelectedPrompt(''); // Clear selection when manually typing
+    // Update Redux state
     const situationData = { situation: value, date: currentDate };
     sessionActions.updateSituation(situationData);
-    setSelectedPrompt(''); // Clear selection when manually typing
   }, [sessionActions, currentDate]);
 
   const handleDateChange = useCallback((date: Date | undefined) => {
@@ -65,6 +79,8 @@ export function SituationPrompt({
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
+      setCurrentDate(dateString);
+      // Update Redux state
       const situationData = { situation: currentSituation, date: dateString };
       sessionActions.updateSituation(situationData);
     }
@@ -76,16 +92,14 @@ export function SituationPrompt({
         situation: currentSituation.trim(),
         date: currentDate
       };
-      
-      // Complete this step
-      sessionActions.updateSituation(situationData);
-      
+
+      // Complete this step - Redux state is already updated
       // Call parent completion handler if provided
       if (onComplete) {
         onComplete(situationData);
       }
     }
-  }, [isValid, currentSituation, currentDate, sessionActions, onComplete]);
+  }, [isValid, currentSituation, currentDate, onComplete]);
 
   const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && e.ctrlKey) {
@@ -134,7 +148,7 @@ export function SituationPrompt({
           <p className="text-sm font-medium text-foreground">{t('situation.quick')}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {situationPrompts.slice(0, 4).map((prompt, index) => {
-              const isSelected = selectedPrompt === prompt;
+              const isSelected = selectedPrompt === prompt || currentSituation === prompt;
               return (
                 <Button
                   key={index}
@@ -143,8 +157,8 @@ export function SituationPrompt({
                   onClick={() => handlePromptSelect(prompt)}
                   className={cn(
                     "text-xs h-8 px-3 text-left justify-start",
-                    isSelected 
-                      ? "bg-primary text-primary-foreground" 
+                    isSelected
+                      ? "bg-primary text-primary-foreground"
                       : "border-dashed hover:bg-accent hover:text-accent-foreground"
                   )}
                 >

@@ -49,7 +49,7 @@ function CBTDiaryPageContent() {
   const t = useTranslations('cbt');
   
   // Get session ID from Redux
-  const reduxSessionId = useAppSelector(state => state.cbt.sessionData.sessionId);
+  const reduxSessionId = useAppSelector(state => state.cbtSession.sessionId);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
