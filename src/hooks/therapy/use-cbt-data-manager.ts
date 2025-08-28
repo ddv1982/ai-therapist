@@ -35,9 +35,6 @@ import {
   setSubmitting,
   clearValidationErrors,
   resetCurrentDraft,
-  // New completion tracking actions
-  markAsCompleted,
-  resetCompletionStatus,
   // Types
   type CBTFormData,
   type CBTDraft,
@@ -125,8 +122,6 @@ interface UseCBTDataManagerReturn {
     delete: (id: string) => void;
     reset: () => void;
     complete: (data: CBTFormData) => void;
-    markAsCompleted: (sessionId: string) => void;
-    resetCompletionStatus: () => void;
   };
   
   // Session Management
@@ -198,9 +193,6 @@ interface UseCBTDataManagerReturn {
   status: {
     isSubmitting: boolean;
     isDraftSaved: boolean;
-    isCompleted: boolean;
-    completionTimestamp: string | null;
-    completedSessionId: string | null;
     lastAutoSave: string | null;
     progress: {
       completedSteps: number;
@@ -239,9 +231,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   const validationState = useSelector(selectCBTValidationState);
   const savedDrafts = useSelector(selectCBTSavedDrafts);
   const lastAutoSave = useSelector((state: RootState) => state.cbtDrafts.lastAutoSave);
-  const isCompleted = useSelector((state: RootState) => state.cbtDrafts.isCompleted);
-  const completionTimestamp = useSelector((state: RootState) => state.cbtDrafts.completionTimestamp);
-  const completedSessionId = useSelector((state: RootState) => state.cbtDrafts.completedSessionId);
   const hasHydratedFromRHF = useRef<boolean>(false);
   
   // Auto-save management
@@ -381,14 +370,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     
     complete: (data: CBTFormData) => {
       dispatch(completeCBTEntry(data));
-    },
-
-    markAsCompleted: (sessionId: string) => {
-      dispatch(markAsCompleted({ sessionId }));
-    },
-
-    resetCompletionStatus: () => {
-      dispatch(resetCompletionStatus());
     },
   }), [dispatch]);
   
@@ -565,9 +546,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     return {
       isSubmitting: validationState.isSubmitting,
       isDraftSaved: !!lastAutoSave && (new Date().getTime() - new Date(lastAutoSave).getTime()) < 5000,
-      isCompleted,
-      completionTimestamp,
-      completedSessionId,
       lastAutoSave,
       progress: {
         completedSteps,
@@ -575,7 +553,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         percentage: Math.round((completedSteps / totalSteps) * 100),
       },
     };
-  }, [validationState.isSubmitting, lastAutoSave, sessionData, isCompleted, completionTimestamp, completedSessionId]);
+  }, [validationState.isSubmitting, lastAutoSave, sessionData]);
   
   // Chat Integration
   const chatIntegration = useMemo(() => ({
