@@ -710,20 +710,8 @@ export default function CBTDiaryPage() {
         setCurrentSession(sessionId);
         return sessionId;
       }
-
-      // If no current session, create a new one for CBT diary
-      const title = 'CBT Session - ' + new Date().toLocaleDateString();
-      const createResp = await apiClient.createSession({ title });
-      if (createResp && createResp.success && createResp.data) {
-        const newSession = createResp.data as components['schemas']['Session'];
-        const sessionId = newSession.id;
-        setCurrentSession(sessionId);
-        
-        // Set as current session
-        await apiClient.setCurrentSession(sessionId);
-        
-        return sessionId;
-      }
+      // Do NOT create a session preemptively. Only create on explicit send.
+      return null;
     } catch (error) {
       logger.error('Failed to ensure session for CBT diary', {
         component: 'CBTDiaryPage',
