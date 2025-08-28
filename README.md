@@ -332,6 +332,17 @@ npm run totp reset     # Reset TOTP (server-side only, removes all config)
 npm run totp test      # Test TOTP functionality with diagnostics
 ```
 
+#### Stable QR Code During Setup
+- The setup QR code is now stable across refreshes on the setup page, avoiding token mismatches.
+- Server caches setup data for 5 minutes and reuses it during initial setup.
+- Client also holds setup data in sessionStorage (5 minutes) to avoid unintentional regeneration on refresh.
+- Cache is automatically cleared when setup completes or when you run `npm run totp reset`.
+
+If you still get mismatches:
+- Ensure your device time is set to automatic and is in sync.
+- Avoid opening the setup page in multiple tabs while scanning.
+- Use the manual entry key if QR scanning is delayed.
+
 #### What the system provides:
 - ✅ **Comprehensive Health Monitoring** - Database, encryption, time sync, and configuration checks
 - 🔄 **Secure Server-Side Operations** - No external API access to sensitive operations
