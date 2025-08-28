@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
-import { HelpCircle, Plus } from 'lucide-react';
+import { HelpCircle, Plus, Minus } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { ChallengeQuestionsData } from '@/types/therapy';
 // Removed CBTFormValidationError import - validation errors not displayed
@@ -100,7 +100,14 @@ export function ChallengeQuestions({
     }
   }, [questionsData.challengeQuestions]);
 
-
+  const removeQuestion = useCallback((index: number) => {
+    if (questionsData.challengeQuestions.length > 1) {
+      setQuestionsData(prev => ({
+        ...prev,
+        challengeQuestions: prev.challengeQuestions.filter((_, i) => i !== index)
+      }));
+    }
+  }, [questionsData.challengeQuestions.length]);
 
   const handleSubmit = useCallback(() => {
     const validQuestions = questionsData.challengeQuestions.filter(q => q.answer.trim());
@@ -140,9 +147,21 @@ export function ChallengeQuestions({
             {questionsData.challengeQuestions.map((questionData, index) => (
               <Card key={index} className="p-4 bg-muted/30 border border-border/30">
                 <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-foreground">
-                    {questionData.question}
-                  </h4>
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="text-sm font-medium text-foreground flex-1">
+                      {questionData.question}
+                    </h4>
+                    {questionsData.challengeQuestions.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeQuestion(index)}
+                        className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
                   
                   <Textarea
                     placeholder={t('challenge.placeholder')}

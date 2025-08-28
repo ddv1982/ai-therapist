@@ -118,19 +118,21 @@ export function ThoughtRecord({
         <div className="flex justify-center items-center pt-4 gap-4">
           <button
             onClick={handleAddThought}
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-md text-xs h-6 w-6 p-0 hover:bg-primary/10 hover:text-primary flex-shrink-0"
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             aria-label="Add another thought"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-4 h-4" />
+            Add Thought
           </button>
 
           {thoughts.length > 1 && (
             <button
               onClick={() => handleRemoveThought(thoughts.length - 1)}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 rounded-md text-xs h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive flex-shrink-0"
+              className="flex items-center gap-2 px-3 py-2 text-sm bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 transition-colors"
               aria-label="Remove last thought"
             >
-              <Minus className="w-3 h-3" />
+              <Minus className="w-4 h-4" />
+              Remove
             </button>
           )}
         </div>
