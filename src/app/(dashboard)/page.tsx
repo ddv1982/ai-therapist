@@ -451,7 +451,7 @@ function ChatPageContent() {
     try {
       // Update the backend to mark this as the current session
       await apiClient.setCurrentSession(sessionId);
-
+      
       setCurrentSession(sessionId);
       localStorage.setItem('currentSessionId', sessionId);
       await loadMessagesWithMemory(sessionId);
@@ -467,65 +467,6 @@ function ChatPageContent() {
       await loadMessagesWithMemory(sessionId);
     }
   }, [loadMessagesWithMemory]);
-
-  // Handle CBT session creation refresh
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const cbtSessionCreated = urlParams.get('cbt-session-created');
-    const shouldRefreshSessions = urlParams.get('refresh-sessions');
-
-    if (cbtSessionCreated && shouldRefreshSessions) {
-      logger.info('CBT session created, refreshing sessions list', {
-        component: 'ChatPage',
-        operation: 'cbt-session-refresh',
-        sessionId: cbtSessionCreated
-      });
-
-      // Refresh sessions to ensure the new CBT session appears in sidebar
-      loadSessions();
-
-      // Verify the CBT session exists and set it as current if needed
-      const verifyAndSetSession = async () => {
-        try {
-          const sessionResp = await apiClient.getSessionById(cbtSessionCreated);
-          if (sessionResp && sessionResp.success && sessionResp.data) {
-            logger.info('CBT session verified, setting as current', {
-              component: 'ChatPage',
-              operation: 'cbt-session-refresh',
-              sessionId: cbtSessionCreated
-            });
-
-            // Only set as current if we don't have one already
-            if (!currentSession) {
-              await setCurrentSessionAndSync(cbtSessionCreated);
-            }
-          } else {
-            logger.warn('CBT session not found or inaccessible', {
-              component: 'ChatPage',
-              operation: 'cbt-session-refresh',
-              sessionId: cbtSessionCreated,
-              response: sessionResp
-            });
-          }
-        } catch (error) {
-          logger.error('Failed to verify CBT session', {
-            component: 'ChatPage',
-            operation: 'cbt-session-refresh',
-            sessionId: cbtSessionCreated,
-            error: error instanceof Error ? error.message : String(error)
-          });
-        }
-      };
-
-      verifyAndSetSession();
-
-      // Clean up URL parameters
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.delete('cbt-session-created');
-      newUrl.searchParams.delete('refresh-sessions');
-      window.history.replaceState({}, '', newUrl.toString());
-    }
-  }, [loadSessions, setCurrentSessionAndSync, currentSession]);
 
   const startNewSession = () => {
     // Just clear current session and messages - don't create DB session yet
