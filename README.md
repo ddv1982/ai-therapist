@@ -36,7 +36,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 24+
 - SQLite (included)
 
 ### Installation
