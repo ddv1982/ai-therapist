@@ -53,3 +53,4 @@ src/app/test-*/
 # E2E test artifacts
 /test-results/
 /playwright-report/
+new-auth-qr.png

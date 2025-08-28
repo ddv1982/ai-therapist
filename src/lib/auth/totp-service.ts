@@ -306,6 +306,45 @@ export async function regenerateBackupCodes(): Promise<string[]> {
 }
 
 /**
+ * Regenerate TOTP secret while keeping the auth configuration active
+ * This is useful for when users lose access to their authenticator device
+ */
+export async function regenerateTOTPSecret(): Promise<TOTPSetupData> {
+  return await prisma.$transaction(async (tx) => {
+    const config = await tx.authConfig.findFirst();
+    if (!config || !config.isSetup) {
+      throw new Error('TOTP not configured. Use generateTOTPSetup() for initial setup.');
+    }
+
+    // Generate new TOTP setup data
+    const setupData = await generateTOTPSetup();
+
+    // Encrypt the new secret and backup codes
+    const encryptedSecret = encryptSensitiveData(setupData.secret);
+    const backupCodesData: BackupCode[] = setupData.backupCodes.map(code => ({
+      code,
+      used: false,
+    }));
+    const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
+
+    // Update the existing config with new secret and backup codes
+    await tx.authConfig.update({
+      where: { id: config.id },
+      data: {
+        secret: encryptedSecret,
+        backupCodes: encryptedBackupCodes,
+      },
+    });
+
+    // Clear all trusted devices and sessions since the secret changed
+    await tx.authSession.deleteMany({});
+    await tx.trustedDevice.deleteMany({});
+
+    return setupData;
+  });
+}
+
+/**
  * Reset TOTP configuration (for disabling 2FA)
  */
 export async function resetTOTPConfig(): Promise<void> {

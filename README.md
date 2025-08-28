@@ -109,6 +109,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - `npm run encryption:setup` - Setup encryption configuration
 - `npm run encryption:validate` - Validate encryption setup
 - `npm run env:init` - Bootstrap .env.local file with default variables
+- `node scripts/regenerate-auth.js` - Server-side TOTP regeneration (lost authenticator recovery)
 
 ### Health & Monitoring
 - `curl http://localhost:4000/api/health` - Get comprehensive system health status
@@ -290,13 +291,61 @@ __tests__/
 - Verify `ENCRYPTION_KEY` is set
 - Database constraint errors: Remove `prisma/dev.db` and run `npm run db:setup`
 
-### Reset authentication (development)
+### Authentication Recovery
 
-If you lose access to your authenticator or need to re-enroll during development, you can reset TOTP configuration and sessions:
+#### Lost Authenticator Device (Server-side Recovery)
+
+If a user loses access to their authenticator app, you can regenerate new auth codes directly on the server without network exposure:
+
+```bash
+# Run from project root with server filesystem access
+npx tsx scripts/regenerate-auth.js
+```
+
+**What this script does:**
+- ✅ Verifies TOTP is currently configured
+- 🔄 Generates new TOTP secret and QR code  
+- 💾 Updates database with new encrypted credentials
+- 🔑 Provides new manual entry key and backup codes
+- 📱 Optionally saves QR code as PNG file
+- 🧹 Clears all trusted devices and sessions for security
+
+**Usage example:**
+```bash
+🔄 AI Therapist - Regenerate Authentication Setup
+============================================================
+✅ Current TOTP configuration found.
+
+⚠️  WARNING: This will generate a NEW authenticator secret.
+   - Current authenticator app will stop working
+   - All trusted devices will be logged out
+   - New backup codes will be generated
+
+❓ Do you want to continue? (y/n): y
+
+🔄 Generating new authentication setup...
+✅ New authentication setup generated successfully!
+
+🔑 Manual Entry Key: ABCD1234EFGH5678...
+📱 QR Code Data URL: data:image/png;base64,iVBOR...
+💾 New Backup Codes:
+   01. ABCD1234
+   02. EFGH5678
+   ...
+
+❓ Save QR code to file? (y/n): y
+💾 QR code saved to: new-auth-qr.png
+
+🎉 Regeneration complete!
+```
+
+#### Reset authentication (development)
+
+For development environments, you can reset TOTP configuration completely:
 
 ```bash
 # Dev-only: resets TOTP config and clears sessions; accessible only from localhost
-curl -X POST http://localhost:4000/api/auth/setup/reset
+curl -X DELETE http://localhost:4000/api/auth/setup
 ```
 
 Then open `http://localhost:4000/auth/setup` to scan a new QR and complete verification.
