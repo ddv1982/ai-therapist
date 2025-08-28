@@ -133,6 +133,12 @@ The app automatically selects the optimal model based on features:
 - **Privacy Protected** - No personal details reproduced
 - **Growth Focused** - Emphasizes healing and progress
 
+#### Context-Driven Inclusion Policy
+- Reports include sections only when supported by chat or CBT diary context.
+- ERP, Schema Therapy, Cognitive Distortion Analysis, and Framework Recommendations are omitted if irrelevant.
+- When in doubt about relevance, omit rather than include placeholders.
+- Defined in `src/lib/therapy/therapy-prompts.ts` (see “Section Inclusion Policy”).
+
 ## 🔧 Configuration
 
 ### Environment Variables
@@ -162,6 +168,19 @@ RATE_LIMIT_DISABLED="true"   # Disable API rate limiting
 - **Full-width Messages** - Better readability on small screens
 - **Auto-collapsing Sidebar** - Clean mobile navigation
 - **Authentication Flow** - Mobile-optimized TOTP setup
+
+### PWA and iOS Fullscreen
+- Add to Home Screen in Safari to launch without browser UI.
+- Manifest served at `/manifest.webmanifest` via `src/app/manifest.ts`.
+- iOS metadata configured in `src/app/layout.tsx` (Apple web app, status bar, icons).
+- Place icons under `public/icons/`:
+  - `icon-192.png`, `icon-512.png`, `maskable-512.png`, `apple-touch-icon.png` (180×180)
+- Tip: After changes, delete the old Home Screen icon and add again.
+
+### iOS Keyboard Handling
+- Inputs use ≥16px font to prevent auto-zoom.
+- Safe areas applied via `env(safe-area-inset-*)` in `globals.css`.
+- Messages list sets `scroll-padding-bottom` based on the input/footer height (ResizeObserver) so `scrollIntoView` keeps the input visible above the keyboard.
 
 ## 🛡️ Security Features
 
