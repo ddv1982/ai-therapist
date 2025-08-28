@@ -312,14 +312,57 @@ function CBTDiaryPageContent() {
       let sessionId: string | null = null;
       const now = new Date();
       const title = 'CBT Session - ' + now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+
+      logger.info('Creating new CBT session', {
+        component: 'CBTDiaryPage',
+        operation: 'handleSendToChat',
+        title,
+        hasStarted,
+        isCBTActive
+      });
+
       const createResp = await apiClient.createSession({ title });
       if (createResp && createResp.success && createResp.data) {
         const newSession = createResp.data as components['schemas']['Session'];
         sessionId = newSession.id;
-        await apiClient.setCurrentSession(newSession.id);
+
+        logger.info('CBT session created successfully', {
+          component: 'CBTDiaryPage',
+          operation: 'handleSendToChat',
+          sessionId: newSession.id,
+          title: newSession.title
+        });
+
+        // Set as current session
+        try {
+          await apiClient.setCurrentSession(newSession.id);
+          logger.info('CBT session set as current', {
+            component: 'CBTDiaryPage',
+            operation: 'handleSendToChat',
+            sessionId: newSession.id
+          });
+        } catch (setCurrentError) {
+          logger.warn('Failed to set CBT session as current, continuing anyway', {
+            component: 'CBTDiaryPage',
+            operation: 'handleSendToChat',
+            sessionId: newSession.id,
+            error: setCurrentError instanceof Error ? setCurrentError.message : String(setCurrentError)
+          });
+          // Don't fail the whole operation if setting current session fails
+        }
+
         // Initialize Redux CBT session context with the new session id for bookkeeping
         dispatch(startReduxCBTSession({ sessionId }));
+      } else {
+        logger.error('Failed to create CBT session', {
+          component: 'CBTDiaryPage',
+          operation: 'handleSendToChat',
+          response: createResp,
+          title
+        });
+        throw new Error('Failed to create a new session for CBT');
       }
+
       if (!sessionId) {
         throw new Error('Failed to create a new session for CBT');
       }
@@ -355,13 +398,50 @@ function CBTDiaryPageContent() {
       setIsStreaming(false);
 
       // Save CBT summary to chat
+      logger.info('Saving CBT summary to chat', {
+        component: 'CBTDiaryPage',
+        operation: 'handleSendToChat',
+        sessionId
+      });
+
       const summaryResponse: PostMessageResponse = await apiClient.postMessage(sessionId, { role: 'user', content: cbtSummary });
-      getApiData(summaryResponse);
+      const summaryMessageData = getApiData(summaryResponse);
+      if (!summaryMessageData) {
+        logger.warn('CBT summary message may not have saved properly', {
+          component: 'CBTDiaryPage',
+          operation: 'handleSendToChat',
+          sessionId,
+          response: summaryResponse
+        });
+      }
 
       // Save therapeutic analysis to chat, prefixed as a clear Session Report
       const prefixedReportContent = `📊 **Session Report**\n\n${therapeuticAnalysis}`;
+      logger.info('Saving therapeutic analysis to chat', {
+        component: 'CBTDiaryPage',
+        operation: 'handleSendToChat',
+        sessionId,
+        contentLength: prefixedReportContent.length
+      });
+
       const analysisMessageResponse: PostMessageResponse = await apiClient.postMessage(sessionId, { role: 'assistant', content: prefixedReportContent, modelUsed: 'openai/gpt-oss-120b' });
-      getApiData(analysisMessageResponse);
+      const analysisData = getApiData(analysisMessageResponse);
+      if (!analysisData) {
+        logger.warn('Therapeutic analysis message may not have saved properly', {
+          component: 'CBTDiaryPage',
+          operation: 'handleSendToChat',
+          sessionId,
+          response: analysisMessageResponse
+        });
+      }
+
+      logger.info('CBT session successfully sent to chat', {
+        component: 'CBTDiaryPage',
+        operation: 'handleSendToChat',
+        sessionId,
+        summarySaved: !!summaryMessageData,
+        analysisSaved: !!analysisData
+      });
 
       // Clear CBT session since it's complete - use unified CBT action
       draftActions.reset();
@@ -376,9 +456,10 @@ function CBTDiaryPageContent() {
         title: 'CBT Session Analyzed & Sent',
         message: 'Your CBT session and therapeutic analysis have been added to your chat!'
       });
-      
-      // Redirect to chat
-      router.push('/');
+
+      // Redirect to chat with session refresh indicator
+      // This ensures the main chat page knows to refresh sessions
+      router.push(`/?cbt-session-created=${sessionId}&refresh-sessions=true`);
       
     } catch (error) {
       logger.error('Error sending CBT session to chat', {
