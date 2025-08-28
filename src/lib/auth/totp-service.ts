@@ -349,6 +349,11 @@ export async function resetTOTPConfig(): Promise<void> {
     });
   }
 
+  // Clear the setup cache so new setup data is generated
+  if (globalThis.totpSetupCache) {
+    delete globalThis.totpSetupCache;
+  }
+
   // Also clear all trusted devices and sessions
   await prisma.authSession.deleteMany({});
   await prisma.trustedDevice.deleteMany({});

@@ -1,3 +1,4 @@
+/* eslint-disable no-var */
 import { NextRequest } from 'next/server';
 import { generateTOTPSetup, saveTOTPConfig, isTOTPSetup, resetTOTPConfig } from '@/lib/auth/totp-service';
 import { getOrCreateDevice, createAuthSession } from '@/lib/auth/device-fingerprint';
@@ -5,6 +6,20 @@ import { getClientIP } from '@/lib/auth/auth-middleware';
 import { handleApiError } from '@/lib/utils/error-utils';
 import { withRateLimitUnauthenticated, withApiMiddleware } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse, createForbiddenErrorResponse } from '@/lib/api/api-response';
+
+// Type declaration for global cache
+declare global {
+  // eslint-disable-next-line no-var
+  var totpSetupCache: {
+    data: {
+      qrCodeUrl: string;
+      manualEntryKey: string;
+      backupCodes: string[];
+      secret: string;
+    };
+    timestamp: number;
+  } | undefined;
+}
 
 // GET /api/auth/setup - Get setup data (QR code, backup codes)
 // Note: This endpoint must be accessible before authentication during initial setup
@@ -16,8 +31,32 @@ export const GET = withRateLimitUnauthenticated(async (_request: NextRequest) =>
       return createErrorResponse('TOTP already configured', 400);
     }
 
+    // Check if we have recent setup data in memory (to prevent QR code regeneration on refresh)
+    const cacheExpiry = 5 * 60 * 1000; // 5 minutes
+
+    // Simple in-memory cache (in production, use Redis or similar)
+    if (globalThis.totpSetupCache &&
+        globalThis.totpSetupCache.timestamp &&
+        (Date.now() - globalThis.totpSetupCache.timestamp) < cacheExpiry) {
+      console.log('Reusing cached TOTP setup data');
+      return createSuccessResponse({
+        qrCodeUrl: globalThis.totpSetupCache.data.qrCodeUrl,
+        manualEntryKey: globalThis.totpSetupCache.data.manualEntryKey,
+        backupCodes: globalThis.totpSetupCache.data.backupCodes,
+        secret: globalThis.totpSetupCache.data.secret,
+      });
+    }
+
+    console.log('Generating new TOTP setup data at:', new Date().toISOString());
+
     // Generate TOTP setup data
     const setupData = await generateTOTPSetup();
+
+    // Cache the setup data
+    globalThis.totpSetupCache = {
+      data: setupData,
+      timestamp: Date.now()
+    };
     
     return createSuccessResponse({
       qrCodeUrl: setupData.qrCodeUrl,
@@ -67,6 +106,11 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
 
     // Save TOTP configuration
     await saveTOTPConfig(secret, backupCodes);
+
+    // Clear the setup cache since setup is now complete
+    if (globalThis.totpSetupCache) {
+      delete globalThis.totpSetupCache;
+    }
 
     // Create device and session for immediate authentication
     const userAgent = request.headers.get('user-agent') || 'unknown';
