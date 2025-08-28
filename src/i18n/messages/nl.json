@@ -65,7 +65,6 @@
   "cbt.progress.complete": "{percent}% voltooid",
   "cbt.status.at": "om {time}",
   "cbt.status.saving": "Bezig met opslaan...",
-  "cbt.status.completed": "Voltooid & Verzonden naar Chat",
   "cbt.nav.skip": "Overslaan",
   "cbt.nav.next": "Doorgaan",
   "cbt.emotions.title": "Hoe voel je je?",
@@ -171,7 +170,7 @@
   "cbt.thoughts.credibility": "In hoeverre geloof je deze gedachte? (Geloofwaardigheid)",
   "cbt.thoughts.credibilityLabel": "Geloofwaardigheid",
   "cbt.thoughts.scaleLeft": "Niet geloofwaardig",
-  "cbt.thoughts.scaleRight": "Geloofwaardig",
+  "cbt.thoughts.scaleRight": "Volledig geloofwaardig",
   "cbt.thoughts.prompts": [
     "Ik ben niet goed genoeg",
     "Er gaat iets ergs gebeuren",

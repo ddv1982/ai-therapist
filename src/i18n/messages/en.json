@@ -259,7 +259,6 @@
   "cbt.progress.complete": "{percent}% Complete",
   "cbt.status.at": "at {time}",
   "cbt.status.saving": "Saving...",
-  "cbt.status.completed": "Completed & Sent to Chat",
   "cbt.nav.skip": "Skip",
   "cbt.nav.next": "Continue",
   "cbt.emotions.title": "How are you feeling?",

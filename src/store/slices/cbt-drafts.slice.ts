@@ -6,9 +6,6 @@ interface CBTDraftsState {
   savedDrafts: CBTDraft[];
   completedEntries: CBTFormData[];
   lastAutoSave: string | null;
-  isCompleted: boolean;
-  completionTimestamp: string | null;
-  completedSessionId: string | null;
 }
 
 const initialState: CBTDraftsState = {
@@ -16,9 +13,6 @@ const initialState: CBTDraftsState = {
   savedDrafts: [],
   completedEntries: [],
   lastAutoSave: null,
-  isCompleted: false,
-  completionTimestamp: null,
-  completedSessionId: null,
 };
 
 const cbtDraftsSlice = createSlice({
@@ -82,24 +76,6 @@ const cbtDraftsSlice = createSlice({
     resetCurrentDraft: (state) => {
       state.currentDraft = null;
       state.lastAutoSave = null;
-      state.isCompleted = false;
-      state.completionTimestamp = null;
-      state.completedSessionId = null;
-    },
-
-    markAsCompleted: (state, action: PayloadAction<{ sessionId: string }>) => {
-      state.isCompleted = true;
-      state.completionTimestamp = new Date().toISOString();
-      state.completedSessionId = action.payload.sessionId;
-      // Clear the current draft since it's been sent to chat
-      state.currentDraft = null;
-      state.lastAutoSave = null;
-    },
-
-    resetCompletionStatus: (state) => {
-      state.isCompleted = false;
-      state.completionTimestamp = null;
-      state.completedSessionId = null;
     },
   },
 });
@@ -112,8 +88,6 @@ export const {
   deleteDraft,
   completeEntry,
   resetCurrentDraft,
-  markAsCompleted,
-  resetCompletionStatus,
 } = cbtDraftsSlice.actions;
 
 export default cbtDraftsSlice.reducer;

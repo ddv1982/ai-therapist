@@ -30,12 +30,12 @@ import { cn } from '@/lib/utils/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import { logger } from '@/lib/utils/logger';
 import { CBTStepType, CBTFormValidationError } from '@/types/therapy';
-import {
-  ChevronLeft,
-  ChevronRight,
-  CheckCircle,
-  AlertCircle,
-  Save,
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  CheckCircle, 
+  AlertCircle, 
+  Save, 
   Clock,
   Brain,
   Heart,
@@ -44,8 +44,7 @@ import {
   HelpCircle,
   Lightbulb,
   Users,
-  Activity,
-  Check
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -345,18 +344,10 @@ export function CBTStepWrapper({
   
   const renderAutoSaveStatus = () => {
     if (!autoSave) return null;
-
+    
     return (
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        {status.isCompleted ? (
-          <>
-            <Check className="w-3 h-3 text-green-600" />
-            <span className="text-green-600">{t('status.completed')}</span>
-            {status.completionTimestamp && (
-              <span>{t('status.at', { time: new Date(status.completionTimestamp).toLocaleTimeString() })}</span>
-            )}
-          </>
-        ) : status.isDraftSaved ? (
+        {status.isDraftSaved ? (
           <>
             <Save className="w-3 h-3" />
             <span>{t('status.saved')}</span>
