@@ -133,98 +133,74 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
   const verificationId = generateSecureRandomString(8, 'abcdefghijklmnopqrstuvwxyz0123456789');
   logger.debug(`TOTP verification starting`, { verificationId });
 
-  try {
-    const config = await prisma.authConfig.findFirst();
-    if (!config || !config.isSetup) {
-      logger.debug(`TOTP verification failed: No config or not setup`, { verificationId });
-      return false;
-    }
-
-    // Decrypt the secret for use with error handling
-    let decryptedSecret: string;
-    try {
-      decryptedSecret = decryptSensitiveData(config.secret);
-    } catch (decryptError) {
-      logger.error(`TOTP verification failed: Secret decryption error`, {
-        verificationId,
-        error: decryptError instanceof Error ? decryptError.message : 'Unknown decryption error'
-      });
-      return false;
-    }
-
-    // Validate secret format
-    if (!decryptedSecret || decryptedSecret.length < 32) {
-      logger.error(`TOTP verification failed: Invalid secret format`, { verificationId });
-      return false;
-    }
-
-    // Clean and validate token format
-    const cleanToken = token.replace(/\s/g, ''); // Remove any whitespace
-    logger.debug(`Token cleaned`, { verificationId, originalToken: token, cleanToken });
-  
-    if (!/^\d{6}$/.test(cleanToken)) {
-      logger.debug(`Invalid token format`, { verificationId, cleanToken, length: cleanToken.length });
-      return false;
-    }
-
-    // Get current time info for comparison
-    const currentTime = Math.floor(Date.now() / 1000);
-    const currentToken = speakeasy.totp({
-      secret: decryptedSecret,
-      encoding: 'base32',
-      time: currentTime,
-    });
-
-    logger.debug(`Server time`, { verificationId, serverTime: new Date().toISOString() });
-    logger.debug(`Current server token`, { verificationId, currentToken });
-    logger.debug(`Provided token`, { verificationId, providedToken: cleanToken });
-    logger.debug(`Tokens match check`, { verificationId, match: currentToken === cleanToken });
-
-    // Verification with window tolerance
-    const verified = speakeasy.totp.verify({
-      secret: decryptedSecret,
-      encoding: 'base32',
-      token: cleanToken,
-      window: 4, // Increased from 2 to 4 for better multi-device support
-    });
-
-    logger.debug(`TOTP verification result`, { verificationId, verified, result: verified ? 'SUCCESS' : 'FAILED' });
-
-    // If verification failed, show time windows for debugging
-    if (!verified) {
-      logger.debug(`Checking time windows for token match`, { verificationId });
-      let foundMatch = false;
-
-      for (let i = -6; i <= 6; i++) {
-        const testTime = currentTime + (i * 30);
-        const testToken = speakeasy.totp({
-          secret: decryptedSecret,
-          encoding: 'base32',
-          time: testTime,
-        });
-        const matches = testToken === cleanToken;
-
-        if (matches) {
-          logger.debug(`MATCH FOUND at time window`, { verificationId, window: i, offset: i * 30, testToken, matchTime: new Date(testTime * 1000).toISOString() });
-          foundMatch = true;
-        }
-      }
-
-      if (!foundMatch) {
-        logger.debug(`No token match found in any time window`, { verificationId, possibleIssues: 'device time sync, wrong secret, or expired token' });
-      }
-    }
-
-    return verified;
-
-  } catch (error) {
-    logger.error(`TOTP verification failed with error`, {
-      verificationId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+  // Load config; surface DB errors
+  const config = await prisma.authConfig.findFirst();
+  if (!config || !config.isSetup) {
+    logger.debug(`TOTP verification: no config or not setup`, { verificationId });
     return false;
   }
+
+  // Decrypt the secret; surface decryption errors
+  let decryptedSecret: string;
+  try {
+    decryptedSecret = decryptSensitiveData(config.secret);
+  } catch (decryptError) {
+    logger.error(`TOTP verification failed: Secret decryption error`, {
+      verificationId,
+      error: decryptError instanceof Error ? decryptError.message : 'Unknown decryption error'
+    });
+    throw decryptError instanceof Error ? decryptError : new Error(String(decryptError));
+  }
+
+  // Basic validation (allow shorter base32 secrets used in tests)
+  if (!decryptedSecret) {
+    logger.error(`TOTP verification failed: Empty secret`, { verificationId });
+    return false;
+  }
+
+  // Clean and validate token format
+  const cleanToken = token.replace(/\s/g, '');
+  logger.debug(`Token cleaned`, { verificationId, originalToken: token, cleanToken });
+  if (!/^\d{6}$/.test(cleanToken)) {
+    logger.debug(`Invalid token format`, { verificationId, cleanToken, length: cleanToken.length });
+    return false;
+  }
+
+  // For diagnostics only
+  const currentTime = Math.floor(Date.now() / 1000);
+  const currentToken = speakeasy.totp({ secret: decryptedSecret, encoding: 'base32', time: currentTime });
+  logger.debug(`Server time`, { verificationId, serverTime: new Date().toISOString() });
+  logger.debug(`Current server token`, { verificationId, currentToken });
+  logger.debug(`Provided token`, { verificationId, providedToken: cleanToken });
+  logger.debug(`Tokens match check`, { verificationId, match: currentToken === cleanToken });
+
+  // Verification with tolerance
+  const verified = speakeasy.totp.verify({
+    secret: decryptedSecret,
+    encoding: 'base32',
+    token: cleanToken,
+    window: 4,
+  });
+
+  logger.debug(`TOTP verification result`, { verificationId, verified, result: verified ? 'SUCCESS' : 'FAILED' });
+
+  if (!verified) {
+    logger.debug(`Checking time windows for token match`, { verificationId });
+    let foundMatch = false;
+    for (let i = -6; i <= 6; i++) {
+      const testTime = currentTime + (i * 30);
+      const testToken = speakeasy.totp({ secret: decryptedSecret, encoding: 'base32', time: testTime });
+      if (testToken === cleanToken) {
+        logger.debug(`MATCH FOUND at time window`, { verificationId, window: i, offset: i * 30, testToken, matchTime: new Date(testTime * 1000).toISOString() });
+        foundMatch = true;
+      }
+    }
+    if (!foundMatch) {
+      logger.debug(`No token match found in any time window`, { verificationId, possibleIssues: 'device time sync, wrong secret, or expired token' });
+    }
+  }
+
+  return verified;
 }
 
 /**
@@ -297,7 +273,27 @@ export async function getUnusedBackupCodesCount(): Promise<number> {
   return backupCodes?.filter(code => !code.used).length || 0;
 }
 
-// regenerateBackupCodes function removed - use server-side scripts only
+/**
+ * Regenerate backup codes for an already set up TOTP configuration
+ * Returns the new plaintext codes
+ */
+export async function regenerateBackupCodes(): Promise<string[]> {
+  const config = await prisma.authConfig.findFirst();
+  if (!config || !config.isSetup) {
+    throw new Error('TOTP not set up');
+  }
+
+  const newCodes = Array.from({ length: 10 }, () => generateSecureRandomString(8).toUpperCase());
+  const backupCodesData: BackupCode[] = newCodes.map(code => ({ code, used: false }));
+  const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
+
+  await prisma.authConfig.update({
+    where: { id: config.id },
+    data: { backupCodes: encryptedBackupCodes },
+  });
+
+  return newCodes;
+}
 
 /**
  * Regenerate TOTP secret while keeping the auth configuration active

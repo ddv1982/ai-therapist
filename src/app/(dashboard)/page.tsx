@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthGuard } from '@/features/auth/components/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,8 @@ import {
   Sparkles,
   Brain,
   Globe,
-  Lock
+  Lock,
+  ArrowDown
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { LanguageToggle } from '@/components/ui/language-switcher';
@@ -41,6 +42,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { updateSettings } from '@/store/slices/chatSlice';
+import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 
 type ListSessionsResponse = import('@/lib/api/api-response').ApiResponse<components['schemas']['Session'][]>;
 type CreateSessionResponse = import('@/lib/api/api-response').ApiResponse<components['schemas']['Session']>;
@@ -91,18 +93,30 @@ function ChatPageContent() {
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const aiPlaceholderIdRef = useRef<string | null>(null);
   const sessionIdRef = useRef<string | null>(null);
-  const [, setInputHeight] = useState(0);
+  const inputHeightRef = useRef(0);
+  const initialLoadDoneRef = useRef(false);
+  const sessionsLoadingRef = useRef(false);
+
+  // Streaming-aware scroll behavior akin to ChatGPT
+  const { scrollToBottom, isNearBottom } = useScrollToBottom({
+    isStreaming: isLoading,
+    messages,
+    container: messagesContainerRef.current,
+    behavior: 'smooth',
+    respectUserScroll: true
+  });
 
   // AI SDK: single transport for chat streaming through /api/chat
-  const { sendMessage: sendAiMessage } = useChat({
+  const transport = useMemo(() => new DefaultChatTransport({
+    api: '/api/chat',
+    body: {
+      sessionId: currentSession ?? undefined,
+    },
+  }), [currentSession]);
+
+  const { sendMessage: sendAiMessage, stop: stopAi } = useChat({
     id: currentSession ?? 'default',
-    transport: new DefaultChatTransport({
-      api: '/api/chat',
-      body: {
-        sessionId: currentSession ?? undefined,
-        // webSearchEnabled will be passed dynamically in sendMessage
-      },
-    }),
+    transport,
     onError: (error) => {
       setIsLoading(false);
       logger.error('Chat stream error', { component: 'ChatPage' }, error);
@@ -214,6 +228,8 @@ function ChatPageContent() {
 
   // Load sessions from database on component mount (memoized)
   const loadSessions = useCallback(async () => {
+    if (sessionsLoadingRef.current) return;
+    sessionsLoadingRef.current = true;
     try {
       const sessionsData: ListSessionsResponse = await apiClient.listSessions();
       const sessions = getApiData(sessionsData);
@@ -239,6 +255,8 @@ function ChatPageContent() {
         title: 'Loading Error',
         message: 'Failed to load chat sessions. Please refresh the page.'
       });
+    } finally {
+      sessionsLoadingRef.current = false;
     }
   }, [logMobileError, showToast]);
 
@@ -293,14 +311,19 @@ function ChatPageContent() {
     }
   }, []);
 
-  // Simple, reliable scroll behavior
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Keep input focused on mount and after streaming
+  useEffect(() => {
+    // Focus shortly after mount to ensure layout settles
+    const id = setTimeout(() => textareaRef.current?.focus(), 50);
+    return () => clearTimeout(id);
+  }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!isLoading) {
+      const id = setTimeout(() => textareaRef.current?.focus(), 50);
+      return () => clearTimeout(id);
+    }
+  }, [isLoading]);
 
   // Load current active session (memoized)
   const loadCurrentSession = useCallback(async () => {
@@ -363,6 +386,8 @@ function ChatPageContent() {
 
   // Load sessions and current session on component mount
   useEffect(() => {
+    if (initialLoadDoneRef.current) return;
+    initialLoadDoneRef.current = true;
     loadSessions();
     loadCurrentSession();
   }, [loadSessions, loadCurrentSession]);
@@ -405,7 +430,7 @@ function ChatPageContent() {
         setViewportHeight('100vh');
         document.documentElement.style.removeProperty('--app-height');
         document.documentElement.style.removeProperty('--vh');
-        setInputHeight(0);
+        inputHeightRef.current = 0;
       }
     };
 
@@ -420,15 +445,33 @@ function ChatPageContent() {
     };
 
     window.addEventListener('resize', debouncedResize);
-    window.addEventListener('orientationchange', () => {
+    const handleOrientationChange = () => {
       setTimeout(updateViewport, 300); // Longer delay for orientation change
-    });
+    };
+    window.addEventListener('orientationchange', handleOrientationChange);
 
     return () => {
       window.removeEventListener('resize', debouncedResize);
-      window.removeEventListener('orientationchange', updateViewport);
+      window.removeEventListener('orientationchange', handleOrientationChange);
       clearTimeout(resizeTimeout);
     }; 
+  }, []);
+
+  // Development-only diagnostics to detect unexpected page unloads/reloads
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+    const beforeUnload = (_event: BeforeUnloadEvent) => {
+      logger.warn('Page unloading', { component: 'ChatPage', operation: 'beforeunload' });
+    };
+    const onPageHide = (event: PageTransitionEvent) => {
+      logger.warn('Page hidden', { component: 'ChatPage', operation: 'pagehide', persisted: event.persisted });
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+    window.addEventListener('pagehide', onPageHide);
+    return () => {
+      window.removeEventListener('beforeunload', beforeUnload);
+      window.removeEventListener('pagehide', onPageHide);
+    };
   }, []);
 
   // Observe input container height and write to scroll container as CSS var
@@ -437,7 +480,7 @@ function ChatPageContent() {
     const target = inputContainerRef.current;
     const update = () => {
       const h = target.offsetHeight || 0;
-      setInputHeight(h);
+      inputHeightRef.current = h;
       messagesContainerRef.current!.style.setProperty('--input-h', `${h}px`);
     };
     update();
@@ -579,8 +622,7 @@ function ChatPageContent() {
     // Ensure onFinish sees the latest session id
     sessionIdRef.current = sessionId;
     
-    // Reload sessions to update message count in sidebar
-    await loadSessions();
+    // Sidebar counts will refresh after assistant finishes; avoid duplicate fetches here
     try {
       // Create AI message placeholder (typing indicator)
       const aiMessage: Message = {
@@ -634,7 +676,7 @@ function ChatPageContent() {
         });
       }
     }
-  }, [input, isLoading, currentSession, showToast, saveMessage, setCurrentSessionAndSync, loadSessions, setMessages, sendAiMessage, settings.webSearchEnabled, settings.model]);
+  }, [input, isLoading, currentSession, showToast, saveMessage, setCurrentSessionAndSync, setMessages, sendAiMessage, settings.webSearchEnabled, settings.model]);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -652,6 +694,22 @@ function ChatPageContent() {
     e.preventDefault();
     sendMessage();
   }, [sendMessage]);
+
+  const stopGenerating = useCallback(() => {
+    try {
+      // Abort the in-flight stream
+      stopAi?.();
+    } catch {}
+    // Clean up placeholder and loading state
+    const placeholderId = aiPlaceholderIdRef.current;
+    if (placeholderId) {
+      setMessages(prev => prev.filter(m => m.id !== placeholderId));
+      aiPlaceholderIdRef.current = null;
+    }
+    setIsLoading(false);
+    // Keep focus so user can continue typing
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  }, [stopAi, setMessages]);
 
   const generateReport = async () => {
     if (!currentSession || messages.length === 0) {
@@ -782,6 +840,23 @@ function ChatPageContent() {
     isLoading: isLoading
   };
 
+  // Memoized app container style to avoid expensive repaints on each keystroke
+  const appContainerStyle = useMemo<React.CSSProperties>(() => ({
+    height: viewportHeight,
+    minHeight: viewportHeight,
+    maxHeight: viewportHeight,
+    overflow: 'hidden',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundImage: `
+      radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.05) 0%, transparent 50%)
+    `
+  }), [viewportHeight]);
+
   return (
     <ChatUIProvider bridge={chatUIBridge}>
     <AuthGuard>
@@ -789,21 +864,7 @@ function ChatPageContent() {
         className="flex bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20"
         role="application"
         aria-label={t('app.aria')}
-      style={{
-        height: viewportHeight,
-        minHeight: viewportHeight,
-        maxHeight: viewportHeight,
-        overflow: 'hidden', // Prevent page-level scrolling
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundImage: `
-          radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.05) 0%, transparent 50%)
-        `
-      }}
+      style={appContainerStyle}
     >
       {/* Mobile backdrop overlay */}
       {showSidebar && (
@@ -1021,6 +1082,21 @@ function ChatPageContent() {
                   )}
                 </Button>
               )}
+              {isLoading && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={stopGenerating}
+                  className={getTherapeuticIconButton('large')}
+                  style={{
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
+                  title={t('chat.main.stopGenerating')}
+                >
+                  <div className="shimmer-effect"></div>
+                  <X className="w-5 h-5 relative z-10" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -1043,7 +1119,7 @@ function ChatPageContent() {
         {/* Messages */}
         <div 
           ref={messagesContainerRef}
-          className={`flex-1 overflow-y-auto custom-scrollbar ${isMobile ? (messages.length === 0 ? 'p-2 pb-0 prevent-bounce' : 'p-3 pb-0 prevent-bounce') : 'p-3 sm:p-6'}`} 
+          className={`flex-1 overflow-y-auto relative custom-scrollbar ${isMobile ? (messages.length === 0 ? 'p-2 pb-0 prevent-bounce' : 'p-3 pb-0 prevent-bounce') : 'p-3 sm:p-6'}`} 
           style={{
             minHeight: 0,
             WebkitOverflowScrolling: 'touch',
@@ -1121,6 +1197,25 @@ function ChatPageContent() {
           
           {/* Simple scroll anchor for auto-scroll */}
           <div ref={messagesEndRef} />
+
+          {/* Jump to latest button when scrolled up */}
+          <div className="sticky bottom-3 flex justify-center pointer-events-none">
+            {!isNearBottom && (
+              <Button
+                onClick={() => {
+                  scrollToBottom();
+                  setTimeout(() => textareaRef.current?.focus(), 50);
+                }}
+                variant="secondary"
+                size="sm"
+                className="pointer-events-auto shadow-md rounded-full px-3 py-1 gap-2 bg-background/90 backdrop-blur border"
+                aria-label={t('main.jumpToLatest')}
+              >
+                <ArrowDown className="w-4 h-4" />
+                {t('main.latest')}
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Input Area */}
@@ -1128,6 +1223,8 @@ function ChatPageContent() {
           <div className="max-w-4xl mx-auto">
             <form onSubmit={handleFormSubmit} className="flex gap-3 items-end">
               <div className="flex-1 relative">
+                {/** Compute placeholder so it disappears when streaming or typing */}
+                {(() => null)()}
                 <Textarea
                   ref={textareaRef}
                   value={input}
@@ -1137,15 +1234,15 @@ function ChatPageContent() {
                     // Ensure input is visible above keyboard on iOS
                     if (isMobile) {
                       setTimeout(() => {
-                        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        scrollToBottom();
                         // Additionally ensure the input itself is visible
                         textareaRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
                       }, 100);
                     }
                   }}
-                  placeholder={t('input.placeholder')}
+                  placeholder={!isLoading && input.trim().length === 0 ? t('input.placeholder') : ''}
                   className="min-h-[52px] sm:min-h-[80px] max-h-[120px] sm:max-h-[200px] resize-none rounded-xl sm:rounded-2xl border-border/50 bg-background/80 backdrop-blur-sm px-3 sm:px-6 py-3 sm:py-4 text-base placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all duration-300 touch-manipulation"
-                  disabled={isLoading}
+                  disabled={false}
                   style={{
                     fontSize: isMobile ? '16px' : undefined, // Prevent zoom on iOS
                     WebkitTapHighlightColor: 'transparent'

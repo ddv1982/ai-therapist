@@ -3,7 +3,7 @@
  * Handles auto-scrolling during message streaming animations
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { StreamingStage } from '@/types/streaming';
 
 interface UseScrollToBottomOptions {
@@ -12,6 +12,7 @@ interface UseScrollToBottomOptions {
   container?: HTMLElement | null;
   behavior?: 'auto' | 'smooth';
   offset?: number;
+  respectUserScroll?: boolean;
 }
 
 export function useScrollToBottom({
@@ -19,11 +20,19 @@ export function useScrollToBottom({
   messages,
   container,
   behavior = 'smooth',
-  offset = 0
+  offset = 0,
+  respectUserScroll = true
 }: UseScrollToBottomOptions) {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastMessageCountRef = useRef(messages.length);
   const streamingStageRef = useRef<StreamingStage>('revealed');
+  const [isNearBottomState, setIsNearBottomState] = useState<boolean>(true);
+
+  const computeIsNearBottom = useCallback(() => {
+    if (!container) return true;
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    return (scrollHeight - scrollTop - clientHeight) < 100;
+  }, [container]);
 
   // Enhanced scroll function that works with streaming animations
   const scrollToBottom = useCallback((force = false, delay = 0) => {
@@ -92,6 +101,13 @@ export function useScrollToBottom({
       lastMessageCountRef.current = messages.length;
       
       if (hasNewMessage) {
+        // Respect user scroll position similar to ChatGPT behavior
+        const nearBottom = computeIsNearBottom();
+        if (respectUserScroll && !nearBottom) {
+          // Do not force-scroll if the user has scrolled up
+          return;
+        }
+
         // Scroll for new messages with streaming awareness
         if (isStreaming) {
           scrollToBottomWithStreaming();
@@ -100,7 +116,7 @@ export function useScrollToBottom({
         }
       }
     }
-  }, [messages.length, isStreaming, scrollToBottom, scrollToBottomWithStreaming]);
+  }, [messages.length, isStreaming, scrollToBottom, scrollToBottomWithStreaming, computeIsNearBottom, respectUserScroll]);
 
   // Handle streaming stage changes
   const onStreamingStageChange = useCallback((stage: StreamingStage) => {
@@ -130,13 +146,26 @@ export function useScrollToBottom({
     };
   }, []);
 
+  // Track near-bottom state and update on scroll
+  useEffect(() => {
+    if (!container) return;
+    // Initialize state
+    setIsNearBottomState(computeIsNearBottom());
+
+    const onScroll = () => {
+      setIsNearBottomState(computeIsNearBottom());
+    };
+    container.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      container.removeEventListener('scroll', onScroll);
+    };
+  }, [container, computeIsNearBottom]);
+
   return {
     scrollToBottom,
     scrollToBottomWithStreaming,
     onStreamingStageChange,
     smartScrollToBottom,
-    isNearBottom: container ? 
-      (container.scrollHeight - container.scrollTop - container.clientHeight) < 100 
-      : true
+    isNearBottom: isNearBottomState
   };
 }
