@@ -1240,7 +1240,7 @@ function ChatPageContent() {
                       }, 100);
                     }
                   }}
-                  placeholder={!isLoading && input.trim().length === 0 ? t('input.placeholder') : ''}
+                  placeholder={!(isLoading || aiPlaceholderIdRef.current !== null) && input.trim().length === 0 ? t('input.placeholder') : ''}
                   className="min-h-[52px] sm:min-h-[80px] max-h-[120px] sm:max-h-[200px] resize-none rounded-xl sm:rounded-2xl border-border/50 bg-background/80 backdrop-blur-sm px-3 sm:px-6 py-3 sm:py-4 text-base placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all duration-300 touch-manipulation"
                   disabled={false}
                   style={{
@@ -1251,20 +1251,35 @@ function ChatPageContent() {
                   aria-describedby="input-help"
                 />
               </div>
-              <Button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 text-white shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex-shrink-0`}
-                style={{
-                  WebkitTapHighlightColor: 'transparent'
-                }}
-                aria-label={isLoading ? t('input.sending') : t('input.send')}
-                aria-disabled={isLoading || !input.trim()}
-              >
-                {/* Shimmer effect */}
-                <div className="shimmer-effect"></div>
-                <Send className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
-              </Button>
+              {(isLoading || aiPlaceholderIdRef.current !== null) ? (
+                <Button
+                  type="button"
+                  onClick={stopGenerating}
+                  className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-muted text-foreground hover:bg-muted/90 active:bg-muted/80 shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden touch-manipulation flex-shrink-0 border`}
+                  style={{
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
+                  aria-label={t('chat.main.stopGenerating')}
+                >
+                  <div className="shimmer-effect"></div>
+                  <X className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={!input.trim()}
+                  className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 text-white shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex-shrink-0`}
+                  style={{
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
+                  aria-label={t('input.send')}
+                  aria-disabled={!input.trim()}
+                >
+                  {/* Shimmer effect */}
+                  <div className="shimmer-effect"></div>
+                  <Send className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
+                </Button>
+              )}
             </form>
           </div>
           {/* Decorative gradient line */}
