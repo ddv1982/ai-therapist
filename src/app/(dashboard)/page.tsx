@@ -1091,7 +1091,7 @@ function ChatPageContent() {
                   style={{
                     WebkitTapHighlightColor: 'transparent'
                   }}
-                  title={t('chat.main.stopGenerating')}
+                  title={t('main.stopGenerating')}
                 >
                   <div className="shimmer-effect"></div>
                   <X className="w-5 h-5 relative z-10" />
@@ -1259,7 +1259,7 @@ function ChatPageContent() {
                   style={{
                     WebkitTapHighlightColor: 'transparent'
                   }}
-                  aria-label={t('chat.main.stopGenerating')}
+                  aria-label={t('main.stopGenerating')}
                 >
                   <div className="shimmer-effect"></div>
                   <X className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
