@@ -16,7 +16,7 @@
 
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { logger } from '@/lib/utils/logger';
 import { 
@@ -211,6 +211,9 @@ interface UseCBTDataManagerReturn {
     generateSummary: () => string;
     getFormattedOutput: () => string;
   };
+
+  // Debounced auto-save function
+  debouncedAutoSave: (data: Partial<CBTFormInput>) => void;
 }
 
 export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCBTDataManagerReturn {
@@ -232,7 +235,48 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   
   // Auto-save management
   const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
-  const lastDataRef = useRef<string>('');
+  
+  // Debounced auto-save function
+  const debouncedAutoSave = useCallback((data: Partial<CBTFormInput>) => {
+    if (autoSaveTimeout.current) {
+      clearTimeout(autoSaveTimeout.current);
+    }
+    
+    autoSaveTimeout.current = setTimeout(() => {
+      // Convert RHF form data to Redux-compatible format and update session
+      if (data?.situation) {
+        dispatch(updateSituation({
+          situation: data.situation,
+          date: data.date || new Date().toISOString().split('T')[0]
+        }));
+      }
+
+      if (data?.initialEmotions) {
+        // Ensure all emotion values are numbers
+        const emotions = {
+          fear: data.initialEmotions.fear || 0,
+          anger: data.initialEmotions.anger || 0,
+          sadness: data.initialEmotions.sadness || 0,
+          joy: data.initialEmotions.joy || 0,
+          anxiety: data.initialEmotions.anxiety || 0,
+          shame: data.initialEmotions.shame || 0,
+          guilt: data.initialEmotions.guilt || 0,
+          other: data.initialEmotions.other || '',
+          otherIntensity: data.initialEmotions.otherIntensity || 0,
+        };
+        dispatch(updateEmotions(emotions));
+      }
+    }, options.autoSaveDelay || 600);
+  }, [dispatch, options.autoSaveDelay]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeout.current) {
+        clearTimeout(autoSaveTimeout.current);
+      }
+    };
+  }, []);
   
   // Chat integration
   const { currentSessionId } = useChatUI();
@@ -242,18 +286,12 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   useEffect(() => {
     if (!currentDraft || autoSaveDelay <= 0) return;
     
-    const currentDataString = JSON.stringify(currentDraft.data);
-    
-    // Only auto-save if data has actually changed
-    if (currentDataString === lastDataRef.current) return;
-    
     if (autoSaveTimeout.current) {
       clearTimeout(autoSaveTimeout.current);
     }
     
     autoSaveTimeout.current = setTimeout(() => {
       dispatch(saveDraft());
-      lastDataRef.current = currentDataString;
     }, autoSaveDelay);
     
     return () => {
@@ -678,6 +716,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     
     // Export Utilities
     utilities,
+
+    // Debounced auto-save function
+    debouncedAutoSave,
   };
 }
 

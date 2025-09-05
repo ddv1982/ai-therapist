@@ -207,14 +207,20 @@ const cbtSlice = createSlice({
       state.validationErrors = {};
     },
     updateSituation: (state, action: PayloadAction<SituationData>) => {
-      state.sessionData.situation = action.payload;
-      state.sessionData.lastModified = new Date().toISOString();
-      state.lastAutoSave = new Date().toISOString();
+      // Only update if there's an actual change to prevent unnecessary re-renders
+      if (JSON.stringify(state.sessionData.situation) !== JSON.stringify(action.payload)) {
+        state.sessionData.situation = action.payload;
+        state.sessionData.lastModified = new Date().toISOString();
+        state.lastAutoSave = new Date().toISOString();
+      }
     },
     updateEmotions: (state, action: PayloadAction<EmotionData>) => {
-      state.sessionData.emotions = action.payload;
-      state.sessionData.lastModified = new Date().toISOString();
-      state.lastAutoSave = new Date().toISOString();
+      // Only update if there's an actual change to prevent unnecessary re-renders
+      if (JSON.stringify(state.sessionData.emotions) !== JSON.stringify(action.payload)) {
+        state.sessionData.emotions = action.payload;
+        state.sessionData.lastModified = new Date().toISOString();
+        state.lastAutoSave = new Date().toISOString();
+      }
     },
     clearEmotions: (state) => {
       state.sessionData.emotions = null;

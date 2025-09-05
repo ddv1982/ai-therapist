@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 
 export interface SessionData {
   id: string;
@@ -15,6 +15,8 @@ interface SessionsState {
   isCreatingSession: boolean;
   isDeletingSession: string | null;
   error: string | null;
+  recoveryData: Record<string, unknown> | null;
+  recoveryAttempted: boolean;
 }
 
 const initialState: SessionsState = {
@@ -23,6 +25,8 @@ const initialState: SessionsState = {
   isCreatingSession: false,
   isDeletingSession: null,
   error: null,
+  recoveryData: null,
+  recoveryAttempted: false,
 };
 
 const sessionsSlice = createSlice({
@@ -72,5 +76,24 @@ export const {
   setDeletingSession,
   setError,
 } = sessionsSlice.actions;
+
+// Async thunks
+export const performSessionHeartbeat = createAsyncThunk(
+  'sessions/performHeartbeat',
+  async () => {
+    // Simulate heartbeat API call
+    await new Promise(resolve => setTimeout(resolve, 100));
+    return { timestamp: Date.now() };
+  }
+);
+
+export const recoverSession = createAsyncThunk(
+  'sessions/recoverSession',
+  async () => {
+    // Simulate session recovery
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return { success: true };
+  }
+);
 
 export default sessionsSlice.reducer;
