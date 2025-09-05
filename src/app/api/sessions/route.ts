@@ -5,6 +5,7 @@ import { withValidation, withAuth, errorHandlers } from '@/lib/api/api-middlewar
 import { getUserSessions } from '@/lib/database/queries';
 import { createSuccessResponse } from '@/lib/api/api-response';
 import { deduplicateRequest } from '@/lib/utils/request-deduplication';
+import { SessionCache } from '@/lib/cache';
 
 export const POST = withValidation(
   createSessionSchema,
@@ -50,6 +51,12 @@ export const POST = withValidation(
         userId: context.userInfo.userId
       });
 
+      // Cache the new session data
+      await SessionCache.set(session.id, {
+        ...session,
+        status: session.status as 'active' | 'inactive' | 'archived'
+      });
+
       return createSuccessResponse(session, { requestId: context.requestId });
     } catch (error) {
       return errorHandlers.handleDatabaseError(
@@ -61,23 +68,25 @@ export const POST = withValidation(
   }
 );
 
-export const GET = withAuth(async (_request, context) => {
-  try {
-    logger.debug('Fetching sessions', context);
+export const GET = withAuth(
+  async (_request, context) => {
+      try {
+        logger.debug('Fetching sessions', context);
 
-    const sessions = await getUserSessions(context.userInfo.userId);
+        const sessions = await getUserSessions(context.userInfo.userId);
 
-    logger.info('Sessions fetched successfully', {
-      requestId: context.requestId,
-      sessionCount: sessions.length
-    });
+        logger.info('Sessions fetched successfully', {
+          requestId: context.requestId,
+          sessionCount: sessions.length
+        });
 
-    return createSuccessResponse(sessions, { requestId: context.requestId });
-  } catch (error) {
-    return errorHandlers.handleDatabaseError(
-      error as Error,
-      'fetch sessions',
-      context
-    );
-  }
-});
+        return createSuccessResponse(sessions, { requestId: context.requestId });
+      } catch (error) {
+        return errorHandlers.handleDatabaseError(
+          error as Error,
+          'fetch sessions',
+          context
+        );
+      }
+    }
+);

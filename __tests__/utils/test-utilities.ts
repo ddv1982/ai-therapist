@@ -28,10 +28,11 @@ declare global {
 }
 import { jest } from '@jest/globals';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-import chatReducer from '@/store/slices/chatSlice';
-import sessionsReducer from '@/store/slices/sessionsSlice';
-import cbtReducer from '@/store/slices/cbtSlice';
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import chatSlice from '@/store/slices/chatSlice';
+import sessionsSlice from '@/store/slices/sessionsSlice';
+import cbtSlice from '@/store/slices/cbtSlice';
+import type { AuthValidationResult } from '@/lib/api/api-auth';
 
 // =============================================================================
 // MOCK FACTORIES AND CONFIGURATIONS
@@ -151,7 +152,7 @@ export class MockFactory {
       },
       // Auth mocks
       apiAuth: {
-        validateApiAuth: createMockFn<{ isValid: boolean; userId: string }>()
+        validateApiAuth: createMockFn<AuthValidationResult>()
           .mockResolvedValue({ isValid: true, userId: 'test-user' }),
         // createAuthErrorResponse removed in favor of standardized helpers
       },
@@ -219,7 +220,7 @@ export class MockFactory {
     };
     
     if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
-      requestInit.body = JSON.stringify(body);
+      (requestInit as any).body = JSON.stringify(body);
     }
     
     return new NextRequest(requestUrl, requestInit as ConstructorParameters<typeof NextRequest>[1]);
@@ -242,7 +243,7 @@ export class MockFactory {
         generateDeviceName: jest.fn().mockReturnValue('Mock Device Browser'),
       },
       apiAuth: {
-        validateApiAuth: jest.fn().mockResolvedValue({ isValid: true, userId: 'mock-user-id' }),
+        validateApiAuth: jest.fn(() => Promise.resolve<AuthValidationResult>({ isValid: true, userId: 'mock-user-id' })),
         createAuthErrorResponse: jest.fn().mockReturnValue({ status: 401, body: { error: 'Unauthorized' } }),
       }
     };
@@ -493,12 +494,14 @@ export class ComponentTestUtils {
    * Create Redux test store with all slices
    */
   static createTestStore(preloadedState?: any) {
+    const rootReducer = combineReducers({
+      chat: chatSlice,
+      sessions: sessionsSlice,
+      cbt: cbtSlice,
+    });
+    
     return configureStore({
-      reducer: {
-        chat: chatReducer,
-        sessions: sessionsReducer,
-        cbt: cbtReducer,
-      },
+      reducer: rootReducer,
       preloadedState,
     });
   }
@@ -558,11 +561,11 @@ export class ComponentTestUtils {
     } = options;
 
     function AllProviders({ children }: { children: ReactNode }) {
-      let content = React.createElement(React.Fragment, {}, children);
+      let content = children;
       
       // Add Redux Provider first (innermost)
       if (withReduxProvider) {
-        content = React.createElement(Provider, { store, children: content });
+        content = React.createElement(Provider as any, { store, children: content });
       }
       
       if (withToastProvider) {
@@ -577,7 +580,7 @@ export class ComponentTestUtils {
         content = React.createElement(ThemeProvider, { children: content });
       }
 
-      return content;
+      return content as ReactElement;
     }
 
     return render(ui, { wrapper: AllProviders, ...renderOptions });
@@ -589,7 +592,7 @@ export class ComponentTestUtils {
   static renderWithRedux(ui: ReactElement, initialState?: any): RenderResult {
     const store = ComponentTestUtils.createTestStore(initialState);
     const TestWrapper = ({ children }: { children?: ReactNode }) => 
-      React.createElement(Provider, { store }, children);
+      React.createElement(Provider as any, { store, children: children as any });
     
     return render(ui, { wrapper: TestWrapper });
   }
@@ -606,11 +609,12 @@ export class ComponentTestUtils {
       document.body.innerHTML = '';
       
       // Mock fetch for API calls
-      global.fetch = jest.fn().mockResolvedValue({
-        json: jest.fn().mockResolvedValue({ success: false, memoryDetails: [] }),
+      const mockResponse: any = {
+        json: jest.fn().mockImplementation(() => Promise.resolve({ success: false, memoryDetails: [] })),
         ok: true,
         status: 200,
-      });
+      };
+      (global as any).fetch = jest.fn().mockImplementation(() => Promise.resolve(mockResponse));
       
       // Setup common component and utility mocks
       ComponentTestUtils.setupCommonMocks();

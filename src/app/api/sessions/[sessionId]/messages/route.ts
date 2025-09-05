@@ -5,6 +5,7 @@ import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encrypti
 import { withAuth, withValidationAndParams, errorHandlers } from '@/lib/api/api-middleware';
 import { verifySessionOwnership } from '@/lib/database/queries';
 import { createSuccessResponse, createNotFoundErrorResponse, createPaginatedResponse } from '@/lib/api/api-response';
+import { MessageCache } from '@/lib/cache';
 
 const postBodySchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -44,6 +45,9 @@ export const POST = withValidationAndParams(
         },
       });
 
+      // Invalidate message cache for this session
+      await MessageCache.invalidate(sessionId);
+
       return createSuccessResponse({
         id: message.id,
         sessionId,
@@ -59,46 +63,48 @@ export const POST = withValidationAndParams(
   }
 );
 
-export const GET = withAuth(async (request: NextRequest, context, params) => {
-  try {
-    const { sessionId } = params as { sessionId: string };
+export const GET = withAuth(
+  async (request: NextRequest, context, params) => {
+      try {
+        const { sessionId } = await params as { sessionId: string };
 
-    const { valid } = await verifySessionOwnership(sessionId, context.userInfo.userId);
-    if (!valid) {
-      return createNotFoundErrorResponse('Session', context.requestId);
+        const { valid } = await verifySessionOwnership(sessionId, context.userInfo.userId);
+        if (!valid) {
+          return createNotFoundErrorResponse('Session', context.requestId);
+        }
+
+        const { searchParams } = new URL(request.url);
+        const parsed = querySchema.safeParse(Object.fromEntries(searchParams.entries()));
+        const page = parsed.success ? (parsed.data.page ?? 1) : 1;
+        const limit = parsed.success ? (parsed.data.limit ?? 50) : 50;
+
+        const total = await prisma.message.count({ where: { sessionId } });
+        const messages = await prisma.message.findMany({
+          where: { sessionId },
+          orderBy: { timestamp: 'asc' },
+          skip: (page - 1) * limit,
+          take: limit,
+        });
+
+        const decrypted = safeDecryptMessages(messages.map(m => ({
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp,
+        })));
+
+        const items = messages.map((m, i) => ({
+          id: m.id,
+          sessionId: m.sessionId,
+          role: decrypted[i].role,
+          content: decrypted[i].content,
+          modelUsed: m.modelUsed ?? undefined,
+          timestamp: decrypted[i].timestamp,
+          createdAt: m.createdAt,
+        }));
+
+        return createPaginatedResponse(items, page, limit, total, context.requestId);
+      } catch (error) {
+        return errorHandlers.handleDatabaseError(error as Error, 'fetch messages (nested)', context);
+      }
     }
-
-    const { searchParams } = new URL(request.url);
-    const parsed = querySchema.safeParse(Object.fromEntries(searchParams.entries()));
-    const page = parsed.success ? (parsed.data.page ?? 1) : 1;
-    const limit = parsed.success ? (parsed.data.limit ?? 50) : 50;
-
-    const total = await prisma.message.count({ where: { sessionId } });
-    const messages = await prisma.message.findMany({
-      where: { sessionId },
-      orderBy: { timestamp: 'asc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-
-    const decrypted = safeDecryptMessages(messages.map(m => ({
-      role: m.role,
-      content: m.content,
-      timestamp: m.timestamp,
-    })));
-
-    const items = messages.map((m, i) => ({
-      id: m.id,
-      sessionId: m.sessionId,
-      role: decrypted[i].role,
-      content: decrypted[i].content,
-      modelUsed: m.modelUsed ?? undefined,
-      timestamp: decrypted[i].timestamp,
-      createdAt: m.createdAt,
-    }));
-
-    return createPaginatedResponse(items, page, limit, total, context.requestId);
-  } catch (error) {
-    return errorHandlers.handleDatabaseError(error as Error, 'fetch messages (nested)', context);
-  }
-});
+);

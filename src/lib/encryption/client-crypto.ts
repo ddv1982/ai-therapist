@@ -57,7 +57,7 @@ function getRandomBytes(length: number): Uint8Array {
  */
 function stringToArrayBuffer(str: string): ArrayBuffer {
   const encoder = new TextEncoder();
-  return encoder.encode(str);
+  return encoder.encode(str).buffer;
 }
 
 /**
@@ -89,7 +89,7 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
   }
-  return bytes.buffer;
+  return bytes.buffer as ArrayBuffer;
 }
 
 /**
@@ -107,7 +107,7 @@ async function deriveKey(masterKey: ArrayBuffer, salt: Uint8Array): Promise<Cryp
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: salt,
+      salt: salt as BufferSource,
       iterations: ITERATIONS,
       hash: 'SHA-256'
     },
@@ -141,8 +141,8 @@ async function getMasterKey(): Promise<ArrayBuffer> {
 
   // Generate new session key
   const newKey = getRandomBytes(32); // 256 bits
-  sessionStorage.setItem('therapeutic-session-key', arrayBufferToBase64(newKey.buffer));
-  return newKey.buffer;
+  sessionStorage.setItem('therapeutic-session-key', arrayBufferToBase64(newKey.buffer as ArrayBuffer));
+  return newKey.buffer as ArrayBuffer;
 }
 
 /**
@@ -167,10 +167,10 @@ export async function encryptClientData(plaintext: string): Promise<string> {
     const encryptedData = await crypto.subtle.encrypt(
       {
         name: ALGORITHM,
-        iv: iv
+        iv: iv as BufferSource
       },
       key,
-      encodedData
+      encodedData as BufferSource
     );
 
     // Combine salt + iv + encrypted data for storage
@@ -182,7 +182,7 @@ export async function encryptClientData(plaintext: string): Promise<string> {
     combined.set(new Uint8Array(encryptedData), SALT_LENGTH + IV_LENGTH);
 
     // Return as base64
-    return arrayBufferToBase64(combined.buffer);
+    return arrayBufferToBase64(combined.buffer as ArrayBuffer);
   } catch (error) {
     throw new ClientCryptoError(
       'Failed to encrypt client data',
@@ -216,10 +216,10 @@ export async function decryptClientData(encryptedData: string): Promise<string> 
     const decryptedData = await crypto.subtle.decrypt(
       {
         name: ALGORITHM,
-        iv: iv
+        iv: iv as BufferSource
       },
       key,
-      encrypted
+      encrypted as BufferSource
     );
 
     // Convert back to string

@@ -53,7 +53,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   // Prefer the cookie locale when present; fall back to next-intl detection
-  const cookieLocale = cookies().get('NEXT_LOCALE')?.value;
+  const cookieLocale = (await cookies()).get('NEXT_LOCALE')?.value;
   const detected = await getLocale();
   const resolvedLocale: AppLocale = (locales as readonly string[]).includes(cookieLocale ?? '')
     ? (cookieLocale as AppLocale)

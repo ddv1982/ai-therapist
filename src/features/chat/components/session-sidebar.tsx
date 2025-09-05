@@ -81,10 +81,9 @@ export function SessionSidebar({
           </div>
           <Button 
             onClick={startNewSession}
-            className="w-full justify-start gap-3 h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
+            className="w-full justify-start gap-3 h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 text-white shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation !transform-none !hover:transform-none !active:transform-none !scale-100 !hover:scale-100 !active:scale-100 !ring-0 !focus:ring-0 !focus-visible:ring-0 !outline-none"
           >
-            {/* Shimmer effect */}
-            <div className="shimmer-effect"></div>
+            <div className="shimmer-effect opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
             <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
               <Plus className="w-4 h-4" />
             </div>

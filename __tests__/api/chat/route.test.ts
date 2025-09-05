@@ -32,11 +32,9 @@ jest.mock('@/lib/therapy/therapy-prompts', () => ({
 }));
 
 // Mock imports
-import { model, languageModels } from '@/ai/providers';
 import { streamText } from 'ai';
 
 // Type the mocked functions
-const mockModel = jest.mocked(model);
 const mockStreamText = jest.mocked(streamText);
 // const _mockConvertToModelMessages = jest.mocked(convertToModelMessages);
 
@@ -77,7 +75,7 @@ describe('/api/chat Route - Simplified Architecture', () => {
         sessionId: 'test-session-123'
       });
 
-      const response = await POST(request);
+      const response = await POST(request, { params: Promise.resolve({}) });
 
       // Verify AI SDK streamText was called with correct parameters
       expect(mockStreamText).toHaveBeenCalledWith({
@@ -104,7 +102,8 @@ describe('/api/chat Route - Simplified Architecture', () => {
         sessionId: 'test-session'
       });
 
-      await POST(request);
+      await POST(request, { params: Promise.resolve({}) });
+      await POST(request, { params: Promise.resolve({}) });
 
       // Verify streamText was called with correct model (default 20B model)
       expect(mockStreamText).toHaveBeenCalledWith(expect.objectContaining({
@@ -118,7 +117,7 @@ describe('/api/chat Route - Simplified Architecture', () => {
         selectedModel: 'openai/gpt-oss-120b'
       });
 
-      await POST(request);
+      await POST(request, { params: Promise.resolve({}) });
 
       // Verify streamText was called with correct model and parameters
       expect(mockStreamText).toHaveBeenCalledWith({
@@ -142,7 +141,7 @@ describe('/api/chat Route - Simplified Architecture', () => {
 
       const request = createMockRequest({ messages });
 
-      await POST(request);
+      await POST(request, { params: Promise.resolve({}) });
 
       // Should pass messages directly to streamText without conversion
       expect(mockStreamText).toHaveBeenCalledWith({
@@ -173,7 +172,7 @@ describe('/api/chat Route - Simplified Architecture', () => {
         messages: [{ id: '1', role: 'user', content: 'Hello' }]
       });
 
-      const response = await POST(request);
+      const response = await POST(request, { params: Promise.resolve({}) });
 
       expect(mockStreamResponse.toUIMessageStreamResponse).toHaveBeenCalledWith({
         onError: expect.any(Function)
@@ -202,7 +201,7 @@ describe('/api/chat Route - Simplified Architecture', () => {
         messages: [{ id: '1', role: 'user', content: 'Hello' }]
       });
 
-      await POST(request);
+      await POST(request, { params: Promise.resolve({}) });
 
       expect(mockStreamText).toHaveBeenCalled();
     });
@@ -228,7 +227,7 @@ describe('/api/chat Route - Simplified Architecture', () => {
         messages: [{ id: '1', role: 'user', content: 'Hello' }]
       });
 
-      await POST(request);
+      await POST(request, { params: Promise.resolve({}) });
 
       expect(mockStreamText).toHaveBeenCalled();
       consoleSpy.mockRestore();
@@ -248,7 +247,7 @@ describe('/api/chat Route - Simplified Architecture', () => {
           selectedModel: modelId
         });
 
-        await POST(request);
+        await POST(request, { params: Promise.resolve({}) });
 
         // Verify streamText was called with the correct model from languageModels
         const expectedModel = modelId === 'openai/gpt-oss-20b' ? 'mock-model-20b' : 'mock-model-120b';

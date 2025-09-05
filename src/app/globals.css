@@ -1,10 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@config "../../tailwind.config.js";
+@plugin "@tailwindcss/typography";
+@plugin "tailwindcss-animate";
+@import "tailwindcss";
 
 @layer base {
   :root {
-    /* Modern shadcn v2 with tweakcn.com-inspired therapeutic colors */
     --background: 0 0% 100%;
     --foreground: 222 84% 4.9%;
     --card: 0 0% 100%;
@@ -27,9 +27,9 @@
     --radius: 0.75rem;
     
     /* Enhanced therapeutic gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(211 96% 48%) 0%, hsl(217 91% 54%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(152 60% 42%) 0%, hsl(162 63% 46%) 100%);
-    --gradient-muted: linear-gradient(135deg, hsl(210 40% 96%) 0%, hsl(214 32% 91%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(211deg 96% 48%) 0%, hsl(217deg 91% 54%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(152deg 60% 42%) 0%, hsl(162deg 63% 46%) 100%);
+    --gradient-muted: linear-gradient(135deg, hsl(210deg 40% 96%) 0%, hsl(214deg 32% 91%) 100%);
     
     /* Professional therapeutic colors */
     --therapy-success: 147 45% 55%;
@@ -39,12 +39,12 @@
     --therapy-warm: 25 95% 53%;
     
     /* Component-specific variables */
-    --sidebar-background: hsl(210 40% 98%);
+    --sidebar-background: hsl(210deg 40% 98%);
     --modal-backdrop: 222 47% 11% / 0.8;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 5%);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -2px rgb(0 0 0 / 10%);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -4px rgb(0 0 0 / 10%);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 10%), 0 8px 10px -6px rgb(0 0 0 / 10%);
     
     /* Typography variables for better readability */
     --line-height-relaxed: 1.6;
@@ -75,9 +75,9 @@
     --ring: 210 85% 60%;
     
     /* Dark theme gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210 85% 60%) 0%, hsl(220 85% 65%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(147 45% 55%) 0%, hsl(157 45% 60%) 100%);
-    --gradient-muted: linear-gradient(135deg, hsl(217 32% 17%) 0%, hsl(217 32% 20%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(210deg 85% 60%) 0%, hsl(220deg 85% 65%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(147deg 45% 55%) 0%, hsl(157deg 45% 60%) 100%);
+    --gradient-muted: linear-gradient(135deg, hsl(217deg 32% 17%) 0%, hsl(217deg 32% 20%) 100%);
     
     /* Dark therapeutic colors */
     --therapy-success: 147 50% 60%;
@@ -87,18 +87,18 @@
     --therapy-warm: 25 95% 63%;
     
     /* Dark component variables */
-    --sidebar-background: hsl(222 84% 4.9%);
+    --sidebar-background: hsl(222deg 84% 4.9%);
     --modal-backdrop: 0 0% 0% / 0.9;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 30%);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 30%), 0 2px 4px -2px rgb(0 0 0 / 30%);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 30%), 0 4px 6px -4px rgb(0 0 0 / 30%);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 30%), 0 8px 10px -6px rgb(0 0 0 / 30%);
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   
   html {
@@ -130,17 +130,16 @@
   button,
   [role="button"] {
     user-select: none;
-    transition: transform 0.1s ease, opacity 0.1s ease;
+    transition: opacity 0.1s ease;
   }
 
   button:active,
   [role="button"]:active {
-    transform: scale(0.98);
     opacity: 0.95;
   }
 
   /* Mobile input fixes */
-  @media (max-width: 768px) {
+  @media (width <= 768px) {
     input,
     select,
     textarea {
@@ -158,10 +157,12 @@
     button:hover,
     [role="button"]:hover {
       opacity: 0.9;
+      transform: none;
     }
     
     a:hover {
       opacity: 0.8;
+      transform: none;
     }
   }
 
@@ -183,7 +184,7 @@
   }
 
   /* Mobile viewport fix */
-  @media (max-width: 768px) {
+  @media (width <= 768px) {
     body {
       height: 100vh;
       min-height: 100vh;
@@ -192,7 +193,7 @@
 }
 
 /* Mobile responsive fixes */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   #__next {
     height: 100%;
     overflow: hidden;
@@ -201,7 +202,7 @@
 }
 
 /* Network URL specific fixes */
-@media (min-resolution: 2dppx) and (hover: none) {
+@media (resolution >= 2dppx) and (hover: none) {
   /* High DPI mobile devices accessing via network */
   .network-optimized {
     /* Reduce complexity for better performance */
@@ -289,15 +290,15 @@
   }
   
   .therapy-modal-content {
-    @apply spacing-therapy-md max-h-[90vh] overflow-y-auto;
+    @apply p-therapy-md max-h-[90vh] overflow-y-auto;
   }
   
   .therapy-modal-header {
-    @apply spacing-therapy-md border-b border-border flex items-center justify-between;
+    @apply p-therapy-md border-b border-border flex items-center justify-between;
   }
   
   .therapy-modal-footer {
-    @apply spacing-therapy-md border-t border-border flex items-center justify-end gap-therapy-sm;
+    @apply p-therapy-md border-t border-border flex items-center justify-end gap-therapy-sm;
   }
   
   .therapy-input {
@@ -314,19 +315,19 @@
   }
   
   .therapy-button-primary {
-    @apply therapy-button therapy-primary hover:bg-primary/90 active:scale-95;
+    @apply inline-flex items-center justify-center px-therapy-md py-therapy-xs rounded-therapy-sm text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95;
   }
   
   .therapy-button-secondary {
-    @apply therapy-button therapy-secondary hover:bg-secondary/80 active:scale-95;
+    @apply inline-flex items-center justify-center px-therapy-md py-therapy-xs rounded-therapy-sm text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-95;
   }
   
   .therapy-button-accent {
-    @apply therapy-button therapy-accent hover:bg-accent/90 active:scale-95;
+    @apply inline-flex items-center justify-center px-therapy-md py-therapy-xs rounded-therapy-sm text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 active:scale-95;
   }
   
   .therapy-button-ghost {
-    @apply therapy-button hover:bg-accent/10 hover:text-accent-foreground active:scale-95;
+    @apply inline-flex items-center justify-center px-therapy-md py-therapy-xs rounded-therapy-sm text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none hover:bg-accent/10 hover:text-accent-foreground active:scale-95;
   }
   
   .therapy-form-group {
@@ -404,7 +405,7 @@
   .custom-scrollbar:hover { scrollbar-width: none; scrollbar-color: transparent transparent; }
   
   /* Mobile-specific scrolling improvements */
-  @media (max-width: 768px) {
+  @media (width <= 768px) {
     .custom-scrollbar {
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
@@ -428,7 +429,6 @@
       .custom-scrollbar {
         /* Prevent momentum scrolling issues */
         -webkit-overflow-scrolling: auto;
-        overflow-scrolling: auto;
       }
     }
   }
@@ -452,13 +452,10 @@
     }
     
     /* Fix for iOS keyboard viewport changes */
-    @media screen and (max-width: 768px) {
+    @media screen and (width <= 768px) {
       .mobile-container {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        inset: 0;
         height: var(--app-height, 100vh);
         min-height: var(--app-height, 100vh);
         max-height: var(--app-height, 100vh);
@@ -466,16 +463,16 @@
         z-index: 0;
       }
       
-      /* Prevent iOS zoom on input focus */
-      input[type="text"],
-      input[type="password"],
-      input[type="email"],
-      textarea,
-      select {
-        font-size: 16px !important;
-        -webkit-appearance: none;
-        border-radius: 0;
-      }
+    /* Prevent iOS zoom on input focus */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    textarea,
+    select {
+      font-size: 16px;
+      -webkit-appearance: none;
+      border-radius: 0;
+    }
       
       /* Fix iOS button styling */
       button {
@@ -498,7 +495,7 @@
     background: linear-gradient(
       105deg,
       transparent 40%,
-      rgba(255, 255, 255, 0.3) 50%,
+      rgb(255 255 255 / 30%) 50%,
       transparent 60%
     );
   }
@@ -507,7 +504,7 @@
     background: linear-gradient(
       105deg,
       transparent 40%,
-      rgba(255, 255, 255, 0.15) 50%,
+      rgb(255 255 255 / 15%) 50%,
       transparent 60%
     );
   }
@@ -532,6 +529,7 @@
   /* Thumb styling */
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
+    appearance: none;
     @apply w-5 h-5 rounded-full bg-primary shadow-lg cursor-pointer;
     transition: all 0.2s ease;
   }
@@ -580,7 +578,7 @@
   
   .message-content-user p, .message-content-assistant p {
     @apply leading-relaxed mb-3 last:mb-0;
-    word-wrap: break-word;
+    overflow-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
   }
@@ -593,7 +591,7 @@
   
   .message-content-user li, .message-content-assistant li {
     line-height: var(--line-height-relaxed);
-    word-wrap: break-word;
+    overflow-wrap: break-word;
     overflow-wrap: break-word;
     margin-bottom: 0.5rem;
   }
@@ -644,14 +642,14 @@
       /* Mobile: 1 column */
       grid-template-columns: repeat(1, 1fr);
       /* Tablet: 2 columns */
-      @media (min-width: 640px) {
+      @media (width >= 640px) {
         grid-template-columns: repeat(2, 1fr);
       }
       /* Desktop: 3-4 columns */
-      @media (min-width: 1024px) {
+      @media (width >= 1024px) {
         grid-template-columns: repeat(3, 1fr);
       }
-      @media (min-width: 1280px) {
+      @media (width >= 1280px) {
         grid-template-columns: repeat(4, 1fr);
       }
     }
@@ -664,13 +662,13 @@
     /* Masonry Layout */
     &.masonry-layout {
       @apply columns-1 gap-4 space-y-4;
-      @media (min-width: 640px) {
+      @media (width >= 640px) {
         columns: 2;
       }
-      @media (min-width: 1024px) {
+      @media (width >= 1024px) {
         columns: 3;
       }
-      @media (min-width: 1280px) {
+      @media (width >= 1280px) {
         columns: 4;
       }
 
@@ -693,14 +691,14 @@
       /* Mobile: 1 column */
       grid-template-columns: repeat(1, 1fr);
       /* Tablet: 2 columns */
-      @media (min-width: 640px) {
+      @media (width >= 640px) {
         grid-template-columns: repeat(2, 1fr);
       }
       /* Desktop: 3-4 columns based on complexity */
-      @media (min-width: 1024px) {
+      @media (width >= 1024px) {
         grid-template-columns: repeat(3, 1fr);
       }
-      @media (min-width: 1280px) {
+      @media (width >= 1280px) {
         grid-template-columns: repeat(4, 1fr);
       }
 
@@ -818,14 +816,14 @@
   }
 
   /* Auto-responsive table behavior - mobile */
-  @media (max-width: 767px) {
+  @media (width <= 767px) {
     .therapeutic-table-container.auto-responsive .therapeutic-table-auto {
       @apply hidden;
     }
   }
 
   /* Hybrid layout behavior - tablet and mobile */
-  @media (max-width: 1023px) {
+  @media (width <= 1023px) {
     .therapeutic-table-container.hybrid-layout .therapeutic-table-hybrid {
       @apply hidden;
     }
@@ -876,7 +874,7 @@
   }
 
   /* Mobile-specific card optimizations */
-  @media (max-width: 640px) {
+  @media (width <= 640px) {
     .therapeutic-card-grid .card-grid-container.grid-layout {
       @apply gap-3;
     }
@@ -1121,7 +1119,7 @@
   }
 
   /* Mobile-Specific Optimizations */
-  @media (max-width: 768px) {
+  @media (width <= 768px) {
     /* Reduce animation intensity on mobile for better performance */
     .streaming-blur .streaming-content-container {
       filter: blur(1.5px) brightness(0.97);
@@ -1150,7 +1148,7 @@
   }
 
   /* High DPI Display Optimizations */
-  @media (min-resolution: 2dppx) {
+  @media (resolution >= 2dppx) {
     .streaming-blur .streaming-content-container {
       filter: blur(2px) brightness(0.96) saturate(1.08);
     }
@@ -1163,19 +1161,19 @@
   /* Reduced Motion Support */
   @media (prefers-reduced-motion: reduce) {
     .streaming-message-wrapper * {
-      animation: none !important;
-      transition: opacity 200ms ease !important;
+      animation: none;
+      transition: opacity 200ms ease;
     }
 
     .streaming-blur .streaming-content-container,
     .streaming-stabilizing .streaming-content-container {
-      filter: none !important;
-      transform: none !important;
-      opacity: 0.98 !important;
+      filter: none;
+      transform: none;
+      opacity: 0.98;
     }
 
     .streaming-revealed .streaming-content-container {
-      opacity: 1 !important;
+      opacity: 1;
     }
   }
 
@@ -1210,7 +1208,7 @@
  * ======================================== */
 
 /* Simple iOS Safari scroll compatibility during streaming */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .streaming-message-wrapper {
     -webkit-overflow-scrolling: touch;
     position: relative;
@@ -1280,7 +1278,7 @@
 }
 
 /* Mobile touch scroll enhancements for CBT modal */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .cbt-modal-scroll-area {
     /* Enhanced touch scrolling */
     touch-action: pan-y;
@@ -1298,7 +1296,7 @@
 }
 
 /* Performance optimizations for low-power devices */
-@media (max-resolution: 1dppx) {
+@media (resolution <= 1dppx) {
   .cbt-modal-card {
     /* Disable GPU acceleration on low-res displays */
     transform: none;
@@ -1314,12 +1312,12 @@
 .therapeutic-content {
   /* Better text spacing and readability */
   line-height: var(--line-height-relaxed);
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
   
   /* Prevent awkward line breaks */
-  text-rendering: optimizeLegibility;
+  text-rendering: optimizelegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -1335,7 +1333,7 @@
 .therapeutic-content ul li {
   @apply relative;
   line-height: var(--line-height-relaxed);
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   overflow-wrap: break-word;
   
   /* Better spacing for multi-line list items */
@@ -1378,7 +1376,7 @@
 /* Long text handling */
 .therapeutic-content p {
   line-height: var(--line-height-relaxed);
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
   margin-bottom: 1rem;
@@ -1394,7 +1392,7 @@
 /* Better handling of dashes and hyphens in therapeutic text */
 .therapeutic-content {
   /* Handle em-dashes and en-dashes properly */
-  text-rendering: optimizeLegibility;
+  text-rendering: optimizelegibility;
 }
 
 /* Better spacing for therapeutic techniques */
@@ -1413,13 +1411,13 @@
 .message-content-assistant,
 .message-content-user {
   line-height: var(--line-height-relaxed);
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   overflow-wrap: break-word;
 }
 
 /* Ensure links are visible and readable inside user bubbles (which use primary background) */
 .message-content-user a {
-  @apply underline;
+  text-decoration: underline;
   /* Use foreground color for contrast on primary background */
   color: hsl(var(--primary-foreground));
   /* Wrap long URLs nicely */
@@ -1440,7 +1438,7 @@
 
 /* Better handling of long therapy technique names */
 .technique-name {
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
   line-height: var(--line-height-normal);
@@ -1458,7 +1456,7 @@
 }
 
 /* Mobile-specific text improvements */
-@media (max-width: 768px) {
+@media (width <= 768px) {
   .therapeutic-content {
     line-height: 1.7; /* Slightly more space on mobile for easier reading */
   }
@@ -1500,13 +1498,13 @@
 /* Improve readability of therapeutic terms and definitions */
 .therapeutic-term {
   @apply font-semibold text-primary;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   overflow-wrap: break-word;
 }
 
 .therapeutic-definition {
   @apply text-muted-foreground mt-1;
   line-height: var(--line-height-relaxed);
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   overflow-wrap: break-word;
 }

@@ -36,12 +36,12 @@ export function withApiMiddleware<T = unknown>(
   handler: (
     request: NextRequest,
     context: RequestContext,
-    params?: unknown
+    params: Promise<Record<string, string>>
   ) => Promise<NextResponse<ApiResponse<T>>>
 ) {
   return async (
     request: NextRequest,
-    routeParams?: { params: unknown }
+    routeParams: { params: Promise<Record<string, string>> }
   ): Promise<NextResponse<ApiResponse<T>>> => {
     const requestContext = createRequestLogger(request);
     const start = Date.now();
@@ -74,7 +74,7 @@ export function withAuth<T = unknown>(
   handler: (
     request: NextRequest,
     context: AuthenticatedRequestContext,
-    params?: unknown
+    params: Promise<Record<string, string>>
   ) => Promise<NextResponse<ApiResponse<T>>>
 ) {
   return withApiMiddleware(async (request, baseContext, params) => {
@@ -119,12 +119,12 @@ export function withAuthStreaming(
   handler: (
     request: NextRequest,
     context: AuthenticatedRequestContext,
-    params?: unknown
+    params: Promise<Record<string, string>>
   ) => Promise<Response>
 ) {
   return async (
     request: NextRequest,
-    routeParams?: { params: unknown }
+    routeParams: { params: Promise<Record<string, string>> }
   ): Promise<Response> => {
     const baseContext = createRequestLogger(request);
     const start = Date.now();
@@ -159,7 +159,7 @@ export function withAuthStreaming(
         userId: userInfo.userId,
       });
 
-      const res = await handler(request, authenticatedContext, routeParams?.params);
+      const res = await handler(request, authenticatedContext, routeParams.params);
       logger.info('Streaming request completed', { requestId: authenticatedContext.requestId, url: authenticatedContext.url, method: authenticatedContext.method, durationMs: Date.now() - start });
       return res;
     } catch (error) {
@@ -197,13 +197,13 @@ export function withAuthAndRateLimitStreaming(
   handler: (
     request: NextRequest,
     context: AuthenticatedRequestContext,
-    params?: unknown
+    params: Promise<Record<string, string>>
   ) => Promise<Response>,
   options: { maxRequests?: number; windowMs?: number; maxConcurrent?: number } = {}
 ) {
   return async (
     request: NextRequest,
-    routeParams?: { params: unknown }
+    routeParams: { params: Promise<Record<string, string>> }
   ): Promise<Response> => {
     // In test environment, bypass auth and rate limiting to allow unit tests to exercise handlers
     if (process.env.NODE_ENV === 'test') {
@@ -377,13 +377,14 @@ export function withValidationAndParams<TSchema extends z.ZodSchema, TResponse =
     request: NextRequest,
     context: AuthenticatedRequestContext,
     validatedData: z.infer<TSchema>,
-    params: unknown
+    params: Record<string, string>
   ) => Promise<NextResponse<ApiResponse<TResponse>>>
 ) {
-  return (request: NextRequest, routeParams: { params: unknown }) => {
-    return withValidation(schema, (req, ctx, data) => 
-      handler(req, ctx, data, routeParams.params)
-    )(request, routeParams);
+  return (request: NextRequest, routeParams: { params: Promise<Record<string, string>> }) => {
+    return withValidation(schema, async (req, ctx, data) => {
+      const params = await routeParams.params;
+      return handler(req, ctx, data, params);
+    })(request, routeParams);
   };
 }
 
@@ -492,13 +493,13 @@ export function withAuthAndRateLimit<T = unknown>(
   handler: (
     request: NextRequest,
     context: AuthenticatedRequestContext,
-    params?: unknown
+    params: Promise<Record<string, string>>
   ) => Promise<NextResponse<ApiResponse<T>>>,
   options: { maxRequests?: number; windowMs?: number } = {}
 ) {
   return async (
     request: NextRequest,
-    routeParams?: { params: unknown }
+    routeParams: { params: Promise<Record<string, string>> }
   ): Promise<NextResponse<ApiResponse<T>>> => {
     const requestContext = createRequestLogger(request);
     const start = Date.now();

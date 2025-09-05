@@ -16,8 +16,8 @@ export const cbtRHFSchema = z.object({
     anxiety: z.number().min(0).max(10),
     shame: z.number().min(0).max(10),
     guilt: z.number().min(0).max(10),
-    other: z.string().optional().default(''),
-    otherIntensity: z.number().min(0).max(10).optional().default(0),
+    other: z.string().optional(),
+    otherIntensity: z.number().min(0).max(10).optional(),
   }),
   finalEmotions: z.object({
     fear: z.number().min(0).max(10),
@@ -27,8 +27,8 @@ export const cbtRHFSchema = z.object({
     anxiety: z.number().min(0).max(10),
     shame: z.number().min(0).max(10),
     guilt: z.number().min(0).max(10),
-    other: z.string().optional().default(''),
-    otherIntensity: z.number().min(0).max(10).optional().default(0),
+    other: z.string().optional(),
+    otherIntensity: z.number().min(0).max(10).optional(),
   }),
   automaticThoughts: z.array(
     z.object({
@@ -53,9 +53,9 @@ export const cbtRHFSchema = z.object({
       intensity: z.number().min(0).max(10).optional(),
     })
   ),
-  newBehaviors: z.string().optional().default(''),
+  newBehaviors: z.string().optional(),
   // alternativeResponses removed from current UX
-  originalThoughtCredibility: z.number().min(0).max(10),
+  originalThoughtCredibility: z.number().min(0).max(10).optional(),
 });
 
 export type CBTFormInput = z.infer<typeof cbtRHFSchema>;

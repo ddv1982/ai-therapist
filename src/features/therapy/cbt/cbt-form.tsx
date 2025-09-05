@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { useForm, Controller, useWatch } from 'react-hook-form';
+import { useForm, Controller, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { cbtRHFSchema, type CBTFormInput, getDefaultCBTValues } from './cbt-form-schema';
+import { cbtRHFSchema, type CBTFormInput } from './cbt-form-schema';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,9 +19,36 @@ interface CBTFormProps {
 
 export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps) {
   const form = useForm<CBTFormInput>({
-    resolver: zodResolver(cbtRHFSchema),
+    resolver: zodResolver(cbtRHFSchema) as unknown as Resolver<CBTFormInput>,
     mode: 'onChange',
-    defaultValues: (defaultValues as CBTFormInput) || (getDefaultCBTValues() as unknown as CBTFormInput),
+    defaultValues: defaultValues || {
+      date: new Date().toISOString().split('T')[0],
+      situation: '',
+      initialEmotions: {
+        fear: 0,
+        anger: 0,
+        sadness: 0,
+        joy: 0,
+        anxiety: 0,
+        shame: 0,
+        guilt: 0,
+      },
+      finalEmotions: {
+        fear: 0,
+        anger: 0,
+        sadness: 0,
+        joy: 0,
+        anxiety: 0,
+        shame: 0,
+        guilt: 0,
+      },
+      automaticThoughts: [{ thought: '', credibility: 5 }],
+      coreBeliefText: '',
+      coreBeliefCredibility: 5,
+      challengeQuestions: [],
+      rationalThoughts: [],
+      schemaModes: [],
+    },
   });
 
   const { control, handleSubmit, formState } = form;
@@ -52,11 +79,11 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
     }
   }, [current, sessionActions, onDraftChange]);
 
-  const isSituationValid = (String((current as Partial<CBTFormInput>)?.situation || '').trim().length) >= 5;
+  const isSituationValid = (String(current?.situation || '').trim().length) >= 5;
 
   return (
     <Card className="p-4 space-y-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit((data) => onSubmit(data))} className="space-y-6">
         <div>
           <label className="text-sm font-medium">Situation</label>
           <Controller
@@ -74,7 +101,7 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
             )}
           />
           {formState.errors.situation?.message && (
-            <p className="text-xs text-red-600 mt-1">{formState.errors.situation.message}</p>
+            <p className="text-xs text-red-600 mt-1">{String(formState.errors.situation.message)}</p>
           )}
         </div>
 
