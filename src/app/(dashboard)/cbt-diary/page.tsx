@@ -375,8 +375,8 @@ function CBTDiaryPageContent() {
         message: 'Your CBT session and therapeutic analysis have been added to your chat!'
       });
       
-      // Redirect to chat
-      router.push('/');
+      // Redirect back to root, chat will load current session
+      router.replace('/');
       
     } catch (error) {
       logger.error('Error sending CBT session to chat', {
