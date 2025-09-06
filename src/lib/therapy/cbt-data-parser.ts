@@ -546,7 +546,7 @@ export function generateCBTSummary(cbtData: ExtractedCBTData): string {
   
   if (cbtData.emotions?.initial) {
     const emotionList = Object.entries(cbtData.emotions.initial)
-      .filter(([_, value]) => value > 0)
+      .filter(([, value]) => value > 0)
       .map(([emotion, value]) => `${emotion}: ${value}/10`)
       .join(', ');
     sections.push(`**Initial Emotions**: ${emotionList}`);

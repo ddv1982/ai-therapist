@@ -259,7 +259,7 @@ function generateRecommendedActions(
 /**
  * Returns relevant emergency resources based on detected categories
  */
-function getRelevantResources(_categories: CrisisCategory[]): EmergencyResource[] {
+function getRelevantResources(): EmergencyResource[] {
   // Always include suicide prevention and general crisis resources
   const relevantResources = [...EMERGENCY_RESOURCES];
   

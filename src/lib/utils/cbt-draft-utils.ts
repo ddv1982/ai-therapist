@@ -31,7 +31,7 @@ export const loadCBTDraftSync = <T>(_key: string, defaultValue: T): T => {
   return defaultValue;
 };
 
-export const useDraftSaver = (_key: string, _data: unknown) => {
+export const useDraftSaver = () => {
   logger.warn('Deprecated function called', { 
     function: 'useDraftSaver',
     message: 'Use Redux store instead',
@@ -40,7 +40,7 @@ export const useDraftSaver = (_key: string, _data: unknown) => {
   return { isDraftSaved: true };
 };
 
-export const clearCBTDraft = (_key: string) => {
+export const clearCBTDraft = () => {
   logger.warn('Deprecated function called', { 
     function: 'clearCBTDraft',
     message: 'Data is managed by Redux',
@@ -48,7 +48,7 @@ export const clearCBTDraft = (_key: string) => {
   });
 };
 
-export const saveCBTDraft = (_key: string, _data: unknown) => {
+export const saveCBTDraft = () => {
   logger.warn('Deprecated function called', { 
     function: 'saveCBTDraft',
     message: 'Use Redux actions instead',

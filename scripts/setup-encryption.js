@@ -7,6 +7,20 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env.local if present, otherwise .env
+try {
+  const envLocalPath = path.join(__dirname, '..', '.env.local');
+  const envPath = path.join(__dirname, '..', '.env');
+  if (fs.existsSync(envLocalPath)) {
+    dotenv.config({ path: envLocalPath });
+  } else if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+  }
+} catch (_) {
+  // Non-fatal if env files are missing; setup can still proceed
+}
 
 /**
  * Generate a secure encryption key
@@ -100,6 +114,15 @@ function main() {
       
     case 'setup':
       try {
+        // If an encryption key already exists and is valid, do not overwrite
+        const existingKey = process.env.ENCRYPTION_KEY;
+        const existingValid = validateEncryptionKey(existingKey || '').valid;
+        if (existingValid) {
+          console.log('✅ Encryption key already configured. Skipping generation.');
+          console.log('📁 Source: .env.local or environment');
+          break;
+        }
+
         const setupKey = generateSecureEncryptionKey();
         const envFile = updateEnvFile(setupKey);
         

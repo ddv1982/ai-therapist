@@ -32,7 +32,6 @@ interface MessageProps {
 
 function MessageComponent({ 
   message, 
-  variant: _variant = 'default', 
   className
 }: MessageProps) {
   const containerClasses = buildMessageClasses(message.role, 'container');

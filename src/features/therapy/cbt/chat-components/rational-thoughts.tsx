@@ -28,8 +28,6 @@ export function RationalThoughts({
   onComplete, 
   initialData,
   coreBeliefText,
-  stepNumber: _stepNumber,
-  totalSteps: _totalSteps,
   className 
 }: RationalThoughtsProps) {
   const t = useTranslations('cbt');

@@ -23,7 +23,7 @@ declare global {
 
 // GET /api/auth/setup - Get setup data (QR code, backup codes)
 // Note: This endpoint must be accessible before authentication during initial setup
-export const GET = withRateLimitUnauthenticated(async (_request: NextRequest) => {
+export const GET = withRateLimitUnauthenticated(async () => {
   try {
     // Check if TOTP is already set up
     const isSetup = await isTOTPSetup();

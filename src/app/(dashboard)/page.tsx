@@ -460,7 +460,7 @@ function ChatPageContent() {
   // Development-only diagnostics to detect unexpected page unloads/reloads
   useEffect(() => {
     if (process.env.NODE_ENV !== 'development') return;
-    const beforeUnload = (_event: BeforeUnloadEvent) => {
+    const beforeUnload = () => {
       logger.warn('Page unloading', { component: 'ChatPage', operation: 'beforeunload' });
     };
     const onPageHide = (event: PageTransitionEvent) => {

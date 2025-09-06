@@ -30,7 +30,6 @@ export function MessageActions({
   messageId: _messageId,
   messageContent,
   messageRole,
-  timestamp: _timestamp,
   className
 }: MessageActionsProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -54,7 +53,7 @@ export function MessageActions({
     exportError,
     clearError
   } = useCBTExportActions(parsedData.formData, messageContent, {
-    onSuccess: (format: CBTExportFormat, _filename: string) => {
+    onSuccess: (format: CBTExportFormat) => {
       setLastExportedFormat(format);
       setShowSuccessIcon(true);
       setShowDropdown(false);

@@ -163,7 +163,6 @@ export function CBTStepWrapper({
   onPrevious,
   onSkip,
   autoSave = true,
-  autoSaveDelay: _autoSaveDelay = 1000,
   showProgress = true,
   hideProgressBar = false,
   allowPartialCompletion = false,

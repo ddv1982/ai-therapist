@@ -54,7 +54,7 @@ export function CBTExportButton({
     exportError,
     clearError
   } = useCBTExportActions(formData, markdownContent, {
-    onSuccess: (format: CBTExportFormat, _filename: string) => {
+    onSuccess: (format: CBTExportFormat) => {
       setLastExportedFormat(format);
       setShowSuccessIcon(true);
       setShowDropdown(false);

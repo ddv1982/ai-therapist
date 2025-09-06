@@ -66,7 +66,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
     dispatch(setCurrentStep(4));
   };
 
-  const handleFinalEmotionsComplete = (_data: import('@/store/slices/cbtSlice').EmotionData) => {
+  const handleFinalEmotionsComplete = () => {
     // In mobile flow, store final emotions in draft or session slice if needed; advance to actions
     // Here we only advance steps. ActionPlan will persist as part of session actions.
     dispatch(setCurrentStep(5));

@@ -137,7 +137,7 @@ export function CacheInvalidate(
       
       // Invalidate cache patterns
       for (const pattern of patterns) {
-        const keyGenerator = options.keyGenerator || ((_args: unknown[]) => pattern);
+        const keyGenerator = options.keyGenerator || (() => pattern);
         const cacheKey = keyGenerator(args);
         
         try {

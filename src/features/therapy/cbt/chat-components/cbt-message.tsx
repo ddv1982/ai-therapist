@@ -53,7 +53,6 @@ export function CBTMessage({
   onChallengeQuestionsComplete,
   onRationalThoughtsComplete,
   onActionComplete,
-  initialSituationData: _initialSituationData,
   initialEmotionData,
   initialThoughtData,
   initialCoreBeliefData,

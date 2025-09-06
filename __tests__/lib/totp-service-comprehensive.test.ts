@@ -65,7 +65,7 @@ describe('TOTP Service Comprehensive Tests', () => {
     mockEncryptBackupCodes.mockReturnValue('encrypted-backup-codes');
     
     // Mock $transaction to execute the callback with the same prisma mock object
-    mockPrisma.$transaction.mockImplementation(async (callback) => {
+    mockPrisma.$transaction.mockImplementation(async (callback: (tx: typeof mockPrisma) => any) => {
       return await callback(mockPrisma);
     });
   });

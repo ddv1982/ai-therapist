@@ -33,10 +33,8 @@ interface ThoughtRecordProps {
 export function ThoughtRecord({ 
   onComplete, 
   initialData,
-  title: _title = "",
-  subtitle: _subtitle = "",
-  stepNumber: _stepNumber,
-  totalSteps: _totalSteps,
+  title,
+  subtitle,
   className 
 }: ThoughtRecordProps) {
   const t = useTranslations('cbt');
@@ -172,8 +170,8 @@ export function ThoughtRecord({
   return (
     <CBTStepWrapper
       step="thoughts"
-      title={_title || t('thoughts.title')}
-      subtitle={_subtitle || t('thoughts.subtitle')}
+      title={title || t('thoughts.title')}
+      subtitle={subtitle || t('thoughts.subtitle')}
       icon={<Brain className="w-5 h-5" />}
       isValid={hasValidThoughts}
       validationErrors={[]} // No validation error display

@@ -3,7 +3,7 @@
  * Tests the AI SDK 5 chat API, streaming, and therapeutic functionality
  */
 
-import { NextRequest } from 'next/server';
+// Removed unused NextRequest import
 
 // Mock AI SDK 5 streamText function
 jest.mock('ai', () => ({
@@ -44,7 +44,7 @@ jest.mock('@/lib/database/db', () => ({
 
 describe('AI SDK 5 Integration Tests', () => {
   const mockStreamText = require('ai').streamText;
-  const { model, languageModels, models } = require('@/ai/providers');
+  const { model, languageModels } = require('@/ai/providers');
   const { prisma } = require('@/lib/database/db');
 
   beforeEach(() => {

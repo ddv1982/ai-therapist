@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server';
 import { checkDatabaseHealth, prisma } from '@/lib/database/db';
 import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
@@ -301,6 +300,6 @@ export const GET = withApiMiddleware(async (_request, context) => {
 /**
  * Liveness probe - simple endpoint to check if the API is responsive
  */
-export async function HEAD(_request: NextRequest) {
+export async function HEAD() {
   return new Response(null, { status: 200 });
 }

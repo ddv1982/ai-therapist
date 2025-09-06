@@ -135,7 +135,6 @@ export function TherapeuticFormField({
   labelClassName,
   children,
   customField,
-  mobileOptimized: _mobileOptimized = true,
   ...props
 }: TherapeuticFormFieldProps) {
   const t = useTranslations('ui');

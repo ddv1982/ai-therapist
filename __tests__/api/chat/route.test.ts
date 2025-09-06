@@ -49,6 +49,19 @@ function createMockRequest(body: any, options: { url?: string } = {}): NextReque
   } as any as NextRequest;
 }
 
+// Mock middleware to pass-through handler and provide context
+jest.mock('@/lib/api/api-middleware', () => ({
+  withAuthAndRateLimitStreaming: (handler: any) => async (req: any, ctx?: any) => {
+    const context = ctx ?? { requestId: 'test-request-id', userInfo: { userId: 'test-user-id' } };
+    return handler(req, context);
+  }
+}));
+
+// Mock i18n request to avoid dynamic import behavior
+jest.mock('@/i18n/request', () => ({
+  getApiRequestLocale: () => 'en'
+}));
+
 describe('/api/chat Route - Simplified Architecture', () => {
   beforeEach(() => {
     jest.clearAllMocks();

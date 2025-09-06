@@ -70,8 +70,6 @@ const DEFAULT_SCHEMA_MODES: SchemaMode[] = [
 export function SchemaModes({ 
   onComplete, 
   initialData,
-  stepNumber: _stepNumber,
-  totalSteps: _totalSteps,
   className 
 }: SchemaModesProps) {
   const { sessionData, schemaActions } = useCBTDataManager();

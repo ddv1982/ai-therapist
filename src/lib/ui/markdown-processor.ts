@@ -83,7 +83,7 @@ function countTableColumns(tableHtml: string): number {
  * Modern markdown processor using markdown-it + sanitize-html
  * Server-side table processing with CSS container queries for responsive behavior
  */
-export function processMarkdown(text: string, _isUser: boolean = false): string {
+export function processMarkdown(text: string): string {
   if (!text) return '';
 
   // Pre-process text to handle common HTML entities and tags

@@ -54,7 +54,7 @@ interface ParsedAnalysis {
 /**
  * Generates fallback analysis when JSON parsing fails by extracting insights from the human-readable report
  */
-function generateFallbackAnalysis(reportContent: string, _messages: ReportMessage[]): ParsedAnalysis {
+function generateFallbackAnalysis(reportContent: string): ParsedAnalysis {
   const fallbackAnalysis: ParsedAnalysis = {
     sessionOverview: {
       themes: extractThemes(reportContent),
@@ -501,7 +501,7 @@ ${languageDirective}`;
         devLog('Attempting fallback content analysis...');
         try {
           // Extract basic insights from the human-readable report
-          parsedAnalysis = generateFallbackAnalysis(completion, messages);
+          parsedAnalysis = generateFallbackAnalysis(completion);
           devLog('Successfully generated fallback analysis from human-readable content');
           
           logger.info('Fallback analysis generated successfully', {

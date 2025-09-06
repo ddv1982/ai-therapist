@@ -52,8 +52,6 @@ export function ActionPlan({
   customEmotion,
   title,
   subtitle,
-  stepNumber: _stepNumber,
-  totalSteps: _totalSteps,
   className 
 }: ActionPlanProps) {
   const t = useTranslations('cbt');

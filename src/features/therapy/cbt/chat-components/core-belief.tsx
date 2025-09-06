@@ -30,8 +30,6 @@ interface CoreBeliefProps {
 export function CoreBelief({ 
   onComplete, 
   initialData,
-  stepNumber: _stepNumber,
-  totalSteps: _totalSteps,
   className 
 }: CoreBeliefProps) {
   const t = useTranslations('cbt');

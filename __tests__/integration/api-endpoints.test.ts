@@ -3,9 +3,7 @@
  * Tests the complete AI SDK 5 chat API with streaming, authentication, and database operations
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { streamText } from 'ai';
-import { model } from '@/ai/providers';
+// Removed unused imports that caused TS errors
 
 // Mock AI SDK 5 streamText function
 jest.mock('ai', () => ({

@@ -38,8 +38,6 @@ export function ChallengeQuestions({
   onComplete, 
   initialData,
   coreBeliefText,
-  stepNumber: _stepNumber,
-  totalSteps: _totalSteps,
   className 
 }: ChallengeQuestionsProps) {
   const t = useTranslations('cbt');

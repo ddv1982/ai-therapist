@@ -34,17 +34,15 @@ export interface TherapeuticCardProps {
  * Individual therapeutic card component with responsive design
  * Handles different variants and provides mobile-optimized layouts
  */
-export function TherapeuticCard({
-  data,
-  columns,
-  variant = 'default',
-  onClick,
-  onEdit: _onEdit,
-  onDelete: _onDelete,
-  onView: _onView,
-  className,
-  index = 0
-}: TherapeuticCardProps) {
+export function TherapeuticCard(props: TherapeuticCardProps) {
+  const {
+    data,
+    columns,
+    variant = 'default',
+    onClick,
+    className,
+    index = 0
+  } = props;
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Determine which columns to show based on variant and screen size

@@ -423,8 +423,8 @@ export const errorHandlers = {
  * Rate limiting middleware (placeholder for future implementation)
  */
 export function withRateLimit(
-  _maxRequests: number = 100,
-  _windowMs: number = 60000 // 1 minute
+  // maxRequests: number = 100,  // TODO: Implement rate limiting
+  // windowMs: number = 60000    // TODO: Implement rate limiting
 ) {
   return function<T>(
     handler: (

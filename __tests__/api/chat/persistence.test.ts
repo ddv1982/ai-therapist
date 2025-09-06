@@ -42,19 +42,31 @@ jest.mock('@/lib/database/queries', () => ({
   verifySessionOwnership: jest.fn().mockResolvedValue({ valid: true }),
 }));
 
-function createMockRequest(body: any, options: { url?: string } = {}): NextRequest {
+// Mock middleware pass-through with test context
+jest.mock('@/lib/api/api-middleware', () => ({
+  withAuthAndRateLimitStreaming: (handler: any) => async (req: any, ctx?: any) => {
+    const context = ctx ?? { requestId: 'test-request-id', userInfo: { userId: 'test-user-id' } };
+    return handler(req, context);
+  }
+}));
+
+// Mock i18n request
+jest.mock('@/i18n/request', () => ({
+  getApiRequestLocale: () => 'en'
+}));
+
+function createMockRequest(body: any, options: { url?: string } = {}): any {
   const url = options.url || 'http://localhost:4000/api/chat';
   return {
     json: jest.fn().mockResolvedValue(body),
     nextUrl: new URL(url),
     headers: new Headers({ 'content-type': 'application/json' })
-  } as any as NextRequest;
+  } as any;
 }
 
 describe('Assistant message persistence (server-side)', () => {
   it('persists assistant response to database after streaming completes', async () => {
     const { POST } = require('@/app/api/chat/route');
-    const { prisma } = require('@/lib/database/db');
 
     const request = createMockRequest({
       messages: [

@@ -75,7 +75,6 @@ export interface TherapeuticModalProps {
   mobileAsSheet?: boolean; // Force sheet on mobile
   
   // Styling
-  className?: string;
   contentClassName?: string;
   headerClassName?: string;
   footerClassName?: string;
@@ -86,8 +85,6 @@ export interface TherapeuticModalProps {
   
   // Event handlers
   onClose?: () => void;
-  onConfirm?: () => void;
-  onCancel?: () => void;
 }
 
 /**
@@ -124,15 +121,12 @@ export function TherapeuticModal({
   therapeuticIcon,
   mobileOptimized = true,
   mobileAsSheet = true,
-  className: _className,
   contentClassName,
   headerClassName,
   footerClassName,
   role,
   ariaLabel,
   onClose,
-  onConfirm: _onConfirm,
-  onCancel: _onCancel,
   ...props
 }: TherapeuticModalProps) {
 

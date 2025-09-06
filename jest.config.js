@@ -36,6 +36,7 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/src/$1',
     // Mock static assets
     '\\.(css|less|sass|scss|png|jpg|jpeg|gif|webp|svg)$': 'identity-obj-proxy',
+    '^next-intl$': '<rootDir>/__tests__/__mocks__/next-intl.js',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(jspdf|canvas|@ai-sdk|ai))'

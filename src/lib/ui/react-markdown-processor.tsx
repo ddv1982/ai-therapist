@@ -62,7 +62,7 @@ function extractCBTSummaryData(text: string): { summaryData: CBTSessionSummaryDa
 /**
  * Process markdown text and return React JSX elements
  */
-export function processReactMarkdown(text: string, isUser: boolean = false, _cbtData?: { structuredCBTData?: Record<string, unknown> }): React.ReactElement {
+export function processReactMarkdown(text: string, isUser: boolean = false): React.ReactElement {
   if (!text) return <></>;
 
   // Check for CBT summary cards first
@@ -98,7 +98,7 @@ export function processReactMarkdown(text: string, isUser: boolean = false, _cbt
   // Convert tokens to React elements
   return (
     <div className={`markdown-content ${isUser ? 'user-content' : 'assistant-content'}`}>
-      {tokensToReactElements(tokens, isUser)}
+      {tokensToReactElements(tokens)}
     </div>
   );
 }
@@ -106,7 +106,7 @@ export function processReactMarkdown(text: string, isUser: boolean = false, _cbt
 /**
  * Convert markdown-it tokens to React elements
  */
-function tokensToReactElements(tokens: Token[], _isUser: boolean): React.ReactElement[] {
+function tokensToReactElements(tokens: Token[]): React.ReactElement[] {
   const elements: React.ReactElement[] = [];
   let index = 0;
   let elementCounter = 0; // Use a separate counter for unique keys

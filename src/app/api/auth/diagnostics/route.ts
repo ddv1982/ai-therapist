@@ -3,7 +3,7 @@ import { getTOTPDiagnostics, isTOTPSetup } from '@/lib/auth/totp-service';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
 
 // GET /api/auth/diagnostics - Get TOTP diagnostics for debugging
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     // Check if TOTP is set up
     const isSetup = await isTOTPSetup();
