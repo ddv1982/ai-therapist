@@ -22,6 +22,7 @@ import {
   type TableData,
   type TableDisplayConfig
 } from './table-data-extractor';
+import { processMarkdown } from './markdown-processor';
 
 // Configure markdown-it with therapeutic-friendly settings
 const md = new MarkdownIt({
@@ -68,45 +69,34 @@ export function processReactMarkdown(text: string, isUser: boolean = false): Rea
   // Check for CBT summary cards first
   const { summaryData, cleanText } = extractCBTSummaryData(text);
   
-  // If we found a CBT summary card, render it and skip normal markdown processing
   if (summaryData) {
     return <CBTSessionSummaryCard data={summaryData} />;
   }
 
-  // Pre-process text to handle common HTML entities and tags
-  const processedText = cleanText
-    // Convert literal <br> tags to actual line breaks for markdown processing
-    .replace(/<br\s*\/?>/gi, '\n')
-    // Convert other common HTML entities that might appear as text
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"');
-
-  // Parse markdown to tokens
-  let tokens: Token[];
+  // Use the improved HTML-based processor
   try {
-    tokens = md.parse(processedText, {});
+    // Use static import to avoid async client component issues
+    const html = processMarkdown(cleanText);
+    return (
+      <div
+        className={`markdown-content ${isUser ? 'user-content' : 'assistant-content'}`}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    );
   } catch (error) {
-    logger.warn('Markdown parsing failed in React processor', {
-      operation: 'processMarkdownToReact',
+    logger.warn('Markdown processing failed in React wrapper', {
+      operation: 'processReactMarkdown',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
-    return <p>{processedText}</p>;
+    return <p>{cleanText}</p>;
   }
-
-  // Convert tokens to React elements
-  return (
-    <div className={`markdown-content ${isUser ? 'user-content' : 'assistant-content'}`}>
-      {tokensToReactElements(tokens)}
-    </div>
-  );
 }
 
 /**
  * Convert markdown-it tokens to React elements
+ * (Currently unused, but kept for future therapeutic table rendering)
  */
-function tokensToReactElements(tokens: Token[]): React.ReactElement[] {
+export function tokensToReactElements(tokens: Token[]): React.ReactElement[] {
   const elements: React.ReactElement[] = [];
   let index = 0;
   let elementCounter = 0; // Use a separate counter for unique keys

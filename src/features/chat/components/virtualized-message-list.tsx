@@ -165,7 +165,12 @@ function VirtualizedMessageListComponent({
   };
 
   return (
-    <div className={containerClassName}>
+    <div
+      className={containerClassName}
+      role="log"
+      aria-live="polite"
+      aria-relevant="additions text"
+    >
       {visibleMessages.map((message, index) => {
         const isLastMessage = index === visibleMessages.length - 1;
         const isAssistantMessage = message.role === 'assistant';

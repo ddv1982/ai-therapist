@@ -478,14 +478,24 @@ function ChatPageContent() {
     if (!inputContainerRef.current || !messagesContainerRef.current) return;
     const target = inputContainerRef.current;
     const update = () => {
-      const h = target.offsetHeight || 0;
-      inputHeightRef.current = h;
-      messagesContainerRef.current!.style.setProperty('--input-h', `${h}px`);
+      if (!messagesContainerRef.current) return;
+      const height = target.offsetHeight ?? 0;
+      inputHeightRef.current = height;
+      messagesContainerRef.current.style.setProperty('--input-h', `${height}px`);
     };
+
+    // Run once on mount
     update();
-    const ro = new ResizeObserver(update);
-    ro.observe(target);
-    return () => ro.disconnect();
+
+    const resizeObserver = new ResizeObserver(() => {
+      // Use requestAnimationFrame to avoid layout thrashing
+      requestAnimationFrame(update);
+    });
+    resizeObserver.observe(target);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, []);
 
   // Set current session for cross-device continuity (memoized)

@@ -1,42 +1,45 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createEntityAdapter } from '@reduxjs/toolkit';
 import type { MessageData } from '@/features/chat/messages';
 
 interface ChatState {
-  messages: MessageData[];
   isStreaming: boolean;
   currentInput: string;
   streamingMessageId: string | null;
   error: string | null;
   settings: {
     model: string;
-    webSearchEnabled: boolean; // Add websearch toggle
+    webSearchEnabled: boolean;
   };
 }
 
-const initialState: ChatState = {
-  messages: [],
+const messagesAdapter = createEntityAdapter<MessageData>({
+  sortComparer: (a, b) => {
+    const aTime = typeof a.timestamp === 'number' ? a.timestamp : new Date(a.timestamp).getTime();
+    const bTime = typeof b.timestamp === 'number' ? b.timestamp : new Date(b.timestamp).getTime();
+    return aTime - bTime;
+  },
+});
+
+const initialState = messagesAdapter.getInitialState<ChatState>({
   isStreaming: false,
   currentInput: '',
   streamingMessageId: null,
   error: null,
   settings: {
     model: 'openai/gpt-oss-20b',
-    webSearchEnabled: false, // Default to disabled
+    webSearchEnabled: false,
   },
-};
+});
 
 const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
     addMessage: (state, action: PayloadAction<MessageData>) => {
-      state.messages.push(action.payload);
+      messagesAdapter.addOne(state, action.payload);
     },
     updateMessage: (state, action: PayloadAction<{ id: string; content: string }>) => {
-      const message = state.messages.find(m => m.id === action.payload.id);
-      if (message) {
-        message.content = action.payload.content;
-      }
+      messagesAdapter.updateOne(state, { id: action.payload.id, changes: { content: action.payload.content } });
     },
     setStreaming: (state, action: PayloadAction<{ isStreaming: boolean; messageId?: string }>) => {
       state.isStreaming = action.payload.isStreaming;
@@ -46,7 +49,7 @@ const chatSlice = createSlice({
       state.currentInput = action.payload;
     },
     clearMessages: (state) => {
-      state.messages = [];
+      messagesAdapter.removeAll(state);
       state.isStreaming = false;
       state.streamingMessageId = null;
       state.error = null;
@@ -71,5 +74,15 @@ export const {
   setError,
   updateSettings,
 } = chatSlice.actions;
+
+export const chatSelectors = messagesAdapter.getSelectors(
+  (state: { chat: ReturnType<typeof chatSlice.reducer> }) => state.chat
+);
+
+// Fine-grained selectors for performance
+export const selectIsStreaming = (state: { chat: ReturnType<typeof chatSlice.reducer> }) => state.chat.isStreaming;
+export const selectCurrentInput = (state: { chat: ReturnType<typeof chatSlice.reducer> }) => state.chat.currentInput;
+export const selectSettings = (state: { chat: ReturnType<typeof chatSlice.reducer> }) => state.chat.settings;
+export const selectError = (state: { chat: ReturnType<typeof chatSlice.reducer> }) => state.chat.error;
 
 export default chatSlice.reducer;

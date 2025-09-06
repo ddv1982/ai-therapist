@@ -1,0 +1,81 @@
+@layer components {
+  /* Therapeutic content text improvements */
+  .therapeutic-content {
+    line-height: var(--line-height-relaxed);
+    overflow-wrap: break-word;
+    hyphens: auto;
+    text-rendering: optimizelegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .therapeutic-content p {
+    line-height: var(--line-height-relaxed);
+    margin-bottom: 1rem;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+
+  .therapeutic-content ol,
+  .therapeutic-content ul {
+    @apply space-y-3 pl-6 my-4;
+    line-height: var(--line-height-relaxed);
+  }
+
+  .therapeutic-content ol > li {
+    counter-increment: therapeutic-counter;
+    list-style: none;
+    position: relative;
+  }
+
+  .therapeutic-content ol > li::before {
+    content: counter(therapeutic-counter) ".";
+    @apply absolute left-0 top-0 font-semibold text-primary;
+    margin-left: -1.5rem;
+    min-width: 1.25rem;
+    text-align: right;
+  }
+
+  .therapeutic-content ul > li {
+    list-style: none;
+    position: relative;
+  }
+
+  .therapeutic-content ul > li::before {
+    content: "•";
+    @apply absolute left-0 top-0 text-primary font-bold;
+    margin-left: -1.25rem;
+    line-height: inherit;
+  }
+
+  .therapeutic-content blockquote {
+    @apply border-l-4 border-primary/30 pl-4 py-2 my-4 bg-muted/20 rounded-r-lg italic;
+  }
+
+  .therapeutic-term {
+    @apply font-semibold text-primary;
+  }
+
+  .therapeutic-definition {
+    @apply text-muted-foreground mt-1;
+    line-height: var(--line-height-relaxed);
+  }
+
+  /* Mobile adjustments */
+  @media (width <= 768px) {
+    .therapeutic-content {
+      line-height: 1.7;
+    }
+    .therapeutic-content ol,
+    .therapeutic-content ul {
+      @apply pl-5;
+    }
+    .therapeutic-content ol > li::before {
+      margin-left: -1.25rem;
+      min-width: 1rem;
+    }
+    .therapeutic-content ul > li::before {
+      margin-left: -1rem;
+    }
+  }
+}

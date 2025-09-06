@@ -32,9 +32,14 @@ export function ChatComposer({
   const t = useTranslations('chat');
 
   return (
-    <div ref={inputContainerRef} className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} border-t border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`} role="form" aria-label="Send message">
+    <div
+      ref={inputContainerRef}
+      className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} border-t border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`}
+      role="form"
+      aria-label="Chat composer"
+    >
       <div className="max-w-4xl mx-auto">
-        <form onSubmit={onSubmit} className="flex gap-3 items-end">
+        <form onSubmit={onSubmit} className="flex gap-3 items-end" aria-label="Send a message">
           <div className="flex-1 relative">
             <Textarea
               ref={textareaRef}
@@ -53,8 +58,14 @@ export function ChatComposer({
               disabled={false}
               style={{ fontSize: isMobile ? '16px' : undefined, WebkitTapHighlightColor: 'transparent' }}
               aria-label={t('input.ariaLabel')}
-              aria-describedby="input-help"
+              aria-describedby="chat-composer-help"
+              aria-multiline="true"
+              role="textbox"
             />
+            <p id="chat-composer-help" className="sr-only">
+              {t('input.help', { defaultMessage: 'Type your message and press Enter to send' })}
+            </p>
+            {/* Removed inline help text to avoid cluttering UI */}
           </div>
           {isLoading ? (
             <Button
@@ -75,6 +86,7 @@ export function ChatComposer({
               style={{ WebkitTapHighlightColor: 'transparent' }}
               aria-label={t('input.send')}
               aria-disabled={!input.trim()}
+              aria-describedby={!input.trim() ? 'chat-composer-error' : undefined}
             >
               <div className="shimmer-effect"></div>
               <Send className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
@@ -86,5 +98,3 @@ export function ChatComposer({
     </div>
   );
 }
-
-

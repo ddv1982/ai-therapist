@@ -184,6 +184,13 @@ class CacheManager {
         key: cacheKey,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+
+      // Fallback to in-memory cache
+      const memoryCache = (globalThis as { __memoryCache?: Record<string, unknown> }).__memoryCache;
+      const memoryValue = memoryCache?.[cacheKey];
+      if (memoryValue !== undefined) {
+        return memoryValue as T;
+      }
       
       return (cacheOptions.fallback as T) || null;
     }
@@ -230,7 +237,15 @@ class CacheManager {
         key: cacheKey,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
-      return false;
+
+      // Fallback to in-memory cache
+      const globalWithCache = globalThis as { __memoryCache?: Record<string, unknown> };
+      if (!globalWithCache.__memoryCache) {
+        globalWithCache.__memoryCache = {};
+      }
+      globalWithCache.__memoryCache[cacheKey] = data;
+
+      return true;
     }
   }
 

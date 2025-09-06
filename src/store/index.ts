@@ -18,18 +18,18 @@ const rootReducer = combineReducers({
 // Resilient storage for SSR and restricted environments (e.g., iOS private mode)
 const createNoopStorage = () => {
   return {
-    getItem(_key: string) {
+    getItem() {
       return Promise.resolve(null);
     },
-    setItem(_key: string, _value: string) {
+    setItem() {
       return Promise.resolve();
     },
-    removeItem(_key: string) {
+    removeItem() {
       return Promise.resolve();
     },
     // Required to satisfy Storage interface at compile time; never called
     clear() {},
-    key(_index: number) { return null; },
+    key() { return null; },
     get length() { return 0; },
   } as unknown as Storage;
 };

@@ -15,7 +15,7 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setCurrentSession, addSession } from '@/store/slices/sessionsSlice';
+import { setCurrentSession, SessionData } from '@/store/slices/sessionsSlice';
 import { clearMessages } from '@/store/slices/chatSlice';
 import { createDraft } from '@/store/slices/cbtSlice';
 import { MessageSquare, Brain, Plus, Settings, Moon, Search, Clock } from 'lucide-react';
@@ -38,8 +38,8 @@ export function CommandPalette({
   const router = useRouter();
   const dispatch = useAppDispatch();
   
-  const sessions = useAppSelector(state => state.sessions?.sessions || []);
-  const currentSessionId = useAppSelector(state => state.sessions?.currentSessionId);
+  const sessions = useAppSelector(state => Object.values(state.sessions.entities));
+  const currentSessionId = useAppSelector(state => state.sessions.currentSessionId);
   
   // Keyboard shortcut to open command palette
   useEffect(() => {
@@ -71,7 +71,6 @@ export function CommandPalette({
       messageCount: 0,
     };
     
-    dispatch(addSession(newSession));
     dispatch(setCurrentSession(newSession.id));
     dispatch(clearMessages());
   };
@@ -131,7 +130,7 @@ export function CommandPalette({
               {/* Recent Sessions */}
               {sessions.length > 0 && (
                 <CommandGroup heading={t('command.recent')}>
-                  {sessions.slice(0, 6).map((session) => (
+                  {sessions.slice(0, 6).map((session: SessionData) => (
                     <CommandItem
                       key={session.id}
                       onSelect={() => handleSelect(() => switchToSession(session.id))}

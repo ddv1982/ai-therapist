@@ -118,12 +118,12 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
       deviceName: device.name
     }, { requestId });
     
-    // Set the authentication cookie
+    // Set the authentication cookie with stricter security
     response.cookies.set('auth-session-token', session.sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       sameSite: 'strict',
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      maxAge: 60 * 60, // 1 hour
       path: '/',
     });
     

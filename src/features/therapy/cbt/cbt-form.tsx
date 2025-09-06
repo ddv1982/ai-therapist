@@ -85,15 +85,20 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
     <Card className="p-4 space-y-6">
       <form onSubmit={handleSubmit((data) => onSubmit(data))} className="space-y-6">
         <div>
-          <label className="text-sm font-medium">Situation</label>
+          <label className="text-sm font-medium" htmlFor="situation-input">
+            Situation
+          </label>
           <Controller
             control={control}
             name="situation"
             render={({ field }) => (
               <Textarea
                 {...field}
+                id="situation-input"
                 placeholder="Describe the situation..."
                 className="mt-2"
+                aria-invalid={!!formState.errors.situation}
+                aria-describedby={formState.errors.situation ? 'situation-error' : undefined}
                 onChange={(e) => {
                   field.onChange(e);
                 }}
@@ -101,7 +106,9 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
             )}
           />
           {formState.errors.situation?.message && (
-            <p className="text-xs text-red-600 mt-1">{String(formState.errors.situation.message)}</p>
+            <p id="situation-error" className="text-xs text-red-600 mt-1" role="alert">
+              {String(formState.errors.situation.message)}
+            </p>
           )}
         </div>
 

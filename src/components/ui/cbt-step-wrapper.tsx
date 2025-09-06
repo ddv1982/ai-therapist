@@ -443,99 +443,108 @@ export function CBTStepWrapper({
 // =============================================================================
 
 export function SituationStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
+  const t = useTranslations('cbt');
   return (
     <CBTStepWrapper
       step="situation"
-      title="Describe the Situation"
-      subtitle="Tell me about what happened"
+      title={t('situation.title')}
+      subtitle={t('situation.subtitle')}
       {...props}
     />
   );
 }
 
 export function EmotionStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
+  const t = useTranslations('cbt');
   return (
     <CBTStepWrapper
       step="emotions"
-      title="Rate Your Emotions"
-      subtitle="How intense were your feelings?"
+      title={t('emotions.title')}
+      subtitle={t('emotions.subtitle')}
       {...props}
     />
   );
 }
 
 export function FinalEmotionStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
+  const t = useTranslations('cbt');
   return (
     <CBTStepWrapper
       step="final-emotions"
-      title="How do you feel now?"
-      subtitle="Rate how your emotions have changed"
+      title={t('emotions.titleNow')}
+      subtitle={t('emotions.subtitleNow')}
       {...props}
     />
   );
 }
 
 export function ThoughtStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
+  const t = useTranslations('cbt');
   return (
     <CBTStepWrapper
       step="thoughts"
-      title="Automatic Thoughts"
-      subtitle="What thoughts went through your mind?"
+      title={t('thoughts.title')}
+      subtitle={t('thoughts.subtitle')}
       {...props}
     />
   );
 }
 
 export function CoreBeliefStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
+  const t = useTranslations('cbt');
   return (
     <CBTStepWrapper
       step="core-belief"
-      title="Core Belief Analysis"
-      subtitle="What deeper belief might be driving these thoughts?"
+      title={t('coreBelief.title')}
+      subtitle={t('coreBelief.subtitle')}
       {...props}
     />
   );
 }
 
 export function ChallengeStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
+  const t = useTranslations('cbt');
   return (
     <CBTStepWrapper
       step="challenge-questions"
-      title="Challenge the Thoughts"
-      subtitle="Let's examine the evidence"
+      title={t('challenge.title')}
+      subtitle={t('challenge.subtitle')}
       {...props}
     />
   );
 }
 
 export function RationalStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
+  const t = useTranslations('cbt');
   return (
     <CBTStepWrapper
       step="rational-thoughts"
-      title="Rational Alternatives"
-      subtitle="What are more balanced ways to think about this?"
+      title={t('rational.title')}
+      subtitle={t('rational.subtitle')}
       {...props}
     />
   );
 }
 
 export function SchemaStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
+  const t = useTranslations('cbt');
   return (
     <CBTStepWrapper
       step="schema-modes"
-      title="Schema Modes"
-      subtitle="Which parts of yourself feel most active?"
+      title={t('schema.title')}
+      subtitle={t('schema.subtitle')}
       {...props}
     />
   );
 }
 
 export function ActionStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
+  const t = useTranslations('cbt');
   return (
     <CBTStepWrapper
       step="actions"
-      title="Action Plan"
-      subtitle="How will you respond differently next time?"
+      title={t('actionPlan.title')}
+      subtitle={t('actionPlan.subtitle')}
       {...props}
     />
   );

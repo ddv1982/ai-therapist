@@ -17,6 +17,61 @@ interface RateLimitConfig {
   blockDuration: number;
 }
 
+import { redisManager } from '@/lib/cache/redis-client';
+
+class RedisRateLimiter {
+  private prefix = 'rate_limit';
+
+  private getKey(ip: string, bucket: string): string {
+    return `${this.prefix}:${bucket}:${ip}`;
+  }
+
+  async checkRateLimit(ip: string, bucketName: 'default' | 'api' | 'chat' = 'default'): Promise<{ allowed: boolean; retryAfter?: number }> {
+    const config = this.getConfigForBucket(bucketName);
+    const key = this.getKey(ip, bucketName);
+    // const now = Date.now(); // removed unused variable
+
+    const result = await redisManager.executeCommand<{ allowed: boolean; retryAfter?: number }>(async (client) => {
+      const tx = client.multi();
+      tx.incr(key);
+      tx.pTTL(key);
+      const execResult = await tx.exec();
+      const count = Number(execResult?.[0] ?? 0);
+      const ttl = Number(execResult?.[1] ?? config.windowMs);
+
+      if (count === 1) {
+        await client.pExpire(key, config.windowMs);
+      }
+
+      if (count > config.maxAttempts) {
+        return { allowed: false, retryAfter: Math.ceil(ttl / 1000) };
+      }
+
+      return { allowed: true };
+    }, { allowed: true });
+
+    // Ensure non-null return
+    return result || { allowed: true };
+  }
+
+  private getConfigForBucket(name: string) {
+    const blockMs = Number(process.env.RATE_LIMIT_BLOCK_MS || 5 * 60 * 1000);
+    if (name === 'chat') {
+      const windowMs = Number(process.env.CHAT_WINDOW_MS || 5 * 60 * 1000);
+      const maxAttempts = Number(process.env.CHAT_MAX_REQS || 120);
+      return { windowMs, maxAttempts, blockDuration: blockMs };
+    }
+    if (name === 'api') {
+      const windowMs = Number(process.env.API_WINDOW_MS || 5 * 60 * 1000);
+      const maxAttempts = Number(process.env.API_MAX_REQS || 300);
+      return { windowMs, maxAttempts, blockDuration: blockMs };
+    }
+    const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS || 5 * 60 * 1000);
+    const maxAttempts = Number(process.env.RATE_LIMIT_MAX_REQS || 50);
+    return { windowMs, maxAttempts, blockDuration: blockMs };
+  }
+}
+
 class NetworkRateLimiter {
   private buckets = new Map<string, { store: Map<string, RateLimitEntry>; config: RateLimitConfig }>();
   private cleanupInterval: NodeJS.Timeout | null = null;
@@ -255,11 +310,15 @@ class NetworkRateLimiter {
 }
 
 // Singleton instance
-let rateLimiter: NetworkRateLimiter | null = null;
+let rateLimiter: NetworkRateLimiter | RedisRateLimiter | null = null;
 
-export function getRateLimiter(): NetworkRateLimiter {
+export function getRateLimiter(): NetworkRateLimiter | RedisRateLimiter {
   if (!rateLimiter) {
-    rateLimiter = new NetworkRateLimiter();
+    if (typeof process !== 'undefined' && process.env?.RATE_LIMIT_USE_REDIS === 'true') {
+      rateLimiter = new RedisRateLimiter();
+    } else {
+      rateLimiter = new NetworkRateLimiter();
+    }
   }
   return rateLimiter;
 }

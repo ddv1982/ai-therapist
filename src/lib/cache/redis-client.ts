@@ -127,10 +127,12 @@ class RedisManager {
    * Setup global event handlers
    */
   private setupEventHandlers(): void {
-    // Handle process termination gracefully
-    process.on('SIGINT', () => this.disconnect());
-    process.on('SIGTERM', () => this.disconnect());
-    process.on('beforeExit', () => this.disconnect());
+    // Handle process termination gracefully (only in Node.js runtime)
+    if (typeof process !== 'undefined' && process.on) {
+      process.on('SIGINT', () => this.disconnect());
+      process.on('SIGTERM', () => this.disconnect());
+      process.on('beforeExit', () => this.disconnect());
+    }
   }
 
   /**

@@ -1,7 +1,7 @@
 import React, { createRef } from 'react';
 import { screen, fireEvent } from '@testing-library/react';
-import { ComponentTestUtils } from '__tests__/utils/test-utilities';
-import { ChatComposer } from '@/features/chat/components/chat-composer';
+import { render } from '@testing-library/react';
+import { ChatComposer } from '../../../src/features/chat/components/chat-composer';
 
 describe('ChatComposer', () => {
   test('calls onChange and onSubmit', () => {
@@ -11,7 +11,7 @@ describe('ChatComposer', () => {
     const ref = createRef<HTMLDivElement>();
     const taRef = createRef<HTMLTextAreaElement>();
 
-    ComponentTestUtils.renderWithProviders(
+    render(
       <ChatComposer
         input=""
         isLoading={false}
@@ -35,9 +35,55 @@ describe('ChatComposer', () => {
     expect(onSubmit).toHaveBeenCalled();
   });
 
+  test('disables send button and shows error when input is empty', () => {
+    const onSubmit = jest.fn((e) => e.preventDefault());
+    render(
+      <ChatComposer
+        input=""
+        isLoading={false}
+        isMobile={false}
+        onChange={() => {}}
+        onKeyDown={() => {}}
+        onSubmit={onSubmit}
+        onStop={() => {}}
+      />
+    );
+
+    const sendBtn = screen.getByLabelText('input.send');
+    expect(sendBtn).toBeDisabled();
+
+    // Error message should be visible
+    const errorMsg = screen.getByText(/Message cannot be empty/i);
+    expect(errorMsg).toBeInTheDocument();
+  });
+
+  test('allows typing and enables send button', () => {
+    const onChange = jest.fn();
+    const onSubmit = jest.fn((e) => e.preventDefault());
+    render(
+      <ChatComposer
+        input="Hello"
+        isLoading={false}
+        isMobile={false}
+        onChange={onChange}
+        onKeyDown={() => {}}
+        onSubmit={onSubmit}
+        onStop={() => {}}
+      />
+    );
+
+    const textarea = screen.getByRole('textbox');
+    expect(textarea).toHaveValue('Hello');
+
+    const sendBtn = screen.getByLabelText('input.send');
+    expect(sendBtn).not.toBeDisabled();
+
+    fireEvent.submit(sendBtn.closest('form')!);
+    expect(onSubmit).toHaveBeenCalled();
+  });
   test('shows stop button while loading', () => {
     const onStop = jest.fn();
-    ComponentTestUtils.renderWithProviders(
+    render(
       <ChatComposer
         input=""
         isLoading={true}
@@ -54,5 +100,3 @@ describe('ChatComposer', () => {
     expect(onStop).toHaveBeenCalled();
   });
 });
-
-

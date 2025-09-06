@@ -496,7 +496,15 @@ export function TherapeuticFormField({
 }
 
 // Helper function for intensity labels
-function getIntensityLabel(value: number): string {
+function getIntensityLabel(value: number, t?: (key: string) => string): string {
+  if (t) {
+    if (value === 0) return t('cbt.emotionIntensity.none');
+    if (value <= 2) return t('cbt.emotionIntensity.mild');
+    if (value <= 5) return t('cbt.emotionIntensity.moderate');
+    if (value <= 7) return t('cbt.emotionIntensity.strong');
+    if (value <= 9) return t('cbt.emotionIntensity.veryStrong');
+    return t('cbt.emotionIntensity.overwhelming');
+  }
   if (value === 0) return "None";
   if (value <= 2) return "Mild";
   if (value <= 5) return "Moderate";
@@ -541,13 +549,13 @@ export const therapeuticFieldPresets = {
     variant: 'therapeutic' as const,
     allowCustomEmotion: true,
     emotions: [
-      { key: 'fear', label: 'Fear', emoji: '😨', color: 'bg-slate-600' },
-      { key: 'anger', label: 'Anger', emoji: '😠', color: 'bg-red-600' },
-      { key: 'sadness', label: 'Sadness', emoji: '😢', color: 'bg-blue-600' },
-      { key: 'joy', label: 'Joy', emoji: '😊', color: 'bg-yellow-500' },
-      { key: 'anxiety', label: 'Anxiety', emoji: '😰', color: 'bg-orange-500' },
-      { key: 'shame', label: 'Shame', emoji: '😳', color: 'bg-pink-600' },
-      { key: 'guilt', label: 'Guilt', emoji: '😔', color: 'bg-indigo-600' }
+      { key: 'fear', label: 'cbt.emotions.fear', emoji: '😨', color: 'bg-slate-600' },
+      { key: 'anger', label: 'cbt.emotions.anger', emoji: '😠', color: 'bg-red-600' },
+      { key: 'sadness', label: 'cbt.emotions.sadness', emoji: '😢', color: 'bg-blue-600' },
+      { key: 'joy', label: 'cbt.emotions.joy', emoji: '😊', color: 'bg-yellow-500' },
+      { key: 'anxiety', label: 'cbt.emotions.anxiety', emoji: '😰', color: 'bg-orange-500' },
+      { key: 'shame', label: 'cbt.emotions.shame', emoji: '😳', color: 'bg-pink-600' },
+      { key: 'guilt', label: 'cbt.emotions.guilt', emoji: '😔', color: 'bg-indigo-600' }
     ],
     ...props
   })

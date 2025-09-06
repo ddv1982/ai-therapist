@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRateLimiter } from '@/lib/api/rate-limiter';
 import createMiddleware from 'next-intl/middleware';
 import { locales, defaultLocale } from './src/i18n/config';
 
@@ -15,7 +14,8 @@ function getClientIP(request: NextRequest): string {
     return realIP;
   }
   
-  return request.ip || 'unknown';
+  // NextRequest does not expose .ip in Edge runtime, rely on headers only
+  return 'unknown';
 }
 
 const handleI18n = createMiddleware({
@@ -46,21 +46,6 @@ export async function middleware(request: NextRequest) {
     pathname.includes('.')
   ) {
     return NextResponse.next();
-  }
-  
-  // Apply rate limiting to prevent abuse
-  const rateLimiter = getRateLimiter();
-  const rateLimitResult = rateLimiter.checkRateLimit(clientIP);
-  
-  if (!rateLimitResult.allowed) {
-    const retryAfter = rateLimitResult.retryAfter || 300; // Reduced from 900 to 5 minutes
-    return new Response('Rate limit exceeded. Please try again later.', {
-      status: 429,
-      headers: {
-        'Content-Type': 'text/plain',
-        'Retry-After': retryAfter.toString()
-      }
-    });
   }
   
   // Continue to main application pages

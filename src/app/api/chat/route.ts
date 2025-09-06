@@ -6,6 +6,7 @@ import { groq } from "@ai-sdk/groq";
 import { THERAPY_SYSTEM_PROMPT } from '@/lib/therapy/therapy-prompts';
 import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
+import { createErrorResponse } from '@/lib/api/api-response';
 
 import { prisma } from '@/lib/database/db';
 import { verifySessionOwnership } from '@/lib/database/queries';
@@ -48,26 +49,17 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       const parsed = JSON.parse(bodyText);
       fullBody = parsed;
     } else {
-      return new Response(
-        JSON.stringify({ error: "Unsupported request body" }),
-        { status: 400, headers: { "Content-Type": "application/json", "X-Request-Id": context.requestId } }
-      );
+      return createErrorResponse("Unsupported request body", 400, { requestId: context.requestId });
     }
 
     // Basic payload size cap (~128KB default, configurable via env)
     if (bodySize > MAX_SIZE) {
-      return new Response(
-        JSON.stringify({ error: "Request too large" }),
-        { status: 413, headers: { "Content-Type": "application/json", "X-Request-Id": context.requestId } }
-      );
+      return createErrorResponse("Request too large", 413, { requestId: context.requestId });
     }
 
     const parsedInput = chatRequestSchema.safeParse(fullBody);
     if (!parsedInput.success) {
-      return new Response(
-        JSON.stringify({ error: "Invalid request data", details: parsedInput.error.message }),
-        { status: 400, headers: { "Content-Type": "application/json", "X-Request-Id": context.requestId } }
-      );
+      return createErrorResponse("Invalid request data", 400, { requestId: context.requestId, details: parsedInput.error.message });
     }
 
     // Accept both legacy { role, content } and AI SDK UI message { role, parts } shapes
@@ -97,13 +89,34 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
 
     const typedMessages = normalizeMessages(parsedInput.data.messages);
     if (!typedMessages) {
-      return new Response(
-        JSON.stringify({ error: "Invalid messages format" }),
-        { status: 400, headers: { "Content-Type": "application/json", "X-Request-Id": context.requestId } }
-      );
+      return createErrorResponse("Invalid messages format", 400, { requestId: context.requestId });
     }
     // Extract sessionId for server-side persistence of assistant messages
     const sessionId = parsedInput.data.sessionId;
+
+    // Load full session history if sessionId is provided
+    let history: ApiChatMessage[] = [];
+    if (sessionId) {
+      const dbMessages = await prisma.message.findMany({
+        where: { sessionId },
+        orderBy: { timestamp: 'asc' },
+      });
+      const { safeDecryptMessages } = await import('@/lib/chat/message-encryption');
+      const decrypted = safeDecryptMessages(dbMessages.map(m => ({
+        role: m.role,
+        content: m.content,
+        timestamp: m.timestamp,
+      })));
+      history = decrypted.map((m, i) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+        id: dbMessages[i].id,
+      }));
+    }
+
+    // Merge DB history with new messages
+    const allMessages = [...history, ...typedMessages];
+
     // Respect explicit selectedModel when provided, otherwise auto-select
     const parsedSelectedModel = parsedInput.data.selectedModel;
     const webSearchEnabled = parsedInput.data.webSearchEnabled ?? false;
@@ -155,7 +168,7 @@ ${languageDirective}`
     const result = streamText({
       model: languageModels[modelId as ModelID],
       system: systemPrompt,
-      messages: typedMessages,
+      messages: allMessages,
       ...(hasWebSearch && { tools: { browser_search: groq.tools.browserSearch({}) } }),
       toolChoice: toolChoice,
       experimental_telemetry: { isEnabled: false },
@@ -279,7 +292,25 @@ ${languageDirective}`
           const decoder = new TextDecoder();
           let buffer = '';
           let accumulated = '';
-          const processBuffer = () => {
+          const CHUNK_SIZE = 2048; // persist every ~2KB
+          const persistChunk = async (chunk: string) => {
+            try {
+              const encrypted = encryptMessage({ role: 'assistant', content: chunk, timestamp: new Date() });
+              await prisma.message.create({
+                data: {
+                  sessionId,
+                  role: encrypted.role,
+                  content: encrypted.content,
+                  timestamp: encrypted.timestamp,
+                  modelUsed: parsedSelectedModel,
+                },
+              });
+              logger.debug('Assistant message chunk persisted', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId, length: chunk.length });
+            } catch (err) {
+              logger.error('Failed to persist assistant message chunk', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId }, err instanceof Error ? err : new Error(String(err)));
+            }
+          };
+          const processBuffer = async () => {
             let newlineIndex = buffer.indexOf('\n');
             while (newlineIndex !== -1) {
               const line = buffer.slice(0, newlineIndex);
@@ -300,6 +331,10 @@ ${languageDirective}`
                   } else if (typeof obj?.delta?.text === 'string') {
                     accumulated += obj.delta.text;
                   }
+                  if (accumulated.length >= CHUNK_SIZE) {
+                    await persistChunk(accumulated);
+                    accumulated = '';
+                  }
                 } catch {
                   // ignore parse errors
                 }
@@ -311,21 +346,11 @@ ${languageDirective}`
             const { done, value } = await reader.read();
             if (done) break;
             buffer += decoder.decode(value, { stream: true });
-            processBuffer();
+            await processBuffer();
           }
-          if (buffer.length > 0) processBuffer();
+          if (buffer.length > 0) await processBuffer();
           if (accumulated) {
-            const encrypted = encryptMessage({ role: 'assistant', content: accumulated, timestamp: new Date() });
-            await prisma.message.create({
-              data: {
-                sessionId,
-                role: encrypted.role,
-                content: encrypted.content,
-                timestamp: encrypted.timestamp,
-                modelUsed: parsedSelectedModel,
-              },
-            });
-            logger.info('Assistant message persisted after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId });
+            await persistChunk(accumulated);
           }
         };
 
@@ -370,9 +395,6 @@ ${languageDirective}`
     return uiResponse as Response;
   } catch (error) {
     logger.apiError('/api/chat', error as Error, { apiEndpoint: '/api/chat', requestId: context.requestId });
-    return new Response(
-      JSON.stringify({ error: "Failed to process request" }),
-      { status: 500, headers: { "Content-Type": "application/json", "X-Request-Id": context.requestId } }
-    );
+    return createErrorResponse("Failed to process request", 500, { requestId: context.requestId });
   }
 });

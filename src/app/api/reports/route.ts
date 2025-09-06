@@ -25,6 +25,6 @@ export const GET = withAuthAndRateLimit(async (_request: NextRequest, context) =
     return createSuccessResponse(reports, { requestId: context.requestId });
   } catch (error) {
     logger.apiError('/api/reports', error as Error, { ...context });
-    return createErrorResponse('Internal server error', 500, { requestId: context.requestId });
+    return createErrorResponse('Failed to fetch reports', 500, { requestId: context.requestId });
   }
 });

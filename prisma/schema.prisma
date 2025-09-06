@@ -123,4 +123,5 @@ model AuthSession {
   device TrustedDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 
   @@map("auth_sessions")
+  @@index([deviceId, expiresAt])
 }

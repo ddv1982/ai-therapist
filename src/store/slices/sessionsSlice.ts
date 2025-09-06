@@ -1,4 +1,5 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, createEntityAdapter, PayloadAction } from '@reduxjs/toolkit';
+// import { prisma } from '@/lib/database/db'; // reserved for future API integration
 
 export interface SessionData {
   id: string;
@@ -10,7 +11,6 @@ export interface SessionData {
 }
 
 interface SessionsState {
-  sessions: SessionData[];
   currentSessionId: string | null;
   isCreatingSession: boolean;
   isDeletingSession: string | null;
@@ -19,34 +19,47 @@ interface SessionsState {
   recoveryAttempted: boolean;
 }
 
-const initialState: SessionsState = {
-  sessions: [],
+const sessionsAdapter = createEntityAdapter<SessionData>({
+  sortComparer: (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+});
+
+const initialState = sessionsAdapter.getInitialState<SessionsState>({
   currentSessionId: null,
   isCreatingSession: false,
   isDeletingSession: null,
   error: null,
   recoveryData: null,
   recoveryAttempted: false,
-};
+});
+
+export const createSession = createAsyncThunk(
+  'sessions/createSession',
+  async (title: string, { rejectWithValue }) => {
+    try {
+      // TODO: Replace with API call to backend
+      const newSession: SessionData = {
+        id: crypto.randomUUID(),
+        title,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        messageCount: 0,
+      };
+      return newSession;
+    } catch {
+      return rejectWithValue('Failed to create session');
+    }
+  }
+);
 
 const sessionsSlice = createSlice({
   name: 'sessions',
   initialState,
   reducers: {
-    setSessions: (state, action: PayloadAction<SessionData[]>) => {
-      state.sessions = action.payload;
-    },
-    addSession: (state, action: PayloadAction<SessionData>) => {
-      state.sessions.unshift(action.payload);
-    },
     updateSession: (state, action: PayloadAction<{ id: string; updates: Partial<SessionData> }>) => {
-      const session = state.sessions.find(s => s.id === action.payload.id);
-      if (session) {
-        Object.assign(session, action.payload.updates);
-      }
+      sessionsAdapter.updateOne(state, { id: action.payload.id, changes: action.payload.updates });
     },
     deleteSession: (state, action: PayloadAction<string>) => {
-      state.sessions = state.sessions.filter(s => s.id !== action.payload);
+      sessionsAdapter.removeOne(state, action.payload);
       if (state.currentSessionId === action.payload) {
         state.currentSessionId = null;
       }
@@ -64,11 +77,24 @@ const sessionsSlice = createSlice({
       state.error = action.payload;
     },
   },
+  extraReducers: (builder) => {
+    builder.addCase(createSession.pending, (state) => {
+      state.isCreatingSession = true;
+      state.error = null;
+    });
+    builder.addCase(createSession.fulfilled, (state, action) => {
+      state.isCreatingSession = false;
+      sessionsAdapter.addOne(state, action.payload);
+      state.currentSessionId = action.payload.id;
+    });
+    builder.addCase(createSession.rejected, (state, action) => {
+      state.isCreatingSession = false;
+      state.error = (action.payload as string) || 'Failed to create session';
+    });
+  }
 });
 
 export const {
-  setSessions,
-  addSession,
   updateSession,
   deleteSession,
   setCurrentSession,
@@ -76,6 +102,10 @@ export const {
   setDeletingSession,
   setError,
 } = sessionsSlice.actions;
+
+export const sessionsSelectors = sessionsAdapter.getSelectors(
+  (state: { sessions: ReturnType<typeof sessionsSlice.reducer> }) => state.sessions
+);
 
 // Async thunks
 export const performSessionHeartbeat = createAsyncThunk(

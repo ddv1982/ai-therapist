@@ -490,9 +490,9 @@ Output:
 ## 🏗️ Architecture
 
 ### Modern Stack
-- **Next.js 14** with App Router and Turbopack
+- **Next.js 15** with App Router and Turbopack
 - **TypeScript** in strict mode
-- **Tailwind CSS** with design system
+- **Tailwind CSS v4** with modularized global styles (`src/styles/`)
 - **Prisma** with SQLite database
 - **AI SDK 5** with Groq integration
 
@@ -510,6 +510,7 @@ src/
 │   │   └── storage-management.ts      # localStorage monitoring
 │   ├── chat/        # Chat functionality
 │   └── therapy/     # Therapeutic frameworks
+├── styles/          # Modularized global styles (base, typography, layout, components, utilities)
 ├── types/           # TypeScript definitions
 └── hooks/           # Custom React hooks
 ```

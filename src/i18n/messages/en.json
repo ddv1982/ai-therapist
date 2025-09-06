@@ -10,6 +10,8 @@
   "chat.input.ariaLabel": "Type your message",
   "chat.input.send": "Send message",
   "chat.input.sending": "Sending message...",
+  "chat.input.help": "Type your message and press Enter to send.",
+  "chat.input.error": "Failed to send message. Please try again.",
   "toast.saved": "Saved successfully",
   "ui.saved": "Saved",
   "ui.valid": "Valid",
