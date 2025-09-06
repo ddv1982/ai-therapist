@@ -195,11 +195,18 @@ jest.mock('next/server', () => ({
     clone: jest.fn(),
   })),
   NextResponse: {
-    json: jest.fn((data, init) => ({
-      status: init?.status || 200,
-      headers: new Map(Object.entries(init?.headers || {})),
-      body: JSON.stringify(data),
-    })),
+    json: jest.fn((data, init) => {
+      const headers = new Map(Object.entries(init?.headers || {}));
+      const body = JSON.stringify(data);
+      return {
+        status: init?.status || 200,
+        headers,
+        body,
+        json: async () => data,
+        text: async () => body,
+        cookies: { set: jest.fn(), delete: jest.fn() },
+      };
+    }),
     next: jest.fn(),
     redirect: jest.fn(),
   },
