@@ -167,6 +167,29 @@ This will automatically:
 - `curl http://localhost:4000/api/health` - Get comprehensive system health status
 - Monitor circuit breaker status, storage usage, and database performance
 
+### Makefile workflow (optional)
+
+The repository includes a `Makefile` that wraps common npm scripts and setup tasks. Running `make` with no arguments shows a full, self-documented help screen.
+
+Common commands:
+
+- **Help**: `make` or `make help`
+- **Intelligent setup + dev**: `make setup`
+- **Dev (after setup)**: `make dev`
+- **Build / Start (prod)**: `make build && make start`
+- **Diagnostics**: `make doctor`
+- **Tests**: `make test` (Jest), `make e2e`, `make e2e-ui`, `make e2e-debug` (Playwright)
+- **Lint/Type/Prisma checks**: `make lint`, `make tsc-check`, `make prisma-validate`
+- **Database utilities**: `make db-studio`, `make migrate`, `make push`, `make generate`, `make db-reset`
+- **Redis helpers**: `make redis-up`, `make redis-stop`
+- **Auth (TOTP)**: `make auth-setup`, `make auth-reset`, `make auth-status`, `make auth-health`
+- **Cleanup**: `make clean` (artifacts), `make clean-all` (also removes node_modules and local DB)
+
+Notes:
+
+- Targets are "intelligent" and will auto-install dependencies, create `.env.local`, initialize the DB, start Redis, set up/validate encryption, generate Prisma client and OpenAPI types where needed.
+- Override the app port when useful: `APP_PORT=5000 make setup`
+
 ## 🧠 AI Model System
 
 ### Unified AI SDK 5 + Groq
