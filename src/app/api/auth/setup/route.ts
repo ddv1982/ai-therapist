@@ -160,6 +160,10 @@ export const DELETE = withApiMiddleware(async (request: NextRequest, context) =>
     }
 
     await resetTOTPConfig();
+    // Clear in-memory setup cache to avoid stale data after reset
+    if (globalThis.totpSetupCache) {
+      try { delete globalThis.totpSetupCache; } catch {}
+    }
 
     return createSuccessResponse({ reset: true }, { requestId: context.requestId });
   } catch (error) {

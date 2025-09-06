@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/auth/use-auth';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { checkSessionStatus } from '@/store/slices/authSlice';
 import { therapeuticInteractive } from '@/lib/ui/design-tokens';
 import { logger } from '@/lib/utils/logger';
 
@@ -10,8 +11,14 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { isAuthenticated, needsSetup, needsVerification, isLoading } = useAuth();
+  const dispatch = useAppDispatch();
+  const { isAuthenticated, needsSetup, needsVerification, isLoading } = useAppSelector(s => s.auth);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Kick off a session check on mount
+  useEffect(() => {
+    dispatch(checkSessionStatus());
+  }, [dispatch]);
 
   // Add timeout for loading state to prevent endless hanging
   useEffect(() => {

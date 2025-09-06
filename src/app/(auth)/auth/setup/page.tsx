@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { loadSetupData, completeSetup, waitForAuthentication } from '@/store/slices/authSlice';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,71 +10,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { therapeuticInteractive } from '@/lib/ui/design-tokens';
 import {useTranslations} from 'next-intl';
 
-interface SetupData {
-  qrCodeUrl: string;
-  manualEntryKey: string;
-  backupCodes: string[];
-  secret: string;
-}
-
 export default function TOTPSetupPage() {
   const t = useTranslations();
-  const [setupData, setSetupData] = useState<SetupData | null>(null);
+  const dispatch = useAppDispatch();
+  const { setupData, isSetupLoading: isLoading, isVerifying } = useAppSelector(s => s.auth);
   const [verificationToken, setVerificationToken] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
   const [backupCodesSaved, setBackupCodesSaved] = useState(false);
   const hasFetched = useRef(false);
   const STORAGE_KEY = 'totp-setup-data';
-  const STORAGE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
   const fetchSetupData = useCallback(async () => {
     try {
-      // First try sessionStorage to avoid regenerating QR on refresh
-      if (typeof window !== 'undefined') {
-        const raw = sessionStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          try {
-            const parsed = JSON.parse(raw) as { data: SetupData; savedAt: number };
-            if (parsed && parsed.data && Date.now() - parsed.savedAt < STORAGE_TTL_MS) {
-              setSetupData(parsed.data);
-              setIsLoading(false);
-              return;
-            }
-          } catch {}
-        }
+      // Clear any previous error to prevent transient failure flash on fresh loads
+      setError('');
+      await dispatch(loadSetupData()).unwrap();
+    } catch (err) {
+      const message = (err as Error).message || '';
+      if (message === 'TOTP already configured') {
+        window.location.href = '/auth/verify';
+        return;
       }
-
-      const response = await fetch('/api/auth/setup', { cache: 'no-store' });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok) {
-        const errorMessage = (payload && (payload.error?.message || payload.error)) || '';
-        // If TOTP is already configured, redirect to verification
-        if (response.status === 400 && errorMessage === 'TOTP already configured') {
-          window.location.href = '/auth/verify';
-          return;
-        }
-        throw new Error(errorMessage || 'Failed to fetch setup data');
-      }
-      const data = (payload && payload.data) || null;
-      if (!data) {
-        throw new Error('Invalid setup response');
-      }
-      setSetupData(data);
-      // Persist in session storage to keep QR stable across accidental refreshes
-      if (typeof window !== 'undefined') {
-        try {
-          sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ data, savedAt: Date.now() }));
-        } catch {}
-      }
-      setIsLoading(false);
-    } catch {
       setError(t('auth.setup.error.load'));
-      setIsLoading(false);
     }
-  }, [t, STORAGE_TTL_MS]);
+  }, [dispatch, t]);
 
   useEffect(() => {
     // Prevent double execution in development mode
@@ -81,52 +43,37 @@ export default function TOTPSetupPage() {
     fetchSetupData();
   }, [fetchSetupData]);
 
-  
-
   const handleVerification = async () => {
     if (!setupData || !verificationToken) {
       return;
     }
 
-    setIsVerifying(true);
     setError('');
 
     try {
-      const response = await fetch('/api/auth/setup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          secret: setupData.secret,
-          backupCodes: setupData.backupCodes,
-          verificationToken,
-        }),
-      });
+      await dispatch(completeSetup({
+        secret: setupData.secret,
+        backupCodes: setupData.backupCodes,
+        verificationToken,
+      })).unwrap();
 
-      const payload = await response.json().catch(() => null);
-      if (response.ok) {
-        // Redirect to main app
-        // Cleanup cached setup data once completed
-        if (typeof window !== 'undefined') {
-          try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
-        }
-        window.location.href = '/';
-      } else {
-        const errorMessage = (payload && (payload.error?.message || payload.error)) || 'Verification failed';
-        setError(errorMessage);
+      // Cleanup cached setup data once completed
+      if (typeof window !== 'undefined') {
+        try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
       }
-    } catch {
-      setError(t('auth.setup.error.verify'));
-    } finally {
-      setIsVerifying(false);
+
+      // Robust redirect: poll server-side session until authenticated (no cookie reads)
+      await dispatch(waitForAuthentication({ timeoutMs: 6000, intervalMs: 200 })).unwrap();
+      window.location.replace('/');
+    } catch (err) {
+      const message = (err as Error).message || 'Verification failed';
+      setError(message);
     }
   };
 
   const downloadBackupCodes = () => {
     if (!setupData) return;
-    
-    const codes = setupData.backupCodes.join('\\n');
+    const codes = setupData.backupCodes.join('\n');
     const blob = new Blob([codes], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -138,17 +85,18 @@ export default function TOTPSetupPage() {
 
   const copyBackupCodes = () => {
     if (!setupData) return;
-    
-    navigator.clipboard.writeText(setupData.backupCodes.join('\\n'));
+    navigator.clipboard.writeText(setupData.backupCodes.join('\n'));
   };
 
   const copyManualKey = () => {
     if (!setupData) return;
-    
     navigator.clipboard.writeText(setupData.manualEntryKey);
   };
 
-  if (isLoading) {
+  // Prevent initial flash of the failure card before the first load attempt finishes
+  const showLoading = isLoading || (!setupData && !error);
+
+  if (showLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -159,7 +107,7 @@ export default function TOTPSetupPage() {
     );
   }
 
-  if (!setupData) {
+  if (!setupData && error) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -195,7 +143,7 @@ export default function TOTPSetupPage() {
           <p className="text-muted-foreground">{t('auth.setup.subtitle')}</p>
         </div>
 
-        {step === 1 && (
+        {setupData && step === 1 && (
           <Card>
             <CardHeader>
               <CardTitle>{t('auth.setup.step1.title')}</CardTitle>
@@ -233,7 +181,7 @@ export default function TOTPSetupPage() {
           </Card>
         )}
 
-        {step === 2 && (
+        {setupData && step === 2 && (
           <Card>
             <CardHeader>
               <CardTitle>{t('auth.setup.step2.title')}</CardTitle>
@@ -243,7 +191,7 @@ export default function TOTPSetupPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-2 p-4 bg-muted rounded-lg">
-                {setupData.backupCodes.map((code, index) => (
+                {setupData.backupCodes.map((code: string, index: number) => (
                   <code key={index} className="text-sm font-mono">
                     {code}
                   </code>
@@ -283,7 +231,7 @@ export default function TOTPSetupPage() {
           </Card>
         )}
 
-        {step === 3 && (
+        {setupData && step === 3 && (
           <Card>
             <CardHeader>
               <CardTitle>{t('auth.setup.step3.title')}</CardTitle>

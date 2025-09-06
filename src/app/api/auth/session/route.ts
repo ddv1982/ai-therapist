@@ -2,11 +2,12 @@ import { NextRequest } from 'next/server';
 import { verifyAuthSession, revokeAuthSession } from '@/lib/auth/device-fingerprint';
 import { isTOTPSetup } from '@/lib/auth/totp-service';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
-import { withAuthAndRateLimit } from '@/lib/api/api-middleware';
+import { withRateLimitUnauthenticated, withAuthAndRateLimit } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // GET /api/auth/session - Check session status
-export const GET = withAuthAndRateLimit(async (request: NextRequest) => {
+// This endpoint must be callable before authentication to drive the initial setup flow
+export const GET = withRateLimitUnauthenticated(async (request: NextRequest) => {
   try {
     // Check if TOTP is set up
     const isSetup = await isTOTPSetup();
