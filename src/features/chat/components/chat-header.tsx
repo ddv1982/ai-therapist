@@ -1,0 +1,113 @@
+'use client';
+
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { FileText, Menu, X, Brain } from 'lucide-react';
+import { getTherapeuticIconButton } from '@/lib/ui/design-tokens';
+import { useTranslations } from 'next-intl';
+
+interface ChatHeaderProps {
+  showSidebar: boolean;
+  onToggleSidebar: () => void;
+  hasActiveSession: boolean;
+  hasMessages: boolean;
+  isGeneratingReport: boolean;
+  isLoading: boolean;
+  isMobile: boolean;
+  onGenerateReport: () => void;
+  onStopGenerating: () => void;
+  onOpenCBTDiary: () => void;
+}
+
+export function ChatHeader({
+  showSidebar,
+  onToggleSidebar,
+  hasActiveSession,
+  hasMessages,
+  isGeneratingReport,
+  isLoading,
+  isMobile,
+  onGenerateReport,
+  onStopGenerating,
+  onOpenCBTDiary,
+}: ChatHeaderProps) {
+  const t = useTranslations('chat');
+
+  return (
+    <div className={`${isMobile ? 'p-3' : 'p-6'} border-b border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`}>
+      <div className="flex items-center justify-between">
+        <div className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'}`}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onTouchStart={onToggleSidebar}
+            onClick={onToggleSidebar}
+            className={getTherapeuticIconButton('large')}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            aria-label={t('main.toggleSidebar')}
+            aria-expanded={showSidebar}
+            aria-controls="chat-sidebar"
+          >
+            <div className="shimmer-effect"></div>
+            <Menu className="w-5 h-5 relative z-10" />
+          </Button>
+          <div>
+            <h1 className="text-lg md:text-xl">
+              {hasActiveSession ? t('main.sessionTitle') : t('main.newConversation')}
+            </h1>
+            <p className="text-sm text-muted-foreground hidden sm:block">
+              {hasActiveSession ? t('main.sessionSubtitle') : t('main.newSubtitle')}
+            </p>
+          </div>
+        </div>
+        <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
+          {hasActiveSession && hasMessages && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onGenerateReport}
+              disabled={isGeneratingReport}
+              className={getTherapeuticIconButton('large', true)}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+              title={t('main.generateReport')}
+            >
+              <div className="shimmer-effect"></div>
+              {isGeneratingReport ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin relative z-10" />
+              ) : (
+                <FileText className="w-5 h-5 relative z-10" />
+              )}
+            </Button>
+          )}
+          {isLoading && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onStopGenerating}
+              className={getTherapeuticIconButton('large')}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+              title={t('main.stopGenerating')}
+            >
+              <div className="shimmer-effect"></div>
+              <X className="w-5 h-5 relative z-10" />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenCBTDiary}
+            className={getTherapeuticIconButton('large')}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            title={isMobile ? t('main.cbtMobile') : t('main.cbtOpen')}
+          >
+            <div className="shimmer-effect"></div>
+            <Brain className="w-5 h-5 relative z-10" />
+          </Button>
+        </div>
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+    </div>
+  );
+}
+
+

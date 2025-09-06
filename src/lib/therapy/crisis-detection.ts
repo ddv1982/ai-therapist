@@ -194,8 +194,8 @@ export function detectCrisisContent(text: string): CrisisDetectionResult {
   // Generate recommended actions based on detected content
   const recommendedActions = generateRecommendedActions(detectedCategories, highestRiskLevel);
   
-  // Filter emergency resources based on detected categories
-  const relevantResources = getRelevantResources(detectedCategories);
+  // Select emergency resources (currently returns a general list)
+  const relevantResources = getRelevantResources();
 
   return {
     isHighRisk,

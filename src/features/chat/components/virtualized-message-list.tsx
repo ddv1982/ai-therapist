@@ -28,6 +28,7 @@ interface VirtualizedMessageListProps {
   messages: MessageData[];
   isStreaming: boolean;
   isMobile: boolean;
+  maxVisible?: number;
   // CBT component handlers - optional for normal chat
   onCBTSituationComplete?: (data: SituationData) => void;
   onCBTEmotionComplete?: (data: EmotionData) => void;
@@ -46,6 +47,7 @@ function VirtualizedMessageListComponent({
   messages, 
   isStreaming, 
   isMobile,
+  maxVisible = 50,
   onCBTSituationComplete,
   onCBTEmotionComplete,
   onCBTThoughtComplete,
@@ -59,15 +61,15 @@ function VirtualizedMessageListComponent({
 }: VirtualizedMessageListProps) {
   // For conversations with many messages, only render the most recent ones to improve performance
   const visibleMessages = useMemo(() => {
-    if (messages.length <= 50) {
+    if (messages.length <= maxVisible) {
       // For shorter conversations, render all messages
       return messages;
     }
     
-    // For longer conversations, show only the most recent 50 messages
+    // For longer conversations, show only the most recent window of messages
     // This prevents the DOM from getting too heavy
-    return messages.slice(-50);
-  }, [messages]);
+    return messages.slice(-maxVisible);
+  }, [messages, maxVisible]);
 
   const containerClassName = useMemo(() => 
     `max-w-4xl mx-auto ${isMobile ? 'space-y-3 pb-6' : 'space-y-6 pb-12'}`,
@@ -172,22 +174,7 @@ function VirtualizedMessageListComponent({
         return (
           <div key={message.id}>
             {/* Show typing indicator before empty assistant message */}
-            {shouldShowTypingIndicator && (
-              <div className="flex justify-start items-center py-2 mb-2 max-w-4xl mx-auto">
-                <div className="flex items-center gap-4">
-                  {/* Avatar placeholder */}
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 shadow-lg flex items-center justify-center">
-                    <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                  </div>
-                  {/* Typing dots */}
-                  <div className="flex space-x-2 animate-pulse">
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {shouldShowTypingIndicator && <TypingIndicator />}
             
             {/* Render CBT component if this is a CBT step, otherwise render normal message */}
             {message.metadata?.step ? (
@@ -214,6 +201,23 @@ function VirtualizedMessageListComponent({
   );
 }
 
+const TypingIndicator = memo(function TypingIndicator() {
+  return (
+    <div className="flex justify-start items-center py-2 mb-2 max-w-4xl mx-auto" aria-live="polite">
+      <div className="flex items-center gap-4">
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 shadow-lg flex items-center justify-center">
+          <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+        </div>
+        <div className="flex space-x-2 animate-pulse" aria-label="Assistant is typing">
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 export const VirtualizedMessageList = memo(VirtualizedMessageListComponent, (prevProps, nextProps) => {
   // Only re-render if messages changed, streaming status changed, or mobile status changed
   return (
@@ -221,6 +225,7 @@ export const VirtualizedMessageList = memo(VirtualizedMessageListComponent, (pre
     prevProps.messages[prevProps.messages.length - 1]?.id === nextProps.messages[nextProps.messages.length - 1]?.id &&
     prevProps.messages[prevProps.messages.length - 1]?.content === nextProps.messages[nextProps.messages.length - 1]?.content &&
     prevProps.isStreaming === nextProps.isStreaming &&
-    prevProps.isMobile === nextProps.isMobile
+    prevProps.isMobile === nextProps.isMobile &&
+    prevProps.maxVisible === nextProps.maxVisible
   );
 });

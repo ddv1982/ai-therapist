@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { performance } from 'node:perf_hooks';
 import { z } from 'zod';
 import { validateApiAuth } from '@/lib/api/api-auth';
 import { validateRequest } from '@/lib/utils/validation';
@@ -44,7 +45,7 @@ export function withApiMiddleware<T = unknown>(
     routeParams: { params: Promise<Record<string, string>> }
   ): Promise<NextResponse<ApiResponse<T>>> => {
     const requestContext = createRequestLogger(request);
-    const start = Date.now();
+    const startHighRes = performance.now();
     
     try {
       const context: RequestContext = {
@@ -55,14 +56,20 @@ export function withApiMiddleware<T = unknown>(
       };
 
       const res = await handler(request, context, routeParams?.params);
+      const durationMs = Math.round(performance.now() - startHighRes);
       try { res.headers.set('X-Request-Id', context.requestId); } catch {}
-      logger.info('API request completed', { requestId: context.requestId, url: context.url, method: context.method, durationMs: Date.now() - start });
+      try { res.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+      logger.info('API request completed', { requestId: context.requestId, url: context.url, method: context.method, durationMs });
       return res;
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
       const rid = (requestContext as unknown as { requestId?: string } | undefined)?.requestId || 'test-request';
       const ctx = (requestContext as unknown as Record<string, unknown>) || {};
-      return createServerErrorResponse(err, rid, ctx) as NextResponse<ApiResponse<T>>;
+      const resp = createServerErrorResponse(err, rid, ctx) as NextResponse<ApiResponse<T>>;
+      const durationMs = Math.round(performance.now() - startHighRes);
+      try { resp.headers.set('X-Request-Id', rid); } catch {}
+      try { resp.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+      return resp;
     }
   };
 }
@@ -127,7 +134,7 @@ export function withAuthStreaming(
     routeParams: { params: Promise<Record<string, string>> }
   ): Promise<Response> => {
     const baseContext = createRequestLogger(request);
-    const start = Date.now();
+    const startHighRes = performance.now();
     try {
       const authResult = await validateApiAuth(request);
       if (!authResult.isValid) {
@@ -141,7 +148,9 @@ export function withAuthStreaming(
           JSON.stringify({ error: authResult.error || 'Authentication required' }),
           { status: 401, headers: { 'Content-Type': 'application/json' } }
         );
+        const durationMs = Math.round(performance.now() - startHighRes);
         try { unauthorized.headers.set('X-Request-Id', baseContext.requestId || 'unknown'); } catch {}
+        try { unauthorized.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
         return unauthorized;
       }
 
@@ -160,14 +169,21 @@ export function withAuthStreaming(
       });
 
       const res = await handler(request, authenticatedContext, routeParams.params);
-      logger.info('Streaming request completed', { requestId: authenticatedContext.requestId, url: authenticatedContext.url, method: authenticatedContext.method, durationMs: Date.now() - start });
+      const durationMs = Math.round(performance.now() - startHighRes);
+      try { (res as Response).headers.set('X-Request-Id', authenticatedContext.requestId); } catch {}
+      try { (res as Response).headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+      logger.info('Streaming request completed', { requestId: authenticatedContext.requestId, url: authenticatedContext.url, method: authenticatedContext.method, durationMs });
       return res;
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      return new Response(
+      const resp = new Response(
         JSON.stringify({ error: err.message, requestId: baseContext.requestId || 'unknown' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
+      const durationMs = Math.round(performance.now() - startHighRes);
+      try { resp.headers.set('X-Request-Id', baseContext.requestId || 'unknown'); } catch {}
+      try { resp.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+      return resp;
     }
   };
 }
@@ -218,7 +234,8 @@ export function withAuthAndRateLimitStreaming(
       return handler(request, testContext, routeParams?.params);
     }
     const baseContext = createRequestLogger(request);
-    const start = Date.now();
+    // legacy start timestamp removed; using high-resolution timers elsewhere
+    const startHighRes = performance.now();
     const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
     let didIncrement = false;
     try {
@@ -231,10 +248,14 @@ export function withAuthAndRateLimitStreaming(
           url: baseContext.url,
           error: authResult.error,
         });
-        return new Response(
+        const unauthorized = new Response(
           JSON.stringify({ error: authResult.error || 'Authentication required' }),
           { status: 401, headers: { 'Content-Type': 'application/json' } }
         );
+        const durationMs = Math.round(performance.now() - startHighRes);
+        try { unauthorized.headers.set('X-Request-Id', baseContext.requestId || 'unknown'); } catch {}
+        try { unauthorized.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+        return unauthorized;
       }
 
       // Rate limit check (global and per-route)
@@ -244,10 +265,14 @@ export function withAuthAndRateLimitStreaming(
         const globalResult = limiter.checkRateLimit(clientIP, 'chat');
         if (!globalResult.allowed) {
           const retryAfter = String(globalResult.retryAfter || Math.ceil((5 * 60)));
-          return new Response('Rate limit exceeded. Please try again later.', {
+          const limited = new Response('Rate limit exceeded. Please try again later.', {
             status: 429,
             headers: { 'Content-Type': 'text/plain', 'Retry-After': retryAfter },
           });
+          const durationMs = Math.round(performance.now() - startHighRes);
+          try { limited.headers.set('X-Request-Id', baseContext.requestId || 'unknown'); } catch {}
+          try { limited.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+          return limited;
         }
       }
 
@@ -273,10 +298,14 @@ export function withAuthAndRateLimitStreaming(
         // Concurrency control
         const currentInflight = inflightCounters.get(clientIP) || 0;
         if (currentInflight >= maxConcurrent) {
-          return new Response('Too many concurrent requests. Please wait.', {
+          const tooMany = new Response('Too many concurrent requests. Please wait.', {
             status: 429,
             headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' },
           });
+          const durationMs = Math.round(performance.now() - startHighRes);
+          try { tooMany.headers.set('X-Request-Id', baseContext.requestId || 'unknown'); } catch {}
+          try { tooMany.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+          return tooMany;
         }
         inflightCounters.set(clientIP, currentInflight + 1);
         didIncrement = true;
@@ -298,15 +327,21 @@ export function withAuthAndRateLimitStreaming(
       });
 
       const response = await handler(request, authenticatedContext, routeParams?.params);
+      const durationMs = Math.round(performance.now() - startHighRes);
       try { response.headers.set('X-Request-Id', authenticatedContext.requestId); } catch {}
-      logger.info('Rate-limited streaming request completed', { requestId: authenticatedContext.requestId, url: authenticatedContext.url, method: authenticatedContext.method, durationMs: Date.now() - start });
+      try { response.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+      logger.info('Rate-limited streaming request completed', { requestId: authenticatedContext.requestId, url: authenticatedContext.url, method: authenticatedContext.method, durationMs });
       return response;
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      return new Response(
+      const resp = new Response(
         JSON.stringify({ error: err.message, requestId: baseContext.requestId || 'unknown' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
+      const durationMs = Math.round(performance.now() - startHighRes);
+      try { resp.headers.set('X-Request-Id', baseContext.requestId || 'unknown'); } catch {}
+      try { resp.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+      return resp;
     }
     finally {
       // Decrement inflight concurrency
@@ -502,7 +537,7 @@ export function withAuthAndRateLimit<T = unknown>(
     routeParams: { params: Promise<Record<string, string>> }
   ): Promise<NextResponse<ApiResponse<T>>> => {
     const requestContext = createRequestLogger(request);
-    const start = Date.now();
+    const startHighRes = performance.now();
     const baseContext: RequestContext = {
       requestId: requestContext.requestId || 'unknown',
       method: requestContext.method as string | undefined,
@@ -513,10 +548,14 @@ export function withAuthAndRateLimit<T = unknown>(
       const authResult = await validateApiAuth(request);
       if (!authResult.isValid) {
         logger.warn('Unauthorized request', { ...baseContext, error: authResult.error });
-        return createAuthenticationErrorResponse(
+        const unauthorized = createAuthenticationErrorResponse(
           authResult.error || 'Authentication required',
           baseContext.requestId
         ) as NextResponse<ApiResponse<T>>;
+        const durationMs = Math.round(performance.now() - startHighRes);
+        try { unauthorized.headers.set('X-Request-Id', baseContext.requestId); } catch {}
+        try { unauthorized.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+        return unauthorized;
       }
 
       const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
@@ -529,7 +568,7 @@ export function withAuthAndRateLimit<T = unknown>(
         const result = limiter.checkRateLimit(clientIP, 'api');
         if (!result.allowed) {
           const retryAfter = String(result.retryAfter || Math.ceil(windowMs / 1000));
-          return NextResponse.json(
+          const limited = NextResponse.json(
             {
               success: false,
               error: {
@@ -542,6 +581,10 @@ export function withAuthAndRateLimit<T = unknown>(
             },
             { status: 429, headers: { 'Retry-After': retryAfter } }
           ) as NextResponse<ApiResponse<T>>;
+          const durationMs = Math.round(performance.now() - startHighRes);
+          try { limited.headers.set('X-Request-Id', baseContext.requestId); } catch {}
+          try { limited.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+          return limited;
         }
       }
 
@@ -549,11 +592,18 @@ export function withAuthAndRateLimit<T = unknown>(
       const authenticatedContext: AuthenticatedRequestContext = { ...baseContext, userInfo };
 
       const res = await handler(request, authenticatedContext, routeParams?.params);
-      logger.info('Auth+rate-limited request completed', { requestId: authenticatedContext.requestId, url: authenticatedContext.url, method: authenticatedContext.method, durationMs: Date.now() - start });
+      const durationMs = Math.round(performance.now() - startHighRes);
+      try { res.headers.set('X-Request-Id', authenticatedContext.requestId); } catch {}
+      try { res.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+      logger.info('Auth+rate-limited request completed', { requestId: authenticatedContext.requestId, url: authenticatedContext.url, method: authenticatedContext.method, durationMs });
       return res;
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      return createServerErrorResponse(err, baseContext.requestId, baseContext) as NextResponse<ApiResponse<T>>;
+      const resp = createServerErrorResponse(err, baseContext.requestId, baseContext) as NextResponse<ApiResponse<T>>;
+      const durationMs = Math.round(performance.now() - startHighRes);
+      try { resp.headers.set('X-Request-Id', baseContext.requestId); } catch {}
+      try { resp.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+      return resp;
     }
   };
 }

@@ -4,12 +4,8 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation';
 import { AuthGuard } from '@/features/auth/components/auth-guard';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { 
-  Send, 
-  FileText,
-  Menu,
   Plus,
   MessageSquare,
   Trash2,
@@ -29,10 +25,13 @@ import { logger } from '@/lib/utils/logger';
 import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/chat/memory-utils';
 // Removed handleStreamingResponse - AI SDK handles streaming automatically
 import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
+import { ChatHeader } from '@/features/chat/components/chat-header';
+import { ChatComposer } from '@/features/chat/components/chat-composer';
+import { SystemBanner } from '@/features/chat/components/system-banner';
 import type { MessageData } from '@/features/chat/messages/message';
 import { MobileDebugInfo } from '@/components/layout/mobile-debug-info';
 import { MemoryManagementModal } from '@/features/therapy/memory/memory-management-modal';
-import { therapeuticInteractive, getTherapeuticIconButton } from '@/lib/ui/design-tokens';
+import { therapeuticInteractive } from '@/lib/ui/design-tokens';
 import { useChatMessages } from '@/hooks/use-chat-messages';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { apiClient } from '@/lib/api/client';
@@ -679,8 +678,8 @@ function ChatPageContent() {
   }, [input, isLoading, currentSession, showToast, saveMessage, setCurrentSessionAndSync, setMessages, sendAiMessage, settings.webSearchEnabled, settings.model]);
 
   // Memoized input handlers for better performance
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+  const handleInputChange = useCallback((value: string) => {
+    setInput(value);
   }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1032,88 +1031,18 @@ function ChatPageContent() {
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col relative min-h-0" role="main" aria-label={t('main.aria')}>
         {/* Header */}
-        <div className={`${isMobile ? 'p-3' : 'p-6'} border-b border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`}>
-          <div className="flex items-center justify-between">
-            <div className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'}`}>
-              <Button
-                variant="ghost"
-                size="sm"
-                onTouchStart={() => setShowSidebar(!showSidebar)}
-                onClick={() => setShowSidebar(!showSidebar)}
-                className={getTherapeuticIconButton('large')}
-                style={{
-                  WebkitTapHighlightColor: 'transparent'
-                }}
-                aria-label={t('main.toggleSidebar')}
-                aria-expanded={showSidebar}
-                aria-controls="chat-sidebar"
-              >
-                <div className="shimmer-effect"></div>
-                <Menu className="w-5 h-5 relative z-10" />
-              </Button>
-              <div>
-                <h1 className="text-lg md:text-xl">
-                  {currentSession ? t('main.sessionTitle') : t('main.newConversation')}
-                </h1>
-                <p className="text-sm text-muted-foreground hidden sm:block">
-                  {currentSession ? t('main.sessionSubtitle') : t('main.newSubtitle')}
-                </p>
-              </div>
-            </div>
-            <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
-              {currentSession && messages.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={generateReport}
-                  disabled={isGeneratingReport}
-                  className={getTherapeuticIconButton('large', true)}
-                  style={{
-                    WebkitTapHighlightColor: 'transparent'
-                  }}
-                  title={t('main.generateReport')}
-                >
-                  <div className="shimmer-effect"></div>
-                  {isGeneratingReport ? (
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin relative z-10" />
-                  ) : (
-                    <FileText className="w-5 h-5 relative z-10" />
-                  )}
-                </Button>
-              )}
-              {isLoading && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={stopGenerating}
-                  className={getTherapeuticIconButton('large')}
-                  style={{
-                    WebkitTapHighlightColor: 'transparent'
-                  }}
-                  title={t('main.stopGenerating')}
-                >
-                  <div className="shimmer-effect"></div>
-                  <X className="w-5 h-5 relative z-10" />
-                </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={openCBTDiary}
-                className={getTherapeuticIconButton('large')}
-                style={{
-                  WebkitTapHighlightColor: 'transparent'
-                }}
-                title={isMobile ? t('main.cbtMobile') : t('main.cbtOpen')}
-              >
-                <div className="shimmer-effect"></div>
-                <Brain className="w-5 h-5 relative z-10" />
-              </Button>
-            </div>
-          </div>
-          {/* Decorative gradient line */}
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
-        </div>
+        <ChatHeader
+          showSidebar={showSidebar}
+          onToggleSidebar={() => setShowSidebar(!showSidebar)}
+          hasActiveSession={Boolean(currentSession)}
+          hasMessages={messages.length > 0}
+          isGeneratingReport={isGeneratingReport}
+          isLoading={isLoading}
+          isMobile={isMobile}
+          onGenerateReport={generateReport}
+          onStopGenerating={stopGenerating}
+          onOpenCBTDiary={openCBTDiary}
+        />
 
         {/* Messages */}
         <div 
@@ -1131,27 +1060,14 @@ function ChatPageContent() {
           aria-live="polite"
           aria-atomic="false"
         >
-          {/* Memory Context Indicator (hidden on empty/welcome state) */}
-          {memoryContext.hasMemory && messages.length > 0 && (
-            <div className={`mb-4 ${isMobile ? 'mx-1' : 'mx-2'}`}>
-              <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-primary/80 flex items-center gap-2">
-                    <Sparkles className="w-3 h-3" />
-                    {formatMemoryInfo(memoryContext)}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowMemoryModal(true)}
-                    className="text-primary/60 hover:text-primary hover:bg-primary/10 h-6 px-2"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+          <SystemBanner
+            hasMemory={memoryContext.hasMemory}
+            messageCount={messages.length}
+            isMobile={isMobile}
+            onManageMemory={() => setShowMemoryModal(true)}
+            formatText={formatMemoryInfo}
+            contextInfo={memoryContext}
+          />
           
           {messages.length === 0 ? (
             <div className={`flex items-center justify-center ${isMobile ? 'py-2' : 'py-16'}`}>
@@ -1218,72 +1134,17 @@ function ChatPageContent() {
         </div>
 
         {/* Input Area */}
-        <div ref={inputContainerRef} className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} border-t border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`} role="form" aria-label="Send message">
-          <div className="max-w-4xl mx-auto">
-            <form onSubmit={handleFormSubmit} className="flex gap-3 items-end">
-              <div className="flex-1 relative">
-                {/** Compute placeholder so it disappears when streaming or typing */}
-                {(() => null)()}
-                <Textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  onFocus={() => {
-                    // Ensure input is visible above keyboard on iOS
-                    if (isMobile) {
-                      setTimeout(() => {
-                        scrollToBottom();
-                        // Additionally ensure the input itself is visible
-                        textareaRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-                      }, 100);
-                    }
-                  }}
-                  placeholder={!(isLoading || aiPlaceholderIdRef.current !== null) && input.trim().length === 0 ? t('input.placeholder') : ''}
-                  className="min-h-[52px] sm:min-h-[80px] max-h-[120px] sm:max-h-[200px] resize-none rounded-xl sm:rounded-2xl border-border/50 bg-background/80 backdrop-blur-sm px-3 sm:px-6 py-3 sm:py-4 text-base placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all duration-300 touch-manipulation"
-                  disabled={false}
-                  style={{
-                    fontSize: isMobile ? '16px' : undefined, // Prevent zoom on iOS
-                    WebkitTapHighlightColor: 'transparent'
-                  }}
-                  aria-label={t('input.ariaLabel')}
-                  aria-describedby="input-help"
-                />
-              </div>
-              {(isLoading || aiPlaceholderIdRef.current !== null) ? (
-                <Button
-                  type="button"
-                  onClick={stopGenerating}
-                  className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-muted text-foreground hover:bg-muted/90 active:bg-muted/80 shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden touch-manipulation flex-shrink-0 border`}
-                  style={{
-                    WebkitTapHighlightColor: 'transparent'
-                  }}
-                  aria-label={t('main.stopGenerating')}
-                >
-                  <div className="shimmer-effect"></div>
-                  <X className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={!input.trim()}
-                  className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 text-white shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex-shrink-0`}
-                  style={{
-                    WebkitTapHighlightColor: 'transparent'
-                  }}
-                  aria-label={t('input.send')}
-                  aria-disabled={!input.trim()}
-                >
-                  {/* Shimmer effect */}
-                  <div className="shimmer-effect"></div>
-                  <Send className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
-                </Button>
-              )}
-            </form>
-          </div>
-          {/* Decorative gradient line */}
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent/50 to-transparent"></div>
-        </div>
+        <ChatComposer
+          input={input}
+          isLoading={Boolean(isLoading || aiPlaceholderIdRef.current !== null)}
+          isMobile={isMobile}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          onSubmit={handleFormSubmit}
+          onStop={stopGenerating}
+          inputContainerRef={inputContainerRef}
+          textareaRef={textareaRef}
+        />
       </main>
 
       {/* Mobile Debug Info - only shows on mobile Safari with network URL */}

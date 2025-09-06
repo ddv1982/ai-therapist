@@ -50,6 +50,11 @@ export class MockFactory {
   static createLucideIconMocks() {
     return {
       X: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'x-icon', className, ...props }),
+      Send: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'send-icon', className, ...props }),
+      Menu: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'menu-icon', className, ...props }),
+      FileText: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'filetext-icon', className, ...props }),
+      Brain: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'brain-icon', className, ...props }),
+      Sparkles: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'sparkles-icon', className, ...props }),
       CheckCircle: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'check-circle-icon', className, ...props }),
       AlertCircle: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'alert-circle-icon', className, ...props }),
       Info: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'info-icon', className, ...props }),
@@ -522,6 +527,10 @@ export class ComponentTestUtils {
     
     jest.mock('@/components/ui/button', () => ({
       Button: uiMocks.Button,
+    }));
+    
+    jest.mock('@/components/ui/textarea', () => ({
+      Textarea: uiMocks.Textarea,
     }));
     
     jest.mock('@/components/ui/card', () => ({

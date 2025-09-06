@@ -2,7 +2,7 @@
  * Message Content Component - Handles content processing and display
  */
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import { cn } from '@/lib/utils/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/design-system/message';
@@ -38,10 +38,7 @@ export function MessageContent({ content, role, messageId, className }: MessageC
   // Get streaming state from Redux
   const isStreaming = useSelector((state: RootState) => state.chat?.isStreaming || false);
   const streamingMessageId = useSelector((state: RootState) => state.chat?.streamingMessageId);
-  const currentSessionId = useSelector((state: RootState) => state.sessions?.currentSessionId);
-  
-  // State for CBT diagnostic data
-  const [cbtReportData, setCbtReportData] = useState<Record<string, unknown> | undefined>(undefined);
+  // Session id not needed in this component currently
   
   // Determine if this specific message is currently streaming
   const isThisMessageStreaming = isStreaming && streamingMessageId === messageId;
@@ -54,49 +51,7 @@ export function MessageContent({ content, role, messageId, className }: MessageC
     logger.secureDevLog('CBT report detected', { component: 'MessageContent', messageId, role });
   }
   
-  // Load CBT data for session reports
-  useEffect(() => {
-    if (isCBTReport) {
-      // Load CBT data silently
-      
-      // Try to fetch session report data (don't require Redux session ID)
-      fetch('/api/reports/memory?manage=true&includeFullContent=true')
-        .then(response => response.json())
-        .then(data => {
-          if (data.success && data.memoryDetails && data.memoryDetails.length > 0) {
-            // Find the most recent report (likely the current session)
-            let sessionReport = null;
-            
-            if (currentSessionId) {
-              sessionReport = data.memoryDetails.find((report: Record<string, unknown>) => 
-                report.sessionId === currentSessionId
-              );
-            }
-            
-            if (!sessionReport && data.memoryDetails.length > 0) {
-              sessionReport = data.memoryDetails[0]; // Most recent
-            }
-            
-            if (sessionReport?.structuredCBTData) {
-              // Transform the summary data to the format needed for table population
-              // This will enable the tables to show actual CBT data instead of being empty
-              
-              // Note: The actual table population logic needs to be implemented
-              // in the markdown processor or table components
-              setCbtReportData(sessionReport);
-            }
-          }
-        })
-        .catch(error => {
-          logger.error('Failed to load CBT data for message content', {
-            component: 'MessageContent',
-            messageId,
-            currentSessionId,
-            isCBTReport
-          }, error);
-        });
-    }
-  }, [isCBTReport, messageId, currentSessionId]);
+  // (Previously loaded CBT report data for tables; removed as tables render directly from markdown.)
   
   const bubbleClasses = buildMessageClasses(role, 'bubble');
   const contentClasses = role === 'user' ? 'message-content-user' : 'message-content-assistant';
@@ -107,7 +62,6 @@ export function MessageContent({ content, role, messageId, className }: MessageC
         content={content}
         isStreaming={isThisMessageStreaming}
         isUser={role === 'user'}
-        cbtData={cbtReportData}
       />
     </div>
   );

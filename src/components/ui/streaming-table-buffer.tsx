@@ -14,7 +14,6 @@ interface StreamingTableBufferProps {
   isStreaming: boolean;
   isUser?: boolean;
   className?: string;
-  cbtData?: Record<string, unknown>; // Add CBT data prop for table population
 }
 
 interface TableBuffer {
@@ -32,8 +31,7 @@ export function StreamingTableBuffer({
   content, 
   isStreaming, 
   isUser = false, 
-  className,
-  cbtData
+  className
 }: StreamingTableBufferProps) {
   const [bufferedContent, setBufferedContent] = useState('');
   const previousContentRef = useRef('');
@@ -233,7 +231,7 @@ export function StreamingTableBuffer({
       if (i % 2 === 0) {
         // Regular content
         if (parts[i].trim()) {
-          elements.push(processReactMarkdown(parts[i], isUser, cbtData));
+          elements.push(processReactMarkdown(parts[i], isUser));
         }
       } else {
         // Placeholder (column count is in parts[i])
@@ -259,7 +257,7 @@ export function StreamingTableBuffer({
   // Regular rendering for complete content
   return (
     <div className={className}>
-      {processReactMarkdown(bufferedContent, isUser, cbtData)}
+      {processReactMarkdown(bufferedContent, isUser)}
     </div>
   );
 }
