@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAppDispatch } from '@/store/hooks';
-import { verifyLogin, waitForAuthentication } from '@/store/slices/authSlice';
+import { waitForAuthentication } from '@/store/slices/authSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,16 +26,16 @@ export default function TOTPVerifyPage() {
     setError('');
 
     try {
-      try {
-        await dispatch(verifyLogin({ token, isBackupCode: useBackupCode })).unwrap();
-      } catch (err) {
-        const message = (err as Error).message || 'Verification failed';
-        setError(message);
-        setIsVerifying(false);
-        return;
-      }
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, isBackupCode: useBackupCode }),
+      });
 
-      {
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.error?.message || "Verification failed");
+      }
         const data = { redirectUrl: '/' } as { redirectUrl?: string };
         
         logger.securityEvent('totp_verification_success', {
@@ -90,7 +90,6 @@ export default function TOTPVerifyPage() {
         
         // Start the redirect process
         await redirectToApp();
-      }
     } catch (error) {
       logger.error('TOTP verification error', {
         component: 'TOTPVerifyPage',

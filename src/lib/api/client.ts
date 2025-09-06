@@ -31,14 +31,48 @@ export class ApiClient {
     if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
     if (!headers.has('X-Request-Id')) headers.set('X-Request-Id', this.generateRequestId());
 
-    const res = await fetch(this.withBase(path), {
-      credentials: 'include',
-      ...init,
-      headers,
-      signal: controller.signal,
-    }).finally(() => clearTimeout(timeout));
+    let res: Response;
+    try {
+      res = await fetch(this.withBase(path), {
+        credentials: 'include',
+        ...init,
+        headers,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      clearTimeout(timeout);
+      throw err;
+    } finally {
+      clearTimeout(timeout);
+    }
+
+    // If unauthorized, try refresh
+    if (res.status === 401) {
+      const refreshed = await this.refreshToken();
+      if (refreshed) {
+        res = await fetch(this.withBase(path), {
+          credentials: 'include',
+          ...init,
+          headers,
+          signal: controller.signal,
+        });
+      }
+    }
 
     return (await parseJsonSafe(res)) as T;
+  }
+
+  private async refreshToken(): Promise<boolean> {
+    try {
+      const res = await fetch(this.withBase('/api/auth/refresh'), {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      return data?.success === true;
+    } catch {
+      return false;
+    }
   }
 
   // Sessions

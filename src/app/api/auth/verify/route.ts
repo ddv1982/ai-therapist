@@ -137,6 +137,7 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
     });
     devLog(`=== AUTH REQUEST END [${requestId}] ERROR ===\n`);
     
+    console.timeEnd(`[${requestId}] total`);
     return createErrorResponse('Verification failed', 500, { requestId });
   }
 });
