@@ -61,10 +61,9 @@ export function SessionSidebar({
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
                 <Heart className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h2 className="text-lg gradient-text">Therapeutic AI</h2>
-                <p className="text-sm text-muted-foreground">Your compassionate companion</p>
-              </div>
+<h2 className="text-2xl sm:text-3xl mb-4 tracking-tight gradient-text">
+  Therapeutic AI
+</h2>
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />

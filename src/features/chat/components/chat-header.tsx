@@ -50,15 +50,7 @@ export function ChatHeader({
           >
             <div className="shimmer-effect"></div>
             <Menu className="w-5 h-5 relative z-10" />
-          </Button>
-          <div>
-            <h1 className="text-lg md:text-xl">
-              {hasActiveSession ? t('main.sessionTitle') : t('main.newConversation')}
-            </h1>
-            <p className="text-sm text-muted-foreground hidden sm:block">
-              {hasActiveSession ? t('main.sessionSubtitle') : t('main.newSubtitle')}
-            </p>
-          </div>
+          </Button> 
         </div>
         <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
           {hasActiveSession && hasMessages && (
@@ -109,5 +101,3 @@ export function ChatHeader({
     </div>
   );
 }
-
-
