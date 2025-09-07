@@ -61,7 +61,7 @@
   }
 
   .markdown-content table {
-    @apply w-full border-collapse my-4 text-sm;
+    @apply w-full border-collapse my-4 text-sm table-fixed;
   }
   .markdown-content th {
     @apply border border-border px-3 py-2 text-left font-semibold bg-muted;
@@ -78,8 +78,13 @@
     @apply overflow-x-auto -mx-2;
   }
 
+  /* Ensure table min-width for many columns */
+  .markdown-content .table-container table {
+    min-width: 800px;
+  }
+
   /* Mobile adjustments */
-  @screen sm {
+  @media (max-width: 640px) {
     .markdown-content h1 { @apply text-2xl; }
     .markdown-content h2 { @apply text-xl; }
     .markdown-content h3 { @apply text-lg; }
