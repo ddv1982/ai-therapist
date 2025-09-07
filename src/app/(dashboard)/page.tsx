@@ -939,7 +939,6 @@ function ChatPageContent() {
             <div className="text-center py-12">
               <MessageSquare className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">{t('sidebar.noSessions')}</p>
-              <p className="text-sm text-muted-foreground/70">{t('sidebar.startPrompt')}</p>
             </div>
           ) : (
             sessions.map((session, index) => (
