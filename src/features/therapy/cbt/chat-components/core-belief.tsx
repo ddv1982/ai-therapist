@@ -10,6 +10,7 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { CoreBeliefData } from '@/types/therapy';
 // Removed chat bridge imports - individual data no longer sent during session
 import {useTranslations} from 'next-intl';
+import { cn } from '@/lib/utils/utils';
 
 // Remove local interface - use the one from cbtSlice
 // export interface CoreBeliefData {
@@ -65,8 +66,17 @@ export function CoreBelief({
   
   // Note: Chat bridge no longer used - data sent only in final comprehensive summary
 
+  const [selectedPrompt, setSelectedPrompt] = useState<string>('');
+
   const handleBeliefChange = useCallback((value: string) => {
     setBeliefData(prev => ({ ...prev, coreBeliefText: value }));
+    // If user types or value differs from selected prompt, clear highlight
+    setSelectedPrompt(prev => (prev === value ? prev : ''));
+  }, []);
+
+  const handlePromptSelect = useCallback((prompt: string) => {
+    setSelectedPrompt(prompt);
+    setBeliefData(prev => ({ ...prev, coreBeliefText: prompt }));
   }, []);
 
   const handleCredibilityChange = useCallback((value: number) => {
@@ -116,17 +126,25 @@ export function CoreBelief({
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">{t('coreBelief.promptLabel')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {beliefPrompts.map((prompt, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleBeliefChange(prompt)}
-                  className="text-xs h-8 px-3 border-dashed hover:bg-accent hover:text-accent-foreground text-left justify-start"
-                >
-                  {prompt}
-                </Button>
-              ))}
+              {beliefPrompts.map((prompt, index) => {
+                const isSelected = selectedPrompt === prompt;
+                return (
+                  <Button
+                    key={index}
+                    variant={isSelected ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handlePromptSelect(prompt)}
+                    className={cn(
+                      'text-xs h-8 px-3 text-left justify-start',
+                      isSelected
+                        ? 'bg-primary text-primary-foreground'
+                        : 'border-dashed hover:bg-accent hover:text-accent-foreground'
+                    )}
+                  >
+                    {prompt}
+                  </Button>
+                );
+              })}
             </div>
           </div>
 

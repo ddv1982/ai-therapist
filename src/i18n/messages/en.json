@@ -104,6 +104,7 @@
   "cbt.actions.startNew": "Start New Session",
   "cbt.actions.begin": "Begin CBT Session"
   ,
+  "cbt.sessionReportTitle": "CBT Session Report",
   "auth.setup.qrAlt": "TOTP QR Code",
   "cbt.actionPlan.title": "Future Action Plan",
   "cbt.actionPlan.subtitle": "Plan your responses for similar situations",

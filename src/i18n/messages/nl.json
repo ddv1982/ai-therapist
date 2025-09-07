@@ -131,6 +131,7 @@
   "cbt.actions.resume": "Vorige sessie hervatten",
   "cbt.actions.startNew": "Nieuwe sessie starten",
   "cbt.actions.begin": "CBT-sessie starten",
+  "cbt.sessionReportTitle": "CBT Sessie Rapport",
   "auth.setup.qrAlt": "TOTP QR-code",
   "cbt.actionPlan.title": "Toekomstig actieplan",
   "cbt.actionPlan.subtitle": "Plan je reacties voor soortgelijke situaties",

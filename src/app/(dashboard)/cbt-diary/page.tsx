@@ -308,8 +308,7 @@ function CBTDiaryPageContent() {
       
       // Always create a NEW session for each CBT send
       let sessionId: string | null = null;
-      const now = new Date();
-      const title = 'CBT Session - ' + now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+      const title = t('sessionReportTitle');
       const createResp = await apiClient.createSession({ title });
       if (createResp && createResp.success && createResp.data) {
         const newSession = createResp.data as components['schemas']['Session'];
@@ -395,7 +394,7 @@ function CBTDiaryPageContent() {
       setIsLoading(false);
       setIsStreaming(false);
     }
-  }, [hasStarted, isCBTActive, isLoading, isStreaming, generateTherapeuticSummaryCard, messages, router, showToast, draftActions, reduxSessionId, dispatch]);
+  }, [hasStarted, isCBTActive, isLoading, isStreaming, generateTherapeuticSummaryCard, messages, router, showToast, draftActions, reduxSessionId, dispatch, t]);
 
   const handleCBTRationalThoughtsComplete = useCallback(async (data: RationalThoughtsData) => {
     completeRationalThoughtsStep(data);
@@ -694,6 +693,7 @@ function CBTDiaryPageContent() {
 export default function CBTDiaryPage() {
   const { addMessageToChat } = useChatMessages();
   const [currentSession, setCurrentSession] = useState<string | null>(null);
+  const t = useTranslations('cbt');
 
   // Session management for CBT diary
   const ensureSession = useCallback(async (): Promise<string | null> => {
@@ -710,7 +710,7 @@ export default function CBTDiaryPage() {
       }
 
       // If no current session, create a new one for CBT diary
-      const title = 'CBT Session - ' + new Date().toLocaleDateString();
+      const title = t('sessionReportTitle');
       const createResp = await apiClient.createSession({ title });
       if (createResp && createResp.success && createResp.data) {
         const newSession = createResp.data as components['schemas']['Session'];
@@ -729,7 +729,7 @@ export default function CBTDiaryPage() {
       }, error instanceof Error ? error : new Error(String(error)));
     }
     return null;
-  }, []);
+  }, [t]);
 
   // Initialize session when component mounts
   useEffect(() => {
