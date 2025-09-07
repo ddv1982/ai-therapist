@@ -8,9 +8,9 @@
   .spacing-therapy-2xl { @apply p-therapy-2xl; }
 
   /* Color variants */
-  .therapy-primary { @apply bg-primary text-primary-foreground shadow-xs; }
+  .therapy-primary { @apply bg-primary text-primary-foreground shadow-sm; }
   .therapy-secondary { @apply bg-secondary text-secondary-foreground; }
-  .therapy-accent { @apply bg-accent text-accent-foreground shadow-xs; }
+  .therapy-accent { @apply bg-accent text-accent-foreground shadow-sm; }
   .therapy-muted { @apply bg-muted text-muted-foreground; }
   .therapy-card { @apply bg-card text-card-foreground border border-border rounded-therapy-md shadow-sm; }
 
