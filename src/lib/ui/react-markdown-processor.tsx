@@ -19,8 +19,7 @@ import {
   extractTableDataFromTokens, 
   convertToColumnConfig, 
   convertToRowData,
-  type TableData,
-  type TableDisplayConfig
+  type TableData
 } from './table-data-extractor';
 import { processMarkdown } from './markdown-processor';
 
@@ -108,7 +107,7 @@ export function tokensToReactElements(tokens: Token[]): React.ReactElement[] {
       case 'table_open': {
         // Handle table specially - convert to TherapeuticTable component
         try {
-          const { data, config, endIndex } = extractTableDataFromTokens(tokens, index);
+          const { data, endIndex } = extractTableDataFromTokens(tokens, index);
           
           // Skip empty tables completely - don't render anything
           const hasContent = data.rows.length > 0 && data.rows.some(row => 
@@ -116,7 +115,7 @@ export function tokensToReactElements(tokens: Token[]): React.ReactElement[] {
           );
           
           if (hasContent) {
-            const tableElement = renderTableAsReactComponent(data, config, `table-${elementCounter}`);
+            const tableElement = renderTableAsReactComponent(data, `table-${elementCounter}`);
             elements.push(tableElement);
             elementCounter++;
           }
@@ -196,23 +195,19 @@ export function tokensToReactElements(tokens: Token[]): React.ReactElement[] {
  */
 function renderTableAsReactComponent(
   data: TableData, 
-  config: TableDisplayConfig, 
   key: string
 ): React.ReactElement {
   const columns = convertToColumnConfig(data);
   const rowData = convertToRowData(data);
-
-  // Map variant to valid TherapeuticTable variants
-  const tableVariant = config.variant === 'detailed' ? 'default' : config.variant;
   
   return (
     <div key={key} className="table-container mb-4">
       <TherapeuticTable
         data={rowData}
         columns={columns}
-        variant={tableVariant as 'default' | 'therapeutic' | 'compact'}
-        displayMode={config.displayMode}
-        layout={config.layout}
+        variant={'default'}
+        displayMode={'auto'}
+        layout={'grid'}
         className="therapeutic-table-generated"
       />
     </div>

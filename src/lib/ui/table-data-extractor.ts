@@ -13,18 +13,14 @@ export interface TableData {
   columnCount: number;
 }
 
-export interface TableDisplayConfig {
-  displayMode: 'table' | 'cards' | 'auto';
-  variant: 'default' | 'therapeutic' | 'compact' | 'detailed';
-  layout: 'grid' | 'list' | 'masonry';
-}
+// Column-based display configuration has been removed. We keep only the
+// extracted table data to render via a unified, responsive table path.
 
 /**
  * Extract structured table data from markdown-it table tokens
  */
 export function extractTableDataFromTokens(tokens: Token[], startIndex: number): {
   data: TableData;
-  config: TableDisplayConfig;
   endIndex: number;
 } {
   const tableToken = tokens[startIndex];
@@ -101,7 +97,6 @@ export function extractTableDataFromTokens(tokens: Token[], startIndex: number):
       rows,
       columnCount
     },
-    config: determineDisplayConfig({ headers, rows, columnCount }),
     endIndex: index
   };
 }
@@ -135,107 +130,7 @@ function generateDefaultHeaders(columnCount: number): string[] {
   return Array.from({ length: columnCount }, (_, i) => `Column ${i + 1}`);
 }
 
-/**
- * Determine optimal display configuration based on table characteristics
- */
-function determineDisplayConfig(data: TableData): TableDisplayConfig {
-  const { columnCount } = data;
-  
-  // Analyze content characteristics for smarter decisions
-  const contentAnalysis = analyzeTableContent(data);
-  
-  // Determine display mode based on multiple factors
-  let displayMode: 'table' | 'cards' | 'auto' = 'auto';
-  
-  if (columnCount > 6) {
-    displayMode = 'cards'; // Force cards for very complex tables
-  } else if (columnCount > 4) {
-    // 5-6 columns: decide based on content complexity and mobile-friendliness
-    if (contentAnalysis.hasLongContent || contentAnalysis.isCBTData) {
-      displayMode = 'cards'; // Better for mobile and complex content
-    } else {
-      displayMode = 'auto'; // Let responsive logic decide
-    }
-  } else if (columnCount <= 3 && contentAnalysis.isSimpleData) {
-    displayMode = 'auto'; // Good for both formats
-  } else {
-    displayMode = 'auto'; // Default responsive behavior
-  }
-  
-  // Determine variant based on enhanced content analysis
-  let variant: 'default' | 'therapeutic' | 'compact' | 'detailed' = 'default';
-  
-  if (contentAnalysis.isCBTData || contentAnalysis.isTherapeuticData) {
-    variant = 'therapeutic';
-  } else if (contentAnalysis.isCompactData) {
-    variant = 'compact';
-  } else if (contentAnalysis.hasLongContent) {
-    variant = 'detailed';
-  }
-  
-  // Determine layout based on content characteristics and column count
-  let layout: 'grid' | 'list' | 'masonry' = 'grid';
-  
-  if (columnCount <= 2) {
-    layout = 'list';
-  } else if (contentAnalysis.hasVariableContentLength || columnCount >= 6) {
-    layout = 'masonry'; // Better for uneven content heights
-  } else {
-    layout = 'grid'; // Standard grid for uniform content
-  }
-  
-  return {
-    displayMode,
-    variant,
-    layout
-  };
-}
-
-/**
- * Analyze table content to make smarter display decisions
- */
-function analyzeTableContent(data: TableData): {
-  isCBTData: boolean;
-  isTherapeuticData: boolean;
-  isCompactData: boolean;
-  hasLongContent: boolean;
-  isSimpleData: boolean;
-  hasVariableContentLength: boolean;
-} {
-  const { headers, rows } = data;
-  
-  // CBT-specific patterns
-  const cbtPatterns = /^(thought|feeling|behavior|situation|mood|rating|intensity|distortion|schema|belief|evidence|reframe|challenge)$/i;
-  const isCBTData = headers.some(header => cbtPatterns.test(header)) ||
-                    rows.some(row => row.some(cell => cbtPatterns.test(cell)));
-  
-  // General therapeutic patterns
-  const therapeuticPatterns = /^(patient|session|therapy|treatment|progress|anxiety|depression|stress|emotion|goal|intervention|technique)$/i;
-  const isTherapeuticData = headers.some(header => therapeuticPatterns.test(header)) ||
-                           rows.some(row => row.some(cell => therapeuticPatterns.test(cell)));
-  
-  // Calculate content characteristics
-  const allCells = rows.flat();
-  const cellLengths = allCells.map(cell => cell.length);
-  const avgCellLength = cellLengths.reduce((sum, len) => sum + len, 0) / Math.max(cellLengths.length, 1);
-  const maxCellLength = Math.max(...cellLengths);
-  const minCellLength = Math.min(...cellLengths);
-  
-  // Content classification
-  const isCompactData = avgCellLength < 20 && maxCellLength < 50;
-  const hasLongContent = maxCellLength > 100 || avgCellLength > 50;
-  const isSimpleData = avgCellLength < 30 && maxCellLength < 60;
-  const hasVariableContentLength = (maxCellLength - minCellLength) > 50;
-  
-  return {
-    isCBTData,
-    isTherapeuticData,
-    isCompactData,
-    hasLongContent,
-    isSimpleData,
-    hasVariableContentLength
-  };
-}
+// All column-count based display heuristics have been removed.
 
 /**
  * Convert table data to column configuration for TherapeuticTable

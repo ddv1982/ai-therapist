@@ -19,26 +19,16 @@ md.use(markdownItAttrs, {
 });
 
 /**
- * Enhanced table processing with intelligent layout selection
- * - 1-3 columns: Auto-responsive (cards on mobile, table on desktop)
- * - 4-5 columns: Hybrid layout with card fallback
- * - 6+ columns: Always transform to cards or definition lists
+ * Enhanced table processing
+ * Uniformly applies responsive table enhancements regardless of column count.
+ * We no longer transform wide tables into card layouts.
  */
 function enhanceTablesForTherapeuticUse(html: string): string {
   // Process each table individually to apply column-based logic
   return html.replace(/<table[^>]*>[\s\S]*?<\/table>/gi, (tableMatch) => {
     const columnCount = countTableColumns(tableMatch);
-    
-    if (columnCount <= 3) {
-      // Simple tables: Auto-responsive with card support
-      return processResponsiveTable(tableMatch, columnCount);
-    } else if (columnCount <= 5) {
-      // Medium tables: Hybrid layout
-      return processHybridTable(tableMatch, columnCount);
-    } else {
-      // Complex tables: Transform to cards or structured view
-      return transformToCardLayout(tableMatch, columnCount);
-    }
+    // Always use the responsive table behavior; do not transform to cards
+    return processResponsiveTable(tableMatch, columnCount);
   });
 }
 
@@ -216,41 +206,9 @@ function processResponsiveTable(tableHtml: string, columnCount: number): string 
   return `<div class="therapeutic-table-container auto-responsive" ${cardDataAttrs}>${processedHtml}</div>`;
 }
 
-/**
- * Process hybrid tables (4-5 columns) with smart layout selection
- */
-function processHybridTable(tableHtml: string, columnCount: number): string {
-  let processedHtml = tableHtml;
-  
-  // Add hybrid layout class
-  processedHtml = processedHtml.replace(
-    /<table([^>]*class="([^"]*)")([^>]*)>/gi,
-    (_match, _classAttr, existingClasses, rest) => {
-      const classes = `${existingClasses} therapeutic-table-hybrid card-fallback-enabled`.trim();
-      return `<table class="${classes}" data-columns="${columnCount}" data-display-mode="hybrid"${rest}>`;
-    }
-  );
-  
-  processedHtml = processedHtml.replace(
-    /<table(?![^>]*class=)([^>]*)>/gi, 
-    `<table class="therapeutic-table-hybrid card-fallback-enabled" data-columns="${columnCount}" data-display-mode="hybrid"$1>`
-  );
-  
-  const tableData = extractTableDataForCards(tableHtml);
-  const cardDataAttrs = generateCardDataAttributes(tableData, columnCount);
-  
-  return `<div class="therapeutic-table-container hybrid-layout" ${cardDataAttrs}>${processedHtml}</div>`;
-}
-
-/**
- * Transform complex tables (6+ columns) to card layout
- */
-function transformToCardLayout(tableHtml: string, columnCount: number): string {
-  const tableData = extractTableDataForCards(tableHtml);
-  
-  // Generate pure card markup for complex tables
-  return generateCardOnlyMarkup(tableData, columnCount);
-}
+// NOTE: The previous hybrid and card-only transformation paths have been removed
+// to prevent column-count-driven rendering. All tables now use the same
+// responsive behavior handled by processResponsiveTable.
 
 /**
  * Extract structured data from table HTML for card layout
@@ -360,78 +318,5 @@ function determineCardLayout(columnCount: number): string {
   return 'grid';
 }
 
-/**
- * Generate pure card markup for complex tables
- */
-function generateCardOnlyMarkup(tableData: { headers: string[], rows: string[][] }, columnCount: number): string {
-  const variant = determineCardVariant(tableData);
-  const layout = determineCardLayout(columnCount);
-  
-  let cardHtml = `<div class="therapeutic-card-grid-generated" data-variant="${variant}" data-layout="${layout}">`;
-  
-  // Add caption if applicable
-  cardHtml += `<div class="card-grid-header">
-    <h3 class="text-lg font-semibold">Complex Data (${columnCount} columns)</h3>
-    <span class="text-sm text-muted-foreground">${tableData.rows.length} items</span>
-  </div>`;
-  
-  // Generate cards container
-  cardHtml += `<div class="card-grid-container ${layout}-layout">`;
-  
-  tableData.rows.forEach((row, index) => {
-    cardHtml += generateSingleCard(tableData.headers, row, index, variant);
-  });
-  
-  cardHtml += '</div></div>';
-  
-  return cardHtml;
-}
-
-/**
- * Generate markup for a single card
- */
-function generateSingleCard(headers: string[], row: string[], index: number, variant: string): string {
-  const primaryField = row[0] || `Item ${index + 1}`;
-  const secondaryFields = headers.slice(1).map((header, i) => ({ 
-    label: header, 
-    value: row[i + 1] || '' 
-  })).filter(field => field.value);
-  
-  let cardHtml = `<div class="therapeutic-card generated-card ${variant}-variant" data-index="${index}">`;
-  
-  // Card header
-  cardHtml += `<div class="card-header">
-    <h4 class="card-title">${primaryField}</h4>
-  </div>`;
-  
-  // Card content
-  cardHtml += `<div class="card-content">`;
-  
-  // Show first 3 fields prominently
-  secondaryFields.slice(0, 3).forEach(field => {
-    cardHtml += `<div class="card-field primary">
-      <span class="field-label">${field.label}:</span>
-      <span class="field-value">${field.value}</span>
-    </div>`;
-  });
-  
-  // Collapsible additional fields for complex data
-  if (secondaryFields.length > 3) {
-    cardHtml += `<details class="card-details">
-      <summary class="details-toggle">Show ${secondaryFields.length - 3} more fields</summary>
-      <div class="additional-fields">`;
-    
-    secondaryFields.slice(3).forEach(field => {
-      cardHtml += `<div class="card-field secondary">
-        <span class="field-label">${field.label}:</span>
-        <span class="field-value">${field.value}</span>
-      </div>`;
-    });
-    
-    cardHtml += `</div></details>`;
-  }
-  
-  cardHtml += `</div></div>`;
-  
-  return cardHtml;
-}
+// The previous card markup generators have been removed along with the
+// card-only transformation path.

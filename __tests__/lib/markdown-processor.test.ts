@@ -419,7 +419,7 @@ I was walking outside during my lunch break.
       expect(result).not.toContain('Complex Data');
     });
 
-    it('should transform 6-column tables to structured cards', () => {
+    it('should render 6-column tables as responsive tables (no card transform)', () => {
       const input = `| Patient | Date | Mood | Anxiety | Intervention | Notes |
 |---------|------|------|---------|-------------|-------|
 | John D  | 2025-08-09 | 7/10 | High | CBT | Thought records |
@@ -427,18 +427,13 @@ I was walking outside during my lunch break.
       
       const result = processMarkdown(input, false);
       
-      // Should be transformed to card view for 6+ columns
-      expect(result).not.toContain('<table');
-      expect(result).toContain('Complex Data (6 columns)');
-      expect(result).toContain('card-field'); // Modern card structure
-      expect(result).toContain('<h4>John D</h4>'); // Patient name as heading
-      expect(result).toContain('<span>Date:</span>'); // Field labels
-      expect(result).toContain('<span>2025-08-09</span>'); // Field values
-      expect(result).toContain('Show 2 more fields'); // Collapsible feature
-      expect(result).toContain('CBT');
+      // Should remain a table with responsive enhancements
+      expect(result).toContain('<table');
+      expect(result).toContain('data-columns="6"');
+      expect(result).not.toContain('Complex Data');
     });
 
-    it('should transform 8-column key-value tables to definition lists', () => {
+    it('should render 8-column tables as responsive tables (no card transform)', () => {
       const input = `| Question | Answer | Importance | Evidence | Counter | Emotion | Before | After |
 |----------|--------|------------|----------|---------|---------|--------|-------|
 | What happened? | Meeting | High | None | Maybe helpful | Anxiety | 8/10 | 4/10 |
@@ -446,18 +441,13 @@ I was walking outside during my lunch break.
       
       const result = processMarkdown(input, false);
       
-      // Should be transformed to card format for 8+ columns (same as 6-column)  
-      expect(result).not.toContain('<table');
-      expect(result).toContain('Complex Data (8 columns)');
-      expect(result).toContain('card-field'); // Same card structure
-      expect(result).toContain('<h4>What happened?</h4>'); // Question as heading
-      expect(result).toContain('<span>Answer:</span>'); // Field labels
-      expect(result).toContain('<span>Meeting</span>'); // Field values  
-      expect(result).toContain('Show 4 more fields'); // Collapsible with more fields
-      expect(result).toContain('Anxiety');
+      // Should remain a table
+      expect(result).toContain('<table');
+      expect(result).toContain('data-columns="8"');
+      expect(result).not.toContain('Complex Data');
     });
 
-    it('should transform 10+ column tables to expandable rows', () => {
+    it('should render 10+ column tables as responsive tables', () => {
       const input = `| ID | Patient | Date | Time | Mood | Anxiety | Depression | Sleep | Appetite | Energy | Focus | Medication | Notes | Follow-up |
 |----|---------|----- |------|------|---------|------------|-------|----------|--------|-------|------------|-------|-----------|
 | 1  | John D  | 2025-08-09 | 10:30 | 6/10 | High | Medium | Poor | Normal | Low | Poor | Sertraline | Struggling with work | Next week |
@@ -465,16 +455,13 @@ I was walking outside during my lunch break.
       
       const result = processMarkdown(input, false);
       
-      // Should be transformed to expandable rows
-      expect(result).not.toContain('<table');
-      expect(result).toContain('Complex Data');
-      expect(result).toContain('14 columns');
-      expect(result).toContain('2 items'); // Should show item count
-      expect(result).toContain('John D');
-      expect(result).toContain('Show 10 more fields');
+      // Should remain a table with detected columns
+      expect(result).toContain('<table');
+      expect(result).toContain('data-columns="14"');
+      expect(result).not.toContain('Complex Data');
     });
 
-    it('should detect therapeutic content patterns for cards', () => {
+    it('should detect therapeutic content but keep table rendering', () => {
       const input = `| Patient | Session | Date | Primary Concern | Mood Score | Intervention |
 |---------|---------|------|----------------|------------|-------------|
 | Alice M | 3 | 2025-08-09 | Work stress | 4/10 | Mindfulness |
@@ -482,14 +469,13 @@ I was walking outside during my lunch break.
       
       const result = processMarkdown(input, false);
       
-      // Should use structured cards due to therapeutic patterns
-      expect(result).toContain('Complex Data');
-      expect(result).toContain('6 columns'); // Should show column count
-      expect(result).toContain('Alice M');
-      expect(result).toContain('Work stress');
+      // Should remain a table even with therapeutic patterns
+      expect(result).toContain('<table');
+      expect(result).toContain('data-columns="6"');
+      expect(result).not.toContain('Complex Data');
     });
 
-    it('should handle alternative view data with missing cells', () => {
+    it('should handle wide tables with missing cells as tables', () => {
       const input = `| Col1 | Col2 | Col3 | Col4 | Col5 | Col6 | Col7 |
 |------|------|------|------|------|------|------|
 | A    | B    | C    |      | E    | F    | G    |
@@ -497,12 +483,10 @@ I was walking outside during my lunch break.
       
       const result = processMarkdown(input, false);
       
-      // Should handle empty cells gracefully in alternative view
-      expect(result).toContain('Complex Data');
-      expect(result).toContain('7 columns'); // Should show column count instead of checking empty cell handling
-      expect(result).toContain('A');
-      expect(result).toContain('B');
-      expect(result).toContain('H');
+      // Should handle empty cells gracefully but keep table rendering
+      expect(result).toContain('<table');
+      expect(result).toContain('data-columns="7"');
+      expect(result).not.toContain('Complex Data');
     });
 
     it('should preserve table structure for extraction errors', () => {
@@ -513,12 +497,9 @@ I was walking outside during my lunch break.
       
       const result = processMarkdown(input, false);
       
-      // Should transform to alternative view, but if extraction fails, should fallback gracefully
-      // This test ensures no crashes occur with unusual table structures
-      // The first column header "A" becomes the first row identifier "X" in alternative view
-      expect(result).toContain('X'); // First row identifier
-      expect(result).toContain('Y'); // First data value
-      // Could be either table or alternative view, both are acceptable
+      // Should remain a table and not crash with unusual structures
+      expect(result).toContain('<table');
+      expect(result).toContain('data-columns="6"');
     });
 
     it('should apply correct column-specific CSS classes', () => {
@@ -533,16 +514,17 @@ I was walking outside during my lunch break.
       expect(result).toContain('data-columns="5"');
     });
 
-    it('should generate proper ARIA labels for alternative views', () => {
+    it('should keep wide tables and include column metadata', () => {
       const input = `| Name | Age | City | Job | Salary | Benefits |
 |------|-----|------|-----|--------|----------|
 | John | 30  | NYC  | Dev | 100k   | Health   |`;
       
       const result = processMarkdown(input, false);
       
-      // Should include accessibility attributes
-      expect(result).toContain('Complex Data');
-      expect(result).toContain('6 columns'); // Should indicate column count
+      // Should include column metadata and remain a table
+      expect(result).toContain('<table');
+      expect(result).toContain('data-columns="6"');
+      expect(result).not.toContain('Complex Data');
     });
   });
 
@@ -560,19 +542,20 @@ I was walking outside during my lunch break.
       expect(result).toContain('<table');
     });
 
-    it('should handle tables with no headers', () => {
+    it('should handle tables with no headers as tables', () => {
       const input = `| A | B | C | D | E | F | G |
 |---|---|---|---|---|---|---|
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |`;
       
       const result = processMarkdown(input, false);
       
-      // Should still count columns and transform to alternative view
-      expect(result).toContain('Complex Data');
-      expect(result).not.toContain('<table');
+      // Should still count columns and keep table rendering
+      expect(result).toContain('<table');
+      expect(result).toContain('data-columns="7"');
+      expect(result).not.toContain('Complex Data');
     });
 
-    it('should handle tables with uneven row lengths', () => {
+    it('should handle tables with uneven row lengths as tables', () => {
       const input = `| A | B | C | D | E | F |
 |---|---|---|---|---|---|
 | 1 | 2 | 3 | 4 | 5 | 6 |
@@ -580,8 +563,9 @@ I was walking outside during my lunch break.
       
       const result = processMarkdown(input, false);
       
-      // Should base column count on header row
-      expect(result).toContain('Complex Data');
+      // Should base column count on header row and keep table rendering
+      expect(result).toContain('<table');
+      expect(result).toContain('data-columns="6"');
       expect(result).toContain('X');
       expect(result).toContain('Y');
       expect(result).toContain('Z');
