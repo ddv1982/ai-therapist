@@ -4,8 +4,14 @@ import { prisma } from '@/lib/database/db';
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
 import { withAuth, withValidationAndParams, errorHandlers } from '@/lib/api/api-middleware';
 import { verifySessionOwnership } from '@/lib/database/queries';
-import { createSuccessResponse, createNotFoundErrorResponse, createPaginatedResponse } from '@/lib/api/api-response';
+import { 
+  createSuccessResponse, 
+  createNotFoundErrorResponse, 
+  createPaginatedResponse, 
+  addTherapeuticHeaders 
+} from '@/lib/api/api-response';
 import { MessageCache } from '@/lib/cache';
+import { logger } from '@/lib/utils/logger';
 
 const postBodySchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -165,8 +171,11 @@ export const GET = withAuth(
           createdAt: m.createdAt,
         }));
 
-        return createPaginatedResponse(items, page, limit, total, context.requestId);
+        let response = createPaginatedResponse(items, page, limit, total, context.requestId);
+        response = addTherapeuticHeaders(response);
+        return response;
       } catch (error) {
+        logger.apiError('/api/sessions/[sessionId]/messages', error as Error, { requestId: context.requestId });
         return errorHandlers.handleDatabaseError(error as Error, 'fetch messages (nested)', context);
       }
     }

@@ -73,9 +73,9 @@ export const POST = withApiMiddleware(async () => {
 
     return res;
   } catch (error) {
-    logger.error("Error refreshing token", { error });
+    logger.apiError("/api/auth/refresh", error as Error);
     return NextResponse.json(
-      { success: false, error: { message: "Server error" } } as ApiResponse<null>,
+      { success: false, error: { message: "Internal server error" } } as ApiResponse<null>,
       { status: 500 }
     );
   }

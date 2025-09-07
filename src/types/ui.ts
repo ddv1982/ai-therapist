@@ -15,8 +15,8 @@ import type { CBTFormData } from './therapy';
  * Standard props for components that handle show/hide state
  */
 export interface ToggleComponentProps {
-  show: boolean;
-  setShow: (show: boolean) => void;
+  showSidebar: boolean;
+  setShowSidebar: (show: boolean) => void;
 }
 
 /**

@@ -5,7 +5,10 @@ import { getClientIP } from '@/lib/auth/auth-middleware';
 import { generateSecureRandomString } from '@/lib/utils/utils';
 import { devLog, logger, createRequestLogger } from '@/lib/utils/logger';
 import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
-import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
+import { 
+  createSuccessResponse, 
+  createErrorResponse
+} from '@/lib/api/api-response';
 
 // POST /api/auth/verify - Verify TOTP token or backup code
 export const POST = withRateLimitUnauthenticated(async (request: NextRequest) => {

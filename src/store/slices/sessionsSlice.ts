@@ -121,23 +121,4 @@ export const sessionsSelectors = sessionsAdapter.getSelectors(
   (state: { sessions: ReturnType<typeof sessionsSlice.reducer> }) => state.sessions
 );
 
-// Async thunks
-export const performSessionHeartbeat = createAsyncThunk(
-  'sessions/performHeartbeat',
-  async () => {
-    // Simulate heartbeat API call
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return { timestamp: Date.now() };
-  }
-);
-
-export const recoverSession = createAsyncThunk(
-  'sessions/recoverSession',
-  async () => {
-    // Simulate session recovery
-    await new Promise(resolve => setTimeout(resolve, 200));
-    return { success: true };
-  }
-);
-
 export default sessionsSlice.reducer;

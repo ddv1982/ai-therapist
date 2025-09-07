@@ -4,7 +4,7 @@
  */
 
 import { Middleware, MiddlewareAPI, AnyAction } from '@reduxjs/toolkit';
-import { performSessionHeartbeat } from '../slices/sessionsSlice';
+import { sessionsApi } from '../slices/sessionsApi';
 
 const HEARTBEAT_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
@@ -23,14 +23,12 @@ export const sessionHeartbeatMiddleware: Middleware =
     // Start heartbeat when a session becomes active
     if ((action as AnyAction).type === 'sessions/setCurrentSession' && (action as AnyAction).payload) {
       if (!heartbeatInterval) {
-        // Initial heartbeat - handle AsyncThunkAction dispatch
-        const heartbeatAction = performSessionHeartbeat() as unknown as AnyAction;
-        api.dispatch(heartbeatAction);
-        
+        // Initial heartbeat using recoverSession endpoint
+        api.dispatch(sessionsApi.endpoints.recoverSession.initiate() as unknown as AnyAction);
+
         // Set up periodic heartbeat
         heartbeatInterval = setInterval(() => {
-          const intervalAction = performSessionHeartbeat() as unknown as AnyAction;
-          api.dispatch(intervalAction);
+          api.dispatch(sessionsApi.endpoints.recoverSession.initiate() as unknown as AnyAction);
         }, HEARTBEAT_INTERVAL);
       }
     }
