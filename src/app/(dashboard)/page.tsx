@@ -905,7 +905,6 @@ function ChatPageContent() {
               </div>
               <div>
                 <h2 className="text-lg gradient-text">{t('sidebar.brandName')}</h2>
-                <p className="text-sm text-muted-foreground">{t('sidebar.tagline')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
