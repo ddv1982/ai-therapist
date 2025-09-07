@@ -42,12 +42,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
   useEffect(() => {
     if (isLoading && !loadingTimeout) return;
 
-    if (needsSetup || loadingTimeout) {
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+
+    if ((needsSetup || loadingTimeout) && currentPath !== '/auth/setup') {
       window.location.href = '/auth/setup';
       return;
     }
 
-    if (needsVerification) {
+    if (needsVerification && currentPath !== '/auth/verify') {
       window.location.href = '/auth/verify';
       return;
     }

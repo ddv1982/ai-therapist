@@ -1,0 +1,478 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { DefaultChatTransport } from 'ai';
+import { useChat } from '@ai-sdk/react';
+import type { MessageData } from '@/features/chat/messages/message';
+import { useChatMessages } from './use-chat-messages';
+import { useScrollToBottom } from './use-scroll-to-bottom';
+import { apiClient } from '@/lib/api/client';
+import { getApiData } from '@/lib/api/api-response';
+import type { components } from '@/types/api.generated';
+import { mapApiSessionToUiSession } from '@/lib/chat/session-mapper';
+import { logger } from '@/lib/utils/logger';
+import { generateUUID } from '@/lib/utils/utils';
+import { checkMemoryContext, type MemoryContextInfo } from '@/lib/chat/memory-utils';
+
+type Message = MessageData;
+
+type Session = ReturnType<typeof mapApiSessionToUiSession>;
+
+export interface ChatController {
+  // state
+  messages: Message[];
+  sessions: Session[];
+  currentSession: string | null;
+  input: string;
+  isLoading: boolean;
+  isMobile: boolean;
+  viewportHeight: string;
+  isGeneratingReport: boolean;
+  memoryContext: MemoryContextInfo;
+
+  // refs needed by UI
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  messagesContainerRef: React.RefObject<HTMLDivElement | null>;
+  inputContainerRef: React.RefObject<HTMLDivElement | null>;
+
+  // scrolling helpers
+  isNearBottom: boolean;
+  scrollToBottom: (force?: boolean, delay?: number) => void;
+
+  // actions
+  setInput: (value: string) => void;
+  sendMessage: () => Promise<void>;
+  stopGenerating: () => void;
+  startNewSession: () => void;
+  deleteSession: (sessionId: string) => Promise<void>;
+  loadSessions: () => Promise<void>;
+  setCurrentSessionAndSync: (sessionId: string) => Promise<void>;
+  generateReport: () => Promise<void>;
+
+  // setters used by outer UI
+  setShowSidebar: (value: boolean) => void;
+  showSidebar: boolean;
+  setMemoryContext: (info: MemoryContextInfo) => void;
+
+  // bridge helper
+  addMessageToChat: (message: { content: string; role: 'user' | 'assistant'; sessionId: string; modelUsed?: string; source?: string }) => Promise<{ success: boolean; error?: string }>;
+}
+
+export function useChatController(options?: { model: string; webSearchEnabled: boolean }): ChatController {
+  const {
+    messages,
+    loadMessages,
+    addMessageToChat: _addMessageToChat,
+    clearMessages,
+    setMessages,
+  } = useChatMessages();
+
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [currentSession, setCurrentSession] = useState<string | null>(null);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState('100vh');
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [memoryContext, setMemoryContext] = useState<MemoryContextInfo>({ hasMemory: false, reportCount: 0 });
+
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const inputContainerRef = useRef<HTMLDivElement | null>(null);
+  const aiPlaceholderIdRef = useRef<string | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const initialLoadDoneRef = useRef(false);
+  const sessionsLoadingRef = useRef(false);
+  const creatingSessionRef = useRef(false);
+  const pendingSessionIdRef = useRef<string | null>(null);
+
+  const { scrollToBottom, isNearBottom } = useScrollToBottom({
+    isStreaming: isLoading,
+    messages,
+    container: messagesContainerRef.current,
+    behavior: 'smooth',
+    respectUserScroll: true,
+  });
+
+  // AI SDK transport and chat
+  const transport = useMemo(() => new DefaultChatTransport({
+    api: '/api/chat',
+    body: {
+      sessionId: currentSession ?? undefined,
+    },
+  }), [currentSession]);
+
+  const { sendMessage: sendAiMessage, stop: stopAi } = useChat({
+    id: currentSession ?? 'default',
+    transport,
+    onError: (error) => {
+      setIsLoading(false);
+      logger.error('Chat stream error', { component: 'useChatController' }, error);
+    },
+    onFinish: async ({ message }) => {
+      try {
+        const textContent = (message.parts ?? [])
+          .reduce((acc, part) => acc + (part.type === 'text' ? (part.text ?? '') : ''), '');
+        const trimmedContent = textContent.trim();
+
+        if (aiPlaceholderIdRef.current) {
+          const placeholderId = aiPlaceholderIdRef.current;
+          setMessages(prev => prev.map(m => (
+            m.id === placeholderId ? { ...m, content: textContent } : m
+          )));
+        }
+
+        const sid = sessionIdRef.current;
+        if (sid && trimmedContent.length > 0) {
+          try {
+            const recent = await apiClient.listMessages(sid, { limit: 5 });
+            const page = recent ? getApiData(recent) : undefined;
+            const items = (page?.items || []) as Array<{ role: string; content: string }>;
+            const alreadySaved = items.some(it => it.role === 'assistant' && it.content === trimmedContent);
+            if (!alreadySaved) {
+              await saveMessage(sid, 'assistant', trimmedContent, options?.webSearchEnabled ? 'openai/gpt-oss-120b' : options?.model);
+            }
+          } catch {
+            await saveMessage(sid, 'assistant', trimmedContent, options?.webSearchEnabled ? 'openai/gpt-oss-120b' : options?.model);
+          }
+          await loadMessages(sid);
+          await loadSessions();
+        }
+      } finally {
+        aiPlaceholderIdRef.current = null;
+        setIsLoading(false);
+      }
+    },
+  });
+
+  useEffect(() => {
+    sessionIdRef.current = currentSession;
+  }, [currentSession]);
+
+  // Memory-context hydration whenever current session changes (or none)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const info = await checkMemoryContext(currentSession ?? undefined);
+        if (active) setMemoryContext(info);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { active = false; };
+  }, [currentSession]);
+
+  const loadSessions = useCallback(async () => {
+    if (sessionsLoadingRef.current) return;
+    sessionsLoadingRef.current = true;
+    try {
+      const sessionsData = await apiClient.listSessions();
+      const sessions = getApiData(sessionsData);
+      const uiSessions: Session[] = (sessions || []).map(mapApiSessionToUiSession) as Session[];
+      setSessions(uiSessions);
+    } finally {
+      sessionsLoadingRef.current = false;
+    }
+  }, []);
+
+  const saveMessage = useCallback(async (sessionId: string, role: 'user' | 'assistant', content: string, modelUsed?: string) => {
+    try {
+      const resp = await apiClient.postMessage(sessionId, { role, content, modelUsed });
+      if (resp && resp.success && resp.data) {
+        return resp.data as components['schemas']['Message'];
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // Initial focus and environment detection
+  useEffect(() => {
+    const id = setTimeout(() => textareaRef.current?.focus(), 50);
+    return () => clearTimeout(id);
+  }, []);
+  useEffect(() => {
+    if (!isLoading) {
+      const id = setTimeout(() => textareaRef.current?.focus(), 50);
+      return () => clearTimeout(id);
+    }
+  }, [isLoading]);
+
+  const loadCurrentSession = useCallback(async () => {
+    try {
+      const savedCurrentSession = typeof window !== 'undefined' ? localStorage.getItem('currentSessionId') : null;
+      const data = await apiClient.getCurrentSession();
+      const currentSessionData: { currentSession?: { id: string; messageCount?: number } } = (data && (data as { success?: boolean }).success)
+        ? (data as { data: { currentSession?: { id: string; messageCount?: number } } }).data
+        : (data as { currentSession?: { id: string; messageCount?: number } });
+      if (currentSessionData?.currentSession) {
+        const sessionId = currentSessionData.currentSession.id;
+        setCurrentSession(sessionId);
+        await loadMessages(sessionId);
+        if (typeof window !== 'undefined') localStorage.setItem('currentSessionId', sessionId);
+        return;
+      }
+
+      if (savedCurrentSession) {
+        try {
+          const verifyResp = await apiClient.getSessionById(savedCurrentSession);
+          if (verifyResp && verifyResp.success && verifyResp.data) {
+            setCurrentSession(savedCurrentSession);
+            await loadMessages(savedCurrentSession);
+          } else {
+            localStorage.removeItem('currentSessionId');
+          }
+        } catch {
+          localStorage.removeItem('currentSessionId');
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, [loadMessages]);
+
+  useEffect(() => {
+    if (initialLoadDoneRef.current) return;
+    initialLoadDoneRef.current = true;
+    loadSessions();
+    loadCurrentSession();
+  }, [loadSessions, loadCurrentSession]);
+
+  // mobile/responsive viewport tracking
+  useEffect(() => {
+    const updateViewport = () => {
+      const isMobileDevice = window.innerWidth < 768;
+      setIsMobile(isMobileDevice);
+      if (isMobileDevice) {
+        const actualHeight = Math.min(window.innerHeight, window.screen.height);
+        setViewportHeight(`${actualHeight}px`);
+        document.documentElement.style.setProperty('--app-height', `${actualHeight}px`);
+        document.documentElement.style.setProperty('--vh', `${actualHeight * 0.01}px`);
+      } else {
+        setViewportHeight('100vh');
+        document.documentElement.style.removeProperty('--app-height');
+        document.documentElement.style.removeProperty('--vh');
+      }
+    };
+    updateViewport();
+    let resizeTimeout: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(updateViewport, 150);
+    };
+    window.addEventListener('resize', debouncedResize);
+    const handleOrientationChange = () => setTimeout(updateViewport, 300);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    return () => {
+      window.removeEventListener('resize', debouncedResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      clearTimeout(resizeTimeout);
+    };
+  }, []);
+
+  const setCurrentSessionAndSync = useCallback(async (sessionId: string) => {
+    try {
+      await apiClient.setCurrentSession(sessionId);
+      setCurrentSession(sessionId);
+      if (typeof window !== 'undefined') localStorage.setItem('currentSessionId', sessionId);
+      await loadMessages(sessionId);
+    } catch {
+      setCurrentSession(sessionId);
+      if (typeof window !== 'undefined') localStorage.setItem('currentSessionId', sessionId);
+      await loadMessages(sessionId);
+    }
+  }, [loadMessages]);
+
+  const startNewSession = () => {
+    // Instant UI feedback
+    setCurrentSession(null);
+    clearMessages();
+    if (typeof window !== 'undefined') localStorage.removeItem('currentSessionId');
+    setTimeout(() => textareaRef.current?.focus(), 100);
+
+    // Optimistically create a session in the background so the first send has no extra roundtrip
+    (async () => {
+      try {
+        if (creatingSessionRef.current) return;
+        creatingSessionRef.current = true;
+        const result = await apiClient.createSession({ title: 'New Chat' });
+        const created = getApiData(result);
+        if (!created) return;
+        const newSession: Session = mapApiSessionToUiSession(created as components['schemas']['Session']) as Session;
+        setSessions(prev => [newSession, ...prev]);
+        pendingSessionIdRef.current = newSession.id;
+        await setCurrentSessionAndSync(newSession.id);
+        pendingSessionIdRef.current = null;
+      } catch {
+        // Do not surface an error to the user; fallback will still create on first send
+        logger.warn('Background session creation failed; will create on first send');
+      } finally {
+        creatingSessionRef.current = false;
+      }
+    })();
+  };
+
+  const deleteSession = async (sessionId: string) => {
+    try {
+      const resp = await apiClient.deleteSession(sessionId);
+      if (resp) {
+        setSessions(prev => prev.filter(session => session.id !== sessionId));
+        if (currentSession === sessionId) {
+          setCurrentSession(null);
+          clearMessages();
+          if (typeof window !== 'undefined') localStorage.removeItem('currentSessionId');
+        }
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const sendMessage = useCallback(async () => {
+    if (!input.trim() || isLoading) return;
+    let sessionId = currentSession;
+    if (!sessionId) {
+      // If a background creation is in-flight, wait briefly to reuse it
+      const awaitPending = async (timeoutMs = 1500): Promise<string | null> => {
+        const started = Date.now();
+        while (Date.now() - started < timeoutMs) {
+          if (pendingSessionIdRef.current) return pendingSessionIdRef.current;
+          if (sessionIdRef.current) return sessionIdRef.current;
+          await new Promise(r => setTimeout(r, 50));
+        }
+        return null;
+      };
+      const maybePending = creatingSessionRef.current ? await awaitPending() : null;
+      if (maybePending) {
+        sessionId = maybePending;
+      } else {
+        try {
+          const result = await apiClient.createSession({ title: 'New Chat' });
+          const created = getApiData(result);
+          const newSession: Session = mapApiSessionToUiSession(created as components['schemas']['Session']) as Session;
+          if (newSession) {
+            setSessions(prev => [newSession, ...prev]);
+            await setCurrentSessionAndSync(newSession.id);
+            sessionId = newSession.id;
+          } else {
+            return;
+          }
+        } catch {
+          return;
+        }
+      }
+    }
+
+    const userMessage: Message = {
+      id: generateUUID(),
+      role: 'user',
+      content: input,
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+    if (!sessionId) return;
+    await saveMessage(sessionId, 'user', userMessage.content);
+    sessionIdRef.current = sessionId;
+    try {
+      const aiMessage: Message = {
+        id: generateUUID(),
+        role: 'assistant',
+        content: '',
+        timestamp: new Date(),
+      };
+      aiPlaceholderIdRef.current = aiMessage.id;
+      setMessages(prev => [...prev, aiMessage]);
+      await sendAiMessage({
+        role: 'user',
+        parts: [{ type: 'text', text: userMessage.content }],
+      }, {
+        body: {
+          sessionId: currentSession ?? undefined,
+          webSearchEnabled: options?.webSearchEnabled ?? false,
+          selectedModel: options?.model,
+          state: {},
+        },
+      });
+    } catch (error) {
+      setIsLoading(false);
+      logger.error('Error sending message to AI', { component: 'useChatController', sessionId: sessionId || 'none', model: options?.model }, error instanceof Error ? error : new Error(String(error)));
+    }
+  }, [input, isLoading, currentSession, options?.webSearchEnabled, options?.model, setCurrentSessionAndSync, setMessages, sendAiMessage, saveMessage]);
+
+  const stopGenerating = useCallback(() => {
+    try {
+      stopAi?.();
+    } catch {}
+    const placeholderId = aiPlaceholderIdRef.current;
+    if (placeholderId) {
+      setMessages(prev => prev.filter(m => m.id !== placeholderId));
+      aiPlaceholderIdRef.current = null;
+    }
+    setIsLoading(false);
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  }, [stopAi, setMessages]);
+
+  const generateReport = useCallback(async () => {
+    if (!currentSession || messages.length === 0) return;
+    setIsGeneratingReport(true);
+    try {
+      const result = await apiClient.generateReportDetailed({
+        sessionId: currentSession,
+        messages: messages.filter(m => !m.content.startsWith('📊 **Session Report**')).map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp.toISOString?.() })),
+        model: 'openai/gpt-oss-120b',
+      });
+      if (result && typeof (result as { reportContent?: unknown }).reportContent === 'string') {
+        const reportMessage = {
+          id: Date.now().toString(),
+          role: 'assistant' as const,
+          content: `📊 **Session Report**\n\n${(result as { reportContent: string }).reportContent}`,
+          timestamp: new Date(),
+          modelUsed: 'openai/gpt-oss-120b',
+        };
+        setMessages(prev => [...prev, reportMessage]);
+        try {
+          await saveMessage(currentSession, 'assistant', reportMessage.content, 'openai/gpt-oss-120b');
+          await loadSessions();
+        } catch {}
+      }
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  }, [currentSession, messages, setMessages, saveMessage, loadSessions]);
+
+  return {
+    messages,
+    sessions,
+    currentSession,
+    input,
+    isLoading,
+    isMobile,
+    viewportHeight,
+    isGeneratingReport,
+    memoryContext,
+    textareaRef,
+    messagesContainerRef,
+    inputContainerRef,
+    isNearBottom,
+    scrollToBottom,
+    setInput,
+    sendMessage,
+    stopGenerating,
+    startNewSession,
+    deleteSession,
+    loadSessions,
+    setCurrentSessionAndSync,
+    generateReport,
+    setShowSidebar,
+    showSidebar,
+    addMessageToChat: _addMessageToChat,
+    setMemoryContext,
+  };
+}
+
+

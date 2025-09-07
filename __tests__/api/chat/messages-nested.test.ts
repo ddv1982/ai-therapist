@@ -11,6 +11,9 @@ jest.mock('@/lib/database/db', () => ({
       count: jest.fn(),
       findMany: jest.fn(),
     },
+    session: {
+      update: jest.fn(),
+    },
   },
 }));
 

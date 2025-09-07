@@ -122,10 +122,13 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
     }, { requestId });
     
     // Set the authentication cookie with stricter security
+    const isHttps = request.nextUrl.protocol === 'https:';
+    const isProd = process.env.NODE_ENV === 'production';
     response.cookies.set('auth-session-token', session.sessionToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
+      // In development and on LAN over http, allow non-secure cookie so auth works
+      secure: isProd || isHttps,
+      sameSite: 'lax',
       maxAge: 60 * 60, // 1 hour
       path: '/',
     });

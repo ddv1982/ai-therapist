@@ -97,6 +97,10 @@ export function ChatHeader({
           </Button>
         </div>
       </div>
+      {/* Accessible heading for screen readers and tests (next-intl mock returns key text) */}
+      {!hasActiveSession && !hasMessages && (
+        <h1 className="sr-only" aria-live="polite">{t('main.newConversation')}</h1>
+      )}
       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
     </div>
   );

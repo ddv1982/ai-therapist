@@ -86,13 +86,17 @@ export const ChatComposer = React.memo(function ChatComposer({
               style={{ WebkitTapHighlightColor: 'transparent' }}
               aria-label={t('input.send')}
               aria-disabled={!input.trim()}
-              aria-describedby={!input.trim() ? 'chat-composer-error' : undefined}
             >
               <div className="shimmer-effect"></div>
               <Send className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
             </Button>
           )}
         </form>
+        {!input.trim() && (
+          <p id="chat-composer-error" role="alert" className="sr-only">
+            Message cannot be empty
+          </p>
+        )}
       </div>
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent/50 to-transparent"></div>
     </div>

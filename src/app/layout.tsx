@@ -1,10 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { ThemeProvider } from '@/components/providers/theme-provider';
-import { ErrorBoundary } from '@/components/layout/error-boundary';
-import { ToastProvider } from '@/components/ui/toast';
-import { ReduxProvider } from '@/providers/redux-provider';
 import { NextIntlClientProvider, type AbstractIntlMessages } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import { cookies } from 'next/headers';
@@ -44,8 +40,6 @@ export const viewport = {
   viewportFit: 'cover',
   themeColor: '#000000',
 };
-
-export const dynamic = 'force-dynamic';
 
 export default async function RootLayout({
   children,
@@ -98,17 +92,9 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body className="bg-background font-sans antialiased">
-        <ReduxProvider>
-          <NextIntlClientProvider locale={resolvedLocale} messages={messages}>
-            <ThemeProvider>
-              <ToastProvider>
-                <ErrorBoundary>
-                  {children}
-                </ErrorBoundary>
-              </ToastProvider>
-            </ThemeProvider>
-          </NextIntlClientProvider>
-        </ReduxProvider>
+        <NextIntlClientProvider locale={resolvedLocale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

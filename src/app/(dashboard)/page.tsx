@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthGuard } from '@/features/auth/components/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -18,679 +18,67 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { LanguageToggle } from '@/components/ui/language-switcher';
-import { generateUUID } from '@/lib/utils/utils';
-import { useToast } from '@/components/ui/toast';
 import {useTranslations} from 'next-intl';
-import { logger } from '@/lib/utils/logger';
-import { checkMemoryContext, formatMemoryInfo, type MemoryContextInfo } from '@/lib/chat/memory-utils';
-// Removed handleStreamingResponse - AI SDK handles streaming automatically
+import { formatMemoryInfo } from '@/lib/chat/memory-utils';
 import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
 import { ChatHeader } from '@/features/chat/components/chat-header';
 import { ChatComposer } from '@/features/chat/components/chat-composer';
 import { SystemBanner } from '@/features/chat/components/system-banner';
-import type { MessageData } from '@/features/chat/messages/message';
 import { MobileDebugInfo } from '@/components/layout/mobile-debug-info';
 import { MemoryManagementModal } from '@/features/therapy/memory/memory-management-modal';
 import { therapeuticInteractive } from '@/lib/ui/design-tokens';
-import { useChatMessages } from '@/hooks/use-chat-messages';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
-import { apiClient } from '@/lib/api/client';
-import type { components } from '@/types/api.generated';
-import { getApiData } from '@/lib/api/api-response';
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
+import { useInputFooterHeight } from '@/hooks/use-input-footer-height';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { updateSettings } from '@/store/slices/chatSlice';
-import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
+import { useChatController } from '@/hooks';
 
-type ListSessionsResponse = import('@/lib/api/api-response').ApiResponse<components['schemas']['Session'][]>;
-type CreateSessionResponse = import('@/lib/api/api-response').ApiResponse<components['schemas']['Session']>;
-
-// Using MessageData from the new message system
-type Message = MessageData;
-
-interface Session {
-  id: string;
-  title: string;
-  lastMessage?: string;
-  startedAt: Date;
-  _count?: {
-    messages: number;
-  };
-}
+// types are provided by the controller; no local re-definitions needed
 
 function ChatPageContent() {
   const router = useRouter();
-  const { showToast } = useToast();
   const dispatch = useAppDispatch();
   const settings = useAppSelector(state => state.chat?.settings || { webSearchEnabled: false, model: 'openai/gpt-oss-20b' });
   const t = useTranslations('chat');
-  
-  // Use the new chat messages hook
+
   const {
     messages,
-    loadMessages,
+    sessions,
+    currentSession,
+    input,
+    isLoading,
+    isMobile,
+    viewportHeight,
+    isGeneratingReport,
+    memoryContext,
+    setMemoryContext,
+    textareaRef,
+    messagesContainerRef,
+    inputContainerRef,
+    isNearBottom,
+    scrollToBottom,
+    setInput,
+    sendMessage,
+    stopGenerating,
+    startNewSession,
+    deleteSession,
+    setCurrentSessionAndSync,
+    generateReport,
+    setShowSidebar,
+    showSidebar,
     addMessageToChat,
-    clearMessages,
-    setMessages
-  } = useChatMessages();
-  
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [currentSession, setCurrentSession] = useState<string | null>(null);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(true);
-  // Environment API key is configured server-side
-  const [isMobile, setIsMobile] = useState(false);
-  const [viewportHeight, setViewportHeight] = useState('100vh');
-  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-  const [memoryContext, setMemoryContext] = useState<MemoryContextInfo>({ hasMemory: false, reportCount: 0 });
+  } = useChatController({ model: settings.model, webSearchEnabled: settings.webSearchEnabled });
   const [showMemoryModal, setShowMemoryModal] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputContainerRef = useRef<HTMLDivElement>(null);
-  const aiPlaceholderIdRef = useRef<string | null>(null);
-  const sessionIdRef = useRef<string | null>(null);
-  const inputHeightRef = useRef(0);
-  const initialLoadDoneRef = useRef(false);
-  const sessionsLoadingRef = useRef(false);
+  // kept for backward compatibility; no longer used since height is managed by hook
+  // const inputHeightRef = useRef(0);
 
-  // Streaming-aware scroll behavior akin to ChatGPT
-  const { scrollToBottom, isNearBottom } = useScrollToBottom({
-    isStreaming: isLoading,
-    messages,
-    container: messagesContainerRef.current,
-    behavior: 'smooth',
-    respectUserScroll: true
-  });
-
-  // AI SDK: single transport for chat streaming through /api/chat
-  const transport = useMemo(() => new DefaultChatTransport({
-    api: '/api/chat',
-    body: {
-      sessionId: currentSession ?? undefined,
-    },
-  }), [currentSession]);
-
-  const { sendMessage: sendAiMessage, stop: stopAi } = useChat({
-    id: currentSession ?? 'default',
-    transport,
-    onError: (error) => {
-      setIsLoading(false);
-      logger.error('Chat stream error', { component: 'ChatPage' }, error);
-    },
-    onFinish: async ({ message }) => {
-      try {
-        // Extract text from AI SDK message parts
-        const textContent = (message.parts ?? [])
-          .reduce((acc, part) => acc + (part.type === 'text' ? (part.text ?? '') : ''), '');
-        const trimmedContent = textContent.trim();
-
-        // Update the last placeholder message content
-        if (aiPlaceholderIdRef.current) {
-          const placeholderId = aiPlaceholderIdRef.current;
-          setMessages(prev => prev.map(m => (
-            m.id === placeholderId ? { ...m, content: textContent } : m
-          )));
-        }
-
-        // Only persist if there is any assistant text content. Tool-only responses may be empty.
-        const sid = sessionIdRef.current;
-        if (sid && trimmedContent.length > 0) {
-          try {
-            const recent = await apiClient.listMessages(sid, { limit: 5 });
-            const page = recent ? getApiData(recent) : undefined;
-            const items = (page?.items || []) as Array<{ role: string; content: string }>;
-            const alreadySaved = items.some(it => it.role === 'assistant' && it.content === trimmedContent);
-            if (!alreadySaved) {
-              await saveMessage(sid, 'assistant', trimmedContent, settings.webSearchEnabled ? 'openai/gpt-oss-120b' : settings.model);
-            }
-          } catch {
-            logger.warn('Assistant persistence fallback check failed; attempting save', {
-              component: 'ChatPage',
-              operation: 'assistantFallbackPersist'
-            });
-            await saveMessage(sid, 'assistant', trimmedContent, settings.webSearchEnabled ? 'openai/gpt-oss-120b' : settings.model);
-          }
-          await loadMessages(sid);
-          await loadSessions();
-        }
-      } catch (err) {
-        logger.error('Failed to finalize assistant message', {
-          component: 'ChatPage',
-          operation: 'onFinish'
-        }, err instanceof Error ? err : new Error(String(err)));
-      } finally {
-        aiPlaceholderIdRef.current = null;
-        setIsLoading(false);
-      }
-    }
-  });
-
-  // Keep a live ref of the current session for streaming callbacks
-  useEffect(() => {
-    sessionIdRef.current = currentSession;
-  }, [currentSession]);
-  
-  // Mobile Safari debugging
-  const logMobileError = useCallback(async (error: unknown, context: string) => {
-    const isSafari = typeof navigator !== 'undefined' && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-    const isMobileDevice = typeof window !== 'undefined' && window.innerWidth < 768;
-    const isNetworkUrl = typeof window !== 'undefined' && !window.location.hostname.match(/localhost|127\.0\.0\.1/);
-    
-    if (isSafari && isMobileDevice) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorStack = error instanceof Error ? error.stack : undefined;
-      
-      logger.error(`Mobile Safari error in ${context}`, {
-        component: 'ChatPage',
-        operation: context,
-        error: errorMessage,
-        stack: errorStack,
-        userAgent: navigator.userAgent,
-        url: window.location.href,
-        viewport: {
-          width: window.innerWidth,
-          height: window.innerHeight,
-          devicePixelRatio: window.devicePixelRatio
-        },
-        isNetworkUrl,
-        isMobileSafari: true
-      }, error instanceof Error ? error : new Error(String(error)));
-      
-      // Send to error logging endpoint
-      try {
-        await fetch('/api/errors', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            error: errorMessage,
-            stack: errorStack,
-            userAgent: navigator.userAgent,
-            url: window.location.href,
-            timestamp: new Date().toISOString(),
-            context,
-            isMobileSafari: true,
-            isNetworkUrl
-          })
-        });
-      } catch (loggingError) {
-        logger.error('Failed to log mobile error to API', {
-          component: 'ChatPage',
-          operation: 'logMobileError',
-          originalContext: context
-        }, loggingError instanceof Error ? loggingError : new Error(String(loggingError)));
-      }
-    }
-  }, []);
-
-  // Load sessions from database on component mount (memoized)
-  const loadSessions = useCallback(async () => {
-    if (sessionsLoadingRef.current) return;
-    sessionsLoadingRef.current = true;
-    try {
-      const sessionsData: ListSessionsResponse = await apiClient.listSessions();
-      const sessions = getApiData(sessionsData);
-      // Map API date strings to UI Session type (which expects Date)
-      const uiSessions: Session[] = (sessions || []).map((s) => ({
-        ...s,
-        startedAt: s.startedAt ? new Date(s.startedAt as unknown as string) : undefined,
-        endedAt: s.endedAt ? new Date(s.endedAt as unknown as string) : undefined,
-        createdAt: s.createdAt ? new Date(s.createdAt as unknown as string) : undefined,
-        updatedAt: s.updatedAt ? new Date(s.updatedAt as unknown as string) : undefined,
-      })) as unknown as Session[];
-      setSessions(uiSessions);
-    } catch (error) {
-      logger.error('Failed to load chat sessions', {
-        component: 'ChatPage', 
-        operation: 'loadSessions'
-      }, error instanceof Error ? error : new Error(String(error)));
-      await logMobileError(error, 'loadSessions');
-      // Ensure sessions is always an array even on error
-      setSessions([]);
-      showToast({
-        type: 'error',
-        title: 'Loading Error',
-        message: 'Failed to load chat sessions. Please refresh the page.'
-      });
-    } finally {
-      sessionsLoadingRef.current = false;
-    }
-  }, [logMobileError, showToast]);
-
-  // Load messages for a specific session (memoized)
-  // Enhanced loadMessages that uses the hook and also loads memory context
-  const loadMessagesWithMemory = useCallback(async (sessionId: string) => {
-    try {
-      // Load messages using the hook
-      await loadMessages(sessionId);
-      
-      // Check for memory context when loading session
-      const memoryInfo = await checkMemoryContext(sessionId);
-      setMemoryContext(memoryInfo);
-    } catch (error) {
-      logger.error('Failed to load messages with memory context', {
-        component: 'ChatPage',
-        operation: 'loadMessagesWithMemory',
-        sessionId
-      }, error instanceof Error ? error : new Error(String(error)));
-      await logMobileError(error, 'loadMessages');
-      showToast({
-        type: 'error',
-        title: 'Loading Error',
-        message: 'Failed to load chat messages. Please try again.'
-      });
-    }
-  }, [loadMessages, logMobileError, showToast]);
-
-  // Save message to database (memoized)
-  const saveMessage = useCallback(async (sessionId: string, role: 'user' | 'assistant', content: string, modelUsed?: string) => {
-    try {
-      const resp = await apiClient.postMessage(sessionId, { role, content, modelUsed });
-      if (resp && resp.success && resp.data) {
-        return resp.data as components['schemas']['Message'];
-      }
-      logger.error('Failed to save message to database', {
-        component: 'ChatPage',
-        operation: 'saveMessage',
-        sessionId,
-        role,
-        status: resp && resp.success === false ? 400 : 500
-      });
-      return null;
-    } catch (error) {
-      logger.error('Error saving message to database', {
-        component: 'ChatPage',
-        operation: 'saveMessage',
-        sessionId,
-        role
-      }, error instanceof Error ? error : new Error(String(error)));
-      return null;
-    }
-  }, []);
-
-  // Keep input focused on mount and after streaming
-  useEffect(() => {
-    // Focus shortly after mount to ensure layout settles
-    const id = setTimeout(() => textareaRef.current?.focus(), 50);
-    return () => clearTimeout(id);
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      const id = setTimeout(() => textareaRef.current?.focus(), 50);
-      return () => clearTimeout(id);
-    }
-  }, [isLoading]);
-
-  // Load current active session (memoized)
-  const loadCurrentSession = useCallback(async () => {
-    try {
-      // First try to get from localStorage for faster loading
-      const savedCurrentSession = localStorage.getItem('currentSessionId');
-      
-      const data = await apiClient.getCurrentSession();
-      const currentSessionData: { currentSession?: { id: string; messageCount?: number } } = (data && (data as { success?: boolean }).success) ? (data as { data: { currentSession?: { id: string; messageCount?: number } } }).data : (data as { currentSession?: { id: string; messageCount?: number } });
-      if (currentSessionData?.currentSession) {
-        const sessionId = currentSessionData.currentSession.id;
-          setCurrentSession(sessionId);
-          await loadMessagesWithMemory(sessionId);
-          
-          // Save to localStorage for faster future loads
-          localStorage.setItem('currentSessionId', sessionId);
-          
-          logger.info('Loaded current session successfully', {
-            component: 'ChatPage',
-            operation: 'loadCurrentSession',
-            sessionId,
-            messageCount: currentSessionData.currentSession.messageCount
-          });
-          return;
-        }
-      
-      // Fallback: if no current session from API but we have one saved locally
-      if (savedCurrentSession) {
-        try {
-          // Verify the saved session still exists
-          const verifyResp = await apiClient.getSessionById(savedCurrentSession);
-          if (verifyResp && verifyResp.success && verifyResp.data) {
-            setCurrentSession(savedCurrentSession);
-            await loadMessagesWithMemory(savedCurrentSession);
-            logger.info('Restored session from localStorage', {
-              component: 'ChatPage',
-              operation: 'loadCurrentSession',
-              sessionId: savedCurrentSession
-            });
-          } else {
-            // Saved session no longer exists, clear localStorage
-            localStorage.removeItem('currentSessionId');
-          }
-        } catch (error) {
-          logger.error('Failed to verify saved session from localStorage', {
-            component: 'ChatPage',
-            operation: 'loadCurrentSession',
-            sessionId: savedCurrentSession
-          }, error instanceof Error ? error : new Error(String(error)));
-          localStorage.removeItem('currentSessionId');
-        }
-      }
-    } catch (error) {
-      logger.error('Failed to load current session', {
-        component: 'ChatPage',
-        operation: 'loadCurrentSession'
-      }, error instanceof Error ? error : new Error(String(error)));
-    }
-  }, [loadMessagesWithMemory]); // Only depends on loadMessagesWithMemory
-
-  // Load sessions and current session on component mount
-  useEffect(() => {
-    if (initialLoadDoneRef.current) return;
-    initialLoadDoneRef.current = true;
-    loadSessions();
-    loadCurrentSession();
-  }, [loadSessions, loadCurrentSession]);
-
-  // When no current session is selected (brand-new chat), fetch global memory context
-  useEffect(() => {
-    const loadGlobalMemory = async () => {
-      try {
-        if (!currentSession) {
-          const info = await checkMemoryContext();
-          setMemoryContext(info);
-        }
-      } catch {
-        logger.warn('Failed to load global memory context', {
-          component: 'ChatPage',
-          operation: 'loadGlobalMemory'
-        });
-      }
-    };
-    loadGlobalMemory();
-  }, [currentSession]);
-
-  // Environment API key is automatically configured
-
-  // Mobile detection with dynamic resize handling and iOS viewport fixes
-  useEffect(() => {
-    const updateViewport = () => {
-      const isMobileDevice = window.innerWidth < 768;
-      setIsMobile(isMobileDevice);
-      
-      if (isMobileDevice) {
-        // Use the smaller of window.innerHeight or screen.height for iOS
-        const actualHeight = Math.min(window.innerHeight, window.screen.height);
-        setViewportHeight(`${actualHeight}px`);
-        
-        // Set CSS custom properties for consistent viewport handling
-        document.documentElement.style.setProperty('--app-height', `${actualHeight}px`);
-        document.documentElement.style.setProperty('--vh', `${actualHeight * 0.01}px`);
-      } else {
-        setViewportHeight('100vh');
-        document.documentElement.style.removeProperty('--app-height');
-        document.documentElement.style.removeProperty('--vh');
-        inputHeightRef.current = 0;
-      }
-    };
-
-    // Initial check
-    updateViewport();
-
-    // Add resize listener with debounce for performance
-    let resizeTimeout: NodeJS.Timeout;
-    const debouncedResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(updateViewport, 150);
-    };
-
-    window.addEventListener('resize', debouncedResize);
-    const handleOrientationChange = () => {
-      setTimeout(updateViewport, 300); // Longer delay for orientation change
-    };
-    window.addEventListener('orientationchange', handleOrientationChange);
-
-    return () => {
-      window.removeEventListener('resize', debouncedResize);
-      window.removeEventListener('orientationchange', handleOrientationChange);
-      clearTimeout(resizeTimeout);
-    }; 
-  }, []);
-
-  // Development-only diagnostics to detect unexpected page unloads/reloads
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'development') return;
-    const beforeUnload = () => {
-      logger.warn('Page unloading', { component: 'ChatPage', operation: 'beforeunload' });
-    };
-    const onPageHide = (event: PageTransitionEvent) => {
-      logger.warn('Page hidden', { component: 'ChatPage', operation: 'pagehide', persisted: event.persisted });
-    };
-    window.addEventListener('beforeunload', beforeUnload);
-    window.addEventListener('pagehide', onPageHide);
-    return () => {
-      window.removeEventListener('beforeunload', beforeUnload);
-      window.removeEventListener('pagehide', onPageHide);
-    };
-  }, []);
-
-  // Observe input container height and write to scroll container as CSS var
-  useEffect(() => {
-    if (!inputContainerRef.current || !messagesContainerRef.current) return;
-    const target = inputContainerRef.current;
-    const update = () => {
-      if (!messagesContainerRef.current) return;
-      const height = target.offsetHeight ?? 0;
-      inputHeightRef.current = height;
-      messagesContainerRef.current.style.setProperty('--input-h', `${height}px`);
-    };
-
-    // Run once on mount
-    update();
-
-    const resizeObserver = new ResizeObserver(() => {
-      // Use requestAnimationFrame to avoid layout thrashing
-      requestAnimationFrame(update);
-    });
-    resizeObserver.observe(target);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, []);
-
-  // Set current session for cross-device continuity (memoized)
-  const setCurrentSessionAndSync = useCallback(async (sessionId: string) => {
-    try {
-      // Update the backend to mark this as the current session
-      await apiClient.setCurrentSession(sessionId);
-      
-      setCurrentSession(sessionId);
-      localStorage.setItem('currentSessionId', sessionId);
-      await loadMessagesWithMemory(sessionId);
-    } catch (error) {
-      logger.error('Failed to sync current session across devices', {
-        component: 'ChatPage',
-        operation: 'setCurrentSessionAndSync',
-        sessionId
-      }, error instanceof Error ? error : new Error(String(error)));
-      // Still set locally even if sync fails
-      setCurrentSession(sessionId);
-      localStorage.setItem('currentSessionId', sessionId);
-      await loadMessagesWithMemory(sessionId);
-    }
-  }, [loadMessagesWithMemory]);
-
-  const startNewSession = () => {
-    // Just clear current session and messages - don't create DB session yet
-    setCurrentSession(null);
-    clearMessages();
-    localStorage.removeItem('currentSessionId');
-    // Focus the input field after starting new session
-    setTimeout(() => textareaRef.current?.focus(), 100);
-
-    // Proactively load global memory context so the banner shows immediately
-    ;(async () => {
-      try {
-        const info = await checkMemoryContext();
-        setMemoryContext(info);
-      } catch {
-        logger.warn('Failed to prefetch global memory context after starting new session', {
-          component: 'ChatPage',
-          operation: 'startNewSession:prefetchMemory'
-        });
-      }
-    })();
-  };
-
-  const deleteSession = async (sessionId: string) => {
-    try {
-      const resp = await apiClient.deleteSession(sessionId);
-      if (resp) {
-        setSessions(prev => prev.filter(session => session.id !== sessionId));
-        if (currentSession === sessionId) {
-          setCurrentSession(null);
-          clearMessages();
-          localStorage.removeItem('currentSessionId');
-        }
-      } else {
-        logger.error('Failed to delete session', {
-          component: 'ChatPage',
-          operation: 'deleteSession',
-          sessionId
-        });
-      }
-    } catch (error) {
-      logger.error('Error deleting session', {
-        component: 'ChatPage',
-        operation: 'deleteSession',
-        sessionId
-      }, error instanceof Error ? error : new Error(String(error)));
-    }
-  };
-
-  const sendMessage = useCallback(async () => {
-    if (!input.trim() || isLoading) return;
-    
-    // Environment API key is automatically handled by the server
-
-    // Auto-create session if none exists, using first message as title
-    let sessionId = currentSession;
-    if (!sessionId) {
-      try {
-        // Create session with placeholder title; real title will be generated after first message
-        const result: CreateSessionResponse = await apiClient.createSession({ title: 'New Chat' });
-        const created = getApiData(result);
-        const newSession: Session = {
-          ...created,
-          startedAt: created.startedAt ? new Date(created.startedAt as unknown as string) : undefined,
-          endedAt: created.endedAt ? new Date(created.endedAt as unknown as string) : undefined,
-          createdAt: created.createdAt ? new Date(created.createdAt as unknown as string) : undefined,
-          updatedAt: created.updatedAt ? new Date(created.updatedAt as unknown as string) : undefined,
-        } as unknown as Session;
-        if (newSession) {
-          setSessions(prev => [newSession, ...prev]);
-          
-          // Set as current session and sync across devices
-          await setCurrentSessionAndSync(newSession.id);
-          sessionId = newSession.id;
-        } else {
-          logger.error('Failed to create new session', {
-          component: 'ChatPage',
-          operation: 'sendMessage',
-          status: 500
-        });
-          return;
-        }
-      } catch (error) {
-        logger.error('Error creating new session', {
-          component: 'ChatPage',
-          operation: 'sendMessage'
-        }, error instanceof Error ? error : new Error(String(error)));
-        return;
-      }
-    }
-
-    const userMessage: Message = {
-      id: generateUUID(),
-      role: 'user',
-      content: input,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
-
-    // Save user message to database (defensive guard for session)
-    if (!sessionId) {
-      logger.error('Attempted to send message without a session', { component: 'ChatPage', operation: 'sendMessage' });
-      return;
-    }
-    await saveMessage(sessionId, 'user', userMessage.content);
-    // Ensure onFinish sees the latest session id
-    sessionIdRef.current = sessionId;
-    
-    // Sidebar counts will refresh after assistant finishes; avoid duplicate fetches here
-    try {
-      // Create AI message placeholder (typing indicator)
-      const aiMessage: Message = {
-        id: generateUUID(),
-        role: 'assistant',
-        content: '',
-        timestamp: new Date()
-      };
-      aiPlaceholderIdRef.current = aiMessage.id;
-      setMessages(prev => [...prev, aiMessage]);
-
-      // Use AI SDK React to stream via /api/chat
-      await sendAiMessage({
-        role: 'user',
-        parts: [{ type: 'text', text: userMessage.content }]
-      }, {
-        body: {
-          sessionId: currentSession ?? undefined,
-          webSearchEnabled: settings.webSearchEnabled,
-          selectedModel: settings.model,
-          state: {} // ensure state is always defined to prevent hydration errors
-        }
-      });
-    } catch (error) {
-      setIsLoading(false);
-      logger.error('Error sending message to AI', {
-        component: 'ChatPage',
-        operation: 'sendMessage',
-        sessionId: sessionId || 'none',
-        model: settings.webSearchEnabled ? 'openai/gpt-oss-120b' : settings.model
-      }, error instanceof Error ? error : new Error(String(error)));
-      
-      // Check if it's a model-related error with proper type handling
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('model_not_found') || errorMessage.includes('404')) {
-        showToast({
-          type: 'error',
-          title: 'Model Not Available',
-          message: 'The selected model is not available. Please try again.'
-        });
-      } else if (errorMessage.includes('Failed to fetch')) {
-        showToast({
-          type: 'error',
-          title: 'Network Error',
-          message: 'Please check your connection and try again.'
-        });
-      } else {
-        showToast({
-          type: 'error',
-          title: 'Message Failed',
-          message: 'Failed to send message. Please check your API key and settings.'
-        });
-      }
-    }
-  }, [input, isLoading, currentSession, showToast, saveMessage, setCurrentSessionAndSync, setMessages, sendAiMessage, settings.webSearchEnabled, settings.model]);
+  // Keep CSS var for footer height in sync
+  useInputFooterHeight(inputContainerRef, messagesContainerRef);
 
   // Memoized input handlers for better performance
   const handleInputChange = useCallback((value: string) => {
     setInput(value);
-  }, []);
+  }, [setInput]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -704,111 +92,7 @@ function ChatPageContent() {
     sendMessage();
   }, [sendMessage]);
 
-  const stopGenerating = useCallback(() => {
-    try {
-      // Abort the in-flight stream
-      stopAi?.();
-    } catch {}
-    // Clean up placeholder and loading state
-    const placeholderId = aiPlaceholderIdRef.current;
-    if (placeholderId) {
-      setMessages(prev => prev.filter(m => m.id !== placeholderId));
-      aiPlaceholderIdRef.current = null;
-    }
-    setIsLoading(false);
-    // Keep focus so user can continue typing
-    setTimeout(() => textareaRef.current?.focus(), 50);
-  }, [stopAi, setMessages]);
-
-  const generateReport = async () => {
-    if (!currentSession || messages.length === 0) {
-      showToast({
-        type: 'warning',
-        title: 'No Session Data',
-        message: 'Please ensure you have messages in the current session to generate a report.'
-      });
-      return;
-    }
-
-    logger.therapeuticOperation('session_report_generation_started', {
-      sessionId: currentSession,
-      messageCount: messages.length
-    });
-
-    setIsGeneratingReport(true);
-    try {
-      const result = await apiClient.generateReportDetailed({
-        sessionId: currentSession,
-        messages: messages.filter(msg => !msg.content.startsWith('📊 **Session Report**')).map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp.toISOString?.() })),
-        model: 'openai/gpt-oss-120b',
-      });
-
-      if (result && typeof (result as { reportContent?: unknown }).reportContent === 'string') {
-        
-        // Add the report content to the current chat
-        if (currentSession) {
-          const reportMessage = {
-            id: Date.now().toString(),
-            role: 'assistant' as const,
-            content: `📊 **Session Report**\n\n${(result as { reportContent: string }).reportContent}`,
-            timestamp: new Date(),
-            modelUsed: 'openai/gpt-oss-120b' // Reports use the larger model
-          };
-          
-          setMessages(prev => [...prev, reportMessage]);
-          
-          // Save the report message to database with model information
-          try {
-            await saveMessage(currentSession, 'assistant', reportMessage.content, 'openai/gpt-oss-120b');
-            
-            // Reload sessions to update message count in sidebar
-            await loadSessions();
-          } catch (error) {
-            logger.error('Failed to save report message to database', {
-              component: 'ChatPage',
-              operation: 'generateReport',
-              sessionId: currentSession
-            }, error instanceof Error ? error : new Error(String(error)));
-          }
-        }
-        
-        showToast({
-          type: 'success',
-          title: 'Report Generated',
-          message: 'Session report has been added to this chat!'
-        });
-      } else {
-        const error: { error?: string } = (result as { error?: string }) || { error: 'Unknown error' };
-        logger.error('Session report generation failed', {
-          component: 'ChatPage',
-          operation: 'generateReport',
-          sessionId: currentSession,
-          messageCount: messages.length,
-          status: 500,
-          error: error
-        });
-        
-        showToast({
-          type: 'error',
-          title: 'Report Failed',
-          message: error.error || 'Failed to generate report. Please try again.'
-        });
-      }
-    } catch (error) {
-      logger.error('Error during report generation', {
-        component: 'ChatPage',
-        operation: 'generateReport',
-        sessionId: currentSession
-      }, error instanceof Error ? error : new Error(String(error)));
-      showToast({
-        type: 'error',
-        title: 'Report Failed',
-        message: 'Failed to generate report. Please try again.'
-      });
-    } finally {
-      setIsGeneratingReport(false);
-    }
-  };
+  // stopGenerating and generateReport come from the controller
 
   const openCBTDiary = useCallback(() => {
     router.push('/cbt-diary');
@@ -974,7 +258,7 @@ function ChatPageContent() {
                     {session.title}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(session.startedAt).toLocaleString()}
+                    {session.startedAt ? new Date(session.startedAt).toLocaleString() : ''}
                   </p>
                 </div>
                 <Button
@@ -1112,9 +396,6 @@ function ChatPageContent() {
             />
           )}
           
-          {/* Simple scroll anchor for auto-scroll */}
-          <div ref={messagesEndRef} />
-
           {/* Jump to latest button when scrolled up */}
           <div className="sticky bottom-3 flex justify-center pointer-events-none">
             {!isNearBottom && (
@@ -1138,7 +419,7 @@ function ChatPageContent() {
         {/* Input Area */}
         <ChatComposer
           input={input}
-          isLoading={Boolean(isLoading || aiPlaceholderIdRef.current !== null)}
+          isLoading={Boolean(isLoading)}
           isMobile={isMobile}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
