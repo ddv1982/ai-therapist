@@ -23,14 +23,15 @@ model User {
 }
 
 model Session {
-  id        String    @id @default(uuid())
-  userId    String    @map("user_id")
-  title     String
-  startedAt DateTime  @default(now()) @map("started_at")
-  endedAt   DateTime? @map("ended_at")
-  status    String    @default("active")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  title        String
+  messageCount Int       @default(0) @map("message_count")
+  startedAt    DateTime  @default(now()) @map("started_at")
+  endedAt      DateTime? @map("ended_at")
+  status       String    @default("active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
 
   user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages Message[]

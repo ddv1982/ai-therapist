@@ -58,6 +58,20 @@ const sessionsSlice = createSlice({
     updateSession: (state, action: PayloadAction<{ id: string; updates: Partial<SessionData> }>) => {
       sessionsAdapter.updateOne(state, { id: action.payload.id, changes: action.payload.updates });
     },
+    incrementMessageCount: (state, action: PayloadAction<string>) => {
+      const session = state.entities[action.payload];
+      if (session) {
+        session.messageCount += 1;
+        session.updatedAt = new Date();
+      }
+    },
+    setSessionTitle: (state, action: PayloadAction<{ id: string; title: string }>) => {
+      const session = state.entities[action.payload.id];
+      if (session) {
+        session.title = action.payload.title;
+        session.updatedAt = new Date();
+      }
+    },
     deleteSession: (state, action: PayloadAction<string>) => {
       sessionsAdapter.removeOne(state, action.payload);
       if (state.currentSessionId === action.payload) {

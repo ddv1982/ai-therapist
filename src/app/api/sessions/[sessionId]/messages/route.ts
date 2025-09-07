@@ -45,6 +45,68 @@ export const POST = withValidationAndParams(
         },
       });
 
+      // Count messages in session
+      const messageCount = await prisma.message.count({ where: { sessionId } });
+
+      // Title generation logic (based on user message count)
+      if (validatedData.role === 'user') {
+        // Count only user messages
+        const userMessageCount = await prisma.message.count({
+          where: { sessionId, role: 'user' },
+        });
+
+        if (userMessageCount === 1) {
+          // First user message: keep placeholder title
+          await prisma.session.update({
+            where: { id: sessionId },
+            data: { messageCount },
+          });
+        } else if (userMessageCount === 2 || userMessageCount === 4) {
+          // Generate or regenerate title after 2 and 4 user messages
+          const { generateChatTitle } = await import('@/lib/chat/title-generator');
+
+          // Fetch first few user messages for context
+          const firstMessages = await prisma.message.findMany({
+            where: { sessionId, role: 'user' },
+            orderBy: { timestamp: 'asc' },
+            take: 5,
+          });
+
+          // Decrypt messages before generating title
+          const decryptedFirst = safeDecryptMessages(firstMessages.map(m => ({
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp,
+          })));
+
+          const combinedContent = decryptedFirst
+            .map(m => m.content)
+            .join('\n\n');
+
+          const title = await generateChatTitle(combinedContent);
+
+          await prisma.session.update({
+            where: { id: sessionId },
+            data: {
+              title,
+              messageCount,
+            },
+          });
+        } else {
+          // Just increment message count
+          await prisma.session.update({
+            where: { id: sessionId },
+            data: { messageCount },
+          });
+        }
+      } else {
+        // Assistant or other roles: just increment message count
+        await prisma.session.update({
+          where: { id: sessionId },
+          data: { messageCount },
+        });
+      }
+
       // Invalidate message cache for this session
       await MessageCache.invalidate(sessionId);
 
@@ -56,6 +118,7 @@ export const POST = withValidationAndParams(
         modelUsed: validatedData.modelUsed,
         timestamp: message.timestamp,
         createdAt: message.createdAt,
+        messageCount,
       }, { requestId: context.requestId });
     } catch (error) {
       return errorHandlers.handleDatabaseError(error as Error, 'create message (nested)', context);

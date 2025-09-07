@@ -577,8 +577,8 @@ function ChatPageContent() {
     let sessionId = currentSession;
     if (!sessionId) {
       try {
-        const title = input.slice(0, 50) + (input.length > 50 ? '...' : '');
-        const result: CreateSessionResponse = await apiClient.createSession({ title });
+        // Create session with placeholder title; real title will be generated after first message
+        const result: CreateSessionResponse = await apiClient.createSession({ title: 'New Chat' });
         const created = getApiData(result);
         const newSession: Session = {
           ...created,
@@ -597,7 +597,6 @@ function ChatPageContent() {
           logger.error('Failed to create new session', {
           component: 'ChatPage',
           operation: 'sendMessage',
-          title: title,
           status: 500
         });
           return;
@@ -972,18 +971,12 @@ function ChatPageContent() {
                   <MessageSquare className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-medium truncate mb-1">
+                  <h3 className="text-base font-medium line-clamp-2 mb-1">
                     {session.title}
                   </h3>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground truncate">
-                      {session._count?.messages ? `${session._count.messages} ${t('sidebar.messages')}` : t('sidebar.noMessages')}
-                    </p>
-                    <div className="h-1 w-1 rounded-full bg-muted-foreground/30"></div>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(session.startedAt).toLocaleDateString()}
-                    </p>
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(session.startedAt).toLocaleString()}
+                  </p>
                 </div>
                 <Button
                   variant="ghost"
