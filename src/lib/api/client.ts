@@ -46,34 +46,13 @@ export class ApiClient {
       clearTimeout(timeout);
     }
 
-    // If unauthorized, try refresh
-    if (res.status === 401) {
-      const refreshed = await this.refreshToken();
-      if (refreshed) {
-        res = await fetch(this.withBase(path), {
-          credentials: 'include',
-          ...init,
-          headers,
-          signal: controller.signal,
-        });
-      }
-    }
+    // If unauthorized, surface the 401 response to the caller without retry
+    // Auth is managed via DB-backed session cookie; no token refresh
 
     return (await parseJsonSafe(res)) as T;
   }
 
-  private async refreshToken(): Promise<boolean> {
-    try {
-      const res = await fetch(this.withBase('/api/auth/refresh'), {
-        method: 'POST',
-        credentials: 'include',
-      });
-      const data = await res.json();
-      return data?.success === true;
-    } catch {
-      return false;
-    }
-  }
+  // Token refresh removed; DB-backed session cookie handles auth.
 
   // Sessions
   async listSessions(): Promise<ApiResponse<components['schemas']['Session'][]>> {

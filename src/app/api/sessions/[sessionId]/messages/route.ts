@@ -160,14 +160,14 @@ export const GET = withAuth(
           content: m.content,
           timestamp: m.timestamp,
         })));
-
+        // Guard against length mismatch to avoid undefined indexing
         const items = messages.map((m, i) => ({
           id: m.id,
           sessionId: m.sessionId,
-          role: decrypted[i].role,
-          content: decrypted[i].content,
+          role: decrypted[i]?.role ?? m.role,
+          content: decrypted[i]?.content ?? '',
           modelUsed: m.modelUsed ?? undefined,
-          timestamp: decrypted[i].timestamp,
+          timestamp: decrypted[i]?.timestamp ?? m.timestamp,
           createdAt: m.createdAt,
         }));
 

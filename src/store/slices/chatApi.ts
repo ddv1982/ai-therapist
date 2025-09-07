@@ -26,6 +26,10 @@ export const chatApi = createApi({
     baseUrl: '/api',
     prepareHeaders: (headers) => {
       headers.set('Content-Type', 'application/json');
+      if (!headers.has('X-Request-Id')) {
+        const rid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+        headers.set('X-Request-Id', rid);
+      }
       return headers;
     },
   }),

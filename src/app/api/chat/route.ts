@@ -263,7 +263,7 @@ ${languageDirective}`
               role: encrypted.role,
               content: encrypted.content,
               timestamp: encrypted.timestamp,
-              modelUsed: parsedSelectedModel,
+              modelUsed: modelId,
             },
           });
           logger.info('Assistant message persisted after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId });
@@ -302,7 +302,7 @@ ${languageDirective}`
                   role: encrypted.role,
                   content: encrypted.content,
                   timestamp: encrypted.timestamp,
-                  modelUsed: parsedSelectedModel,
+                  modelUsed: modelId,
                 },
               });
               logger.debug('Assistant message chunk persisted', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId, length: chunk.length });
