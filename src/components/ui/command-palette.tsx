@@ -15,7 +15,8 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setCurrentSession, SessionData } from '@/store/slices/sessionsSlice';
+import { setCurrentSession } from '@/store/slices/sessionsSlice';
+import { useFetchSessionsQuery, SessionData } from '@/store/slices/sessionsApi';
 import { clearMessages } from '@/store/slices/chatSlice';
 import { createDraft } from '@/store/slices/cbtSlice';
 import { MessageSquare, Brain, Plus, Settings, Moon, Search, Clock } from 'lucide-react';
@@ -37,8 +38,8 @@ export function CommandPalette({
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const dispatch = useAppDispatch();
-  
-  const sessions = useAppSelector(state => Object.values(state.sessions.entities));
+
+  const { data: sessions = [] } = useFetchSessionsQuery();
   const currentSessionId = useAppSelector(state => state.sessions.currentSessionId);
   
   // Keyboard shortcut to open command palette
@@ -63,15 +64,8 @@ export function CommandPalette({
   };
 
   const createNewSession = () => {
-    const newSession = {
-      id: uuidv4(),
-      title: 'New Chat',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      messageCount: 0,
-    };
-    
-    dispatch(setCurrentSession(newSession.id));
+    // Do not create a DB session yet; just clear state
+    dispatch(setCurrentSession(null));
     dispatch(clearMessages());
   };
 

@@ -346,9 +346,20 @@ class CacheManager {
     try {
       const result = await redisManager.executeCommand(
         async (client) => {
-          const keys = await client.keys(searchPattern);
-          if (keys.length === 0) return 0;
-          return await client.del(keys);
+          let cursor = 0;
+          let totalDeleted = 0;
+          do {
+            const scanResult = await client.scan(String(cursor), {
+              MATCH: searchPattern,
+              COUNT: 100,
+            });
+            cursor = Number(scanResult.cursor);
+            const keys: string[] = scanResult.keys;
+            if (keys.length > 0) {
+              totalDeleted += await client.del(keys as unknown as [string, ...string[]]);
+            }
+          } while (cursor !== 0);
+          return totalDeleted;
         },
         0
       );
@@ -435,6 +446,13 @@ class CacheManager {
       stats: new Map(this.stats),
       totalKeys
     };
+  }
+
+  /**
+   * Invalidate all keys in a namespace
+   */
+  async invalidateNamespace(namespace: string): Promise<number> {
+    return this.invalidatePattern('*', {}, { prefix: namespace });
   }
 }
 

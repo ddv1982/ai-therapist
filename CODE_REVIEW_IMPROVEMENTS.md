@@ -16,56 +16,57 @@ This document summarizes the recommended improvements identified during the code
 ## 🚀 Improvements to Make
 
 ### 1. API Consistency
-- [ ] Migrate all API routes to use standardized `ApiResponse<T>` and `getApiData`.
-- [ ] Ensure all routes include `X-Request-Id` headers for traceability.
-- [ ] Remove legacy response shapes (e.g. memory endpoints).
+- [x] Migrate all API routes to use standardized `ApiResponse<T>` and `getApiData`.
+- [x] Ensure all routes include `X-Request-Id` headers for traceability.
+- [ ] Remove legacy response shapes (e.g. memory endpoints) — **partially done, memory routes still need Zod validation**
 
 ### 2. Error Handling
-- [ ] Adopt a consistent error-handling strategy with structured error responses.
-- [ ] Provide meaningful error messages instead of generic catches.
+- [x] Adopt a consistent error-handling strategy with structured error responses.
+- [x] Provide meaningful error messages instead of generic catches.
 
 ### 3. Redux & State Management
-- [ ] Refactor Redux slices (`chatSlice.ts`, `sessionsSlice.ts`) to use **RTK Query** for API integration.
-- [ ] Reduce boilerplate by leveraging RTK Query caching and auto-generated hooks.
+- [x] Refactor Redux slices (`sessionsSlice.ts`) to use **RTK Query** for API integration.
+- [x] Refactor Redux slice (`chatSlice.ts`) to use **RTK Query** for API integration.
+- [x] Reduce boilerplate by leveraging RTK Query caching and auto-generated hooks.
 
 ### 4. Type Safety
-- [ ] Eliminate `any` usage in UI components (e.g. `command-palette.tsx`).
-- [ ] Strengthen TypeScript types across props and API responses.
-- [ ] Enforce stricter ESLint/TSConfig rules for type safety.
+- [x] Eliminate `any` usage in UI components (e.g. `command-palette.tsx`).
+- [x] Strengthen TypeScript types across props and API responses.
+- [x] Enforce stricter ESLint/TSConfig rules for type safety.
 
 ### 5. Performance
-- [ ] Review Redis cache invalidation strategies to ensure consistency.
-- [ ] Optimize React components (`chat-composer.tsx`, `session-sidebar.tsx`) with `React.memo` and `useCallback`.
+- [x] Review Redis cache invalidation strategies to ensure consistency (refactored invalidatePattern to use SCAN, added namespace invalidation).
+- [x] Optimize React components (`chat-composer.tsx`, `session-sidebar.tsx`) with `React.memo` and `useCallback`.
 - [ ] Audit re-renders in chat-related components.
 
 ### 6. Styling & Design System
-- [ ] Consolidate global CSS (`globals.css`, `base.css`) with Tailwind utilities.
-- [ ] Move towards a unified design system for consistent UI patterns.
-- [ ] Document reusable UI components.
+- [x] Consolidate global CSS (`globals.css`, `base.css`) with Tailwind utilities.
+- [x] Move towards a unified design system for consistent UI patterns.
+- [x] Document reusable UI components.
 
 ### 7. Documentation
-- [ ] Expand `README.md` with:
+- [x] Expand `README.md` with:
   - Setup instructions (DB, Redis, env vars).
   - API usage examples.
   - Deployment guidelines.
-- [ ] Add developer onboarding guide.
+- [x] Add developer onboarding guide.
 
 ### 8. Validation
-- [ ] Introduce **Zod** schemas for request validation in API routes.
-- [ ] Ensure all inputs are validated before processing.
+- [x] Introduce **Zod** schemas for request validation in API routes (chat, messages).
+- [ ] Ensure all inputs are validated before processing — ❌ memory and auth routes still use manual validation.
 
 ### 9. Streaming APIs
-- [ ] Adopt `withAuthAndRateLimitStreaming` for chat endpoints to support real-time responses.
-- [ ] Ensure streaming endpoints follow the same auth and rate-limit rules.
+- [x] Adopt `withAuthAndRateLimitStreaming` for chat endpoints to support real-time responses.
+- [x] Ensure streaming endpoints follow the same auth and rate-limit rules.
 
 ### 10. Observability
-- [ ] Add structured logging (e.g. `pino`) for API requests and errors.
-- [ ] Integrate monitoring/metrics for API performance.
+- [x] Add structured logging for API requests and errors.
+- [ ] Integrate monitoring/metrics for API performance — ❌ not implemented.
 
 ### 11. Accessibility (a11y)
-- [ ] Review UI components (`command-palette.tsx`, `chat-composer.tsx`) for ARIA roles.
-- [ ] Ensure full keyboard navigation support.
-- [ ] Add accessibility tests.
+- [x] Review UI components (`command-palette.tsx`, `chat-composer.tsx`) for ARIA roles.
+- [x] Ensure full keyboard navigation support.
+- [ ] Add accessibility tests — ❌ not implemented.
 
 ---
 

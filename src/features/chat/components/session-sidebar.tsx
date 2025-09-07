@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -18,7 +18,7 @@ import { SessionSidebarProps } from '@/types/ui';
 // Using centralized props interface from types/component-props.ts
 // SessionSidebarProps includes all necessary props
 
-export function SessionSidebar({
+export const SessionSidebar = React.memo(function SessionSidebar({
   showSidebar,
   setShowSidebar,
   sessions,
@@ -70,7 +70,7 @@ export function SessionSidebar({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowSidebar(false)}
+                onClick={useCallback(() => setShowSidebar(false), [setShowSidebar])}
                 className={therapeuticInteractive.iconButtonSmall}
               >
                 <div className="shimmer-effect"></div>
@@ -115,7 +115,6 @@ export function SessionSidebar({
                 onClick={() => {
                   setCurrentSession(session.id);
                   loadMessages(session.id);
-                  // Hide sidebar on mobile after selecting a chat
                   if (isMobile) {
                     setShowSidebar(false);
                   }
@@ -165,4 +164,4 @@ export function SessionSidebar({
       </aside>
     </>
   );
-}
+});

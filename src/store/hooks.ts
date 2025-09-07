@@ -8,14 +8,13 @@ export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
 
 // Convenience selectors
 export const selectCurrentSession = (state: RootState) => {
-  const entities = state.sessions?.entities || {};
   const currentId = state.sessions?.currentSessionId;
-  return currentId ? entities[currentId] : null;
+  return currentId ? { id: currentId } : null;
 };
 
-export const selectChatMessages = (state: RootState) => {
-  const entities = state.chat?.entities || {};
-  return Object.values(entities);
+export const selectChatMessages = (state: RootState): unknown[] => {
+  const chatState = state.chat as { messages?: Record<string, unknown> } | undefined;
+  return chatState?.messages ? Object.values(chatState.messages) : [];
 };
 
 export const selectCurrentCBTDraft = (state: RootState) => state.cbt?.currentDraft;

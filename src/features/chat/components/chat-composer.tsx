@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, X } from 'lucide-react';
@@ -18,7 +18,7 @@ interface ChatComposerProps {
   textareaRef?: React.RefObject<HTMLTextAreaElement | null> | React.MutableRefObject<HTMLTextAreaElement | null>;
 }
 
-export function ChatComposer({
+export const ChatComposer = React.memo(function ChatComposer({
   input,
   isLoading,
   isMobile,
@@ -44,15 +44,15 @@ export function ChatComposer({
             <Textarea
               ref={textareaRef}
               value={input}
-              onChange={(e) => onChange(e.target.value)}
+              onChange={useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value), [onChange])}
               onKeyDown={onKeyDown}
-              onFocus={() => {
+              onFocus={useCallback(() => {
                 if (isMobile) {
                   setTimeout(() => {
                     textareaRef?.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
                   }, 100);
                 }
-              }}
+              }, [isMobile, textareaRef])}
               placeholder={!isLoading && input.trim().length === 0 ? t('input.placeholder') : ''}
               className="min-h-[52px] sm:min-h-[80px] max-h-[120px] sm:max-h-[200px] resize-none rounded-xl sm:rounded-2xl border-border/50 bg-background/80 backdrop-blur-sm px-3 sm:px-6 py-3 sm:py-4 text-base placeholder:text-muted-foreground/70 focus:ring-2 focus:ring-primary/30 focus:border-primary/60 transition-all duration-300 touch-manipulation"
               disabled={false}
@@ -97,4 +97,4 @@ export function ChatComposer({
       <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent/50 to-transparent"></div>
     </div>
   );
-}
+});

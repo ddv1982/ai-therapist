@@ -650,7 +650,8 @@ function ChatPageContent() {
         body: {
           sessionId: currentSession ?? undefined,
           webSearchEnabled: settings.webSearchEnabled,
-          selectedModel: settings.model
+          selectedModel: settings.model,
+          state: {} // ensure state is always defined to prevent hydration errors
         }
       });
     } catch (error) {
