@@ -5,7 +5,7 @@
 
 import { useEffect } from 'react';
 import { useAppDispatch } from '@/store/hooks';
-import { useRecoverSessionMutation } from '@/store/slices/sessionsApi';
+import { sessionsApi } from '@/store/slices/sessionsApi';
 import { useAuth } from './use-auth';
 
 const HEARTBEAT_INTERVAL = 10 * 60 * 1000; // 10 minutes
@@ -13,24 +13,23 @@ const HEARTBEAT_INTERVAL = 10 * 60 * 1000; // 10 minutes
 export function useAuthHeartbeat() {
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAuth();
-  const [recoverSession] = useRecoverSessionMutation();
 
   useEffect(() => {
     if (!isAuthenticated) {
       return;
     }
 
-    // Perform initial heartbeat by calling recoverSession
-    recoverSession();
+    // Perform initial heartbeat by calling getCurrentSession (keeps cookie/session warm)
+    dispatch(sessionsApi.endpoints.getCurrentSession.initiate());
 
     // Set up periodic heartbeat
     const interval = setInterval(() => {
-      recoverSession();
+      dispatch(sessionsApi.endpoints.getCurrentSession.initiate());
     }, HEARTBEAT_INTERVAL);
 
     // Cleanup
     return () => clearInterval(interval);
-  }, [isAuthenticated, dispatch, recoverSession]);
+  }, [isAuthenticated, dispatch]);
 
   return null;
 }

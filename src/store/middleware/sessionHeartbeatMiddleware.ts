@@ -1,6 +1,13 @@
 /**
- * Simple session heartbeat middleware
- * Manages basic session keepalive
+ * Session heartbeat middleware
+ *
+ * Unified selection model:
+ * - The server is authoritative for the current session via `/api/sessions/current`.
+ * - The client reflects this in Redux `sessions.currentSessionId`.
+ *
+ * This middleware keeps the client hydrated by periodically calling
+ * `GET /api/sessions/current` while a session is selected, so Redux stays
+ * aligned with server state across tabs/devices.
  */
 
 import { Middleware, MiddlewareAPI, AnyAction } from '@reduxjs/toolkit';
@@ -23,12 +30,12 @@ export const sessionHeartbeatMiddleware: Middleware =
     // Start heartbeat when a session becomes active
     if ((action as AnyAction).type === 'sessions/setCurrentSession' && (action as AnyAction).payload) {
       if (!heartbeatInterval) {
-        // Initial heartbeat using recoverSession endpoint
-        api.dispatch(sessionsApi.endpoints.recoverSession.initiate() as unknown as AnyAction);
+        // Initial heartbeat using getCurrentSession endpoint
+        api.dispatch(sessionsApi.endpoints.getCurrentSession.initiate() as unknown as AnyAction);
 
         // Set up periodic heartbeat
         heartbeatInterval = setInterval(() => {
-          api.dispatch(sessionsApi.endpoints.recoverSession.initiate() as unknown as AnyAction);
+          api.dispatch(sessionsApi.endpoints.getCurrentSession.initiate() as unknown as AnyAction);
         }, HEARTBEAT_INTERVAL);
       }
     }

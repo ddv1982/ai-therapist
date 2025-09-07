@@ -1,4 +1,5 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 import { persistStore, persistReducer } from 'redux-persist';
 import createWebStorage from 'redux-persist/lib/storage/createWebStorage';
 
@@ -6,6 +7,8 @@ import chatSlice from './slices/chatSlice';
 import sessionsSlice from './slices/sessionsSlice';
 import cbtSlice from './slices/cbtSlice';
 import authSlice from './slices/authSlice';
+import { sessionsApi } from './slices/sessionsApi';
+import { sessionHeartbeatMiddleware } from './middleware/sessionHeartbeatMiddleware';
 
 // Root reducer
 const rootReducer = combineReducers({
@@ -13,6 +16,7 @@ const rootReducer = combineReducers({
   sessions: sessionsSlice,
   cbt: cbtSlice,
   auth: authSlice,
+  [sessionsApi.reducerPath]: sessionsApi.reducer,
 });
 
 // Resilient storage for SSR and restricted environments (e.g., iOS private mode)
@@ -67,8 +71,15 @@ export const store = configureStore({
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE', 'persist/REGISTER'],
         ignoredPaths: ['_persist'],
       },
-    }),
+    })
+      .concat(
+        sessionsApi.middleware,
+        sessionHeartbeatMiddleware,
+      ),
 });
+
+// Enable refetchOnFocus/refetchOnReconnect behaviors for RTK Query
+setupListeners(store.dispatch);
 
 export const persistor = persistStore(store);
 

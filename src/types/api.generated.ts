@@ -123,6 +123,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get current active session
+         * @description Returns the most recently updated active session for the authenticated user.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current active session (if any) */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            currentSession?: components["schemas"]["Session"] | null;
+                        };
+                    };
+                };
+                500: components["responses"]["InternalServerError"];
+            };
+        };
+        put?: never;
+        /**
+         * Set current active session
+         * @description Marks the specified session as current by updating its updatedAt and status to active.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        sessionId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Session marked as current */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                        };
+                    };
+                };
+                400: components["responses"]["BadRequest"];
+                /** @description Session not found or access denied */
+                404: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                500: components["responses"]["InternalServerError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessions/{sessionId}": {
         parameters: {
             query?: never;

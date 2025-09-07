@@ -22,6 +22,7 @@ import { createDraft } from '@/store/slices/cbtSlice';
 import { MessageSquare, Brain, Plus, Settings, Moon, Search, Clock } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import {useTranslations} from 'next-intl';
+import { useSelectSession } from '@/hooks';
 
 interface CommandPaletteProps {
   onCBTOpen?: () => void;
@@ -41,6 +42,7 @@ export function CommandPalette({
 
   const { data: sessions = [] } = useFetchSessionsQuery();
   const currentSessionId = useAppSelector(state => state.sessions.currentSessionId);
+  const { selectSession } = useSelectSession();
   
   // Keyboard shortcut to open command palette
   useEffect(() => {
@@ -69,8 +71,8 @@ export function CommandPalette({
     dispatch(clearMessages());
   };
 
-  const switchToSession = (sessionId: string) => {
-    dispatch(setCurrentSession(sessionId));
+  const switchToSession = async (sessionId: string) => {
+    await selectSession(sessionId);
   };
 
   const openCBTDiary = () => {
@@ -135,7 +137,7 @@ export function CommandPalette({
                           {session.title}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {session.messageCount} {t('command.messages')}
+                          {(session as unknown as { _count?: { messages?: number } })._count?.messages ?? (session as unknown as { messageCount?: number }).messageCount ?? 0} {t('command.messages')}
                         </div>
                       </div>
                       {currentSessionId === session.id && (

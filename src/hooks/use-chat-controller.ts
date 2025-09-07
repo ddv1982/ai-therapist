@@ -13,6 +13,10 @@ import { mapApiSessionToUiSession } from '@/lib/chat/session-mapper';
 import { logger } from '@/lib/utils/logger';
 import { generateUUID } from '@/lib/utils/utils';
 import { checkMemoryContext, type MemoryContextInfo } from '@/lib/chat/memory-utils';
+import { useTranslations } from 'next-intl';
+import { useAppDispatch } from '@/store/hooks';
+import { setCurrentSession as setCurrentSessionAction } from '@/store/slices/sessionsSlice';
+import { useSelectSession } from '@/hooks';
 
 type Message = MessageData;
 
@@ -67,6 +71,14 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     setMessages,
   } = useChatMessages();
 
+  const dispatch = useAppDispatch();
+  const t = useTranslations();
+  const { selectSession } = useSelectSession();
+  const resolveDefaultTitle = useCallback((): string => {
+    const val = t('sessions.defaultTitle');
+    return typeof val === 'string' && val.length > 0 ? val : 'New Chat';
+  }, [t]);
+
   const [sessions, setSessions] = useState<Session[]>([]);
   const [currentSession, setCurrentSession] = useState<string | null>(null);
   const [input, setInput] = useState('');
@@ -84,8 +96,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
   const sessionIdRef = useRef<string | null>(null);
   const initialLoadDoneRef = useRef(false);
   const sessionsLoadingRef = useRef(false);
-  const creatingSessionRef = useRef(false);
-  const pendingSessionIdRef = useRef<string | null>(null);
+  // Background creation removed; associated refs removed
 
   const { scrollToBottom, isNearBottom } = useScrollToBottom({
     isStreaming: isLoading,
@@ -203,7 +214,6 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
 
   const loadCurrentSession = useCallback(async () => {
     try {
-      const savedCurrentSession = typeof window !== 'undefined' ? localStorage.getItem('currentSessionId') : null;
       const data = await apiClient.getCurrentSession();
       const currentSessionData: { currentSession?: { id: string; messageCount?: number } } = (data && (data as { success?: boolean }).success)
         ? (data as { data: { currentSession?: { id: string; messageCount?: number } } }).data
@@ -211,28 +221,20 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
       if (currentSessionData?.currentSession) {
         const sessionId = currentSessionData.currentSession.id;
         setCurrentSession(sessionId);
+        dispatch(setCurrentSessionAction(sessionId));
         await loadMessages(sessionId);
         if (typeof window !== 'undefined') localStorage.setItem('currentSessionId', sessionId);
         return;
       }
 
-      if (savedCurrentSession) {
-        try {
-          const verifyResp = await apiClient.getSessionById(savedCurrentSession);
-          if (verifyResp && verifyResp.success && verifyResp.data) {
-            setCurrentSession(savedCurrentSession);
-            await loadMessages(savedCurrentSession);
-          } else {
-            localStorage.removeItem('currentSessionId');
-          }
-        } catch {
-          localStorage.removeItem('currentSessionId');
-        }
-      }
+      // Fallback: nothing on server, clear any stale local
+      setCurrentSession(null);
+      dispatch(setCurrentSessionAction(null));
+      if (typeof window !== 'undefined') localStorage.removeItem('currentSessionId');
     } catch {
       // ignore
     }
-  }, [loadMessages]);
+  }, [loadMessages, dispatch]);
 
   useEffect(() => {
     if (initialLoadDoneRef.current) return;
@@ -274,45 +276,19 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
   }, []);
 
   const setCurrentSessionAndSync = useCallback(async (sessionId: string) => {
-    try {
-      await apiClient.setCurrentSession(sessionId);
-      setCurrentSession(sessionId);
-      if (typeof window !== 'undefined') localStorage.setItem('currentSessionId', sessionId);
-      await loadMessages(sessionId);
-    } catch {
-      setCurrentSession(sessionId);
-      if (typeof window !== 'undefined') localStorage.setItem('currentSessionId', sessionId);
-      await loadMessages(sessionId);
-    }
-  }, [loadMessages]);
+    await selectSession(sessionId);
+    setCurrentSession(sessionId);
+    if (typeof window !== 'undefined') localStorage.setItem('currentSessionId', sessionId);
+    await loadMessages(sessionId);
+  }, [selectSession, loadMessages]);
 
   const startNewSession = () => {
-    // Instant UI feedback
+    // Clear selection; do not create DB session until first send
     setCurrentSession(null);
+    dispatch(setCurrentSessionAction(null));
     clearMessages();
     if (typeof window !== 'undefined') localStorage.removeItem('currentSessionId');
     setTimeout(() => textareaRef.current?.focus(), 100);
-
-    // Optimistically create a session in the background so the first send has no extra roundtrip
-    (async () => {
-      try {
-        if (creatingSessionRef.current) return;
-        creatingSessionRef.current = true;
-        const result = await apiClient.createSession({ title: 'New Chat' });
-        const created = getApiData(result);
-        if (!created) return;
-        const newSession: Session = mapApiSessionToUiSession(created as components['schemas']['Session']) as Session;
-        setSessions(prev => [newSession, ...prev]);
-        pendingSessionIdRef.current = newSession.id;
-        await setCurrentSessionAndSync(newSession.id);
-        pendingSessionIdRef.current = null;
-      } catch {
-        // Do not surface an error to the user; fallback will still create on first send
-        logger.warn('Background session creation failed; will create on first send');
-      } finally {
-        creatingSessionRef.current = false;
-      }
-    })();
   };
 
   const deleteSession = async (sessionId: string) => {
@@ -322,8 +298,14 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
         setSessions(prev => prev.filter(session => session.id !== sessionId));
         if (currentSession === sessionId) {
           setCurrentSession(null);
+          await selectSession(null);
           clearMessages();
           if (typeof window !== 'undefined') localStorage.removeItem('currentSessionId');
+          // Hydrate current session from server to align with authoritative state
+          await loadCurrentSession();
+        } else {
+          // Still refresh sessions list for accurate counts
+          await loadSessions();
         }
       }
     } catch {
@@ -335,34 +317,21 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     if (!input.trim() || isLoading) return;
     let sessionId = currentSession;
     if (!sessionId) {
-      // If a background creation is in-flight, wait briefly to reuse it
-      const awaitPending = async (timeoutMs = 1500): Promise<string | null> => {
-        const started = Date.now();
-        while (Date.now() - started < timeoutMs) {
-          if (pendingSessionIdRef.current) return pendingSessionIdRef.current;
-          if (sessionIdRef.current) return sessionIdRef.current;
-          await new Promise(r => setTimeout(r, 50));
-        }
-        return null;
-      };
-      const maybePending = creatingSessionRef.current ? await awaitPending() : null;
-      if (maybePending) {
-        sessionId = maybePending;
-      } else {
-        try {
-          const result = await apiClient.createSession({ title: 'New Chat' });
-          const created = getApiData(result);
-          const newSession: Session = mapApiSessionToUiSession(created as components['schemas']['Session']) as Session;
-          if (newSession) {
-            setSessions(prev => [newSession, ...prev]);
-            await setCurrentSessionAndSync(newSession.id);
-            sessionId = newSession.id;
-          } else {
-            return;
-          }
-        } catch {
+      // Create now at first send (no background creation)
+      try {
+        const defaultTitle = resolveDefaultTitle();
+        const result = await apiClient.createSession({ title: defaultTitle });
+        const created = getApiData(result);
+        const newSession: Session = mapApiSessionToUiSession(created as components['schemas']['Session']) as Session;
+        if (newSession) {
+          setSessions(prev => [newSession, ...prev]);
+          await setCurrentSessionAndSync(newSession.id);
+          sessionId = newSession.id;
+        } else {
           return;
         }
+      } catch {
+        return;
       }
     }
 
@@ -402,7 +371,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
       setIsLoading(false);
       logger.error('Error sending message to AI', { component: 'useChatController', sessionId: sessionId || 'none', model: options?.model }, error instanceof Error ? error : new Error(String(error)));
     }
-  }, [input, isLoading, currentSession, options?.webSearchEnabled, options?.model, setCurrentSessionAndSync, setMessages, sendAiMessage, saveMessage]);
+  }, [input, isLoading, currentSession, options?.webSearchEnabled, options?.model, setCurrentSessionAndSync, setMessages, sendAiMessage, saveMessage, resolveDefaultTitle]);
 
   const stopGenerating = useCallback(() => {
     try {

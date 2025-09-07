@@ -14,8 +14,6 @@ interface SessionsState {
   isCreatingSession: boolean;
   isDeletingSession: string | null;
   error: string | null;
-  recoveryData: Record<string, unknown> | null;
-  recoveryAttempted: boolean;
 }
 
 const initialState: SessionsState = {
@@ -23,8 +21,6 @@ const initialState: SessionsState = {
   isCreatingSession: false,
   isDeletingSession: null,
   error: null,
-  recoveryData: null,
-  recoveryAttempted: false,
 };
 
 const sessionsSlice = createSlice({

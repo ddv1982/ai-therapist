@@ -63,6 +63,7 @@
   "reports.example.section3i1": "Practice daily mindfulness exercises",
   "reports.example.section3i2": "Set specific work boundaries this week",
   "reports.example.section3i3": "Journal about family interaction patterns",
+  "sessions.defaultTitle": "New Chat",
 
   "auth.setup.title": "Set Up Two-Factor Authentication",
   "auth.setup.subtitle": "Secure your AI Therapist with TOTP authentication",

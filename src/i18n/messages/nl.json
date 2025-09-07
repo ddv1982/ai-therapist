@@ -63,6 +63,7 @@
   "reports.example.section3i1": "Dagelijkse mindfulness-oefeningen",
   "reports.example.section3i2": "Deze week specifieke werkgrenzen stellen",
   "reports.example.section3i3": "Dagboek bijhouden over patronen in familie-interacties",
+  "sessions.defaultTitle": "Nieuwe chat",
   "cbt.progress.step": "Stap {current} van {total}",
   "cbt.progress.complete": "{percent}% voltooid",
   "cbt.status.at": "om {time}",

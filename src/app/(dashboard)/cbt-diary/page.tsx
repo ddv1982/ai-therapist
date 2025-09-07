@@ -32,6 +32,7 @@ import type {
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { startCBTSession as startReduxCBTSession } from '@/store/slices/cbtSlice';
 import { useChatMessages } from '@/hooks/use-chat-messages';
+import { useSelectSession } from '@/hooks';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { apiClient } from '@/lib/api/client';
 import type { components } from '@/types/api.generated';
@@ -47,6 +48,7 @@ function CBTDiaryPageContent() {
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
   const t = useTranslations('cbt');
+  const { selectSession } = useSelectSession();
   
   // Get session ID from Redux
   const reduxSessionId = useAppSelector(state => state.cbt?.sessionData?.sessionId);
@@ -313,7 +315,7 @@ function CBTDiaryPageContent() {
       if (createResp && createResp.success && createResp.data) {
         const newSession = createResp.data as components['schemas']['Session'];
         sessionId = newSession.id;
-        await apiClient.setCurrentSession(newSession.id);
+        await selectSession(sessionId);
         // Initialize Redux CBT session context with the new session id for bookkeeping
         dispatch(startReduxCBTSession({ sessionId }));
       }
@@ -394,7 +396,7 @@ function CBTDiaryPageContent() {
       setIsLoading(false);
       setIsStreaming(false);
     }
-  }, [hasStarted, isCBTActive, isLoading, isStreaming, generateTherapeuticSummaryCard, messages, router, showToast, draftActions, reduxSessionId, dispatch, t]);
+  }, [hasStarted, isCBTActive, isLoading, isStreaming, generateTherapeuticSummaryCard, messages, router, showToast, draftActions, reduxSessionId, dispatch, t, selectSession]);
 
   const handleCBTRationalThoughtsComplete = useCallback(async (data: RationalThoughtsData) => {
     completeRationalThoughtsStep(data);
