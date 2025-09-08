@@ -105,12 +105,12 @@ doctor: ## Quick health diagnostics
 # ----- Quality gates -----
 
 lint: ## Lint and validate (ESLint + TS + Prisma)
-	@npm run lint
+	@npx eslint .
 	@npx tsc --noEmit
 	@npx prisma validate
 
 fix: ## Auto-fix lint issues
-	@npx next lint --fix
+	@npx eslint . --fix
 
 tsc-check: ## TypeScript type-check only
 	@npx tsc --noEmit
@@ -225,5 +225,3 @@ clean-all: clean ## Remove node_modules and local DB (destructive)
 	rm -rf node_modules
 	rm -f $(STAMP_NODE)
 	rm -f $(DB_FILE)
-
-

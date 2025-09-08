@@ -31,8 +31,10 @@ jest.mock('@/lib/auth/crypto-utils', () => ({
   decryptSensitiveData: jest.fn(),
 }));
 
-const mockEncrypt = require('@/lib/auth/crypto-utils').encryptSensitiveData;
-const mockDecrypt = require('@/lib/auth/crypto-utils').decryptSensitiveData;
+import { encryptSensitiveData, decryptSensitiveData } from '@/lib/auth/crypto-utils';
+
+const mockEncrypt = encryptSensitiveData as jest.Mock;
+const mockDecrypt = decryptSensitiveData as jest.Mock;
 
 describe('Message Encryption Service', () => {
   beforeEach(() => {

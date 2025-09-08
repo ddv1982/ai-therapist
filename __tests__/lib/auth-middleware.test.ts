@@ -25,8 +25,11 @@ jest.mock('next/server', () => ({
 import { NextRequest } from 'next/server';
 import { checkAuth, getClientIP, authMiddleware } from '@/lib/auth/auth-middleware';
 
-const mockVerifyAuthSession = require('@/lib/auth/device-fingerprint').verifyAuthSession;
-const mockIsTOTPSetup = require('@/lib/auth/totp-service').isTOTPSetup;
+import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
+import { isTOTPSetup } from '@/lib/auth/totp-service';
+
+const mockVerifyAuthSession = verifyAuthSession as jest.Mock;
+const mockIsTOTPSetup = isTOTPSetup as jest.Mock;
 
 // Helper to create mock NextRequest
 function createMockRequest(pathname: string = '/', cookies: Record<string, string> = {}, headers: Record<string, string> = {}): NextRequest {

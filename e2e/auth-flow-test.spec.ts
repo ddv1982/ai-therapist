@@ -5,7 +5,7 @@
  * through to successful main app access, with detailed logging and debugging.
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test.describe('Authentication Flow Testing', () => {
   test('complete authentication flow and access main app', async ({ page }) => {
@@ -89,7 +89,7 @@ test.describe('Authentication Flow Testing', () => {
               const errorText = await page.locator('text=/error|invalid|failed/i').first().textContent();
               console.log(`❌ Possible error detected: ${errorText}`);
             }
-          } catch (e) {
+          } catch {
             // Ignore errors when checking for error messages
           }
         }

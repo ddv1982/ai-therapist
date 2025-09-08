@@ -7,7 +7,7 @@ describe('Markdown Processor with sanitize-html', () => {
 ## Secondary Header
 ### Sub Header`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       expect(result).toContain('<h1');
       expect(result).toContain('<h2');
@@ -20,7 +20,7 @@ describe('Markdown Processor with sanitize-html', () => {
     it('should convert bold text to strong tags', () => {
       const input = 'This is **bold text** in a sentence.';
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       expect(result).toContain('<strong');
       expect(result).toContain('bold text');
@@ -30,7 +30,7 @@ describe('Markdown Processor with sanitize-html', () => {
     it('should convert italic text to em tags', () => {
       const input = 'This is *italic text* in a sentence.';
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       expect(result).toContain('<em');
       expect(result).toContain('italic text');
@@ -40,7 +40,7 @@ describe('Markdown Processor with sanitize-html', () => {
     it('should handle literal <br> tags by converting them to line breaks', () => {
       const input = 'First line<br>Second line<br/>Third line';
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should convert <br> tags to actual line breaks, which markdown-it will handle
       expect(result).not.toContain('<br>');
@@ -58,7 +58,7 @@ describe('Markdown Processor with sanitize-html', () => {
 - Second item
 - Third item`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       expect(result).toContain('First item');
       expect(result).toContain('Second item');
@@ -76,7 +76,7 @@ describe('Markdown Processor with sanitize-html', () => {
 
 Content below`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       expect(result).toContain('<hr');
       expect(result).toContain('Content above');
@@ -89,7 +89,7 @@ Content below`;
 | Cell 1   | Cell 2   |
 | Cell 3   | Cell 4   |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Basic table structure
       expect(result).toContain('<table');
@@ -116,7 +116,7 @@ Content below`;
 | Why? |  |
 | How do you feel now? | Better |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       expect(result).toContain('<table');
       expect(result).toContain('What happened?');
@@ -139,7 +139,7 @@ Content below`;
 
 {.table-compact}`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should contain the custom class
       expect(result).toContain('table-compact');
@@ -155,7 +155,7 @@ Content below`;
 
 {.table-cbt-report}`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should have proper structure
       expect(result).toContain('Emotion');
@@ -178,7 +178,7 @@ Content below`;
 | All-or-nothing thinking   | 8/10      | High                     |
 | Catastrophizing           | 6/10      | Medium                   |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should extract clean header text for data-labels
       expect(result).toContain('Cognitive Distortion'); // Should contain header text
@@ -195,7 +195,7 @@ Content below`;
 |-------------|-------------|
 | Row 2 Col 1 | Row 2 Col 2 |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should still apply therapeutic styling
       expect(result).toContain('data-columns');
@@ -217,7 +217,7 @@ Some text between tables.
 |---------|-------|
 | Other   | Data  |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should have two tables with therapeutic styling
       const tableMatches = result.match(/<table[^>]*>/g);
@@ -237,7 +237,7 @@ Some text between tables.
 
 {.custom-table}`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should preserve the custom class
       expect(result).toContain('custom-table');
@@ -251,7 +251,7 @@ Some text between tables.
 | **How are you feeling?** | *Much better* now |
 | What's your goal? | To improve ~~my mood~~ my **overall wellness** |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should preserve inline formatting
       expect(result).toContain('<strong>How are you feeling?</strong>');
@@ -298,7 +298,7 @@ I was walking outside during my lunch break.
 
 *This is for reflection and growth.*`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Check headers
       expect(result).toContain('<h1');
@@ -337,7 +337,7 @@ I was walking outside during my lunch break.
     it('should sanitize dangerous HTML while preserving markdown', () => {
       const input = `**Bold text** with <script>alert('xss')</script> dangerous content`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       expect(result).toContain('<strong');
       expect(result).toContain('Bold text');
@@ -349,7 +349,7 @@ I was walking outside during my lunch break.
     it('should generate clean HTML without inline classes', () => {
       const input = '**Bold text**';
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       expect(result).toContain('<strong>');
       expect(result).toContain('Bold text');
@@ -361,7 +361,7 @@ I was walking outside during my lunch break.
 
   describe('Edge cases', () => {
     it('should handle empty input', () => {
-      const result = processMarkdown('', false);
+      const result = processMarkdown('');
       
       expect(result).toBe('');
     });
@@ -369,7 +369,7 @@ I was walking outside during my lunch break.
     it('should handle plain text without markdown', () => {
       const input = 'Just plain text without any markdown formatting.';
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       expect(result).toContain('Just plain text without any markdown formatting.');
       expect(result).toContain('<p');
@@ -378,8 +378,8 @@ I was walking outside during my lunch break.
     it('should handle mixed user and assistant styling', () => {
       const input = '**Bold text**';
       
-      const userResult = processMarkdown(input, true);
-      const assistantResult = processMarkdown(input, false);
+      const userResult = processMarkdown(input);
+      const assistantResult = processMarkdown(input);
       
       // Both should produce strong tags but may have different classes
       expect(userResult).toContain('<strong');
@@ -396,7 +396,7 @@ I was walking outside during my lunch break.
 | Data 1   | Data 2   | Data 3   | Data 4   |
 | More 1   | More 2   | More 3   | More 4   |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should be a standard table (not alternative view)
       expect(result).toContain('<table');
@@ -411,7 +411,7 @@ I was walking outside during my lunch break.
 | A     | B     | C     | D     | E     |
 | F     | G     | H     | I     | J     |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should be a standard table with optimization
       expect(result).toContain('<table');
@@ -425,7 +425,7 @@ I was walking outside during my lunch break.
 | John D  | 2025-08-09 | 7/10 | High | CBT | Thought records |
 | Jane S  | 2025-08-08 | 5/10 | Medium | DBT | Distress tolerance |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should remain a table with responsive enhancements
       expect(result).toContain('<table');
@@ -439,7 +439,7 @@ I was walking outside during my lunch break.
 | What happened? | Meeting | High | None | Maybe helpful | Anxiety | 8/10 | 4/10 |
 | Why worried? | Performance | Medium | Past success | Could go well | Fear | 7/10 | 3/10 |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should remain a table
       expect(result).toContain('<table');
@@ -453,7 +453,7 @@ I was walking outside during my lunch break.
 | 1  | John D  | 2025-08-09 | 10:30 | 6/10 | High | Medium | Poor | Normal | Low | Poor | Sertraline | Struggling with work | Next week |
 | 2  | Jane S  | 2025-08-08 | 14:15 | 8/10 | Low | Low | Good | Good | High | Good | None | Great progress | 2 weeks |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should remain a table with detected columns
       expect(result).toContain('<table');
@@ -467,7 +467,7 @@ I was walking outside during my lunch break.
 | Alice M | 3 | 2025-08-09 | Work stress | 4/10 | Mindfulness |
 | Bob K   | 1 | 2025-08-08 | Relationships | 6/10 | Communication skills |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should remain a table even with therapeutic patterns
       expect(result).toContain('<table');
@@ -481,7 +481,7 @@ I was walking outside during my lunch break.
 | A    | B    | C    |      | E    | F    | G    |
 | H    | I    |      | K    | L    |      | N    |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should handle empty cells gracefully but keep table rendering
       expect(result).toContain('<table');
@@ -495,7 +495,7 @@ I was walking outside during my lunch break.
 |---|---|---|---|---|---|
 | X | Y |   |   |   |   |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should remain a table and not crash with unusual structures
       expect(result).toContain('<table');
@@ -507,7 +507,7 @@ I was walking outside during my lunch break.
 |------|------|------|------|------|
 | A    | B    | C    | D    | E    |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // 5-column table should be standard table (updated expectation)
       expect(result).toContain('<table'); // Should be a table
@@ -519,7 +519,7 @@ I was walking outside during my lunch break.
 |------|-----|------|-----|--------|----------|
 | John | 30  | NYC  | Dev | 100k   | Health   |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should include column metadata and remain a table
       expect(result).toContain('<table');
@@ -535,7 +535,7 @@ I was walking outside during my lunch break.
 |------|------|------|
 | A    | B    | C    |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should count actual columns, not colspan values
       expect(result).toContain('data-columns="3"');
@@ -547,7 +547,7 @@ I was walking outside during my lunch break.
 |---|---|---|---|---|---|---|
 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should still count columns and keep table rendering
       expect(result).toContain('<table');
@@ -561,7 +561,7 @@ I was walking outside during my lunch break.
 | 1 | 2 | 3 | 4 | 5 | 6 |
 | X | Y | Z |   |   |   |`;
       
-      const result = processMarkdown(input, false);
+      const result = processMarkdown(input);
       
       // Should base column count on header row and keep table rendering
       expect(result).toContain('<table');

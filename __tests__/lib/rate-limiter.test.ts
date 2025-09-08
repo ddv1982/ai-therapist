@@ -25,7 +25,11 @@ describe('RateLimiter', () => {
     
     // Get fresh rate limiter instance and clear its state
     rateLimiter = getRateLimiter();
-    rateLimiter.destroy(); // Clear existing state
+    // Clear state via any-cast cleanup if available
+    const rlAny = rateLimiter as any;
+    if (typeof rlAny.destroy === 'function') {
+      rlAny.destroy();
+    }
     rateLimiter = getRateLimiter(); // Get fresh instance
   });
 
@@ -97,7 +101,7 @@ describe('RateLimiter', () => {
       }
       
       // Check status
-      const status = rateLimiter.getStatus(ip);
+      const status: any = (rateLimiter as any).getStatus(ip);
       expect(status.count).toBe(10);
       expect(status.remaining).toBe(40); // 50 max - 10 used
     });
@@ -155,7 +159,7 @@ describe('RateLimiter', () => {
   describe('Status Reporting', () => {
     it('should return correct status for new IP', () => {
       const rateLimiter = getRateLimiter();
-      const status = rateLimiter.getStatus('203.0.113.5');
+      const status: any = (rateLimiter as any).getStatus('203.0.113.5');
       
       expect(status.count).toBe(0);
       expect(status.remaining).toBe(50);
@@ -171,7 +175,7 @@ describe('RateLimiter', () => {
         rateLimiter.checkRateLimit(ip);
       }
       
-      const status = rateLimiter.getStatus(ip);
+      const status: any = (rateLimiter as any).getStatus(ip);
       expect(status.count).toBe(15);
       expect(status.remaining).toBe(35);
     });
@@ -185,7 +189,7 @@ describe('RateLimiter', () => {
         rateLimiter.checkRateLimit(ip);
       }
       
-      const status = rateLimiter.getStatus(ip);
+      const status: any = (rateLimiter as any).getStatus(ip);
       expect(status.remaining).toBe(0);
     });
   });
@@ -199,7 +203,7 @@ describe('RateLimiter', () => {
         rateLimiter.checkRateLimit(suspiciousIP);
       }
       
-      const suspicious = rateLimiter.getSuspiciousActivity();
+      const suspicious: any[] = (rateLimiter as any).getSuspiciousActivity();
       expect(suspicious.length).toBeGreaterThanOrEqual(1);
       const foundSuspicious = suspicious.find((entry: { ip: string; attempts: number; lastAttempt: number }) => entry.ip === suspiciousIP);
       expect(foundSuspicious).toBeDefined();
@@ -226,7 +230,7 @@ describe('RateLimiter', () => {
       
       // Run after timeout
       setTimeout(() => {
-        const suspicious = rateLimiter.getSuspiciousActivity();
+        const suspicious: any[] = (rateLimiter as any).getSuspiciousActivity();
         if (suspicious.length >= 2) {
           expect(suspicious[0].lastAttempt).toBeGreaterThanOrEqual(suspicious[1].lastAttempt);
         }
@@ -242,8 +246,8 @@ describe('RateLimiter', () => {
         rateLimiter.checkRateLimit(normalIP);
       }
       
-      const suspicious = rateLimiter.getSuspiciousActivity();
-      const foundIP = suspicious.find(entry => entry.ip === normalIP);
+      const suspicious: any[] = (rateLimiter as any).getSuspiciousActivity();
+      const foundIP = suspicious.find((entry: { ip: string }) => entry.ip === normalIP);
       expect(foundIP).toBeUndefined();
     });
   });
@@ -267,17 +271,17 @@ describe('RateLimiter', () => {
         rateLimiter.checkRateLimit(ip);
       }
       
-      let status = rateLimiter.getStatus(ip);
+      let status: any = (rateLimiter as any).getStatus(ip);
       expect(status.count).toBe(30);
       
       // Fast forward past window expiry (5 minutes)
       jest.advanceTimersByTime(5 * 60 * 1000 + 1000);
       
       // Next request should reset the counter
-      const result = rateLimiter.checkRateLimit(ip);
+      const result = rateLimiter.checkRateLimit(ip) as any;
       expect(result.allowed).toBe(true);
       
-      status = rateLimiter.getStatus(ip);
+      status = (rateLimiter as any).getStatus(ip);
       expect(status.count).toBe(1); // Reset to 1 after new request
     });
 
@@ -291,15 +295,17 @@ describe('RateLimiter', () => {
       }
       
       // Verify blocked
-      let result = rateLimiter.checkRateLimit(ip);
-      expect(result.allowed).toBe(false);
+      const result1 = rateLimiter.checkRateLimit(ip) as any;
+      expect(result1.allowed).toBe(false);
+      const result2 = rateLimiter.checkRateLimit(ip) as any;
+      expect(result2.allowed).toBe(false);
       
       // Fast forward past block duration (5 minutes + window)
       jest.advanceTimersByTime(10 * 60 * 1000 + 1000);
       
       // Should be allowed again
-      result = rateLimiter.checkRateLimit(ip);
-      expect(result.allowed).toBe(true);
+      const result3 = rateLimiter.checkRateLimit(ip) as any;
+      expect(result3.allowed).toBe(true);
     });
   });
 
@@ -312,7 +318,7 @@ describe('RateLimiter', () => {
       rateLimiter.checkRateLimit(ip);
       
       // Verify entry exists
-      const status = rateLimiter.getStatus(ip);
+      const status: any = (rateLimiter as any).getStatus(ip);
       expect(status.count).toBe(1);
       
       // Access private cleanup method via any
@@ -326,7 +332,7 @@ describe('RateLimiter', () => {
       rateLimiterAny.cleanup();
       
       // Entry should be cleaned up - status should be reset
-      const newStatus = rateLimiter.getStatus(ip);
+      const newStatus: any = (rateLimiter as any).getStatus(ip);
       expect(newStatus.count).toBe(0);
       
       jest.useRealTimers();
@@ -357,7 +363,7 @@ describe('RateLimiter', () => {
       limiter1.checkRateLimit(ip);
       
       const limiter2 = getRateLimiter();
-      const status = limiter2.getStatus(ip);
+      const status: any = (limiter2 as any).getStatus(ip);
       
       expect(status.count).toBe(1);
     });
@@ -372,12 +378,12 @@ describe('RateLimiter', () => {
       rateLimiter.checkRateLimit('203.0.113.16');
       
       // Destroy should clear interval and store
-      rateLimiter.destroy();
+      (rateLimiter as any).destroy();
       
       expect(rateLimiterAny.cleanupInterval).toBeNull();
       
       // Store should be cleared
-      const status = rateLimiter.getStatus('203.0.113.16');
+      const status: any = (rateLimiter as any).getStatus('203.0.113.16');
       expect(status.count).toBe(0);
     });
   });
@@ -385,14 +391,14 @@ describe('RateLimiter', () => {
   describe('Edge Cases', () => {
     it('should handle empty IP string', () => {
       const rateLimiter = getRateLimiter();
-      const result = rateLimiter.checkRateLimit('');
+      const result: any = rateLimiter.checkRateLimit('');
       
       expect(result.allowed).toBe(true);
     });
 
     it('should handle undefined IP', () => {
       const rateLimiter = getRateLimiter();
-      const result = rateLimiter.checkRateLimit(undefined as any);
+      const result: any = rateLimiter.checkRateLimit(undefined as any);
       
       // Should handle gracefully without throwing
       expect(typeof result.allowed).toBe('boolean');
@@ -412,7 +418,7 @@ describe('RateLimiter', () => {
       rateLimiter.checkRateLimit(ip);
       
       // Attempts should be tracked correctly
-      const status = rateLimiter.getStatus(ip);
+      const status: any = (rateLimiter as any).getStatus(ip);
       expect(status.count).toBe(3);
       
       jest.useRealTimers();

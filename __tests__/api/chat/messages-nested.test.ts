@@ -80,14 +80,14 @@ jest.mock('@/lib/api/api-middleware', () => {
 
 // Mock standardized response helpers to ensure NextResponse-like object in tests
 jest.mock('@/lib/api/api-response', () => {
-  function makeResp(status, payload) {
+  function makeResp(status: number, payload: unknown) {
     const store = new Map();
     store.set('X-Request-Id', 'test-request-id');
     return {
       status,
       headers: {
-        get: (k) => store.get(k),
-        set: (k, v) => { store.set(k, v); },
+        get: (k: string) => store.get(k),
+        set: (k: string, v: unknown) => { store.set(k, v); },
       },
       json: async () => payload,
       text: async () => JSON.stringify(payload),
@@ -95,10 +95,10 @@ jest.mock('@/lib/api/api-response', () => {
     };
   }
   return {
-    createSuccessResponse: (data, meta) => makeResp(200, { success: true, data, meta: { timestamp: new Date().toISOString(), ...(meta || {}) } }),
-    createNotFoundErrorResponse: (resource, requestId) => makeResp(404, { success: false, error: { message: `${resource} not found` }, meta: { timestamp: new Date().toISOString(), requestId } }),
-    createPaginatedResponse: (items, page, limit, total, requestId) => makeResp(200, { success: true, data: { items, pagination: { page, limit, total, totalPages: Math.ceil(total / limit), hasNext: page < Math.ceil(total / limit), hasPrev: page > 1 } }, meta: { timestamp: new Date().toISOString(), requestId } }),
-    createServerErrorResponse: (error, requestId, _context) => makeResp(500, { success: false, error: { message: 'Internal server error', details: process.env.NODE_ENV === 'development' ? error?.message : undefined }, meta: { timestamp: new Date().toISOString(), requestId } }),
+    createSuccessResponse: (data: unknown, meta?: Record<string, unknown>) => makeResp(200, { success: true, data, meta: { timestamp: new Date().toISOString(), ...(meta || {}) } }),
+    createNotFoundErrorResponse: (resource: string, requestId: string) => makeResp(404, { success: false, error: { message: `${resource} not found` }, meta: { timestamp: new Date().toISOString(), requestId } }),
+    createPaginatedResponse: (items: unknown[], page: number, limit: number, total: number, requestId: string) => makeResp(200, { success: true, data: { items, pagination: { page, limit, total, totalPages: Math.ceil(total / limit), hasNext: page < Math.ceil(total / limit), hasPrev: page > 1 } }, meta: { timestamp: new Date().toISOString(), requestId } }),
+    createServerErrorResponse: (error: Error, requestId: string, _context?: unknown) => makeResp(500, { success: false, error: { message: 'Internal server error', details: process.env.NODE_ENV === 'development' ? error?.message : undefined }, meta: { timestamp: new Date().toISOString(), requestId } }),
   };
 });
 
@@ -173,5 +173,3 @@ describe('Nested messages route: /api/sessions/[sessionId]/messages', () => {
     expect(res.headers.get('X-Request-Id')).toBeTruthy();
   });
 });
-
-

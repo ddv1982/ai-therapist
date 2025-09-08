@@ -42,10 +42,22 @@ jest.mock('@/lib/database/db', () => ({
   },
 }));
 
+import { streamText } from 'ai';
+import { model, languageModels } from '@/ai/providers';
+import { prisma } from '@/lib/database/db';
+
+const mockStreamText = streamText as jest.Mock;
+const mockPrisma = {
+  session: {
+    create: jest.fn().mockResolvedValue({}),
+    findUnique: jest.fn().mockResolvedValue(null),
+  },
+  message: {
+    create: jest.fn().mockResolvedValue({}),
+  },
+} as unknown as jest.Mocked<typeof prisma>;
+
 describe('AI SDK 5 Integration Tests', () => {
-  const mockStreamText = require('ai').streamText;
-  const { model, languageModels } = require('@/ai/providers');
-  const { prisma } = require('@/lib/database/db');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -108,12 +120,12 @@ describe('AI SDK 5 Integration Tests', () => {
         mockStreamText.mockResolvedValue(mockResult);
 
         await mockStreamText({
-          model: languageModels[modelKey],
+          model: languageModels[modelKey as keyof typeof languageModels],
           messages: [{ role: 'user', content: 'Test' }],
         });
 
         expect(mockStreamText).toHaveBeenCalledWith({
-          model: languageModels[modelKey],
+          model: languageModels[modelKey as keyof typeof languageModels],
           messages: [{ role: 'user', content: 'Test' }],
         });
       }
@@ -130,9 +142,9 @@ describe('AI SDK 5 Integration Tests', () => {
         createdAt: new Date(),
       };
 
-      prisma.session.create.mockResolvedValue(mockSession);
+      (mockPrisma.session.create as jest.Mock).mockResolvedValue(mockSession);
 
-      const result = await prisma.session.create({
+      const result = await mockPrisma.session.create({
         data: {
           userId: 'test-user',
           title: 'Test Session',
@@ -141,7 +153,7 @@ describe('AI SDK 5 Integration Tests', () => {
       });
 
       expect(result).toEqual(mockSession);
-      expect(prisma.session.create).toHaveBeenCalledWith({
+      expect((mockPrisma.session.create as jest.Mock)).toHaveBeenCalledWith({
         data: {
           userId: 'test-user',
           title: 'Test Session',
@@ -159,9 +171,9 @@ describe('AI SDK 5 Integration Tests', () => {
         timestamp: new Date(),
       };
 
-      prisma.message.create.mockResolvedValue(mockMessage);
+      (mockPrisma.message.create as jest.Mock).mockResolvedValue(mockMessage);
 
-      const result = await prisma.message.create({
+      const result = await mockPrisma.message.create({
         data: {
           sessionId: 'test-session-id',
           role: 'user',
@@ -172,7 +184,7 @@ describe('AI SDK 5 Integration Tests', () => {
 
       expect(result).toEqual(mockMessage);
       // Relax timestamp millisecond precision to avoid flakiness
-      expect(prisma.message.create).toHaveBeenCalledWith(
+      expect((mockPrisma.message.create as jest.Mock)).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             sessionId: 'test-session-id',
@@ -187,7 +199,7 @@ describe('AI SDK 5 Integration Tests', () => {
 
   describe('Therapeutic Context', () => {
     test('should use therapeutic system prompts', () => {
-      const { getTherapeuticSystemPrompt } = require('@/lib/therapy/therapy-prompts');
+      const { getTherapeuticSystemPrompt } = jest.requireMock('@/lib/therapy/therapy-prompts');
       
       const prompt = getTherapeuticSystemPrompt();
       expect(prompt).toBe('You are a compassionate AI therapist.');

@@ -37,14 +37,14 @@ jest.mock('@/lib/api/api-middleware', () => {
 
 // Mock standardized response helpers to simple test-friendly objects
 jest.mock('@/lib/api/api-response', () => {
-  function makeResp(status, payload) {
+  function makeResp(status: number, payload: unknown) {
     const store = new Map();
     store.set('X-Request-Id', 'test-request-id');
     return {
       status,
       headers: {
-        get: (k) => store.get(k),
-        set: (k, v) => { store.set(k, v); },
+        get: (k: string) => store.get(k),
+        set: (k: string, v: unknown) => { store.set(k, v); },
       },
       json: async () => payload,
       text: async () => JSON.stringify(payload),
@@ -52,8 +52,8 @@ jest.mock('@/lib/api/api-response', () => {
     };
   }
   return {
-    createSuccessResponse: (data, meta) => makeResp(200, { success: true, data, meta: { timestamp: new Date().toISOString(), ...(meta || {}) } }),
-    createErrorResponse: (message, status = 400, options = {}) => makeResp(status, { success: false, error: { message, code: options.code, details: options.details, suggestedAction: options.suggestedAction }, meta: { timestamp: new Date().toISOString(), requestId: options.requestId } }),
+    createSuccessResponse: (data: unknown, meta?: Record<string, unknown>) => makeResp(200, { success: true, data, meta: { timestamp: new Date().toISOString(), ...(meta || {}) } }),
+    createErrorResponse: (message: string, status = 400, options: { code?: string; details?: string; suggestedAction?: string; requestId?: string } = {}) => makeResp(status, { success: false, error: { message, code: options.code, details: options.details, suggestedAction: options.suggestedAction }, meta: { timestamp: new Date().toISOString(), requestId: options.requestId } }),
   };
 });
 
@@ -86,5 +86,3 @@ describe('/api/errors standardized responses and headers', () => {
     expect(res.headers.get('X-Request-Id')).toBeTruthy();
   });
 });
-
-

@@ -22,7 +22,9 @@ const mockRemoveToast = jest.fn((id) => {
   }
 });
 
-const useToast = () => ({
+// Mock hook for testing - intentionally unused
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _useToast = () => ({
   toasts: mockToasts,
   showToast: mockShowToast,
   removeToast: mockRemoveToast,

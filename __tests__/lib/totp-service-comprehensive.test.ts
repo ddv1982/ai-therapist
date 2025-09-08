@@ -204,7 +204,7 @@ describe('TOTP Service Comprehensive Tests', () => {
   describe('getTOTPDiagnostics', () => {
     beforeEach(() => {
       const { decryptSensitiveData } = require('@/lib/auth/crypto-utils');
-      decryptSensitiveData.mockReturnValue('JBSWY3DPEHPK3PXP');
+      (decryptSensitiveData as jest.Mock).mockReturnValue('JBSWY3DPEHPK3PXP');
     });
 
     it('should return diagnostics when TOTP is configured', async () => {
@@ -369,7 +369,7 @@ describe('TOTP Service Comprehensive Tests', () => {
   describe('verifyBackupCode', () => {
     beforeEach(() => {
       const { decryptBackupCodes } = require('@/lib/auth/crypto-utils');
-      decryptBackupCodes.mockReturnValue([
+      (decryptBackupCodes as jest.Mock).mockReturnValue([
         { code: 'ABCD1234', used: false },
         { code: 'EFGH5678', used: true, usedAt: new Date('2024-01-01') },
         { code: 'IJKL9012', used: false }
@@ -457,7 +457,7 @@ describe('TOTP Service Comprehensive Tests', () => {
       });
 
       const { decryptBackupCodes } = require('@/lib/auth/crypto-utils');
-      decryptBackupCodes.mockImplementation(() => {
+      (decryptBackupCodes as jest.Mock).mockImplementation(() => {
         throw new Error('Decryption failed');
       });
 

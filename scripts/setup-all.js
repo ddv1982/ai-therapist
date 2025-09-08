@@ -51,7 +51,7 @@ async function setupAll() {
     try {
       await runCommand('node', [path.join(__dirname, 'setup-encryption.js'), 'setup']);
       console.log('✅ Encryption setup complete\n');
-    } catch (error) {
+    } catch {
       console.log('⚠️  Encryption setup failed, but continuing...');
       console.log('   You may need to run: npm run encryption:setup\n');
     }
@@ -73,7 +73,7 @@ async function setupAll() {
     try {
       await runCommand('npm', ['run', 'redis:status']);
       console.log('✅ Redis is running');
-    } catch (error) {
+    } catch {
       console.log('⚠️  Redis may not be running. Try: npm run redis:start');
     }
 

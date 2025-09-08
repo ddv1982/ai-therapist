@@ -3,8 +3,7 @@
  */
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen } from '@testing-library/react';
 import { MemoryManagementModal } from '@/features/therapy/memory/memory-management-modal';
 import * as memoryUtils from '@/lib/chat/memory-utils';
 

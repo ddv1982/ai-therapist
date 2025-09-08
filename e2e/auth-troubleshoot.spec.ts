@@ -5,7 +5,7 @@
  * and providing detailed guidance for completing 2FA.
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 test.describe('Authentication Troubleshooting', () => {
   test('monitor authentication flow and provide guidance', async ({ page }) => {
@@ -16,7 +16,7 @@ test.describe('Authentication Troubleshooting', () => {
     // Navigate to application
     await page.goto('http://localhost:4000');
     
-    let urlHistory: string[] = [];
+    const urlHistory: string[] = [];
     let authAttempts = 0;
     
     // Monitor URL changes

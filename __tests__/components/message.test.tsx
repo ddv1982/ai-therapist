@@ -11,8 +11,8 @@ import { Message } from '@/features/chat/messages';
 // Mock store for Redux dependencies
 const mockStore = configureStore({
   reducer: {
-    chat: (state = { isStreaming: false, streamingMessageId: null }, action) => state,
-    sessions: (state = { currentSessionId: null }, action) => state,
+    chat: (state = { isStreaming: false, streamingMessageId: null }) => state,
+    sessions: (state = { currentSessionId: null }) => state,
   },
 });
 

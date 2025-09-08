@@ -70,7 +70,7 @@ function createMockRequest(body: any, options: { url?: string } = {}): any {
 
 describe('Assistant message persistence (server-side)', () => {
   it('persists assistant response to database after streaming completes', async () => {
-    const { POST } = require('@/app/api/chat/route');
+    const { POST } = await import('@/app/api/chat/route');
 
     const request = createMockRequest({
       messages: [
@@ -80,7 +80,7 @@ describe('Assistant message persistence (server-side)', () => {
       sessionId: 'session-abc'
     });
 
-    await expect(POST(request)).resolves.not.toBeInstanceOf(Error);
+    await expect(POST(request, { params: {} } as any)).resolves.not.toBeInstanceOf(Error);
 
     // Allow any pending microtasks to complete (give background persistence time)
     await new Promise((resolve) => setTimeout(resolve, 10));

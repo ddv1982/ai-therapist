@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryManagementModal } from '@/features/therapy/memory/memory-management-modal';
 import * as memoryUtils from '@/lib/chat/memory-utils';
 
@@ -66,7 +66,7 @@ jest.mock('@/components/ui/card', () => ({
 
 // Mock SessionReportDetailModal
 jest.mock('@/features/therapy/memory/session-report-detail-modal', () => ({
-  SessionReportDetailModal: ({ open, onOpenChange, reportInfo, currentSessionId }: any) =>
+  SessionReportDetailModal: ({ open, reportInfo }: any) =>
     open ? React.createElement('div', { 
       'data-testid': 'session-report-detail-modal',
       role: 'dialog',

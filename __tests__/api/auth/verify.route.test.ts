@@ -82,7 +82,7 @@ jest.mock('@/lib/api/api-response', () => {
   };
 });
 
-const { verifyTOTPToken, isTOTPSetup } = require('@/lib/auth/totp-service');
+import { verifyTOTPToken, isTOTPSetup } from '@/lib/auth/totp-service';
 
 function createMockRequest(body: Record<string, unknown>, opts: { url?: string } = {}): NextRequest {
   return {

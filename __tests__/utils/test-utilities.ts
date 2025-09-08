@@ -574,19 +574,19 @@ export class ComponentTestUtils {
       
       // Add Redux Provider first (innermost)
       if (withReduxProvider) {
-        content = React.createElement(Provider as any, { store, children: content });
+        content = React.createElement(Provider as any, { store }, content);
       }
       
       if (withToastProvider) {
         const ToastProvider = ({ children }: { children?: ReactNode }) => 
           React.createElement('div', { 'data-testid': 'toast-provider' }, children);
-        content = React.createElement(ToastProvider, { children: content });
+        content = React.createElement(ToastProvider, {}, content);
       }
       
       if (withThemeProvider) {
         const ThemeProvider = ({ children }: { children?: ReactNode }) => 
           React.createElement('div', { 'data-testid': 'theme-provider' }, children);
-        content = React.createElement(ThemeProvider, { children: content });
+        content = React.createElement(ThemeProvider, {}, content);
       }
 
       return content as ReactElement;
@@ -601,7 +601,7 @@ export class ComponentTestUtils {
   static renderWithRedux(ui: ReactElement, initialState?: any): RenderResult {
     const store = ComponentTestUtils.createTestStore(initialState);
     const TestWrapper = ({ children }: { children?: ReactNode }) => 
-      React.createElement(Provider as any, { store, children: children as any });
+      React.createElement(Provider as any, { store }, children as any);
     
     return render(ui, { wrapper: TestWrapper });
   }
@@ -940,7 +940,7 @@ export class TestSetupUtils {
         } else {
           (console.error as jest.Mock).mockImplementation(() => {});
         }
-      } catch (error) {
+      } catch {
         // Console methods already mocked, ignore
       }
     });
@@ -1001,7 +1001,7 @@ export class TestSetupUtils {
 // EXPORTS
 // =============================================================================
 
-export default {
+const TestUtilities = {
   MockFactory,
   TherapeuticDataFactory,
   ComponentTestUtils,
@@ -1009,3 +1009,5 @@ export default {
   PerformanceTestUtils,
   TestSetupUtils,
 };
+
+export default TestUtilities;

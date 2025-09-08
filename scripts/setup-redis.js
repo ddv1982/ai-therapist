@@ -74,7 +74,7 @@ function installRedis() {
  * Start Redis service
  */
 function startRedis() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve, _reject) => {
     console.log('🚀 Starting Redis service...');
     
     let command, args;

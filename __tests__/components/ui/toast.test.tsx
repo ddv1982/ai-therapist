@@ -83,8 +83,10 @@ function TestToastComponent() {
 }
 
 // Test component that throws error when used outside provider
-function TestToastWithoutProvider() {
-  const { showToast } = useToast();
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function _TestToastWithoutProvider() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, react-hooks/rules-of-hooks
+  const { showToast: _showToast } = useToast();
   return <div>Should not work</div>;
 }
 

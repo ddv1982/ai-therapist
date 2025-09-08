@@ -28,7 +28,8 @@ const handleI18n = createMiddleware({
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const clientIP = getClientIP(request);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _clientIP = getClientIP(request);
   
   // Skip API routes - CSRF protection handled at individual route level
   if (pathname.startsWith('/api')) {

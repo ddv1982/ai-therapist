@@ -202,7 +202,7 @@ export class ComponentTestTemplate {
       needsDatabase?: boolean;
     } = {}
   ) {
-    const { needsRedux = true, needsAuth: _needsAuth = false, needsDatabase: _needsDatabase = false } = options;
+    const { needsRedux = true } = options;
     
     describe(`${componentName} Component`, () => {
       

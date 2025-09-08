@@ -3,12 +3,12 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SessionReportDetailModal } from '@/features/therapy/memory/session-report-detail-modal';
 import * as memoryUtils from '@/lib/chat/memory-utils';
 import type { MemoryDetailInfo } from '@/lib/chat/memory-utils';
-import { ComponentTestUtils, MockFactory } from '../../utils/test-utilities';
+import { ComponentTestUtils } from '../../utils/test-utilities';
 
 // Mock the dependencies
 jest.mock('@/lib/chat/memory-utils', () => ({

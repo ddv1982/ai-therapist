@@ -18,6 +18,7 @@ try {
   } else if (fs.existsSync(envPath)) {
     dotenv.config({ path: envPath });
   }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 } catch (_) {
   // Non-fatal if env files are missing; setup can still proceed
 }
