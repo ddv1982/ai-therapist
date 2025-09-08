@@ -17,6 +17,5 @@ function NextIntlClientProvider({ children }) {
   return children;
 }
 
-module.exports = { useTranslations, useFormatter, NextIntlClientProvider };
-
-
+const nextIntlMock = { useTranslations, useFormatter, NextIntlClientProvider };
+export default nextIntlMock;
