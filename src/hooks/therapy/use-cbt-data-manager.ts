@@ -1,19 +1,3 @@
-/**
- * UNIFIED CBT STATE MANAGEMENT HOOK
- * 
- * This hook consolidates all CBT state management into a single, unified interface
- * that eliminates the triple implementation chaos across the application.
- * 
- * Key Features:
- * - Single source of truth via Redux store
- * - Unified interface for all CBT operations  
- * - Performance optimized with selective subscriptions
- * - Proper cleanup and memory management
- * - Auto-save with debouncing
- * - Comprehensive validation
- * - Session management integration
- */
-
 'use client';
 
 import { useEffect, useMemo, useRef, useCallback } from 'react';
@@ -24,7 +8,6 @@ import {
 } from '@reduxjs/toolkit';
 import { type RootState } from '@/store';
 import { 
-  // CBT Redux Actions
   createDraft,
   updateDraft,
   setCurrentStep,
@@ -35,7 +18,6 @@ import {
   setSubmitting,
   clearValidationErrors,
   resetCurrentDraft,
-  // Session-scoped actions
   startCBTSession,
   updateSituation,
   updateEmotions,
@@ -56,7 +38,6 @@ import {
   toggleSchemaMode,
   updateActionPlan,
   clearCBTSession,
-  // Types
   type CBTFormData,
   type CBTDraft,
   cbtFormSchema,
@@ -78,7 +59,6 @@ import { useChatUI } from '@/contexts/chat-ui-context';
 import { useCBTChatBridge } from '@/lib/therapy/use-cbt-chat-bridge';
 import { generateUUID } from '@/lib/utils/utils';
 
-// Selectors: avoid identity result functions to prevent memoization warnings
 const selectCBTCurrentDraft = (state: RootState) => state.cbt?.currentDraft;
 const selectCBTSessionData = (state: RootState) => state.cbt?.sessionData;
 
@@ -105,13 +85,11 @@ interface UseCBTDataManagerOptions {
 }
 
 interface UseCBTDataManagerReturn {
-  // Current State
   currentDraft: CBTDraft | null;
   sessionData: ReturnType<typeof selectCBTSessionData>;
   validationState: ReturnType<typeof selectCBTValidationState>;
   savedDrafts: CBTDraft[];
   
-  // Draft Management
   draftActions: {
     create: (id?: string) => void;
     update: (data: Partial<CBTFormData>) => void;
@@ -122,7 +100,6 @@ interface UseCBTDataManagerReturn {
     complete: (data: CBTFormData) => void;
   };
   
-  // Session Management
   sessionActions: {
     start: (sessionId?: string) => void;
     clear: () => void;
@@ -131,46 +108,39 @@ interface UseCBTDataManagerReturn {
     clearEmotions: () => void;
   };
   
-  // Thought Management
   thoughtActions: {
     updateThoughts: (data: ThoughtData[]) => void;
     addThought: (data: ThoughtData) => void;
     removeThought: (index: number) => void;
   };
   
-  // Core Belief Management
   beliefActions: {
     updateCoreBeliefs: (data: CoreBeliefData[]) => void;
     addCoreBelief: (data: CoreBeliefData) => void;
     removeCoreBelief: (index: number) => void;
   };
   
-  // Challenge Questions Management
   challengeActions: {
     updateChallengeQuestions: (data: ChallengeQuestionData[]) => void;
     addChallengeQuestion: (data: ChallengeQuestionData) => void;
     removeChallengeQuestion: (index: number) => void;
   };
   
-  // Rational Thoughts Management
   rationalActions: {
     updateRationalThoughts: (data: RationalThoughtData[]) => void;
     addRationalThought: (data: RationalThoughtData) => void;
     removeRationalThought: (index: number) => void;
   };
   
-  // Schema Modes Management
   schemaActions: {
     updateSchemaModes: (data: SchemaModeData[]) => void;
     toggleSchemaMode: (index: number, isActive: boolean) => void;
   };
   
-  // Action Plan Management
   actionActions: {
     updateActionPlan: (data: ActionPlanData) => void;
   };
   
-  // Navigation & Validation
   navigation: {
     currentStep: number;
     setCurrentStep: (step: number) => void;
@@ -187,7 +157,6 @@ interface UseCBTDataManagerReturn {
     clearErrors: () => void;
   };
   
-  // Status & Progress
   status: {
     isSubmitting: boolean;
     isDraftSaved: boolean;
@@ -199,20 +168,17 @@ interface UseCBTDataManagerReturn {
     };
   };
   
-  // Chat Integration
   chatIntegration: {
     sendToChat: (message: string) => Promise<boolean>;
     isIntegrationAvailable: boolean;
   };
   
-  // Export Utilities
   utilities: {
     exportData: () => string;
     generateSummary: () => string;
     getFormattedOutput: () => string;
   };
 
-  // Debounced auto-save function
   debouncedAutoSave: (data: Partial<CBTFormInput>) => void;
 }
 
@@ -226,24 +192,22 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   
   const dispatch = useDispatch();
   
-  // Optimized selectors for performance
+
   const currentDraft = useSelector(selectCBTCurrentDraft);
   const sessionData = useSelector(selectCBTSessionData);
   const validationState = useSelector(selectCBTValidationState);
   const savedDrafts = useSelector(selectCBTSavedDrafts);
   const lastAutoSave = useSelector((state: RootState) => state.cbt?.lastAutoSave);
   
-  // Auto-save management
+
   const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
   
-  // Debounced auto-save function
   const debouncedAutoSave = useCallback((data: Partial<CBTFormInput>) => {
     if (autoSaveTimeout.current) {
       clearTimeout(autoSaveTimeout.current);
     }
     
     autoSaveTimeout.current = setTimeout(() => {
-      // Convert RHF form data to Redux-compatible format and update session
       if (data?.situation) {
         dispatch(updateSituation({
           situation: data.situation,
@@ -251,8 +215,8 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         }));
       }
 
+
       if (data?.initialEmotions) {
-        // Ensure all emotion values are numbers
         const emotions = {
           fear: data.initialEmotions.fear || 0,
           anger: data.initialEmotions.anger || 0,
@@ -267,9 +231,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         dispatch(updateEmotions(emotions));
       }
     }, options.autoSaveDelay || 600);
+
   }, [dispatch, options.autoSaveDelay]);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (autoSaveTimeout.current) {
@@ -277,12 +241,11 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       }
     };
   }, []);
+
   
-  // Chat integration
   const { currentSessionId } = useChatUI();
   const chatBridge = useCBTChatBridge();
   
-  // Auto-save with debouncing
   useEffect(() => {
     if (!currentDraft || autoSaveDelay <= 0) return;
     
@@ -300,16 +263,16 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         autoSaveTimeout.current = null;
       }
     };
+
   }, [currentDraft, autoSaveDelay, dispatch]);
   
-  // Initialize session if sessionId provided
   useEffect(() => {
     if (sessionId && sessionId !== sessionData?.sessionId) {
       dispatch(startCBTSession({ sessionId }));
     }
+
   }, [sessionId, sessionData?.sessionId, dispatch]);
 
-  // One-time migration from localStorage to Redux (if needed)
   useEffect(() => {
     const migrationKey = 'cbt-migration-completed';
     const hasMigrated = localStorage.getItem(migrationKey);
@@ -323,53 +286,52 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         return;
       }
 
+
       const draft = JSON.parse(rawDraft) as CBTFormInput;
 
-      // Only migrate if there's no existing Redux state
       const isEmpty = !sessionData?.situation && !sessionData?.emotions && sessionData?.thoughts.length === 0;
       if (!isEmpty) {
         localStorage.setItem(migrationKey, 'true');
         return;
       }
 
-      // Create a new draft in Redux with migrated data
+
       const draftId = `cbt-draft-${generateUUID()}`;
       dispatch(createDraft({ id: draftId }));
 
-      // Migrate situation
       if (draft.situation) {
         const situationData = { situation: draft.situation, date: draft.date };
         dispatch(updateSituation(situationData));
+
       }
 
-      // Migrate emotions (use initial emotions for in-session work)
       if (draft.initialEmotions) {
         dispatch(updateEmotions(draft.initialEmotions as unknown as EmotionData));
+
       }
 
-      // Migrate thoughts
       if (Array.isArray(draft.automaticThoughts) && draft.automaticThoughts.length > 0) {
         dispatch(updateThoughts(draft.automaticThoughts as unknown as ThoughtData[]));
+
       }
 
-      // Migrate core beliefs (convert single text/credibility to array entry if available)
       if (draft.coreBeliefText && draft.coreBeliefText.trim().length > 0) {
         dispatch(updateCoreBeliefs([
           { coreBeliefText: draft.coreBeliefText, coreBeliefCredibility: draft.coreBeliefCredibility }
         ] as unknown as CoreBeliefData[]));
+
       }
 
-      // Migrate challenge questions
       if (Array.isArray(draft.challengeQuestions)) {
         dispatch(updateChallengeQuestions(draft.challengeQuestions as unknown as ChallengeQuestionData[]));
+
       }
 
-      // Migrate rational thoughts
       if (Array.isArray(draft.rationalThoughts)) {
         dispatch(updateRationalThoughts(draft.rationalThoughts as unknown as RationalThoughtData[]));
+
       }
 
-      // Migrate schema modes: map from consolidated SchemaMode[] -> SchemaModeData[]
       if (Array.isArray(draft.schemaModes)) {
         const mapped = draft.schemaModes.map((m) => ({
           mode: m.name,
@@ -378,9 +340,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
           isActive: !!m.selected,
         }));
         dispatch(updateSchemaModes(mapped as unknown as SchemaModeData[]));
+
       }
 
-      // Migrate action plan (optional)
       if (draft.newBehaviors) {
         const actionPlan = {
           finalEmotions: draft.finalEmotions,
@@ -392,6 +354,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
 
       // Clean up old localStorage data
       localStorage.removeItem('cbt-draft');
+
       localStorage.setItem(migrationKey, 'true');
 
       logger.info('Successfully migrated CBT draft from localStorage to Redux', {
@@ -405,14 +368,10 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         operation: 'migration',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
-      // Still mark as completed to avoid repeated attempts
       localStorage.setItem(migrationKey, 'true');
     }
   }, [dispatch, sessionData]);
 
-
-  
-  // Draft Management Actions
   const draftActions = useMemo(() => ({
     create: (id?: string) => {
       const draftId = id || `cbt-draft-${generateUUID()}`;
@@ -442,9 +401,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     complete: (data: CBTFormData) => {
       dispatch(completeCBTEntry(data));
     },
+
   }), [dispatch]);
   
-  // Session Management Actions
   const sessionActions = useMemo(() => ({
     start: (sessionId?: string) => {
       const id = sessionId || currentSessionId || `session-${generateUUID()}`;
@@ -466,9 +425,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     clearEmotions: () => {
       dispatch(clearEmotions());
     },
+
   }), [dispatch, currentSessionId]);
   
-  // Thought Management Actions
   const thoughtActions = useMemo(() => ({
     updateThoughts: (data: ThoughtData[]) => {
       dispatch(updateThoughts(data));
@@ -481,9 +440,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     removeThought: (index: number) => {
       dispatch(removeThought(index));
     },
+
   }), [dispatch]);
   
-  // Core Belief Management Actions
   const beliefActions = useMemo(() => ({
     updateCoreBeliefs: (data: CoreBeliefData[]) => {
       dispatch(updateCoreBeliefs(data));
@@ -496,9 +455,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     removeCoreBelief: (index: number) => {
       dispatch(removeCoreBelief(index));
     },
+
   }), [dispatch]);
   
-  // Challenge Questions Management Actions
   const challengeActions = useMemo(() => ({
     updateChallengeQuestions: (data: ChallengeQuestionData[]) => {
       dispatch(updateChallengeQuestions(data));
@@ -511,9 +470,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     removeChallengeQuestion: (index: number) => {
       dispatch(removeChallengeQuestion(index));
     },
+
   }), [dispatch]);
   
-  // Rational Thoughts Management Actions  
   const rationalActions = useMemo(() => ({
     updateRationalThoughts: (data: RationalThoughtData[]) => {
       dispatch(updateRationalThoughts(data));
@@ -526,9 +485,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     removeRationalThought: (index: number) => {
       dispatch(removeRationalThought(index));
     },
+
   }), [dispatch]);
   
-  // Schema Modes Management Actions
   const schemaActions = useMemo(() => ({
     updateSchemaModes: (data: SchemaModeData[]) => {
       dispatch(updateSchemaModes(data));
@@ -537,19 +496,19 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     toggleSchemaMode: (index: number, isActive: boolean) => {
       dispatch(toggleSchemaMode({ index, isActive }));
     },
+
   }), [dispatch]);
   
-  // Action Plan Management Actions
   const actionActions = useMemo(() => ({
     updateActionPlan: (data: ActionPlanData) => {
       dispatch(updateActionPlan(data));
     },
+
   }), [dispatch]);
   
-  // Navigation Logic
   const navigation = useMemo(() => {
     const currentStep = validationState?.currentStep || 1;
-    const maxSteps = 8; // Total CBT steps
+    const maxSteps = 8;
     
     return {
       currentStep,
@@ -575,7 +534,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     };
   }, [validationState?.currentStep, dispatch]);
   
-  // Validation Logic
   const validation = useMemo(() => {
     const validateForm = (): CBTFormValidationError[] => {
       if (!enableValidation || !currentDraft) return [];
@@ -599,7 +557,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     };
   }, [currentDraft, validationState?.validationErrors, enableValidation, dispatch]);
   
-  // Status & Progress
   const status = useMemo(() => {
     const completedSteps = sessionData ? [
       sessionData?.situation,
@@ -626,7 +583,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     };
   }, [validationState?.isSubmitting, lastAutoSave, sessionData]);
   
-  // Chat Integration
   const chatIntegration = useMemo(() => ({
     sendToChat: async (message: string): Promise<boolean> => {
       if (!enableChatIntegration || !currentSessionId) return false;
@@ -646,7 +602,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     isIntegrationAvailable: enableChatIntegration && !!currentSessionId,
   }), [enableChatIntegration, currentSessionId, chatBridge]);
   
-  // Export Utilities
   const utilities = useMemo(() => ({
     exportData: (): string => {
       if (!currentDraft) return '';
@@ -681,7 +636,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     getFormattedOutput: (): string => {
       if (!currentDraft) return '';
       
-      // Generate CBT summary card format
       return `<!-- CBT_SUMMARY_CARD:${JSON.stringify(currentDraft.data)} -->
 <!-- END_CBT_SUMMARY_CARD -->`;
     },
@@ -722,10 +676,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   };
 }
 
-/**
- * Lightweight hook for components that only need specific CBT data
- * This reduces unnecessary re-renders by subscribing only to relevant state slices
- */
 export function useUnifiedCBTSelector<T>(
   selector: (state: RootState) => T,
   equalityFn?: (left: T, right: T) => boolean
@@ -733,37 +683,25 @@ export function useUnifiedCBTSelector<T>(
   return useSelector(selector, equalityFn);
 }
 
-/**
- * Hook for components that only need CBT actions without state subscriptions
- * This is useful for components that trigger actions but don't display state
- */
 export function useUnifiedCBTActions() {
   const dispatch = useDispatch();
   
   return useMemo(() => ({
-    // Draft actions
     createDraft: (id: string) => dispatch(createDraft({ id })),
     updateDraft: (data: Partial<CBTFormData>) => dispatch(updateDraft(data)),
     saveDraft: () => dispatch(saveDraft()),
     deleteDraft: (id: string) => dispatch(deleteDraft(id)),
-    
-    // Session actions
     startSession: (sessionId: string) => dispatch(startCBTSession({ sessionId })),
     clearSession: () => dispatch(clearCBTSession()),
-    
-    // Content actions
     updateSituation: (data: SituationData) => dispatch(updateSituation(data)),
     updateEmotions: (data: EmotionData) => dispatch(updateEmotions(data)),
     addThought: (data: ThoughtData) => dispatch(addThought(data)),
     addCoreBelief: (data: CoreBeliefData) => dispatch(addCoreBelief(data)),
-    
-    // Navigation actions
     setCurrentStep: (step: number) => dispatch(setCurrentStep(step)),
     setSubmitting: (isSubmitting: boolean) => dispatch(setSubmitting(isSubmitting)),
   }), [dispatch]);
 }
 
-// Backward compatibility exports
 export const useUnifiedCBT = useCBTDataManager;
 export type UseUnifiedCBTOptions = UseCBTDataManagerOptions;
 export type UseUnifiedCBTReturn = UseCBTDataManagerReturn;

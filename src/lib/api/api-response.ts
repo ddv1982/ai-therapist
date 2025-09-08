@@ -2,11 +2,6 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logger } from '@/lib/utils/logger';
 
-/**
- * Standardized API response types for consistent therapeutic AI application responses
- */
-
-// Base response interface
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
@@ -22,7 +17,6 @@ export interface ApiResponse<T = unknown> {
   };
 }
 
-// Success response helper
 export function createSuccessResponse<T>(
   data: T,
   meta?: Partial<ApiResponse['meta']>
@@ -43,7 +37,6 @@ export function createSuccessResponse<T>(
   return response;
 }
 
-// Error response helper
 export function createErrorResponse(
   message: string,
   status: number = 400,
@@ -78,7 +71,6 @@ export function createErrorResponse(
   return response;
 }
 
-// Validation error response helper
 export function createValidationErrorResponse(
   validationError: string,
   requestId?: string
@@ -95,7 +87,6 @@ export function createValidationErrorResponse(
   );
 }
 
-// Database error response helper
 export function createDatabaseErrorResponse(
   operation: string,
   requestId?: string
@@ -112,7 +103,6 @@ export function createDatabaseErrorResponse(
   );
 }
 
-// Authentication error response helper
 export function createAuthenticationErrorResponse(
   authError: string,
   requestId?: string
@@ -129,7 +119,6 @@ export function createAuthenticationErrorResponse(
   );
 }
 
-// Not found error response helper
 export function createNotFoundErrorResponse(
   resource: string,
   requestId?: string
@@ -146,7 +135,6 @@ export function createNotFoundErrorResponse(
   );
 }
 
-// Forbidden error response helper
 export function createForbiddenErrorResponse(
   reason: string,
   requestId?: string
@@ -163,7 +151,6 @@ export function createForbiddenErrorResponse(
   );
 }
 
-// Rate limit error response helper
 export function createRateLimitErrorResponse(
   requestId?: string
 ): NextResponse<ApiResponse> {
@@ -179,13 +166,12 @@ export function createRateLimitErrorResponse(
   );
 }
 
-// Server error response helper
 export function createServerErrorResponse(
   error: Error,
   requestId?: string,
   context?: Record<string, unknown>
 ): NextResponse<ApiResponse> {
-  // Log the error for debugging
+
   logger.apiError('Server error', error, { requestId, ...context });
   
   return createErrorResponse(
@@ -200,7 +186,6 @@ export function createServerErrorResponse(
   );
 }
 
-// Type guards for response validation
 export function isSuccessResponse<T>(response: unknown): response is ApiResponse<T> {
   if (!response || typeof response !== 'object' || response === null) {
     return false;
@@ -221,7 +206,6 @@ export function isErrorResponse(response: unknown): response is ApiResponse {
   return (response as { success: boolean }).success === false;
 }
 
-// Response validation schema
 export const apiResponseSchema = z.object({
   success: z.boolean(),
   data: z.any().optional(),
@@ -237,7 +221,6 @@ export const apiResponseSchema = z.object({
   }).optional(),
 });
 
-// Helper to validate API response format
 export function validateApiResponse(response: unknown): {
   valid: boolean;
   error?: string;
@@ -256,7 +239,6 @@ export function validateApiResponse(response: unknown): {
   }
 }
 
-// Standardized pagination response
 export interface PaginatedResponse<T> {
   items: T[];
   pagination: {
@@ -291,7 +273,6 @@ export function createPaginatedResponse<T>(
   }, { requestId });
 }
 
-// Helper to unwrap standardized responses in clients/callers
 export function getApiData<T>(resp: ApiResponse<T>): T {
   if (resp && resp.success) {
     return resp.data as T;
@@ -299,13 +280,7 @@ export function getApiData<T>(resp: ApiResponse<T>): T {
   const message = resp?.error?.details || resp?.error?.message || 'API error';
   throw new Error(message);
 }
-// ============================================================================
-// THERAPEUTIC-SPECIFIC RESPONSE UTILITIES
-// ============================================================================
 
-/**
- * Specialized response for therapeutic session operations
- */
 export interface TherapeuticSessionResponse {
   sessionId: string;
   status: 'active' | 'completed' | 'paused';
@@ -325,9 +300,6 @@ export function createSessionResponse(
   });
 }
 
-/**
- * Specialized response for AI chat completions
- */
 export interface ChatCompletionResponse {
   messageId: string;
   content: string;
@@ -355,9 +327,6 @@ export function createChatCompletionResponse(
   });
 }
 
-/**
- * Add therapeutic safety headers to any response
- */
 export function addTherapeuticHeaders<T>(
   response: NextResponse<ApiResponse<T>>
 ): NextResponse<ApiResponse<T>> {

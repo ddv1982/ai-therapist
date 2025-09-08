@@ -10,7 +10,6 @@ import authSlice from './slices/authSlice';
 import { sessionsApi } from './slices/sessionsApi';
 import { sessionHeartbeatMiddleware } from './middleware/sessionHeartbeatMiddleware';
 
-// Root reducer
 const rootReducer = combineReducers({
   chat: chatSlice,
   sessions: sessionsSlice,
@@ -19,7 +18,6 @@ const rootReducer = combineReducers({
   [sessionsApi.reducerPath]: sessionsApi.reducer,
 });
 
-// Resilient storage for SSR and restricted environments (e.g., iOS private mode)
 const createNoopStorage = () => {
   return {
     getItem() {
@@ -31,7 +29,6 @@ const createNoopStorage = () => {
     removeItem() {
       return Promise.resolve();
     },
-    // Required to satisfy Storage interface at compile time; never called
     clear() {},
     key() { return null; },
     get length() { return 0; },
@@ -56,8 +53,8 @@ const safeStorage: Storage =
 const persistConfig = {
   key: 'therapeuticAI',
   storage: safeStorage,
-  whitelist: ['cbt', 'sessions'], // Persist drafts and session data
-  blacklist: ['chat'], // Don't persist real-time chat state
+  whitelist: ['cbt', 'sessions'],
+  blacklist: ['chat'],
 };
 
 type RootState = ReturnType<typeof rootReducer>;
@@ -78,7 +75,6 @@ export const store = configureStore({
       ),
 });
 
-// Enable refetchOnFocus/refetchOnReconnect behaviors for RTK Query
 setupListeners(store.dispatch);
 
 export const persistor = persistStore(store);

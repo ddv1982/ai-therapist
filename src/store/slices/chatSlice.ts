@@ -27,10 +27,8 @@ const chatSlice = createSlice({
   initialState,
   reducers: {
     addMessage: () => {
-      // handled by RTK Query (chatApi)
     },
     updateMessage: () => {
-      // handled by RTK Query (chatApi)
     },
     setStreaming: (state, action: PayloadAction<{ isStreaming: boolean; messageId?: string }>) => {
       state.isStreaming = action.payload.isStreaming;
