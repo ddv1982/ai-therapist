@@ -28,9 +28,7 @@ export interface RedisConfig {
 }
 
 class RedisManager {
-  // Using any due to complex Redis type conflicts between different versions
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private client: any = null;
+  private client: RedisClientType<Record<string, never>, Record<string, never>, Record<string, never>> | null = null;
   private isConnected = false;
   private isConnecting = false;
   private reconnectAttempts = 0;
@@ -88,7 +86,7 @@ class RedisManager {
         }
       });
 
-      this.client = createClient(redisConfig);
+      this.client = createClient(redisConfig) as unknown as RedisClientType<Record<string, never>, Record<string, never>, Record<string, never>>;
       this.setupClientEventHandlers();
 
       await this.client.connect();
@@ -100,10 +98,8 @@ class RedisManager {
 
       logger.info('Redis connected successfully', {
         operation: 'redis_connect',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        host: (redisConfig.socket as any)?.host,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        port: (redisConfig.socket as any)?.port,
+        host: (redisConfig.socket as { host?: string })?.host,
+        port: (redisConfig.socket as { port?: number })?.port,
         database: redisConfig.database
       });
 
@@ -184,7 +180,7 @@ class RedisManager {
   /**
    * Get Redis client instance
    */
-  getClient(): RedisClientType | null {
+  getClient(): RedisClientType<Record<string, never>, Record<string, never>, Record<string, never>> | null {
     return this.client;
   }
 
@@ -199,7 +195,7 @@ class RedisManager {
    * Execute Redis command with error handling
    */
   async executeCommand<T>(
-    command: (client: RedisClientType) => Promise<T>,
+    command: (client: RedisClientType<Record<string, never>, Record<string, never>, Record<string, never>>) => Promise<T>,
     fallback?: T
   ): Promise<T | null> {
     // Try to connect if not already connected (lazy connection)
@@ -299,7 +295,7 @@ class RedisManager {
       }
 
       // Test with a simple ping
-      const pong = await this.client.ping();
+      const pong = await this.client!.ping();
       
       return {
         healthy: pong === 'PONG',

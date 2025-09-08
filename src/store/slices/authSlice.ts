@@ -126,7 +126,6 @@ export const waitForAuthentication = createAsyncThunk(
     const timeoutMs = args.timeoutMs ?? 5000;
     const intervalMs = args.intervalMs ?? 200;
     const started = Date.now();
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const res = await fetch('/api/auth/session', {
         credentials: 'include',

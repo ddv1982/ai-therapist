@@ -4,8 +4,12 @@
  */
 
 // Local type definition for markdown-it Token to avoid complex type issues
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Token = any;
+type Token = {
+  type: string;
+  tag: string;
+  content: string;
+  children?: Token[];
+};
 
 export interface TableData {
   headers: string[];

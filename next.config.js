@@ -1,14 +1,14 @@
 /** @type {import('next').NextConfig} */
-const createNextIntlPlugin = require('next-intl/plugin');
+import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
-const path = require('path');
+import path from 'path';
 
 const nextConfig = {
   serverExternalPackages: ['prisma'],
   // Hide development indicators (Turbopack icon, etc.)
   devIndicators: false,
   // Ensure Next uses this project as the workspace root (fixes multi-lockfile warning)
-  outputFileTracingRoot: path.resolve(__dirname),
+  outputFileTracingRoot: path.resolve(new URL('.', import.meta.url).pathname),
   // Only expose client-safe environment variables
   env: {
     // Remove server-only secrets from client bundle
@@ -80,4 +80,4 @@ const nextConfig = {
   },
 }
 
-module.exports = withNextIntl(nextConfig)
+export default withNextIntl(nextConfig);

@@ -51,7 +51,9 @@ function createMockRequest(body: any, options: { url?: string } = {}): NextReque
 
 // Mock middleware to pass-through handler and provide context
 jest.mock('@/lib/api/api-middleware', () => ({
-  withAuthAndRateLimitStreaming: (handler: any) => async (req: any, ctx?: any) => {
+  withAuthAndRateLimitStreaming: (
+    handler: (req: NextRequest, ctx: { requestId: string; userInfo: { userId: string } }) => Promise<unknown>
+  ) => async (req: NextRequest, ctx?: { requestId: string; userInfo: { userId: string } }) => {
     const context = ctx ?? { requestId: 'test-request-id', userInfo: { userId: 'test-user-id' } };
     return handler(req, context);
   }
@@ -198,7 +200,15 @@ describe('/api/chat Route - Simplified Architecture', () => {
       // const _mockOnError = jest.fn().mockReturnValue('Rate limit exceeded. Please try again later.');
 
       mockStreamText.mockReturnValue({
-        toUIMessageStreamResponse: jest.fn().mockImplementation((options) => {
+        // Provide minimal shape of StreamTextResult to satisfy TS
+        content: [],
+        text: jest.fn(),
+        reasoning: undefined,
+        reasoningText: undefined,
+        toAIStreamResponse: jest.fn(),
+        toDataStreamResponse: jest.fn(),
+        toTextStreamResponse: jest.fn(),
+        toUIMessageStreamResponse: jest.fn().mockImplementation((options?: { onError?: (err: Error) => string }) => {
           if (options && options.onError) {
             const errorMessage = options.onError(mockError);
             expect(errorMessage).toBe('Rate limit exceeded. Please try again later.');
@@ -234,7 +244,7 @@ describe('/api/chat Route - Simplified Architecture', () => {
             headers: new Headers()
           };
         })
-      } as any);
+      } as unknown as ReturnType<typeof streamText>);
 
       const request = createMockRequest({
         messages: [{ id: '1', role: 'user', content: 'Hello' }]

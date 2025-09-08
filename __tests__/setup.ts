@@ -39,7 +39,7 @@ console.log('🧪 Unified Test Architecture Loaded - 23 optimization patterns ac
 // Ensure X-Request-Id exists in tests for API middleware
 if (typeof global.Headers !== 'undefined') {
   const OriginalHeaders = global.Headers;
-  // @ts-ignore
+  // @ts-expect-error
   global.Headers = class TestHeaders extends OriginalHeaders {
     constructor(init?: HeadersInit) {
       super(init);

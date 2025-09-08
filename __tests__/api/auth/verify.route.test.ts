@@ -37,7 +37,8 @@ jest.mock('@/lib/api/api-middleware', () => {
   const actual = jest.requireActual('@/lib/api/api-middleware');
   return {
     ...actual,
-    withRateLimitUnauthenticated: (handler: any) => async (req: any, _routeParams?: any) => {
+    withRateLimitUnauthenticated: (handler: (req: NextRequest, ctx: { requestId: string }, extra: Promise<Record<string, unknown>>) => Promise<unknown>) =>
+      async (req: NextRequest) => {
       const ctx = { requestId: 'test-request-id' };
       return handler(req, ctx, Promise.resolve({}));
     },
@@ -46,14 +47,14 @@ jest.mock('@/lib/api/api-middleware', () => {
 
 // Mock standardized response helpers used by verify route
 jest.mock('@/lib/api/api-response', () => {
-  function makeResp(status, payload) {
-    const store = new Map();
+  function makeResp(status: number, payload: Record<string, unknown>) {
+    const store = new Map<string, string>();
     store.set('X-Request-Id', 'test-request-id');
     return {
       status,
       headers: {
-        get: (k) => store.get(k),
-        set: (k, v) => { store.set(k, v); },
+        get: (k: string) => store.get(k),
+        set: (k: string, v: string) => { store.set(k, v); },
       },
       json: async () => payload,
       text: async () => JSON.stringify(payload),
@@ -61,14 +62,29 @@ jest.mock('@/lib/api/api-response', () => {
     };
   }
   return {
-    createSuccessResponse: (data, meta) => makeResp(200, { success: true, data, meta: { timestamp: new Date().toISOString(), ...(meta || {}) } }),
-    createErrorResponse: (message, status = 400, options = {}) => makeResp(status, { success: false, error: { message, code: options.code, details: options.details, suggestedAction: options.suggestedAction }, meta: { timestamp: new Date().toISOString(), requestId: options.requestId } }),
+    createSuccessResponse: (data: unknown, meta?: Record<string, unknown>) =>
+      makeResp(200, { success: true, data, meta: { timestamp: new Date().toISOString(), ...(meta || {}) } }),
+    createErrorResponse: (
+      message: string,
+      status: number = 400,
+      options: { code?: string; details?: unknown; suggestedAction?: string; requestId?: string } = {}
+    ) =>
+      makeResp(status, {
+        success: false,
+        error: {
+          message,
+          code: options.code,
+          details: options.details,
+          suggestedAction: options.suggestedAction,
+        },
+        meta: { timestamp: new Date().toISOString(), requestId: options.requestId },
+      }),
   };
 });
 
-const { verifyTOTPToken, verifyBackupCode, isTOTPSetup } = require('@/lib/auth/totp-service');
+const { verifyTOTPToken, isTOTPSetup } = require('@/lib/auth/totp-service');
 
-function createMockRequest(body: any, opts: { url?: string } = {}): NextRequest {
+function createMockRequest(body: Record<string, unknown>, opts: { url?: string } = {}): NextRequest {
   return {
     json: jest.fn().mockResolvedValue(body),
     nextUrl: new URL(opts.url || 'http://localhost:4000/api/auth/verify'),
@@ -91,7 +107,7 @@ describe('/api/auth/verify', () => {
     (verifyTOTPToken as jest.Mock).mockResolvedValue(true);
 
     const req = createMockRequest({ token: '123456', isBackupCode: false });
-    const res = await mod.POST(req as any);
+    const res = await mod.POST(req as any, { params: {} } as any);
 
     expect(res.status).toBe(200);
     const data = await res.json();
@@ -105,7 +121,7 @@ describe('/api/auth/verify', () => {
     (verifyTOTPToken as jest.Mock).mockResolvedValue(true);
 
     const req = createMockRequest({ token: '654321', isBackupCode: false });
-    const res = await mod.POST(req as any);
+    const res = await mod.POST(req as any, { params: {} } as any);
 
     expect([200, 500]).toContain(res.status);
     const body = await res.json();
@@ -121,7 +137,7 @@ describe('/api/auth/verify', () => {
     (verifyTOTPToken as jest.Mock).mockResolvedValue(false);
 
     const req = createMockRequest({ token: '000000', isBackupCode: false });
-    const res = await mod.POST(req as any);
+    const res = await mod.POST(req as any, { params: {} } as any);
 
     expect(res.status).toBe(401);
     const body = await res.json();
@@ -134,7 +150,7 @@ describe('/api/auth/verify', () => {
     (isTOTPSetup as jest.Mock).mockResolvedValue(false);
 
     const req = createMockRequest({ token: '123456' });
-    const res = await mod.POST(req as any);
+    const res = await mod.POST(req, { params: Promise.resolve({}) });
 
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -142,5 +158,3 @@ describe('/api/auth/verify', () => {
     expect(body.error?.message).toBe('TOTP not configured');
   });
 });
-
-

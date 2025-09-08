@@ -1,4 +1,3 @@
-/* eslint-disable no-var */
 import { NextRequest } from 'next/server';
 import { generateTOTPSetup, saveTOTPConfig, isTOTPSetup, resetTOTPConfig } from '@/lib/auth/totp-service';
 import { getOrCreateDevice, createAuthSession } from '@/lib/auth/device-fingerprint';
@@ -9,7 +8,6 @@ import { createSuccessResponse, createErrorResponse, createForbiddenErrorRespons
 
 // Type declaration for global cache
 declare global {
-  // eslint-disable-next-line no-var
   var totpSetupCache: {
     data: {
       qrCodeUrl: string;

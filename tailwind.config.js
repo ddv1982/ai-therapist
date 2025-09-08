@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+const config = {
   theme: {
     extend: {
       colors: {
@@ -141,3 +141,4 @@ module.exports = {
     },
   },
 };
+export default config;

@@ -606,7 +606,7 @@ describe('Analysis Utils - Consolidated Functionality', () => {
     });
     
     test('should handle invalid analysis type', () => {
-      // @ts-ignore - Testing runtime behavior
+      // @ts-expect-error - Testing runtime behavior
       expect(getMinimumWordCountThreshold('invalid')).toBe(25);
     });
   });
