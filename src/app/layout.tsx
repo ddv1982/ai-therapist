@@ -5,6 +5,7 @@ import { NextIntlClientProvider, type AbstractIntlMessages } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import { cookies } from 'next/headers';
 import { locales, defaultLocale, type AppLocale } from '@/i18n/config';
+import { ReduxProvider } from '@/providers/redux-provider';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -93,7 +94,9 @@ export default async function RootLayout({
       </head>
       <body className="bg-background font-sans antialiased">
         <NextIntlClientProvider locale={resolvedLocale} messages={messages}>
-          {children}
+          <ReduxProvider>
+            {children}
+          </ReduxProvider>
         </NextIntlClientProvider>
       </body>
     </html>
