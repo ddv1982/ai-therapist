@@ -11,4 +11,6 @@ globs: src/app/api/**/*.ts
   [`src/types/api.generated.ts`](mdc:src/types/api.generated.ts) via the
   `api:types` script whenever the contract changes.
 - Ensure `X-Request-Id` headers are included and documented for traceability.
+- Request-level logs should include the model used and any tool-calling details
+  for chat endpoints; do not log IP addresses.
 

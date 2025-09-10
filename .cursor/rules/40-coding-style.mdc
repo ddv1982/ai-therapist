@@ -12,3 +12,7 @@ globs: *.ts,*.tsx
 - Match existing formatting and avoid unrelated reformatting.
 - Keep comments concise and focused on the "why".
 
+## UI Conventions
+- Use the same font consistently across the chat interface.
+- Hide scrollbars by default in chat views unless explicitly needed.
+

@@ -36,4 +36,12 @@ alwaysApply: true
     responses (see [`src/lib/api/api-response.ts`](mdc:src/lib/api/api-response.ts)).
   - Include `X-Request-Id` headers in requests/responses where applicable and
     ensure they are reflected in the OpenAPI spec (`docs/api.yaml`).
+  - Prefer API wrappers for new/refactored routes (see
+    [10-api-wrappers.mdc](mdc:.cursor/rules/10-api-wrappers.mdc) and
+    [api-wrappers.mdc](mdc:.cursor/rules/api-wrappers.mdc)).
+  - Use the typed API client on the client side
+    ([`src/lib/api/client.ts`](mdc:src/lib/api/client.ts)) with OpenAPI types
+    ([`src/types/api.generated.ts`](mdc:src/types/api.generated.ts)).
+  - Follow chat UX/session behavior rules (see
+    [30-chat-behavior.mdc](mdc:.cursor/rules/30-chat-behavior.mdc)).
 
