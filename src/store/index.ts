@@ -8,7 +8,7 @@ import sessionsSlice from './slices/sessionsSlice';
 import cbtSlice from './slices/cbtSlice';
 import authSlice from './slices/authSlice';
 import { sessionsApi } from './slices/sessionsApi';
-import { sessionHeartbeatMiddleware } from './middleware/sessionHeartbeatMiddleware';
+import { sessionHeartbeatMiddleware } from './middleware/session-heartbeat-middleware';
 
 const rootReducer = combineReducers({
   chat: chatSlice,

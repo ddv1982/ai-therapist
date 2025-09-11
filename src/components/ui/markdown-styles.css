@@ -124,6 +124,17 @@
   background-color: hsl(var(--muted) / 0.2);
 }
 
+.message-content-assistant .markdown-content table th:nth-child(n+4),
+.message-content-assistant .markdown-content table td:nth-child(n+4) {
+  display: none;
+}
+
+/* Allow explicit opt-out via data-expanded on a table wrapper */
+.message-content-assistant [data-expanded="true"] table th,
+.message-content-assistant [data-expanded="true"] table td {
+  display: table-cell;
+}
+
 .markdown-content .table-container {
   overflow-x: auto;
   margin-left: -0.5rem;
