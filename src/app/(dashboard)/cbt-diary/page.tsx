@@ -38,6 +38,7 @@ import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { apiClient } from '@/lib/api/client';
 import type { components } from '@/types/api.generated';
 import { getApiData, type ApiResponse } from '@/lib/api/api-response';
+import { therapeuticInteractive } from '@/lib/ui/design-tokens';
 
 type PostMessageResponse = ApiResponse<components['schemas']['Message']>;
 
@@ -59,6 +60,8 @@ function CBTDiaryPageContent() {
   const [isMobile, setIsMobile] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Prevent duplicate insertion of CBT step components after rapid clicks
+  const lastInsertedStepRef = useRef<string | null>(null);
   
   // Use CBT data manager hook for draft management (transition phase)
   const { draftActions, savedDrafts, currentDraft } = useCBTDataManager();
@@ -86,13 +89,18 @@ function CBTDiaryPageContent() {
     generateTherapeuticSummaryCard
   } = useCBTChatExperience();
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll only when non-CBT text messages are appended (avoid jank on steps)
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    const isCBTComponent = Boolean(last.metadata?.step);
+    if (!isCBTComponent) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   // Check for existing draft using saved drafts for immediate UI updates
@@ -175,6 +183,13 @@ function CBTDiaryPageContent() {
     startCBTFlow();
   }, [startCBTFlow]);
 
+  // Reset step guard when session completes or deactivates
+  useEffect(() => {
+    if (!isCBTActive || cbtCurrentStep === 'complete') {
+      lastInsertedStepRef.current = null;
+    }
+  }, [isCBTActive, cbtCurrentStep]);
+
   // Handle CBT session start and add situation component
   useEffect(() => {
     if (isCBTActive && cbtCurrentStep === 'situation' && cbtMessages.length > 0) {
@@ -193,7 +208,13 @@ function CBTDiaryPageContent() {
         }
       };
       
+      // Guard: avoid inserting the same step twice
+      if (lastInsertedStepRef.current === cbtCurrentStep) {
+        return;
+      }
+
       setMessages([cbtComponentMessage]);
+      lastInsertedStepRef.current = cbtCurrentStep;
     }
   }, [isCBTActive, cbtCurrentStep, cbtMessages.length, cbtSessionData]);
 
@@ -215,7 +236,15 @@ function CBTDiaryPageContent() {
         }
       };
       
-      setMessages(prev => [...prev, cbtComponentMessage]);
+      setMessages(prev => {
+        const last = prev[prev.length - 1];
+        const lastStep = last?.metadata?.step as string | undefined;
+        if (lastStep === cbtCurrentStep || lastInsertedStepRef.current === cbtCurrentStep) {
+          return prev; // de-dupe
+        }
+        lastInsertedStepRef.current = cbtCurrentStep;
+        return [...prev, cbtComponentMessage];
+      });
     }
   }, [isCBTActive, cbtCurrentStep, cbtSessionData]);
 
@@ -453,71 +482,95 @@ function CBTDiaryPageContent() {
   }, [completeFinalEmotionsStep]);
 
   return (
-    <div className="h-screen bg-background flex flex-col" style={{ height: '100dvh' }}>
+    <div className={cn("h-screen bg-background flex flex-col", isMobile && "cbt-compact")} style={{ height: '100dvh' }}>
       {/* Header */}
-      <div className="border-b bg-card/50 backdrop-blur-md sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-            <button 
-              onClick={() => router.push('/')}
-              className="hover:text-foreground transition-colors"
-            >
-              {t('nav.chat')}
-            </button>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-foreground font-semibold">{t('nav.session')}</span>
-            {isCBTActive && cbtCurrentStep !== 'complete' && (
-              <>
-                <ChevronRight className="w-4 h-4" />
-                <span className="text-primary capitalize">
-                  Step {getStepInfo(cbtCurrentStep).stepNumber} of {getStepInfo(cbtCurrentStep).totalSteps}: {cbtCurrentStep.replace('-', ' ')}
-                </span>
-              </>
-            )}
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+      {isMobile ? (
+        <div className="border-b bg-card/70 backdrop-blur-md sticky top-0 z-10">
+          <div className="max-w-4xl mx-auto px-3 py-2">
+            <div className="flex items-center justify-between gap-2">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => router.push('/')}
-                className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground"
+                className={cn("flex items-center gap-1 h-8 px-2", therapeuticInteractive.buttonBase)}
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">{t('nav.backToChat')}</span>
-                <span className="sm:hidden">{t('nav.back')}</span>
+                <span className="text-sm">{t('nav.back')}</span>
               </Button>
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
-                  <Brain className="w-6 h-6 text-primary-foreground" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-semibold">
-                    Interactive CBT Session
-                    {isCBTActive && cbtCurrentStep !== 'complete' && (
-                      <span className="ml-3 text-base text-primary font-normal">
-                        (Step {getStepInfo(cbtCurrentStep).stepNumber} of {getStepInfo(cbtCurrentStep).totalSteps})
-                      </span>
-                    )}
-                  </h1>
-                  <p className="text-sm text-muted-foreground hidden sm:block">
-                    {isCBTActive && cbtCurrentStep !== 'complete' 
-                      ? `Current: ${cbtCurrentStep.replace('-', ' ')} - Guided cognitive behavioral therapy experience`
-                      : "Guided cognitive behavioral therapy experience"
-                    }
-                  </p>
+              {isCBTActive && cbtCurrentStep !== 'complete' && (
+                <span className="text-xs text-primary">
+                  Step {getStepInfo(cbtCurrentStep).stepNumber}/{getStepInfo(cbtCurrentStep).totalSteps}
+                </span>
+              )}
+            </div>
+            {isCBTActive && cbtCurrentStep !== 'complete' && (
+              <div className="w-full bg-muted rounded-full h-1 mt-2">
+                <div 
+                  className="bg-primary h-1 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${(getStepInfo(cbtCurrentStep).stepNumber / getStepInfo(cbtCurrentStep).totalSteps) * 100}%` }}
+                ></div>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="border-b bg-card/50 backdrop-blur-md sticky top-0 z-10">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+              <button 
+                onClick={() => router.push('/')}
+                className="hover:text-foreground transition-colors"
+              >
+                {t('nav.chat')}
+              </button>
+              <ChevronRight className="w-4 h-4" />
+              <span className="text-foreground font-semibold">{t('nav.session')}</span>
+              {isCBTActive && cbtCurrentStep !== 'complete' && (
+                <>
+                  <ChevronRight className="w-4 h-4" />
+                  <span className="text-primary capitalize">
+                    Step {getStepInfo(cbtCurrentStep).stepNumber} of {getStepInfo(cbtCurrentStep).totalSteps}: {cbtCurrentStep.replace('-', ' ')}
+                  </span>
+                </>
+              )}
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push('/')}
+                  className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">{t('nav.backToChat')}</span>
+                </Button>
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
+                    <Brain className="w-6 h-6 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl font-semibold">
+                      Interactive CBT Session
+                      {isCBTActive && cbtCurrentStep !== 'complete' && (
+                        <span className="ml-3 text-base text-primary font-normal">
+                          (Step {getStepInfo(cbtCurrentStep).stepNumber} of {getStepInfo(cbtCurrentStep).totalSteps})
+                        </span>
+                      )}
+                    </h1>
+                    
+                  </div>
                 </div>
               </div>
             </div>
-            
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Progress Indicator */}
-      {isCBTActive && cbtCurrentStep !== 'complete' && (
+      {/* Progress Indicator - desktop only */}
+      {!isMobile && isCBTActive && cbtCurrentStep !== 'complete' && (
         <div className="border-b bg-muted/30">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3">
             <div className="flex items-center justify-between mb-2">
@@ -554,7 +607,7 @@ function CBTDiaryPageContent() {
       )}
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex-1 overflow-y-auto min-h-0 scroll-container" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className={cn("max-w-4xl mx-auto py-6 min-h-full", isMobile ? "px-3 pb-6" : "px-4 sm:px-6 pb-8")}>
           {!hasStarted ? (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -676,24 +729,26 @@ function CBTDiaryPageContent() {
         </div>
       </div>
 
-      {/* Progress Information */}
-      <div className="border-t bg-card/50 backdrop-blur-md">
-        <div className={cn("max-w-4xl mx-auto py-4 text-center", isMobile ? "px-3" : "px-4 sm:px-6")}>
-          <div className="text-sm text-muted-foreground">
-            {isStreaming ? (
-              <span>🔄 Analyzing your CBT session and preparing for chat...</span>
-            ) : isCBTActive && cbtCurrentStep !== 'complete' && cbtCurrentStep !== 'final-emotions' ? (
-              <span>💙 Complete the {cbtCurrentStep.replace('-', ' ')} exercise above to continue your CBT journey</span>
-            ) : isCBTActive && cbtCurrentStep === 'final-emotions' ? (
-              <span>💙 Reflect on your emotions, then click &quot;Send to Chat&quot; for AI analysis</span>
-            ) : hasStarted ? (
-              <span>💙 Your progress is automatically saved in each step - no additional input needed</span>
-            ) : (
-              <span>💙 Start your CBT session to begin therapeutic exploration</span>
-            )}
+      {/* Progress Information - desktop only */}
+      {!isMobile && (
+        <div className="border-t bg-card/50 backdrop-blur-md">
+          <div className={cn("max-w-4xl mx-auto py-4 text-center", "px-4 sm:px-6")}> 
+            <div className="text-sm text-muted-foreground">
+              {isStreaming ? (
+                <span>🔄 Analyzing your CBT session and preparing for chat...</span>
+              ) : isCBTActive && cbtCurrentStep !== 'complete' && cbtCurrentStep !== 'final-emotions' ? (
+                <span>💙 Complete the {cbtCurrentStep.replace('-', ' ')} exercise above to continue your CBT journey</span>
+              ) : isCBTActive && cbtCurrentStep === 'final-emotions' ? (
+                <span>💙 Reflect on your emotions, then click &quot;Send to Chat&quot; for AI analysis</span>
+              ) : hasStarted ? (
+                <span>💙 Your progress is automatically saved in each step - no additional input needed</span>
+              ) : (
+                <span>💙 Start your CBT session to begin therapeutic exploration</span>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

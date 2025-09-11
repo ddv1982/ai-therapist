@@ -45,30 +45,48 @@ export function DatePicker({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
+          aria-haspopup="dialog"
+          aria-expanded={open}
           className={cn(
-            "w-full justify-start text-left font-normal",
+            // DS: full width on mobile, natural on desktop up to 320px
+            "w-full md:w-[320px] justify-start text-left font-normal h-10 px-3",
             !value && "text-muted-foreground",
             className
           )}
           disabled={disabled}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
+          <CalendarIcon className="mr-2 h-4 w-4" aria-hidden="true" />
           {value ? format(value, "PPP") : <span>{placeholder || t('datePick')}</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={value}
-          onSelect={handleSelect}
-          disabled={(date) => {
-            if (maxDate && date > maxDate) return true
-            if (minDate && date < minDate) return true
-            return false
-          }}
-          initialFocus
-        />
+      <PopoverContent
+        align="start"
+        side="bottom"
+        sideOffset={8}
+        avoidCollisions
+        collisionPadding={8}
+        className={cn(
+          // Responsive sizing per shadcn + DS: avoid desktop scrollbar, allow mobile scroll
+          "p-0 w-[min(92vw,360px)] md:w-[360px] max-h-[min(70vh,420px)] md:overflow-visible overflow-auto rounded-lg border mx-2 md:mx-0"
+        )}
+      >
+        <div className="p-2 w-full">
+          <Calendar
+            mode="single"
+            selected={value}
+            onSelect={handleSelect}
+            disabled={(date) => {
+              if (maxDate && date > maxDate) return true
+              if (minDate && date < minDate) return true
+              return false
+            }}
+            // Responsive cell size: larger tap targets on mobile
+            className="[--cell-size:2.75rem] md:[--cell-size:2.25rem]"
+            initialFocus
+          />
+        </div>
       </PopoverContent>
     </Popover>
   )

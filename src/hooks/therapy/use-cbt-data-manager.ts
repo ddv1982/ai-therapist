@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { logger } from '@/lib/utils/logger';
 import { 
@@ -201,6 +201,8 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   
 
   const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
+  const uiSavingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [isSavingUI, setIsSavingUI] = useState<boolean>(false);
   
   const debouncedAutoSave = useCallback((data: Partial<CBTFormInput>) => {
     if (autoSaveTimeout.current) {
@@ -239,6 +241,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       if (autoSaveTimeout.current) {
         clearTimeout(autoSaveTimeout.current);
       }
+      if (uiSavingTimeout.current) {
+        clearTimeout(uiSavingTimeout.current);
+      }
     };
   }, []);
 
@@ -265,6 +270,23 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     };
 
   }, [currentDraft, autoSaveDelay, dispatch]);
+
+  // UI-saving indicator: whenever session data changes, briefly show "saving" then "saved"
+  useEffect(() => {
+    if (!sessionData?.lastModified) return;
+    setIsSavingUI(true);
+    if (uiSavingTimeout.current) {
+      clearTimeout(uiSavingTimeout.current);
+    }
+    uiSavingTimeout.current = setTimeout(() => {
+      setIsSavingUI(false);
+    }, 700);
+    return () => {
+      if (uiSavingTimeout.current) {
+        clearTimeout(uiSavingTimeout.current);
+      }
+    };
+  }, [sessionData?.lastModified]);
   
   useEffect(() => {
     if (sessionId && sessionId !== sessionData?.sessionId) {
@@ -573,7 +595,8 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     
     return {
       isSubmitting: validationState?.isSubmitting || false,
-      isDraftSaved: !!lastAutoSave && (new Date().getTime() - new Date(lastAutoSave).getTime()) < 5000,
+      // Consider draft saved when no UI-saving is pending.
+      isDraftSaved: !isSavingUI,
       lastAutoSave: lastAutoSave || null,
       progress: {
         completedSteps,
@@ -581,7 +604,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         percentage: Math.round((completedSteps / totalSteps) * 100),
       },
     };
-  }, [validationState?.isSubmitting, lastAutoSave, sessionData]);
+  }, [validationState?.isSubmitting, lastAutoSave, sessionData, isSavingUI]);
   
   const chatIntegration = useMemo(() => ({
     sendToChat: async (message: string): Promise<boolean> => {

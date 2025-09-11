@@ -12,6 +12,7 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { ActionPlanData, EmotionData } from '@/types/therapy';
 // Removed chat bridge imports - individual data no longer sent during session
 import {useTranslations} from 'next-intl';
+import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
 // Remove local interfaces - use the ones from cbtSlice
 // export interface EmotionData {
@@ -184,6 +185,7 @@ export function ActionPlan({
       validationErrors={[]} // No validation error display
       onNext={handleNext}
       nextButtonText={t('actionPlan.nextToReflection')}
+      hideProgressBar={true}
       className={className}
     >
       <Card className="border-border bg-card">
@@ -238,7 +240,7 @@ export function ActionPlan({
             {t('actionPlan.futureActionTitle')}
           </h4>
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground">
+            <label className={therapeuticTypography.label}>
               {t('actionPlan.futureActionLabel')}
             </label>
             <Textarea
@@ -256,7 +258,7 @@ export function ActionPlan({
 
         {/* Helper Text */}
         <div className="text-center space-y-2">
-          <p className="text-sm text-muted-foreground">
+          <p className={therapeuticTypography.smallSecondary}>
             {t('actionPlan.successMessage')}
           </p>
           {overallImprovement > 0 && (

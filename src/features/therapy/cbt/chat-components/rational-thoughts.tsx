@@ -12,6 +12,7 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { RationalThoughtsData } from '@/types/therapy';
 // Removed CBTFormValidationError import - validation errors not displayed
 import {useTranslations} from 'next-intl';
+import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
 interface RationalThoughtsProps {
   onComplete: (data: RationalThoughtsData) => void;
@@ -145,14 +146,15 @@ export function RationalThoughts({
       isValid={isValid}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      nextButtonText={`${t('rational.next')}${validThoughtCount > 0 ? ` (${validThoughtCount} ${t('rational.countLabel')})` : ''}`}
+      nextButtonText={t('rational.next')}
       helpText={t('rational.help')}
+      hideProgressBar={true}
       className={className}
     >
       <div className="space-y-6">
           {/* Quick Thought Prompts */}
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">{t('rational.promptLabel')}</p>
+            <p className={therapeuticTypography.smallSecondary}>{t('rational.promptLabel')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {thoughtPrompts.slice(0, 4).map((prompt, index) => {
                 const isSelected = selectedPrompts[0] === prompt;
@@ -182,7 +184,7 @@ export function RationalThoughts({
               <Card key={index} className="p-4 bg-muted/30 border border-border/30">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-foreground">
+                    <h4 className={therapeuticTypography.label}>
                       Rational Thought {index + 1}
                     </h4>
                     {thoughtsData.rationalThoughts.length > 1 && (
@@ -215,7 +217,7 @@ export function RationalThoughts({
                     />
                   )}
                   
-                  <div className="flex justify-end text-sm text-muted-foreground">
+                  <div className={therapeuticTypography.smallSecondary}>
                     <span>{thoughtData.thought.length}/200</span>
                   </div>
                 </div>

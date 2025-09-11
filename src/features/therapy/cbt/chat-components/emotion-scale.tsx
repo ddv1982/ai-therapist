@@ -11,6 +11,7 @@ import { TherapySlider } from '@/components/ui/therapy-slider';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { EmotionData } from '@/types/therapy';
 import {useTranslations} from 'next-intl';
+import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
 // Remove local interface - use the one from cbtSlice
 // export interface EmotionData {
@@ -106,7 +107,7 @@ export function EmotionScale({
       isValid={hasSelectedEmotions}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      nextButtonText={`${t('emotions.next')}${selectedCount > 0 ? ` (${selectedCount} ${t('finalEmotions.emotions')})` : ''}`}
+      nextButtonText={t('emotions.next')}
       helpText={t('emotions.help')}
       hideProgressBar={true} // Parent page shows progress
       className={className}
@@ -151,9 +152,9 @@ export function EmotionScale({
                         {emotion.emoji}
                       </div>
                       <div>
-                        <h4 className="font-semibold text-sm text-foreground">{emotion.label}</h4>
+                        <h4 className={therapeuticTypography.label}>{emotion.label}</h4>
                         {isSelected && (
-                          <p className="text-sm text-muted-foreground">
+                          <p className={therapeuticTypography.smallSecondary}>
                             {value === 0 && "Not present"}
                             {value > 0 && value <= 2 && "Mild"}
                             {value > 2 && value <= 5 && "Moderate"} 

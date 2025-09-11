@@ -13,6 +13,7 @@ import type { ThoughtData } from '@/types/therapy';
 // Removed CBTFormValidationError import - validation errors not displayed
 // Removed chat bridge imports - individual data no longer sent during session
 import {useTranslations} from 'next-intl';
+import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
 // Remove local interface - use the one from cbtSlice
 // export interface ThoughtData {
@@ -178,13 +179,14 @@ export function ThoughtRecord({
       onNext={handleNext}
       nextButtonText={`${t('thoughts.next')}${validThoughtCount > 0 ? ` (${validThoughtCount} ${t('thoughts.countLabel')})` : ''}`}
       helpText={t('thoughts.help')}
+      hideProgressBar={true}
       className={className}
     >
 
       <div className="space-y-6">
         {/* Thought Prompts */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className={cn("flex items-center gap-2", therapeuticTypography.smallSecondary)}>
             <Lightbulb className="w-4 h-4" />
             <span>{t('thoughts.promptLabel')}</span>
           </div>
@@ -217,7 +219,7 @@ export function ThoughtRecord({
             <Card key={index} className="p-4 bg-muted/30 border border-border/30 w-full max-w-full overflow-hidden">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-base font-semibold text-foreground">
+                  <label className={cn("text-base font-semibold text-foreground", therapeuticTypography.label)}>
                     {t('thoughts.entryLabel')} {index + 1}
                   </label>
                   {thoughts.length > 1 && (

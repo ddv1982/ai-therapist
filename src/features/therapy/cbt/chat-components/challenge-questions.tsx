@@ -10,6 +10,8 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { ChallengeQuestionsData } from '@/types/therapy';
 // Removed CBTFormValidationError import - validation errors not displayed
 import {useTranslations} from 'next-intl';
+import { therapeuticTypography } from '@/lib/ui/design-tokens';
+import { cn } from '@/lib/utils/utils';
 
 interface ChallengeQuestionsProps {
   onComplete: (data: ChallengeQuestionsData) => void;
@@ -135,8 +137,9 @@ export function ChallengeQuestions({
       isValid={isValid}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      nextButtonText={`${t('challenge.next')}${answeredQuestions > 0 ? ` (${answeredQuestions} ${t('challenge.answeredLabel')})` : ''}`}
+      nextButtonText={t('challenge.next')}
       helpText={t('challenge.help')}
+      hideProgressBar={true}
       className={className}
     >
       <div className="space-y-6">
@@ -146,7 +149,7 @@ export function ChallengeQuestions({
               <Card key={index} className="p-4 bg-muted/30 border border-border/30">
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-sm font-semibold text-foreground flex-1">
+                    <h4 className={cn("flex-1", therapeuticTypography.label)}>
                       {questionData.question}
                     </h4>
                     {questionsData.challengeQuestions.length > 1 && (
@@ -169,7 +172,7 @@ export function ChallengeQuestions({
                     maxLength={300}
                   />
                   
-                  <div className="flex justify-end text-sm text-muted-foreground">
+                  <div className={cn("flex justify-end", therapeuticTypography.smallSecondary)}>
                     <span>{questionData.answer.length}/300</span>
                   </div>
                 </div>

@@ -345,13 +345,13 @@ export function CBTStepWrapper({
     if (!autoSave) return null;
     
     return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground autosave">
         {status.isDraftSaved ? (
           <>
             <Save className="w-3 h-3" />
             <span>{t('status.saved')}</span>
             {lastSaveTime && (
-              <span>{t('status.at', { time: lastSaveTime.toLocaleTimeString() })}</span>
+              <span className="hidden md:inline">{t('status.at', { time: lastSaveTime.toLocaleTimeString() })}</span>
             )}
           </>
         ) : (
@@ -368,45 +368,48 @@ export function CBTStepWrapper({
     if (hideNavigation) return null;
     
     return (
-      <div className="flex items-center justify-between pt-6 border-t border-border">
-        <div className="flex items-center gap-2">
-          {canGoPrevious && (
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={isProcessing}
-              className="flex items-center gap-2"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              {previousButtonText || t('nav.back')}
-            </Button>
-          )}
+      <div className="pt-6 border-t border-border sticky-footer">
+        <div className="flex items-center justify-between nav-container">
+          <div className="flex items-center gap-2 nav-left">
+            {canGoPrevious && (
+              <Button
+                variant="outline"
+                onClick={handlePrevious}
+                disabled={isProcessing}
+                className="flex items-center gap-2 h-12"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                {previousButtonText || t('nav.back')}
+              </Button>
+            )}
+            
+            {canSkip && (
+              <Button
+                variant="ghost"
+                onClick={handleSkip}
+                disabled={isProcessing}
+                className="text-muted-foreground h-12"
+              >
+                {t('nav.skip')}
+              </Button>
+            )}
+          </div>
           
-          {canSkip && (
-            <Button
-              variant="ghost"
-              onClick={handleSkip}
-              disabled={isProcessing}
-              className="text-muted-foreground"
-            >
-              {t('nav.skip')}
-            </Button>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {renderAutoSaveStatus()}
-          
-          {canGoNext && (
-            <Button
-              onClick={handleNext}
-              disabled={isProcessing || (!isStepValid && !allowPartialCompletion)}
-              className="flex items-center gap-2"
-            >
-              {nextButtonText || t('nav.next')}
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          )}
+          <div className="flex items-center gap-3 nav-right">
+            <div className="autosave flex items-center">
+              {renderAutoSaveStatus()}
+            </div>
+            {canGoNext && (
+              <Button
+                onClick={handleNext}
+                disabled={isProcessing || (!isStepValid && !allowPartialCompletion)}
+                className="flex items-center gap-2 h-12"
+              >
+                {nextButtonText || t('nav.next')}
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );

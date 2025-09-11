@@ -11,6 +11,7 @@ import { TherapySlider } from '@/components/ui/therapy-slider';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { EmotionData, ActionPlanData } from '@/types/therapy';
 import {useTranslations} from 'next-intl';
+import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
 interface FinalEmotionReflectionProps {
   onComplete?: (data: EmotionData) => void;
@@ -135,9 +136,9 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
                           {emotion.emoji}
                         </div>
                         <div>
-                          <h4 className="font-semibold text-sm text-foreground">{emotion.label}</h4>
+                          <h4 className={therapeuticTypography.label}>{emotion.label}</h4>
                           {isSelected && (
-                            <p className="text-sm text-muted-foreground">
+                            <p className={therapeuticTypography.smallSecondary}>
                               {value === 0 && t('emotionIntensity.none')}
                               {value > 0 && value <= 2 && t('emotionIntensity.mild')}
                               {value > 2 && value <= 5 && t('emotionIntensity.moderate')}

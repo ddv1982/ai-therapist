@@ -170,7 +170,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent 
         side="bottom" 
-        className="h-[90vh] overflow-y-auto"
+        className="h-[90vh] overflow-y-auto cbt-compact"
       >
         <SheetHeader className="space-y-4 pb-6">
           <div className="flex items-center gap-2">

@@ -11,6 +11,7 @@ import type { CoreBeliefData } from '@/types/therapy';
 // Removed chat bridge imports - individual data no longer sent during session
 import {useTranslations} from 'next-intl';
 import { cn } from '@/lib/utils/utils';
+import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
 // Remove local interface - use the one from cbtSlice
 // export interface CoreBeliefData {
@@ -119,12 +120,13 @@ export function CoreBelief({
       onNext={handleNext}
       nextButtonText={t('coreBelief.next')}
       helpText={t('coreBelief.help')}
+      hideProgressBar={true}
       className={className}
     >
       <div className="space-y-6">
           {/* Quick Belief Prompts */}
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">{t('coreBelief.promptLabel')}</p>
+            <p className={therapeuticTypography.smallSecondary}>{t('coreBelief.promptLabel')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {beliefPrompts.map((prompt, index) => {
                 const isSelected = selectedPrompt === prompt;
@@ -157,7 +159,7 @@ export function CoreBelief({
               className="min-h-[80px] resize-none"
               maxLength={500}
             />
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <div className={cn("flex items-center justify-between", therapeuticTypography.smallSecondary)}>
               <span>{beliefData.coreBeliefText.length < 3 ? t('coreBelief.moreDetails') : t('coreBelief.lookingGood')}</span>
               <span>{beliefData.coreBeliefText.length}/500</span>
             </div>

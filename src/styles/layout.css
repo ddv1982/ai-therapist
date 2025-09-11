@@ -22,6 +22,80 @@
   }
 }
 
+/* Compact CBT mode - scoped reductions for mobile cleanliness */
+.cbt-compact .bg-card {
+  box-shadow: none;
+}
+
+.cbt-compact .rounded-lg {
+  border-radius: 0.5rem; /* slightly smaller */
+}
+
+.cbt-compact .p-6 {
+  padding: 1rem; /* reduce inner padding */
+}
+
+.cbt-compact .space-y-4 > * + * {
+  margin-top: 0.5rem; /* tighter vertical rhythm */
+}
+
+.cbt-compact h1,
+.cbt-compact h2 {
+  font-size: 1.125rem; /* ~text-lg */
+}
+
+.cbt-compact .text-sm {
+  font-size: 0.8125rem; /* slightly smaller */
+}
+
+.cbt-compact .btn,
+.cbt-compact button {
+  height: 2.75rem; /* slightly shorter on mobile to save space */
+}
+
+.cbt-compact textarea {
+  min-height: 2.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* Sticky footer support */
+.cbt-compact .sticky-footer {
+  position: sticky;
+  bottom: 0;
+  background: color-mix(in oklch, var(--card) 85%, transparent);
+  padding-bottom: env(safe-area-inset-bottom);
+  backdrop-filter: saturate(120%) blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Prevent horizontal overflow in footer rows */
+.cbt-compact .sticky-footer .nav-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cbt-compact .sticky-footer .nav-left,
+.cbt-compact .sticky-footer .nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0; /* allow shrinking without overflow */
+}
+
+.cbt-compact .sticky-footer .autosave {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40vw;
+}
+
 /* Hover effects for desktop only */
 @media (hover: hover) {
   button:hover,
@@ -60,6 +134,17 @@ nav,
     overflow: hidden;
     position: relative;
   }
+}
+
+/* Fire Your Design Team: scroll behavior smoothing and anchor restoration */
+.scroll-container {
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain; /* prevent parent bounce */
+  -webkit-overflow-scrolling: touch; /* iOS momentum */
+}
+
+.scroll-container:focus {
+  outline: none;
 }
 
 /* Performance optimizations for high-DPI mobile */
