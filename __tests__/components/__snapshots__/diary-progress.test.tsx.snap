@@ -1,0 +1,73 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`DiaryProgress does not render on mobile 1`] = `<div />`;
+
+exports[`DiaryProgress renders desktop progress 1`] = `
+<div>
+  <div
+    class="border-b bg-muted/30"
+  >
+    <div
+      class="max-w-4xl mx-auto px-4 sm:px-6 py-3"
+    >
+      <div
+        class="flex items-center justify-between mb-2"
+      >
+        <span
+          class="text-sm font-semibold text-foreground"
+        >
+          Step 
+          4
+           of 
+          9
+        </span>
+        <span
+          class="text-sm text-muted-foreground"
+        >
+          44
+          % Complete
+        </span>
+      </div>
+      <div
+        class="w-full bg-muted rounded-full h-2"
+      >
+        <div
+          class="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
+          style="width: 44%;"
+        />
+      </div>
+      <div
+        class="flex justify-between mt-1 text-sm text-muted-foreground"
+      >
+        <span>
+          Situation
+        </span>
+        <span>
+          Emotions
+        </span>
+        <span>
+          Thoughts
+        </span>
+        <span>
+          Core Belief
+        </span>
+        <span>
+          Challenge
+        </span>
+        <span>
+          Rational
+        </span>
+        <span>
+          Schema
+        </span>
+        <span>
+          Actions
+        </span>
+        <span>
+          Final Emotions
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+`;

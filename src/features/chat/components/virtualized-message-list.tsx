@@ -229,6 +229,7 @@ export const VirtualizedMessageList = memo(VirtualizedMessageListComponent, (pre
     prevProps.messages.length === nextProps.messages.length &&
     prevProps.messages[prevProps.messages.length - 1]?.id === nextProps.messages[nextProps.messages.length - 1]?.id &&
     prevProps.messages[prevProps.messages.length - 1]?.content === nextProps.messages[nextProps.messages.length - 1]?.content &&
+    prevProps.messages[prevProps.messages.length - 1]?.metadata?.step === nextProps.messages[nextProps.messages.length - 1]?.metadata?.step &&
     prevProps.isStreaming === nextProps.isStreaming &&
     prevProps.isMobile === nextProps.isMobile &&
     prevProps.maxVisible === nextProps.maxVisible

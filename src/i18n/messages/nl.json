@@ -284,4 +284,14 @@
   "chat.empty.compassionDesc": "Ontvang empathische, niet-oordelende begeleiding op maat",
   "chat.empty.privateTitle": "Privé & veilig",
   "chat.empty.privateDesc": "Je gesprekken zijn vertrouwelijk en worden veilig opgeslagen"
+  ,
+  "cbt.ai.situationNext": "Dank je wel voor het delen van die situatie. Het begrijpen van de context is heel belangrijk voor CBT-werk.\n\nLaten we nu onderzoeken hoe deze situatie je emotioneel liet voelen.",
+  "cbt.ai.emotionsNext": "Deze gevoelens zijn begrijpelijk. Laten we nu bekijken welke gedachten er door je heen gingen.",
+  "cbt.ai.thoughtsNext": "Mooi werk met het verkennen van je gedachten. Laten we kijken naar de onderliggende kernopvattingen.",
+  "cbt.ai.coreBeliefNext": "Uitstekend inzicht. Laten we deze opvatting samen uitdagen.",
+  "cbt.ai.challengeNext": "Goed gedaan met het uitdagen van die gedachten. Laten we rationele alternatieven ontwikkelen.",
+  "cbt.ai.rationalNext": "Mooi werk met het ontwikkelen van evenwichtige gedachten. Laten we nu schema-modi verkennen.",
+  "cbt.ai.schemaNext": "Bedankt voor het identificeren van schema-modi. Laten we een actieplan maken.",
+  "cbt.ai.actionsNext": "Mooi plan. Als laatste stap: reflecteer alsjeblieft op hoe je je nu voelt.",
+  "cbt.ai.finalNext": "Prachtige reflectie. Je hebt je CBT-sessie voltooid."
 }

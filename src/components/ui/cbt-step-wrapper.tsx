@@ -50,6 +50,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import {useTranslations} from 'next-intl';
+import { getStepInfo, CBT_STEPS } from '@/features/therapy/cbt/utils/step-mapping';
 
 // =============================================================================
 // TYPES & INTERFACES
@@ -126,21 +127,7 @@ const STEP_COLORS: Record<CBTStepType, string> = {
   'complete': 'bg-accent/10 border-primary/30 text-foreground'
 };
 
-// =============================================================================
-// STEP ORDER CONFIGURATION
-// =============================================================================
-
-const STEP_ORDER: CBTStepType[] = [
-  'situation',
-  'emotions', 
-  'thoughts',
-  'core-belief',
-  'challenge-questions',
-  'rational-thoughts',
-  'schema-modes',
-  'final-emotions',
-  'actions'
-];
+// Step order and numbering are sourced from step-mapping to avoid DRY.
 
 // =============================================================================
 // MAIN COMPONENT
@@ -185,20 +172,33 @@ export function CBTStepWrapper({
   } = useCBTDataManager();
   
   const [isProcessing, setIsProcessing] = useState(false);
+  const [hasAdvanced, setHasAdvanced] = useState(false);
   const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
+
+  // Reset one-shot state when step changes
+  useEffect(() => {
+    setHasAdvanced(false);
+  }, [step]);
   
   // =============================================================================
   // COMPUTED VALUES
   // =============================================================================
   
-  const currentStepIndex = STEP_ORDER.indexOf(step);
-  const progressPercentage = showProgress ? ((currentStepIndex + 1) / STEP_ORDER.length) * 100 : 0;
+  const { stepNumber, totalSteps } = getStepInfo(step);
+  const progressPercentage = showProgress ? (stepNumber / totalSteps) * 100 : 0;
   
-  // Determine step validation state
-  const stepValidationErrors = propValidationErrors !== undefined ? propValidationErrors :
-    (customValidation ? customValidation() : []) ||
-    validation.errors[step] ? [{ field: step, message: validation.errors[step] }] : [];
-    
+  // Determine step validation state (avoid operator precedence pitfalls)
+  let stepValidationErrors: CBTFormValidationError[] = [];
+  if (propValidationErrors !== undefined) {
+    stepValidationErrors = propValidationErrors;
+  } else if (typeof customValidation === 'function') {
+    stepValidationErrors = customValidation() || [];
+  } else if (validation.errors[step]) {
+    stepValidationErrors = [{ field: step, message: validation.errors[step] }];
+  } else {
+    stepValidationErrors = [];
+  }
+   
   const isStepValid = propIsValid ?? (
     stepValidationErrors.length === 0 && 
     (allowPartialCompletion || validation.isFormValid)
@@ -216,13 +216,16 @@ export function CBTStepWrapper({
   // =============================================================================
   
   const handleNext = useCallback(async () => {
+    if (isProcessing || hasAdvanced) return;
     setIsProcessing(true);
     
     try {
       if (onNext) {
         await onNext();
+        setHasAdvanced(true);
       } else {
         navigation.goNext();
+        setHasAdvanced(true);
       }
     } catch (error) {
       logger.error('Error in CBT step navigation forward', {
@@ -233,7 +236,7 @@ export function CBTStepWrapper({
     } finally {
       setIsProcessing(false);
     }
-  }, [onNext, navigation, step]);
+  }, [onNext, navigation, step, isProcessing, hasAdvanced]);
   
   const handlePrevious = useCallback(async () => {
     setIsProcessing(true);
@@ -284,7 +287,7 @@ export function CBTStepWrapper({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-muted-foreground">
-            {t('progress.step', { current: currentStepIndex + 1, total: STEP_ORDER.length })}
+            {t('progress.step', { current: stepNumber, total: CBT_STEPS.length })}
           </span>
           <span className="text-sm text-muted-foreground">
             {t('progress.complete', { percent: Math.round(progressPercentage) })}
@@ -402,7 +405,7 @@ export function CBTStepWrapper({
             {canGoNext && (
               <Button
                 onClick={handleNext}
-                disabled={isProcessing || (!isStepValid && !allowPartialCompletion)}
+                disabled={isProcessing || hasAdvanced || (!isStepValid && !allowPartialCompletion)}
                 className="flex items-center gap-2 h-12"
               >
                 {nextButtonText || t('nav.next')}

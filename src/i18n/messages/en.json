@@ -286,4 +286,14 @@
   "cbt.slider.intLeft": "1 - Mild",
   "cbt.slider.intCenter": "5 - Moderate",
   "cbt.slider.intRight": "10 - Intense"
+  ,
+  "cbt.ai.situationNext": "Thank you for sharing that situation with me. Understanding the context is so important for CBT work.\n\nNow let's explore how this situation made you feel emotionally.",
+  "cbt.ai.emotionsNext": "These feelings are valid. Now let's examine what thoughts were running through your mind.",
+  "cbt.ai.thoughtsNext": "Great work exploring your thoughts. Let's consider the core beliefs underneath.",
+  "cbt.ai.coreBeliefNext": "Excellent insight. Now let's challenge this belief together.",
+  "cbt.ai.challengeNext": "Great work challenging those thoughts. Let's develop some rational alternatives.",
+  "cbt.ai.rationalNext": "Beautiful work developing balanced thoughts. Let's explore schema modes next.",
+  "cbt.ai.schemaNext": "Thanks for identifying schema modes. Let's create an action plan.",
+  "cbt.ai.actionsNext": "Great plan. As a final step, please reflect on how you feel now.",
+  "cbt.ai.finalNext": "Wonderful reflection. You've completed your CBT session."
 }

@@ -1,0 +1,112 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`DraftPanel renders with draft found 1`] = `
+<div>
+  <div
+    class="space-y-4"
+  >
+    <div
+      class="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
+    >
+      <div
+        class="flex items-center justify-between mb-2"
+      >
+        <div
+          class="flex items-center gap-2"
+        >
+          <h3
+            class="font-semibold"
+          >
+            📝 Previous Session Found
+          </h3>
+          <span
+            class="px-2 py-1 text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full"
+          >
+            status.saved
+          </span>
+        </div>
+        <button
+          aria-label="actions.deleteDraft"
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-muted hover:text-foreground h-12 w-12"
+          title="actions.deleteDraft"
+        >
+          <div
+            class="w-4 h-4"
+            data-testid="trash-icon"
+          />
+        </button>
+      </div>
+      <p
+        class="text-sm opacity-90"
+      >
+        draft.found
+      </p>
+      <p
+        class="text-sm opacity-75 mt-1"
+      >
+        draft.choice
+      </p>
+    </div>
+    <div
+      class="flex flex-col sm:flex-row gap-3 justify-center"
+    >
+      <button
+        class="inline-flex items-center whitespace-nowrap text-base font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 py-2 justify-center gap-3 h-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 group px-6"
+      >
+        <div
+          class="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"
+        >
+          <div
+            class="w-4 h-4"
+            data-testid="brain-icon"
+          />
+        </div>
+        <span
+          class="font-semibold"
+        >
+          actions.resume
+        </span>
+        <div
+          class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"
+          data-testid="sparkles-icon"
+        />
+      </button>
+      <button
+        class="inline-flex items-center gap-2 whitespace-nowrap text-base transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border-input bg-background shadow-sm py-2 justify-center h-12 rounded-xl border-2 hover:bg-accent hover:text-accent-foreground px-6 font-semibold"
+      >
+        actions.startNew
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`DraftPanel renders without draft (begin button) 1`] = `
+<div>
+  <div
+    class="flex justify-center"
+  >
+    <button
+      class="inline-flex items-center whitespace-nowrap text-base font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 py-2 justify-center gap-3 h-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 group px-8"
+    >
+      <div
+        class="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"
+      >
+        <div
+          class="w-4 h-4"
+          data-testid="brain-icon"
+        />
+      </div>
+      <span
+        class="font-semibold"
+      >
+        actions.begin
+      </span>
+      <div
+        class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"
+        data-testid="sparkles-icon"
+      />
+    </button>
+  </div>
+</div>
+`;

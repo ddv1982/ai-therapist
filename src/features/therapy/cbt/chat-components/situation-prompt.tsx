@@ -4,12 +4,12 @@ import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
-import { Calendar, MapPin, ChevronRight } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { SituationData } from '@/types/therapy';
 import {useTranslations} from 'next-intl';
+import CBTStepWrapper from '@/components/ui/cbt-step-wrapper';
 
 interface SituationPromptProps {
   onComplete?: (data: SituationData) => void;
@@ -97,22 +97,14 @@ export function SituationPrompt({
   const charCount = currentSituation.length;
 
   return (
-    <Card className={cn("bg-card rounded-lg p-6 shadow-sm", className)}>
-      {/* Step Header */}
-      <div className="mb-3 p-3 rounded border bg-muted/50 border-border/50 text-foreground">
-        <div className="flex items-center gap-3 mb-2">
-          <MapPin className="w-6 h-6 flex-shrink-0" />
-          <div className="flex-1">
-            <h2 className="text-xl font-semibold">{t('situation.title')}</h2>
-            <p className="text-sm opacity-80 mt-1">{t('situation.subtitle')}</p>
-          </div>
-        </div>
-        <p className="text-sm opacity-70 mt-2">
-          {t('situation.helper')}
-        </p>
-      </div>
-
-      {/* Content */}
+    <CBTStepWrapper.Situation
+      onNext={handleNext}
+      isValid={isValid}
+      nextButtonText={t('situation.next')}
+      hideProgressBar={true}
+      helpText={t('situation.helper')}
+      className={className}
+    >
       <div className="space-y-6">
         {/* Date Selection */}
         <div className="flex items-center gap-3">
@@ -172,18 +164,6 @@ export function SituationPrompt({
           </div>
         </div>
       </div>
-
-      {/* Navigation */}
-      <div className="flex items-center justify-end pt-6 border-t border-border mt-6">
-        <Button
-          onClick={handleNext}
-          disabled={!isValid}
-          className="flex items-center gap-2"
-        >
-          {t('situation.next')}
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-      </div>
-    </Card>
+    </CBTStepWrapper.Situation>
   );
 }
