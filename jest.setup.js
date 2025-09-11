@@ -94,6 +94,37 @@ jest.mock('@ai-sdk/react', () => ({
 }))
 
 // ReactMarkdown and remark-gfm no longer used - removed from dependencies
+// Mock Streamdown to avoid ESM transform issues and keep tests fast
+jest.mock('streamdown', () => {
+  const React = require('react');
+  function SimpleMarkdown({ children, className }) {
+    if (!children) return null;
+    const text = String(children);
+    // Very lightweight markdown handling for tests:
+    // - Strip **bold** markers
+    // - Convert simple lists starting with '- '
+    // - Split paragraphs by double newlines
+    const stripped = text.replace(/\*\*(.*?)\*\*/g, '$1');
+    const blocks = stripped.split(/\n\n+/);
+    const elements = [];
+    for (const block of blocks) {
+      const lines = block.split(/\n/);
+      if (lines.every(l => l.trim().startsWith('- '))) {
+        elements.push(
+          React.createElement(
+            'ul',
+            { key: `ul-${elements.length}` },
+            lines.map((l, i) => React.createElement('li', { key: `li-${i}` }, l.trim().slice(2)))
+          )
+        );
+      } else {
+        elements.push(React.createElement('p', { key: `p-${elements.length}` }, block.replace(/\n/g, ' ')));
+      }
+    }
+    return React.createElement('div', { className }, elements);
+  }
+  return { Streamdown: SimpleMarkdown };
+});
 
 // Mock crypto for testing with realistic behavior
 Object.defineProperty(global, 'crypto', {

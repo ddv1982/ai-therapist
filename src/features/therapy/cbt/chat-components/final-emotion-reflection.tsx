@@ -42,13 +42,13 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
   const [showCustom, setShowCustom] = useState(Boolean(localFinal.other));
 
   const coreEmotions = [
-    { key: 'fear', label: 'Fear', emoji: '😨', color: 'bg-slate-600' },
-    { key: 'anger', label: 'Anger', emoji: '😠', color: 'bg-red-600' },
-    { key: 'sadness', label: 'Sadness', emoji: '😢', color: 'bg-blue-600' },
-    { key: 'joy', label: 'Joy', emoji: '😊', color: 'bg-yellow-500' },
-    { key: 'anxiety', label: 'Anxiety', emoji: '😰', color: 'bg-orange-500' },
-    { key: 'shame', label: 'Shame', emoji: '😳', color: 'bg-pink-600' },
-    { key: 'guilt', label: 'Guilt', emoji: '😔', color: 'bg-indigo-600' }
+    { key: 'fear', label: 'Fear', emoji: '😨', color: 'bg-emotion-fear' },
+    { key: 'anger', label: 'Anger', emoji: '😠', color: 'bg-emotion-anger' },
+    { key: 'sadness', label: 'Sadness', emoji: '😢', color: 'bg-emotion-sadness' },
+    { key: 'joy', label: 'Joy', emoji: '😊', color: 'bg-emotion-joy' },
+    { key: 'anxiety', label: 'Anxiety', emoji: '😰', color: 'bg-emotion-anxiety' },
+    { key: 'shame', label: 'Shame', emoji: '😳', color: 'bg-emotion-shame' },
+    { key: 'guilt', label: 'Guilt', emoji: '😔', color: 'bg-emotion-guilt' }
   ];
 
   const handleEmotionChange = useCallback((key: keyof EmotionData, value: number) => {
@@ -102,7 +102,7 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
       isValid={hasSelectedEmotions}
       validationErrors={[]}
       onNext={handleNext}
-      nextButtonText={`${t('actions.sendToChat')}${selectedCount > 0 ? ` (${selectedCount} ${t('finalEmotions.emotions')})` : ''}`}
+      nextButtonText={t('actions.sendToChat')}
       hideProgressBar={true}
       className={className}
     >

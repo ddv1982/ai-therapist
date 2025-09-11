@@ -102,19 +102,14 @@ export function useCbtDiaryFlow(): UseCbtDiaryFlowReturn {
       metadata: { step, stepNumber, totalSteps, sessionData: cbtSessionData }
     } as MessageData;
 
-    const raf = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
-      ? window.requestAnimationFrame
-      : ((cb: FrameRequestCallback) => setTimeout(() => cb(performance.now()), 0) as unknown as number);
-
-    (raf as unknown as (cb: FrameRequestCallback) => void)(() => {
-      setMessages(prev => {
-        const alreadyPresent = prev.some(m => m.metadata?.step === step);
-        if (alreadyPresent) return prev;
-        lastInsertedStepRef.current = step;
-        return [...prev, nextComponent];
-      });
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 0);
+    // Synchronously append for deterministic test behavior and simpler UI updates
+    setMessages(prev => {
+      const alreadyPresent = prev.some(m => m.metadata?.step === step);
+      if (alreadyPresent) return prev;
+      lastInsertedStepRef.current = step;
+      return [...prev, nextComponent];
     });
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 0);
   }, [cbtSessionData]);
 
   // Ensure current step component exists (works for resume/drafts)

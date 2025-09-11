@@ -3,12 +3,10 @@
  */
 
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { cn } from '@/lib/utils/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/design-system/message';
-import { StreamingTableBuffer } from '@/components/ui/streaming-table-buffer';
+import { Markdown } from '@/components/ui/markdown';
 import { logger } from '@/lib/utils/logger';
-import type { RootState } from '@/store';
 
 interface MessageContentProps {
   content: string;
@@ -35,14 +33,6 @@ function detectCBTSessionReport(content: string): boolean {
 }
 
 export function MessageContent({ content, role, messageId, className }: MessageContentProps) {
-  // Get streaming state from Redux
-  const isStreaming = useSelector((state: RootState) => state.chat?.isStreaming || false);
-  const streamingMessageId = useSelector((state: RootState) => state.chat?.streamingMessageId);
-  // Session id not needed in this component currently
-  
-  // Determine if this specific message is currently streaming
-  const isThisMessageStreaming = isStreaming && streamingMessageId === messageId;
-  
   // Check if this is a CBT session report message
   const isCBTReport = role === 'assistant' && detectCBTSessionReport(content);
   
@@ -58,11 +48,9 @@ export function MessageContent({ content, role, messageId, className }: MessageC
   
   return (
     <div className={cn(bubbleClasses, contentClasses, 'therapeutic-content', className)}>
-      <StreamingTableBuffer
-        content={content}
-        isStreaming={isThisMessageStreaming}
-        isUser={role === 'user'}
-      />
+      <Markdown isUser={role === 'user'}>
+        {content}
+      </Markdown>
     </div>
   );
 }

@@ -35,7 +35,6 @@ import {
   ChevronRight, 
   CheckCircle, 
   AlertCircle, 
-  Save, 
   Clock,
   Brain,
   Heart,
@@ -173,7 +172,6 @@ export function CBTStepWrapper({
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasAdvanced, setHasAdvanced] = useState(false);
-  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
 
   // Reset one-shot state when step changes
   useEffect(() => {
@@ -267,14 +265,8 @@ export function CBTStepWrapper({
   }, [onSkip, navigation]);
   
   // =============================================================================
-  // AUTO-SAVE EFFECT
+  // AUTO-SAVE EFFECT (visual handled in render; no timestamp tracking)
   // =============================================================================
-  
-  useEffect(() => {
-    if (autoSave && status.isDraftSaved) {
-      setLastSaveTime(new Date());
-    }
-  }, [autoSave, status.isDraftSaved]);
   
   // =============================================================================
   // RENDER HELPERS
@@ -348,20 +340,17 @@ export function CBTStepWrapper({
     if (!autoSave) return null;
     
     return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground autosave">
+      <div className="flex items-center gap-2 autosave">
         {status.isDraftSaved ? (
-          <>
-            <Save className="w-3 h-3" />
+          <div className="flex items-center gap-2 text-xs px-2 py-1 rounded-md bg-green-50 text-green-700 ring-1 ring-green-600/10 dark:bg-green-900/20 dark:text-green-400 dark:ring-green-500/20">
+            <span className="w-2 h-2 rounded-full bg-green-500"></span>
             <span>{t('status.saved')}</span>
-            {lastSaveTime && (
-              <span className="hidden md:inline">{t('status.at', { time: lastSaveTime.toLocaleTimeString() })}</span>
-            )}
-          </>
+          </div>
         ) : (
-          <>
-            <Clock className="w-3 h-3 animate-pulse" />
+          <div className="flex items-center gap-2 text-xs px-2 py-1 rounded-md bg-muted/40 text-muted-foreground">
+            <Clock className="w-3 h-3" />
             <span>{t('status.saving')}</span>
-          </>
+          </div>
         )}
       </div>
     );

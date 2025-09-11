@@ -52,20 +52,21 @@ export function ChatHeader({
           </Button> 
         </div>
         <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
-          {hasActiveSession && hasMessages && (
+          {hasActiveSession && (
             <Button
               variant="ghost"
               size="sm"
               onClick={onGenerateReport}
-              disabled={isGeneratingReport}
-              className={getIconButtonSize('large')}
+              // Avoid disabled to keep spinner fully opaque; block clicks via pointer-events
+              className={`${getIconButtonSize('large')} ${isGeneratingReport ? 'pointer-events-none' : ''} text-foreground`}
+              aria-disabled={isGeneratingReport}
               style={{ WebkitTapHighlightColor: 'transparent' }}
               title={t('main.generateReport')}
             >
-                {isGeneratingReport ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin relative z-10" />
+              {isGeneratingReport ? (
+                <div className="w-4 h-4 border-2 border-black dark:border-white border-t-transparent rounded-full animate-spin relative z-10 opacity-100" />
               ) : (
-                <FileText className="w-4 h-4 relative z-10" />
+                <FileText className="w-4 h-4 relative z-10 text-foreground" />
               )}
             </Button>
           )}

@@ -50,15 +50,26 @@ export function EmotionScale({
   );
   const [showCustom, setShowCustom] = useState(Boolean(currentEmotions.other));
 
-  // Core emotions with visual styling using design system colors
+  // Emotion color mapping using DS tokens; balanced, accessible hues
+  const emotionColor: Record<string, string> = {
+    joy: 'bg-emotion-joy',
+    fear: 'bg-emotion-fear',
+    anger: 'bg-emotion-anger',
+    sadness: 'bg-emotion-sadness',
+    anxiety: 'bg-emotion-anxiety',
+    shame: 'bg-emotion-shame',
+    guilt: 'bg-emotion-guilt',
+  };
+
+  // Core emotions with visual styling using emotionColor mapping
   const coreEmotions = [
-    { key: 'fear', label: 'Fear', emoji: '😨', color: 'bg-muted-foreground' },
-    { key: 'anger', label: 'Anger', emoji: '😠', color: 'bg-muted-foreground' },
-    { key: 'sadness', label: 'Sadness', emoji: '😢', color: 'bg-muted-foreground' },
-    { key: 'joy', label: 'Joy', emoji: '😊', color: 'bg-primary' },
-    { key: 'anxiety', label: 'Anxiety', emoji: '😰', color: 'bg-muted-foreground' },
-    { key: 'shame', label: 'Shame', emoji: '😳', color: 'bg-muted-foreground' },
-    { key: 'guilt', label: 'Guilt', emoji: '😔', color: 'bg-muted-foreground' }
+    { key: 'fear', label: 'Fear', emoji: '😨', color: emotionColor.fear || 'bg-muted-foreground' },
+    { key: 'anger', label: 'Anger', emoji: '😠', color: emotionColor.anger || 'bg-muted-foreground' },
+    { key: 'sadness', label: 'Sadness', emoji: '😢', color: emotionColor.sadness || 'bg-muted-foreground' },
+    { key: 'joy', label: 'Joy', emoji: '😊', color: emotionColor.joy || 'bg-primary' },
+    { key: 'anxiety', label: 'Anxiety', emoji: '😰', color: emotionColor.anxiety || 'bg-muted-foreground' },
+    { key: 'shame', label: 'Shame', emoji: '😳', color: emotionColor.shame || 'bg-muted-foreground' },
+    { key: 'guilt', label: 'Guilt', emoji: '😔', color: emotionColor.guilt || 'bg-muted-foreground' }
   ];
 
   // Validation logic - keeps form functional without showing error messages

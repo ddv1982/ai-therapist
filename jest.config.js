@@ -39,7 +39,7 @@ const customJestConfig = {
     '^next-intl$': '<rootDir>/__tests__/__mocks__/next-intl.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(jspdf|canvas|@ai-sdk|ai))'
+    'node_modules/(?!(jspdf|canvas|@ai-sdk|ai|streamdown|react-markdown|remark-gfm|vfile|unist-util-.*|bail|is-plain-obj))'
   ],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   globals: {

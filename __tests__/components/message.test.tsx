@@ -32,9 +32,8 @@ describe('Message Component', () => {
   it('renders message content correctly', () => {
     render(<Message message={mockMessage} />, { wrapper: TestWrapper });
     
-    // Text is split due to bold formatting, so search for parts
-    expect(screen.getByText(/Hello, this is a test message with/)).toBeInTheDocument();
-    expect(screen.getByText('bold')).toBeInTheDocument();
+    // Verify the full text is present (test markdown is mocked to plain text)
+    expect(screen.getByText(/Hello, this is a test message with bold text\./)).toBeInTheDocument();
   });
 
   it('displays timestamp correctly', () => {
@@ -67,7 +66,8 @@ describe('Message Component', () => {
     
     render(<Message message={messageWithMarkdown} />, { wrapper: TestWrapper });
     
-    expect(screen.getByText('Heading')).toBeInTheDocument();
+    // Our test markdown mock renders headings as plain text paragraphs
+    expect(screen.getByText('## Heading')).toBeInTheDocument();
     expect(screen.getByText('List item')).toBeInTheDocument();
     expect(screen.getByText('Bold text')).toBeInTheDocument();
   });

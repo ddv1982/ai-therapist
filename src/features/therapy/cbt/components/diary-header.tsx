@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ChevronRight, Brain } from 'lucide-react';
+import { ArrowLeft, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
 import {useTranslations} from 'next-intl';
 import { getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
@@ -52,21 +52,6 @@ export function DiaryHeader({ isMobile, isCBTActive, cbtCurrentStep, onBack }: D
   return (
     <div className="border-b bg-card/50 backdrop-blur-md sticky top-0 z-10">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-          <button onClick={onBack} className="hover:text-foreground transition-colors">
-            {t('nav.chat')}
-          </button>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-foreground font-semibold">{t('nav.session')}</span>
-          {isCBTActive && cbtCurrentStep !== 'complete' && (
-            <>
-              <ChevronRight className="w-4 h-4" />
-              <span className="text-primary capitalize">
-                Step {getStepInfo(cbtCurrentStep).stepNumber} of {getStepInfo(cbtCurrentStep).totalSteps}: {cbtCurrentStep.replace('-', ' ')}
-              </span>
-            </>
-          )}
-        </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
@@ -85,12 +70,12 @@ export function DiaryHeader({ isMobile, isCBTActive, cbtCurrentStep, onBack }: D
               <div>
                 <h1 className="text-3xl font-semibold">
                   Interactive CBT Session
-                  {isCBTActive && cbtCurrentStep !== 'complete' && (
-                    <span className="ml-3 text-base text-primary font-normal">
-                      (Step {getStepInfo(cbtCurrentStep).stepNumber} of {getStepInfo(cbtCurrentStep).totalSteps})
-                    </span>
-                  )}
                 </h1>
+                {isCBTActive && cbtCurrentStep !== 'complete' && (
+                  <p className="text-sm text-muted-foreground capitalize mt-1">
+                    {cbtCurrentStep.replace('-', ' ')}
+                  </p>
+                )}
               </div>
             </div>
           </div>

@@ -43,6 +43,15 @@ const config = {
           warning: "oklch(var(--therapy-warning))",
           info: "oklch(var(--therapy-info))",
         },
+        emotion: {
+          fear: "oklch(var(--emotion-fear))",
+          anger: "oklch(var(--emotion-anger))",
+          sadness: "oklch(var(--emotion-sadness))",
+          joy: "oklch(var(--emotion-joy))",
+          anxiety: "oklch(var(--emotion-anxiety))",
+          shame: "oklch(var(--emotion-shame))",
+          guilt: "oklch(var(--emotion-guilt))",
+        },
       },
       /* Simplified border radius following 8pt grid */
       borderRadius: {

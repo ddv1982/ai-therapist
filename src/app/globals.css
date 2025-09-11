@@ -1,5 +1,7 @@
 /* Tailwind v4 - Single import for all utilities */
 @import "tailwindcss";
+@source "../../node_modules/streamdown/dist/index.js";
+@import "katex/dist/katex.min.css";
 
 /* Theme registration using @theme directive - Tailwind v4 approach */
 @theme {
@@ -28,6 +30,15 @@
   --color-therapy-success: var(--therapy-success);
   --color-therapy-warning: var(--therapy-warning);
   --color-therapy-info: var(--therapy-info);
+
+  /* Emotion colors */
+  --color-emotion-fear: var(--emotion-fear);
+  --color-emotion-anger: var(--emotion-anger);
+  --color-emotion-sadness: var(--emotion-sadness);
+  --color-emotion-joy: var(--emotion-joy);
+  --color-emotion-anxiety: var(--emotion-anxiety);
+  --color-emotion-shame: var(--emotion-shame);
+  --color-emotion-guilt: var(--emotion-guilt);
 }
 
 /* Essential CSS modules - Fire Your Design Team approach */

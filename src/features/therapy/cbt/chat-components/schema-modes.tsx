@@ -198,12 +198,12 @@ export function SchemaModes({
         {selectedModes.length > 0 && (
           <p className="text-sm text-primary/70 font-semibold">{selectedModes.length} {t('schema.selected')}</p>
         )}
-        <div className={`flex items-center gap-1 text-sm px-2 py-1 rounded transition-all duration-300 ${
-          isDraftSaved 
-            ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
+        <div className={`flex items-center gap-2 text-xs px-2 py-1 rounded-md transition-all duration-200 ${
+          isDraftSaved
+            ? 'bg-green-50 text-green-700 ring-1 ring-green-600/10 dark:bg-green-900/20 dark:text-green-400 dark:ring-green-500/20 opacity-100 scale-100'
             : 'opacity-0 scale-95'
         }`}>
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="w-2 h-2 rounded-full bg-green-500"></span>
           {t('status.saved')}
         </div>
       </div>

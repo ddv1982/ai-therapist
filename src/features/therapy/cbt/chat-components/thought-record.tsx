@@ -160,7 +160,6 @@ export function ThoughtRecord({
   }, [thoughts, thoughtActions, validateThoughts, onComplete]);
 
   const hasValidThoughts = thoughts.some(t => t.thought.trim().length >= 3);
-  const validThoughtCount = thoughts.filter(t => t.thought.trim().length >= 3).length;
 
   // Validation logic - keeps form functional without showing error messages
 
@@ -177,7 +176,7 @@ export function ThoughtRecord({
       isValid={hasValidThoughts}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      nextButtonText={`${t('thoughts.next')}${validThoughtCount > 0 ? ` (${validThoughtCount} ${t('thoughts.countLabel')})` : ''}`}
+      nextButtonText={t('thoughts.next')}
       helpText={t('thoughts.help')}
       hideProgressBar={true}
       className={className}

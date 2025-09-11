@@ -36,6 +36,15 @@
   --therapy-warning: oklch(0.75 0.15 85);
   --therapy-info: oklch(0.7 0.15 237);
 
+  /* Emotion color variables (light) */
+  --emotion-fear: oklch(0.7 0.12 200);
+  --emotion-anger: oklch(0.62 0.24 25);
+  --emotion-sadness: oklch(0.6 0.12 255);
+  --emotion-joy: oklch(0.85 0.15 95);
+  --emotion-anxiety: oklch(0.75 0.14 80);
+  --emotion-shame: oklch(0.7 0.16 350);
+  --emotion-guilt: oklch(0.65 0.14 285);
+
   /* Component-specific variables */
   --sidebar-background: oklch(0.98 0.01 247);
   --modal-backdrop: oklch(0.25 0.02 258 / 0.8);
@@ -87,6 +96,15 @@
   --therapy-success: oklch(0.7 0.12 142);
   --therapy-warning: oklch(0.8 0.12 85);
   --therapy-info: oklch(0.75 0.12 237);
+
+  /* Emotion color variables (dark) */
+  --emotion-fear: oklch(0.7 0.12 200);
+  --emotion-anger: oklch(0.7 0.2 25);
+  --emotion-sadness: oklch(0.7 0.12 255);
+  --emotion-joy: oklch(0.8 0.16 95);
+  --emotion-anxiety: oklch(0.78 0.14 80);
+  --emotion-shame: oklch(0.78 0.16 350);
+  --emotion-guilt: oklch(0.7 0.14 285);
 
   /* Dark component variables */
   --sidebar-background: oklch(0.13 0.02 258);
