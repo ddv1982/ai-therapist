@@ -1,119 +1,124 @@
-@layer base {
-  :root {
-    /* Light theme variables */
-    --background: 0 0% 100%;
-    --foreground: 222 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 84% 4.9%;
-    --primary: 211 96% 48%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 152 60% 42%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 211 96% 48%;
-    --radius: 0.75rem;
+:root {
+  /* Light theme variables in OKLCH format for better accessibility */
+  /* 60% - Neutral backgrounds */
+  --background: oklch(1 0 0);
+  --card: oklch(1 0 0);
+  --popover: oklch(1 0 0);
+  --secondary: oklch(0.96 0.01 247);
+  --muted: oklch(0.96 0.01 247);
+  
+  /* 30% - Complementary text and UI */
+  --foreground: oklch(0.145 0.045 258);
+  --card-foreground: oklch(0.145 0.045 258);
+  --popover-foreground: oklch(0.145 0.045 258);
+  --secondary-foreground: oklch(0.25 0.02 258);
+  --muted-foreground: oklch(0.5 0.01 258);
+  --border: oklch(0.91 0.01 247);
+  --input: oklch(0.91 0.01 247);
+  
+  /* 10% - Accent colors for CTAs and highlights */
+  --primary: oklch(0.6 0.19 237);
+  --primary-foreground: oklch(0.98 0.01 247);
+  --accent: oklch(0.55 0.15 152);
+  --accent-foreground: oklch(0.98 0.01 247);
+  --destructive: oklch(0.62 0.24 25);
+  --destructive-foreground: oklch(0.98 0.01 247);
+  --ring: oklch(0.6 0.19 237);
+  --radius: 0.75rem;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(211deg 96% 48%) 0%, hsl(217deg 91% 54%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(152deg 60% 42%) 0%, hsl(162deg 63% 46%) 100%);
-    --gradient-muted: linear-gradient(135deg, hsl(210deg 40% 96%) 0%, hsl(214deg 32% 91%) 100%);
+  /* Simplified gradients using OKLCH */
+  --gradient-primary: linear-gradient(135deg, oklch(0.6 0.19 237) 0%, oklch(0.65 0.18 245) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.55 0.15 152) 0%, oklch(0.6 0.15 162) 100%);
+  --gradient-muted: linear-gradient(135deg, oklch(0.96 0.01 247) 0%, oklch(0.91 0.01 247) 100%);
 
-    /* Therapeutic colors */
-    --therapy-success: 147 45% 55%;
-    --therapy-warning: 38 92% 50%;
-    --therapy-info: 210 85% 60%;
-    --therapy-calm: 206 100% 50%;
-    --therapy-warm: 25 95% 53%;
+  /* Reduced therapeutic colors (following 10% accent rule) */
+  --therapy-success: oklch(0.65 0.15 142);
+  --therapy-warning: oklch(0.75 0.15 85);
+  --therapy-info: oklch(0.7 0.15 237);
 
-    /* Component-specific variables */
-    --sidebar-background: hsl(210deg 40% 98%);
-    --modal-backdrop: 222 47% 11% / 0.8;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 5%);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -2px rgb(0 0 0 / 10%);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -4px rgb(0 0 0 / 10%);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 10%), 0 8px 10px -6px rgb(0 0 0 / 10%);
+  /* Component-specific variables */
+  --sidebar-background: oklch(0.98 0.01 247);
+  --modal-backdrop: oklch(0.25 0.02 258 / 0.8);
+  
+  /* Shadows using 8pt grid system */
+  --shadow-sm: 0 2px 4px 0 oklch(0.145 0.045 258 / 5%);
+  --shadow-md: 0 8px 16px -4px oklch(0.145 0.045 258 / 10%);
+  --shadow-lg: 0 16px 24px -8px oklch(0.145 0.045 258 / 10%);
+  --shadow-xl: 0 24px 32px -8px oklch(0.145 0.045 258 / 10%);
 
-    /* Typography variables */
-    --line-height-relaxed: 1.6;
-    --line-height-normal: 1.5;
-    --line-height-tight: 1.4;
-  }
-
-  .dark {
-    /* Dark theme variables */
-    --background: 222 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 85% 60%;
-    --primary-foreground: 222 84% 4.9%;
-    --secondary: 217 32% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 32% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 147 45% 55%;
-    --accent-foreground: 222 84% 4.9%;
-    --destructive: 0 75% 65%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 32% 17%;
-    --input: 217 32% 17%;
-    --ring: 210 85% 60%;
-
-    /* Dark gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210deg 85% 60%) 0%, hsl(220deg 85% 65%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(147deg 45% 55%) 0%, hsl(157deg 45% 60%) 100%);
-    --gradient-muted: linear-gradient(135deg, hsl(217deg 32% 17%) 0%, hsl(217deg 32% 20%) 100%);
-
-    /* Dark therapeutic colors */
-    --therapy-success: 147 50% 60%;
-    --therapy-warning: 38 95% 60%;
-    --therapy-info: 210 90% 65%;
-    --therapy-calm: 206 100% 60%;
-    --therapy-warm: 25 95% 63%;
-
-    /* Dark component variables */
-    --sidebar-background: hsl(222deg 84% 4.9%);
-    --modal-backdrop: 0 0% 0% / 0.9;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 30%);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 30%), 0 2px 4px -2px rgb(0 0 0 / 30%);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 30%), 0 4px 6px -4px rgb(0 0 0 / 30%);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 30%), 0 8px 10px -6px rgb(0 0 0 / 30%);
-  }
+  /* Typography variables (simplified) */
+  --line-height-relaxed: 1.6;
+  --line-height-normal: 1.5;
 }
 
-@layer base {
-  * {
-    border-color: hsl(var(--border));
-  }
+.dark {
+  /* Dark theme variables in OKLCH format */
+  /* 60% - Dark neutral backgrounds */
+  --background: oklch(0.13 0.02 258);
+  --card: oklch(0.13 0.02 258);
+  --popover: oklch(0.13 0.02 258);
+  --secondary: oklch(0.2 0.015 258);
+  --muted: oklch(0.2 0.015 258);
+  
+  /* 30% - Light text and UI for contrast */
+  --foreground: oklch(0.98 0.01 247);
+  --card-foreground: oklch(0.98 0.01 247);
+  --popover-foreground: oklch(0.98 0.01 247);
+  --secondary-foreground: oklch(0.98 0.01 247);
+  --muted-foreground: oklch(0.7 0.01 258);
+  --border: oklch(0.2 0.015 258);
+  --input: oklch(0.2 0.015 258);
+  
+  /* 10% - Accent colors for dark mode */
+  --primary: oklch(0.7 0.15 237);
+  --primary-foreground: oklch(0.13 0.02 258);
+  --accent: oklch(0.65 0.12 152);
+  --accent-foreground: oklch(0.13 0.02 258);
+  --destructive: oklch(0.7 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 247);
+  --ring: oklch(0.7 0.15 237);
 
-  html {
-    scroll-behavior: smooth;
-    height: 100%;
-    overflow: hidden;
-  }
+  /* Simplified dark gradients */
+  --gradient-primary: linear-gradient(135deg, oklch(0.7 0.15 237) 0%, oklch(0.75 0.14 245) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.65 0.12 152) 0%, oklch(0.7 0.12 162) 100%);
+  --gradient-muted: linear-gradient(135deg, oklch(0.2 0.015 258) 0%, oklch(0.22 0.015 258) 100%);
 
-  body {
-    @apply bg-background text-foreground font-sans;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    height: 100%;
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
+  /* Reduced dark therapeutic colors */
+  --therapy-success: oklch(0.7 0.12 142);
+  --therapy-warning: oklch(0.8 0.12 85);
+  --therapy-info: oklch(0.75 0.12 237);
+
+  /* Dark component variables */
+  --sidebar-background: oklch(0.13 0.02 258);
+  --modal-backdrop: oklch(0.05 0.01 258 / 0.9);
+  
+  /* Dark shadows using 8pt grid */
+  --shadow-sm: 0 2px 4px 0 oklch(0.05 0.01 258 / 30%);
+  --shadow-md: 0 8px 16px -4px oklch(0.05 0.01 258 / 30%);
+  --shadow-lg: 0 16px 24px -8px oklch(0.05 0.01 258 / 30%);
+  --shadow-xl: 0 24px 32px -8px oklch(0.05 0.01 258 / 30%);
+}
+
+/* Base styles without @layer (Tailwind v4 approach) */
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+  height: 100%;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  height: 100%;
+  width: 100%;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }

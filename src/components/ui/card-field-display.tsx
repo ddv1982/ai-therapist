@@ -37,15 +37,15 @@ export function CardFieldDisplay({
   const variantStyles = {
     primary: 'text-base font-semibold text-foreground',
     secondary: 'text-sm text-muted-foreground',
-    badge: 'text-xs',
-    status: 'text-sm font-medium'
+    badge: 'text-sm',
+    status: 'text-sm font-semibold'
   };
 
   const labelStyles = {
-    primary: 'text-sm font-medium text-muted-foreground mb-1',
-    secondary: 'text-xs text-muted-foreground/80',
-    badge: 'text-xs text-muted-foreground/80',
-    status: 'text-xs text-muted-foreground/80 mb-1'
+    primary: 'text-sm font-semibold text-muted-foreground mb-1',
+    secondary: 'text-sm text-muted-foreground/80',
+    badge: 'text-sm text-muted-foreground/80',
+    status: 'text-sm text-muted-foreground/80 mb-1'
   };
 
   // Special handling for badge variant

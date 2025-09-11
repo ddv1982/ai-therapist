@@ -202,9 +202,9 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <Wifi className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">Network Access Detected</span>
+                  <span className="text-sm font-semibold text-blue-800 dark:text-blue-200">Network Access Detected</span>
                 </div>
-                <p className="text-xs text-blue-700 dark:text-blue-300">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
                   You&apos;re accessing this app via network URL. Some mobile browsers have restrictions on network-accessed applications.
                 </p>
               </div>
@@ -214,13 +214,13 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="mb-4 p-3 bg-muted rounded-lg text-left overflow-hidden">
                 <div className="flex items-center gap-2 mb-2">
                   <Bug className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Error Details</span>
+                  <span className="text-sm font-semibold">Error Details</span>
                 </div>
-                <p className="text-xs text-muted-foreground font-mono mb-2 break-words">
+                <p className="text-sm text-muted-foreground font-mono mb-2 break-words">
                   {this.state.error.message}
                 </p>
                 {this.state.errorDetails && (
-                  <div className="text-xs text-muted-foreground space-y-1">
+                  <div className="text-sm text-muted-foreground space-y-1">
                     <p><strong>Browser:</strong> {this.state.errorDetails.isSafari ? 'Safari' : 'Other'} {this.state.errorDetails.isMobile ? '(Mobile)' : '(Desktop)'}</p>
                     <p><strong>Time:</strong> {new Date(this.state.errorDetails.timestamp).toLocaleString()}</p>
                     {this.state.errorDetails.isNetworkUrl && (
@@ -256,8 +256,8 @@ export class ErrorBoundary extends Component<Props, State> {
               {this.state.errorDetails?.isSafari && this.state.errorDetails?.isMobile && (
                 <div className="mt-4 space-y-3">
                   <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
-                    <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">Mobile Safari Quick Fixes:</h4>
-                    <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-1">
+                    <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2">Mobile Safari Quick Fixes:</h4>
+                    <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
                       <li>• Try refreshing the page (swipe down to reload)</li>
                       <li>• Check your Wi-Fi or cellular connection</li>
                       <li>• Clear Safari cache: Settings → Safari → Clear History</li>
@@ -270,8 +270,8 @@ export class ErrorBoundary extends Component<Props, State> {
                   </div>
                   
                   <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Advanced Troubleshooting:</h4>
-                    <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
+                    <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">Advanced Troubleshooting:</h4>
+                    <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                       <li>• Enable JavaScript: Settings → Safari → Advanced → JavaScript</li>
                       <li>• Disable Content Blockers temporarily</li>
                       <li>• Check if Private Browsing is affecting the app</li>
@@ -282,8 +282,8 @@ export class ErrorBoundary extends Component<Props, State> {
                   
                   {this.state.errorDetails?.isNetworkUrl && (
                     <div className="p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
-                      <h4 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">Network Access Tips:</h4>
-                      <ul className="text-xs text-green-700 dark:text-green-300 space-y-1">
+                      <h4 className="text-sm font-semibold text-green-800 dark:text-green-200 mb-2">Network Access Tips:</h4>
+                      <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
                         <li>• Make sure you&apos;re on the same Wi-Fi network</li>
                         <li>• Check if the server is still running</li>
                         <li>• Try accessing other devices on the network</li>

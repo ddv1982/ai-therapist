@@ -1,80 +1,11 @@
-@layer components {
-  /* Spacing utilities */
-  .spacing-therapy-xs { @apply p-therapy-xs; }
-  .spacing-therapy-sm { @apply p-therapy-sm; }
-  .spacing-therapy-md { @apply p-therapy-md; }
-  .spacing-therapy-lg { @apply p-therapy-lg; }
-  .spacing-therapy-xl { @apply p-therapy-xl; }
-  .spacing-therapy-2xl { @apply p-therapy-2xl; }
-
-  /* Color variants */
-  .therapy-primary { @apply bg-primary text-primary-foreground shadow-sm; }
-  .therapy-secondary { @apply bg-secondary text-secondary-foreground; }
-  .therapy-accent { @apply bg-accent text-accent-foreground shadow-sm; }
-  .therapy-muted { @apply bg-muted text-muted-foreground; }
-  .therapy-card { @apply bg-card text-card-foreground border border-border rounded-therapy-md shadow-sm; }
-
-  /* Buttons */
-  .therapy-button-primary { 
-    @apply inline-flex items-center justify-center px-therapy-md py-therapy-xs rounded-therapy-sm text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95; 
-  }
-  .therapy-button-secondary { 
-    @apply inline-flex items-center justify-center px-therapy-md py-therapy-xs rounded-therapy-sm text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-secondary text-secondary-foreground hover:bg-secondary/80 active:scale-95; 
-  }
-  .therapy-button-accent { 
-    @apply inline-flex items-center justify-center px-therapy-md py-therapy-xs rounded-therapy-sm text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 active:scale-95; 
-  }
-  .therapy-button-ghost { 
-    @apply inline-flex items-center justify-center px-therapy-md py-therapy-xs rounded-therapy-sm text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none hover:bg-accent/10 hover:text-accent-foreground active:scale-95; 
-  }
-
-  /* Forms */
-  .therapy-form-group { @apply space-y-therapy-xs; }
-  .therapy-form-label { @apply text-sm font-medium text-foreground; }
-  .therapy-form-description { @apply text-xs text-muted-foreground; }
-  .therapy-form-error { @apply text-xs text-destructive; }
-  .therapy-input { @apply w-full px-therapy-sm py-therapy-xs bg-background border border-input rounded-therapy-sm text-base focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent placeholder:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200; }
-
-  /* Modals */
-  .therapy-modal { @apply bg-background border border-border rounded-therapy-lg shadow-xl backdrop-blur-sm; }
-  .therapy-modal-content { @apply p-therapy-md max-h-[90vh] overflow-y-auto; }
-  .therapy-modal-header { @apply p-therapy-md border-b border-border flex items-center justify-between; }
-  .therapy-modal-footer { @apply p-therapy-md border-t border-border flex items-center justify-end gap-therapy-sm; }
-
-  /* Chat-specific */
-  .message-spacing { @apply mb-4; }
-  .message-padding { @apply p-2; }
-  .message-content-user, .message-content-assistant { @apply leading-relaxed; }
-
-  /* Glassmorphism */
-  .glass-card { @apply bg-card/80 backdrop-blur-md border border-border/50 shadow-lg; }
-
-  /* Animations */
-  .animate-message-in { animation: fade-in 0.5s ease-out; }
-  .animate-slide-in { animation: slide-in 0.3s ease-out; }
-
-  /* Scrollbars */
-  .custom-scrollbar::-webkit-scrollbar { width: 0; height: 0; }
-  .custom-scrollbar { scrollbar-width: none; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-muted-foreground/20 rounded-full; }
-
-  /* Tables */
-  .therapeutic-table { @apply w-full border-primary/20 bg-primary/5 rounded-lg overflow-hidden; table-layout: fixed; }
-  .table-container { @apply rounded-md border overflow-hidden mb-4; }
-  .table-system { @apply w-full border-collapse; }
-  .table-header-therapeutic { @apply bg-primary/10 text-primary-foreground/90 font-semibold py-3 px-4; }
-  .table-row-therapeutic { @apply hover:bg-primary/10 transition-colors border-b border-primary/10; }
-  .table-cell-therapeutic { @apply py-3 px-4 text-left; }
-
-  /* Cards */
-  .therapeutic-card { @apply transition-all duration-200 ease-out relative overflow-hidden; }
-  .therapeutic-card:hover { @apply -translate-y-1; }
-  .therapeutic-card::before { @apply absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-0 transition-opacity duration-300 pointer-events-none; content: ''; }
-  .therapeutic-card:hover::before { @apply opacity-100; }
-
-  /* Sliders */
-  input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
-  input[type="range"]::-webkit-slider-track { @apply bg-muted h-2 rounded-lg; }
-  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; @apply w-5 h-5 rounded-full bg-primary shadow-lg cursor-pointer transition-all; }
-  input[type="range"]::-webkit-slider-thumb:hover { @apply scale-110 shadow-xl; }
-}
+/* 
+ * COMPONENTS REMOVED - Use Tailwind utilities directly in components
+ * Fire Your Design Team principle: No custom CSS classes
+ * 
+ * Instead of custom classes, use:
+ * - Tailwind utilities directly in className
+ * - shadcn/ui components for complex patterns
+ * - text-3xl, text-xl, text-base, text-sm for typography
+ * - bg-primary, bg-muted, text-foreground for colors
+ * - p-4, m-2, gap-2 for spacing (8pt grid)
+ */

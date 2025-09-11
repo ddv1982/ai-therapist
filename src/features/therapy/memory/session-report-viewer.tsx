@@ -33,7 +33,7 @@ function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCB
     <div className="bg-card border border-border rounded-lg p-6" data-testid="detailed-cbt-data">
       <div className="flex items-center gap-2 mb-6">
         <FileText className="w-5 h-5 text-primary" />
-        <h3 className="text-lg font-semibold text-foreground">Detailed CBT Session Data</h3>
+        <h3 className="text-xl font-semibold text-foreground">Detailed CBT Session Data</h3>
       </div>
 
       <div className="space-y-8">
@@ -47,8 +47,8 @@ function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCB
             <table className="w-full border border-border/50 rounded-lg overflow-hidden">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left p-4 font-medium text-sm text-foreground">Date</th>
-                  <th className="text-left p-4 font-medium text-sm text-foreground">Situation Description</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground">Date</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground">Situation Description</th>
                 </tr>
               </thead>
               <tbody>
@@ -71,17 +71,17 @@ function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCB
             <table className="w-full border border-border/50 rounded-lg overflow-hidden">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left p-4 font-medium text-sm text-foreground">Emotion</th>
-                  <th className="text-left p-4 font-medium text-sm text-foreground">Initial Rating</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground">Emotion</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground">Initial Rating</th>
                   {structuredData.emotions.final && Object.keys(structuredData.emotions.final).length > 0 && (
-                    <th className="text-left p-4 font-medium text-sm text-foreground">Final Rating</th>
+                    <th className="text-left p-4 font-semibold text-sm text-foreground">Final Rating</th>
                   )}
                 </tr>
               </thead>
               <tbody>
                 {Object.entries(structuredData.emotions.initial).map(([emotion, rating]) => (
                   <tr key={emotion} className="border-t border-border/50">
-                    <td className="p-4 text-sm capitalize font-medium">{emotion}</td>
+                    <td className="p-4 text-sm capitalize font-semibold">{emotion}</td>
                     <td className="p-4 text-sm">{typeof rating === 'number' ? rating : 0}/10</td>
                     {structuredData.emotions?.final && (
                       <td className="p-4 text-sm">
@@ -107,14 +107,14 @@ function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCB
             <table className="w-full border border-border/50 rounded-lg overflow-hidden">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left p-4 font-medium text-sm text-foreground w-16">#</th>
-                  <th className="text-left p-4 font-medium text-sm text-foreground">Automatic Thought</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground w-16">#</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground">Automatic Thought</th>
                 </tr>
               </thead>
               <tbody>
                 {structuredData.thoughts.automaticThoughts.map((thought: unknown, index: number) => (
                   <tr key={index} className="border-t border-border/50">
-                    <td className="p-4 text-sm font-medium">{index + 1}</td>
+                    <td className="p-4 text-sm font-semibold">{index + 1}</td>
                     <td className="p-4 text-sm">&ldquo;{typeof thought === 'string' ? thought : String(thought || '')}&rdquo;</td>
                   </tr>
                 ))}
@@ -133,14 +133,14 @@ function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCB
             <table className="w-full border border-border/50 rounded-lg overflow-hidden">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left p-4 font-medium text-sm text-foreground">Core Belief</th>
-                  <th className="text-left p-4 font-medium text-sm text-foreground">Credibility Rating</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground">Core Belief</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground">Credibility Rating</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-t border-border/50">
                   <td className="p-4 text-sm">&ldquo;{structuredData.coreBeliefs.belief}&rdquo;</td>
-                  <td className="p-4 text-sm font-medium">{structuredData.coreBeliefs.credibility}/10</td>
+                  <td className="p-4 text-sm font-semibold">{structuredData.coreBeliefs.credibility}/10</td>
                 </tr>
               </tbody>
             </table>
@@ -157,14 +157,14 @@ function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCB
             <table className="w-full border border-border/50 rounded-lg overflow-hidden">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left p-4 font-medium text-sm text-foreground w-16">#</th>
-                  <th className="text-left p-4 font-medium text-sm text-foreground">Rational Thought</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground w-16">#</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground">Rational Thought</th>
                 </tr>
               </thead>
               <tbody>
                 {structuredData.rationalThoughts.thoughts.map((thought: unknown, index: number) => (
                   <tr key={index} className="border-t border-border/50">
-                    <td className="p-4 text-sm font-medium">{index + 1}</td>
+                    <td className="p-4 text-sm font-semibold">{index + 1}</td>
                     <td className="p-4 text-sm">&ldquo;{typeof thought === 'string' ? thought : String(thought || '')}&rdquo;</td>
                   </tr>
                 ))}
@@ -183,15 +183,15 @@ function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCB
             <table className="w-full border border-border/50 rounded-lg overflow-hidden">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left p-4 font-medium text-sm text-foreground">Schema Mode</th>
-                  <th className="text-left p-4 font-medium text-sm text-foreground">Intensity</th>
-                  <th className="text-left p-4 font-medium text-sm text-foreground">Description</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground">Schema Mode</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground">Intensity</th>
+                  <th className="text-left p-4 font-semibold text-sm text-foreground">Description</th>
                 </tr>
               </thead>
               <tbody>
                 {structuredData.schemaModes.map((mode: { name: string; intensity: number; description: string }, index: number) => (
                   <tr key={index} className="border-t border-border/50">
-                    <td className="p-4 text-sm font-medium">{mode.name}</td>
+                    <td className="p-4 text-sm font-semibold">{mode.name}</td>
                     <td className="p-4 text-sm">{mode.intensity}/10</td>
                     <td className="p-4 text-sm">{mode.description}</td>
                   </tr>
@@ -211,18 +211,18 @@ function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCB
             <div className="space-y-6">
               {structuredData.actionPlan.newBehaviors && structuredData.actionPlan.newBehaviors.length > 0 && (
                 <div>
-                  <h5 className="text-sm font-medium text-foreground mb-3">New Behaviors to Practice</h5>
+                  <h5 className="text-sm font-semibold text-foreground mb-3">New Behaviors to Practice</h5>
                   <table className="w-full border border-border/50 rounded-lg overflow-hidden">
                     <thead className="bg-muted/50">
                       <tr>
-                        <th className="text-left p-4 font-medium text-sm text-foreground w-16">#</th>
-                        <th className="text-left p-4 font-medium text-sm text-foreground">Behavior/Strategy</th>
+                        <th className="text-left p-4 font-semibold text-sm text-foreground w-16">#</th>
+                        <th className="text-left p-4 font-semibold text-sm text-foreground">Behavior/Strategy</th>
                       </tr>
                     </thead>
                     <tbody>
                       {structuredData.actionPlan.newBehaviors.map((behavior: unknown, index: number) => (
                         <tr key={index} className="border-t border-border/50">
-                          <td className="p-4 text-sm font-medium">{index + 1}</td>
+                          <td className="p-4 text-sm font-semibold">{index + 1}</td>
                           <td className="p-4 text-sm">{typeof behavior === 'string' ? behavior : String(behavior || '')}</td>
                         </tr>
                       ))}
@@ -272,7 +272,7 @@ export function SessionReportViewer({ reportDetail, className }: SessionReportVi
         <div className="flex items-start gap-4 mb-4">
           <Brain className="w-6 h-6 text-primary mt-1" />
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-foreground mb-2">
+            <h2 className="text-xl font-semibold text-foreground mb-2">
               {reportDetail.sessionTitle}
             </h2>
             

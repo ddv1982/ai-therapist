@@ -97,13 +97,13 @@ export function SituationPrompt({
   const charCount = currentSituation.length;
 
   return (
-    <Card className={cn("bg-card border border-border rounded-lg p-6 shadow-sm", className)}>
+    <Card className={cn("bg-card rounded-lg p-6 shadow-sm", className)}>
       {/* Step Header */}
-      <div className="mb-3 p-2.5 rounded border bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+      <div className="mb-3 p-3 rounded border bg-muted/50 border-border/50 text-foreground">
         <div className="flex items-center gap-3 mb-2">
-          <MapPin className="w-5 h-5 flex-shrink-0" />
+          <MapPin className="w-6 h-6 flex-shrink-0" />
           <div className="flex-1">
-            <h2 className="text-lg font-semibold">{t('situation.title')}</h2>
+            <h2 className="text-xl font-semibold">{t('situation.title')}</h2>
             <p className="text-sm opacity-80 mt-1">{t('situation.subtitle')}</p>
           </div>
         </div>
@@ -131,7 +131,7 @@ export function SituationPrompt({
 
         {/* Quick Prompts */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-foreground">{t('situation.quick')}</p>
+          <p className="text-sm font-semibold text-foreground">{t('situation.quick')}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {situationPrompts.slice(0, 4).map((prompt, index) => {
               const isSelected = selectedPrompt === prompt;
@@ -142,7 +142,7 @@ export function SituationPrompt({
                   size="sm"
                   onClick={() => handlePromptSelect(prompt)}
                   className={cn(
-                    "text-xs h-8 px-3 text-left justify-start",
+                    "text-sm h-8 px-3 text-left justify-start",
                     isSelected 
                       ? "bg-primary text-primary-foreground" 
                       : "border-dashed hover:bg-accent hover:text-accent-foreground"
@@ -166,7 +166,7 @@ export function SituationPrompt({
             maxLength={1000}
           />
           
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>{charCount < 5 ? t('situation.moreDetails') : t('situation.lookingGood')}</span>
             <span>{charCount}/1000</span>
           </div>

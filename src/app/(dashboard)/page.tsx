@@ -139,11 +139,6 @@ function ChatPageContent() {
     minHeight: viewportHeight,
     maxHeight: viewportHeight,
     overflow: 'hidden',
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
     backgroundImage: `
       radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
       radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.05) 0%, transparent 50%)
@@ -154,11 +149,11 @@ function ChatPageContent() {
     <ChatUIProvider bridge={chatUIBridge}>
     <AuthGuard>
       <div 
-        className="flex bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20"
+        className="flex gradient-bg-app"
         role="application"
         aria-label={t('app.aria')}
-      style={appContainerStyle}
-    >
+        style={appContainerStyle}
+      >
       {/* Mobile backdrop overlay */}
       {showSidebar && (
         <div 
@@ -185,11 +180,11 @@ function ChatPageContent() {
         <div className="p-6 border-b border-border/30">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                <Brain className="w-5 h-5 text-white" />
+              <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
+                <Brain className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-lg gradient-text">{t('sidebar.brandName')}</h2>
+                <h2 className="text-xl font-semibold gradient-text">{t('sidebar.brandName')}</h2>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -200,20 +195,18 @@ function ChatPageContent() {
                 onClick={() => setShowSidebar(false)}
                 className={therapeuticInteractive.iconButtonSmall}
               >
-                <div className="shimmer-effect"></div>
                 <X className="w-4 h-4 relative z-10" />
               </Button>
             </div>
           </div>
           <Button 
             onClick={startNewSession}
-            className="w-full justify-start gap-3 h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 text-white shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation !transform-none !hover:transform-none !active:transform-none !scale-100 !hover:scale-100 !active:scale-100 !ring-0 !focus:ring-0 !focus-visible:ring-0 !outline-none"
+            className="w-full justify-start gap-3 h-12 rounded-xl transition-all duration-200 group"
           >
-            <div className="shimmer-effect opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
             <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
               <Plus className="w-4 h-4" />
             </div>
-            <span className="font-medium">{t('sidebar.startNew')}</span>
+            <span className="font-semibold">{t('sidebar.startNew')}</span>
             <Sparkles className="w-4 h-4 ml-auto opacity-60 group-hover:opacity-100 transition-opacity" />
           </Button>
         </div>
@@ -249,12 +242,12 @@ function ChatPageContent() {
                 <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
                   currentSession === session.id 
                     ? 'bg-primary text-primary-foreground' 
-                    : therapeuticInteractive.itemHover
+                    : 'bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary'
                 }`}>
                   <MessageSquare className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-medium line-clamp-2 mb-1">
+                  <h3 className="text-base font-semibold line-clamp-2 mb-1">
                     {session.title}
                   </h3>
                   <p className="text-sm text-muted-foreground">
@@ -264,13 +257,12 @@ function ChatPageContent() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1 h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive relative overflow-hidden"
+                  className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1 h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive"
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteSession(session.id);
                   }}
                 >
-                  <div className="shimmer-effect"></div>
                   <Trash2 className="w-4 h-4 relative z-10" />
                 </Button>
               </div>
@@ -280,7 +272,7 @@ function ChatPageContent() {
         </div>
 
         {/* Smart Model and Web Search (icon) and Language Toggles */}
-        <div className="p-4 border-t border-border/50 bg-gradient-to-t from-blue-50/30 to-transparent dark:from-blue-900/10">
+        <div className="p-4 border-t border-border/50 bg-muted/30">
           <div className="flex items-center justify-end gap-3">
             <button
               onClick={handleSmartModelToggle}
@@ -359,10 +351,10 @@ function ChatPageContent() {
             <div className={`flex items-center justify-center ${isMobile ? 'py-2' : 'py-16'}`}>
               <div className={`text-center max-w-2xl animate-fade-in ${isMobile ? 'px-3' : 'px-6'}`}>
                 <div className={`${isMobile ? 'mb-4' : 'mb-8 sm:mb-10'}`}>
-                  <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 flex items-center justify-center mx-auto mb-4 shadow-md">
-                    <Brain className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4 shadow-md">
+                    <Brain className="w-8 h-8 text-primary" />
                   </div>
-                  <h2 className="text-2xl sm:text-3xl mb-4 tracking-tight gradient-text">
+                  <h2 className="text-3xl mb-4 tracking-tight gradient-text">
                     {t('empty.welcome')}
                   </h2>
                   <p className={`text-sm sm:text-base text-muted-foreground ${isMobile ? 'mb-6' : 'mb-8'} leading-relaxed`}>
@@ -371,17 +363,17 @@ function ChatPageContent() {
                 </div>
 
                 <div className={`grid grid-cols-1 sm:grid-cols-2 ${isMobile ? 'gap-4 mb-6' : 'gap-6 mb-10'}`}>
-                  <div className="p-5 rounded-xl bg-card/70 border border-border text-left flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow">
-                    <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <div className="p-6 rounded-xl bg-card/70 border border-border text-left flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow">
+                    <Sparkles className="w-4 h-4 text-primary flex-shrink-0 mt-1" />
                     <div>
-                      <h3 className="text-base font-medium text-foreground mb-1">{t('empty.compassionTitle')}</h3>
+                      <h3 className="text-base font-semibold text-foreground mb-1">{t('empty.compassionTitle')}</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">{t('empty.compassionDesc')}</p>
                     </div>
                   </div>
-                  <div className="p-5 rounded-xl bg-card/70 border border-border text-left flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow">
-                    <Lock className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                  <div className="p-6 rounded-xl bg-card/70 border border-border text-left flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow">
+                    <Lock className="w-4 h-4 text-accent flex-shrink-0 mt-1" />
                     <div>
-                      <h3 className="text-base font-medium text-foreground mb-1">{t('empty.privateTitle')}</h3>
+                      <h3 className="text-base font-semibold text-foreground mb-1">{t('empty.privateTitle')}</h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">{t('empty.privateDesc')}</p>
                     </div>
                   </div>

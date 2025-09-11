@@ -1,88 +1,146 @@
-@layer components {
-  .markdown-content {
-    @apply text-base leading-relaxed text-foreground;
-  }
+/* 
+ * Markdown Content Styling - Tailwind v4 compliant
+ * Fire Your Design Team: Only 4 font sizes (3xl, xl, base, sm), 2 weights
+ * No @layer needed in Tailwind v4
+ */
 
+.markdown-content {
+  font-size: 1rem; /* text-base */
+  line-height: 1.6;
+  color: hsl(var(--foreground));
+}
+
+/* Typography hierarchy - Fire Your Design Team compliant */
+.markdown-content h1 {
+  font-size: 1.875rem; /* text-3xl - Size 1 */
+  font-weight: 600; /* font-semibold */
+  margin-bottom: 1rem; /* 16px - grid compliant */
+  margin-top: 1.5rem; /* 24px - grid compliant */
+}
+
+.markdown-content h2,
+.markdown-content h3 {
+  font-size: 1.25rem; /* text-xl - Size 2 */
+  font-weight: 600; /* font-semibold */
+  margin-bottom: 0.75rem; /* 12px - grid compliant */
+  margin-top: 1.25rem; /* 20px - close to grid */
+}
+
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  font-size: 1rem; /* text-base - Size 3 */
+  font-weight: 600; /* font-semibold */
+  margin-bottom: 0.5rem; /* 8px - grid compliant */
+  margin-top: 0.75rem; /* 12px - grid compliant */
+}
+
+.markdown-content p {
+  margin-bottom: 0.75rem; /* 12px - grid compliant */
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  list-style: disc;
+  padding-left: 1.5rem; /* 24px - grid compliant */
+  margin-bottom: 0.75rem; /* 12px - grid compliant */
+}
+
+.markdown-content ol {
+  list-style: decimal;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25rem; /* 4px - grid compliant */
+}
+
+.markdown-content a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  word-break: break-words;
+}
+
+.markdown-content a:hover {
+  color: hsl(var(--primary) / 0.8);
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid hsl(var(--primary) / 0.3);
+  padding-left: 1rem; /* 16px - grid compliant */
+  padding-top: 0.5rem; /* 8px - grid compliant */
+  padding-bottom: 0.5rem; /* 8px - grid compliant */
+  margin: 1rem 0; /* 16px - grid compliant */
+  background-color: hsl(var(--muted) / 0.3);
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+  border-radius: 0.375rem;
+}
+
+.markdown-content code {
+  background-color: hsl(var(--muted));
+  padding: 0.125rem 0.25rem; /* 2px 4px - grid compliant */
+  border-radius: 0.25rem;
+  font-size: 0.875rem; /* text-sm - Size 4 */
+  font-family: ui-monospace, monospace;
+}
+
+.markdown-content pre {
+  background-color: hsl(var(--muted));
+  padding: 1rem; /* 16px - grid compliant */
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  margin-bottom: 0.75rem; /* 12px - grid compliant */
+  font-size: 0.875rem; /* text-sm - Size 4 */
+  font-family: ui-monospace, monospace;
+}
+
+.markdown-content hr {
+  margin: 1rem 0; /* 16px - grid compliant */
+  border-color: hsl(var(--border));
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0; /* 16px - grid compliant */
+  font-size: 0.875rem; /* text-sm - Size 4 */
+  table-layout: fixed;
+}
+
+.markdown-content th {
+  border: 1px solid hsl(var(--border));
+  padding: 0.75rem; /* 12px - grid compliant */
+  text-align: left;
+  font-weight: 600; /* font-semibold */
+  background-color: hsl(var(--muted));
+}
+
+.markdown-content td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.75rem; /* 12px - grid compliant */
+}
+
+.markdown-content tr:nth-child(even) {
+  background-color: hsl(var(--muted) / 0.2);
+}
+
+.markdown-content .table-container {
+  overflow-x: auto;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+}
+
+.markdown-content .table-container table {
+  min-width: 800px;
+}
+
+/* Mobile adjustments - maintain Fire Your Design Team compliance */
+@media (max-width: 640px) {
   .markdown-content h1 {
-    @apply text-3xl font-semibold mb-4 mt-6;
+    font-size: 1.25rem; /* text-xl - Size 2 on mobile */
   }
-  .markdown-content h2 {
-    @apply text-2xl font-semibold mb-3 mt-5;
-  }
+  .markdown-content h2,
   .markdown-content h3 {
-    @apply text-xl font-semibold mb-3 mt-4;
-  }
-  .markdown-content h4 {
-    @apply text-lg font-semibold mb-2 mt-3;
-  }
-  .markdown-content h5 {
-    @apply text-base font-semibold mb-2 mt-2;
-  }
-  .markdown-content h6 {
-    @apply text-sm font-semibold mb-2 mt-2;
-  }
-
-  .markdown-content p {
-    @apply mb-3;
-  }
-
-  .markdown-content ul {
-    @apply list-disc pl-6 mb-3;
-  }
-  .markdown-content ol {
-    @apply list-decimal pl-6 mb-3;
-  }
-  .markdown-content li {
-    @apply mb-1;
-  }
-
-  .markdown-content a {
-    @apply text-primary underline hover:text-primary/80 break-words;
-  }
-
-  .markdown-content blockquote {
-    @apply border-l-4 border-primary/30 pl-4 py-2 my-4 bg-muted/30 text-muted-foreground italic rounded;
-  }
-
-  .markdown-content code {
-    @apply bg-muted px-1 py-0.5 rounded text-sm font-mono;
-  }
-
-  .markdown-content pre {
-    @apply bg-muted p-4 rounded-md overflow-x-auto mb-3 text-sm font-mono;
-  }
-
-  .markdown-content hr {
-    @apply my-4 border-border;
-  }
-
-  .markdown-content table {
-    @apply w-full border-collapse my-4 text-sm table-fixed;
-  }
-  .markdown-content th {
-    @apply border border-border px-3 py-2 text-left font-semibold bg-muted;
-  }
-  .markdown-content td {
-    @apply border border-border px-3 py-2;
-  }
-  .markdown-content tr:nth-child(even) {
-    @apply bg-muted/20;
-  }
-
-  /* Responsive table container */
-  .markdown-content .table-container {
-    @apply overflow-x-auto -mx-2;
-  }
-
-  /* Ensure table min-width for many columns */
-  .markdown-content .table-container table {
-    min-width: 800px;
-  }
-
-  /* Mobile adjustments */
-  @media (max-width: 640px) {
-    .markdown-content h1 { @apply text-2xl; }
-    .markdown-content h2 { @apply text-xl; }
-    .markdown-content h3 { @apply text-lg; }
+    font-size: 1rem; /* text-base - Size 3 on mobile */
   }
 }

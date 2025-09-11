@@ -92,7 +92,7 @@ export function MobileDebugInfo() {
       <Card className="max-w-md w-full max-h-[80vh] overflow-auto">
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
+            <h3 className="text-xl font-semibold flex items-center gap-2">
               <Bug className="w-5 h-5" />
               Mobile Debug Info
             </h3>
@@ -137,7 +137,7 @@ export function MobileDebugInfo() {
             
             <div className="pt-2 border-t">
               <strong>User Agent:</strong>
-              <div className="text-xs mt-1 p-2 bg-muted rounded font-mono break-all">
+              <div className="text-sm mt-1 p-2 bg-muted rounded font-mono break-all">
                 {debugInfo.userAgent}
               </div>
             </div>
@@ -165,7 +165,7 @@ export function MobileDebugInfo() {
             </Button>
           </div>
           
-          <div className="mt-4 p-3 bg-muted/50 rounded-lg text-xs">
+          <div className="mt-4 p-3 bg-muted/50 rounded-lg text-sm">
             <p className="text-muted-foreground">
               <strong>Developer Access:</strong><br/>
               • Console: <code>window.__mobileDebugInfo</code><br/>

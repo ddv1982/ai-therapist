@@ -86,7 +86,7 @@ export function TherapeuticCard(props: TherapeuticCardProps) {
           <div className="flex-1 min-w-0">
             <CardTitle className={cn(
               'truncate',
-              variant === 'compact' ? 'text-base' : 'text-lg',
+              variant === 'compact' ? 'text-base' : 'text-xl',
               variant === 'therapeutic' && 'text-primary'
             )}>
               {titleColumn?.render ? titleColumn.render(titleValue, data) : String(titleValue || 'Untitled')}
@@ -160,7 +160,7 @@ export function TherapeuticCard(props: TherapeuticCardProps) {
                   e.stopPropagation();
                   setIsExpanded(!isExpanded);
                 }}
-                className="w-full mt-2 h-8 text-xs text-muted-foreground hover:text-foreground"
+                className="w-full mt-2 h-8 text-sm text-muted-foreground hover:text-foreground"
               >
                 {isExpanded ? (
                   <>

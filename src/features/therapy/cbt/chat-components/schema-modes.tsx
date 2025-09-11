@@ -196,9 +196,9 @@ export function SchemaModes({
     >
       <div className="flex items-center justify-center gap-4 mb-4">
         {selectedModes.length > 0 && (
-          <p className="text-xs text-primary/70 font-medium">{selectedModes.length} {t('schema.selected')}</p>
+          <p className="text-sm text-primary/70 font-semibold">{selectedModes.length} {t('schema.selected')}</p>
         )}
-        <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
+        <div className={`flex items-center gap-1 text-sm px-2 py-1 rounded transition-all duration-300 ${
           isDraftSaved 
             ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
             : 'opacity-0 scale-95'
@@ -250,13 +250,13 @@ export function SchemaModes({
                         </div>
                         <div>
                           <h4 className="font-semibold text-sm text-foreground">{mode.name}</h4>
-                          <p className="text-xs text-muted-foreground italic">{mode.description}</p>
+                          <p className="text-sm text-muted-foreground italic">{mode.description}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {isSelected ? (
                           <>
-                            <span className="text-sm font-medium text-primary">{mode.intensity || 5}/10</span>
+                            <span className="text-sm font-semibold text-primary">{mode.intensity || 5}/10</span>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -287,7 +287,7 @@ export function SchemaModes({
                           onChange={(e) => handleIntensityChange(mode.id, parseInt(e.target.value))}
                           className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 slider-thumb:rounded-full slider-thumb:bg-primary slider-thumb:cursor-pointer"
                         />
-                        <div className="flex justify-between text-xs text-muted-foreground px-1">
+                        <div className="flex justify-between text-sm text-muted-foreground px-1">
                           <span>1</span>
                           <span className="hidden sm:inline">5</span>
                           <span>10</span>
@@ -303,10 +303,10 @@ export function SchemaModes({
           {/* Selected Modes Summary */}
           {selectedModes.length > 0 && (
             <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-              <h4 className="text-sm font-medium text-primary mb-2">{t('schema.active')}</h4>
+              <h4 className="text-sm font-semibold text-primary mb-2">{t('schema.active')}</h4>
               <div className="space-y-1">
                 {selectedModes.map((mode) => (
-                  <div key={mode.id} className="flex justify-between items-center text-xs">
+                  <div key={mode.id} className="flex justify-between items-center text-sm">
                     <span className="text-foreground">{mode.name}</span>
                     <span className="text-muted-foreground">{t('schema.intensity')}: {mode.intensity}/10</span>
                   </div>

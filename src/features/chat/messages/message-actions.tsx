@@ -154,7 +154,7 @@ export function MessageActions({
         
         {showDropdown && (
           <div className="absolute top-full right-0 mt-1 w-56 bg-background border rounded-md shadow-lg z-50">
-            <div className="px-2 py-1.5 text-xs text-muted-foreground border-b">
+            <div className="px-2 py-1.5 text-sm text-muted-foreground border-b">
               CBT Diary Entry ({confidencePercentage}% confidence)
               {parsedData.isComplete ? (
                 <span className="text-green-600 ml-1">✓ Complete</span>
@@ -172,7 +172,7 @@ export function MessageActions({
                 <FileText className="w-4 h-4 mr-2 text-red-600" />
                 <div className="flex flex-col items-start">
                   <span>Export as PDF</span>
-                  <span className="text-xs text-muted-foreground">Professional report format</span>
+                  <span className="text-sm text-muted-foreground">Professional report format</span>
                 </div>
               </button>
               
@@ -184,7 +184,7 @@ export function MessageActions({
                 <FileType className="w-4 h-4 mr-2 text-blue-600" />
                 <div className="flex flex-col items-start">
                   <span>Export as Markdown</span>
-                  <span className="text-xs text-muted-foreground">Formatted text document</span>
+                  <span className="text-sm text-muted-foreground">Formatted text document</span>
                 </div>
               </button>
               
@@ -198,7 +198,7 @@ export function MessageActions({
                 <FileJson className="w-4 h-4 mr-2 text-green-600" />
                 <div className="flex flex-col items-start">
                   <span>Export as JSON</span>
-                  <span className="text-xs text-muted-foreground">Structured data backup</span>
+                  <span className="text-sm text-muted-foreground">Structured data backup</span>
                 </div>
               </button>
               
@@ -210,15 +210,15 @@ export function MessageActions({
                 <FileText className="w-4 h-4 mr-2 text-gray-600" />
                 <div className="flex flex-col items-start">
                   <span>Export as Text</span>
-                  <span className="text-xs text-muted-foreground">Plain text format</span>
+                  <span className="text-sm text-muted-foreground">Plain text format</span>
                 </div>
               </button>
 
               {parsedData.missingFields.length > 0 && (
                 <>
                   <hr className="my-1" />
-                  <div className="px-2 py-1.5 text-xs text-yellow-600">
-                    <div className="font-medium">Partial data detected:</div>
+                  <div className="px-2 py-1.5 text-sm text-yellow-600">
+                    <div className="font-semibold">Partial data detected:</div>
                     <div>Missing: {parsedData.missingFields.join(', ')}</div>
                   </div>
                 </>

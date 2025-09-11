@@ -188,7 +188,7 @@ export function ActionPlan({
     >
       <Card className="border-border bg-card">
         <CardHeader className="p-4 pb-4">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <CardTitle className="text-xl font-semibold flex items-center gap-2">
             <CheckSquare className="w-5 h-5 text-primary" />
             {t('actionPlan.header')}
           </CardTitle>
@@ -200,7 +200,7 @@ export function ActionPlan({
                   {t('actionPlan.improvement')}: +{overallImprovement}
                 </Badge>
               )}
-              <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300 ${
+              <div className={`flex items-center gap-1 text-sm px-2 py-1 rounded transition-all duration-300 ${
                 isDraftSaved 
                   ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
                   : 'opacity-0 scale-95'
@@ -238,7 +238,7 @@ export function ActionPlan({
             {t('actionPlan.futureActionTitle')}
           </h4>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
+            <label className="text-sm font-semibold text-foreground">
               {t('actionPlan.futureActionLabel')}
             </label>
             <Textarea
@@ -256,11 +256,11 @@ export function ActionPlan({
 
         {/* Helper Text */}
         <div className="text-center space-y-2">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {t('actionPlan.successMessage')}
           </p>
           {overallImprovement > 0 && (
-            <p className="text-xs text-green-600 font-medium">
+            <p className="text-sm text-green-600 font-semibold">
               {t('actionPlan.improvedState')}
             </p>
           )}

@@ -18,10 +18,10 @@ const therapyCardVariants = cva(
         muted: "border-muted bg-muted/50 hover:bg-muted/70",
       },
       size: {
-        default: "p-therapy-md",
-        sm: "p-therapy-sm",
-        lg: "p-therapy-lg",
-        xl: "p-therapy-xl",
+        default: "p-4",
+        sm: "p-2",
+        lg: "p-6",
+        xl: "p-8",
       },
       elevation: {
         none: "shadow-none",
@@ -75,20 +75,20 @@ const TherapyCard = React.forwardRef<HTMLDivElement, TherapyCardProps>(
       >
         {/* Header Section */}
         {(title || subtitle || badge || icon || action) && (
-          <div className="flex items-start justify-between mb-therapy-sm">
-            <div className="flex items-start gap-therapy-sm flex-1 min-w-0">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-start gap-2 flex-1 min-w-0">
               {/* Icon */}
               {icon && (
-                <div className="flex-shrink-0 p-therapy-xs rounded-therapy-sm bg-primary/10 text-primary">
+                <div className="flex-shrink-0 p-1 rounded bg-primary/10 text-primary">
                   {icon}
                 </div>
               )}
               
               {/* Title and Subtitle */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-therapy-xs mb-1">
+                <div className="flex items-center gap-1 mb-1">
                   {title && (
-                    <h3 className="text-lg font-semibold text-foreground truncate">
+                    <h3 className="text-xl font-semibold text-foreground truncate">
                       {title}
                     </h3>
                   )}
@@ -108,7 +108,7 @@ const TherapyCard = React.forwardRef<HTMLDivElement, TherapyCardProps>(
             
             {/* Action */}
             {action && (
-              <div className="flex-shrink-0 ml-therapy-sm">
+              <div className="flex-shrink-0 ml-2">
                 {action}
               </div>
             )}
@@ -117,7 +117,7 @@ const TherapyCard = React.forwardRef<HTMLDivElement, TherapyCardProps>(
 
         {/* Description */}
         {description && (
-          <p className="text-sm text-muted-foreground mb-therapy-md leading-relaxed">
+          <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
             {description}
           </p>
         )}

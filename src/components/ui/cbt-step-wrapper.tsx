@@ -101,29 +101,29 @@ export interface CBTStepWrapperProps {
 // =============================================================================
 
 const STEP_ICONS: Record<CBTStepType, ReactNode> = {
-  'situation': <MessageCircle className="w-5 h-5" />,
-  'emotions': <Heart className="w-5 h-5" />,
-  'final-emotions': <Heart className="w-5 h-5" />,
-  'thoughts': <Brain className="w-5 h-5" />,
-  'core-belief': <Target className="w-5 h-5" />,
-  'challenge-questions': <HelpCircle className="w-5 h-5" />,
-  'rational-thoughts': <Lightbulb className="w-5 h-5" />,
-  'schema-modes': <Users className="w-5 h-5" />,
-  'actions': <Activity className="w-5 h-5" />,
-  'complete': <CheckCircle className="w-5 h-5" />
+  'situation': <MessageCircle className="w-6 h-6" />,
+  'emotions': <Heart className="w-6 h-6" />,
+  'final-emotions': <Heart className="w-6 h-6" />,
+  'thoughts': <Brain className="w-6 h-6" />,
+  'core-belief': <Target className="w-6 h-6" />,
+  'challenge-questions': <HelpCircle className="w-6 h-6" />,
+  'rational-thoughts': <Lightbulb className="w-6 h-6" />,
+  'schema-modes': <Users className="w-6 h-6" />,
+  'actions': <Activity className="w-6 h-6" />,
+  'complete': <CheckCircle className="w-6 h-6" />
 };
 
 const STEP_COLORS: Record<CBTStepType, string> = {
-  'situation': 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300',
-  'emotions': 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300',
-  'final-emotions': 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300',
-  'thoughts': 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300',
-  'core-belief': 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300',
-  'challenge-questions': 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800 text-yellow-700 dark:text-yellow-300',
-  'rational-thoughts': 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 text-green-700 dark:text-green-300',
-  'schema-modes': 'bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-300',
-  'actions': 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300',
-  'complete': 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+  'situation': 'bg-muted/50 border-border/50 text-foreground',
+  'emotions': 'bg-muted/50 border-border/50 text-foreground',
+  'final-emotions': 'bg-muted/50 border-border/50 text-foreground',
+  'thoughts': 'bg-muted/50 border-border/50 text-foreground',
+  'core-belief': 'bg-muted/50 border-border/50 text-foreground',
+  'challenge-questions': 'bg-muted/50 border-border/50 text-foreground',
+  'rational-thoughts': 'bg-muted/50 border-border/50 text-foreground',
+  'schema-modes': 'bg-muted/50 border-border/50 text-foreground',
+  'actions': 'bg-muted/50 border-border/50 text-foreground',
+  'complete': 'bg-accent/10 border-primary/30 text-foreground'
 };
 
 // =============================================================================
@@ -297,24 +297,24 @@ export function CBTStepWrapper({
   
   const renderStepHeader = () => (
     <div className={cn(
-      "mb-3 p-2.5 rounded border",
+      "mb-3 p-3 rounded border",
       stepColorClass,
       headerClassName
     )}>
       <div className="flex items-center gap-3 mb-2">
         <div className="flex-shrink-0">
           {React.isValidElement(stepIcon)
-            ? React.cloneElement(stepIcon as React.ReactElement<{ className?: string }>, { className: "w-5 h-5" })
+            ? React.cloneElement(stepIcon as React.ReactElement<{ className?: string }>, { className: "w-6 h-6" })
             : stepIcon}
         </div>
         <div className="flex-1">
-          <h2 className="text-lg font-semibold">{title}</h2>
+          <h2 className="text-xl font-semibold">{title}</h2>
           {subtitle && (
             <p className="text-sm opacity-80 mt-1">{subtitle}</p>
           )}
         </div>
         {isStepValid && (
-          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+          <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
         )}
       </div>
       
@@ -333,7 +333,7 @@ export function CBTStepWrapper({
         <AlertDescription className="ml-2">
           <div className="space-y-1 text-sm">
             {stepValidationErrors.map((error, index) => (
-              <div key={index} className="font-medium">{error.message}</div>
+              <div key={index} className="font-semibold">{error.message}</div>
             ))}
           </div>
         </AlertDescription>
@@ -345,7 +345,7 @@ export function CBTStepWrapper({
     if (!autoSave) return null;
     
     return (
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         {status.isDraftSaved ? (
           <>
             <Save className="w-3 h-3" />
@@ -419,7 +419,7 @@ export function CBTStepWrapper({
   return (
     <div 
       className={cn(
-        "bg-card border border-border rounded-lg p-6 shadow-sm",
+        "bg-card rounded-lg p-6 shadow-sm",
         className
       )}
       role="region"

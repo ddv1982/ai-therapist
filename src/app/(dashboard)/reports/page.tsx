@@ -12,7 +12,7 @@ export default function ReportsPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-xl mb-2">{t('title')}</h1>
+          <h1 className="text-xl font-semibold mb-2">{t('title')}</h1>
           <p className="text-base text-muted-foreground">
             {t('subtitle')}
           </p>
@@ -24,7 +24,7 @@ export default function ReportsPage() {
             <div className="mx-auto mb-4 w-16 h-16 bg-muted rounded-full flex items-center justify-center">
               <FileText className="w-8 h-8 text-muted-foreground" />
             </div>
-            <CardTitle className="text-lg">{t('comingSoon.title')}</CardTitle>
+            <CardTitle className="text-xl font-semibold">{t('comingSoon.title')}</CardTitle>
             <CardDescription className="text-base">
               {t('comingSoon.desc')}
             </CardDescription>
@@ -53,7 +53,7 @@ export default function ReportsPage() {
 
         {/* Example Report Preview */}
         <div className="mt-12 max-w-4xl mx-auto">
-          <h2 className="text-lg mb-6 text-center">{t('example.title')}</h2>
+          <h2 className="text-xl font-semibold mb-6 text-center">{t('example.title')}</h2>
           <Card className="opacity-75">
             <CardHeader>
               <div className="flex items-center justify-between">

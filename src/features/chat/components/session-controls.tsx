@@ -19,7 +19,7 @@ export function SessionControls({
   return (
     <div className="flex items-center justify-between p-4 border-b border-border bg-card">
       <div className="flex items-center space-x-4">
-        <div className="text-lg font-semibold">
+        <div className="text-xl font-semibold">
           {sessionId ? `Session Active` : 'Ready to Start'}
         </div>
         {sessionId && (

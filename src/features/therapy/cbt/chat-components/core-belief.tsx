@@ -124,7 +124,7 @@ export function CoreBelief({
       <div className="space-y-6">
           {/* Quick Belief Prompts */}
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">{t('coreBelief.promptLabel')}</p>
+            <p className="text-sm text-muted-foreground">{t('coreBelief.promptLabel')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {beliefPrompts.map((prompt, index) => {
                 const isSelected = selectedPrompt === prompt;
@@ -135,7 +135,7 @@ export function CoreBelief({
                     size="sm"
                     onClick={() => handlePromptSelect(prompt)}
                     className={cn(
-                      'text-xs h-8 px-3 text-left justify-start',
+                      'text-sm h-8 px-3 text-left justify-start',
                       isSelected
                         ? 'bg-primary text-primary-foreground'
                         : 'border-dashed hover:bg-accent hover:text-accent-foreground'
@@ -157,7 +157,7 @@ export function CoreBelief({
               className="min-h-[80px] resize-none"
               maxLength={500}
             />
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
               <span>{beliefData.coreBeliefText.length < 3 ? t('coreBelief.moreDetails') : t('coreBelief.lookingGood')}</span>
               <span>{beliefData.coreBeliefText.length}/500</span>
             </div>

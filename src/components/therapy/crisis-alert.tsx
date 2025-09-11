@@ -101,12 +101,12 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
               <AlertTriangle className="w-5 h-5 text-white" />
             </div>
             <div>
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <CardTitle className="text-xl font-semibold flex items-center gap-2">
                 Crisis Support Resources
                 <Badge 
                   variant="outline" 
                   className={cn(
-                    "text-xs font-semibold",
+                    "text-sm font-semibold",
                     crisisResult.riskLevel === 'crisis' ? "border-red-300 text-red-700" :
                     crisisResult.riskLevel === 'high' ? "border-orange-300 text-orange-700" :
                     "border-yellow-300 text-yellow-700"
@@ -162,15 +162,15 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
               <div key={index} className="p-3 bg-white border rounded-lg">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h5 className="font-medium text-sm">{resource.name}</h5>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <h5 className="font-semibold text-sm">{resource.name}</h5>
+                    <p className="text-sm text-muted-foreground mt-1">
                       {resource.description}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-7 text-xs"
+                        className="h-7 text-sm"
                         onClick={() => window.open(`tel:${resource.phone}`, '_self')}
                       >
                         <Phone className="w-3 h-3 mr-1" />
@@ -180,7 +180,7 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 text-xs"
+                          className="h-7 text-sm"
                           onClick={() => window.open(resource.website, '_blank')}
                         >
                           <ExternalLink className="w-3 h-3" />
@@ -189,7 +189,7 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
                     </div>
                   </div>
                   {resource.available24x7 && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-sm">
                       <Clock className="w-3 h-3 mr-1" />
                       24/7
                     </Badge>
@@ -236,7 +236,7 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
                     <Badge
                       key={index}
                       variant="outline"
-                      className={cn("text-xs", getCategoryColor(category.category))}
+                      className={cn("text-sm", getCategoryColor(category.category))}
                     >
                       {category.category.replace('_', ' ')} ({category.severity})
                     </Badge>
@@ -272,15 +272,15 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
                     <div key={index} className="p-3 bg-white border rounded-lg">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h5 className="font-medium text-sm">{resource.name}</h5>
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <h5 className="font-semibold text-sm">{resource.name}</h5>
+                          <p className="text-sm text-muted-foreground mt-1">
                             {resource.description}
                           </p>
                           <div className="flex items-center gap-2 mt-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-7 text-xs"
+                              className="h-7 text-sm"
                               onClick={() => window.open(`tel:${resource.phone}`, '_self')}
                             >
                               <Phone className="w-3 h-3 mr-1" />
@@ -290,7 +290,7 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-7 text-xs"
+                                className="h-7 text-sm"
                                 onClick={() => window.open(resource.website, '_blank')}
                               >
                                 <ExternalLink className="w-3 h-3" />
@@ -299,7 +299,7 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
                           </div>
                         </div>
                         {resource.available24x7 && (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-sm">
                             <Clock className="w-3 h-3 mr-1" />
                             24/7
                           </Badge>
@@ -330,7 +330,7 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
 
         {/* Support Message */}
         <div className="text-center text-sm text-muted-foreground p-3 bg-muted/30 rounded-lg">
-          <p className="font-medium mb-1">🤝 You are not alone</p>
+          <p className="font-semibold mb-1">🤝 You are not alone</p>
           <p>
             Reaching out for help is a sign of strength. These resources are here to support you
             through difficult times.

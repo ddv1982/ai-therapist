@@ -152,7 +152,7 @@ export function RationalThoughts({
       <div className="space-y-6">
           {/* Quick Thought Prompts */}
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">{t('rational.promptLabel')}</p>
+            <p className="text-sm text-muted-foreground">{t('rational.promptLabel')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {thoughtPrompts.slice(0, 4).map((prompt, index) => {
                 const isSelected = selectedPrompts[0] === prompt;
@@ -163,7 +163,7 @@ export function RationalThoughts({
                     size="sm"
                     onClick={() => handlePromptSelect(prompt, 0)}
                     className={cn(
-                      "text-xs h-8 px-3 text-left justify-start",
+                      "text-sm h-8 px-3 text-left justify-start",
                       isSelected 
                         ? "bg-primary text-primary-foreground" 
                         : "border-dashed hover:bg-accent hover:text-accent-foreground"
@@ -182,7 +182,7 @@ export function RationalThoughts({
               <Card key={index} className="p-4 bg-muted/30 border border-border/30">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-foreground">
+                    <h4 className="text-sm font-semibold text-foreground">
                       Rational Thought {index + 1}
                     </h4>
                     {thoughtsData.rationalThoughts.length > 1 && (
@@ -215,7 +215,7 @@ export function RationalThoughts({
                     />
                   )}
                   
-                  <div className="flex justify-end text-xs text-muted-foreground">
+                  <div className="flex justify-end text-sm text-muted-foreground">
                     <span>{thoughtData.thought.length}/200</span>
                   </div>
                 </div>

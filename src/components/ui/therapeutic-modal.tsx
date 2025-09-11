@@ -174,7 +174,7 @@ export function TherapeuticModal({
       {/* Step indicator */}
       {stepIndicator && (
         <div className="flex justify-center mb-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-medium">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-semibold">
             <span>Step {stepIndicator.current} of {stepIndicator.total}</span>
           </div>
         </div>
@@ -188,7 +188,7 @@ export function TherapeuticModal({
         <div className="flex-1">
           {title && (
             <h2 className={cn(
-              "text-lg font-semibold",
+              "text-xl font-semibold",
               variant === 'therapeutic' && "text-primary",
               variant === 'cbt-flow' && "text-xl"
             )}>

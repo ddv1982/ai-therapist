@@ -177,21 +177,21 @@ export class ErrorBoundary extends Component<Props, State> {
 
             {showErrorDetails && error && (
               <details className="mt-4 p-4 bg-muted rounded-lg">
-                <summary className="cursor-pointer text-sm font-medium text-foreground hover:text-primary">
+                <summary className="cursor-pointer text-sm font-semibold text-foreground hover:text-primary">
                   Technical Details (click to expand)
                 </summary>
                 <div className="mt-3 space-y-2">
                   <div>
-                    <h4 className="text-sm font-medium text-foreground">Error Message:</h4>
-                    <code className="text-xs bg-background p-2 rounded border block mt-1 text-destructive">
+                    <h4 className="text-sm font-semibold text-foreground">Error Message:</h4>
+                    <code className="text-sm bg-background p-2 rounded border block mt-1 text-destructive">
                       {error.message}
                     </code>
                   </div>
                   
                   {error.stack && (
                     <div>
-                      <h4 className="text-sm font-medium text-foreground">Stack Trace:</h4>
-                      <pre className="text-xs bg-background p-2 rounded border mt-1 overflow-auto max-h-40 text-muted-foreground">
+                      <h4 className="text-sm font-semibold text-foreground">Stack Trace:</h4>
+                      <pre className="text-sm bg-background p-2 rounded border mt-1 overflow-auto max-h-40 text-muted-foreground">
                         {error.stack}
                       </pre>
                     </div>
@@ -199,8 +199,8 @@ export class ErrorBoundary extends Component<Props, State> {
                   
                   {errorInfo?.componentStack && (
                     <div>
-                      <h4 className="text-sm font-medium text-foreground">Component Stack:</h4>
-                      <pre className="text-xs bg-background p-2 rounded border mt-1 overflow-auto max-h-40 text-muted-foreground">
+                      <h4 className="text-sm font-semibold text-foreground">Component Stack:</h4>
+                      <pre className="text-sm bg-background p-2 rounded border mt-1 overflow-auto max-h-40 text-muted-foreground">
                         {errorInfo.componentStack}
                       </pre>
                     </div>
@@ -218,7 +218,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </details>
             )}
             
-            <p className="text-xs text-muted-foreground text-center">
+            <p className="text-sm text-muted-foreground text-center">
               If this error continues, please refresh the page or contact support.
             </p>
           </CardContent>

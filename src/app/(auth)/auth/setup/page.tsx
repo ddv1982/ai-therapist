@@ -134,7 +134,7 @@ export default function TOTPSetupPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <div className={therapeuticInteractive.statusIconContainer}>
+          <div className={therapeuticInteractive.statusIcon}>
             <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
             </svg>
@@ -163,7 +163,7 @@ export default function TOTPSetupPage() {
               </div>
               
               <div className="space-y-2">
-                <p className="text-sm font-medium">{t('auth.setup.step1.cantScan')}</p>
+                <p className="text-sm font-semibold">{t('auth.setup.step1.cantScan')}</p>
                 <div className="flex items-center space-x-2">
                   <code className="flex-1 p-2 bg-muted rounded text-sm font-mono break-all">
                     {setupData.manualEntryKey}
@@ -246,7 +246,7 @@ export default function TOTPSetupPage() {
                   placeholder={t('auth.setup.placeholder')}
                   value={verificationToken}
                   onChange={(e) => setVerificationToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="text-center text-lg font-mono"
+                  className="text-center text-xl font-mono"
                   maxLength={6}
                 />
               </div>

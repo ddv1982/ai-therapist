@@ -49,15 +49,15 @@ export function EmotionScale({
   );
   const [showCustom, setShowCustom] = useState(Boolean(currentEmotions.other));
 
-  // Core emotions with visual styling using fitting colors
+  // Core emotions with visual styling using design system colors
   const coreEmotions = [
-    { key: 'fear', label: 'Fear', emoji: '😨', color: 'bg-slate-600' },
-    { key: 'anger', label: 'Anger', emoji: '😠', color: 'bg-red-600' },
-    { key: 'sadness', label: 'Sadness', emoji: '😢', color: 'bg-blue-600' },
-    { key: 'joy', label: 'Joy', emoji: '😊', color: 'bg-yellow-500' },
-    { key: 'anxiety', label: 'Anxiety', emoji: '😰', color: 'bg-orange-500' },
-    { key: 'shame', label: 'Shame', emoji: '😳', color: 'bg-pink-600' },
-    { key: 'guilt', label: 'Guilt', emoji: '😔', color: 'bg-indigo-600' }
+    { key: 'fear', label: 'Fear', emoji: '😨', color: 'bg-muted-foreground' },
+    { key: 'anger', label: 'Anger', emoji: '😠', color: 'bg-muted-foreground' },
+    { key: 'sadness', label: 'Sadness', emoji: '😢', color: 'bg-muted-foreground' },
+    { key: 'joy', label: 'Joy', emoji: '😊', color: 'bg-primary' },
+    { key: 'anxiety', label: 'Anxiety', emoji: '😰', color: 'bg-muted-foreground' },
+    { key: 'shame', label: 'Shame', emoji: '😳', color: 'bg-muted-foreground' },
+    { key: 'guilt', label: 'Guilt', emoji: '😔', color: 'bg-muted-foreground' }
   ];
 
   // Validation logic - keeps form functional without showing error messages
@@ -102,7 +102,7 @@ export function EmotionScale({
       step="emotions"
       title={type === 'initial' ? t('emotions.title') : t('emotions.titleNow')}
       subtitle={type === 'initial' ? t('emotions.subtitle') : t('emotions.subtitleNow')}
-      icon={<Heart className="w-5 h-5" />}
+      icon={<Heart className="w-6 h-6" />}
       isValid={hasSelectedEmotions}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
@@ -114,7 +114,7 @@ export function EmotionScale({
       <div className="space-y-6">
         {hasSelectedEmotions && (
           <div className="text-center">
-            <p className="text-sm text-primary font-medium">{selectedCount} {t('finalEmotions.selected')}</p>
+            <p className="text-sm text-primary font-semibold">{selectedCount} {t('finalEmotions.selected')}</p>
           </div>
         )}
         
@@ -153,7 +153,7 @@ export function EmotionScale({
                       <div>
                         <h4 className="font-semibold text-sm text-foreground">{emotion.label}</h4>
                         {isSelected && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-sm text-muted-foreground">
                             {value === 0 && "Not present"}
                             {value > 0 && value <= 2 && "Mild"}
                             {value > 2 && value <= 5 && "Moderate"} 
@@ -167,7 +167,7 @@ export function EmotionScale({
                     <div className="flex items-center gap-2">
                       {isSelected ? (
                         <>
-                          <span className="text-sm font-medium text-primary">{value}/10</span>
+                          <span className="text-sm font-semibold text-primary">{value}/10</span>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -249,7 +249,7 @@ export function EmotionScale({
                           </div>
                           <div>
                             <h4 className="font-semibold text-sm text-foreground">{currentEmotions.other}</h4>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-sm text-muted-foreground">
                               {(currentEmotions.otherIntensity || 0) === 0 && "Not present"}
                               {(currentEmotions.otherIntensity || 0) > 0 && (currentEmotions.otherIntensity || 0) <= 2 && "Mild"}
                               {(currentEmotions.otherIntensity || 0) > 2 && (currentEmotions.otherIntensity || 0) <= 5 && "Moderate"} 
@@ -259,7 +259,7 @@ export function EmotionScale({
                             </p>
                           </div>
                         </div>
-                        <span className="text-sm font-medium text-primary">{currentEmotions.otherIntensity || 0}/10</span>
+                        <span className="text-sm font-semibold text-primary">{currentEmotions.otherIntensity || 0}/10</span>
                       </div>
                       <div className="space-y-1">
                         <TherapySlider

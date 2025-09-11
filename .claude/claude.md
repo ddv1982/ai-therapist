@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run start:local` - Start production server (localhost only)
 - `npm run network-ip` - Display network IP addresses
 - `npm run lint` - Run ESLint
+- `npm run api:types` - Generate TypeScript types from OpenAPI spec at docs/api.yaml
 
 ### Database Management
 - `npm run db:setup` - Initialize database and run setup script
@@ -20,11 +21,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run db:migrate` - Create and apply database migrations
 - `npm run db:studio` - Open Prisma Studio database GUI
 
+### Redis & Caching Commands
+- `npm run redis:setup` - Install and configure Redis for caching
+- `npm run redis:start` - Start Redis server
+- `npm run redis:stop` - Stop Redis server  
+- `npm run redis:status` - Check Redis connection status
+- `npm run cache:health` - Check cache health and get statistics
+- `npm run cache:stats` - Get detailed cache performance statistics
+
+### Setup & Configuration Commands
+- `npm run setup:all` - Complete automated setup (database, Redis, encryption, environment)
+- `npm run setup:quick` - Quick setup (database and Redis only)
+- `npm run env:init` - Bootstrap .env.local file with default variables
+
 ### Testing Commands
 - `npm run test` - Run unit tests (40 test suites, 769 tests, 100% pass rate)
 - `npm run test:watch` - Run tests in watch mode for development
 - `npm run test:coverage` - Generate test coverage report
 - `npm run test:all` - Run all available tests (comprehensive test suite)
+- `npm run test:e2e` - Run Playwright end-to-end tests
+- `npm run test:e2e:ui` - Run E2E tests with Playwright UI
+- `npm run test:e2e:debug` - Debug E2E tests
+- `npm run test:e2e:headed` - Run E2E tests in headed mode
 
 ### Important Notes
 - Always run `npm run db:generate` after modifying `prisma/schema.prisma`
@@ -69,28 +87,39 @@ This is a compassionate AI therapist application built with specific therapeutic
 
 ### Design System Constraints
 
-**Typography System (4 Sizes Only)**
-- `text-3xl font-semibold` for main headers
-- `text-xl font-semibold` for section headings  
-- `text-base` for chat messages and body text
-- `text-sm` for timestamps and metadata
+**IMPORTANT: Following "Fire Your Design Team" Rules**
+This codebase strictly enforces a simplified design system with exactly 4 font sizes, 2 font weights, 8pt grid spacing, and 60/30/10 color distribution.
 
-**8pt Grid System**
-- All spacing must be divisible by 8px or 4px
-- Use Tailwind classes: `p-2` (8px), `p-4` (16px), `p-6` (24px), `p-8` (32px), `p-12` (48px)
+**Typography System (STRICT: 4 Sizes, 2 Weights Only)**
+- **Size 1**: `text-3xl font-semibold` - Large headings only
+- **Size 2**: `text-xl font-semibold` - Subheadings/important content
+- **Size 3**: `text-base` - Body text and general content
+- **Size 4**: `text-sm` - Small text/labels/metadata
+- **Font Weights**: Only `font-semibold` (emphasis) and regular (default) allowed
+- **FORBIDDEN**: text-2xl, text-lg, text-xs, font-medium, font-bold
 
-**Color Hierarchy (60/30/10 Rule)**
-- 60%: `bg-background`, `bg-muted` for neutral backgrounds
-- 30%: `text-foreground`, `border-border` for text and subtle UI
-- 10%: `bg-primary`, `bg-accent` for therapeutic highlights and buttons
+**8pt Grid System (STRICT)**
+- ALL spacing values MUST be divisible by 8 or 4
+- **Approved values**: p-0.5 (2px), p-1 (4px), p-2 (8px), p-3 (12px), p-4 (16px), p-6 (24px), p-8 (32px), p-12 (48px), p-16 (64px), p-20 (80px), p-24 (96px)
+- **FORBIDDEN**: p-1.5, p-2.5, p-3.5, p-4.5, p-5.5, p-6.5, p-7.5, p-18, p-88
+- Same rules apply to margin (m-), gap-, space-y-, space-x-
+
+**Color System (60/30/10 Rule with OKLCH)**
+- **60% - Neutral Backgrounds**: `bg-background`, `bg-card`, `bg-muted`
+- **30% - Text and UI**: `text-foreground`, `border-border`, subtle interface elements
+- **10% - Accent Colors**: `bg-primary`, `bg-accent` for CTAs and highlights only
+- **Color Format**: OKLCH for better accessibility and dark mode support
+- **Reduced Palette**: Eliminated therapy-calm, therapy-warm, kept only therapy-success, therapy-warning, therapy-info
 
 ### Technology Stack Specifics
 
-**Tailwind CSS v3 Configuration**
-- Uses HSL CSS variables for theming: `hsl(var(--background))`
-- shadcn/ui components with custom therapeutic color scheme
-- PostCSS configuration with autoprefixer for browser compatibility
-- Custom utilities in `globals.css` for consistent therapeutic styling
+**Tailwind CSS v4 Configuration (Modern Approach)**
+- Uses OKLCH color format for better accessibility: `oklch(0.6 0.19 237)`
+- @theme directive for CSS variable registration (no @layer needed)
+- @import "tailwindcss" for simplified imports
+- Simplified typography: only 4 font sizes, 2 font weights
+- Strict 8pt grid system enforcement in spacing configuration
+- shadcn/ui components following "Fire Your Design Team" constraints
 - **Streaming Animation System** - GPU-accelerated diffusion effects in CSS
 
 **Next.js 14+ App Router with Turbopack**
@@ -213,6 +242,7 @@ export ENCRYPTION_KEY="your-generated-key-here"
 - `npm run encryption:generate` - Generate a new secure key
 - `npm run encryption:setup` - Auto-setup for development (.env file)
 - `npm run encryption:validate <key>` - Validate a key's security
+- `npm run totp` - Complete TOTP management CLI (setup, reset, health checks)
 
 **Security Requirements:**
 - Use different keys for development, staging, and production
@@ -514,3 +544,38 @@ Complete migration to AI SDK 5 with clean architecture, Turbopack development, a
 
 **API Standards Status: ✅ FULLY DOCUMENTED**
 Complete API interface standards documentation with response formats, error codes, endpoint documentation, implementation guidelines, and migration checklist. All new endpoints MUST follow these standardized patterns for consistent developer experience.
+
+## Coding Conventions
+
+### TypeScript/React Style Guide
+Based on `.cursor/rules/40-coding-style.mdc`:
+
+- **Function Signatures**: Prefer explicit function signatures for exported APIs
+- **Type Safety**: Avoid unsafe casts or `any` - use precise types
+- **Naming**: Use meaningful, descriptive names (avoid 1-2 character identifiers)
+- **Error Handling**: Use guard clauses and handle errors early - do not catch errors without meaningful handling
+- **Code Structure**: Prefer multi-line over overly clever one-liners and deep nesting
+- **Formatting**: Match existing formatting and avoid unrelated reformatting
+- **Comments**: Keep comments concise and focused on the "why"
+
+### UI Conventions
+- Use the same font consistently across the chat interface
+- Hide scrollbars by default in chat views unless explicitly needed
+
+### API Development Standards
+Based on `.cursor/rules/10-api-wrappers.mdc`:
+
+- **Middleware**: Use `withApiMiddleware` and `withAuthAndRateLimit` from `src/lib/api/api-middleware.ts`
+- **Response Format**: Use `ApiResponse<T>` and `getApiData` from `src/lib/api/api-response.ts`
+- **Authentication**: Use `requireApiAuth` from `src/lib/api/api-auth.ts` for authenticated endpoints
+- **Rate Limiting**: Apply rate limiting via `src/lib/api/rate-limiter.ts` or combined middleware
+- **Request IDs**: Include `X-Request-Id` headers in requests/responses where applicable
+
+### Project Structure Standards
+Based on `.cursor/rules/00-project-structure.mdc`:
+
+- **State Management**: Redux with provider at `src/providers/redux-provider.tsx`
+- **API Routes**: Live under `src/app/api` with standardized middleware
+- **Type Generation**: Use OpenAPI types from `src/types/api.generated.ts` via `npm run api:types`
+- **Client API**: Use typed API client from `src/lib/api/client.ts`
+- **Documentation**: OpenAPI spec is source of truth at `docs/api.yaml`

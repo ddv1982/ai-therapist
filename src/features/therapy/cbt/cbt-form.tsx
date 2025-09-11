@@ -85,7 +85,7 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
     <Card className="p-4 space-y-6">
       <form onSubmit={handleSubmit((data) => onSubmit(data))} className="space-y-6">
         <div>
-          <label className="text-sm font-medium" htmlFor="situation-input">
+          <label className="text-sm font-semibold" htmlFor="situation-input">
             Situation
           </label>
           <Controller
@@ -106,14 +106,14 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
             )}
           />
           {formState.errors.situation?.message && (
-            <p id="situation-error" className="text-xs text-red-600 mt-1" role="alert">
+            <p id="situation-error" className="text-sm text-red-600 mt-1" role="alert">
               {String(formState.errors.situation.message)}
             </p>
           )}
         </div>
 
         <div>
-          <label className="text-sm font-medium">Initial emotions</label>
+          <label className="text-sm font-semibold">Initial emotions</label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
             {(['fear','anger','sadness','joy','anxiety','shame','guilt'] as const).map((emotion) => (
               <Controller
@@ -122,7 +122,7 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
                 name={`initialEmotions.${emotion}` as const}
                 render={({ field }) => (
                   <div>
-                    <div className="flex items-center justify-between text-xs mb-2">
+                    <div className="flex items-center justify-between text-sm mb-2">
                       <span className="capitalize">{emotion}</span>
                       <span>{field.value}</span>
                     </div>

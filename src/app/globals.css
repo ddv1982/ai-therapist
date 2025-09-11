@@ -1,12 +1,38 @@
-@config "../../tailwind.config.js";
-@plugin "@tailwindcss/typography";
-@plugin "tailwindcss-animate";
+/* Tailwind v4 - Single import for all utilities */
 @import "tailwindcss";
 
-/* Modularized imports */
+/* Theme registration using @theme directive - Tailwind v4 approach */
+@theme {
+  /* Register color variables for Tailwind utilities */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  /* Therapeutic colors */
+  --color-therapy-success: var(--therapy-success);
+  --color-therapy-warning: var(--therapy-warning);
+  --color-therapy-info: var(--therapy-info);
+}
+
+/* Essential CSS modules - Fire Your Design Team approach */
 @import "../styles/base.css";
-@import "../styles/typography.css";
+@import "../styles/typography.css"; 
 @import "../styles/layout.css";
-@import "../styles/components.css";
 @import "../styles/utilities.css";
 @import "../components/ui/markdown-styles.css";

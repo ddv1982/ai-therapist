@@ -198,7 +198,7 @@ export function ThoughtRecord({
                   size="sm"
                   onClick={() => handlePromptSelect(prompt, 0)}
                   className={cn(
-                    "text-xs h-7 px-2",
+                    "text-sm h-7 px-2",
                     isSelected 
                       ? "bg-primary text-primary-foreground" 
                       : "border-dashed hover:bg-accent hover:text-accent-foreground"
@@ -217,7 +217,7 @@ export function ThoughtRecord({
             <Card key={index} className="p-4 bg-muted/30 border border-border/30 w-full max-w-full overflow-hidden">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-base font-medium text-foreground">
+                  <label className="text-base font-semibold text-foreground">
                     {t('thoughts.entryLabel')} {index + 1}
                   </label>
                   {thoughts.length > 1 && (

@@ -187,7 +187,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
               <span className="text-muted-foreground">
                 Step {currentStep} of {CBT_STEPS.length}: {currentStepData?.name}
               </span>
-              <span className="text-primary font-medium">
+              <span className="text-primary font-semibold">
                 {Math.round(progressPercentage)}%
               </span>
             </div>
@@ -195,13 +195,13 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
           </div>
           
           {/* Step Navigation */}
-          <div className="flex justify-between text-xs">
+          <div className="flex justify-between text-sm">
             {CBT_STEPS.map((step) => (
               <div
                 key={step.id}
                 className={`flex-1 text-center py-2 px-1 rounded-sm transition-colors ${
                   step.id === currentStep
-                    ? 'bg-primary/10 text-primary font-medium'
+                    ? 'bg-primary/10 text-primary font-semibold'
                     : step.id < currentStep
                     ? 'text-muted-foreground bg-muted/30'
                     : 'text-muted-foreground/60'

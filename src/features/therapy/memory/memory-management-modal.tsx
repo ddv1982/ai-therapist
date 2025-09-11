@@ -235,7 +235,7 @@ export function MemoryManagementModal({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-5xl h-[85vh] overflow-hidden flex flex-col bg-card border border-border">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg text-foreground" title="Therapeutic Memory Management">
+            <DialogTitle className="flex items-center gap-2 text-xl text-foreground" title="Therapeutic Memory Management">
               <Brain className="w-5 h-5 text-primary" />
               Therapeutic Memory Management
             </DialogTitle>
@@ -251,7 +251,7 @@ export function MemoryManagementModal({
                 <div className="bg-destructive/5 border border-destructive/20 rounded-lg spacing-md max-w-2xl w-full">
                   <div className="flex items-center gap-3 mb-4">
                     <AlertTriangle className="w-6 h-6 text-destructive" />
-                    <h3 className="text-lg font-semibold text-foreground">Confirm Memory Deletion</h3>
+                    <h3 className="text-xl font-semibold text-foreground">Confirm Memory Deletion</h3>
                   </div>
                   
                   <div className="space-y-4">
@@ -260,7 +260,7 @@ export function MemoryManagementModal({
                     </p>
                     
                     <div className="bg-destructive/10 border border-destructive/20 rounded-lg spacing-sm">
-                      <p className="text-sm text-destructive font-medium">
+                      <p className="text-sm text-destructive font-semibold">
                         ⚠️ This action cannot be undone. Your therapeutic insights and session continuity will be lost.
                       </p>
                     </div>
@@ -310,7 +310,7 @@ export function MemoryManagementModal({
               <div className="h-full flex items-center justify-center">
                 <div className="text-center">
                   <Brain className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-                  <h3 className="text-lg font-semibold mb-2 text-foreground">No Memory Data</h3>
+                  <h3 className="text-xl font-semibold mb-2 text-foreground">No Memory Data</h3>
                   <p className="text-sm text-muted-foreground">
                     You don&apos;t have any therapeutic session reports stored yet. 
                     Generate session reports to build therapeutic memory.
@@ -357,7 +357,7 @@ export function MemoryManagementModal({
                 {selectedCount > 0 && (
                   <div className="bg-primary/5 border border-primary/20 rounded-lg spacing-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="text-sm font-semibold text-foreground">
                         {selectedCount} report{selectedCount > 1 ? 's' : ''} selected
                       </span>
                       <Button
@@ -386,7 +386,7 @@ export function MemoryManagementModal({
                     </h4>
                     {selectedCount > 0 && (
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-primary font-medium">
+                        <span className="text-sm text-primary font-semibold">
                           {selectedCount} selected
                         </span>
                         <button
@@ -440,7 +440,7 @@ export function MemoryManagementModal({
                           {/* Content Section */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-2">
-                              <h5 className="text-sm font-medium truncate text-foreground">{report.sessionTitle}</h5>
+                              <h5 className="text-sm font-semibold truncate text-foreground">{report.sessionTitle}</h5>
                               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                 <Calendar className="w-3 h-3" />
                                 {report.reportDate}
@@ -453,7 +453,7 @@ export function MemoryManagementModal({
                             
                             {report.keyInsights.length > 0 && (
                               <div className="mb-3">
-                                <p className="text-sm font-medium text-foreground mb-2">Key Insights:</p>
+                                <p className="text-sm font-semibold text-foreground mb-2">Key Insights:</p>
                                 <div className="flex flex-wrap gap-1">
                                   {report.keyInsights.slice(0, 3).map((insight, index) => (
                                     <span key={index} className="text-sm bg-primary/10 text-primary px-2 py-1 rounded border border-primary/20">

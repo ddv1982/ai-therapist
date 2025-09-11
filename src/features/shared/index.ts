@@ -3,7 +3,6 @@
 
 // Theme utilities
 export { ThemeToggle } from '@/components/shared/theme-toggle';
-export { ShimmerButton } from '@/components/shared/shimmer-button';
 
 // Error handling
 export { ErrorBoundary as ChatErrorBoundary, withErrorBoundary } from '@/components/ui/error-boundary';

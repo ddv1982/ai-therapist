@@ -36,7 +36,7 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
   }, ref) => {
     const isVertical = orientation === "vertical";
     const sizeClasses = {
-      sm: { step: "w-6 h-6", text: "text-xs", spacing: "gap-2" },
+      sm: { step: "w-6 h-6", text: "text-sm", spacing: "gap-2" },
       md: { step: "w-8 h-8", text: "text-sm", spacing: "gap-3" },
       lg: { step: "w-10 h-10", text: "text-base", spacing: "gap-4" },
     }[size];
@@ -54,11 +54,11 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
         {/* Overall Progress Bar */}
         <div className="mb-therapy-md">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-foreground">
+            <span className="text-sm font-semibold text-foreground">
               Overall Progress
             </span>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-primary">
+              <span className="text-sm font-semibold text-primary">
                 {Math.round(progressPercentage)}%
               </span>
               <Badge variant="outline" size="sm">
@@ -66,7 +66,7 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
               </Badge>
             </div>
           </div>
-          <div className="h-2 bg-muted rounded-therapy-sm overflow-hidden">
+          <div className="h-2 bg-muted rounded overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
               style={{ width: `${progressPercentage}%` }}
@@ -123,7 +123,7 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
                           "bg-background border-muted-foreground/30 text-muted-foreground":
                             !step.completed && !step.current && !step.error,
                           // Clickable
-                          "hover:scale-105 cursor-pointer": isClickable,
+                          "cursor-pointer": isClickable,
                           // Disabled
                           "cursor-not-allowed opacity-60": !isClickable && !step.current,
                         }
@@ -161,7 +161,7 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
                     >
                       <span
                         className={cn(
-                          "font-medium transition-colors duration-200",
+                          "font-semibold transition-colors duration-200",
                           {
                             "text-primary": step.current || step.completed,
                             "text-destructive": step.error,
@@ -172,7 +172,7 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
                         {step.label}
                       </span>
                       {showDescription && step.description && (
-                        <span className="text-muted-foreground text-xs mt-1">
+                        <span className="text-muted-foreground text-sm mt-1">
                           {step.description}
                         </span>
                       )}

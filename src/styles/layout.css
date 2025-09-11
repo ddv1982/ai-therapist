@@ -1,75 +1,78 @@
-@layer base {
-  /* Mobile input fixes */
-  @media (width <= 768px) {
-    input,
-    select,
-    textarea {
-      font-size: 16px; /* Prevent mobile zoom on focus */
-    }
+/* 
+ * Layout & Mobile Fixes - Tailwind v4 style (no @layer needed)
+ * Essential browser and device workarounds
+ */
 
-    button,
-    [role="button"] {
-      min-height: 44px;
-    }
-
-    body {
-      height: 100vh;
-      min-height: 100vh;
-    }
-  }
-
-  /* Hover effects for desktop */
-  @media (hover: hover) {
-    button:hover,
-    [role="button"]:hover {
-      opacity: 0.9;
-      transform: none;
-    }
-
-    a:hover {
-      opacity: 0.8;
-      transform: none;
-    }
-  }
-
-  /* Text selection */
+/* Mobile input fixes - prevent zoom and ensure accessibility */
+@media (width <= 768px) {
   input,
-  textarea,
-  .message-content,
-  .message-content-user,
-  .message-content-assistant {
-    user-select: text;
+  select,
+  textarea {
+    font-size: 16px; /* Prevent mobile zoom on focus */
   }
 
   button,
-  [role="button"],
-  nav,
-  .sidebar {
-    user-select: none;
-    cursor: pointer;
+  [role="button"] {
+    min-height: 44px; /* iOS touch target minimum */
   }
 
-  /* Mobile responsive fixes */
-  @media (width <= 768px) {
-    #__next {
-      height: 100%;
-      overflow: hidden;
-      position: relative;
-    }
+  body {
+    height: 100vh;
+    min-height: 100vh;
+  }
+}
+
+/* Hover effects for desktop only */
+@media (hover: hover) {
+  button:hover,
+  [role="button"]:hover {
+    opacity: 0.9;
+    transform: none;
   }
 
-  /* Network URL specific fixes */
-  @media (resolution >= 2dppx) and (hover: none) {
-    .network-optimized {
-      will-change: auto;
-      transform: none;
-    }
+  a:hover {
+    opacity: 0.8;
+    transform: none;
+  }
+}
 
-    .animate-message-in,
-    .animate-slide-in {
-      animation: none;
-      opacity: 1;
-      transform: none;
-    }
+/* Text selection control */
+input,
+textarea,
+.message-content,
+.message-content-user,
+.message-content-assistant {
+  user-select: text;
+}
+
+button,
+[role="button"],
+nav,
+.sidebar {
+  user-select: none;
+  cursor: pointer;
+}
+
+/* Mobile responsive fixes */
+@media (width <= 768px) {
+  #__next {
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+}
+
+/* Performance optimizations for high-DPI mobile */
+@media (resolution >= 2dppx) and (hover: none) {
+  .network-optimized {
+    will-change: auto;
+    transform: none;
+  }
+
+  .animate-message-in,
+  .animate-slide-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 }

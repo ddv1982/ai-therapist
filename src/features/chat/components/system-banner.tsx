@@ -21,7 +21,7 @@ export function SystemBanner({ hasMemory, messageCount, isMobile, onManageMemory
     <div className={`mb-4 ${isMobile ? 'mx-1' : 'mx-2'}`} role="status" aria-live="polite">
       <div className="bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
         <div className="flex items-center justify-between">
-          <p className="text-xs text-primary/80 flex items-center gap-2">
+          <p className="text-sm text-primary/80 flex items-center gap-2">
             <Sparkles className="w-3 h-3" aria-hidden="true" />
             <span>{formatText(contextInfo)}</span>
           </p>

@@ -59,9 +59,9 @@ export const SessionSidebar = React.memo(function SessionSidebar({
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                <Heart className="w-5 h-5 text-white" />
+                <Heart className="w-6 h-6 text-white" />
               </div>
-<h2 className="text-2xl sm:text-3xl mb-4 tracking-tight gradient-text">
+<h2 className="text-3xl mb-4 tracking-tight gradient-text">
   Therapeutic AI
 </h2>
             </div>
@@ -73,20 +73,18 @@ export const SessionSidebar = React.memo(function SessionSidebar({
                 onClick={useCallback(() => setShowSidebar(false), [setShowSidebar])}
                 className={therapeuticInteractive.iconButtonSmall}
               >
-                <div className="shimmer-effect"></div>
                 <X className="w-4 h-4 relative z-10" />
               </Button>
             </div>
           </div>
           <Button 
             onClick={startNewSession}
-            className="w-full justify-start gap-3 h-12 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 text-white shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation !transform-none !hover:transform-none !active:transform-none !scale-100 !hover:scale-100 !active:scale-100 !ring-0 !focus:ring-0 !focus-visible:ring-0 !outline-none"
+            className="w-full justify-start gap-3 h-12 rounded-xl transition-all group"
           >
-            <div className="shimmer-effect opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
             <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
               <Plus className="w-4 h-4" />
             </div>
-            <span className="font-medium">Start New Session</span>
+            <span className="font-semibold">Start New Session</span>
             <Sparkles className="w-4 h-4 ml-auto opacity-60 group-hover:opacity-100 transition-opacity" />
           </Button>
         </div>
@@ -105,8 +103,8 @@ export const SessionSidebar = React.memo(function SessionSidebar({
               key={session.id}
               className={`p-4 mb-3 group transition-all duration-300 hover:shadow-lg cursor-pointer animate-fade-in ${
                 currentSession === session.id 
-                  ? 'ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/5 border-primary/30 shadow-md' 
-                  : 'hover:border-primary/20 bg-white/50 dark:bg-card/50 hover:bg-white/80 dark:hover:bg-card/70'
+                  ? 'ring-2 ring-primary/50 bg-primary/5 border-primary/30 shadow-md' 
+                  : 'hover:border-primary/20 bg-card/50 hover:bg-card/70'
               }`}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
@@ -123,12 +121,12 @@ export const SessionSidebar = React.memo(function SessionSidebar({
                 <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
                   currentSession === session.id 
                     ? 'bg-primary text-primary-foreground' 
-                    : therapeuticInteractive.itemHover
+                    : 'bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary'
                 }`}>
                   <MessageSquare className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-medium truncate mb-1">
+                  <h3 className="text-base font-semibold truncate mb-1">
                     {session.title}
                   </h3>
                   <div className="flex items-center gap-2">
@@ -150,7 +148,6 @@ export const SessionSidebar = React.memo(function SessionSidebar({
                     deleteSession(session.id);
                   }}
                 >
-                  <div className="shimmer-effect"></div>
                   <Trash2 className="w-4 h-4 relative z-10" />
                 </Button>
               </div>

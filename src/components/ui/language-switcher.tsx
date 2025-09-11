@@ -30,10 +30,10 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
   }
 
   return (
-    <div className={`inline-flex items-center gap-1 rounded-full bg-gray-200 dark:bg-gray-700 p-0.5 ${className ?? ''}`} aria-label="Language toggle">
+    <div className={`inline-flex items-center gap-1 rounded-full bg-gray-200 dark:bg-gray-700 p-1 ${className ?? ''}`} aria-label="Language toggle">
       <button
         type="button"
-        className={`px-2 py-1 text-xs rounded-full transition-colors ${locale === 'en' ? 'bg-white text-gray-900 dark:text-gray-900' : 'text-gray-700 dark:text-gray-200'}`}
+        className={`px-2 py-1 text-sm rounded-full transition-colors ${locale === 'en' ? 'bg-white text-gray-900 dark:text-gray-900' : 'text-gray-700 dark:text-gray-200'}`}
         aria-pressed={locale === 'en'}
         aria-label="Switch language to English"
         onClick={() => selectLocale('en')}
@@ -42,7 +42,7 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
       </button>
       <button
         type="button"
-        className={`px-2 py-1 text-xs rounded-full transition-colors ${locale === 'nl' ? 'bg-white text-gray-900 dark:text-gray-900' : 'text-gray-700 dark:text-gray-200'}`}
+        className={`px-2 py-1 text-sm rounded-full transition-colors ${locale === 'nl' ? 'bg-white text-gray-900 dark:text-gray-900' : 'text-gray-700 dark:text-gray-200'}`}
         aria-pressed={locale === 'nl'}
         aria-label="Switch language to Nederlands"
         onClick={() => selectLocale('nl')}

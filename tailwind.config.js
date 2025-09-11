@@ -3,83 +3,87 @@ const config = {
   theme: {
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        /* Tailwind v4 OKLCH colors for better accessibility */
+        border: "oklch(var(--border))",
+        input: "oklch(var(--input))",
+        ring: "oklch(var(--ring))",
+        background: "oklch(var(--background))",
+        foreground: "oklch(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "oklch(var(--primary))",
+          foreground: "oklch(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "oklch(var(--secondary))",
+          foreground: "oklch(var(--secondary-foreground))",
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: "oklch(var(--destructive))",
+          foreground: "oklch(var(--destructive-foreground))",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "oklch(var(--muted))",
+          foreground: "oklch(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "oklch(var(--accent))",
+          foreground: "oklch(var(--accent-foreground))",
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "oklch(var(--popover))",
+          foreground: "oklch(var(--popover-foreground))",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "oklch(var(--card))",
+          foreground: "oklch(var(--card-foreground))",
         },
+        /* Simplified therapy colors - 60/30/10 rule compliance */
         therapy: {
-          primary: "hsl(var(--primary))",
-          accent: "hsl(var(--accent))",
-          warning: "hsl(var(--destructive))",
-          success: "hsl(147 45% 55%)",
-          info: "hsl(210 85% 60%)",
+          success: "oklch(var(--therapy-success))",
+          warning: "oklch(var(--therapy-warning))",
+          info: "oklch(var(--therapy-info))",
         },
       },
+      /* Simplified border radius following 8pt grid */
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-        "therapy-sm": "0.5rem",
-        "therapy-md": "0.75rem",
-        "therapy-lg": "1rem",
-        "therapy-xl": "1.5rem",
+        lg: "var(--radius)",              /* 12px from base.css */
+        md: "calc(var(--radius) - 4px)", /* 8px - grid compliant */
+        sm: "calc(var(--radius) - 8px)", /* 4px - grid compliant */
+        /* Therapy border radius utilities following 8pt grid */
+        "therapy-sm": "4px",   /* 4px - grid compliant */
+        "therapy-md": "8px",   /* 8px - grid compliant */
+        "therapy-lg": "12px",  /* 12px - grid compliant */
       },
+      /* 8pt Grid System: ONLY spacing divisible by 8 or 4 */
       spacing: {
-        "0.5": "0.125rem",
-        "1.5": "0.375rem",
-        "2.5": "0.625rem",
-        "3.5": "0.875rem",
-        "4.5": "1.125rem",
-        "5.5": "1.375rem",
-        "6.5": "1.625rem",
-        "7.5": "1.875rem",
-        "18": "4.5rem",
-        "88": "22rem",
-        "therapy-xs": "0.5rem",
-        "therapy-sm": "1rem",
-        "therapy-md": "1.5rem",
-        "therapy-lg": "2rem",
-        "therapy-xl": "3rem",
-        "therapy-2xl": "4rem",
-        "therapy-3xl": "6rem",
+        /* Fire Your Design Team - strict grid compliance */
+        "0.5": "0.125rem", /* 2px - minimal spacing */
+        "1": "0.25rem",    /* 4px - divisible by 4 */
+        "2": "0.5rem",     /* 8px - divisible by 8 */
+        "3": "0.75rem",    /* 12px - divisible by 4 */
+        "4": "1rem",       /* 16px - divisible by 8 */
+        "6": "1.5rem",     /* 24px - divisible by 8 */
+        "8": "2rem",       /* 32px - divisible by 8 */
+        "12": "3rem",      /* 48px - divisible by 8 */
+        "16": "4rem",      /* 64px - divisible by 8 */
+        "20": "5rem",      /* 80px - divisible by 8 */
+        "24": "6rem",      /* 96px - divisible by 8 */
       },
+      /* Fire Your Design Team Typography: 4 sizes only */
       fontSize: {
-        "therapy-xs": ["0.75rem", { lineHeight: "1rem", fontWeight: "400" }],
-        "therapy-sm": ["0.875rem", { lineHeight: "1.25rem", fontWeight: "400" }],
-        "therapy-base": ["1rem", { lineHeight: "1.5rem", fontWeight: "400" }],
-        "therapy-lg": ["1.125rem", { lineHeight: "1.75rem", fontWeight: "500" }],
-        "therapy-xl": ["1.25rem", { lineHeight: "1.875rem", fontWeight: "600" }],
-        "therapy-2xl": ["1.5rem", { lineHeight: "2rem", fontWeight: "600" }],
-        "therapy-3xl": ["1.875rem", { lineHeight: "2.25rem", fontWeight: "700" }],
+        /* Size 1: Large headings - text-3xl */
+        "3xl": "1.875rem",
+        /* Size 2: Subheadings - text-xl */
+        "xl": "1.25rem",
+        /* Size 3: Body text - text-base */
+        "base": "1rem",
+        /* Size 4: Small text - text-sm */
+        "sm": "0.875rem",
+      },
+      fontWeight: {
+        /* Fire Your Design Team: Only 2 weights */
+        normal: "400",    /* Regular weight */
+        semibold: "600",  /* Semibold weight */
       },
       keyframes: {
         "accordion-down": {
@@ -107,8 +111,8 @@ const config = {
           to: { opacity: "1", transform: "translateY(0)" },
         },
         glow: {
-          "0%, 100%": { boxShadow: "0 0 5px hsl(var(--primary))" },
-          "50%": { boxShadow: "0 0 20px hsl(var(--primary)), 0 0 30px hsl(var(--primary))" },
+          "0%, 100%": { boxShadow: "0 0 5px oklch(var(--primary))" },
+          "50%": { boxShadow: "0 0 20px oklch(var(--primary)), 0 0 30px oklch(var(--primary))" },
         },
         "gentle-glow": {
           "0%, 100%": { opacity: "0.8" },

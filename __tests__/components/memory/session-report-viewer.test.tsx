@@ -185,8 +185,8 @@ describe('SessionReportViewer', () => {
     it('should apply consistent therapeutic styling classes', () => {
       const { container } = render(<SessionReportViewer reportDetail={mockReportDetail} />);
 
-      // Should have therapeutic typography classes
-      expect(container.querySelector('.text-lg')).toBeInTheDocument();
+      // Should have therapeutic typography classes (updated for new design system)
+      expect(container.querySelector('.text-xl')).toBeInTheDocument();
       expect(container.querySelector('.text-sm')).toBeInTheDocument();
       
       // Should have proper spacing classes

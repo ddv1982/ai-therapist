@@ -95,7 +95,7 @@ export function CommandPalette({
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="overflow-hidden p-0 shadow-2xl max-w-2xl">
-          <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground">
+          <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
             <CommandInput 
               placeholder={t('command.placeholder')}
               className="h-12"
@@ -136,7 +136,7 @@ export function CommandPalette({
                         <div className="truncate">
                           {session.title}
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-sm text-muted-foreground">
                           {(session as unknown as { _count?: { messages?: number } })._count?.messages ?? (session as unknown as { messageCount?: number }).messageCount ?? 0} {t('command.messages')}
                         </div>
                       </div>

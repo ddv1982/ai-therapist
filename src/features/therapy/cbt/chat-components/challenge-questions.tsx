@@ -146,7 +146,7 @@ export function ChallengeQuestions({
               <Card key={index} className="p-4 bg-muted/30 border border-border/30">
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-sm font-medium text-foreground flex-1">
+                    <h4 className="text-sm font-semibold text-foreground flex-1">
                       {questionData.question}
                     </h4>
                     {questionsData.challengeQuestions.length > 1 && (
@@ -169,7 +169,7 @@ export function ChallengeQuestions({
                     maxLength={300}
                   />
                   
-                  <div className="flex justify-end text-xs text-muted-foreground">
+                  <div className="flex justify-end text-sm text-muted-foreground">
                     <span>{questionData.answer.length}/300</span>
                   </div>
                 </div>

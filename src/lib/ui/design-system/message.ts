@@ -9,7 +9,7 @@ export const messageBase = {
   avatar: "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm",
   contentWrapper: "flex-1 min-w-0",
   bubble: "p-4 rounded-2xl shadow-sm break-words selectable-text transition-all duration-200 hover:shadow-md",
-  timestamp: "text-xs mt-2 px-1 opacity-70",
+  timestamp: "text-sm mt-2 px-1 opacity-70",
 } as const;
 
 // Role-specific variants
@@ -34,9 +34,9 @@ export const messageVariants = {
 
 // Typography scale for messages
 export const messageTypography = {
-  h1: "text-xl sm:text-2xl font-bold mb-4 mt-6 first:mt-0",
-  h2: "text-lg sm:text-xl font-semibold mb-3 mt-6 first:mt-0", 
-  h3: "text-base sm:text-lg font-semibold mb-2 mt-4 first:mt-0",
+  h1: "text-3xl font-semibold mb-4 mt-6 first:mt-0",
+  h2: "text-xl font-semibold mb-3 mt-6 first:mt-0", 
+  h3: "text-base font-semibold mb-2 mt-4 first:mt-0",
   body: "text-base leading-relaxed",
   small: "text-sm leading-normal",
 } as const;

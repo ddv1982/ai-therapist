@@ -6,7 +6,8 @@ import {
   ArrowLeft,
   ChevronRight,
   Brain,
-  Trash2
+  Trash2,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {useTranslations} from 'next-intl';
@@ -452,7 +453,7 @@ function CBTDiaryPageContent() {
   }, [completeFinalEmotionsStep]);
 
   return (
-    <div className="h-screen bg-gradient-to-br from-background via-background to-muted/20 dark:from-background dark:via-background dark:to-muted/20 flex flex-col" style={{ height: '100dvh' }}>
+    <div className="h-screen bg-background flex flex-col" style={{ height: '100dvh' }}>
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
@@ -465,7 +466,7 @@ function CBTDiaryPageContent() {
               {t('nav.chat')}
             </button>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-foreground font-medium">{t('nav.session')}</span>
+            <span className="text-foreground font-semibold">{t('nav.session')}</span>
             {isCBTActive && cbtCurrentStep !== 'complete' && (
               <>
                 <ChevronRight className="w-4 h-4" />
@@ -489,11 +490,11 @@ function CBTDiaryPageContent() {
                 <span className="sm:hidden">{t('nav.back')}</span>
               </Button>
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                  <Brain className="w-5 h-5 text-white" />
+                <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
+                  <Brain className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-semibold">
+                  <h1 className="text-3xl font-semibold">
                     Interactive CBT Session
                     {isCBTActive && cbtCurrentStep !== 'complete' && (
                       <span className="ml-3 text-base text-primary font-normal">
@@ -520,23 +521,23 @@ function CBTDiaryPageContent() {
         <div className="border-b bg-muted/30">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-sm font-semibold text-foreground">
                 Step {getStepInfo(cbtCurrentStep).stepNumber} of {getStepInfo(cbtCurrentStep).totalSteps}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 {Math.round((getStepInfo(cbtCurrentStep).stepNumber / getStepInfo(cbtCurrentStep).totalSteps) * 100)}% Complete
               </span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-primary to-accent h-2 rounded-full transition-all duration-500 ease-out"
+                className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
                 style={{ 
                   width: `${(getStepInfo(cbtCurrentStep).stepNumber / getStepInfo(cbtCurrentStep).totalSteps) * 100}%` 
                 }}
               ></div>
             </div>
             {!isMobile && (
-              <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+              <div className="flex justify-between mt-1 text-sm text-muted-foreground">
                 <span>Situation</span>
                 <span>Emotions</span>
                 <span>Thoughts</span>
@@ -559,10 +560,10 @@ function CBTDiaryPageContent() {
             <div className="flex items-center justify-center min-h-[60vh]">
               <div className="text-center max-w-2xl animate-fade-in">
                 <div className="mb-8">
-                  <div className="h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/20 flex items-center justify-center mx-auto mb-6 shadow-lg">
+                  <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center mx-auto mb-6 shadow-lg">
                     <Brain className="w-8 h-8 sm:w-12 sm:h-12 text-primary animate-pulse" />
                   </div>
-                  <h2 className="text-xl sm:text-2xl mb-4 gradient-text">
+                  <h2 className="text-3xl mb-4 gradient-text">
                     {t('welcome.title')}
                   </h2>
                   <p className="text-muted-foreground mb-8 leading-relaxed">
@@ -572,11 +573,11 @@ function CBTDiaryPageContent() {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                   <div className="p-4 rounded-xl bg-card/50 border border-border/50 text-left">
-                    <h3 className="text-lg text-primary mb-2">🧠 {t('welcome.evidenceTitle')}</h3>
+                    <h3 className="text-xl font-semibold text-primary mb-2">🧠 {t('welcome.evidenceTitle')}</h3>
                     <p className="text-sm text-muted-foreground">{t('welcome.evidenceDesc')}</p>
                   </div>
                   <div className="p-4 rounded-xl bg-card/50 border border-border/50 text-left">
-                    <h3 className="text-lg text-accent mb-2">💡 {t('welcome.interactiveTitle')}</h3>
+                    <h3 className="text-xl font-semibold text-accent mb-2">💡 {t('welcome.interactiveTitle')}</h3>
                     <p className="text-sm text-muted-foreground">{t('welcome.interactiveDesc')}</p>
                   </div>
                 </div>
@@ -590,7 +591,7 @@ function CBTDiaryPageContent() {
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold">📝 Previous Session Found</h3>
                           {hasDraft && (
-                            <span className="px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                            <span className="px-2 py-1 text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
                               {t('status.saved')}
                             </span>
                           )}
@@ -608,7 +609,7 @@ function CBTDiaryPageContent() {
                       <p className="text-sm opacity-90">
                         You have an unfinished CBT session from {draftLastSaved ? new Date(draftLastSaved).toLocaleDateString() : 'recently'}.
                       </p>
-                      <p className="text-xs opacity-75 mt-1">
+                      <p className="text-sm opacity-75 mt-1">
                         {t('draft.choice')}
                       </p>
                     </div>
@@ -617,15 +618,18 @@ function CBTDiaryPageContent() {
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <Button
                         onClick={handleResumeDraft}
-                        className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3 text-base font-semibold"
+                        className="justify-center gap-3 h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 group px-6"
                       >
-                        <Brain className="w-5 h-5 mr-2" />
-                        {t('actions.resume')}
+                        <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                          <Brain className="w-4 h-4" />
+                        </div>
+                        <span className="font-semibold">{t('actions.resume')}</span>
+                        <Sparkles className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" />
                       </Button>
                       <Button
                         onClick={handleStartFresh}
                         variant="outline"
-                        className="border-2 hover:bg-accent hover:text-accent-foreground px-6 py-3 text-base font-semibold"
+                        className="justify-center h-12 rounded-xl border-2 hover:bg-accent hover:text-accent-foreground px-6 font-semibold"
                       >
                         {t('actions.startNew')}
                       </Button>
@@ -635,10 +639,13 @@ function CBTDiaryPageContent() {
                   <div className="flex justify-center">
                     <Button
                       onClick={handleStartCBT}
-                      className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 px-8 py-3 text-lg font-semibold"
+                      className="justify-center gap-3 h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 group px-8"
                     >
-                      <Brain className="w-5 h-5 mr-2" />
-                      {t('actions.begin')}
+                      <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                        <Brain className="w-4 h-4" />
+                      </div>
+                      <span className="font-semibold">{t('actions.begin')}</span>
+                      <Sparkles className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" />
                     </Button>
                   </div>
                 )}
@@ -672,7 +679,7 @@ function CBTDiaryPageContent() {
       {/* Progress Information */}
       <div className="border-t bg-card/50 backdrop-blur-md">
         <div className={cn("max-w-4xl mx-auto py-4 text-center", isMobile ? "px-3" : "px-4 sm:px-6")}>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-sm text-muted-foreground">
             {isStreaming ? (
               <span>🔄 Analyzing your CBT session and preparing for chat...</span>
             ) : isCBTActive && cbtCurrentStep !== 'complete' && cbtCurrentStep !== 'final-emotions' ? (

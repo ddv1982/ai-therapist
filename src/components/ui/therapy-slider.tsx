@@ -100,13 +100,13 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
     onChange(newValue);
   };
 
-  const labelClassName = labelSize === 'xs' ? 'text-xs' : 'text-sm';
+  const labelClassName = labelSize === 'xs' ? 'text-sm' : 'text-sm';
 
   return (
     <div className={cn("space-y-2", className)}>
       {/* Label and Value Display */}
       <div className="flex justify-between items-center">
-        <label className={cn("font-medium text-foreground", labelClassName)}>
+        <label className={cn("font-semibold text-foreground", labelClassName)}>
           {label}
         </label>
         <span className={cn("text-muted-foreground font-mono", labelClassName)}>
@@ -130,7 +130,7 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
       />
 
       {/* Scale Labels */}
-      <div className="flex justify-between text-xs text-muted-foreground">
+      <div className="flex justify-between text-sm text-muted-foreground">
         <span>{scaleLabels.left}</span>
         {scaleLabels.center && (
           <span className="hidden sm:inline">{scaleLabels.center}</span>

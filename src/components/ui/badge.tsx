@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-therapy-sm border px-therapy-xs py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded border px-1 py-0.5 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
@@ -19,9 +19,9 @@ const badgeVariants = cva(
         therapy: "border-transparent bg-gradient-to-r from-primary to-accent text-white shadow-md",
       },
       size: {
-        default: "h-5 px-therapy-xs text-xs",
+        default: "h-6 px-1 text-sm",
         sm: "h-4 px-1.5 text-[10px]",
-        lg: "h-6 px-therapy-sm text-sm",
+        lg: "h-6 px-2 text-sm",
       },
     },
     defaultVariants: {

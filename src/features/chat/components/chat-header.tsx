@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Menu, X, Brain } from 'lucide-react';
-import { getTherapeuticIconButton } from '@/lib/ui/design-tokens';
+import { getIconButtonSize } from '@/lib/ui/design-tokens';
 import { useTranslations } from 'next-intl';
 
 interface ChatHeaderProps {
@@ -42,14 +42,13 @@ export function ChatHeader({
             size="sm"
             onTouchStart={onToggleSidebar}
             onClick={onToggleSidebar}
-            className={getTherapeuticIconButton('large')}
+            className={getIconButtonSize('large')}
             style={{ WebkitTapHighlightColor: 'transparent' }}
             aria-label={t('main.toggleSidebar')}
             aria-expanded={showSidebar}
             aria-controls="chat-sidebar"
           >
-            <div className="shimmer-effect"></div>
-            <Menu className="w-5 h-5 relative z-10" />
+            <Menu className="w-4 h-4 relative z-10" />
           </Button> 
         </div>
         <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
@@ -59,15 +58,14 @@ export function ChatHeader({
               size="sm"
               onClick={onGenerateReport}
               disabled={isGeneratingReport}
-              className={getTherapeuticIconButton('large', true)}
+              className={getIconButtonSize('large')}
               style={{ WebkitTapHighlightColor: 'transparent' }}
               title={t('main.generateReport')}
             >
-              <div className="shimmer-effect"></div>
-              {isGeneratingReport ? (
+                {isGeneratingReport ? (
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin relative z-10" />
               ) : (
-                <FileText className="w-5 h-5 relative z-10" />
+                <FileText className="w-4 h-4 relative z-10" />
               )}
             </Button>
           )}
@@ -76,24 +74,22 @@ export function ChatHeader({
               variant="secondary"
               size="sm"
               onClick={onStopGenerating}
-              className={getTherapeuticIconButton('large')}
+              className={getIconButtonSize('large')}
               style={{ WebkitTapHighlightColor: 'transparent' }}
               title={t('main.stopGenerating')}
             >
-              <div className="shimmer-effect"></div>
-              <X className="w-5 h-5 relative z-10" />
+                <X className="w-4 h-4 relative z-10" />
             </Button>
           )}
           <Button
             variant="ghost"
             size="sm"
             onClick={onOpenCBTDiary}
-            className={getTherapeuticIconButton('large')}
+            className={getIconButtonSize('large')}
             style={{ WebkitTapHighlightColor: 'transparent' }}
             title={isMobile ? t('main.cbtMobile') : t('main.cbtOpen')}
           >
-            <div className="shimmer-effect"></div>
-            <Brain className="w-5 h-5 relative z-10" />
+            <Brain className="w-4 h-4 relative z-10" />
           </Button>
         </div>
       </div>

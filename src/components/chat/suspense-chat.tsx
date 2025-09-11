@@ -72,7 +72,7 @@ function ConnectionSkeleton() {
           <Loader2 className="h-8 w-8 text-primary animate-spin" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-foreground">
+          <h3 className="text-xl font-semibold text-foreground">
             Connecting to AI Therapist
           </h3>
           <p className="text-sm text-muted-foreground max-w-md">
@@ -93,7 +93,7 @@ function ChatErrorFallback() {
           <MessageSquare className="h-8 w-8 text-destructive" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-foreground">
+          <h3 className="text-xl font-semibold text-foreground">
             Unable to Load Chat
           </h3>
           <p className="text-sm text-muted-foreground">

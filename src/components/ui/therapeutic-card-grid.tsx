@@ -85,7 +85,7 @@ export function TherapeuticCardGrid({
       <div className="space-y-4">
         {caption && (
           <div className="px-1">
-            <h3 className="text-lg font-semibold text-foreground">{caption}</h3>
+            <h3 className="text-xl font-semibold text-foreground">{caption}</h3>
           </div>
         )}
         <div className={layoutStyles.grid.container}>
@@ -119,7 +119,7 @@ export function TherapeuticCardGrid({
             />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">No data available</h3>
+        <h3 className="text-xl font-semibold text-foreground mb-2">No data available</h3>
         <p className="text-sm text-muted-foreground max-w-sm">
           There&apos;s no information to display at the moment. Data will appear here once available.
         </p>
@@ -130,7 +130,7 @@ export function TherapeuticCardGrid({
       <div className="space-y-4">
         {caption && (
           <div className="px-1">
-            <h3 className="text-lg font-semibold text-foreground">{caption}</h3>
+            <h3 className="text-xl font-semibold text-foreground">{caption}</h3>
           </div>
         )}
         <div className="rounded-lg border bg-card">
@@ -148,8 +148,8 @@ export function TherapeuticCardGrid({
       {/* Header with Caption and Summary */}
       {caption && (
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-lg font-semibold text-foreground">{caption}</h3>
-          <Badge variant="secondary" className="text-xs">
+          <h3 className="text-xl font-semibold text-foreground">{caption}</h3>
+          <Badge variant="secondary" className="text-sm">
             {totalItems} {totalItems === 1 ? 'item' : 'items'}
           </Badge>
         </div>
@@ -190,7 +190,7 @@ export function TherapeuticCardGrid({
       {/* Footer Summary for Large Datasets */}
       {totalItems > 20 && (
         <div className="flex justify-center pt-4">
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-sm">
             Showing all {totalItems} items
           </Badge>
         </div>

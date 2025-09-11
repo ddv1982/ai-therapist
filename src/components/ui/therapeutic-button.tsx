@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 // Enhanced button variants that consolidate all button patterns
 const therapeuticButtonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 relative overflow-hidden",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-semibold transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 relative overflow-hidden",
   {
     variants: {
       variant: {
@@ -33,25 +33,24 @@ const therapeuticButtonVariants = cva(
         mobile: "bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 transition-all duration-150 min-h-[44px]",
         "mobile-ghost": "hover:bg-accent hover:text-accent-foreground active:scale-95 transition-all duration-150 min-h-[44px]",
         
-        // Special effect variants
-        shimmer: "bg-gradient-to-r from-primary to-accent text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 group shimmer-button",
-        gradient: "bg-gradient-to-r from-primary via-accent to-primary bg-size-200 bg-pos-0 hover:bg-pos-100 text-white font-medium shadow-lg transition-all duration-500",
+        // Special effect variants (shimmer removed)
+        gradient: "bg-gradient-to-r from-primary via-accent to-primary bg-size-200 bg-pos-0 hover:bg-pos-100 text-white font-semibold shadow-lg transition-all duration-500",
       },
       
       size: {
         default: "h-9 px-4 py-2 text-sm",
-        sm: "h-8 rounded-md px-3 text-xs",
+        sm: "h-8 rounded-md px-3 text-sm",
         lg: "h-10 rounded-md px-8 text-base",
-        xl: "h-12 rounded-lg px-10 text-lg font-semibold",
+        xl: "h-12 rounded-lg px-10 text-xl font-semibold",
         icon: "h-9 w-9",
         "mobile-touch": "h-12 px-6 text-base min-w-[120px]", // Mobile-friendly size
-        "compact": "h-6 px-2 text-xs",
+        "compact": "h-6 px-2 text-sm",
         "full": "w-full h-12 text-base font-semibold",
       },
       
       animation: {
         none: "",
-        hover: "hover:scale-105",
+        hover: "hover:brightness-110",
         press: "active:scale-95",
         bounce: "hover:animate-bounce",
         pulse: "animate-pulse",
@@ -162,7 +161,7 @@ const TherapeuticButton = forwardRef<HTMLButtonElement, TherapeuticButtonProps>(
         className={cn(
           therapeuticButtonVariants({ variant: finalVariant, size: finalSize, animation }),
           // Additional therapeutic effects
-          shimmerEffect && "shimmer-button",
+          shimmerEffect && "",
           gradientAnimation && "gradient-animation",
           glowEffect && "glow-effect",
           therapeuticFeedback && "therapeutic-feedback",
@@ -204,16 +203,13 @@ const TherapeuticButton = forwardRef<HTMLButtonElement, TherapeuticButtonProps>(
           
           {/* Badge */}
           {badge && (
-            <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-sm rounded-full h-6 w-6 flex items-center justify-center">
               {badge}
             </span>
           )}
         </div>
 
-        {/* Shimmer effect overlay */}
-        {(shimmerEffect || variant === 'shimmer') && (
-          <div className="shimmer-effect absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        )}
+        {/* Shimmer effect removed */}
 
         {/* Therapeutic glow effect */}
         {glowEffect && (
@@ -232,7 +228,7 @@ export const therapeuticButtonPresets = {
   primaryAction: (props: Partial<TherapeuticButtonProps>) => ({
     variant: 'therapeutic' as const,
     size: 'lg' as const,
-    shimmerEffect: true,
+    shimmerEffect: false,
     therapeuticFeedback: true,
     ...props
   }),
@@ -241,7 +237,7 @@ export const therapeuticButtonPresets = {
   submit: (props: Partial<TherapeuticButtonProps>) => ({
     variant: 'therapeutic' as const,
     size: 'full' as const,
-    shimmerEffect: true,
+    shimmerEffect: false,
     animation: 'hover' as const,
     ...props
   }),
@@ -291,11 +287,7 @@ export { TherapeuticButton, therapeuticButtonVariants };
 
 // Additional CSS classes for integration with globals.css
 export const therapeuticButtonClasses = {
-  'shimmer-button': `
-    relative overflow-hidden
-    before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
-    before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700
-  `,
+  // shimmer-button removed
   
   'gradient-animation': `
     bg-gradient-to-r from-primary via-accent to-primary bg-size-200 bg-pos-0

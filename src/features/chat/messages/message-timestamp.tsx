@@ -41,7 +41,7 @@ export function MessageTimestamp({ timestamp, role, modelUsed, className }: Mess
       <div className="flex items-center gap-2 text-sm">
         <span>{formattedTime}</span>
         {role === 'assistant' && modelUsed && (
-          <span className="text-muted-foreground/70 text-xs">
+          <span className="text-muted-foreground/70 text-sm">
             • {formatModelName(modelUsed)}
           </span>
         )}

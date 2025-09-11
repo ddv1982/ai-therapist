@@ -177,7 +177,7 @@ export function CBTExportButton({
               <FileText className="w-4 h-4 mr-2 text-red-600" />
               <div className="flex flex-col items-start">
                 <span>Export as PDF</span>
-                <span className="text-xs text-muted-foreground">Professional report format</span>
+                <span className="text-sm text-muted-foreground">Professional report format</span>
               </div>
             </button>
             
@@ -189,7 +189,7 @@ export function CBTExportButton({
               <FileType className="w-4 h-4 mr-2 text-blue-600" />
               <div className="flex flex-col items-start">
                 <span>Export as Markdown</span>
-                <span className="text-xs text-muted-foreground">Formatted text document</span>
+                <span className="text-sm text-muted-foreground">Formatted text document</span>
               </div>
             </button>
             
@@ -203,7 +203,7 @@ export function CBTExportButton({
               <FileJson className="w-4 h-4 mr-2 text-green-600" />
               <div className="flex flex-col items-start">
                 <span>Export as JSON</span>
-                <span className="text-xs text-muted-foreground">Structured data backup</span>
+                <span className="text-sm text-muted-foreground">Structured data backup</span>
               </div>
             </button>
             
@@ -215,7 +215,7 @@ export function CBTExportButton({
               <FileText className="w-4 h-4 mr-2 text-gray-600" />
               <div className="flex flex-col items-start">
                 <span>Export as Text</span>
-                <span className="text-xs text-muted-foreground">Plain text format</span>
+                <span className="text-sm text-muted-foreground">Plain text format</span>
               </div>
             </button>
           </div>

@@ -176,7 +176,7 @@ export function TherapeuticBaseCard({
             <div className="flex-1 min-w-0">
               {/* Step indicator */}
               {stepIndicator && (
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-medium mb-3">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-semibold mb-3">
                   {stepIndicator.current && (
                     <span>Step {stepIndicator.current} of {stepIndicator.total}</span>
                   )}
@@ -187,7 +187,7 @@ export function TherapeuticBaseCard({
               {title && (
                 <CardTitle className={cn(
                   'truncate',
-                  variant === 'compact' ? 'text-base' : 'text-lg',
+                  variant === 'compact' ? 'text-base' : 'text-xl',
                   variant === 'therapeutic' && 'text-primary',
                   variant === 'cbt-section' && 'text-xl font-semibold flex items-center gap-2'
                 )}>
@@ -217,7 +217,7 @@ export function TherapeuticBaseCard({
               {/* Draft saved indicator */}
               {isDraftSaved !== undefined && (
                 <div className={cn(
-                  'flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300',
+                  'flex items-center gap-1 text-sm px-2 py-1 rounded transition-all duration-300',
                   isDraftSaved 
                     ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
                     : 'opacity-0 scale-95'

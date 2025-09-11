@@ -151,8 +151,8 @@ export function TherapeuticLayout({
     none: '',
     default: '[&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:text-xl [&_h2]:font-semibold [&_p]:text-base [&_.meta]:text-sm',
     therapeutic: '[&_h1]:text-3xl [&_h1]:font-semibold [&_h1]:text-primary [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-foreground [&_p]:text-base [&_.meta]:text-sm [&_.meta]:text-muted-foreground',
-    modal: '[&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:text-lg [&_h2]:font-semibold [&_p]:text-sm',
-    compact: '[&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-base [&_h2]:font-semibold [&_p]:text-sm [&_.meta]:text-xs'
+    modal: '[&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:text-xl [&_h2]:font-semibold [&_p]:text-sm',
+    compact: '[&_h1]:text-xl [&_h1]:font-semibold [&_h2]:text-base [&_h2]:font-semibold [&_p]:text-sm [&_.meta]:text-sm'
   };
 
   // Visual variants
@@ -301,7 +301,7 @@ export function CBTFlowLayout({
     >
       {currentStep && totalSteps && (
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-medium">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-semibold">
             Step {currentStep} of {totalSteps}
           </div>
         </div>
@@ -333,7 +333,7 @@ export function ModalLayout({
     >
       {title && (
         <div className="text-center pb-6 border-b border-border">
-          <h2 className="text-2xl font-semibold">{title}</h2>
+          <h2 className="text-3xl font-semibold">{title}</h2>
         </div>
       )}
       {children}

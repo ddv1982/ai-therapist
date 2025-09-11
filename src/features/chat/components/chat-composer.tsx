@@ -75,19 +75,17 @@ export const ChatComposer = React.memo(function ChatComposer({
               style={{ WebkitTapHighlightColor: 'transparent' }}
               aria-label={t('main.stopGenerating')}
             >
-              <div className="shimmer-effect"></div>
               <X className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
             </Button>
           ) : (
             <Button
               type="submit"
               disabled={!input.trim()}
-              className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 text-white shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex-shrink-0`}
+              className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} text-white shadow-lg hover:shadow-xl active:shadow-md transition-all duration-200 group relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex-shrink-0`}
               style={{ WebkitTapHighlightColor: 'transparent' }}
               aria-label={t('input.send')}
               aria-disabled={!input.trim()}
             >
-              <div className="shimmer-effect"></div>
               <Send className={`${isMobile ? 'w-5 h-5' : 'w-6 h-6'} relative z-10`} />
             </Button>
           )}

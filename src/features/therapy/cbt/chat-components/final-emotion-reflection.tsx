@@ -108,7 +108,7 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
       <div className="space-y-6">
         {hasSelectedEmotions && (
           <div className="text-center">
-            <p className="text-sm text-primary font-medium">{selectedCount} {t('finalEmotions.selected')}</p>
+            <p className="text-sm text-primary font-semibold">{selectedCount} {t('finalEmotions.selected')}</p>
           </div>
         )}
 
@@ -137,7 +137,7 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
                         <div>
                           <h4 className="font-semibold text-sm text-foreground">{emotion.label}</h4>
                           {isSelected && (
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-sm text-muted-foreground">
                               {value === 0 && t('emotionIntensity.none')}
                               {value > 0 && value <= 2 && t('emotionIntensity.mild')}
                               {value > 2 && value <= 5 && t('emotionIntensity.moderate')}
@@ -151,7 +151,7 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
                       <div className="flex items-center gap-2">
                         {isSelected ? (
                           <>
-                            <span className="text-sm font-medium text-primary">{value}/10</span>
+                            <span className="text-sm font-semibold text-primary">{value}/10</span>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -223,7 +223,7 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
                           <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-semibold text-sm">💭</div>
                           <div>
                             <h4 className="font-semibold text-sm text-foreground">{localFinal.other}</h4>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-sm text-muted-foreground">
                               {(localFinal.otherIntensity || 0) === 0 && t('emotionIntensity.none')}
                               {(localFinal.otherIntensity || 0) > 0 && (localFinal.otherIntensity || 0) <= 2 && t('emotionIntensity.mild')}
                               {(localFinal.otherIntensity || 0) > 2 && (localFinal.otherIntensity || 0) <= 5 && t('emotionIntensity.moderate')}
@@ -233,7 +233,7 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
                             </p>
                           </div>
                         </div>
-                        <span className="text-sm font-medium text-primary">{localFinal.otherIntensity || 0}/10</span>
+                        <span className="text-sm font-semibold text-primary">{localFinal.otherIntensity || 0}/10</span>
                       </div>
                       <div className="space-y-1">
                         <TherapySlider

@@ -121,7 +121,7 @@ export function SessionReportDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col bg-card border border-border">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-lg text-foreground">
+          <DialogTitle className="flex items-center gap-3 text-xl text-foreground">
             <Button
               variant="ghost"
               size="sm"
@@ -143,7 +143,7 @@ export function SessionReportDetailModal({
           ) : error ? (
             <div className="flex flex-col items-center justify-center spacing-lg min-h-96">
               <AlertCircle className="w-12 h-12 text-destructive mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
+              <h3 className="text-xl font-semibold text-foreground mb-2">
                 Unable to Load Content
               </h3>
               <p className="text-sm text-muted-foreground text-center max-w-md mb-4">

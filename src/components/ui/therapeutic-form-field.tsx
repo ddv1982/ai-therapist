@@ -182,7 +182,7 @@ export function TherapeuticFormField({
   const sizeStyles = {
     sm: 'text-sm',
     md: 'text-base',
-    lg: 'text-lg'
+    lg: 'text-xl'
   };
 
   const displayError = error || localError;
@@ -227,7 +227,7 @@ export function TherapeuticFormField({
                       <div>
                         <h4 className="font-semibold text-sm">{emotion.label}</h4>
                         {isSelected && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-sm text-muted-foreground">
                             {getIntensityLabel(emotionValue)}
                           </p>
                         )}
@@ -236,7 +236,7 @@ export function TherapeuticFormField({
                     <div className="flex items-center gap-2">
                       {isSelected ? (
                         <>
-                          <span className="text-sm font-medium text-primary">{emotionValue}/10</span>
+                          <span className="text-sm font-semibold text-primary">{emotionValue}/10</span>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -266,7 +266,7 @@ export function TherapeuticFormField({
                         onChange={(e) => onEmotionChange?.(emotion.key, parseInt(e.target.value))}
                         className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
                       />
-                      <div className="flex justify-between text-xs text-muted-foreground px-1">
+                      <div className="flex justify-between text-sm text-muted-foreground px-1">
                         <span>1</span>
                         <span className="hidden sm:inline">5</span>
                         <span>10</span>
@@ -374,7 +374,7 @@ export function TherapeuticFormField({
           <span className="text-muted-foreground">/{max}</span>
         </div>
         {sliderVariant === 'emotion' && (
-          <span className="text-sm font-medium text-muted-foreground">
+          <span className="text-sm font-semibold text-muted-foreground">
             {getIntensityLabel(typeof value === 'number' ? value : 0)}
           </span>
         )}
@@ -391,7 +391,7 @@ export function TherapeuticFormField({
       />
 
       {showScale && (
-        <div className="flex justify-between text-xs text-muted-foreground">
+        <div className="flex justify-between text-sm text-muted-foreground">
           <span>{min}</span>
           <span>{Math.floor((min + max) / 2)}</span>
           <span>{max}</span>
@@ -427,7 +427,7 @@ export function TherapeuticFormField({
           {/* Draft saved indicator */}
           {isDraftSaved !== undefined && (
             <div className={cn(
-              'flex items-center gap-1 text-xs px-2 py-1 rounded transition-all duration-300',
+              'flex items-center gap-1 text-sm px-2 py-1 rounded transition-all duration-300',
               isDraftSaved 
                 ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
                 : 'opacity-0 scale-95'
@@ -451,7 +451,7 @@ export function TherapeuticFormField({
       {description && (
         <p className={cn(
           "text-sm text-muted-foreground",
-          variant === 'compact' && "text-xs"
+          variant === 'compact' && "text-sm"
         )}>
           {description}
         </p>

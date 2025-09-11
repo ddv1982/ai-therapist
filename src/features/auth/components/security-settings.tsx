@@ -221,12 +221,12 @@ export function SecuritySettings() {
           {securityData?.devices.map((device) => (
             <div key={device.id} className="flex items-center justify-between p-3 border rounded-lg">
               <div className="flex-1">
-                <p className="font-medium">{device.name}</p>
+                <p className="font-semibold">{device.name}</p>
                 <div className="text-sm text-muted-foreground space-y-1">
                   <p>Last seen: {new Date(device.lastSeen).toLocaleString()}</p>
                   <p>IP: {device.ipAddress}</p>
                   {device.hasActiveSessions && (
-                    <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                    <span className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
                       Active
                     </span>
                   )}

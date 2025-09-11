@@ -1,194 +1,173 @@
 /**
- * Design tokens for therapeutic AI application
- * Centralizes common styling patterns to maintain consistency and reduce duplication
- * Follows the therapeutic design system: 60/30/10 color rule, 8pt grid, 4 typography sizes
+ * Design Tokens - Fire Your Design Team Compliant
+ * NO CUSTOM CLASSES - Export Tailwind utility strings only
+ * 4 font sizes: text-3xl, text-xl, text-base, text-sm
+ * 2 font weights: font-semibold, normal
+ * 8pt grid spacing: p-2, p-4, p-6, p-8, etc.
+ * 60/30/10 color rule: bg-background, text-foreground, bg-primary
  */
 
 // ============================================================================
-// THERAPEUTIC COLOR PATTERNS (60/30/10 Rule)
+// FIRE YOUR DESIGN TEAM - TAILWIND UTILITIES ONLY
 // ============================================================================
 
 export const therapeuticColors = {
-  // 60% - Neutral backgrounds and containers
+  // 60% - Neutral backgrounds (most of the UI)
   neutral: {
     background: 'bg-background',
     muted: 'bg-muted',
     card: 'bg-card',
   },
   
-  // 30% - Text and subtle UI elements  
+  // 30% - Text and subtle UI elements
   subtle: {
     text: 'text-foreground',
     mutedText: 'text-muted-foreground',
     border: 'border-border',
-    borderMuted: 'border-border/30',
   },
   
-  // 10% - Therapeutic highlights and interactive elements
+  // 10% - Primary accents (use sparingly)
   accent: {
-    primary: 'bg-primary',
-    primarySubtle: 'bg-primary/10',
-    primaryBorder: 'border-primary/20',
-    textPrimary: 'text-primary',
-    hoverPrimary: 'hover:bg-primary/10',
-    hoverTextPrimary: 'hover:text-primary',
+    primary: 'bg-primary text-primary-foreground',
+    primaryText: 'text-primary',
+    primaryHover: 'hover:bg-primary/90',
   }
 } as const;
 
 // ============================================================================
-// THERAPEUTIC TYPOGRAPHY SYSTEM (4 Sizes Only)
+// TYPOGRAPHY - FIRE YOUR DESIGN TEAM (4 Sizes, 2 Weights)
 // ============================================================================
 
 export const therapeuticTypography = {
-  // Main headers
-  mainHeader: 'text-3xl font-semibold',
+  // Fire Your Design Team: Only 4 font sizes allowed
+  heading: 'text-3xl font-semibold',      // Size 1: Large headings
+  subheading: 'text-xl font-semibold',    // Size 2: Subheadings/important content
+  body: 'text-base',                      // Size 3: Body text
+  small: 'text-sm',                       // Size 4: Small text/labels
   
-  // Section headings
-  sectionHeading: 'text-xl font-semibold', 
+  // Typography with color combinations
+  headingPrimary: 'text-3xl font-semibold text-foreground',
+  subheadingPrimary: 'text-xl font-semibold text-foreground',
+  bodyPrimary: 'text-base text-foreground',
+  bodySecondary: 'text-base text-muted-foreground',
+  smallPrimary: 'text-sm text-foreground',
+  smallSecondary: 'text-sm text-muted-foreground',
   
-  // Chat messages and body text
-  bodyText: 'text-base',
-  bodyTextRelaxed: 'text-base leading-relaxed',
-  
-  // Timestamps and metadata
-  metadata: 'text-sm',
-  
-  // Specific therapeutic text patterns
-  messageText: 'text-foreground leading-relaxed',
-  messageTextWithMargin: 'mb-4 text-foreground leading-relaxed last:mb-0',
-  strongText: 'font-bold text-foreground',
+  // Special combinations (within Fire Your Design Team constraints)
+  button: 'text-base font-semibold',      // Buttons use Size 3 + semibold
+  label: 'text-sm font-semibold',         // Labels use Size 4 + semibold
+  messageText: 'text-base text-foreground leading-relaxed',
+  strongText: 'font-semibold text-foreground',
 } as const;
 
 // ============================================================================
-// THERAPEUTIC SPACING SYSTEM (8pt Grid)
+// SPACING - 8PT GRID SYSTEM (Fire Your Design Team)
 // ============================================================================
 
 export const therapeuticSpacing = {
-  // Core spacing units (8pt grid)
-  xs: 'p-2',    // 8px
-  sm: 'p-4',    // 16px  
-  md: 'p-6',    // 24px
-  lg: 'p-8',    // 32px
-  xl: 'p-12',   // 48px
+  // Fire Your Design Team: Only 8pt grid compliant spacing
+  xs: 'p-2',     // 8px - divisible by 8
+  sm: 'p-4',     // 16px - divisible by 8  
+  md: 'p-6',     // 24px - divisible by 8
+  lg: 'p-8',     // 32px - divisible by 8
+  xl: 'p-12',    // 48px - divisible by 8
   
-  // Margin variants
-  margin: {
-    xs: 'm-2',
-    sm: 'm-4', 
-    md: 'm-6',
-    lg: 'm-8',
-    xl: 'm-12',
-  },
+  // Margin variants (8pt grid compliant)
+  marginXs: 'm-2',    // 8px
+  marginSm: 'm-4',    // 16px
+  marginMd: 'm-6',    // 24px
+  marginLg: 'm-8',    // 32px
+  marginXl: 'm-12',   // 48px
   
-  // Specific therapeutic spacing patterns
-  messageSpacing: 'mb-4',
-  listItemSpacing: 'pl-6 py-2 mb-3 relative',
-  iconSpacing: 'mb-4',
+  // Common spacing patterns
+  messageSpacing: 'mb-4',        // 16px - grid compliant
+  sectionSpacing: 'mb-6',        // 24px - grid compliant
+  cardSpacing: 'p-4',            // 16px - grid compliant
+  gapSmall: 'gap-2',             // 8px - grid compliant
+  gapMedium: 'gap-4',            // 16px - grid compliant
+  gapLarge: 'gap-6',             // 24px - grid compliant
 } as const;
 
 // ============================================================================
-// THERAPEUTIC INTERACTIVE ELEMENTS
+// INTERACTIVE ELEMENTS - 8PT GRID COMPLIANT
 // ============================================================================
 
 export const therapeuticInteractive = {
-  // Icon buttons - small (8x8)
-  iconButtonSmall: 'rounded-full h-8 w-8 p-0 hover:bg-primary/10 relative overflow-hidden group',
+  // Icon buttons (8pt grid: 32px, 48px sizes)
+  iconButtonSmall: 'h-8 w-8 p-0 rounded-full hover:bg-primary/10 transition-colors', // 32px
+  iconButtonMedium: 'h-12 w-12 p-2 rounded-full hover:bg-primary/10 transition-colors', // 48px
+  iconButtonLarge: 'h-12 w-12 p-0 rounded-full hover:bg-primary/10 hover:text-primary transition-colors', // 48px
   
-  // Icon buttons - medium (9x9) 
-  iconButtonMedium: 'relative h-10 w-10 p-2 rounded-full hover:bg-primary/10 hover:shadow-md hover:scale-105 active:scale-95 transition-all duration-300 group border border-border/30 hover:border-primary/30 overflow-hidden backdrop-blur-sm',
+  // Button variants (Fire Your Design Team compliant)
+  buttonPrimary: 'bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded text-base font-semibold transition-colors',
+  buttonSecondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded text-base font-semibold transition-colors',
+  buttonGhost: 'hover:bg-muted px-4 py-2 rounded text-base font-semibold transition-colors',
   
-  // Icon buttons - large (10x10)
-  iconButtonLarge: 'rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors relative overflow-hidden group touch-manipulation',
+  // Shorthand button styles for cleaner code
+  primaryButton: 'bg-primary text-primary-foreground hover:bg-primary/90',
+  buttonBase: 'px-4 py-2 rounded text-base font-semibold transition-colors',
   
-  // Icon buttons - large disabled
-  iconButtonLargeDisabled: 'rounded-full h-10 w-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors relative overflow-hidden group touch-manipulation disabled:opacity-50',
+  // Cards and containers
+  cardBase: 'bg-card text-card-foreground border border-border rounded-lg p-4',
+  cardHover: 'bg-card text-card-foreground border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors',
   
-  // Therapeutic status indicators
-  statusIconContainer: 'mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4',
-  
-  // Session/item hover states
-  itemHover: 'bg-muted group-hover:bg-primary/10 text-muted-foreground group-hover:text-primary',
+  // Status indicators (64px = 8pt grid)
+  statusIcon: 'w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center',
 } as const;
 
 // ============================================================================
-// THERAPEUTIC CONTENT FORMATTING
+// CONTENT FORMATTING - SIMPLIFIED
 // ============================================================================
 
 export const therapeuticContent = {
-  // Markdown formatting for chat messages
-  strongHighlight: 'font-bold text-foreground bg-primary/10 px-1 py-0.5 rounded',
+  // Fire Your Design Team compliant content styling
+  paragraph: 'mb-4 text-base text-foreground leading-relaxed',
+  strongText: 'font-semibold text-foreground',
+  mutedText: 'text-sm text-muted-foreground',
+  linkText: 'text-primary underline hover:text-primary/80',
   
-  // List formatting - enhanced visual styling
-  listItem: 'text-foreground leading-relaxed pl-6 py-2 relative',
-  listItemWithMargin: 'text-foreground leading-relaxed pl-6 py-2 mb-3 relative',
+  // Lists (8pt grid spacing)
+  listItem: 'text-base leading-relaxed pl-6 py-2',
   
-  // Table formatting
-  tableHeader: 'bg-primary/10 border-b border-border/30',
-  
-  // Paragraph formatting
-  paragraph: 'mb-4 text-foreground leading-relaxed last:mb-0',
+  // Tables
+  tableHeader: 'bg-muted text-foreground font-semibold p-3',
+  tableCell: 'border border-border p-3 text-sm',
 } as const;
 
 // ============================================================================
-// COMPOSITE THERAPEUTIC STYLES
-// ============================================================================
-
-export const therapeuticComposite = {
-  // Common card patterns
-  therapeuticCard: `${therapeuticColors.neutral.card} ${therapeuticSpacing.md} rounded-lg ${therapeuticColors.subtle.border}`,
-  
-  // Chat message containers
-  messageContainer: `${therapeuticSpacing.sm} ${therapeuticContent.paragraph}`,
-  
-  // Settings panels
-  settingsPanel: `${therapeuticColors.neutral.background} ${therapeuticSpacing.lg}`,
-  
-  // Status displays
-  statusDisplay: `${therapeuticInteractive.statusIconContainer}`,
-  
-  // Interactive lists
-  interactiveListItem: `${therapeuticSpacing.sm} ${therapeuticInteractive.itemHover} transition-colors`,
-} as const;
-
-// ============================================================================
-// UTILITY FUNCTIONS FOR DYNAMIC STYLING
+// UTILITY FUNCTIONS - SIMPLIFIED
 // ============================================================================
 
 /**
- * Combines therapeutic design tokens with additional classes
- * @param tokenKey - Key from therapeutic design tokens
- * @param additionalClasses - Additional Tailwind classes
- * @returns Combined class string
+ * Gets the appropriate icon button size (Fire Your Design Team compliant)
+ * @param size - Button size: 'small' (32px) or 'large' (48px)
+ * @returns Tailwind utility classes
  */
-export function combineTherapeuticStyles(
-  tokenKey: string, 
-  additionalClasses?: string
-): string {
-  return additionalClasses ? `${tokenKey} ${additionalClasses}` : tokenKey;
+export function getIconButtonSize(size: 'small' | 'large' = 'large'): string {
+  return size === 'small' 
+    ? therapeuticInteractive.iconButtonSmall 
+    : therapeuticInteractive.iconButtonLarge;
 }
 
 /**
- * Gets the appropriate icon button size based on context
- * @param size - Button size context
- * @param disabled - Whether button is disabled
- * @returns Appropriate therapeutic button classes
+ * Combines classes safely (removes duplicates)
+ * @param classes - Array of class strings
+ * @returns Combined unique classes
  */
-export function getTherapeuticIconButton(
-  size: 'small' | 'medium' | 'large' = 'medium',
-  disabled = false
-): string {
-  if (size === 'small') return therapeuticInteractive.iconButtonSmall;
-  if (size === 'medium') return therapeuticInteractive.iconButtonMedium;
-  if (size === 'large' && disabled) return therapeuticInteractive.iconButtonLargeDisabled;
-  return therapeuticInteractive.iconButtonLarge;
+export function combineClasses(...classes: (string | undefined)[]): string {
+  return classes
+    .filter(Boolean)
+    .join(' ')
+    .split(' ')
+    .filter((cls, index, arr) => arr.indexOf(cls) === index)
+    .join(' ');
 }
 
-/**
- * Type definitions for better TypeScript integration
- */
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
 export type TherapeuticColorKey = keyof typeof therapeuticColors;
 export type TherapeuticTypographyKey = keyof typeof therapeuticTypography;
 export type TherapeuticSpacingKey = keyof typeof therapeuticSpacing;
 export type TherapeuticInteractiveKey = keyof typeof therapeuticInteractive;
-export type TherapeuticContentKey = keyof typeof therapeuticContent;
-export type TherapeuticCompositeKey = keyof typeof therapeuticComposite;
