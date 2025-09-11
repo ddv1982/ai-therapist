@@ -7,6 +7,13 @@ const nextConfig = {
   serverExternalPackages: ['prisma'],
   // Hide development indicators (Turbopack icon, etc.)
   devIndicators: false,
+  // Disable client source maps in development to avoid noisy 3rd-party warnings
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.devtool = false;
+    }
+    return config;
+  },
   // Ensure Next uses this project as the workspace root (fixes multi-lockfile warning)
   outputFileTracingRoot: path.resolve(new URL('.', import.meta.url).pathname),
   // Only expose client-safe environment variables

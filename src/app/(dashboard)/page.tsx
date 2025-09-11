@@ -181,7 +181,7 @@ function ChatPageContent() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
-                <Brain className="w-6 h-6 text-white" />
+                <Brain className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold gradient-text">{t('sidebar.brandName')}</h2>

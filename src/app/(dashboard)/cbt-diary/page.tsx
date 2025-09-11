@@ -491,7 +491,7 @@ function CBTDiaryPageContent() {
               </Button>
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
-                  <Brain className="w-6 h-6 text-white" />
+                  <Brain className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <div>
                   <h1 className="text-3xl font-semibold">

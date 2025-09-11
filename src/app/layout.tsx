@@ -82,7 +82,7 @@ export default async function RootLayout({
   };
   const messages = expandDotNotation(flat) as AbstractIntlMessages;
   return (
-    <html lang={resolvedLocale} className={`${inter.variable}`}>
+    <html lang={resolvedLocale} className={`${inter.variable}`} data-scroll-behavior="smooth">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
         <meta name="mobile-web-app-capable" content="yes" />

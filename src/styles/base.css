@@ -104,7 +104,7 @@
   border-color: var(--border);
 }
 
-html {
+html[data-scroll-behavior="smooth"] {
   scroll-behavior: smooth;
   height: 100%;
 }
