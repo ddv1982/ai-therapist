@@ -618,7 +618,7 @@ function CBTDiaryPageContent() {
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <Button
                         onClick={handleResumeDraft}
-                        className="justify-center gap-3 h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 group px-6"
+                        className="justify-center gap-3 h-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 group px-6"
                       >
                         <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
                           <Brain className="w-4 h-4" />
@@ -639,7 +639,7 @@ function CBTDiaryPageContent() {
                   <div className="flex justify-center">
                     <Button
                       onClick={handleStartCBT}
-                      className="justify-center gap-3 h-12 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-white shadow-lg hover:shadow-xl transition-all duration-200 group px-8"
+                      className="justify-center gap-3 h-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 group px-8"
                     >
                       <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
                         <Brain className="w-4 h-4" />
