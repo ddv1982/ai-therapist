@@ -1,14 +1,14 @@
-const { spawn } = require('child_process');
-const os = require('os');
+import { spawn } from 'child_process';
+import os from 'os';
 
 function getNetworkIP() {
   const interfaces = os.networkInterfaces();
   
   for (const name of Object.keys(interfaces)) {
-    for (const interface of interfaces[name]) {
+    for (const netInterface of interfaces[name]) {
       // Skip internal and non-IPv4 addresses
-      if (interface.family === 'IPv4' && !interface.internal) {
-        return interface.address;
+      if (netInterface.family === 'IPv4' && !netInterface.internal) {
+        return netInterface.address;
       }
     }
   }

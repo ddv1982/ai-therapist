@@ -1,8 +1,12 @@
 #!/usr/bin/env node
-const { spawn, exec } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+import { spawn, exec } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const platform = os.platform();
 
@@ -235,9 +239,5 @@ async function setupRedis() {
   }
 }
 
-// Run setup if called directly
-if (require.main === module) {
-  setupRedis();
-}
-
-module.exports = { setupRedis, checkRedisStatus };
+// Run setup immediately when invoked directly
+await setupRedis();

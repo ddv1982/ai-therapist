@@ -1,6 +1,10 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const target = path.join(__dirname, '..', '.env.local');
 
@@ -37,4 +41,3 @@ RATE_LIMIT_DISABLED=true
 
 fs.writeFileSync(target, template, { encoding: 'utf8' });
 console.log('✅ Created .env.local with defaults (ENCRYPTION_KEY left empty).');
-

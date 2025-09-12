@@ -198,7 +198,7 @@ $(STAMP_NODE): package.json $(LOCKFILE)
 	@touch $(STAMP_NODE)
 
 $(ENV_FILE):
-	@npm run env:init || true
+	@set -e; npm run env:init
 
 $(DB_FILE): prisma/schema.prisma
 	@printf "🔎 Checking database... "

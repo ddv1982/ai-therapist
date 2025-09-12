@@ -4,10 +4,14 @@
  * Helps initialize secure encryption keys for the therapeutic AI application
  */
 
-const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
-const dotenv = require('dotenv');
+import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env.local if present, otherwise .env
 try {
@@ -191,12 +195,6 @@ function main() {
 }
 
 // Run the script
-if (require.main === module) {
-  main();
-}
+main();
 
-module.exports = {
-  generateSecureEncryptionKey,
-  validateEncryptionKey,
-  updateEnvFile
-};
+export { generateSecureEncryptionKey, validateEncryptionKey, updateEnvFile };
