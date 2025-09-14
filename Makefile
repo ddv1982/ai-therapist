@@ -58,7 +58,7 @@ help: ## Show help
 
 # ----- Single intelligent entrypoints -----
 
-setup: $(STAMP_NODE) $(ENV_FILE) $(DB_FILE) redis-up encryption-ok $(API_TYPES) prisma-generate playwright ## Intelligent setup + start dev
+setup: $(STAMP_NODE) env $(DB_FILE) redis-up encryption-ok $(API_TYPES) prisma-generate playwright ## Intelligent setup + start dev
 	@npm run dev
 
 dev: ## Start dev server (assumes setup done)
@@ -77,7 +77,8 @@ bootstrap: env install db redis encryption prisma api-types playwright ## One-ti
 
 install: $(STAMP_NODE) ## Install node dependencies
 
-env: $(ENV_FILE) ## Ensure .env.local exists
+env: ## Ensure .env.local exists/up-to-date
+	@npm run env:init
 
 db: $(DB_FILE) ## Ensure DB is initialized
 

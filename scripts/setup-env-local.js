@@ -9,7 +9,24 @@ const __dirname = path.dirname(__filename);
 const target = path.join(__dirname, '..', '.env.local');
 
 if (fs.existsSync(target)) {
-  console.log('✅ .env.local already exists, no changes made');
+  const existing = fs.readFileSync(target, { encoding: 'utf8' });
+  let changed = false;
+
+  // Backfill missing keys if the file predates newer defaults
+  if (!/^GROQ_API_KEY=/m.test(existing)) {
+    fs.appendFileSync(
+      target,
+      `\n# AI provider API keys\nGROQ_API_KEY=""\n`,
+      { encoding: 'utf8' }
+    );
+    changed = true;
+  }
+
+  if (changed) {
+    console.log('✅ Updated .env.local with missing keys (e.g., GROQ_API_KEY).');
+  } else {
+    console.log('✅ .env.local already exists, no changes made');
+  }
   process.exit(0);
 }
 
