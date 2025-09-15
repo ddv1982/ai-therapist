@@ -228,6 +228,32 @@ export interface CBTExtractionResult {
 }
 
 /**
+ * Obsessions and Compulsions data structures
+ */
+export interface ObsessionData {
+  id: string;
+  obsession: string;
+  intensity: number; // 1-10 scale
+  triggers: string[];
+  createdAt: string;
+}
+
+export interface CompulsionData {
+  id: string;
+  compulsion: string;
+  frequency: number; // 1-10 scale
+  duration: number; // in minutes
+  reliefLevel: number; // 1-10 scale
+  createdAt: string;
+}
+
+export interface ObsessionsCompulsionsData {
+  obsessions: ObsessionData[];
+  compulsions: CompulsionData[];
+  lastModified: string;
+}
+
+/**
  * Parsed CBT data structure for chat parsing
  * Note: Uses the extended form data type for full compatibility
  */

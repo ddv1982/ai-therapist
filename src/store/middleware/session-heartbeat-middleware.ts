@@ -30,8 +30,8 @@ function isSetCurrentSessionAction(action: unknown): action is SetCurrentSession
 /**
  * Redux middleware for session heartbeat management
  */
-export const sessionHeartbeatMiddleware: Middleware<{}, unknown, ThunkDispatch<any, any, UnknownAction>> = 
-  (api: MiddlewareAPI<ThunkDispatch<any, any, UnknownAction>>) => 
+export const sessionHeartbeatMiddleware: Middleware<object, unknown, ThunkDispatch<unknown, unknown, UnknownAction>> = 
+  (api: MiddlewareAPI<ThunkDispatch<unknown, unknown, UnknownAction>>) => 
   (next) => 
   (action) => {
     

@@ -14,6 +14,7 @@ import {
   FinalEmotionReflection,
   ActionPlan
 } from '@/features/therapy/cbt/chat-components';
+import { ObsessionsCompulsionsTable } from '@/features/therapy/obsessions-compulsions/obsessions-compulsions-table';
 import {
   type SituationData,
   type EmotionData,
@@ -22,7 +23,7 @@ import {
   type CoreBeliefData
 } from '@/store/slices/cbtSlice';
 // Use the types from the store instead of component types
-import type { ChallengeQuestionsData, RationalThoughtsData, SchemaModesData } from '@/types/therapy';
+import type { ChallengeQuestionsData, RationalThoughtsData, SchemaModesData, ObsessionsCompulsionsData } from '@/types/therapy';
 
 interface VirtualizedMessageListProps {
   messages: MessageData[];
@@ -40,6 +41,7 @@ interface VirtualizedMessageListProps {
   onCBTSendToChat?: () => void; // For triggering send to chat from final emotions step
   onCBTFinalEmotionsComplete?: (data: EmotionData) => void;
   onCBTActionComplete?: (data: ActionPlanData) => void;
+  onObsessionsCompulsionsComplete?: (data: ObsessionsCompulsionsData) => void;
 }
 
 // Simple virtualization - only render visible and near-visible messages
@@ -57,7 +59,8 @@ function VirtualizedMessageListComponent({
   onCBTSchemaModesComplete,
   onCBTSendToChat,
   onCBTFinalEmotionsComplete,
-  onCBTActionComplete
+  onCBTActionComplete,
+  onObsessionsCompulsionsComplete
 }: VirtualizedMessageListProps) {
   // For conversations with many messages, only render the most recent ones to improve performance
   const visibleMessages = useMemo(() => {
@@ -156,6 +159,14 @@ function VirtualizedMessageListComponent({
             onComplete={onCBTActionComplete}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+          />
+        ) : null;
+
+      case 'obsessions-compulsions':
+        return onObsessionsCompulsionsComplete ? (
+          <ObsessionsCompulsionsTable
+            onComplete={onObsessionsCompulsionsComplete}
+            initialData={message.metadata?.data as ObsessionsCompulsionsData}
           />
         ) : null;
 

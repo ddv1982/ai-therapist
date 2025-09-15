@@ -1,11 +1,20 @@
 import React from 'react';
-import { screen, fireEvent } from '@testing-library/react';
-import { ComponentTestUtils } from '__tests__/utils/test-utilities';
+import { screen, fireEvent, render } from '@testing-library/react';
+
+// Mock lucide-react before importing ChatHeader
+jest.mock('lucide-react', () => ({
+  FileText: () => <div data-testid="file-text-icon" />,
+  Menu: () => <div data-testid="menu-icon" />,
+  X: () => <div data-testid="x-icon" />,
+  Brain: () => <div data-testid="brain-icon" />,
+  List: () => <div data-testid="list-icon" />,
+}));
+
 import { ChatHeader } from '@/features/chat/components/chat-header';
 
 describe('ChatHeader', () => {
   test('renders new conversation title when no active session', () => {
-    ComponentTestUtils.renderWithProviders(
+    render(
       <ChatHeader
         showSidebar={false}
         onToggleSidebar={() => {}}
@@ -17,6 +26,7 @@ describe('ChatHeader', () => {
         onGenerateReport={() => {}}
         onStopGenerating={() => {}}
         onOpenCBTDiary={() => {}}
+        onCreateObsessionsTable={() => {}}
       />
     );
 
@@ -26,7 +36,7 @@ describe('ChatHeader', () => {
 
   test('invokes toggle sidebar on button click', () => {
     const onToggle = jest.fn();
-    ComponentTestUtils.renderWithProviders(
+    render(
       <ChatHeader
         showSidebar={false}
         onToggleSidebar={onToggle}
@@ -38,6 +48,7 @@ describe('ChatHeader', () => {
         onGenerateReport={() => {}}
         onStopGenerating={() => {}}
         onOpenCBTDiary={() => {}}
+        onCreateObsessionsTable={() => {}}
       />
     );
 

@@ -60,6 +60,9 @@ export interface ChatController {
 
   // bridge helper
   addMessageToChat: (message: { content: string; role: 'user' | 'assistant'; sessionId: string; modelUsed?: string; source?: string }) => Promise<{ success: boolean; error?: string }>;
+  
+  // obsessions and compulsions
+  createObsessionsCompulsionsTable: () => Promise<void>;
 }
 
 export function useChatController(options?: { model: string; webSearchEnabled: boolean }): ChatController {
@@ -414,6 +417,56 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     }
   }, [currentSession, messages, setMessages, saveMessage, loadSessions]);
 
+  const createObsessionsCompulsionsTable = useCallback(async () => {
+    let sessionId = currentSession;
+    if (!sessionId) {
+      // Create new session if none exists
+      try {
+        const defaultTitle = resolveDefaultTitle();
+        const result = await apiClient.createSession({ title: defaultTitle });
+        const created = getApiData(result);
+        const newSession: Session = mapApiSessionToUiSession(created as components['schemas']['Session']) as Session;
+        if (newSession) {
+          setSessions(prev => [newSession, ...prev]);
+          await setCurrentSessionAndSync(newSession.id);
+          sessionId = newSession.id;
+        } else {
+          return;
+        }
+      } catch (error) {
+        logger.error('Failed to create session for obsessions table', { error });
+        return;
+      }
+    }
+
+    // Create obsessions and compulsions table message
+    const tableMessage: Message = {
+      id: generateUUID(),
+      role: 'user',
+      content: '', // Empty content, table renders via metadata
+      timestamp: new Date(),
+      metadata: {
+        type: 'obsessions-compulsions-table',
+        step: 'obsessions-compulsions',
+        data: {
+          obsessions: [],
+          compulsions: [],
+          lastModified: new Date().toISOString()
+        }
+      }
+    };
+
+    // Add message to chat
+    setMessages(prev => [...prev, tableMessage]);
+    
+    // Save to backend
+    try {
+      await saveMessage(sessionId, 'user', tableMessage.content);
+    } catch (error) {
+      logger.error('Failed to save obsessions table message', { error });
+    }
+  }, [currentSession, resolveDefaultTitle, setSessions, setCurrentSessionAndSync, setMessages, saveMessage]);
+
   return {
     messages,
     sessions,
@@ -441,6 +494,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     showSidebar,
     addMessageToChat: _addMessageToChat,
     setMemoryContext,
+    createObsessionsCompulsionsTable,
   };
 }
 

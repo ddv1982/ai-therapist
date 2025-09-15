@@ -17,6 +17,9 @@ import { logger } from '@/lib/utils/logger';
 import { parseCBTFromMarkdown } from '@/lib/therapy/cbt-data-parser';
 import { useCBTExportActions } from '@/hooks/therapy/use-cbt-export';
 import { CBTExportFormat } from '@/lib/cbt/export-utils';
+import { isObsessionsCompulsionsMessage } from '@/features/therapy/obsessions-compulsions/utils/obsessions-message-detector';
+import { parseObsessionsCompulsionsFromMarkdown } from '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions';
+import { useObsessionsExportActions, ObsessionsExportFormat } from '@/features/therapy/obsessions-compulsions/utils/obsessions-export-utils';
 
 interface MessageActionsProps {
   messageId: string;
@@ -33,26 +36,29 @@ export function MessageActions({
   className
 }: MessageActionsProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [lastExportedFormat, setLastExportedFormat] = useState<CBTExportFormat | null>(null);
+  const [lastExportedFormat, setLastExportedFormat] = useState<CBTExportFormat | ObsessionsExportFormat | null>(null);
   const [showSuccessIcon, setShowSuccessIcon] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // Only show actions for user messages that contain CBT content
+  // Check for CBT or obsessions content
   const isCBTMessage = messageRole === 'user' && isCBTDiaryMessage(messageContent, 0.6);
+  const isObsessionsMessage = messageRole === 'user' && isObsessionsCompulsionsMessage(messageContent);
+  const shouldShowActions = isCBTMessage || isObsessionsMessage;
   
-  // Parse CBT data for export (always call hooks to avoid conditional hook usage)
-  const parsedData = parseCBTFromMarkdown(messageContent);
+  // Parse data for export (always call hooks to avoid conditional hook usage)
+  const parsedCBTData = parseCBTFromMarkdown(messageContent);
+  const parsedObsessionsData = parseObsessionsCompulsionsFromMarkdown(messageContent);
   
   const {
-    exportAsPDF,
-    exportAsJSON,
-    exportAsMarkdown,
-    exportAsText,
-    isExporting,
-    exportingFormat,
-    exportError,
-    clearError
-  } = useCBTExportActions(parsedData.formData, messageContent, {
+    exportAsPDF: cbtExportAsPDF,
+    exportAsJSON: cbtExportAsJSON,
+    exportAsMarkdown: cbtExportAsMarkdown,
+    exportAsText: cbtExportAsText,
+    isExporting: cbtIsExporting,
+    exportingFormat: cbtExportingFormat,
+    exportError: cbtExportError,
+    clearError: cbtClearError
+  } = useCBTExportActions(parsedCBTData.formData, messageContent, {
     onSuccess: (format: CBTExportFormat) => {
       setLastExportedFormat(format);
       setShowSuccessIcon(true);
@@ -75,13 +81,59 @@ export function MessageActions({
       
       // Clear error after 3 seconds
       setTimeout(() => {
-        clearError();
+        cbtClearError();
       }, 3000);
     }
   });
 
-  // Only render if this is a CBT message
-  if (!isCBTMessage) {
+  const {
+    exportAsPDF: obsessionsExportAsPDF,
+    exportAsJSON: obsessionsExportAsJSON,
+    exportAsMarkdown: obsessionsExportAsMarkdown,
+    exportAsText: obsessionsExportAsText,
+    isExporting: obsessionsIsExporting,
+    exportingFormat: obsessionsExportingFormat,
+    exportError: obsessionsExportError,
+    clearError: obsessionsClearError
+  } = useObsessionsExportActions(parsedObsessionsData, messageContent, {
+    onSuccess: (format: ObsessionsExportFormat) => {
+      setLastExportedFormat(format);
+      setShowSuccessIcon(true);
+      setShowDropdown(false);
+      
+      // Clear success icon after 2 seconds
+      setTimeout(() => {
+        setShowSuccessIcon(false);
+        setLastExportedFormat(null);
+      }, 2000);
+    },
+    onError: (error: Error, format: ObsessionsExportFormat) => {
+      logger.error('Obsessions export error', {
+        component: 'MessageActions',
+        operation: 'export',
+        format,
+        messageId: _messageId
+      }, error);
+      setShowDropdown(false);
+      
+      // Clear error after 3 seconds
+      setTimeout(() => {
+        obsessionsClearError();
+      }, 3000);
+    }
+  });
+
+  // Use the appropriate export functions based on message type
+  const exportAsPDF = isCBTMessage ? cbtExportAsPDF : obsessionsExportAsPDF;
+  const exportAsJSON = isCBTMessage ? cbtExportAsJSON : obsessionsExportAsJSON;
+  const exportAsMarkdown = isCBTMessage ? cbtExportAsMarkdown : obsessionsExportAsMarkdown;
+  const exportAsText = isCBTMessage ? cbtExportAsText : obsessionsExportAsText;
+  const isExporting = isCBTMessage ? cbtIsExporting : obsessionsIsExporting;
+  const exportingFormat = isCBTMessage ? cbtExportingFormat : obsessionsExportingFormat;
+  const exportError = isCBTMessage ? cbtExportError : obsessionsExportError;
+
+  // Only render if this is a CBT or obsessions message
+  if (!shouldShowActions) {
     return null;
   }
 
@@ -156,7 +208,7 @@ export function MessageActions({
           <div className="absolute top-full right-0 mt-1 w-56 bg-background border rounded-md shadow-lg z-50">
             <div className="px-2 py-1.5 text-sm text-muted-foreground border-b">
               CBT Diary Entry ({confidencePercentage}% confidence)
-              {parsedData.isComplete ? (
+              {parsedCBTData.isComplete ? (
                 <span className="text-green-600 ml-1">✓ Complete</span>
               ) : (
                 <span className="text-yellow-600 ml-1">⚠ Partial</span>
@@ -214,12 +266,12 @@ export function MessageActions({
                 </div>
               </button>
 
-              {parsedData.missingFields.length > 0 && (
+              {parsedCBTData.missingFields.length > 0 && (
                 <>
                   <hr className="my-1" />
                   <div className="px-2 py-1.5 text-sm text-yellow-600">
                     <div className="font-semibold">Partial data detected:</div>
-                    <div>Missing: {parsedData.missingFields.join(', ')}</div>
+                    <div>Missing: {parsedCBTData.missingFields.join(', ')}</div>
                   </div>
                 </>
               )}

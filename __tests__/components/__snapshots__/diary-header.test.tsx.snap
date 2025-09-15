@@ -1,100 +1,5 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`DiaryHeader renders desktop header with progress info 1`] = `
-<div>
-  <div
-    class="border-b bg-card/50 backdrop-blur-md sticky top-0 z-10"
-  >
-    <div
-      class="max-w-4xl mx-auto px-4 sm:px-6 py-4"
-    >
-      <div
-        class="flex items-center gap-2 text-sm text-muted-foreground mb-4"
-      >
-        <button
-          class="hover:text-foreground transition-colors"
-        >
-          nav.chat
-        </button>
-        <div
-          class="w-4 h-4"
-          data-testid="icon-chevron-right"
-        />
-        <span
-          class="text-foreground font-semibold"
-        >
-          nav.session
-        </span>
-        <div
-          class="w-4 h-4"
-          data-testid="icon-chevron-right"
-        />
-        <span
-          class="text-primary capitalize"
-        >
-          Step 
-          2
-           of 
-          9
-          : 
-          emotions
-        </span>
-      </div>
-      <div
-        class="flex items-center justify-between"
-      >
-        <div
-          class="flex items-center gap-4"
-        >
-          <button
-            class="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground"
-            variant="ghost"
-          >
-            <div
-              class="w-4 h-4"
-              data-testid="icon-arrow-left"
-            />
-            <span
-              class="hidden sm:inline"
-            >
-              nav.backToChat
-            </span>
-          </button>
-          <div
-            class="flex items-center gap-3"
-          >
-            <div
-              class="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg"
-            >
-              <div
-                class="w-6 h-6 text-primary-foreground"
-                data-testid="icon-brain"
-              />
-            </div>
-            <div>
-              <h1
-                class="text-3xl font-semibold"
-              >
-                Interactive CBT Session
-                <span
-                  class="ml-3 text-base text-primary font-normal"
-                >
-                  (Step 
-                  2
-                   of 
-                  9
-                  )
-                </span>
-              </h1>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-`;
-
 exports[`DiaryHeader renders mobile header 1`] = `
 <div>
   <div
@@ -136,6 +41,65 @@ exports[`DiaryHeader renders mobile header 1`] = `
           class="bg-primary h-1 rounded-full transition-all duration-500 ease-out"
           style="width: 33.33333333333333%;"
         />
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`DiaryHeader renders simplified desktop header 1`] = `
+<div>
+  <div
+    class="border-b bg-card/50 backdrop-blur-md sticky top-0 z-10"
+  >
+    <div
+      class="max-w-4xl mx-auto px-4 sm:px-6 py-4"
+    >
+      <div
+        class="flex items-center justify-between"
+      >
+        <div
+          class="flex items-center gap-4"
+        >
+          <button
+            class="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground"
+            variant="ghost"
+          >
+            <div
+              class="w-4 h-4"
+              data-testid="icon-arrow-left"
+            />
+            <span
+              class="hidden sm:inline"
+            >
+              nav.backToChat
+            </span>
+          </button>
+          <div
+            class="flex items-center gap-3"
+          >
+            <div
+              class="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg"
+            >
+              <div
+                class="w-6 h-6 text-primary-foreground"
+                data-testid="icon-brain"
+              />
+            </div>
+            <div>
+              <h1
+                class="text-3xl font-semibold"
+              >
+                Interactive CBT Session
+              </h1>
+              <p
+                class="text-sm text-muted-foreground capitalize mt-1"
+              >
+                emotions
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

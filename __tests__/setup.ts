@@ -36,6 +36,11 @@ export {
 // Global test configuration message
 console.log('🧪 Unified Test Architecture Loaded - 23 optimization patterns active');
 
+// Mock uuid for tests
+jest.mock('uuid', () => ({
+  v4: jest.fn(() => 'mock-uuid-1234'),
+}));
+
 // Ensure X-Request-Id exists in tests for API middleware
 if (typeof global.Headers !== 'undefined') {
   const OriginalHeaders = global.Headers;

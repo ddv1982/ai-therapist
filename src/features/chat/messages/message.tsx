@@ -17,10 +17,12 @@ interface MessageData {
   timestamp: Date;
   modelUsed?: string;
   metadata?: {
+    type?: string;
     step?: string;
     stepNumber?: number;
     totalSteps?: number;
     sessionData?: unknown;
+    data?: unknown;
   };
 }
 

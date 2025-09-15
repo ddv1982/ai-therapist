@@ -32,6 +32,7 @@ import { useInputFooterHeight } from '@/hooks/use-input-footer-height';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { updateSettings } from '@/store/slices/chatSlice';
 import { useChatController } from '@/hooks';
+import { ObsessionsCompulsionsData } from '@/types/therapy';
 
 // types are provided by the controller; no local re-definitions needed
 
@@ -67,6 +68,7 @@ function ChatPageContent() {
     setShowSidebar,
     showSidebar,
     addMessageToChat,
+    createObsessionsCompulsionsTable,
   } = useChatController({ model: settings.model, webSearchEnabled: settings.webSearchEnabled });
   const [showMemoryModal, setShowMemoryModal] = useState(false);
   // kept for backward compatibility; no longer used since height is managed by hook
@@ -97,6 +99,25 @@ function ChatPageContent() {
   const openCBTDiary = useCallback(() => {
     router.push('/cbt-diary');
   }, [router]);
+
+  const handleObsessionsCompulsionsComplete = useCallback(async (data: ObsessionsCompulsionsData) => {
+    if (!currentSession) return;
+    
+    try {
+      // Format the data for chat
+      const { formatObsessionsCompulsionsForChat } = await import('@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions');
+      const messageContent = formatObsessionsCompulsionsForChat(data);
+      
+      // Send to chat
+      await addMessageToChat({
+        content: messageContent,
+        role: 'user',
+        sessionId: currentSession
+      });
+    } catch (error) {
+      console.error('Failed to save obsessions and compulsions data:', error);
+    }
+  }, [currentSession, addMessageToChat]);
 
   const handleWebSearchToggle = () => {
     const newWebSearchEnabled = !settings.webSearchEnabled;
@@ -320,6 +341,7 @@ function ChatPageContent() {
           onGenerateReport={generateReport}
           onStopGenerating={stopGenerating}
           onOpenCBTDiary={openCBTDiary}
+          onCreateObsessionsTable={createObsessionsCompulsionsTable}
         />
 
         {/* Messages */}
@@ -385,6 +407,7 @@ function ChatPageContent() {
               messages={messages}
               isStreaming={isLoading}
               isMobile={isMobile}
+              onObsessionsCompulsionsComplete={handleObsessionsCompulsionsComplete}
             />
           )}
           

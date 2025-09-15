@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { FileText, Menu, X, Brain } from 'lucide-react';
+import { FileText, Menu, X, Brain, List } from 'lucide-react';
 import { getIconButtonSize } from '@/lib/ui/design-tokens';
 import { useTranslations } from 'next-intl';
 
@@ -17,6 +17,7 @@ interface ChatHeaderProps {
   onGenerateReport: () => void;
   onStopGenerating: () => void;
   onOpenCBTDiary: () => void;
+  onCreateObsessionsTable: () => void;
 }
 
 export function ChatHeader({
@@ -30,6 +31,7 @@ export function ChatHeader({
   onGenerateReport,
   onStopGenerating,
   onOpenCBTDiary,
+  onCreateObsessionsTable,
 }: ChatHeaderProps) {
   const t = useTranslations('chat');
 
@@ -91,6 +93,16 @@ export function ChatHeader({
             title={isMobile ? t('main.cbtMobile') : t('main.cbtOpen')}
           >
             <Brain className="w-4 h-4 relative z-10" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onCreateObsessionsTable}
+            className={getIconButtonSize('large')}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            title={t('main.obsessionsTooltip')}
+          >
+            <List className="w-4 h-4 relative z-10" />
           </Button>
         </div>
       </div>
