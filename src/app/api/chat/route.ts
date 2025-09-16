@@ -12,380 +12,471 @@ import { prisma } from '@/lib/database/db';
 import { verifySessionOwnership } from '@/lib/database/queries';
 import { encryptMessage } from '@/lib/chat/message-encryption';
 
+type ApiChatMessage = { role: 'user' | 'assistant'; content: string; id?: string };
+
+const chatRequestSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string().min(1).max(50000).optional(),
+    parts: z.array(z.object({ type: z.string().optional(), text: z.string().optional() })).optional(),
+    id: z.string().optional(),
+  })).min(1),
+  sessionId: z.string().min(1).optional(),
+  selectedModel: z.string().optional(),
+  webSearchEnabled: z.boolean().optional(),
+  temperature: z.number().min(0).max(2).optional(),
+  maxTokens: z.number().min(256).max(131072).optional(),
+  topP: z.number().min(0.1).max(1.0).optional(),
+});
+
+const DEFAULT_MAX_INPUT_BYTES = 128 * 1024;
+const MAX_ASSISTANT_RESPONSE_CHARS = (() => {
+  const raw = Number(process.env.CHAT_RESPONSE_MAX_CHARS ?? 100_000);
+  return Number.isFinite(raw) && raw > 0 ? raw : 100_000;
+})();
+
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
+type SessionOwnership = Awaited<ReturnType<typeof verifySessionOwnership>>;
+
+type StreamPart = { type?: string; text?: unknown } | null | undefined;
+
+type StreamPayload = {
+  text?: unknown;
+  parts?: StreamPart[];
+  delta?: { text?: unknown };
+};
+
+class AssistantResponseCollector {
+  private buffer = '';
+  private truncated = false;
+
+  constructor(
+    private readonly sessionId: string | undefined,
+    private readonly ownership: SessionOwnership,
+    private readonly modelId: string,
+    private readonly requestId: string,
+  ) {}
+
+  append(chunk: string): boolean {
+    if (!chunk || this.truncated) return this.truncated;
+    const appended = appendWithLimit(this.buffer, chunk);
+    this.buffer = appended.value;
+    this.truncated = this.truncated || appended.truncated;
+    return this.truncated;
+  }
+
+  async persist(): Promise<void> {
+    if (!this.sessionId || !this.ownership.valid) return;
+    const trimmed = this.buffer.trim();
+    if (!trimmed) return;
+
+    const encrypted = encryptMessage({ role: 'assistant', content: trimmed, timestamp: new Date() });
+    try {
+      await prisma.message.create({
+        data: {
+          sessionId: this.sessionId,
+          role: encrypted.role,
+          content: encrypted.content,
+          timestamp: encrypted.timestamp,
+          modelUsed: this.modelId,
+        },
+      });
+      logger.info('Assistant message persisted after stream', {
+        apiEndpoint: '/api/chat',
+        requestId: this.requestId,
+        sessionId: this.sessionId,
+        truncated: this.truncated,
+      });
+    } catch (error) {
+      logger.error(
+        'Failed to persist assistant message after stream',
+        { apiEndpoint: '/api/chat', requestId: this.requestId, sessionId: this.sessionId },
+        error instanceof Error ? error : new Error(String(error)),
+      );
+    }
+  }
+
+  wasTruncated(): boolean {
+    return this.truncated;
+  }
+}
+
 export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, context) => {
   try {
-    type ApiChatMessage = { role: 'user' | 'assistant'; content: string; id?: string };
-    const chatRequestSchema = z.object({
-      messages: z.array(z.object({
-        role: z.enum(['user', 'assistant']),
-        content: z.string().min(1).max(50000).optional(),
-        parts: z.array(z.object({ type: z.string().optional(), text: z.string().optional() })).optional(),
-        id: z.string().optional(),
-      })).min(1),
-      // Tests provide non-UUID session ids; accept any non-empty string
-      sessionId: z.string().min(1).optional(),
-      selectedModel: z.string().optional(),
-      webSearchEnabled: z.boolean().optional(),
-      temperature: z.number().min(0).max(2).optional(),
-      maxTokens: z.number().min(256).max(131072).optional(),
-      topP: z.number().min(0.1).max(1.0).optional(),
-    });
-
-    let fullBody: unknown = undefined;
-    let bodySize = 0;
-    const MAX_SIZE = Number(process.env.CHAT_INPUT_MAX_BYTES || 128 * 1024);
-    const anyReq = req as unknown as { json?: () => Promise<unknown>; text?: () => Promise<string> };
-    if (typeof anyReq.json === 'function') {
-      const data = await anyReq.json();
-      fullBody = data;
-      const jsonString = JSON.stringify(data);
-      bodySize = Buffer.byteLength(jsonString, 'utf8');
-    } else if (typeof anyReq.text === 'function') {
-      const bodyText = await anyReq.text();
-      bodySize = Buffer.byteLength(bodyText, 'utf8');
-      const parsed = JSON.parse(bodyText);
-      fullBody = parsed;
-    } else {
-      return createErrorResponse("Unsupported request body", 400, { requestId: context.requestId });
+    let parsedBody: { body: unknown; size: number };
+    try {
+      parsedBody = await readRequestBody(req);
+    } catch {
+      return createErrorResponse('Unsupported request body', 400, { requestId: context.requestId });
     }
 
-    // Basic payload size cap (~128KB default, configurable via env)
-    if (bodySize > MAX_SIZE) {
-      return createErrorResponse("Request too large", 413, { requestId: context.requestId });
+    const maxSize = Number(process.env.CHAT_INPUT_MAX_BYTES || DEFAULT_MAX_INPUT_BYTES);
+    if (parsedBody.size > maxSize) {
+      return createErrorResponse('Request too large', 413, { requestId: context.requestId });
     }
 
-    const parsedInput = chatRequestSchema.safeParse(fullBody);
-    if (!parsedInput.success) {
-      return createErrorResponse("Invalid request data", 400, { requestId: context.requestId, details: parsedInput.error.message });
+    const parsedInputResult = chatRequestSchema.safeParse(parsedBody.body);
+    if (!parsedInputResult.success) {
+      return createErrorResponse('Invalid request data', 400, { requestId: context.requestId, details: parsedInputResult.error.message });
     }
+    const parsedInput = parsedInputResult.data;
 
-    // Accept both legacy { role, content } and AI SDK UI message { role, parts } shapes
-    const normalizeMessages = (raw: unknown): ApiChatMessage[] | null => {
-      if (!Array.isArray(raw)) return null;
-      const result: ApiChatMessage[] = [];
-      for (const item of raw as unknown[]) {
-        if (typeof item !== 'object' || item === null) return null;
-        const v = item as { role?: unknown; content?: unknown; parts?: unknown; id?: unknown };
-        if (v.role !== 'user' && v.role !== 'assistant') return null;
-        if (typeof v.content === 'string') {
-          result.push({ role: v.role, content: v.content, id: typeof v.id === 'string' ? v.id : undefined });
-          continue;
-        }
-        if (Array.isArray(v.parts)) {
-          const parts = v.parts as Array<{ type?: unknown; text?: unknown }>;
-          const text = parts
-            .map(p => (p && (p.type === 'text') && typeof p.text === 'string' ? p.text : ''))
-            .join('');
-          result.push({ role: v.role, content: text, id: typeof v.id === 'string' ? v.id : undefined });
-          continue;
-        }
-        return null;
-      }
-      return result;
-    };
-
-    const typedMessages = normalizeMessages(parsedInput.data.messages);
+    const typedMessages = normalizeMessages(parsedInput.messages);
     if (!typedMessages) {
-      return createErrorResponse("Invalid messages format", 400, { requestId: context.requestId });
+      return createErrorResponse('Invalid messages format', 400, { requestId: context.requestId });
     }
-    // Extract sessionId for server-side persistence of assistant messages
-    const sessionId = parsedInput.data.sessionId;
 
-    // Confirm session ownership before loading any persisted history or writing messages
-    const sessionOwnership = sessionId
-      ? await verifySessionOwnership(sessionId, context.userInfo.userId)
-      : { valid: false };
-
+    const sessionId = parsedInput.sessionId;
+    const sessionOwnership = await resolveSessionOwnership(sessionId, context.userInfo.userId);
     if (sessionId && !sessionOwnership.valid) {
       return createErrorResponse('Session not found', 404, { requestId: context.requestId });
     }
 
-    // Load full session history if sessionId is provided
-    let history: ApiChatMessage[] = [];
-    if (sessionId && sessionOwnership.valid) {
-      const dbMessages = await prisma.message.findMany({
-        where: { sessionId },
-        orderBy: { timestamp: 'asc' },
-      });
-      const { safeDecryptMessages } = await import('@/lib/chat/message-encryption');
-      const decrypted = safeDecryptMessages(dbMessages.map(m => ({
-        role: m.role,
-        content: m.content,
-        timestamp: m.timestamp,
-      })));
-      history = decrypted.map((m, i) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-        id: dbMessages[i].id,
-      }));
-    }
+    const history = sessionId && sessionOwnership.valid
+      ? await loadSessionHistory(sessionId, sessionOwnership)
+      : [];
 
-    // Merge DB history with new messages
     const allMessages = [...history, ...typedMessages];
 
-    // Respect explicit selectedModel when provided, otherwise auto-select
-    const parsedSelectedModel = parsedInput.data.selectedModel;
-    const webSearchEnabled = parsedInput.data.webSearchEnabled ?? false;
-    
-    // Simple toggle-based model selection: 120B for web search, 20B for fast responses
-    const modelId = webSearchEnabled ? 'openai/gpt-oss-120b' : (parsedSelectedModel || 'openai/gpt-oss-20b');
-    const hasWebSearch = webSearchEnabled;
-    const toolChoice = hasWebSearch ? 'required' : 'none';
+    const { modelId, hasWebSearch } = selectModelConfiguration(
+      parsedInput.selectedModel,
+      parsedInput.webSearchEnabled,
+    );
+    const toolChoiceHeader = hasWebSearch ? 'required' : 'none';
 
-    // Informational log: final model selection and tool choice (no sensitive data)
     logger.info('Model selection for chat request', {
       apiEndpoint: '/api/chat',
       requestId: context.requestId,
       modelId,
-      toolChoice: hasWebSearch ? 'required' : 'none',
-      webSearchEnabled,
-      selectedModelProvided: Boolean(parsedSelectedModel)
+      toolChoice: toolChoiceHeader,
+      webSearchEnabled: hasWebSearch,
+      selectedModelProvided: Boolean(parsedInput.selectedModel),
     });
 
+    const systemPrompt = await buildSystemPrompt(req, hasWebSearch);
 
-    // Locale directive for response language
-    const { getApiRequestLocale } = await import('@/i18n/request');
-    const locale = getApiRequestLocale(req);
-    const languageDirective = process.env.NODE_ENV === 'test'
-      ? ''
-      : (
-        locale === 'nl'
-          ? `LANGUAGE REQUIREMENT:
-Provide all responses in Dutch (Nederlands). Use natural Dutch phrasing. Preserve any code blocks, special markers (e.g., "CBT_SUMMARY_CARD"), and JSON keys exactly as-is.`
-          : `LANGUAGE REQUIREMENT:
-Provide all responses in English. Preserve any code blocks, special markers (e.g., "CBT_SUMMARY_CARD"), and JSON keys exactly as-is.`
-      );
-
-    // Build system prompt for use in streamText and error handling
-    const basePrompt = hasWebSearch 
-      ? THERAPY_SYSTEM_PROMPT + `
-
-**WEB SEARCH CAPABILITIES ACTIVE:**
-You have access to browser search tools. When users ask for current information, research, or resources that would support their therapeutic journey, USE the browser search tool actively to provide helpful, up-to-date information. Web searches can enhance therapy by finding evidence-based resources, current research, mindfulness videos, support groups, or practical tools. After searching, integrate the findings therapeutically and relate them back to the client's needs and goals.`
-      : THERAPY_SYSTEM_PROMPT;
-
-    const systemPrompt = languageDirective
-      ? `${basePrompt}
-
-${languageDirective}`
-      : basePrompt;
-
-    // Single streamText call with conditional properties
-    const result = streamText({
+    const streamOptions = {
       model: languageModels[modelId as ModelID],
       system: systemPrompt,
       messages: allMessages,
-      ...(hasWebSearch && { tools: { browser_search: groq.tools.browserSearch({}) } }),
-      toolChoice: toolChoice,
       experimental_telemetry: { isEnabled: false },
-    });
-
-    const uiResponse = result.toUIMessageStreamResponse({
-      onError: (error) => {
-        if (error instanceof Error && error.message.includes("Rate limit")) {
-          return "Rate limit exceeded. Please try again later.";
-        }
-        
-        // Handle tool choice conflicts and web search specific errors
-        if (error instanceof Error) {
-          const errorMessage = error.message.toLowerCase();
-          
-          // Handle tool choice conflicts specifically
-          if (errorMessage.includes("tool choice is none, but model called a tool") ||
-              errorMessage.includes("tool choice is required, but model did not call a tool")) {
-            logger.error('Tool choice conflict detected', { 
-              apiEndpoint: '/api/chat', 
-              requestId: context.requestId, 
-              userId: context.userInfo.userId,
-              webSearchEnabled,
-              modelId,
-              errorMessage: error.message,
-              promptIncludes: systemPrompt.includes('WEB SEARCH CAPABILITIES ACTIVE'),
-              errorType: 'tool_choice_conflict'
-            });
-            return "I encountered a configuration issue. Let me try again without additional tools.";
-          }
-          
-          // Handle other web search related errors
-          if (errorMessage.includes("browser_search") || 
-              errorMessage.includes("web search") || 
-              errorMessage.includes("tool")) {
-            logger.error('Web search tool error detected', { 
-              apiEndpoint: '/api/chat', 
-              requestId: context.requestId, 
-              userId: context.userInfo.userId,
-              webSearchEnabled,
-              modelId,
-              errorMessage: error.message,
-              errorType: 'web_search_error'
-            });
-            return "I encountered an issue with web search functionality. Let me help you with the information I have available.";
-          }
-        }
-        
-        // Improve error detail logging for provider/tool issues
-        try {
-          const serialized = typeof error === 'object' ? JSON.stringify(error as unknown as Record<string, unknown>) : String(error);
-          logger.error('Chat stream error', { apiEndpoint: '/api/chat', requestId: context.requestId, userId: context.userInfo.userId, detail: serialized });
-        } catch {
-          logger.error('Chat stream error', { apiEndpoint: '/api/chat', requestId: context.requestId, userId: context.userInfo.userId }, error instanceof Error ? error : new Error(String(error)));
-        }
-        return "An error occurred.";
-      },
-    });
-
-    const persistAssistantMessage = async (content: string) => {
-      if (!sessionId || !sessionOwnership.valid) return;
-      if (!content || !content.trim()) return;
-      try {
-        const encrypted = encryptMessage({ role: 'assistant', content, timestamp: new Date() });
-        await prisma.message.create({
-          data: {
-            sessionId,
-            role: encrypted.role,
-            content: encrypted.content,
-            timestamp: encrypted.timestamp,
-            modelUsed: modelId,
-          },
-        });
-        logger.info('Assistant message persisted after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId });
-      } catch (persistError) {
-        logger.error('Failed to persist assistant message after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId }, persistError instanceof Error ? persistError : new Error(String(persistError)));
-      }
+      ...(hasWebSearch
+        ? { tools: { browser_search: groq.tools.browserSearch({}) }, toolChoice: 'required' as const }
+        : {}),
     };
 
-    // Helper to persist from a full SSE text payload
-    const persistFromSseText = async (sseText: string) => {
-      try {
-        let accumulated = '';
-        for (const rawLine of sseText.split('\n')) {
-          const line = rawLine.trim();
-          if (!line.startsWith('data:')) continue;
-          const payload = line.slice(5).trim();
+    const result = streamText(streamOptions as Parameters<typeof streamText>[0]);
+
+    const collector = new AssistantResponseCollector(sessionId, sessionOwnership, modelId, context.requestId);
+
+    const uiResponse = result.toUIMessageStreamResponse({
+      onError: createStreamErrorHandler({
+        context,
+        systemPrompt,
+        modelId,
+        webSearchEnabled: hasWebSearch,
+      }),
+    });
+
+    if (!sessionId) {
+      attachResponseHeaders(uiResponse as Response, context.requestId, modelId, toolChoiceHeader);
+      return uiResponse as Response;
+    }
+
+    if ('body' in uiResponse && (uiResponse as Response).body && typeof (uiResponse as Response).body!.tee === 'function') {
+      const responseWithHeaders = await teeAndPersistStream(
+        uiResponse as Response,
+        collector,
+        context.requestId,
+        modelId,
+        toolChoiceHeader,
+      );
+      if (responseWithHeaders) return responseWithHeaders;
+    }
+
+    await persistFromClonedStream(uiResponse as Response, collector);
+    attachResponseHeaders(uiResponse as Response, context.requestId, modelId, toolChoiceHeader);
+    return uiResponse as Response;
+  } catch (error) {
+    logger.apiError('/api/chat', error as Error, { apiEndpoint: '/api/chat', requestId: context.requestId });
+    return createErrorResponse('Failed to process request', 500, { requestId: context.requestId });
+  }
+});
+
+async function readRequestBody(req: NextRequest): Promise<{ body: unknown; size: number }> {
+  const parser = req as unknown as { json?: () => Promise<unknown>; text?: () => Promise<string> };
+  if (typeof parser.json === 'function') {
+    const data = await parser.json();
+    return { body: data, size: Buffer.byteLength(JSON.stringify(data), 'utf8') };
+  }
+  if (typeof parser.text === 'function') {
+    const text = await parser.text();
+    return { body: JSON.parse(text), size: Buffer.byteLength(text, 'utf8') };
+  }
+  throw new Error('Unsupported request body');
+}
+
+function normalizeMessages(raw: unknown): ApiChatMessage[] | null {
+  if (!Array.isArray(raw)) return null;
+  const result: ApiChatMessage[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') return null;
+    const candidate = item as { role?: unknown; content?: unknown; parts?: unknown; id?: unknown };
+    if (candidate.role !== 'user' && candidate.role !== 'assistant') return null;
+    if (typeof candidate.content === 'string') {
+      result.push({ role: candidate.role, content: candidate.content, id: typeof candidate.id === 'string' ? candidate.id : undefined });
+      continue;
+    }
+    if (Array.isArray(candidate.parts)) {
+      const text = candidate.parts
+        .map((part: StreamPart) => (part && part.type === 'text' && typeof part.text === 'string' ? part.text : ''))
+        .join('');
+      result.push({ role: candidate.role, content: text, id: typeof candidate.id === 'string' ? candidate.id : undefined });
+      continue;
+    }
+    return null;
+  }
+  return result;
+}
+
+async function resolveSessionOwnership(sessionId: string | undefined, userId: string) {
+  if (!sessionId) return { valid: false } as SessionOwnership;
+  return verifySessionOwnership(sessionId, userId, { includeMessages: true });
+}
+
+async function loadSessionHistory(sessionId: string, ownership: SessionOwnership): Promise<ApiChatMessage[]> {
+  const sessionMessages = Array.isArray(ownership.session?.messages)
+    ? ownership.session!.messages
+    : await prisma.message.findMany({
+        where: { sessionId },
+        orderBy: { timestamp: 'asc' },
+      });
+
+  const { safeDecryptMessages } = await import('@/lib/chat/message-encryption');
+  const decrypted = safeDecryptMessages(
+    sessionMessages.map(message => ({
+      role: message.role,
+      content: message.content,
+      timestamp: message.timestamp,
+    })),
+  );
+
+  return decrypted.map((message, index) => ({
+    role: message.role as 'user' | 'assistant',
+    content: message.content,
+    id: sessionMessages[index]?.id,
+  }));
+}
+
+function selectModelConfiguration(selectedModel: string | undefined, webSearchEnabled: boolean | undefined) {
+  const hasWebSearch = Boolean(webSearchEnabled);
+  const modelId = hasWebSearch ? 'openai/gpt-oss-120b' : selectedModel || 'openai/gpt-oss-20b';
+  return { modelId, hasWebSearch };
+}
+
+async function buildSystemPrompt(req: NextRequest, hasWebSearch: boolean): Promise<string> {
+  const { getApiRequestLocale } = await import('@/i18n/request');
+  const locale = getApiRequestLocale(req);
+  const languageDirective = process.env.NODE_ENV === 'test'
+    ? ''
+    : locale === 'nl'
+      ? `LANGUAGE REQUIREMENT:
+Provide all responses in Dutch (Nederlands). Use natural Dutch phrasing. Preserve any code blocks, special markers (e.g., "CBT_SUMMARY_CARD"), and JSON keys exactly as-is.`
+      : `LANGUAGE REQUIREMENT:
+Provide all responses in English. Preserve any code blocks, special markers (e.g., "CBT_SUMMARY_CARD"), and JSON keys exactly as-is.`;
+
+  const basePrompt = hasWebSearch
+    ? `${THERAPY_SYSTEM_PROMPT}
+
+**WEB SEARCH CAPABILITIES ACTIVE:**
+You have access to browser search tools. When users ask for current information, research, or resources that would support their therapeutic journey, USE the browser search tool actively to provide helpful, up-to-date information. Web searches can enhance therapy by finding evidence-based resources, current research, mindfulness videos, support groups, or practical tools. After searching, integrate the findings therapeutically and relate them back to the client's needs and goals.`
+    : THERAPY_SYSTEM_PROMPT;
+
+  return languageDirective ? `${basePrompt}
+
+${languageDirective}` : basePrompt;
+}
+
+function createStreamErrorHandler(params: {
+  context: { requestId: string; userInfo: { userId: string } };
+  systemPrompt: string;
+  modelId: string;
+  webSearchEnabled: boolean;
+}) {
+  const { context, systemPrompt, modelId, webSearchEnabled } = params;
+  return (error: unknown) => {
+    if (error instanceof Error && error.message.includes('Rate limit')) {
+      return 'Rate limit exceeded. Please try again later.';
+    }
+
+    if (error instanceof Error) {
+      const lower = error.message.toLowerCase();
+      if (lower.includes('tool choice is none, but model called a tool') || lower.includes('tool choice is required, but model did not call a tool')) {
+        logger.error('Tool choice conflict detected', {
+          apiEndpoint: '/api/chat',
+          requestId: context.requestId,
+          userId: context.userInfo.userId,
+          webSearchEnabled,
+          modelId,
+          errorMessage: error.message,
+          promptIncludes: systemPrompt.includes('WEB SEARCH CAPABILITIES ACTIVE'),
+          errorType: 'tool_choice_conflict',
+        });
+        return 'I encountered a configuration issue. Let me try again without additional tools.';
+      }
+
+      if (lower.includes('browser_search') || lower.includes('web search') || lower.includes('tool')) {
+        logger.error('Web search tool error detected', {
+          apiEndpoint: '/api/chat',
+          requestId: context.requestId,
+          userId: context.userInfo.userId,
+          webSearchEnabled,
+          modelId,
+          errorMessage: error.message,
+          errorType: 'web_search_error',
+        });
+        return 'I encountered an issue with web search functionality. Let me help you with the information I have available.';
+      }
+    }
+
+    try {
+      const detail = typeof error === 'object' ? JSON.stringify(error as Record<string, unknown>) : String(error);
+      logger.error('Chat stream error', { apiEndpoint: '/api/chat', requestId: context.requestId, userId: context.userInfo.userId, detail });
+    } catch {
+      logger.error('Chat stream error', { apiEndpoint: '/api/chat', requestId: context.requestId, userId: context.userInfo.userId }, error instanceof Error ? error : new Error(String(error)));
+    }
+    return 'An error occurred.';
+  };
+}
+
+async function teeAndPersistStream(
+  response: Response,
+  collector: AssistantResponseCollector,
+  requestId: string,
+  modelId: string,
+  toolChoice: string,
+): Promise<Response | null> {
+  try {
+    const [clientStream, serverStream] = response.body!.tee();
+
+    const consume = async () => {
+      const reader = serverStream.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      const processBuffer = () => {
+        let newlineIndex = buffer.indexOf('\n');
+        while (newlineIndex !== -1) {
+          const line = buffer.slice(0, newlineIndex);
+          buffer = buffer.slice(newlineIndex + 1);
+          const trimmed = line.trim();
+          if (!trimmed.startsWith('data:')) {
+            newlineIndex = buffer.indexOf('\n');
+            continue;
+          }
+          const payloadRaw = trimmed.slice(5).trim();
           try {
-            const obj = JSON.parse(payload);
-            if (typeof obj?.text === 'string') {
-              accumulated += obj.text;
-            } else if (Array.isArray(obj?.parts)) {
-              for (const part of obj.parts) {
-                if (part && part.type === 'text' && typeof part.text === 'string') {
-                  accumulated += part.text;
-                }
-              }
-            } else if (typeof obj?.delta?.text === 'string') {
-              accumulated += obj.delta.text;
+            const payload = JSON.parse(payloadRaw) as StreamPayload;
+            const chunk = extractChunk(payload);
+            if (collector.append(chunk)) {
+              return true;
             }
           } catch {
             // ignore parse errors
           }
+          newlineIndex = buffer.indexOf('\n');
         }
-        await persistAssistantMessage(accumulated);
-      } catch (persistError) {
-        logger.error('Failed to persist assistant message after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId }, persistError instanceof Error ? persistError : new Error(String(persistError)));
+        return false;
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        if (processBuffer()) break;
       }
+
+      if (!collector.wasTruncated() && buffer.length > 0) {
+        processBuffer();
+      }
+
+      await collector.persist();
     };
 
-    // If no session, just return the UI response
-    if (!sessionId) {
-      try {
-        (uiResponse as Response).headers.set('X-Request-Id', context.requestId);
-        (uiResponse as Response).headers.set('X-Model-Id', modelId);
-        (uiResponse as Response).headers.set('X-Tool-Choice', toolChoice);
-      } catch {}
-      return uiResponse as Response;
+    if (process.env.NODE_ENV === 'test') {
+      await consume();
+    } else {
+      void consume();
     }
 
-    // Prefer streaming tee when available
-    if ('body' in uiResponse && (uiResponse as Response).body && typeof (uiResponse as Response).body!.tee === 'function') {
-      try {
-        const [clientStream, serverStream] = (uiResponse as Response).body!.tee();
-        const consumeAndPersist = async () => {
-          const reader = serverStream.getReader();
-          const decoder = new TextDecoder();
-          let buffer = '';
-          let accumulated = '';
-          const processBuffer = async () => {
-            let newlineIndex = buffer.indexOf('\n');
-            while (newlineIndex !== -1) {
-              const line = buffer.slice(0, newlineIndex);
-              buffer = buffer.slice(newlineIndex + 1);
-              const trimmed = line.trim();
-              if (trimmed.startsWith('data:')) {
-                const payload = trimmed.slice(5).trim();
-                try {
-                  const obj = JSON.parse(payload);
-                  if (typeof obj?.text === 'string') {
-                    accumulated += obj.text;
-                  } else if (Array.isArray(obj?.parts)) {
-                    for (const part of obj.parts) {
-                      if (part && part.type === 'text' && typeof part.text === 'string') {
-                        accumulated += part.text;
-                      }
-                    }
-                  } else if (typeof obj?.delta?.text === 'string') {
-                    accumulated += obj.delta.text;
-                  }
-                } catch {
-                  // ignore parse errors
-                }
-              }
-              newlineIndex = buffer.indexOf('\n');
-            }
-          };
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            await processBuffer();
-          }
-          if (buffer.length > 0) await processBuffer();
-          await persistAssistantMessage(accumulated);
-        };
-
-        if (process.env.NODE_ENV === 'test') {
-          await consumeAndPersist();
-        } else {
-          void consumeAndPersist();
-        }
-        const headers = new Headers((uiResponse as Response).headers);
-        try {
-          headers.set('X-Request-Id', context.requestId);
-          headers.set('X-Model-Id', modelId);
-          headers.set('X-Tool-Choice', toolChoice);
-        } catch {}
-        return new Response(clientStream, { status: (uiResponse as Response).status, headers });
-      } catch {
-        // fall through to non-streaming fallback
-      }
-    }
-
-    // Fallback: if tee or web streams unavailable, clone and read full text
-    try {
-      const clone = (uiResponse as Response).clone?.() ?? uiResponse;
-      const sseText = await (clone as Response).text?.();
-      if (typeof sseText === 'string') {
-        if (process.env.NODE_ENV === 'test') {
-          // In tests, await to ensure deterministic persistence
-          await persistFromSseText(sseText);
-        } else {
-          // Fire-and-forget so we don't delay the response
-          void persistFromSseText(sseText);
-        }
-      }
-    } catch {
-      // ignore
-    }
-    try {
-      (uiResponse as Response).headers.set('X-Request-Id', context.requestId);
-      (uiResponse as Response).headers.set('X-Model-Id', modelId);
-      (uiResponse as Response).headers.set('X-Tool-Choice', toolChoice);
-    } catch {}
-    return uiResponse as Response;
-  } catch (error) {
-    logger.apiError('/api/chat', error as Error, { apiEndpoint: '/api/chat', requestId: context.requestId });
-    return createErrorResponse("Failed to process request", 500, { requestId: context.requestId });
+    const headers = new Headers(response.headers);
+    attachResponseHeadersRaw(headers, requestId, modelId, toolChoice);
+    return new Response(clientStream, { status: response.status, headers });
+  } catch {
+    return null;
   }
-});
+}
+
+async function persistFromClonedStream(response: Response, collector: AssistantResponseCollector): Promise<void> {
+  try {
+    const clone = response.clone?.() ?? response;
+    const text = await clone.text?.();
+    if (typeof text !== 'string') return;
+
+    for (const rawLine of text.split('\n')) {
+      const line = rawLine.trim();
+      if (!line.startsWith('data:')) continue;
+      try {
+        const payload = JSON.parse(line.slice(5).trim()) as StreamPayload;
+        if (collector.append(extractChunk(payload))) break;
+      } catch {
+        // ignore parse errors
+      }
+      if (collector.wasTruncated()) break;
+    }
+
+    await collector.persist();
+  } catch {
+    // ignore
+  }
+}
+
+function extractChunk(payload: StreamPayload | undefined): string {
+  if (!payload || typeof payload !== 'object') return '';
+  if (typeof payload.text === 'string') return payload.text;
+  if (Array.isArray(payload.parts)) {
+    return payload.parts
+      .map((part: StreamPart) => (part && part.type === 'text' && typeof part.text === 'string' ? part.text : ''))
+      .join('');
+  }
+  if (typeof payload.delta?.text === 'string') return payload.delta.text;
+  return '';
+}
+
+function appendWithLimit(current: string, addition: string): { value: string; truncated: boolean } {
+  if (!addition) return { value: current, truncated: false };
+  if (current.length >= MAX_ASSISTANT_RESPONSE_CHARS) {
+    return { value: current, truncated: true };
+  }
+  const remaining = MAX_ASSISTANT_RESPONSE_CHARS - current.length;
+  if (addition.length <= remaining) {
+    return { value: current + addition, truncated: false };
+  }
+  return { value: current + addition.slice(0, remaining), truncated: true };
+}
+
+function attachResponseHeaders(response: Response, requestId: string, modelId: string, toolChoice: string) {
+  try {
+    attachResponseHeadersRaw(response.headers, requestId, modelId, toolChoice);
+  } catch {
+    // ignore header failures
+  }
+}
+
+function attachResponseHeadersRaw(headers: Headers, requestId: string, modelId: string, toolChoice: string) {
+  headers.set('X-Request-Id', requestId);
+  headers.set('X-Model-Id', modelId);
+  headers.set('X-Tool-Choice', toolChoice);
+}

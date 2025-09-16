@@ -1,283 +1,228 @@
-import { POST } from '@/app/api/chat/route';
 import { NextRequest } from 'next/server';
 
-// Mock AI SDK and providers
-jest.mock('@/ai/providers', () => ({
-  model: {
-    languageModel: jest.fn().mockReturnValue('mock-model')
+const browserSearchFactoryMock = jest.fn((options?: unknown) => {
+  return { tool: 'browser-search', options };
+});
+
+jest.mock('@ai-sdk/groq', () => ({
+  groq: {
+    tools: {
+      browserSearch: (options?: unknown) => browserSearchFactoryMock(options),
+    },
   },
-  languageModels: {
-    'openai/gpt-oss-20b': 'mock-model-20b',
-    'openai/gpt-oss-120b': 'mock-model-120b'
-  },
-  defaultModel: 'openai/gpt-oss-20b'
 }));
 
+const createErrorResponseMock = jest.fn(
+  (_message: string, status: number = 400, _options?: unknown) =>
+    new Response(null, { status }),
+);
+
+jest.mock('@/lib/api/api-response', () => ({
+  createErrorResponse: (
+    message: string,
+    status?: number,
+    options?: unknown,
+  ) => createErrorResponseMock(message, status, options),
+}));
+
+jest.mock('@/ai/providers', () => ({
+  languageModels: {
+    'openai/gpt-oss-20b': 'mock-model-20b',
+    'openai/gpt-oss-120b': 'mock-model-120b',
+  },
+}));
+
+const streamTextMock = jest.fn();
+const toUIMessageStreamResponseMock = jest.fn();
+
 jest.mock('ai', () => ({
-  streamText: jest.fn().mockReturnValue({
-    toUIMessageStreamResponse: jest.fn().mockReturnValue({
-      status: 200,
-      headers: new Headers({
-        'content-type': 'text/event-stream',
-        'cache-control': 'no-cache',
-        'connection': 'keep-alive'
-      })
-    })
-  }),
-  convertToModelMessages: jest.fn().mockImplementation((messages) => messages)
+  streamText: (...args: unknown[]) => streamTextMock(...args),
 }));
 
 jest.mock('@/lib/therapy/therapy-prompts', () => ({
-  THERAPY_SYSTEM_PROMPT: 'Mock therapeutic system prompt'
+  THERAPY_SYSTEM_PROMPT: 'Mock therapeutic system prompt',
 }));
 
-// Mock imports
-import { streamText } from 'ai';
+const verifySessionOwnershipMock = jest.fn();
 
-// Type the mocked functions
-const mockStreamText = jest.mocked(streamText);
-// const _mockConvertToModelMessages = jest.mocked(convertToModelMessages);
+jest.mock('@/lib/database/queries', () => ({
+  verifySessionOwnership: (...args: unknown[]) => verifySessionOwnershipMock(...args),
+}));
 
-// Helper to create mock request
-function createMockRequest(body: any, options: { url?: string } = {}): NextRequest {
-  const url = options.url || 'http://localhost:4000/api/chat';
-  
+jest.mock('@/lib/chat/message-encryption', () => ({
+  encryptMessage: jest.fn(({ role, content, timestamp }) => ({ role, content, timestamp })),
+  safeDecryptMessages: jest.fn((messages: Array<{ role: string; content: string; timestamp: Date }>) => messages),
+}));
+
+const loggerInfoMock = jest.fn();
+const loggerErrorMock = jest.fn();
+const loggerApiErrorMock = jest.fn();
+
+jest.mock('@/lib/utils/logger', () => ({
+  logger: {
+    info: (...args: unknown[]) => loggerInfoMock(...args),
+    error: (...args: unknown[]) => loggerErrorMock(...args),
+    warn: jest.fn(),
+    apiError: (...args: unknown[]) => loggerApiErrorMock(...args),
+  },
+}));
+
+jest.mock('@/lib/database/db', () => ({
+  prisma: {
+    message: {
+      findMany: jest.fn().mockResolvedValue([]),
+      create: jest.fn().mockResolvedValue(undefined),
+    },
+  },
+}));
+
+jest.mock('@/lib/api/api-middleware', () => ({
+  withAuthAndRateLimitStreaming:
+    (
+      handler: (
+        req: NextRequest,
+        ctx: {
+          requestId: string;
+          method?: string;
+          url?: string;
+          userAgent?: string;
+          userInfo: { userId: string };
+        },
+        params?: Promise<Record<string, string>>
+      ) => Promise<Response>,
+    ) =>
+    async (
+      req: NextRequest,
+      routeParams?: { params: Promise<Record<string, string>> },
+    ) =>
+      handler(
+        req,
+        {
+          requestId: 'test-request',
+          method: req.method || 'POST',
+          url: (req as unknown as { nextUrl?: URL }).nextUrl?.toString() || 'http://localhost/api/chat',
+          userAgent: req.headers?.get?.('user-agent') || 'jest',
+          userInfo: { userId: 'user-1' },
+        },
+        routeParams?.params,
+      ),
+}));
+
+jest.mock('@/i18n/request', () => ({
+  getApiRequestLocale: () => 'en',
+}));
+
+const { POST } = require('@/app/api/chat/route') as {
+  POST: typeof import('@/app/api/chat/route').POST;
+};
+
+function createRequest(body: unknown): NextRequest {
   return {
     json: jest.fn().mockResolvedValue(body),
-    nextUrl: new URL(url),
-    headers: new Headers({ 'content-type': 'application/json' })
-  } as any as NextRequest;
+    method: 'POST',
+    nextUrl: new URL('http://localhost/api/chat'),
+    headers: new Headers({ 'content-type': 'application/json', 'user-agent': 'jest' }),
+  } as unknown as NextRequest;
 }
 
-// Mock middleware to pass-through handler and provide context
-jest.mock('@/lib/api/api-middleware', () => ({
-  withAuthAndRateLimitStreaming: (
-    handler: (req: NextRequest, ctx: { requestId: string; userInfo: { userId: string } }) => Promise<unknown>
-  ) => async (req: NextRequest, ctx?: { requestId: string; userInfo: { userId: string } }) => {
-    const context = ctx ?? { requestId: 'test-request-id', userInfo: { userId: 'test-user-id' } };
-    return handler(req, context);
-  }
-}));
-
-// Mock i18n request to avoid dynamic import behavior
-jest.mock('@/i18n/request', () => ({
-  getApiRequestLocale: () => 'en'
-}));
-
-describe('/api/chat Route - Simplified Architecture', () => {
+describe('/api/chat route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Default streaming response
-    mockStreamText.mockReturnValue({
-      toUIMessageStreamResponse: jest.fn().mockReturnValue({
-        status: 200,
-        headers: new Headers({
-          'content-type': 'text/event-stream'
-        })
-      })
-    } as any);
-  });
-
-  describe('Core Functionality', () => {
-    it('should handle valid AI SDK request with messages', async () => {
-      const request = createMockRequest({
-        messages: [
-          { id: '1', role: 'user', content: 'Hello' },
-          { id: '2', role: 'assistant', content: 'Hi there!' }
-        ],
-        selectedModel: 'openai/gpt-oss-20b',
-        sessionId: 'test-session-123'
-      });
-
-      const response = await POST(request, { params: Promise.resolve({}) });
-
-      // Verify AI SDK streamText was called with correct parameters
-      expect(mockStreamText).toHaveBeenCalledWith({
-        model: 'mock-model-20b', // Direct model from languageModels
-        system: 'Mock therapeutic system prompt',
-        messages: [
-          { id: '1', role: 'user', content: 'Hello' },
-          { id: '2', role: 'assistant', content: 'Hi there!' }
-        ],
-        toolChoice: 'none',
-        experimental_telemetry: {
-          isEnabled: false
-        }
-      });
-
-      // Verify response structure
-      expect(response).toBeTruthy();
-      expect(response.status).toBe(200);
-    });
-
-    it('should use default model when not specified', async () => {
-      const request = createMockRequest({
-        messages: [{ id: '1', role: 'user', content: 'Hello without model' }],
-        sessionId: 'test-session'
-      });
-
-      await POST(request, { params: Promise.resolve({}) });
-      await POST(request, { params: Promise.resolve({}) });
-
-      // Verify streamText was called with correct model (default 20B model)
-      expect(mockStreamText).toHaveBeenCalledWith(expect.objectContaining({
-        model: 'mock-model-20b'
-      }));
-    });
-
-    it('should handle requests without sessionId', async () => {
-      const request = createMockRequest({
-        messages: [{ id: '1', role: 'user', content: 'Hello without session' }],
-        selectedModel: 'openai/gpt-oss-120b'
-      });
-
-      await POST(request, { params: Promise.resolve({}) });
-
-      // Verify streamText was called with correct model and parameters
-      expect(mockStreamText).toHaveBeenCalledWith({
-        model: 'mock-model-120b',
-        system: 'Mock therapeutic system prompt',
-        messages: [{ id: '1', role: 'user', content: 'Hello without session' }],
-        toolChoice: 'none',
-        experimental_telemetry: {
-          isEnabled: false
-        }
-      });
+    browserSearchFactoryMock.mockImplementation(
+      (options?: unknown) => ({ tool: 'browser-search', options }),
+    );
+    createErrorResponseMock.mockImplementation((_message: string, status: number = 400) => new Response(null, { status }));
+    verifySessionOwnershipMock.mockResolvedValue({ valid: false });
+    toUIMessageStreamResponseMock.mockReturnValue({
+      status: 200,
+      headers: new Headers({ 'content-type': 'text/event-stream' }),
+    } as Response);
+    streamTextMock.mockReturnValue({
+      toUIMessageStreamResponse: toUIMessageStreamResponseMock,
     });
   });
 
-  describe('AI SDK Integration', () => {
-    it('should handle messages without convertToModelMessages', async () => {
-      const messages = [
+  it('streams responses for valid requests', async () => {
+    const request = createRequest({
+      messages: [
         { id: '1', role: 'user', content: 'Hello' },
-        { id: '2', role: 'assistant', content: 'Hi there!' }
-      ];
+        { id: '2', role: 'assistant', content: 'Hi!' },
+      ],
+      selectedModel: 'openai/gpt-oss-20b',
+    });
 
-      const request = createMockRequest({ messages });
+    const response = await POST(request, { params: Promise.resolve({}) });
 
-      await POST(request, { params: Promise.resolve({}) });
-
-      // Should pass messages directly to streamText without conversion
-      expect(mockStreamText).toHaveBeenCalledWith({
-        model: 'mock-model-20b', // Uses default 20B model
+    expect(streamTextMock).toHaveBeenCalledTimes(1);
+    expect(streamTextMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'mock-model-20b',
         system: 'Mock therapeutic system prompt',
-        messages: messages,
-        toolChoice: 'none',
-        experimental_telemetry: {
-          isEnabled: false
-        }
-      });
-    });
-
-    it('should return streaming response with error handling', async () => {
-      const mockStreamResponse = {
-        toUIMessageStreamResponse: jest.fn().mockReturnValue({
-          status: 200,
-          headers: new Headers({
-            'content-type': 'text/event-stream',
-            'cache-control': 'no-cache'
-          })
-        })
-      };
-
-      mockStreamText.mockReturnValue(mockStreamResponse as any);
-
-      const request = createMockRequest({
-        messages: [{ id: '1', role: 'user', content: 'Hello' }]
-      });
-
-      const response = await POST(request, { params: Promise.resolve({}) });
-
-      expect(mockStreamResponse.toUIMessageStreamResponse).toHaveBeenCalledWith({
-        onError: expect.any(Function)
-      });
-      expect(response.status).toBe(200);
-    });
-
-    it('should handle rate limit errors', async () => {
-      const mockError = new Error('Rate limit exceeded');
-      // const _mockOnError = jest.fn().mockReturnValue('Rate limit exceeded. Please try again later.');
-
-      mockStreamText.mockReturnValue({
-        // Provide minimal shape of StreamTextResult to satisfy TS
-        content: [],
-        text: jest.fn(),
-        reasoning: undefined,
-        reasoningText: undefined,
-        toAIStreamResponse: jest.fn(),
-        toDataStreamResponse: jest.fn(),
-        toTextStreamResponse: jest.fn(),
-        toUIMessageStreamResponse: jest.fn().mockImplementation((options?: { onError?: (err: Error) => string }) => {
-          if (options && options.onError) {
-            const errorMessage = options.onError(mockError);
-            expect(errorMessage).toBe('Rate limit exceeded. Please try again later.');
-          }
-          return {
-            status: 429,
-            headers: new Headers()
-          };
-        })
-      } as any);
-
-      const request = createMockRequest({
-        messages: [{ id: '1', role: 'user', content: 'Hello' }]
-      });
-
-      await POST(request, { params: Promise.resolve({}) });
-
-      expect(mockStreamText).toHaveBeenCalled();
-    });
-
-    it('should handle generic errors', async () => {
-      const mockError = new Error('Something went wrong');
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-
-      mockStreamText.mockReturnValue({
-        toUIMessageStreamResponse: jest.fn().mockImplementation((options) => {
-          if (options && options.onError) {
-            const errorMessage = options.onError(mockError);
-            expect(errorMessage).toBe('An error occurred.');
-          }
-          return {
-            status: 500,
-            headers: new Headers()
-          };
-        })
-      } as unknown as ReturnType<typeof streamText>);
-
-      const request = createMockRequest({
-        messages: [{ id: '1', role: 'user', content: 'Hello' }]
-      });
-
-      await POST(request, { params: Promise.resolve({}) });
-
-      expect(mockStreamText).toHaveBeenCalled();
-      consoleSpy.mockRestore();
-    });
+        messages: [
+          { id: '1', role: 'user', content: 'Hello' },
+          { id: '2', role: 'assistant', content: 'Hi!' },
+        ],
+      }),
+    );
+    expect(toUIMessageStreamResponseMock).toHaveBeenCalledWith({ onError: expect.any(Function) });
+    expect((response as Response).status).toBe(200);
   });
 
-  describe('Model Selection', () => {
-    const testModels = [
-      'openai/gpt-oss-20b', 
-      'openai/gpt-oss-120b'
-    ];
-
-    testModels.forEach(modelId => {
-      it(`should handle ${modelId} model selection`, async () => {
-        const request = createMockRequest({
-          messages: [{ id: '1', role: 'user', content: 'Test message' }],
-          selectedModel: modelId
-        });
-
-        await POST(request, { params: Promise.resolve({}) });
-
-        // Verify streamText was called with the correct model from languageModels
-        const expectedModel = modelId === 'openai/gpt-oss-20b' ? 'mock-model-20b' : 'mock-model-120b';
-        expect(mockStreamText).toHaveBeenCalledWith(expect.objectContaining({
-          model: expectedModel
-        }));
-      });
+  it('enables web search tooling when requested', async () => {
+    const request = createRequest({
+      messages: [{ id: '1', role: 'user', content: 'Need research help' }],
+      webSearchEnabled: true,
     });
+
+    await POST(request, { params: Promise.resolve({}) });
+
+    expect(browserSearchFactoryMock).toHaveBeenCalledWith({});
+    expect(streamTextMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'mock-model-120b',
+        tools: { browser_search: expect.any(Object) },
+        toolChoice: 'required',
+      }),
+    );
+  });
+
+  it('rejects invalid payloads', async () => {
+    const request = createRequest({ messages: [] });
+
+    const response = await POST(request, { params: Promise.resolve({}) });
+
+    expect(streamTextMock).not.toHaveBeenCalled();
+    expect(response).toBeDefined();
+    expect(response?.status).toBe(400);
+  });
+
+  it('rejects oversized payloads', async () => {
+    process.env.CHAT_INPUT_MAX_BYTES = '10';
+    const request = createRequest({ messages: [{ id: '1', role: 'user', content: 'This is too long' }] });
+
+    const response = await POST(request, { params: Promise.resolve({}) });
+
+    expect(streamTextMock).not.toHaveBeenCalled();
+    expect(response).toBeDefined();
+    expect(response?.status).toBe(413);
+    delete process.env.CHAT_INPUT_MAX_BYTES;
+  });
+
+  it('handles stream errors gracefully', async () => {
+    streamTextMock.mockReturnValueOnce({
+      toUIMessageStreamResponse: jest.fn().mockImplementation(({ onError: handler }) => {
+        expect(typeof handler).toBe('function');
+        expect(handler && handler(new Error('stream failure'))).toBe('An error occurred.');
+        return { status: 500, headers: new Headers() } as Response;
+      }),
+    });
+
+    const request = createRequest({ messages: [{ id: '1', role: 'user', content: 'hello' }] });
+
+    const response = await POST(request, { params: Promise.resolve({}) });
+
+    expect(response).toBeDefined();
+    expect(response?.status).toBe(500);
+    expect(loggerApiErrorMock).not.toHaveBeenCalled();
   });
 });

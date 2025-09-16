@@ -1,22 +1,33 @@
 import { prisma } from '@/lib/database/db';
 import { getSingleUserInfo } from '@/lib/auth/user-session';
 import { logger } from '@/lib/utils/logger';
+import type { Session, Message } from '@prisma/client';
 
 export async function verifySessionOwnership(
   sessionId: string,
-  userId: string
-): Promise<{ valid: boolean; session?: unknown }> {
+  userId: string,
+  options: { includeMessages?: boolean } = {}
+): Promise<{ valid: boolean; session?: (Session & { messages?: Message[] }) }> {
   try {
     const session = await prisma.session.findUnique({
       where: {
         id: sessionId,
         userId: userId,
       },
+      ...(options.includeMessages
+        ? {
+            include: {
+              messages: {
+                orderBy: { timestamp: 'asc' },
+              },
+            },
+          }
+        : {}),
     });
 
     return {
       valid: !!session,
-      session: session || undefined,
+      session: (session as (Session & { messages?: Message[] }) | null) || undefined,
     };
   } catch (error) {
     logger.databaseError('verify session ownership', error as Error, {
