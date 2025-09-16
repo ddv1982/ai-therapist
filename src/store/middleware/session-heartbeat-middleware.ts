@@ -40,13 +40,20 @@ export const sessionHeartbeatMiddleware: Middleware<object, unknown, ThunkDispat
     // Start heartbeat when a session becomes active
     if (isSetCurrentSessionAction(action) && action.payload) {
       if (!heartbeatInterval) {
+        const triggerHeartbeat = () => {
+          api.dispatch(
+            sessionsApi.endpoints.getCurrentSession.initiate(undefined, {
+              subscribe: false,
+              forceRefetch: true,
+            })
+          );
+        };
+
         // Initial heartbeat using getCurrentSession endpoint
-        api.dispatch(sessionsApi.endpoints.getCurrentSession.initiate());
+        triggerHeartbeat();
 
         // Set up periodic heartbeat
-        heartbeatInterval = setInterval(() => {
-          api.dispatch(sessionsApi.endpoints.getCurrentSession.initiate());
-        }, HEARTBEAT_INTERVAL);
+        heartbeatInterval = setInterval(triggerHeartbeat, HEARTBEAT_INTERVAL);
       }
     }
 

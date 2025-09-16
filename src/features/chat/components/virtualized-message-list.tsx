@@ -14,7 +14,7 @@ import {
   FinalEmotionReflection,
   ActionPlan
 } from '@/features/therapy/cbt/chat-components';
-import { ObsessionsCompulsionsTable } from '@/features/therapy/obsessions-compulsions/obsessions-compulsions-table';
+import { ObsessionsCompulsionsFlow } from '@/features/therapy/obsessions-compulsions/obsessions-compulsions-flow';
 import {
   type SituationData,
   type EmotionData,
@@ -164,7 +164,7 @@ function VirtualizedMessageListComponent({
 
       case 'obsessions-compulsions':
         return onObsessionsCompulsionsComplete ? (
-          <ObsessionsCompulsionsTable
+          <ObsessionsCompulsionsFlow
             onComplete={onObsessionsCompulsionsComplete}
             initialData={message.metadata?.data as ObsessionsCompulsionsData}
           />

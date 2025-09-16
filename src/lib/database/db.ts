@@ -1,9 +1,29 @@
 import { PrismaClient } from '@prisma/client';
 import path from 'path';
 
-// Always set DATABASE_URL programmatically
+// Provide a local SQLite fallback when DATABASE_URL is not supplied by the environment.
 const dbPath = path.join(process.cwd(), 'prisma', 'dev.db');
-process.env.DATABASE_URL = `file:${dbPath}`;
+const defaultDatabaseUrl = `file:${dbPath}`;
+
+const resolveDatabaseUrl = (rawUrl: string | undefined): string => {
+  if (!rawUrl || rawUrl.trim() === '') {
+    return defaultDatabaseUrl;
+  }
+
+  if (!rawUrl.startsWith('file:')) {
+    return rawUrl;
+  }
+
+  const filePath = rawUrl.slice('file:'.length);
+  if (!filePath || path.isAbsolute(filePath)) {
+    return rawUrl;
+  }
+
+  return `file:${path.join(process.cwd(), filePath)}`;
+};
+
+const resolvedDatabaseUrl = resolveDatabaseUrl(process.env.DATABASE_URL);
+process.env.DATABASE_URL = resolvedDatabaseUrl;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -17,7 +37,7 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   datasources: {
     db: {
-      url: process.env.DATABASE_URL,
+      url: resolvedDatabaseUrl,
     },
   },
 });

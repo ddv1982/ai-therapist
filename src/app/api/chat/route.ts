@@ -94,9 +94,18 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     // Extract sessionId for server-side persistence of assistant messages
     const sessionId = parsedInput.data.sessionId;
 
+    // Confirm session ownership before loading any persisted history or writing messages
+    const sessionOwnership = sessionId
+      ? await verifySessionOwnership(sessionId, context.userInfo.userId)
+      : { valid: false };
+
+    if (sessionId && !sessionOwnership.valid) {
+      return createErrorResponse('Session not found', 404, { requestId: context.requestId });
+    }
+
     // Load full session history if sessionId is provided
     let history: ApiChatMessage[] = [];
-    if (sessionId) {
+    if (sessionId && sessionOwnership.valid) {
       const dbMessages = await prisma.message.findMany({
         where: { sessionId },
         orderBy: { timestamp: 'asc' },
@@ -228,11 +237,29 @@ ${languageDirective}`
       },
     });
 
+    const persistAssistantMessage = async (content: string) => {
+      if (!sessionId || !sessionOwnership.valid) return;
+      if (!content || !content.trim()) return;
+      try {
+        const encrypted = encryptMessage({ role: 'assistant', content, timestamp: new Date() });
+        await prisma.message.create({
+          data: {
+            sessionId,
+            role: encrypted.role,
+            content: encrypted.content,
+            timestamp: encrypted.timestamp,
+            modelUsed: modelId,
+          },
+        });
+        logger.info('Assistant message persisted after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId });
+      } catch (persistError) {
+        logger.error('Failed to persist assistant message after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId }, persistError instanceof Error ? persistError : new Error(String(persistError)));
+      }
+    };
+
     // Helper to persist from a full SSE text payload
     const persistFromSseText = async (sseText: string) => {
       try {
-        const { valid } = await verifySessionOwnership(sessionId!, context.userInfo.userId);
-        if (!valid) return;
         let accumulated = '';
         for (const rawLine of sseText.split('\n')) {
           const line = rawLine.trim();
@@ -255,19 +282,7 @@ ${languageDirective}`
             // ignore parse errors
           }
         }
-        if (accumulated) {
-          const encrypted = encryptMessage({ role: 'assistant', content: accumulated, timestamp: new Date() });
-          await prisma.message.create({
-            data: {
-              sessionId: sessionId!,
-              role: encrypted.role,
-              content: encrypted.content,
-              timestamp: encrypted.timestamp,
-              modelUsed: modelId,
-            },
-          });
-          logger.info('Assistant message persisted after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId });
-        }
+        await persistAssistantMessage(accumulated);
       } catch (persistError) {
         logger.error('Failed to persist assistant message after stream', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId }, persistError instanceof Error ? persistError : new Error(String(persistError)));
       }
@@ -292,24 +307,6 @@ ${languageDirective}`
           const decoder = new TextDecoder();
           let buffer = '';
           let accumulated = '';
-          const CHUNK_SIZE = 2048; // persist every ~2KB
-          const persistChunk = async (chunk: string) => {
-            try {
-              const encrypted = encryptMessage({ role: 'assistant', content: chunk, timestamp: new Date() });
-              await prisma.message.create({
-                data: {
-                  sessionId,
-                  role: encrypted.role,
-                  content: encrypted.content,
-                  timestamp: encrypted.timestamp,
-                  modelUsed: modelId,
-                },
-              });
-              logger.debug('Assistant message chunk persisted', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId, length: chunk.length });
-            } catch (err) {
-              logger.error('Failed to persist assistant message chunk', { apiEndpoint: '/api/chat', requestId: context.requestId, sessionId }, err instanceof Error ? err : new Error(String(err)));
-            }
-          };
           const processBuffer = async () => {
             let newlineIndex = buffer.indexOf('\n');
             while (newlineIndex !== -1) {
@@ -331,10 +328,6 @@ ${languageDirective}`
                   } else if (typeof obj?.delta?.text === 'string') {
                     accumulated += obj.delta.text;
                   }
-                  if (accumulated.length >= CHUNK_SIZE) {
-                    await persistChunk(accumulated);
-                    accumulated = '';
-                  }
                 } catch {
                   // ignore parse errors
                 }
@@ -349,9 +342,7 @@ ${languageDirective}`
             await processBuffer();
           }
           if (buffer.length > 0) await processBuffer();
-          if (accumulated) {
-            await persistChunk(accumulated);
-          }
+          await persistAssistantMessage(accumulated);
         };
 
         if (process.env.NODE_ENV === 'test') {

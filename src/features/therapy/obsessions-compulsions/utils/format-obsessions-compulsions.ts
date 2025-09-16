@@ -7,38 +7,36 @@ export function formatObsessionsCompulsionsForChat(data: ObsessionsCompulsionsDa
   const { obsessions, compulsions } = data;
   
   let content = '# Obsessions & Compulsions Tracker\n\n';
-  
+
   if (obsessions.length > 0) {
-    content += '## Obsessions\n\n';
     obsessions.forEach((obsession, index) => {
-      content += `### Obsession ${index + 1}\n`;
+      const compulsion = compulsions[index];
+      content += `## Pair ${index + 1}\n\n`;
+      content += `### 🧠 Obsession\n`;
       content += `**Description:** ${obsession.obsession}\n`;
       content += `**Intensity:** ${obsession.intensity}/10\n`;
       if (obsession.triggers.length > 0) {
         content += `**Triggers:** ${obsession.triggers.join(', ')}\n`;
       }
       content += `**Recorded:** ${new Date(obsession.createdAt).toLocaleDateString()}\n\n`;
+
+      if (compulsion) {
+        content += `### 🔁 Compulsion\n`;
+        content += `**Description:** ${compulsion.compulsion}\n`;
+        content += `**Frequency:** ${compulsion.frequency}/10\n`;
+        content += `**Duration:** ${compulsion.duration} minutes\n`;
+        content += `**Relief Level:** ${compulsion.reliefLevel}/10\n`;
+        content += `**Recorded:** ${new Date(compulsion.createdAt).toLocaleDateString()}\n\n`;
+      }
     });
   }
-  
-  if (compulsions.length > 0) {
-    content += '## Compulsions\n\n';
-    compulsions.forEach((compulsion, index) => {
-      content += `### Compulsion ${index + 1}\n`;
-      content += `**Description:** ${compulsion.compulsion}\n`;
-      content += `**Frequency:** ${compulsion.frequency}/10\n`;
-      content += `**Duration:** ${compulsion.duration} minutes\n`;
-      content += `**Relief Level:** ${compulsion.reliefLevel}/10\n`;
-      content += `**Recorded:** ${new Date(compulsion.createdAt).toLocaleDateString()}\n\n`;
-    });
-  }
-  
+
   if (obsessions.length === 0 && compulsions.length === 0) {
     content += 'No obsessions or compulsions recorded yet.\n';
   }
-  
+
   content += `\n*Last updated: ${new Date(data.lastModified).toLocaleString()}*`;
-  
+
   return content;
 }
 

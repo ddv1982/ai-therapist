@@ -63,8 +63,10 @@ export function isLocalhost(host: string): boolean {
  * Detect if the request is coming from a private network IP
  */
 export function isPrivateNetworkAccess(host: string): boolean {
+  if (!host) return false;
+  const cleanHost = host.toLowerCase().split(':')[0];
   // Match private IP ranges: 192.168.x.x, 10.x.x.x, 172.16-31.x.x
-  return host.match(/192\.168\.\d+\.\d+/) !== null ||
-         host.match(/10\.\d+\.\d+\.\d+/) !== null ||
-         host.match(/172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+/) !== null;
+  return /192\.168\.\d+\.\d+/.test(cleanHost) ||
+         /10\.\d+\.\d+\.\d+/.test(cleanHost) ||
+         /172\.(1[6-9]|2[0-9]|3[0-1])\.\d+\.\d+/.test(cleanHost);
 }
