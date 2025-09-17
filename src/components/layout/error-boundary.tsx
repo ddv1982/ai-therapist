@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { AlertTriangle, RefreshCw, Bug, Wifi } from 'lucide-react';
 import { logger } from '@/lib/utils/logger';
+import { reportClientError } from '@/lib/utils/error-reporter';
 
 interface Props {
   children: ReactNode;
@@ -68,100 +69,13 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo
     });
     
-    // Safely check browser environment before accessing window/navigator
-    if (typeof window !== 'undefined' && typeof navigator !== 'undefined') {
-      try {
-        // Enhanced mobile Safari specific error logging
-        const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-        const isMobile = window.innerWidth < 768;
-        const isNetworkUrl = !window.location.hostname.match(/localhost|127\.0\.0\.1/);
-        
-        if (isSafari && isMobile && isNetworkUrl) {
-          logger.error('Mobile Safari network error in React component', {
-            component: 'ErrorBoundary',
-            operation: 'mobileSafariErrorHandling',
-            userAgent: navigator.userAgent,
-            url: window.location.href,
-            viewport: {
-              width: window.innerWidth,
-              height: window.innerHeight,
-              devicePixelRatio: window.devicePixelRatio
-            },
-            componentStack: errorInfo.componentStack?.split('\n')[1] || 'Unknown',
-            isMobileSafari: true
-          }, error);
-          
-          // Enhanced error reporting with retry logic
-          this.reportError(error, errorInfo);
-        }
-      } catch (envError) {
-        // Ignore errors in error detection (likely SSR)
-        logger.error('Error while handling error in ErrorBoundary', {
-          component: 'ErrorBoundary',
-          operation: 'errorHandlingException'
-        }, envError instanceof Error ? envError : new Error(String(envError)));
-      }
-    }
-  }
-
-  private reportError = async (error: Error, errorInfo: ErrorInfo, retryCount = 0) => {
-    if (retryCount > 2) return; // Max 3 attempts
-
+    // Asynchronously report error without blocking render
     try {
-      // Safely access browser APIs
-      const errorReport = {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
-        url: typeof window !== 'undefined' ? window.location.href : 'Unknown',
-        viewport: typeof window !== 'undefined' ? {
-          width: window.innerWidth,
-          height: window.innerHeight,
-          devicePixelRatio: window.devicePixelRatio
-        } : { width: 0, height: 0, devicePixelRatio: 1 },
-        timestamp: new Date().toISOString(),
-        sessionId: typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('sessionId') || 'unknown' : 'unknown',
-        userId: typeof localStorage !== 'undefined' ? localStorage.getItem('userId') || 'anonymous' : 'anonymous',
-        errorBoundary: true,
-        retryAttempt: retryCount
-      };
-
-      const response = await fetch('/api/errors', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Error-Boundary': 'true'
-        },
-        body: JSON.stringify(errorReport),
-        signal: AbortSignal.timeout(5000) // 5 second timeout
-      });
-
-      if (!response.ok && retryCount < 2) {
-        // Retry after a delay
-        setTimeout(() => this.reportError(error, errorInfo, retryCount + 1), 2000);
-      }
-    } catch {
-      // Store error locally if reporting fails
-      try {
-        if (typeof localStorage !== 'undefined') {
-          const localErrors = JSON.parse(localStorage.getItem('unreportedErrors') || '[]');
-          localErrors.push({
-            error: error.message,
-            timestamp: new Date().toISOString(),
-            url: typeof window !== 'undefined' ? window.location.href : 'Unknown'
-          });
-          localStorage.setItem('unreportedErrors', JSON.stringify(localErrors.slice(-10))); // Keep last 10
-        }
-      } catch {
-        // Ignore localStorage errors
-      }
-
-      if (retryCount < 2) {
-        setTimeout(() => this.reportError(error, errorInfo, retryCount + 1), 2000);
-      }
-    }
+      reportClientError({ message: error.message, stack: error.stack ?? undefined, componentStack: errorInfo.componentStack ?? undefined });
+    } catch {}
   }
+
+  // Removed heavy in-render reporting/retries in favor of async reporter
 
   public override render() {
     if (this.state.hasError) {

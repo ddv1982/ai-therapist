@@ -1,4 +1,5 @@
-import { withApiMiddleware } from '@/lib/api/api-middleware';
+import { withApiRoute } from '@/lib/api/with-route';
+import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { createSuccessResponse, createServerErrorResponse } from '@/lib/api/api-response';
 
 /**
@@ -24,11 +25,11 @@ interface ModelsResponse {
  * 
  * @returns {ModelsResponse} List of available models with metadata
  */
-export const GET = withApiMiddleware(async (_request, context) => {
+export const GET = withApiRoute(async (_request, context) => {
   try {
     const availableModels: ModelInfo[] = [
       { 
-        id: 'openai/gpt-oss-20b', 
+        id: DEFAULT_MODEL_ID, 
         name: 'GPT OSS 20B (Fast)', 
         provider: 'OpenAI', 
         maxTokens: 30000, 
@@ -36,7 +37,7 @@ export const GET = withApiMiddleware(async (_request, context) => {
         description: 'Fast model for regular conversations'
       },
       { 
-        id: 'openai/gpt-oss-120b', 
+        id: ANALYTICAL_MODEL_ID, 
         name: 'GPT OSS 120B (Deep Analysis)', 
         provider: 'OpenAI', 
         maxTokens: 30000, 
@@ -53,10 +54,6 @@ export const GET = withApiMiddleware(async (_request, context) => {
 
     return createSuccessResponse(response, { requestId: context.requestId });
   } catch (error) {
-    return createServerErrorResponse(
-      error as Error, 
-      context.requestId,
-      { endpoint: '/api/models' }
-    );
+    return createServerErrorResponse(error as Error, context.requestId, { endpoint: '/api/models' });
   }
 });

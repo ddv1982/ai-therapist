@@ -1,9 +1,12 @@
 import { NextRequest } from 'next/server';
-import { z } from 'zod';
+// import { z } from 'zod';
 import { languageModels, ModelID } from "@/ai/providers";
-import { streamText } from "ai";
 import { groq } from "@ai-sdk/groq";
 import { THERAPY_SYSTEM_PROMPT } from '@/lib/therapy/therapy-prompts';
+import { streamChatCompletion } from '@/lib/chat/streaming';
+import { normalizeChatRequest } from '@/lib/chat/chat-request';
+import { selectModelAndTools } from '@/lib/chat/model-selector';
+// no auto-creation here; session is optional and created client-side on first send
 import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
 import { createErrorResponse } from '@/lib/api/api-response';
@@ -14,20 +17,8 @@ import { encryptMessage } from '@/lib/chat/message-encryption';
 
 type ApiChatMessage = { role: 'user' | 'assistant'; content: string; id?: string };
 
-const chatRequestSchema = z.object({
-  messages: z.array(z.object({
-    role: z.enum(['user', 'assistant']),
-    content: z.string().min(1).max(50000).optional(),
-    parts: z.array(z.object({ type: z.string().optional(), text: z.string().optional() })).optional(),
-    id: z.string().optional(),
-  })).min(1),
-  sessionId: z.string().min(1).optional(),
-  selectedModel: z.string().optional(),
-  webSearchEnabled: z.boolean().optional(),
-  temperature: z.number().min(0).max(2).optional(),
-  maxTokens: z.number().min(256).max(131072).optional(),
-  topP: z.number().min(0.1).max(1.0).optional(),
-});
+// legacy schema kept commented for reference; now using normalizeChatRequest
+// const chatRequestSchema = ...
 
 const DEFAULT_MAX_INPUT_BYTES = 128 * 1024;
 const MAX_ASSISTANT_RESPONSE_CHARS = (() => {
@@ -105,45 +96,56 @@ class AssistantResponseCollector {
 
 export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, context) => {
   try {
-    let parsedBody: { body: unknown; size: number };
-    try {
-      parsedBody = await readRequestBody(req);
-    } catch {
-      return createErrorResponse('Unsupported request body', 400, { requestId: context.requestId });
-    }
-
+    const parsedBody = await readRequestBody(req);
     const maxSize = Number(process.env.CHAT_INPUT_MAX_BYTES || DEFAULT_MAX_INPUT_BYTES);
-    if (parsedBody.size > maxSize) {
-      return createErrorResponse('Request too large', 413, { requestId: context.requestId });
+    if (parsedBody.size > maxSize) return createErrorResponse('Request too large', 413, { requestId: context.requestId });
+
+    const input = parsedBody.body;
+    const raw = input as { sessionId?: string; messages?: Array<{ role?: string; content?: unknown; parts?: Array<{ type?: string; text?: unknown }> }>; message?: unknown; selectedModel?: string; webSearchEnabled?: boolean };
+    const firstUser = Array.isArray(raw?.messages) ? raw.messages.find(m => m?.role === 'user') : undefined;
+    const normalized = normalizeChatRequest({
+      sessionId: raw?.sessionId,
+      message: typeof raw?.message === 'string' && raw.message.length > 0
+        ? raw.message
+        : typeof firstUser?.content === 'string'
+          ? firstUser.content
+          : Array.isArray(firstUser?.parts)
+            ? firstUser!.parts.map(p => (p && p.type === 'text' && typeof p.text === 'string' ? p.text : '')).join('')
+            : '',
+      model: raw?.selectedModel,
+      context: undefined,
+      tools: undefined,
+    });
+    if (!normalized.success) {
+      return createErrorResponse('Invalid request data', 400, { requestId: context.requestId, details: normalized.error });
     }
 
-    const parsedInputResult = chatRequestSchema.safeParse(parsedBody.body);
-    if (!parsedInputResult.success) {
-      return createErrorResponse('Invalid request data', 400, { requestId: context.requestId, details: parsedInputResult.error.message });
-    }
-    const parsedInput = parsedInputResult.data;
+    const providedSessionId = normalized.data.sessionId;
+    const ownership = await resolveSessionOwnership(providedSessionId, context.userInfo.userId);
+    const history = providedSessionId && ownership.valid ? await loadSessionHistory(providedSessionId, ownership) : [];
+    // Prefer forwarding original payload messages (with ids) when available; otherwise build from normalized
+    const payloadMessages = Array.isArray(raw?.messages) ? raw.messages : null;
+    type RawMsg = { role?: string; content?: unknown; parts?: Array<{ type?: string; text?: unknown }>; id?: unknown };
+    const isForwardable = (m: RawMsg | null | undefined): m is { role: 'user' | 'assistant'; content?: unknown; parts?: Array<{ type?: string; text?: unknown }>; id?: unknown } =>
+      !!m && (m.role === 'user' || m.role === 'assistant');
 
-    const typedMessages = normalizeMessages(parsedInput.messages);
-    if (!typedMessages) {
-      return createErrorResponse('Invalid messages format', 400, { requestId: context.requestId });
-    }
+    const forwarded: Array<{ role: 'user' | 'assistant'; content: string; id?: string }> = payloadMessages
+      ? (payloadMessages as RawMsg[])
+          .filter(isForwardable)
+          .map((m) => ({
+            role: m.role,
+            id: typeof m.id === 'string' ? m.id : undefined,
+            content: typeof m.content === 'string'
+              ? m.content
+              : Array.isArray(m.parts)
+                ? m.parts.map((p) => (p && p.type === 'text' && typeof p.text === 'string' ? p.text : '')).join('')
+                : '',
+          }))
+      : [{ role: 'user' as const, content: normalized.data.message }];
 
-    const sessionId = parsedInput.sessionId;
-    const sessionOwnership = await resolveSessionOwnership(sessionId, context.userInfo.userId);
-    if (sessionId && !sessionOwnership.valid) {
-      return createErrorResponse('Session not found', 404, { requestId: context.requestId });
-    }
-
-    const history = sessionId && sessionOwnership.valid
-      ? await loadSessionHistory(sessionId, sessionOwnership)
-      : [];
-
-    const allMessages = [...history, ...typedMessages];
-
-    const { modelId, hasWebSearch } = selectModelConfiguration(
-      parsedInput.selectedModel,
-      parsedInput.webSearchEnabled,
-    );
+    const decision = selectModelAndTools({ message: normalized.data.message, preferredModel: normalized.data.model, webSearchEnabled: Boolean(raw?.webSearchEnabled) });
+    const modelId = (decision.tools.includes('web-search')) ? decision.model : decision.model;
+    const hasWebSearch = decision.tools.includes('web-search');
     const toolChoiceHeader = hasWebSearch ? 'required' : 'none';
 
     logger.info('Model selection for chat request', {
@@ -152,26 +154,21 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       modelId,
       toolChoice: toolChoiceHeader,
       webSearchEnabled: hasWebSearch,
-      selectedModelProvided: Boolean(parsedInput.selectedModel),
+      selectedModelProvided: Boolean(normalized.data.model),
     });
 
     const systemPrompt = await buildSystemPrompt(req, hasWebSearch);
-
-    const streamOptions = {
-      model: languageModels[modelId as ModelID],
+    const result = streamChatCompletion({
+      model: languageModels[modelId as ModelID] as unknown as string,
       system: systemPrompt,
-      messages: allMessages,
-      experimental_telemetry: { isEnabled: false },
-      ...(hasWebSearch
-        ? { tools: { browser_search: groq.tools.browserSearch({}) }, toolChoice: 'required' as const }
-        : {}),
-    };
+      messages: [...history, ...forwarded],
+      telemetry: { isEnabled: false },
+      ...(hasWebSearch ? { tools: { browser_search: groq.tools.browserSearch({}) }, toolChoice: 'required' as const } : {}),
+    });
 
-    const result = streamText(streamOptions as Parameters<typeof streamText>[0]);
+    const collector = new AssistantResponseCollector(providedSessionId, ownership, modelId, context.requestId);
 
-    const collector = new AssistantResponseCollector(sessionId, sessionOwnership, modelId, context.requestId);
-
-    const uiResponse = result.toUIMessageStreamResponse({
+    const uiResponse = (await result).toUIMessageStreamResponse({
       onError: createStreamErrorHandler({
         context,
         systemPrompt,
@@ -180,7 +177,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       }),
     });
 
-    if (!sessionId) {
+    if (!normalized.data.sessionId) {
       attachResponseHeaders(uiResponse as Response, context.requestId, modelId, toolChoiceHeader);
       return uiResponse as Response;
     }
@@ -218,28 +215,7 @@ async function readRequestBody(req: NextRequest): Promise<{ body: unknown; size:
   throw new Error('Unsupported request body');
 }
 
-function normalizeMessages(raw: unknown): ApiChatMessage[] | null {
-  if (!Array.isArray(raw)) return null;
-  const result: ApiChatMessage[] = [];
-  for (const item of raw) {
-    if (!item || typeof item !== 'object') return null;
-    const candidate = item as { role?: unknown; content?: unknown; parts?: unknown; id?: unknown };
-    if (candidate.role !== 'user' && candidate.role !== 'assistant') return null;
-    if (typeof candidate.content === 'string') {
-      result.push({ role: candidate.role, content: candidate.content, id: typeof candidate.id === 'string' ? candidate.id : undefined });
-      continue;
-    }
-    if (Array.isArray(candidate.parts)) {
-      const text = candidate.parts
-        .map((part: StreamPart) => (part && part.type === 'text' && typeof part.text === 'string' ? part.text : ''))
-        .join('');
-      result.push({ role: candidate.role, content: text, id: typeof candidate.id === 'string' ? candidate.id : undefined });
-      continue;
-    }
-    return null;
-  }
-  return result;
-}
+// normalizeMessages inlined into normalizeChatRequest usage
 
 async function resolveSessionOwnership(sessionId: string | undefined, userId: string) {
   if (!sessionId) return { valid: false } as SessionOwnership;
@@ -270,11 +246,7 @@ async function loadSessionHistory(sessionId: string, ownership: SessionOwnership
   }));
 }
 
-function selectModelConfiguration(selectedModel: string | undefined, webSearchEnabled: boolean | undefined) {
-  const hasWebSearch = Boolean(webSearchEnabled);
-  const modelId = hasWebSearch ? 'openai/gpt-oss-120b' : selectedModel || 'openai/gpt-oss-20b';
-  return { modelId, hasWebSearch };
-}
+// superseded by selectModelAndTools
 
 async function buildSystemPrompt(req: NextRequest, hasWebSearch: boolean): Promise<string> {
   const { getApiRequestLocale } = await import('@/i18n/request');

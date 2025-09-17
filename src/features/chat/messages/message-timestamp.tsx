@@ -3,6 +3,7 @@
  */
 
 import React from 'react';
+import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { cn } from '@/lib/utils/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/design-system/message';
 
@@ -26,9 +27,9 @@ export function MessageTimestamp({ timestamp, role, modelUsed, className }: Mess
     if (!model) return '';
     
     // Convert from API format to user-friendly format
-    if (model === 'openai/gpt-oss-20b') {
+    if (model === DEFAULT_MODEL_ID) {
       return 'GPT OSS 20B';
-    } else if (model === 'openai/gpt-oss-120b') {
+    } else if (model === ANALYTICAL_MODEL_ID) {
       return 'GPT OSS 120B (Deep Analysis)';
     }
     

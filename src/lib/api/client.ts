@@ -89,8 +89,8 @@ export class ApiClient {
   // Reports (legacy POST /api/reports removed)
 
   // Reports (detailed generate endpoint)
-  async generateReportDetailed(body: { sessionId: string; messages: Array<{ role: string; content: string; timestamp?: string }>; model?: string }) {
-    return this.request('/api/reports/generate', {
+  async generateReportDetailed(body: paths['/reports/generate']['post']['requestBody']['content']['application/json']) {
+    return this.request<unknown>('/api/reports/generate', {
       method: 'POST',
       body: JSON.stringify(body),
     });
@@ -111,6 +111,31 @@ export class ApiClient {
   // Single session
   async getSessionById(sessionId: string): Promise<ApiResponse<components['schemas']['Session']>> {
     return this.request<ApiResponse<components['schemas']['Session']>>(`/api/sessions/${sessionId}`);
+  }
+
+  // Auth/session status
+  async getSessionStatus(): Promise<unknown> {
+    return this.request<unknown>('/api/auth/session');
+  }
+
+  async revokeCurrentSession(): Promise<ApiResponse<{ success: true }>> {
+    return this.request<ApiResponse<{ success: true }>>('/api/auth/session', { method: 'DELETE' });
+  }
+
+  async logout(): Promise<ApiResponse<{ success: true }>> {
+    return this.request<ApiResponse<{ success: true }>>('/api/auth/logout', { method: 'POST' });
+  }
+
+  // Devices
+  async listDevices(): Promise<ApiResponse<{ devices: unknown[]; backupCodesCount: number }>> {
+    return this.request<ApiResponse<{ devices: unknown[]; backupCodesCount: number }>>('/api/auth/devices');
+  }
+
+  async revokeDevice(deviceId: string): Promise<ApiResponse<{ success: true }>> {
+    return this.request<ApiResponse<{ success: true }>>('/api/auth/devices', {
+      method: 'DELETE',
+      body: JSON.stringify({ deviceId }),
+    });
   }
 }
 

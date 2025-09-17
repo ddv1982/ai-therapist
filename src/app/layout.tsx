@@ -5,7 +5,7 @@ import { NextIntlClientProvider, type AbstractIntlMessages } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import { cookies } from 'next/headers';
 import { locales, defaultLocale, type AppLocale } from '@/i18n/config';
-import { ReduxProvider } from '@/providers/redux-provider';
+import { RootProviders } from '@/app/providers';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -82,7 +82,7 @@ export default async function RootLayout({
   };
   const messages = expandDotNotation(flat) as AbstractIntlMessages;
   return (
-    <html lang={resolvedLocale} className={`${inter.variable}`} data-scroll-behavior="smooth">
+    <html lang={resolvedLocale} className={inter.variable} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -94,9 +94,9 @@ export default async function RootLayout({
       </head>
       <body className="bg-background font-sans antialiased">
         <NextIntlClientProvider locale={resolvedLocale} messages={messages}>
-          <ReduxProvider>
+          <RootProviders>
             {children}
-          </ReduxProvider>
+          </RootProviders>
         </NextIntlClientProvider>
       </body>
     </html>

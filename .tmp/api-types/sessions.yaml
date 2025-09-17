@@ -1,0 +1,871 @@
+openapi: 3.0.3
+info:
+  title: AI Therapist API
+  description: >
+    A comprehensive API for a therapeutic AI chat application that provides
+    compassionate mental health support through AI conversation.
+
+
+    ## Features
+
+    - Real-time streaming chat responses
+
+    - Session management for conversation continuity
+
+    - Professional report generation and email delivery
+
+    - Comprehensive validation and error handling
+
+    - Mobile-optimized responsive design
+
+
+    ## Security
+
+    - CORS protection
+
+    - Input validation with Zod schemas
+
+    - Rate limiting considerations
+
+    - Secure API key handling
+
+
+    ## Authentication
+
+    Currently, the API uses API keys for Groq service authentication. In a
+    production environment, 
+
+    additional authentication layers would be implemented.
+  version: 1.0.0
+  contact:
+    name: AI Therapist Support
+    email: support@ai-therapist.app
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+  - url: https://your-domain.com/api
+    description: Production server
+tags:
+  - name: Sessions
+paths:
+  /sessions:
+    get:
+      summary: Retrieve all chat sessions
+      description: Gets a list of all chat sessions with message counts and metadata
+      tags:
+        - Sessions
+      responses:
+        '200':
+          description: List of sessions
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Session'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Create a new chat session
+      description: Creates a new therapeutic chat session with a specified title
+      tags:
+        - Sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+            examples:
+              new_session:
+                summary: Create new session
+                value:
+                  title: Anxiety Management Session
+      responses:
+        '200':
+          description: Created session
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /sessions/current:
+    get:
+      summary: Get current active session
+      description: >-
+        Returns the most recently updated active session for the authenticated
+        user.
+      tags:
+        - Sessions
+      responses:
+        '200':
+          description: Current active session (if any)
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentSession:
+                    oneOf:
+                      - $ref: '#/components/schemas/Session'
+                      - type: 'null'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Set current active session
+      description: >-
+        Marks the specified session as current by updating its updatedAt and
+        status to active.
+      tags:
+        - Sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+              properties:
+                sessionId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Session marked as current
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Session not found or access denied
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /sessions/{sessionId}:
+    delete:
+      summary: Delete a chat session
+      description: Permanently deletes a chat session and all associated messages
+      tags:
+        - Sessions
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID of the session to delete
+          example: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '200':
+          description: Session deleted successfully
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Session deleted successfully
+        '404':
+          description: Session not found
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/logout:
+    post:
+      summary: Logout and revoke session
+      description: Revokes the current auth session and clears the auth cookie.
+      tags:
+        - Sessions
+      responses:
+        '200':
+          description: Logout successful
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/session:
+    get:
+      summary: Check session status
+      description: >-
+        Returns whether the client is authenticated and whether TOTP
+        setup/verification are needed.
+      tags:
+        - Sessions
+      responses:
+        '200':
+          description: Session status
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      isAuthenticated:
+                        type: boolean
+                      needsSetup:
+                        type: boolean
+                      needsVerification:
+                        type: boolean
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Revoke current session (logout)
+      description: Deletes current session and clears the cookie.
+      tags:
+        - Sessions
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/devices:
+    get:
+      summary: List trusted devices and backup codes count
+      tags:
+        - Sessions
+      responses:
+        '200':
+          description: Device list and backup code info
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      devices:
+                        type: array
+                        items:
+                          type: object
+                      backupCodesCount:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Revoke a trusted device
+      tags:
+        - Sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - deviceId
+              properties:
+                deviceId:
+                  type: string
+      responses:
+        '200':
+          description: Device revoked
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Device management operation (disabled)
+      description: >-
+        For security, device management mutations are restricted. Returns a
+        standardized error.
+      tags:
+        - Sessions
+      responses:
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /auth/diagnostics:
+    get:
+      summary: TOTP diagnostics
+      description: >-
+        Returns server time and current token for diagnostics
+        (development/support tooling).
+      tags:
+        - Sessions
+      responses:
+        '200':
+          description: Diagnostic data
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      serverTime:
+                        type: string
+                      serverTimestamp:
+                        type: integer
+                      currentValidToken:
+                        type: string
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Validate a specific token in diagnostics mode
+      tags:
+        - Sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Validation result
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      providedTokenValid:
+                        type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /auth/mobile-debug:
+    get:
+      summary: Mobile debugging info
+      description: Returns network, device, and TOTP setup status for mobile debugging.
+      tags:
+        - Sessions
+      responses:
+        '200':
+          description: Debug info
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Validate token with client time for mobile debugging
+      tags:
+        - Sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                clientTime:
+                  type: number
+      responses:
+        '200':
+          description: Debug result
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  headers:
+    X-Request-Id:
+      description: Correlation ID for tracing this request
+      schema:
+        type: string
+  schemas:
+    Message:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the message
+          example: msg-123e4567-e89b-12d3-a456-426614174000
+        role:
+          type: string
+          enum:
+            - user
+            - assistant
+          description: The role of the message sender
+        content:
+          type: string
+          minLength: 1
+          maxLength: 50000
+          description: The message content
+          example: I'm struggling with anxiety and need some guidance
+        timestamp:
+          type: string
+          format: date-time
+          description: When the message was created
+        createdAt:
+          type: string
+          format: date-time
+          description: Database creation timestamp
+    NewMessage:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum:
+            - user
+            - assistant
+          description: The role of the message sender
+        content:
+          type: string
+          minLength: 1
+          maxLength: 50000
+          description: The message content
+        modelUsed:
+          type: string
+          maxLength: 100
+          description: Optional model identifier used for assistant messages
+    Session:
+      type: object
+      required:
+        - id
+        - title
+        - userId
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique session identifier
+          example: 123e4567-e89b-12d3-a456-426614174000
+        userId:
+          type: string
+          description: User identifier (currently uses default user)
+          example: default-user-id
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Human-readable session title
+          example: Managing Work Stress
+        status:
+          type: string
+          enum:
+            - active
+            - completed
+          description: Current session status
+        startedAt:
+          type: string
+          format: date-time
+          description: When the session was started
+        endedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the session was completed
+        createdAt:
+          type: string
+          format: date-time
+          description: Database creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Database update timestamp
+        _count:
+          type: object
+          properties:
+            messages:
+              type: integer
+              description: Number of messages in this session
+              example: 12
+    SessionReport:
+      type: object
+      required:
+        - id
+        - sessionId
+        - therapeuticInsights
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique report identifier
+        sessionId:
+          type: string
+          format: uuid
+          description: Associated session ID
+        keyPoints:
+          type: string
+          description: JSON string of key discussion points
+        therapeuticInsights:
+          type: string
+          description: AI-generated therapeutic analysis
+        patternsIdentified:
+          type: string
+          description: JSON string of identified behavioral patterns
+        actionItems:
+          type: string
+          description: JSON string of recommended actions
+        moodAssessment:
+          type: string
+          nullable: true
+          description: Overall mood assessment
+        progressNotes:
+          type: string
+          nullable: true
+          description: Progress tracking notes
+        createdAt:
+          type: string
+          format: date-time
+          description: Report generation timestamp
+    ModelConfig:
+      type: object
+      required:
+        - id
+        - name
+        - provider
+        - maxTokens
+        - category
+      properties:
+        id:
+          type: string
+          description: Model identifier used in API calls
+          example: openai/gpt-oss-120b
+        name:
+          type: string
+          description: Human-readable model name
+          example: GPT OSS 120B
+        provider:
+          type: string
+          description: Model provider/company
+          example: OpenAI
+        maxTokens:
+          type: integer
+          minimum: 256
+          maximum: 131072
+          description: Maximum tokens supported by the model
+          example: 32000
+        category:
+          type: string
+          enum:
+            - featured
+            - production
+            - preview
+          description: Model category/stability level
+          example: featured
+    ChatRequest:
+      type: object
+      required:
+        - messages
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              role:
+                type: string
+                enum:
+                  - user
+                  - assistant
+              content:
+                type: string
+          description: Array of conversation messages
+        sessionId:
+          type: string
+          format: uuid
+          description: Optional session ID for context
+        model:
+          type: string
+          description: AI model to use
+          example: openai/gpt-oss-120b
+        apiKey:
+          type: string
+          description: Groq API key (if not set in environment)
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          description: Response creativity (0=focused, 2=creative)
+          example: 0.7
+        maxTokens:
+          type: integer
+          minimum: 256
+          maximum: 131072
+          description: Maximum response length
+          example: 2000
+        topP:
+          type: number
+          minimum: 0.1
+          maximum: 1
+          description: Nucleus sampling parameter
+          example: 0.9
+    CreateSessionRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Session title
+          example: Managing Anxiety and Stress
+    EmailReportRequest:
+      type: object
+      required:
+        - sessionId
+        - messages
+        - emailAddress
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: Session to generate report for
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+          minItems: 1
+          description: Session messages
+        emailAddress:
+          type: string
+          format: email
+          maxLength: 254
+          description: Recipient email address
+          example: user@example.com
+        model:
+          type: string
+          description: AI model for report generation
+          example: openai/gpt-oss-120b
+        emailConfig:
+          type: object
+          properties:
+            service:
+              type: string
+              enum:
+                - console
+                - smtp
+              description: Email service type
+            smtpHost:
+              type: string
+              description: SMTP server hostname
+              example: smtp.gmail.com
+            smtpUser:
+              type: string
+              format: email
+              description: SMTP username
+            smtpPass:
+              type: string
+              description: SMTP password or app password
+            fromEmail:
+              type: string
+              format: email
+              description: Sender email address
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: Validation failed
+        details:
+          type: string
+          description: Detailed error information
+          example: Invalid email address format
+        code:
+          type: string
+          description: Error code for programmatic handling
+          example: VALIDATION_ERROR
+        suggestedAction:
+          type: string
+          description: Suggested action to resolve the error
+          example: Please check your input and try again
+  responses:
+    BadRequest:
+      description: Bad request - invalid input
+      headers:
+        X-Request-Id:
+          description: Correlation ID for tracing this request
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            validation_error:
+              summary: Validation error
+              value:
+                error: Invalid request data
+                details: 'emailAddress: Invalid email address format'
+                code: VALIDATION_ERROR
+            missing_field:
+              summary: Missing required field
+              value:
+                error: Missing required field
+                details: Session ID is required
+                code: MISSING_FIELD
+    InternalServerError:
+      description: Internal server error
+      headers:
+        X-Request-Id:
+          description: Correlation ID for tracing this request
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            server_error:
+              summary: Generic server error
+              value:
+                error: Internal server error
+                details: An unexpected error occurred
+                code: INTERNAL_ERROR
+            database_error:
+              summary: Database error
+              value:
+                error: Failed to create session
+                details: Unable to create a new therapy session. Please try again.
+                code: SESSION_CREATE_ERROR
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication (currently only used for Groq API)

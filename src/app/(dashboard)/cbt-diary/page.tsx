@@ -190,7 +190,7 @@ function CBTDiaryPageContent() {
         title: t('sessionReportTitle'),
         flowState: cbtFlowState,
         contextualMessages: contextual,
-        model: 'openai/gpt-oss-120b',
+        model: (await import('@/features/chat/config')).ANALYTICAL_MODEL_ID,
       });
 
       await selectSession(sessionId);

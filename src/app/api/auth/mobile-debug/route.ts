@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getTOTPDiagnostics, isTOTPSetup } from '@/lib/auth/totp-service';
 import { getClientIP } from '@/lib/auth/auth-middleware';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
+import { withApiRoute } from '@/lib/api/with-route';
+import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // GET /api/auth/mobile-debug - Get detailed mobile debugging info
-export async function GET(request: NextRequest) {
+export const GET = withApiRoute(async (request: NextRequest, context) => {
   try {
     const userAgent = request.headers.get('user-agent') || 'unknown';
     const ipAddress = getClientIP(request);
@@ -20,7 +22,7 @@ export async function GET(request: NextRequest) {
     // Check if TOTP is set up
     const isSetup = await isTOTPSetup();
     if (!isSetup) {
-      return NextResponse.json({ error: 'TOTP not configured' }, { status: 400 });
+      return createErrorResponse('TOTP not configured', 400, { requestId: context.requestId });
     }
 
     // Get diagnostics
@@ -84,19 +86,15 @@ export async function GET(request: NextRequest) {
         ]
       }
     };
-    
-    return NextResponse.json(debugInfo);
+    return createSuccessResponse(debugInfo, { requestId: context.requestId });
   } catch (error) {
     logger.apiError('/api/auth/mobile-debug', error as Error, createRequestLogger(request));
-    return NextResponse.json({ 
-      error: 'Debug failed',
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+    return createErrorResponse('Debug failed', 500, { requestId: context.requestId });
   }
-}
+});
 
 // POST /api/auth/mobile-debug - Test token with mobile debugging
-export async function POST(request: NextRequest) {
+export const POST = withApiRoute(async (request: NextRequest, context) => {
   try {
     const body = await request.json();
     const { token, clientTime } = body;
@@ -106,13 +104,13 @@ export async function POST(request: NextRequest) {
     const isMobile = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
     if (!token) {
-      return NextResponse.json({ error: 'Token is required' }, { status: 400 });
+      return createErrorResponse('Token is required', 400, { requestId: context.requestId });
     }
 
     // Check if TOTP is set up
     const isSetup = await isTOTPSetup();
     if (!isSetup) {
-      return NextResponse.json({ error: 'TOTP not configured' }, { status: 400 });
+      return createErrorResponse('TOTP not configured', 400, { requestId: context.requestId });
     }
 
     // Get diagnostics for the provided token
@@ -164,13 +162,9 @@ export async function POST(request: NextRequest) {
             ].filter(Boolean)
           }
     };
-    
-    return NextResponse.json(debugResult);
+    return createSuccessResponse(debugResult, { requestId: context.requestId });
   } catch (error) {
     logger.apiError('/api/auth/mobile-debug', error as Error, createRequestLogger(request));
-    return NextResponse.json({ 
-      error: 'Debug test failed',
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
+    return createErrorResponse('Debug test failed', 500, { requestId: context.requestId });
   }
-}
+});

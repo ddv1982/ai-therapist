@@ -30,16 +30,19 @@ import { therapeuticInteractive } from '@/lib/ui/design-tokens';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { useInputFooterHeight } from '@/hooks/use-input-footer-height';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { selectChatSettings } from '@/store/selectors';
 import { updateSettings } from '@/store/slices/chatSlice';
 import { useChatController } from '@/hooks';
 import { ObsessionsCompulsionsData } from '@/types/therapy';
+import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
+ 
 
 // types are provided by the controller; no local re-definitions needed
 
 function ChatPageContent() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const settings = useAppSelector(state => state.chat?.settings || { webSearchEnabled: false, model: 'openai/gpt-oss-20b' });
+  const settings = useAppSelector(selectChatSettings);
   const t = useTranslations('chat');
 
   const {
@@ -123,19 +126,18 @@ function ChatPageContent() {
     const newWebSearchEnabled = !settings.webSearchEnabled;
     dispatch(updateSettings({ 
       webSearchEnabled: newWebSearchEnabled,
-      // If enabling web search, ensure smart model is disabled by switching to fast model
-      ...(newWebSearchEnabled ? { model: 'openai/gpt-oss-20b' } : {})
+      ...(newWebSearchEnabled ? { model: DEFAULT_MODEL_ID } : {})
     }));
   };
 
   const handleSmartModelToggle = () => {
-    const nextModel = settings.model === 'openai/gpt-oss-120b'
-      ? 'openai/gpt-oss-20b'
-      : 'openai/gpt-oss-120b';
+    const nextModel = settings.model === ANALYTICAL_MODEL_ID
+      ? DEFAULT_MODEL_ID
+      : ANALYTICAL_MODEL_ID;
     dispatch(updateSettings({ 
       model: nextModel,
       // If enabling smart model, force web search off
-      ...(nextModel === 'openai/gpt-oss-120b' ? { webSearchEnabled: false } : {})
+      ...(nextModel === ANALYTICAL_MODEL_ID ? { webSearchEnabled: false } : {})
     }));
   };
 
@@ -298,13 +300,13 @@ function ChatPageContent() {
             <button
               onClick={handleSmartModelToggle}
               className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 ${
-                (!settings.webSearchEnabled && settings.model === 'openai/gpt-oss-120b')
+                (!settings.webSearchEnabled && settings.model === ANALYTICAL_MODEL_ID)
                   ? 'bg-violet-600 text-white'
                   : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
               }`}
-              aria-pressed={!settings.webSearchEnabled && settings.model === 'openai/gpt-oss-120b'}
-              aria-label={(!settings.webSearchEnabled && settings.model === 'openai/gpt-oss-120b') ? t('sidebar.smartEnabled') : t('sidebar.smartDisabled')}
-              title={(!settings.webSearchEnabled && settings.model === 'openai/gpt-oss-120b') ? t('sidebar.smartEnabled') : t('sidebar.smartDisabled')}
+              aria-pressed={!settings.webSearchEnabled && settings.model === ANALYTICAL_MODEL_ID}
+              aria-label={(!settings.webSearchEnabled && settings.model === ANALYTICAL_MODEL_ID) ? t('sidebar.smartEnabled') : t('sidebar.smartDisabled')}
+              title={(!settings.webSearchEnabled && settings.model === ANALYTICAL_MODEL_ID) ? t('sidebar.smartEnabled') : t('sidebar.smartDisabled')}
             >
               <Sparkles className="w-4 h-4" />
             </button>

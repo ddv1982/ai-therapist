@@ -13,7 +13,8 @@ export interface AIMessage {
   content: string;
 }
 
-export const generateSessionReport = async (messages: ReportMessage[], systemPrompt: string, selectedModel: string = 'openai/gpt-oss-120b') => {
+import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
+export const generateSessionReport = async (messages: ReportMessage[], systemPrompt: string, selectedModel: string = ANALYTICAL_MODEL_ID) => {
   const userPrompt = `Please generate a therapeutic session report based on the following conversation:\n\n${messages.map(m => `${m.role}: ${m.content}`).join('\n\n')}`;
 
   const result = await generateText({
@@ -27,7 +28,7 @@ export const generateSessionReport = async (messages: ReportMessage[], systemPro
   return result.text;
 };
 
-export const extractStructuredAnalysis = async (reportContent: string, systemPrompt: string, selectedModel: string = 'openai/gpt-oss-120b') => {
+export const extractStructuredAnalysis = async (reportContent: string, systemPrompt: string, selectedModel: string = ANALYTICAL_MODEL_ID) => {
   const userPrompt = `Please extract structured analysis data from the following therapeutic report:\n\n${reportContent}`;
   
   const result = await generateText({
@@ -45,10 +46,10 @@ export const extractStructuredAnalysis = async (reportContent: string, systemPro
 export const streamTextWithBrowserSearch = async (
   messages: AIMessage[],
   systemPrompt: string,
-  modelId: string = 'openai/gpt-oss-120b'
+  modelId: string = ANALYTICAL_MODEL_ID
 ) => {
   // Ensure we're using a supported model for browser search
-  if (modelId !== 'openai/gpt-oss-120b') {
+  if (modelId !== ANALYTICAL_MODEL_ID) {
     throw new Error('Browser search is only supported with openai/gpt-oss-120b model');
   }
 

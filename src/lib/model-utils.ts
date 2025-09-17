@@ -3,6 +3,8 @@
  * Capability-based model selection that detects actual system requirements
  */
 
+import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
+
 export interface ModelSelection {
   modelId: string;
   displayName: string;
@@ -143,7 +145,7 @@ export function selectModelForRequirements(
   // If web search is needed, use 120B model (only model that supports web search)
   if (webSearchDetection.shouldUseWebSearch) {
     return {
-      modelId: 'openai/gpt-oss-120b',
+      modelId: ANALYTICAL_MODEL_ID,
       displayName: 'GPT OSS 120B (Deep Analysis + Web Search)',
       reason: `Web search required: ${webSearchDetection.reason}`
     };
@@ -153,7 +155,7 @@ export function selectModelForRequirements(
   if (/\*\*(Situation|Thoughts|Emotions|Physical Sensations|Behaviors):\*\*/i.test(content) ||
       /CBT Thought Record/i.test(content)) {
     return {
-      modelId: 'openai/gpt-oss-120b',
+      modelId: ANALYTICAL_MODEL_ID,
       displayName: 'GPT OSS 120B (Deep Analysis)',
       reason: 'CBT content requires analytical processing'
     };
@@ -162,7 +164,7 @@ export function selectModelForRequirements(
   // Complex analysis patterns require analytical model
   if (/\b(analyze|analysis|comprehensive|detailed|complex|in.depth|therapeutic)\b/i.test(content)) {
     return {
-      modelId: 'openai/gpt-oss-120b',
+      modelId: ANALYTICAL_MODEL_ID,
       displayName: 'GPT OSS 120B (Deep Analysis)',
       reason: 'Complex analysis request detected'
     };
@@ -173,7 +175,7 @@ export function selectModelForRequirements(
 
   // Default to fast model for general conversation
   return {
-    modelId: 'openai/gpt-oss-20b',
+    modelId: DEFAULT_MODEL_ID,
     displayName: 'GPT OSS 20B',
     reason: 'General conversation - optimized for speed'
   };
@@ -187,7 +189,7 @@ export function selectModel(content: string): ModelSelection {
   if (/\*\*(Situation|Thoughts|Emotions|Physical Sensations|Behaviors):\*\*/i.test(content) ||
       /CBT Thought Record/i.test(content)) {
     return {
-      modelId: 'openai/gpt-oss-120b',
+      modelId: ANALYTICAL_MODEL_ID,
       displayName: 'GPT OSS 120B (Deep Analysis)',
       reason: 'CBT content detected'
     };
@@ -201,7 +203,7 @@ export function selectModel(content: string): ModelSelection {
       /information (on|about)/i.test(content) ||
       /current research|latest.*research|recent studies/i.test(content)) {
     return {
-      modelId: 'openai/gpt-oss-120b',
+      modelId: ANALYTICAL_MODEL_ID,
       displayName: 'GPT OSS 120B (Deep Analysis)', 
       reason: 'Research/search request detected'
     };
@@ -210,7 +212,7 @@ export function selectModel(content: string): ModelSelection {
   // Analysis patterns
   if (/\b(analyze|analysis|comprehensive|detailed|complex|in.depth)\b/i.test(content)) {
     return {
-      modelId: 'openai/gpt-oss-120b',
+      modelId: ANALYTICAL_MODEL_ID,
       displayName: 'GPT OSS 120B (Deep Analysis)',
       reason: 'Analysis request detected'
     };
@@ -218,7 +220,7 @@ export function selectModel(content: string): ModelSelection {
 
   // Default to fast model for regular conversation
   return {
-    modelId: 'openai/gpt-oss-20b',
+    modelId: DEFAULT_MODEL_ID,
     displayName: 'GPT OSS 20B',
     reason: 'General conversation'
   };
@@ -228,16 +230,16 @@ export function selectModel(content: string): ModelSelection {
  * Check if model supports web search
  */
 export function supportsWebSearch(modelId: string): boolean {
-  return modelId === 'openai/gpt-oss-120b';
+  return modelId === ANALYTICAL_MODEL_ID;
 }
 
 /**
  * Format model name for display
  */
 export function formatModelName(modelId: string): string {
-  const modelMap = {
-    'openai/gpt-oss-20b': 'GPT OSS 20B',
-    'openai/gpt-oss-120b': 'GPT OSS 120B (Deep Analysis)'
+  const modelMap: Record<string, string> = {
+    [DEFAULT_MODEL_ID]: 'GPT OSS 20B',
+    [ANALYTICAL_MODEL_ID]: 'GPT OSS 120B (Deep Analysis)'
   };
-  return modelMap[modelId as keyof typeof modelMap] || modelId;
+  return modelMap[modelId] || modelId;
 }

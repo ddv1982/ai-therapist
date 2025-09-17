@@ -1,68 +1,146 @@
 # AI Therapist Refactor Plan
 
-## Objectives
-- Remove systemic DRY violations in the CBT diary/chat stack so behaviour lives in one configurable engine instead of being reimplemented per hook, reducer, and UI component.
-- Simplify the architecture around CBT state, messaging, and chat export so we can extend the flow without regression risk.
-- Improve code quality by leaning on configuration-driven patterns, shared utilities, and clearer separation between presentation and orchestration.
-- Raise confidence with targeted automation (unit + integration coverage) around the refactored surface area.
+## 1. Overview
+This document captures the proposed restructuring of the AI Therapist codebase to simplify architecture, align with current Next.js conventions, and reduce code volume while preserving existing functionality. It is the companion to the recent code review that identified duplication in provider wiring, overgrown API handlers, and a monolithic chat controller.
 
-## Current Pain Points
-1. **Duplicated flow orchestration** – `useCBTChatExperience`, `useCbtDiaryFlow`, Redux `cbtSlice`, and `useCBTChatBridge` each hard-code step transitions, AI copy, and persistence side effects. Keeping them aligned is error-prone.
-2. **String/constants drift** – AI follow-up copy, step titles, and step metadata are scattered across files (hard-coded literals & `next-intl` defaults). Translations and behaviour can diverge silently.
-3. **Reducer boilerplate** – `cbtSlice` exposes ~20 actions that differ only by payload type, leading to repetitive JSON string comparisons and complex selectors.
-4. **Chat summary formatting** – `cbt-data-manager` serialises many flavours of CBT data into identical HTML comment wrappers with copypasted logic.
-5. **UI wrappers & components** – `CBTStepWrapper` exports nine near-identical wrappers, and components like `EmotionScale` embed sizeable constant tables and effectful state wiring inline.
-6. **Testing gaps** – Feature tests stub the flow superficially; we lack assurance around the full cross-layer behaviour once pieces are consolidated.
+## 2. Objectives
+- **Reduce surface area**: Eliminate redundant providers, dead Redux reducers, and sprawling utility modules.
+- **Improve maintainability**: Decompose mega files (e.g., `api/chat/route.ts`, `use-chat-controller.ts`) into focused modules with single responsibilities.
+- **Align with Next.js best practices**: Prefer server components/layouts for data loading, adopt streaming utilities compatible with App Router, and enforce clear separation between server and client concerns.
+- **Preserve functionality**: Ensure therapeutic flows, streaming chat, reporting, and memory management continue to operate unchanged.
+- **Enable incremental adoption**: Provide a phased roadmap with validation steps so the team can ship improvements without destabilizing production.
 
-## Guiding Principles
-- Model CBT steps as declarative configuration (step id → copy, validation, summary builders, completion side-effects).
-- Share that configuration between the store, hooks, and UI through a single engine module.
-- Keep UI components focused on rendering and invoking callbacks; remove persistence/state duplication.
+## 3. Guiding Principles
+1. **“One provider, one place”**: Root layout handles global context; section layouts stay lean.
+2. **Small, testable modules**: Group code by capability (auth, rate limit, streaming) rather than dumping into single files.
+3. **Type-first contracts**: Use zod + TypeScript types to encode API contracts and reuse definitions across client/server.
+4. **Prefer composition over configuration**: Replace configuration-heavy hooks with composable hooks/services.
+5. **Optimize for DX**: Avoid long synchronous effects on the client; minimize hydration mismatches; reduce redundant network calls.
 
-## Refactor Initiatives
+## 4. Current Pain Points
+| Area | Symptoms | References |
+|------|----------|------------|
+| Provider Nesting | `src/app/layout.tsx` and `src/app/(dashboard)/layout.tsx` both mount Redux & Theme providers, leading to duplicate renders and harder SSR debugging. | `src/app/layout.tsx`, `src/app/(dashboard)/layout.tsx` |
+| API Middleware | `src/lib/api/api-middleware.ts` (~600 LOC) combines auth, rate limiting, validation, logging; streaming and JSON routes share copy/paste logic. | `src/lib/api/api-middleware.ts` |
+| Chat Route | `src/app/api/chat/route.ts` (400+ LOC) mixes validation, history hydration, streaming fan-out, persistence, logging, and header mutations. | `src/app/api/chat/route.ts` |
+| Chat Controller | `src/hooks/use-chat-controller.ts` orchestrates everything (AI SDK, sessions, scrolling, memory fetching). Hard to test, double-fetches messages, and tightly couples UI to data-access. | `src/hooks/use-chat-controller.ts` |
+| Error Boundary | `src/components/layout/error-boundary.tsx` performs fetch-retry loops and storage side effects during render, risking cascading failures. | `src/components/layout/error-boundary.tsx` |
+| Redux Slice Noise | `src/store/slices/chatSlice.ts` exports no-op reducers; intent unclear for other developers and bundlers. | `src/store/slices/chatSlice.ts` |
+| Layout & UI | Dashboard page mixes top-level routing, session CRUD logic, and UI conditions in a single client component. | `src/app/(dashboard)/page.tsx` |
 
-### 1. Build a Shared CBT Flow Engine
-- Create `src/features/therapy/cbt/flow/engine.ts` exposing a pure state machine (`transition(state, event)` + selectors) driven by a `CBT_STEP_CONFIG` map.
-- Move step order, AI responses, summary metadata, and follow-up step ids into this config.
-- Reimplement `useCBTChatExperience` and `useCbtDiaryFlow` on top of the engine so they consume the same transition result & message descriptors.
-- Expose typed events (e.g. `COMPLETE_STEP` with payload) so Redux and the chat bridge dispatch identical domain actions.
+## 5. Refactor Strategy
 
-### 2. Collapse CBT Redux Slice Boilerplate
-- Replace per-field reducers (`updateEmotions`, `updateThoughts`, …) with a generic `applyEvent` reducer that forwards to the flow engine.
-- Store session data as an engine state snapshot (`{ context, history, status }`) to avoid ad-hoc JSON comparisons and manual timestamps.
-- Provide memoised selectors for current step, completed steps, summary DTOs, and autosave metadata.
-- Update `useCBTDataManager` to use the new `applyEvent` API and remove redundant derived state (e.g. `navigation` logic can come from the engine selectors).
+### 5.1 Provider & Layout Simplification
+- Keep global providers (`ReduxProvider`, `ThemeProvider`, `ToastProvider`, `ErrorBoundary`) in `src/app/layout.tsx`.
+- Convert `(dashboard)` and `(auth)` layouts to simple server components that render children.
+- Replace custom theme handling with [`next-themes`](https://github.com/pacocoursey/next-themes) or small wrapper around CSS variables; remove localStorage bootstrapping and loading spinners.
+- Introduce `src/app/providers.tsx` exporting a `RootProviders` component to centralize stacking of providers.
 
-### 3. Centralise AI Copy & Summary Formatting
-- Derive AI follow-up messages and step titles from `next-intl` using step config keys, falling back to defaults in one place.
-- Refactor `cbt-data-manager` into composable formatters that operate on typed engine context; eliminate repeated `JSON.stringify` glue.
-- Replace the many `sendXYZData` bridge methods with a single `sendStepToChat(stepId)` that looks up the formatter from the config, plus a `sendSessionSummary` helper.
-- Update tests to mock the config rather than each function individually.
+### 5.2 API Middleware Modularization
+- Break `api-middleware.ts` into:
+  1. `auth.ts`: `authenticateRequest`, `getUserContext`.
+  2. `rate-limit.ts`: `applyRateLimit`, `applyStreamingRateLimit`.
+  3. `logging.ts`: `createRequestContext`, `withRequestMetrics`.
+  4. `validation.ts`: wrappers around zod.
+- Provide lightweight `withApiRoute(handler, { auth?: true, stream?: true, rateLimitBucket?: 'chat' })`.
+- Enforce consistent error responses using `createErrorResponse` without duplicating header logic.
 
-### 4. Slim UI Components & Wrappers
-- Convert `CBTStepWrapper` into a single component that takes a `stepId` and uses config-driven metadata for icon/title/subtitle/help text.
-- Extract emotion definitions (emoji, labels, ranges) into a shared constant; inject via props to `EmotionScale` to reduce inline noise.
-- Introduce small, pure presentational components for repeated UI patterns (badge lists, progress bars) to shorten feature files.
+### 5.3 Streaming Chat Route Refactor
+- Create `src/lib/chat/chat-request.ts` containing schema + normalization logic.
+- Add `src/lib/chat/session-service.ts` for history loading/persistence with Prisma + encryption helpers.
+- Add `src/lib/chat/model-selector.ts` for model + tool choice decisions.
+- Extract streaming fan-out into `src/lib/chat/streaming.ts` (handles tee, collector, truncation caps, test mode bypass).
+- Rebuild `POST` handler as composition of the above, ~150 LOC.
+- Extend tests to focus on modules (unit) plus integration for route.
 
-### 5. Strengthen Automated Coverage
-- Add unit tests for the flow engine (transition table, summary builders, AI copy lookups).
-- Add integration tests that run the full diary flow using the public hooks to ensure message ordering and step insertion stay deterministic.
-- Extend API route tests to cover streaming persistence edge cases via fixtures shared with the engine (ensures future concurrency changes respect limits).
+### 5.4 Chat Client Stack Rework
+- Introduce RTK Query (already partially in repo) or server actions for session list/message persistence.
+- Split `use-chat-controller` into:
+  - `useChatTransport` (handles AI SDK transport setup + streaming callbacks).
+  - `useSessionStore` (fetch list, create/delete, select session via RTK Query or server actions).
+  - `useChatUIState` (sidebar visibility, input state, scroll).
+- Move memory context fetching into a dedicated hook `useMemoryContext(sessionId)`.
+- Convert `src/app/(dashboard)/page.tsx` to server component that loads initial session summary; hydrate client components with data props.
 
-### 6. Migration & Cleanup
-- Provide codemods or scripted updates for components/hooks consuming retired action creators.
-- Update documentation/readmes to reflect the new architecture and extension workflow.
-- Remove deprecated exports (`useCBTChatFlow` alias, redundant formatters) once migration is complete.
+### 5.5 Error Handling Overhaul
+- Replace class-based ErrorBoundary with minimal boundary + `useErrorReporter` hook.
+- Move error reporting logic into `/api/errors` handler invoked via `requestIdleCallback`/`navigator.sendBeacon` to avoid fetch during render.
+- Provide fallback UI and optional debug panel behind `NODE_ENV === 'development'`.
 
-## Execution Roadmap
-1. **Spike (1-2 days)** – Prototype the engine + config, validate parity with current flow in storybook or isolated tests.
-2. **Phase 1: Engine Integration** – Land engine, migrate `useCBTChatExperience`, adapt Redux slice to wrap engine state, keep old bridge temporarily.
-3. **Phase 2: Hook/UI Cleanup** – Port `useCbtDiaryFlow`, `CBTStepWrapper`, and emotion components to the new APIs; address translation wiring.
-4. **Phase 3: Chat Bridge & Formatter Unification** – Replace `useCBTChatBridge` & `cbt-data-manager` duplications with config-driven helpers; update chat API usage/tests.
-5. **Phase 4: Deletions & Polish** – Remove legacy reducers/helpers, run i18n sweep, tighten types, and ensure lint/test pipelines are green.
+### 5.6 Redux Store Cleanup
+- Remove unused reducers from `chatSlice`.
+- Export typed selectors from a central `src/store/selectors.ts`.
+- Document intended usage of slices in `src/store/README.md`.
+- Ensure `persistConfig` only includes slices still requiring persistence.
 
-## Success Criteria
-- Single source of truth for CBT steps (order, copy, validation, follow-ups).
-- Hooks, Redux, and chat bridge rely on shared engine APIs rather than bespoke logic.
-- CBT-related files shrink significantly with clearer separation of concerns.
-- Automated suite covers step transitions, AI message generation, and chat export flows.
+### 5.7 UI & Component Structure
+- In dashboard page, move sidebar, composer, header, report modal into colocated components under `src/features/chat`.
+- Adopt pattern:
+- Remove `index.ts` re-export barrels unless necessary (can cause circular deps).
+- Introduce `src/features/chat/config.ts` for constants (model IDs, defaults).
+
+## 6. Implementation Roadmap
+
+### Phase 0 – Prep (1–2 days)
+- Create branch `refactor/architecture`.
+- Add ADR-style note in `/docs/` summarizing goals (this file).
+- Update lint rules to flag unused exports.
+
+### Phase 1 – Provider/Layout Simplification (1–2 days)
+- Implement `RootProviders`.
+- Remove duplicate provider wrapping in `(dashboard)` and `(auth)` layouts.
+- Swap theme provider to `next-themes`.
+- QA: verify SSR + hydration, theme toggle, toast/error flows.
+
+### Phase 2 – API Middleware Modules (2–3 days)
+- Break down middleware files; update imports.
+- Refactor non-chat routes first (health, sessions) to ensure wrappers work.
+- QA: run unit tests + hit endpoints via Jest/Playwright smoke.
+
+### Phase 3 – Chat Route Decomposition (3–4 days)
+- Build new modules for schema/streaming/session service.
+- Update `api/chat/route.ts` to new composition.
+- Expand test coverage (unit + integration) to cover truncation, persistence, error handling.
+- QA: run `npm run test` and manual streaming test.
+
+### Phase 4 – Chat Client Modules (4–6 days)
+- Introduce new hooks (`useChatTransport`, `useSessionStore`, etc.).
+- Update UI components to consume new hooks.
+- Remove dead Redux reducers.
+- QA: manual session creation/deletion, streaming, memory context, report generation.
+
+### Phase 5 – Error Handling & Misc Cleanup (2–3 days)
+- Replace ErrorBoundary implementation.
+- Migrate memory/error reporting to async hooks.
+- Update docs/readmes to reflect new structure.
+- QA: intentionally throw errors to confirm fallback/telemetry.
+
+### Phase 6 – Polish & Testing (ongoing)
+- Run full Jest + Playwright suites.
+- Update `README` and developer docs.
+- Prepare migration notes for team (changelog, follow-up tasks).
+
+## 7. Testing & QA Strategy
+- Unit tests for new chat modules (model selector, streaming adapter, session service).
+- Contract tests for `createErrorResponse` and middleware wrappers.
+- Component tests for chat UI pieces using Testing Library.
+- Regression E2E flows (Playwright) for chat, CBT diary, memory management.
+- Manual QA across light/dark theme, mobile viewport, offline/online toggles.
+
+## 8. Risks & Mitigations
+| Risk | Mitigation |
+|------|------------|
+| Streaming regression | Maintain parity in tests; shadow deploy via feature flag if possible. |
+| Redux store changes break persistence | Validate persisted keys, run migration script to clean old storage on first load. |
+| Theme provider swap causes FOUC | Use `next-themes` `attribute="class"` and `defaultTheme="system"`; verify SSR. |
+| Increased bundle size from new modules | Monitor bundle reports; prefer server-side utilities. |
+
+## 9. Follow-up Ideas (post-refactor)
+- Consider moving session storage to server actions + React cache to further simplify Redux usage.
+- Explore adopting [React Server Components](https://nextjs.org/docs/app/building-your-application/rendering/server-components) for session lists to cut client bundle size.
+- Add lint rules enforcing Max LOC per file to avoid future mega modules.
+- Document streaming patterns for other AI endpoints to keep consistency.
+
+---
+
+**Next Step**: Save this file (e.g., `docs/refactor-plan.md`) and use it as the living source for tracking the refactor milestones.

@@ -127,7 +127,7 @@ This will automatically:
 - `npm run build` - Build for production (includes database setup)
 - `npm run start` - Start production server (network accessible)
 - `npm run lint` - Run ESLint for code quality
-- `npm run api:types` - Generate TypeScript types from OpenAPI spec
+- `npm run api:types` - Generate TypeScript types from OpenAPI spec (docs/api.yaml → src/types/api.generated.ts)
 
 ### Database Management
 - `npm run db:setup` - Initialize and setup database (runs automatically in dev/build)
@@ -197,6 +197,11 @@ Notes:
 - Server streaming uses AI SDK 5 `streamText` with Groq models from `src/ai/providers.ts`.
 - Reports use AI SDK 5 `generateText` via `src/lib/api/groq-client.ts`.
 - A single source of truth for models is defined in `src/ai/providers.ts`.
+
+### Typed API Client
+- Shared, typed client in `src/lib/api/client.ts` with helpers in `src/types/api.ts`.
+- Standardized server responses via `ApiResponse<T>` and `getApiData` (`src/lib/api/api-response.ts`).
+- Keep `docs/api.yaml` as the source of truth; after changing endpoints, run `npm run api:types` and use the updated types in the client and handlers.
 
 ### Smart Model Selection
 The app automatically selects the optimal model based on features:

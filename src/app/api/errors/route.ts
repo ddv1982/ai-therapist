@@ -1,8 +1,8 @@
-import { withApiMiddleware } from '@/lib/api/api-middleware';
+import { withApiRoute } from '@/lib/api/with-route';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 
-export const POST = withApiMiddleware(async (request, context) => {
+export const POST = withApiRoute(async (request, context) => {
   try {
     const errorData = await request.json();
 
@@ -22,7 +22,7 @@ export const POST = withApiMiddleware(async (request, context) => {
   }
 });
 
-export const GET = withApiMiddleware(async (_request, context) => {
+export const GET = withApiRoute(async (_request, context) => {
   return createSuccessResponse(
     {
       timestamp: new Date().toISOString(),

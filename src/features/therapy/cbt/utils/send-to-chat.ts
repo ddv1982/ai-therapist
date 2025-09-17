@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api/client';
+import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { getApiData, type ApiResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import type { components } from '@/types/api.generated';
@@ -27,7 +28,7 @@ export async function sendToChat({
   title,
   flowState,
   contextualMessages,
-  model = 'openai/gpt-oss-120b',
+  model = ANALYTICAL_MODEL_ID,
 }: SendToChatParams): Promise<SendToChatResult> {
   const summaryCard = buildSessionSummaryCard(flowState);
   const now = Date.now();

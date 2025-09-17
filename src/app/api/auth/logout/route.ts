@@ -1,8 +1,8 @@
-import { withApiMiddleware } from '@/lib/api/api-middleware';
+import { withApiRoute } from '@/lib/api/with-route';
 import { revokeAuthSession } from '@/lib/auth/device-fingerprint';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
-export const POST = withApiMiddleware(async (request, context) => {
+export const POST = withApiRoute(async (request, context) => {
   try {
     const token = request.cookies.get('auth-session-token')?.value;
     if (token) {

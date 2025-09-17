@@ -315,7 +315,8 @@ export async function POST(request: NextRequest) {
   
   try {
     // Always use analytical model for detailed session reports
-    const reportModel = 'openai/gpt-oss-120b';
+    const { REPORT_MODEL_ID } = await import('@/features/chat/config');
+    const reportModel = REPORT_MODEL_ID;
     
     logger.info('Report generation request received', {
       ...requestContext,

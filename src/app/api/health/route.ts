@@ -1,5 +1,5 @@
 import { checkDatabaseHealth, prisma } from '@/lib/database/db';
-import { withApiMiddleware } from '@/lib/api/api-middleware';
+import { withApiRoute } from '@/lib/api/with-route';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { getCircuitBreakerStatus } from '@/lib/utils/graceful-degradation';
 import { getDeduplicationStats } from '@/lib/utils/request-deduplication';
@@ -213,7 +213,7 @@ function checkSystemMetrics(): HealthCheck {
   }
 }
 
-export const GET = withApiMiddleware(async (_request, context) => {
+export const GET = withApiRoute(async (_request, context) => {
   try {
     logger.debug('Comprehensive health check requested', { requestId: context.requestId });
     

@@ -27,15 +27,6 @@ const sessionsSlice = createSlice({
   name: 'sessions',
   initialState,
   reducers: {
-    updateSession: () => {
-      // handled by RTK Query cache updates
-    },
-    incrementMessageCount: () => {
-      // handled by RTK Query cache updates
-    },
-    setSessionTitle: () => {
-      // handled by RTK Query cache updates
-    },
     deleteSession: (state, action: PayloadAction<string>) => {
       if (state.currentSessionId === action.payload) {
         state.currentSessionId = null;
@@ -57,7 +48,6 @@ const sessionsSlice = createSlice({
 });
 
 export const {
-  updateSession,
   deleteSession,
   setCurrentSession,
   setCreatingSession,

@@ -490,6 +490,66 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
+  /reports/generate:
+    post:
+      summary: Generate session report (detailed)
+      description: Generates a therapeutic report from session messages and returns the raw report content.
+      tags:
+        - Reports
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+                - messages
+              properties:
+                sessionId:
+                  type: string
+                  format: uuid
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                        enum: [user, assistant]
+                      content:
+                        type: string
+                      timestamp:
+                        type: string
+                        format: date-time
+                model:
+                  type: string
+                  description: Optional model override
+      responses:
+        200:
+          description: Generated report content
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                  reportContent:
+                    type: string
+                  modelUsed:
+                    type: string
+        400:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
   /models:
     get:
       summary: Get available AI models
@@ -567,6 +627,328 @@ paths:
                   summary: Manual API key needed
                   value:
                     hasGroqApiKey: false
+
+  /errors:
+    post:
+      summary: Report client-side error
+      description: Receives client error reports (message, stack) and logs them with request context. Returns standardized success response.
+      tags:
+        - Environment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                stack:
+                  type: string
+                componentStack:
+                  type: string
+      responses:
+        200:
+          description: Error logged successfully
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: 'Error logged successfully'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/logout:
+    post:
+      summary: Logout and revoke session
+      description: Revokes the current auth session and clears the auth cookie.
+      tags:
+        - Sessions
+      responses:
+        200:
+          description: Logout successful
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/session:
+    get:
+      summary: Check session status
+      description: Returns whether the client is authenticated and whether TOTP setup/verification are needed.
+      tags:
+        - Sessions
+      responses:
+        200:
+          description: Session status
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      isAuthenticated:
+                        type: boolean
+                      needsSetup:
+                        type: boolean
+                      needsVerification:
+                        type: boolean
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Revoke current session (logout)
+      description: Deletes current session and clears the cookie.
+      tags:
+        - Sessions
+      responses:
+        200:
+          description: Success
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/devices:
+    get:
+      summary: List trusted devices and backup codes count
+      tags:
+        - Sessions
+      responses:
+        200:
+          description: Device list and backup code info
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      devices:
+                        type: array
+                        items:
+                          type: object
+                      backupCodesCount:
+                        type: integer
+        401:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Revoke a trusted device
+      tags:
+        - Sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deviceId]
+              properties:
+                deviceId:
+                  type: string
+      responses:
+        200:
+          description: Device revoked
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Device management operation (disabled)
+      description: For security, device management mutations are restricted. Returns a standardized error.
+      tags:
+        - Sessions
+      responses:
+        400:
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/diagnostics:
+    get:
+      summary: TOTP diagnostics
+      description: Returns server time and current token for diagnostics (development/support tooling).
+      tags:
+        - Sessions
+      responses:
+        200:
+          description: Diagnostic data
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      serverTime:
+                        type: string
+                      serverTimestamp:
+                        type: integer
+                      currentValidToken:
+                        type: string
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Validate a specific token in diagnostics mode
+      tags:
+        - Sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        200:
+          description: Validation result
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      providedTokenValid:
+                        type: boolean
+        400:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/mobile-debug:
+    get:
+      summary: Mobile debugging info
+      description: Returns network, device, and TOTP setup status for mobile debugging.
+      tags:
+        - Sessions
+      responses:
+        200:
+          description: Debug info
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      summary: Validate token with client time for mobile debugging
+      tags:
+        - Sessions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                clientTime:
+                  type: number
+      responses:
+        200:
+          description: Debug result
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+        400:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   headers:

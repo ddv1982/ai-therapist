@@ -2,7 +2,8 @@ import { NextRequest } from 'next/server';
 import { verifyAuthSession, revokeAuthSession } from '@/lib/auth/device-fingerprint';
 import { isTOTPSetup } from '@/lib/auth/totp-service';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
-import { withRateLimitUnauthenticated, withAuthAndRateLimit } from '@/lib/api/api-middleware';
+import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
+import { withApiRoute } from '@/lib/api/with-route';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // GET /api/auth/session - Check session status
@@ -48,7 +49,7 @@ export const GET = withRateLimitUnauthenticated(async (request: NextRequest) => 
 });
 
 // DELETE /api/auth/session - Logout (revoke session)
-export const DELETE = withAuthAndRateLimit(async (request: NextRequest) => {
+export const DELETE = withApiRoute(async (request: NextRequest, context) => {
   try {
     const sessionToken = request.cookies.get('auth-session-token')?.value;
     
@@ -57,9 +58,9 @@ export const DELETE = withAuthAndRateLimit(async (request: NextRequest) => {
     }
     // createLogoutResponse returns a NextResponse, but our wrapper expects ApiResponse.
     // For API consistency, respond with success and rely on client to redirect.
-    return createSuccessResponse({ success: true });
+    return createSuccessResponse({ success: true }, { requestId: context.requestId });
   } catch (error) {
     logger.apiError('/api/auth/session', error as Error, createRequestLogger(request));
-    return createErrorResponse('Logout failed', 500);
+    return createErrorResponse('Logout failed', 500, { requestId: context.requestId });
   }
-});
+}, { auth: true, rateLimitBucket: 'api' });

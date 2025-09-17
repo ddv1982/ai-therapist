@@ -1,23 +1,22 @@
 import { NextRequest } from 'next/server';
-import { getTrustedDevices, revokeDeviceTrust } from '@/lib/auth/device-fingerprint';
-import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
+import { getTrustedDevices, revokeDeviceTrust, verifyAuthSession } from '@/lib/auth/device-fingerprint';
 import { getUnusedBackupCodesCount } from '@/lib/auth/totp-service';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
-import { withAuthAndRateLimit } from '@/lib/api/api-middleware';
+import { withApiRoute } from '@/lib/api/with-route';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // GET /api/auth/devices - Get trusted devices and backup codes info
-export const GET = withAuthAndRateLimit(async (request: NextRequest) => {
+export const GET = withApiRoute(async (request: NextRequest, context) => {
   try {
-    // Verify authentication
+    // Verify authentication (also needed for device context)
     const sessionToken = request.cookies.get('auth-session-token')?.value;
     if (!sessionToken) {
-      return createErrorResponse('Not authenticated', 401);
+      return createErrorResponse('Not authenticated', 401, { requestId: context.requestId });
     }
 
     const deviceInfo = await verifyAuthSession(sessionToken);
     if (!deviceInfo) {
-      return createErrorResponse('Invalid session', 401);
+      return createErrorResponse('Invalid session', 401, { requestId: context.requestId });
     }
 
     // Get trusted devices
@@ -29,69 +28,69 @@ export const GET = withAuthAndRateLimit(async (request: NextRequest) => {
     return createSuccessResponse({
       devices,
       backupCodesCount: unusedBackupCodes,
-    });
+    }, { requestId: context.requestId });
   } catch (error) {
     logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
-    return createErrorResponse('Failed to get devices', 500);
+    return createErrorResponse('Failed to get devices', 500, { requestId: context.requestId });
   }
-});
+}, { auth: true, rateLimitBucket: 'api' });
 
 // DELETE /api/auth/devices - Revoke device trust
-export const DELETE = withAuthAndRateLimit(async (request: NextRequest) => {
+export const DELETE = withApiRoute(async (request: NextRequest, context) => {
   try {
-    // Verify authentication
+    // Verify authentication (needed for current device id)
     const sessionToken = request.cookies.get('auth-session-token')?.value;
     if (!sessionToken) {
-      return createErrorResponse('Not authenticated', 401);
+      return createErrorResponse('Not authenticated', 401, { requestId: context.requestId });
     }
 
     const deviceInfo = await verifyAuthSession(sessionToken);
     if (!deviceInfo) {
-      return createErrorResponse('Invalid session', 401);
+      return createErrorResponse('Invalid session', 401, { requestId: context.requestId });
     }
 
     const body = await request.json();
     const { deviceId } = body;
 
     if (!deviceId) {
-      return createErrorResponse('Device ID is required', 400);
+      return createErrorResponse('Device ID is required', 400, { requestId: context.requestId });
     }
 
     // Don't allow revoking the current device
     if (deviceId === deviceInfo.deviceId) {
-      return createErrorResponse('Cannot revoke current device', 400);
+      return createErrorResponse('Cannot revoke current device', 400, { requestId: context.requestId });
     }
 
     const success = await revokeDeviceTrust(deviceId);
     
     if (!success) {
-      return createErrorResponse('Device not found', 404);
+      return createErrorResponse('Device not found', 404, { requestId: context.requestId });
     }
 
-    return createSuccessResponse({ success: true });
+    return createSuccessResponse({ success: true }, { requestId: context.requestId });
   } catch (error) {
     logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
-    return createErrorResponse('Failed to revoke device', 500);
+    return createErrorResponse('Failed to revoke device', 500, { requestId: context.requestId });
   }
-});
+}, { auth: true, rateLimitBucket: 'api' });
 
 // POST /api/auth/devices - Device management (backup code regeneration removed for security)
-export const POST = withAuthAndRateLimit(async (request: NextRequest) => {
+export const POST = withApiRoute(async (request: NextRequest, context) => {
   try {
     // Verify authentication
     const sessionToken = request.cookies.get('auth-session-token')?.value;
     if (!sessionToken) {
-      return createErrorResponse('Not authenticated', 401);
+      return createErrorResponse('Not authenticated', 401, { requestId: context.requestId });
     }
 
     const deviceInfo = await verifyAuthSession(sessionToken);
     if (!deviceInfo) {
-      return createErrorResponse('Invalid session', 401);
+      return createErrorResponse('Invalid session', 401, { requestId: context.requestId });
     }
 
-    return createErrorResponse('Action not supported. Use server-side scripts for TOTP management.', 400);
+    return createErrorResponse('Action not supported. Use server-side scripts for TOTP management.', 400, { requestId: context.requestId });
   } catch (error) {
     logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
-    return createErrorResponse('Failed to process request', 500);
+    return createErrorResponse('Failed to process request', 500, { requestId: context.requestId });
   }
-});
+}, { auth: true, rateLimitBucket: 'api' });

@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, Smartphone, Download, Copy } from 'lucide-react';
 import { logger } from '@/lib/utils/logger';
+import { apiClient } from '@/lib/api/client';
+import { getApiData } from '@/lib/api/api-response';
 
 interface TrustedDevice {
   id: string;
@@ -33,11 +35,9 @@ export function SecuritySettings() {
 
   const fetchSecurityData = async () => {
     try {
-      const response = await fetch('/api/auth/devices');
-      if (response.ok) {
-        const data = await response.json();
-        setSecurityData(data);
-      }
+      const resp = await apiClient.listDevices();
+      const data = getApiData(resp) as unknown as SecurityData | null;
+      if (data) setSecurityData(data);
     } catch (error) {
       logger.securityEvent('Failed to fetch security data', {
         component: 'SecuritySettings',
@@ -51,15 +51,8 @@ export function SecuritySettings() {
 
   const revokeDevice = async (deviceId: string) => {
     try {
-      const response = await fetch('/api/auth/devices', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deviceId }),
-      });
-
-      if (response.ok) {
-        await fetchSecurityData();
-      }
+      const resp = await apiClient.revokeDevice(deviceId);
+      if (resp?.success) await fetchSecurityData();
     } catch (error) {
       logger.securityEvent('Failed to revoke device', {
         component: 'SecuritySettings',
@@ -71,26 +64,9 @@ export function SecuritySettings() {
   };
 
   const regenerateBackupCodes = async () => {
-    try {
-      const response = await fetch('/api/auth/devices', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'regenerate-backup-codes' }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setNewBackupCodes(data.backupCodes);
-        setShowBackupCodes(true);
-        await fetchSecurityData();
-      }
-    } catch (error) {
-      logger.securityEvent('Failed to regenerate backup codes', {
-        component: 'SecuritySettings',
-        operation: 'regenerateBackupCodes',
-        error: (error as Error).message
-      });
-    }
+    // Disabled for security; server instructs to use CLI/server scripts
+    setNewBackupCodes(null);
+    setShowBackupCodes(false);
   };
 
   const downloadBackupCodes = () => {
@@ -114,11 +90,8 @@ export function SecuritySettings() {
 
   const logout = async () => {
     try {
-      const response = await fetch('/api/auth/session', {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
+      const resp = await apiClient.revokeCurrentSession();
+      if (resp?.success) {
         window.location.href = '/auth/verify';
       }
     } catch (error) {
@@ -166,8 +139,8 @@ export function SecuritySettings() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={regenerateBackupCodes} variant="outline">
-            Generate New Backup Codes
+          <Button onClick={regenerateBackupCodes} variant="outline" disabled title="Use server tools to manage backup codes">
+            Backup Codes Managed Server-side
           </Button>
         </CardContent>
       </Card>

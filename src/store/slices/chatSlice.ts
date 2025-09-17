@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { DEFAULT_MODEL_ID } from '@/features/chat/config';
 
 interface ChatState {
   isStreaming: boolean;
@@ -17,7 +18,7 @@ const initialState: ChatState = {
   streamingMessageId: null,
   error: null,
   settings: {
-    model: 'openai/gpt-oss-20b',
+    model: DEFAULT_MODEL_ID,
     webSearchEnabled: false,
   },
 };
@@ -26,10 +27,6 @@ const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
-    addMessage: () => {
-    },
-    updateMessage: () => {
-    },
     setStreaming: (state, action: PayloadAction<{ isStreaming: boolean; messageId?: string }>) => {
       state.isStreaming = action.payload.isStreaming;
       state.streamingMessageId = action.payload.messageId || null;
@@ -54,8 +51,6 @@ const chatSlice = createSlice({
 });
 
 export const {
-  addMessage,
-  updateMessage,
   setStreaming,
   setCurrentInput,
   clearMessages,

@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import type { TypedUseSelectorHook } from 'react-redux';
 import type { RootState, AppDispatch } from './index';
+import { DEFAULT_MODEL_ID } from '@/features/chat/config';
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
@@ -22,3 +23,5 @@ export const selectCBTValidationErrors = (state: RootState) => state.cbt?.valida
 export const selectIsStreaming = (state: RootState) => state.chat?.isStreaming || false;
 
 export const selectChatSettings = (state: RootState) => state.chat?.settings || { webSearchEnabled: false, model: 'openai/gpt-oss-20b' };
+// Prefer selectors in src/store/selectors.ts; retained for backward compatibility
+export const selectChatSettingsSafe = (state: RootState) => state.chat?.settings || { webSearchEnabled: false, model: DEFAULT_MODEL_ID };

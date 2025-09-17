@@ -1,7 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { DefaultChatTransport } from 'ai';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useChat } from '@ai-sdk/react';
 import type { MessageData } from '@/features/chat/messages/message';
 import { useChatMessages } from './use-chat-messages';
@@ -9,18 +8,19 @@ import { useScrollToBottom } from './use-scroll-to-bottom';
 import { apiClient } from '@/lib/api/client';
 import { getApiData } from '@/lib/api/api-response';
 import type { components } from '@/types/api.generated';
-import { mapApiSessionToUiSession } from '@/lib/chat/session-mapper';
+// session mapping is handled by useSessionStore
 import { logger } from '@/lib/utils/logger';
 import { generateUUID } from '@/lib/utils/utils';
 import { checkMemoryContext, type MemoryContextInfo } from '@/lib/chat/memory-utils';
 import { useTranslations } from 'next-intl';
 import { useAppDispatch } from '@/store/hooks';
 import { setCurrentSession as setCurrentSessionAction } from '@/store/slices/sessionsSlice';
-import { useSelectSession } from '@/hooks';
+import { useSelectSession, useMemoryContext, useSessionStore, useChatTransport } from '@/hooks';
+import { ANALYTICAL_MODEL_ID, REPORT_MODEL_ID } from '@/features/chat/config';
 
 type Message = MessageData;
 
-type Session = ReturnType<typeof mapApiSessionToUiSession>;
+type Session = { id: string; title: string; messageCount?: number; startedAt?: Date };
 
 export interface ChatController {
   // state
@@ -82,7 +82,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     return typeof val === 'string' && val.length > 0 ? val : 'New Chat';
   }, [t]);
 
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const { sessions, loadSessions: loadSessionsFromStore, removeSession, createSession } = useSessionStore();
   const [currentSession, setCurrentSession] = useState<string | null>(null);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -90,7 +90,11 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
   const [isMobile, setIsMobile] = useState(false);
   const [viewportHeight, setViewportHeight] = useState('100vh');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-  const [memoryContext, setMemoryContext] = useState<MemoryContextInfo>({ hasMemory: false, reportCount: 0 });
+  const { memoryContext, setMemoryContext } = useMemoryContext(currentSession);
+  const setMemoryContextRef = useRef(setMemoryContext);
+  useEffect(() => {
+    setMemoryContextRef.current = setMemoryContext;
+  }, [setMemoryContext]);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
@@ -110,12 +114,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
   });
 
   // AI SDK transport and chat
-  const transport = useMemo(() => new DefaultChatTransport({
-    api: '/api/chat',
-    body: {
-      sessionId: currentSession ?? undefined,
-    },
-  }), [currentSession]);
+  const transport = useChatTransport({ sessionId: currentSession });
 
   const { sendMessage: sendAiMessage, stop: stopAi } = useChat({
     id: currentSession ?? 'default',
@@ -145,10 +144,10 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
             const items = (page?.items || []) as Array<{ role: string; content: string }>;
             const alreadySaved = items.some(it => it.role === 'assistant' && it.content === trimmedContent);
             if (!alreadySaved) {
-              await saveMessage(sid, 'assistant', trimmedContent, options?.webSearchEnabled ? 'openai/gpt-oss-120b' : options?.model);
+              await saveMessage(sid, 'assistant', trimmedContent, options?.webSearchEnabled ? ANALYTICAL_MODEL_ID : options?.model);
             }
           } catch {
-            await saveMessage(sid, 'assistant', trimmedContent, options?.webSearchEnabled ? 'openai/gpt-oss-120b' : options?.model);
+            await saveMessage(sid, 'assistant', trimmedContent, options?.webSearchEnabled ? ANALYTICAL_MODEL_ID : options?.model);
           }
           await loadMessages(sid);
           await loadSessions();
@@ -170,7 +169,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     (async () => {
       try {
         const info = await checkMemoryContext(currentSession ?? undefined);
-        if (active) setMemoryContext(info);
+        if (active) setMemoryContextRef.current(info);
       } catch {
         // ignore
       }
@@ -182,14 +181,11 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     if (sessionsLoadingRef.current) return;
     sessionsLoadingRef.current = true;
     try {
-      const sessionsData = await apiClient.listSessions();
-      const sessions = getApiData(sessionsData);
-      const uiSessions: Session[] = (sessions || []).map(mapApiSessionToUiSession) as Session[];
-      setSessions(uiSessions);
+      await loadSessionsFromStore();
     } finally {
       sessionsLoadingRef.current = false;
     }
-  }, []);
+  }, [loadSessionsFromStore]);
 
   const saveMessage = useCallback(async (sessionId: string, role: 'user' | 'assistant', content: string, modelUsed?: string) => {
     try {
@@ -296,20 +292,17 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
 
   const deleteSession = async (sessionId: string) => {
     try {
-      const resp = await apiClient.deleteSession(sessionId);
-      if (resp) {
-        setSessions(prev => prev.filter(session => session.id !== sessionId));
-        if (currentSession === sessionId) {
-          setCurrentSession(null);
-          await selectSession(null);
-          clearMessages();
-          if (typeof window !== 'undefined') localStorage.removeItem('currentSessionId');
-          // Hydrate current session from server to align with authoritative state
-          await loadCurrentSession();
-        } else {
-          // Still refresh sessions list for accurate counts
-          await loadSessions();
-        }
+      await removeSession(sessionId);
+      if (currentSession === sessionId) {
+        setCurrentSession(null);
+        await selectSession(null);
+        clearMessages();
+        if (typeof window !== 'undefined') localStorage.removeItem('currentSessionId');
+        // Hydrate current session from server to align with authoritative state
+        await loadCurrentSession();
+      } else {
+        // Still refresh sessions list for accurate counts
+        await loadSessions();
       }
     } catch {
       // ignore
@@ -323,16 +316,10 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
       // Create now at first send (no background creation)
       try {
         const defaultTitle = resolveDefaultTitle();
-        const result = await apiClient.createSession({ title: defaultTitle });
-        const created = getApiData(result);
-        const newSession: Session = mapApiSessionToUiSession(created as components['schemas']['Session']) as Session;
-        if (newSession) {
-          setSessions(prev => [newSession, ...prev]);
-          await setCurrentSessionAndSync(newSession.id);
-          sessionId = newSession.id;
-        } else {
-          return;
-        }
+        const newSession = await createSession(defaultTitle);
+        if (!newSession) return;
+        await setCurrentSessionAndSync(newSession.id);
+        sessionId = newSession.id;
       } catch {
         return;
       }
@@ -374,7 +361,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
       setIsLoading(false);
       logger.error('Error sending message to AI', { component: 'useChatController', sessionId: sessionId || 'none', model: options?.model }, error instanceof Error ? error : new Error(String(error)));
     }
-  }, [input, isLoading, currentSession, options?.webSearchEnabled, options?.model, setCurrentSessionAndSync, setMessages, sendAiMessage, saveMessage, resolveDefaultTitle]);
+  }, [input, isLoading, currentSession, options?.webSearchEnabled, options?.model, setCurrentSessionAndSync, setMessages, sendAiMessage, saveMessage, resolveDefaultTitle, createSession]);
 
   const stopGenerating = useCallback(() => {
     try {
@@ -396,7 +383,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
       const result = await apiClient.generateReportDetailed({
         sessionId: currentSession,
         messages: messages.filter(m => !m.content.startsWith('📊 **Session Report**')).map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp.toISOString?.() })),
-        model: 'openai/gpt-oss-120b',
+        model: REPORT_MODEL_ID,
       });
       if (result && typeof (result as { reportContent?: unknown }).reportContent === 'string') {
         const reportMessage = {
@@ -404,11 +391,11 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
           role: 'assistant' as const,
           content: `📊 **Session Report**\n\n${(result as { reportContent: string }).reportContent}`,
           timestamp: new Date(),
-          modelUsed: 'openai/gpt-oss-120b',
+          modelUsed: REPORT_MODEL_ID,
         };
         setMessages(prev => [...prev, reportMessage]);
         try {
-          await saveMessage(currentSession, 'assistant', reportMessage.content, 'openai/gpt-oss-120b');
+          await saveMessage(currentSession, 'assistant', reportMessage.content, REPORT_MODEL_ID);
           await loadSessions();
         } catch {}
       }
@@ -423,16 +410,10 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
       // Create new session if none exists
       try {
         const defaultTitle = resolveDefaultTitle();
-        const result = await apiClient.createSession({ title: defaultTitle });
-        const created = getApiData(result);
-        const newSession: Session = mapApiSessionToUiSession(created as components['schemas']['Session']) as Session;
-        if (newSession) {
-          setSessions(prev => [newSession, ...prev]);
-          await setCurrentSessionAndSync(newSession.id);
-          sessionId = newSession.id;
-        } else {
-          return;
-        }
+        const newSession = await createSession(defaultTitle);
+        if (!newSession) return;
+        await setCurrentSessionAndSync(newSession.id);
+        sessionId = newSession.id;
       } catch (error) {
         logger.error('Failed to create session for obsessions table', { error });
         return;
@@ -465,7 +446,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     } catch (error) {
       logger.error('Failed to save obsessions table message', { error });
     }
-  }, [currentSession, resolveDefaultTitle, setSessions, setCurrentSessionAndSync, setMessages, saveMessage]);
+  }, [currentSession, resolveDefaultTitle, setCurrentSessionAndSync, setMessages, saveMessage, createSession]);
 
   return {
     messages,
