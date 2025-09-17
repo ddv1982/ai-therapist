@@ -1,5 +1,5 @@
 // Mock for next-intl to avoid ESM issues in tests
-function useTranslations(namespace) {
+function useTranslations(_namespace) {
   return function t(key) {
     // Normalize by stripping known prefixes
     const normalized = key.replace(/^chat\./, '').replace(/^ui\./, '');
@@ -44,5 +44,7 @@ function NextIntlClientProvider({ children }) {
   return children;
 }
 
+const nextIntlMock = { useTranslations, useFormatter, NextIntlClientProvider };
+
 export { useTranslations, useFormatter, NextIntlClientProvider };
-export default { useTranslations, useFormatter, NextIntlClientProvider };
+export default nextIntlMock;

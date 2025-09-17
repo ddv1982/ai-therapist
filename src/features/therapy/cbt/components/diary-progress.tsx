@@ -1,11 +1,11 @@
 import React from 'react';
 import { getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
-import type { CBTStep } from '@/features/therapy/cbt/hooks/use-cbt-chat-experience';
+import type { CBTStepType } from '@/types/therapy';
 
 interface DiaryProgressProps {
   isMobile: boolean;
   isCBTActive: boolean;
-  cbtCurrentStep: CBTStep;
+  cbtCurrentStep: CBTStepType;
 }
 
 export function DiaryProgress({ isMobile, isCBTActive, cbtCurrentStep }: DiaryProgressProps) {

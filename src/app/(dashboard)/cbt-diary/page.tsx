@@ -23,7 +23,7 @@ import { apiClient } from '@/lib/api/client';
 import type { components } from '@/types/api.generated';
 //
 import { useCbtDiaryFlow } from '@/features/therapy/cbt/hooks/use-cbt-diary-flow';
-import { sendToChat as sendToChatUtil } from '@/features/therapy/cbt/utils/send-to-chat';
+import { sendToChat } from '@/features/therapy/cbt/utils/send-to-chat';
 
 // Using MessageData from the message system
 // Type alias not required locally
@@ -36,7 +36,7 @@ function CBTDiaryPageContent() {
   const { selectSession } = useSelectSession();
   
   // Get session ID from Redux
-  const reduxSessionId = useAppSelector(state => state.cbt?.sessionData?.sessionId);
+  const reduxSessionId = useAppSelector((state) => state.cbt?.flow?.sessionId ?? null);
   // Streaming and view state
   const [isLoading, setIsLoading] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
@@ -49,8 +49,9 @@ function CBTDiaryPageContent() {
     messages,
     isCBTActive,
     cbtCurrentStep,
+    cbtFlowState,
+    goToStep,
     startCBTFlow,
-    generateTherapeuticSummaryCard,
     handleCBTSituationComplete,
     handleCBTEmotionComplete,
     handleCBTThoughtComplete,
@@ -177,18 +178,19 @@ function CBTDiaryPageContent() {
     setIsStreaming(true);
     
     try {
-      const summaryData = generateTherapeuticSummaryCard();
-      const cbtSummary = `<!-- CBT_SUMMARY_CARD:${JSON.stringify(summaryData)} -->\n<!-- END_CBT_SUMMARY_CARD -->`;
+      if (!cbtFlowState) {
+        throw new Error('CBT flow state missing');
+      }
 
       const contextual = messages
         .filter((msg: MessageData) => !msg.metadata?.step)
         .map((m: MessageData) => ({ role: m.role, content: m.content, timestamp: m.timestamp.toISOString() }));
 
-      const { sessionId } = await sendToChatUtil({
+      const { sessionId } = await sendToChat({
         title: t('sessionReportTitle'),
-        cbtSummaryCard: cbtSummary,
+        flowState: cbtFlowState,
         contextualMessages: contextual,
-        model: 'openai/gpt-oss-120b'
+        model: 'openai/gpt-oss-120b',
       });
 
       await selectSession(sessionId);
@@ -227,7 +229,7 @@ function CBTDiaryPageContent() {
       setIsLoading(false);
       setIsStreaming(false);
     }
-  }, [hasStarted, isCBTActive, isLoading, isStreaming, generateTherapeuticSummaryCard, messages, router, showToast, draftActions, reduxSessionId, dispatch, t, selectSession]);
+  }, [hasStarted, isCBTActive, isLoading, isStreaming, cbtFlowState, messages, router, showToast, draftActions, reduxSessionId, dispatch, t, selectSession]);
 
   return (
     <div className={cn("h-screen bg-background flex flex-col", isMobile && "cbt-compact")} style={{ height: '100dvh' }}>
@@ -295,6 +297,8 @@ function CBTDiaryPageContent() {
                 messages={messages}
                 isStreaming={isLoading}
                 isMobile={isMobile}
+                activeCBTStep={cbtCurrentStep}
+                onCBTStepNavigate={goToStep}
                 onCBTSituationComplete={handleCBTSituationComplete}
                 onCBTEmotionComplete={handleCBTEmotionComplete}
                 onCBTThoughtComplete={handleCBTThoughtComplete}

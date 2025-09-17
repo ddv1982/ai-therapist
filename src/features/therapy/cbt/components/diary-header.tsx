@@ -4,12 +4,12 @@ import { ArrowLeft, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
 import {useTranslations} from 'next-intl';
 import { getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
-import type { CBTStep } from '@/features/therapy/cbt/hooks/use-cbt-chat-experience';
+import type { CBTStepType } from '@/types/therapy';
 
 interface DiaryHeaderProps {
   isMobile: boolean;
   isCBTActive: boolean;
-  cbtCurrentStep: CBTStep;
+  cbtCurrentStep: CBTStepType;
   onBack: () => void;
 }
 

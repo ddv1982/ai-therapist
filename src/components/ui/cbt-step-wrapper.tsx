@@ -50,6 +50,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import {useTranslations} from 'next-intl';
 import { getStepInfo, CBT_STEPS } from '@/features/therapy/cbt/utils/step-mapping';
+import { CBT_STEP_CONFIG } from '@/features/therapy/cbt/flow';
 
 // =============================================================================
 // TYPES & INTERFACES
@@ -58,7 +59,7 @@ import { getStepInfo, CBT_STEPS } from '@/features/therapy/cbt/utils/step-mappin
 export interface CBTStepWrapperProps {
   // Step Configuration
   step: CBTStepType;
-  title: string;
+  title?: string;
   subtitle?: string;
   icon?: ReactNode;
   
@@ -169,6 +170,29 @@ export function CBTStepWrapper({
     validation, 
     status 
   } = useCBTDataManager();
+
+  const stepConfig = step !== 'complete' ? CBT_STEP_CONFIG[step as keyof typeof CBT_STEP_CONFIG] : undefined;
+  const resolvedTitle = title ?? (
+    stepConfig
+      ? (t(stepConfig.metadata.title.translationKey as unknown as Parameters<typeof t>[0], {
+          default: stepConfig.metadata.title.defaultText,
+        }) as string)
+      : 'Session Complete'
+  );
+  const resolvedSubtitle = subtitle ?? (
+    stepConfig?.metadata.subtitle
+      ? (t(stepConfig.metadata.subtitle.translationKey as unknown as Parameters<typeof t>[0], {
+          default: stepConfig.metadata.subtitle.defaultText,
+        }) as string)
+      : undefined
+  );
+  const resolvedHelpText = helpText ?? (
+    stepConfig?.metadata.helpText
+      ? (t(stepConfig.metadata.helpText.translationKey as unknown as Parameters<typeof t>[0], {
+          default: stepConfig.metadata.helpText.defaultText,
+        }) as string)
+      : undefined
+  );
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [hasAdvanced, setHasAdvanced] = useState(false);
@@ -182,7 +206,10 @@ export function CBTStepWrapper({
   // COMPUTED VALUES
   // =============================================================================
   
-  const { stepNumber, totalSteps } = getStepInfo(step);
+  const { stepNumber, totalSteps } =
+    step === 'complete'
+      ? { stepNumber: CBT_STEPS.length, totalSteps: CBT_STEPS.length }
+      : getStepInfo(step);
   const progressPercentage = showProgress ? (stepNumber / totalSteps) * 100 : 0;
   
   // Determine step validation state (avoid operator precedence pitfalls)
@@ -303,9 +330,9 @@ export function CBTStepWrapper({
             : stepIcon}
         </div>
         <div className="flex-1">
-          <h2 className="text-xl font-semibold">{title}</h2>
-          {subtitle && (
-            <p className="text-sm opacity-80 mt-1">{subtitle}</p>
+          <h2 className="text-xl font-semibold">{resolvedTitle}</h2>
+          {resolvedSubtitle && (
+            <p className="text-sm opacity-80 mt-1">{resolvedSubtitle}</p>
           )}
         </div>
         {isStepValid && (
@@ -313,8 +340,8 @@ export function CBTStepWrapper({
         )}
       </div>
       
-      {helpText && (
-        <p className="text-sm opacity-70 mt-2">{helpText}</p>
+      {resolvedHelpText && (
+        <p className="text-sm opacity-70 mt-2">{resolvedHelpText}</p>
       )}
     </div>
   );
@@ -418,7 +445,7 @@ export function CBTStepWrapper({
         className
       )}
       role="region"
-      aria-label={ariaLabel || `CBT Step: ${title}`}
+      aria-label={ariaLabel || `CBT Step: ${resolvedTitle}`}
     >
       {renderProgressBar()}
       {renderStepHeader()}

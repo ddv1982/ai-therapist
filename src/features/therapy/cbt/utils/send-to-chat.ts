@@ -1,10 +1,12 @@
 import { apiClient } from '@/lib/api/client';
 import { getApiData, type ApiResponse } from '@/lib/api/api-response';
+import { logger } from '@/lib/utils/logger';
 import type { components } from '@/types/api.generated';
+import { buildSessionSummaryCard, type CBTFlowState } from '@/features/therapy/cbt/flow';
 
 export interface SendToChatParams {
   title: string;
-  cbtSummaryCard: string;
+  flowState: CBTFlowState;
   contextualMessages: { role: 'user' | 'assistant'; content: string; timestamp: string }[];
   model?: string;
 }
@@ -13,32 +15,55 @@ export interface SendToChatResult {
   sessionId: string;
 }
 
-export async function sendToChat({ title, cbtSummaryCard, contextualMessages, model = 'openai/gpt-oss-120b' }: SendToChatParams): Promise<SendToChatResult> {
-  // Create a new session for the CBT send
-  const createResp = await apiClient.createSession({ title });
-  if (!createResp || !createResp.success || !createResp.data) throw new Error('Failed to create a new session for CBT');
-  const newSession = createResp.data as components['schemas']['Session'];
-  const sessionId = newSession.id;
+function mapApiResponse<T>(response: ApiResponse<T>): T {
+  const data = getApiData(response);
+  if (!data) {
+    throw new Error('Missing data in API response');
+  }
+  return data;
+}
 
-  // Generate report
-  const reportData = await apiClient.generateReportDetailed({
+export async function sendToChat({
+  title,
+  flowState,
+  contextualMessages,
+  model = 'openai/gpt-oss-120b',
+}: SendToChatParams): Promise<SendToChatResult> {
+  const summaryCard = buildSessionSummaryCard(flowState);
+  const now = Date.now();
+
+  const reportMessages = [
+    { role: 'user' as const, content: summaryCard, timestamp: new Date(now).toISOString() },
+    ...contextualMessages,
+  ];
+
+  const createdSession = mapApiResponse<components['schemas']['Session']>(
+    await apiClient.createSession({ title }),
+  );
+  const sessionId = createdSession.id;
+
+  const reportResponse = await apiClient.generateReportDetailed({
     sessionId,
-    messages: [{ role: 'user', content: cbtSummaryCard, timestamp: new Date().toISOString() }, ...contextualMessages],
-    model
+    messages: reportMessages,
+    model,
   });
-  if (!(reportData as { success?: boolean; reportContent?: string }).success || !(reportData as { reportContent?: string }).reportContent) {
+
+  const reportSuccess = (reportResponse as { success?: boolean }).success;
+  const reportContent = (reportResponse as { reportContent?: string }).reportContent;
+  if (!reportSuccess || !reportContent) {
     throw new Error('Failed to generate session report');
   }
-  const therapeuticAnalysis = (reportData as { reportContent: string }).reportContent;
 
-  // Save summary and analysis
-  const summaryResponse: ApiResponse<components['schemas']['Message']> = await apiClient.postMessage(sessionId, { role: 'user', content: cbtSummaryCard });
-  getApiData(summaryResponse);
+  await apiClient.postMessage(sessionId, { role: 'user', content: summaryCard });
 
-  const prefixedReportContent = `📊 **Session Report**\n\n${therapeuticAnalysis}`;
-  const analysisMessageResponse: ApiResponse<components['schemas']['Message']> = await apiClient.postMessage(sessionId, { role: 'assistant', content: prefixedReportContent, modelUsed: model });
-  getApiData(analysisMessageResponse);
+  const prefixedReportContent = `📊 **Session Report**\n\n${reportContent}`;
+  await apiClient.postMessage(sessionId, {
+    role: 'assistant',
+    content: prefixedReportContent,
+    modelUsed: model,
+  });
+
+  logger.info('CBT session exported to chat', { sessionId, title });
 
   return { sessionId };
 }
-

@@ -3,10 +3,10 @@
  * Single source of truth for step numbers to avoid DRY violations
  */
 
-import type { CBTStep } from '../hooks/use-cbt-chat-experience';
+import type { CBTStepId } from '@/features/therapy/cbt/flow';
 
 // The canonical CBT steps in order - matches use-cbt-chat-experience.ts
-export const CBT_STEPS: CBTStep[] = [
+export const CBT_STEPS: CBTStepId[] = [
   'situation', 
   'emotions', 
   'thoughts', 
@@ -26,7 +26,7 @@ export const TOTAL_CBT_STEPS = CBT_STEPS.length;
  * @param step - The CBT step to get the number for
  * @returns The step number (1-based) or 1 if not found
  */
-export function getStepNumber(step: CBTStep): number {
+export function getStepNumber(step: CBTStepId): number {
   const index = CBT_STEPS.indexOf(step);
   return index >= 0 ? index + 1 : 1;
 }
@@ -44,7 +44,7 @@ export function getTotalSteps(): number {
  * @param step - The CBT step to get numbers for
  * @returns Object with stepNumber and totalSteps
  */
-export function getStepInfo(step: CBTStep): { stepNumber: number; totalSteps: number } {
+export function getStepInfo(step: CBTStepId): { stepNumber: number; totalSteps: number } {
   return {
     stepNumber: getStepNumber(step),
     totalSteps: getTotalSteps()
@@ -56,6 +56,6 @@ export function getStepInfo(step: CBTStep): { stepNumber: number; totalSteps: nu
  * @param step - The step to validate
  * @returns True if the step is valid
  */
-export function isValidStep(step: CBTStep): boolean {
+export function isValidStep(step: CBTStepId): boolean {
   return CBT_STEPS.includes(step);
 }

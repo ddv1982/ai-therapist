@@ -7,7 +7,7 @@ import {
   createSelector
 } from '@reduxjs/toolkit';
 import { type RootState } from '@/store';
-import { 
+import {
   createDraft,
   updateDraft,
   setCurrentStep,
@@ -19,29 +19,13 @@ import {
   clearValidationErrors,
   resetCurrentDraft,
   startCBTSession,
-  updateSituation,
-  updateEmotions,
-  clearEmotions,
-  updateThoughts,
-  addThought,
-  removeThought,
-  updateCoreBeliefs,
-  addCoreBelief,
-  removeCoreBelief,
-  updateChallengeQuestions,
-  addChallengeQuestion,
-  removeChallengeQuestion,
-  updateRationalThoughts,
-  addRationalThought,
-  removeRationalThought,
-  updateSchemaModes,
-  toggleSchemaMode,
-  updateActionPlan,
+  applyCBTEvent,
   clearCBTSession,
   type CBTFormData,
   type CBTDraft,
   cbtFormSchema,
 } from '@/store/slices/cbtSlice';
+import { type CBTStepPayloadMap, type CBTFlowState, TOTAL_CBT_STEPS } from '@/features/therapy/cbt/flow';
 
 import type {
   SituationData,
@@ -49,18 +33,78 @@ import type {
   ThoughtData,
   CoreBeliefData,
   ChallengeQuestionData,
+  ChallengeQuestionsData,
   RationalThoughtData,
+  RationalThoughtsData,
   SchemaModeData,
+  SchemaMode,
   ActionPlanData,
   CBTFormValidationError,
 } from '@/types/therapy';
 import type { CBTFormInput } from '@/features/therapy/cbt/cbt-form-schema';
 import { useChatUI } from '@/contexts/chat-ui-context';
-import { useCBTChatBridge } from '@/lib/therapy/use-cbt-chat-bridge';
+import { useCBTChatBridge, type SendStepOptions } from '@/lib/therapy/use-cbt-chat-bridge';
+import { buildSessionSummaryCard } from '@/features/therapy/cbt/flow/cards';
+import { buildMarkdownSummary } from '@/features/therapy/cbt/flow/summary';
 import { generateUUID } from '@/lib/utils/utils';
+import { type CBTStepId } from '@/features/therapy/cbt/flow';
 
 const selectCBTCurrentDraft = (state: RootState) => state.cbt?.currentDraft;
-const selectCBTSessionData = (state: RootState) => state.cbt?.sessionData;
+const selectCBTFlowState = (state: RootState) => state.cbt?.flow;
+
+interface LegacySessionData {
+  sessionId: string | null;
+  situation: SituationData | null;
+  emotions: EmotionData | null;
+  thoughts: ThoughtData[];
+  coreBeliefs: CoreBeliefData[];
+  challengeQuestions: ChallengeQuestionData[];
+  rationalThoughts: RationalThoughtData[];
+  schemaModes: SchemaModeData[];
+  actionPlan: ActionPlanData | null;
+  startedAt: string | null;
+  lastModified: string | null;
+}
+
+const EMPTY_SESSION: LegacySessionData = {
+  sessionId: null,
+  situation: null,
+  emotions: null,
+  thoughts: [],
+  coreBeliefs: [],
+  challengeQuestions: [],
+  rationalThoughts: [],
+  schemaModes: [],
+  actionPlan: null,
+  startedAt: null,
+  lastModified: null,
+};
+
+const mapFlowToLegacySession = (flow?: CBTFlowState | null): LegacySessionData => {
+  if (!flow) return EMPTY_SESSION;
+  const context = flow.context;
+  const legacySchemaModes = context.schemaModes?.selectedModes?.map((mode) => ({
+    mode: mode.id,
+    description: mode.description,
+    intensity: typeof mode.intensity === 'number' ? mode.intensity : 0,
+    isActive: Boolean(mode.selected),
+  })) ?? [];
+  return {
+    sessionId: flow.sessionId ?? null,
+    situation: context.situation ?? null,
+    emotions: context.emotions ?? null,
+    thoughts: context.thoughts ?? [],
+    coreBeliefs: context.coreBelief ? [context.coreBelief] : [],
+    challengeQuestions: context.challengeQuestions?.challengeQuestions ?? [],
+    rationalThoughts: context.rationalThoughts?.rationalThoughts ?? [],
+    schemaModes: legacySchemaModes,
+    actionPlan: context.actionPlan ?? null,
+    startedAt: flow.startedAt ?? null,
+    lastModified: flow.updatedAt ?? null,
+  };
+};
+
+const selectCBTSessionData = createSelector([selectCBTFlowState], mapFlowToLegacySession);
 
 const selectCBTValidationState = createSelector(
   [
@@ -169,7 +213,10 @@ interface UseCBTDataManagerReturn {
   };
   
   chatIntegration: {
-    sendToChat: (message: string) => Promise<boolean>;
+    sendSessionSummary: () => Promise<boolean>;
+    sendStepCard: (stepId: CBTStepId, options?: SendStepOptions) => Promise<boolean>;
+    sendAllCompletedSteps: () => Promise<boolean>;
+    sendEmotionComparison: (initial: EmotionData, final: EmotionData) => Promise<boolean>;
     isIntegrationAvailable: boolean;
   };
   
@@ -191,7 +238,33 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   } = options;
   
   const dispatch = useDispatch();
-  
+  const flowState = useSelector(selectCBTFlowState);
+  const hasStartedSessionRef = useRef(false);
+  const ensureActiveSession = useCallback(() => {
+    if (flowState?.status && flowState.status !== 'idle') {
+      hasStartedSessionRef.current = false;
+      return;
+    }
+    if (hasStartedSessionRef.current) return;
+    hasStartedSessionRef.current = true;
+    const existingId = flowState?.sessionId;
+    dispatch(startCBTSession({ sessionId: existingId ?? `cbt-${generateUUID()}` }));
+  }, [dispatch, flowState?.status, flowState?.sessionId]);
+  const flowUpdate = useCallback(
+    <K extends CBTStepId>(stepId: K, payload: CBTStepPayloadMap[K]) => {
+      ensureActiveSession();
+      dispatch(applyCBTEvent({ type: 'UPDATE_STEP', stepId, payload }));
+    },
+    [dispatch, ensureActiveSession],
+  );
+  const flowClear = useCallback(
+    (stepId: CBTStepId) => {
+      ensureActiveSession();
+      dispatch(applyCBTEvent({ type: 'CLEAR_STEP', stepId }));
+    },
+    [dispatch, ensureActiveSession],
+  );
+
 
   const currentDraft = useSelector(selectCBTCurrentDraft);
   const sessionData = useSelector(selectCBTSessionData);
@@ -211,10 +284,10 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     
     autoSaveTimeout.current = setTimeout(() => {
       if (data?.situation) {
-        dispatch(updateSituation({
+        flowUpdate('situation', {
           situation: data.situation,
-          date: data.date || new Date().toISOString().split('T')[0]
-        }));
+          date: data.date || new Date().toISOString().split('T')[0],
+        });
       }
 
 
@@ -230,11 +303,11 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
           other: data.initialEmotions.other || '',
           otherIntensity: data.initialEmotions.otherIntensity || 0,
         };
-        dispatch(updateEmotions(emotions));
+        flowUpdate('emotions', emotions as EmotionData);
       }
     }, options.autoSaveDelay || 600);
 
-  }, [dispatch, options.autoSaveDelay]);
+  }, [flowUpdate, options.autoSaveDelay]);
 
   useEffect(() => {
     return () => {
@@ -321,47 +394,62 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       const draftId = `cbt-draft-${generateUUID()}`;
       dispatch(createDraft({ id: draftId }));
 
+      if (!sessionData?.sessionId) {
+        dispatch(startCBTSession({ sessionId: `cbt-${generateUUID()}` }));
+      }
+
       if (draft.situation) {
         const situationData = { situation: draft.situation, date: draft.date };
-        dispatch(updateSituation(situationData));
+        flowUpdate('situation', situationData);
 
       }
 
       if (draft.initialEmotions) {
-        dispatch(updateEmotions(draft.initialEmotions as unknown as EmotionData));
+        flowUpdate('emotions', draft.initialEmotions as unknown as EmotionData);
 
       }
 
       if (Array.isArray(draft.automaticThoughts) && draft.automaticThoughts.length > 0) {
-        dispatch(updateThoughts(draft.automaticThoughts as unknown as ThoughtData[]));
+        flowUpdate('thoughts', draft.automaticThoughts as unknown as ThoughtData[]);
 
       }
 
       if (draft.coreBeliefText && draft.coreBeliefText.trim().length > 0) {
-        dispatch(updateCoreBeliefs([
-          { coreBeliefText: draft.coreBeliefText, coreBeliefCredibility: draft.coreBeliefCredibility }
-        ] as unknown as CoreBeliefData[]));
+        flowUpdate(
+          'core-belief',
+          {
+            coreBeliefText: draft.coreBeliefText,
+            coreBeliefCredibility: draft.coreBeliefCredibility,
+          } as unknown as CoreBeliefData,
+        );
 
       }
 
       if (Array.isArray(draft.challengeQuestions)) {
-        dispatch(updateChallengeQuestions(draft.challengeQuestions as unknown as ChallengeQuestionData[]));
+        flowUpdate('challenge-questions', {
+          challengeQuestions: draft.challengeQuestions as unknown as ChallengeQuestionData[],
+        } as ChallengeQuestionsData);
 
       }
 
       if (Array.isArray(draft.rationalThoughts)) {
-        dispatch(updateRationalThoughts(draft.rationalThoughts as unknown as RationalThoughtData[]));
+        flowUpdate('rational-thoughts', {
+          rationalThoughts: draft.rationalThoughts as unknown as RationalThoughtData[],
+        } as RationalThoughtsData);
 
       }
 
       if (Array.isArray(draft.schemaModes)) {
-        const mapped = draft.schemaModes.map((m) => ({
-          mode: m.name,
-          description: m.description,
-          intensity: typeof m.intensity === 'number' ? m.intensity : 5,
-          isActive: !!m.selected,
+        const mapped: SchemaMode[] = draft.schemaModes.map((mode, index) => ({
+          id: mode.id ?? mode.name ?? `legacy-schema-mode-${index}`,
+          name: mode.name ?? mode.id ?? `Schema Mode ${index + 1}`,
+          description: mode.description ?? '',
+          selected: Boolean(mode.selected),
+          intensity: typeof mode.intensity === 'number' ? mode.intensity : 5,
         }));
-        dispatch(updateSchemaModes(mapped as unknown as SchemaModeData[]));
+        flowUpdate('schema-modes', {
+          selectedModes: mapped,
+        });
 
       }
 
@@ -371,7 +459,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
           originalThoughtCredibility: draft.originalThoughtCredibility,
           newBehaviors: draft.newBehaviors,
         } as unknown as ActionPlanData;
-        dispatch(updateActionPlan(actionPlan));
+        flowUpdate('actions', actionPlan);
       }
 
       // Clean up old localStorage data
@@ -392,7 +480,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       });
       localStorage.setItem(migrationKey, 'true');
     }
-  }, [dispatch, sessionData]);
+  }, [dispatch, sessionData, flowUpdate]);
 
   const draftActions = useMemo(() => ({
     create: (id?: string) => {
@@ -437,100 +525,142 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     },
     
     updateSituation: (data: SituationData) => {
-      dispatch(updateSituation(data));
+      flowUpdate('situation', data);
     },
     
     updateEmotions: (data: EmotionData) => {
-      dispatch(updateEmotions(data));
+      flowUpdate('emotions', data);
     },
     
     clearEmotions: () => {
-      dispatch(clearEmotions());
+      flowClear('emotions');
     },
 
-  }), [dispatch, currentSessionId]);
+  }), [dispatch, currentSessionId, flowUpdate, flowClear]);
   
   const thoughtActions = useMemo(() => ({
     updateThoughts: (data: ThoughtData[]) => {
-      dispatch(updateThoughts(data));
-    },
-    
-    addThought: (data: ThoughtData) => {
-      dispatch(addThought(data));
-    },
-    
-    removeThought: (index: number) => {
-      dispatch(removeThought(index));
+      flowUpdate('thoughts', data);
     },
 
-  }), [dispatch]);
+    addThought: (data: ThoughtData) => {
+      const next = [...(sessionData.thoughts ?? []), data];
+      flowUpdate('thoughts', next);
+    },
+
+    removeThought: (index: number) => {
+      const current = sessionData.thoughts ?? [];
+      const next = current.filter((_, i) => i !== index);
+      if (next.length === 0) {
+        flowClear('thoughts');
+      } else {
+        flowUpdate('thoughts', next);
+      }
+    },
+
+  }), [flowUpdate, flowClear, sessionData.thoughts]);
   
   const beliefActions = useMemo(() => ({
     updateCoreBeliefs: (data: CoreBeliefData[]) => {
-      dispatch(updateCoreBeliefs(data));
-    },
-    
-    addCoreBelief: (data: CoreBeliefData) => {
-      dispatch(addCoreBelief(data));
-    },
-    
-    removeCoreBelief: (index: number) => {
-      dispatch(removeCoreBelief(index));
+      if (!data?.length) {
+        flowClear('core-belief');
+        return;
+      }
+      flowUpdate('core-belief', data[0]);
     },
 
-  }), [dispatch]);
+    addCoreBelief: (data: CoreBeliefData) => {
+      flowUpdate('core-belief', data);
+    },
+
+    removeCoreBelief: (index: number) => {
+      if (index === 0) {
+        flowClear('core-belief');
+      }
+    },
+
+  }), [flowUpdate, flowClear]);
   
   const challengeActions = useMemo(() => ({
     updateChallengeQuestions: (data: ChallengeQuestionData[]) => {
-      dispatch(updateChallengeQuestions(data));
-    },
-    
-    addChallengeQuestion: (data: ChallengeQuestionData) => {
-      dispatch(addChallengeQuestion(data));
-    },
-    
-    removeChallengeQuestion: (index: number) => {
-      dispatch(removeChallengeQuestion(index));
+      flowUpdate('challenge-questions', { challengeQuestions: data } as ChallengeQuestionsData);
     },
 
-  }), [dispatch]);
+    addChallengeQuestion: (data: ChallengeQuestionData) => {
+      const current = sessionData.challengeQuestions ?? [];
+      flowUpdate('challenge-questions', { challengeQuestions: [...current, data] } as ChallengeQuestionsData);
+    },
+
+    removeChallengeQuestion: (index: number) => {
+      const current = sessionData.challengeQuestions ?? [];
+      const next = current.filter((_, i) => i !== index);
+      if (next.length === 0) {
+        flowClear('challenge-questions');
+      } else {
+        flowUpdate('challenge-questions', { challengeQuestions: next } as ChallengeQuestionsData);
+      }
+    },
+
+  }), [flowUpdate, flowClear, sessionData.challengeQuestions]);
   
   const rationalActions = useMemo(() => ({
     updateRationalThoughts: (data: RationalThoughtData[]) => {
-      dispatch(updateRationalThoughts(data));
-    },
-    
-    addRationalThought: (data: RationalThoughtData) => {
-      dispatch(addRationalThought(data));
-    },
-    
-    removeRationalThought: (index: number) => {
-      dispatch(removeRationalThought(index));
+      flowUpdate('rational-thoughts', { rationalThoughts: data } as RationalThoughtsData);
     },
 
-  }), [dispatch]);
+    addRationalThought: (data: RationalThoughtData) => {
+      const current = sessionData.rationalThoughts ?? [];
+      flowUpdate('rational-thoughts', { rationalThoughts: [...current, data] } as RationalThoughtsData);
+    },
+
+    removeRationalThought: (index: number) => {
+      const current = sessionData.rationalThoughts ?? [];
+      const next = current.filter((_, i) => i !== index);
+      if (next.length === 0) {
+        flowClear('rational-thoughts');
+      } else {
+        flowUpdate('rational-thoughts', { rationalThoughts: next } as RationalThoughtsData);
+      }
+    },
+
+  }), [flowUpdate, flowClear, sessionData.rationalThoughts]);
   
   const schemaActions = useMemo(() => ({
     updateSchemaModes: (data: SchemaModeData[]) => {
-      dispatch(updateSchemaModes(data));
-    },
-    
-    toggleSchemaMode: (index: number, isActive: boolean) => {
-      dispatch(toggleSchemaMode({ index, isActive }));
+      const mapped: SchemaMode[] = data.map((mode, index) => ({
+        id: mode.mode ?? `schema-mode-${index}`,
+        name: mode.mode ?? `Schema Mode ${index + 1}`,
+        description: mode.description ?? '',
+        selected: Boolean(mode.isActive),
+        intensity: typeof mode.intensity === 'number' ? mode.intensity : 0,
+      }));
+      flowUpdate('schema-modes', { selectedModes: mapped });
     },
 
-  }), [dispatch]);
+    toggleSchemaMode: (index: number, isActive: boolean) => {
+      const current = sessionData.schemaModes ?? [];
+      const mapped: SchemaMode[] = current.map((mode, idx) => ({
+        id: mode.mode ?? `schema-mode-${idx}`,
+        name: mode.mode ?? `Schema Mode ${idx + 1}`,
+        description: mode.description ?? '',
+        selected: idx === index ? isActive : Boolean(mode.isActive),
+        intensity: typeof mode.intensity === 'number' ? mode.intensity : 0,
+      }));
+      flowUpdate('schema-modes', { selectedModes: mapped });
+    },
+
+  }), [flowUpdate, sessionData.schemaModes]);
   
   const actionActions = useMemo(() => ({
     updateActionPlan: (data: ActionPlanData) => {
-      dispatch(updateActionPlan(data));
+      flowUpdate('actions', data);
     },
 
-  }), [dispatch]);
+  }), [flowUpdate]);
   
   const navigation = useMemo(() => {
     const currentStep = validationState?.currentStep || 1;
-    const maxSteps = 8;
+    const maxSteps = TOTAL_CBT_STEPS;
     
     return {
       currentStep,
@@ -591,7 +721,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       sessionData?.actionPlan,
     ].filter(Boolean).length : 0;
     
-    const totalSteps = 8;
+    const totalSteps = TOTAL_CBT_STEPS;
     
     return {
       isSubmitting: validationState?.isSubmitting || false,
@@ -607,23 +737,24 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   }, [validationState?.isSubmitting, lastAutoSave, sessionData, isSavingUI]);
   
   const chatIntegration = useMemo(() => ({
-    sendToChat: async (message: string): Promise<boolean> => {
-      if (!enableChatIntegration || !currentSessionId) return false;
-      
-      try {
-        const result = await chatBridge.sendChatMessage(message, currentSessionId);
-        return result;
-      } catch (error) {
-        logger.therapeuticOperation('Failed to send CBT data to chat', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          operation: 'sendCBTDataToChat'
-        });
-        return false;
-      }
+    sendSessionSummary: async (): Promise<boolean> => {
+      if (!enableChatIntegration || !currentSessionId || !flowState) return false;
+      return chatBridge.sendSessionSummary(flowState, currentSessionId);
     },
-    
+    sendStepCard: async (stepId: CBTStepId, options?: SendStepOptions): Promise<boolean> => {
+      if (!enableChatIntegration || !currentSessionId || !flowState) return false;
+      return chatBridge.sendStepCard(stepId, flowState.context, currentSessionId, options);
+    },
+    sendAllCompletedSteps: async (): Promise<boolean> => {
+      if (!enableChatIntegration || !currentSessionId || !flowState) return false;
+      return chatBridge.sendAllCompletedSteps(flowState.context, currentSessionId);
+    },
+    sendEmotionComparison: async (initial: EmotionData, final: EmotionData): Promise<boolean> => {
+      if (!enableChatIntegration || !currentSessionId) return false;
+      return chatBridge.sendEmotionComparison(initial, final, currentSessionId);
+    },
     isIntegrationAvailable: enableChatIntegration && !!currentSessionId,
-  }), [enableChatIntegration, currentSessionId, chatBridge]);
+  }), [enableChatIntegration, currentSessionId, chatBridge, flowState]);
   
   const utilities = useMemo(() => ({
     exportData: (): string => {
@@ -632,37 +763,15 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     },
     
     generateSummary: (): string => {
-      if (!sessionData) return '';
-      
-      const sections = [];
-      
-      if (sessionData?.situation) {
-        sections.push(`**Situation:** ${sessionData?.situation.situation}`);
-      }
-      
-      if (sessionData?.emotions) {
-        const emotions = Object.entries(sessionData?.emotions)
-          .filter(([key, value]) => key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0)
-          .map(([emotion, intensity]) => `${emotion}: ${intensity}/10`);
-        if (emotions.length > 0) {
-          sections.push(`**Emotions:** ${emotions.join(', ')}`);
-        }
-      }
-      
-      if (sessionData?.thoughts.length > 0) {
-        sections.push(`**Thoughts:** ${sessionData?.thoughts.map(t => t.thought).join('; ')}`);
-      }
-      
-      return sections.join('\n\n');
+      if (!flowState) return '';
+      return buildMarkdownSummary(flowState);
     },
-    
+
     getFormattedOutput: (): string => {
-      if (!currentDraft) return '';
-      
-      return `<!-- CBT_SUMMARY_CARD:${JSON.stringify(currentDraft.data)} -->
-<!-- END_CBT_SUMMARY_CARD -->`;
+      if (!flowState) return '';
+      return buildSessionSummaryCard(flowState);
     },
-  }), [currentDraft, sessionData]);
+  }), [currentDraft, flowState]);
   
   return {
     // Current State
@@ -708,6 +817,12 @@ export function useUnifiedCBTSelector<T>(
 
 export function useUnifiedCBTActions() {
   const dispatch = useDispatch();
+  const updateStep = useCallback(
+    <K extends CBTStepId>(stepId: K, payload: CBTStepPayloadMap[K]) => {
+      dispatch(applyCBTEvent({ type: 'UPDATE_STEP', stepId, payload }));
+    },
+    [dispatch],
+  );
   
   return useMemo(() => ({
     createDraft: (id: string) => dispatch(createDraft({ id })),
@@ -716,13 +831,13 @@ export function useUnifiedCBTActions() {
     deleteDraft: (id: string) => dispatch(deleteDraft(id)),
     startSession: (sessionId: string) => dispatch(startCBTSession({ sessionId })),
     clearSession: () => dispatch(clearCBTSession()),
-    updateSituation: (data: SituationData) => dispatch(updateSituation(data)),
-    updateEmotions: (data: EmotionData) => dispatch(updateEmotions(data)),
-    addThought: (data: ThoughtData) => dispatch(addThought(data)),
-    addCoreBelief: (data: CoreBeliefData) => dispatch(addCoreBelief(data)),
+    updateSituation: (data: SituationData) => updateStep('situation', data),
+    updateEmotions: (data: EmotionData) => updateStep('emotions', data),
+    addThought: (data: ThoughtData) => updateStep('thoughts', [data]),
+    addCoreBelief: (data: CoreBeliefData) => updateStep('core-belief', data),
     setCurrentStep: (step: number) => dispatch(setCurrentStep(step)),
     setSubmitting: (isSubmitting: boolean) => dispatch(setSubmitting(isSubmitting)),
-  }), [dispatch]);
+  }), [dispatch, updateStep]);
 }
 
 export const useUnifiedCBT = useCBTDataManager;

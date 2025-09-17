@@ -18,11 +18,10 @@ import {
   type ActionPlanData,
   type CoreBeliefData
 } from './index';
-import type { ChallengeQuestionsData, RationalThoughtsData } from '@/types/therapy';
-import type { CBTStep } from '../hooks/use-cbt-chat-experience';
+import type { ChallengeQuestionsData, RationalThoughtsData, CBTStepType } from '@/types/therapy';
 
 interface CBTMessageProps {
-  step: CBTStep;
+  step: CBTStepType;
   stepNumber: number;
   totalSteps: number;
   onSituationComplete?: (data: SituationData) => void;

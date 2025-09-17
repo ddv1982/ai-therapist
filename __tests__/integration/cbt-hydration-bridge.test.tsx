@@ -1,17 +1,18 @@
 import React from 'react';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { store } from '@/store';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
+import { applyCBTEvent, clearCBTSession, startCBTSession } from '@/store/slices/cbtSlice';
 
 describe('CBT Redux-only persistence', () => {
   beforeEach(() => {
     try { localStorage.clear(); } catch {}
     // Reset the Redux store
-    store.dispatch({ type: 'cbt/clearCBTSession' });
+    store.dispatch(clearCBTSession());
   });
 
-  it('migrates localStorage draft to Redux once', () => {
+  it('migrates localStorage draft to Redux once', async () => {
     const draft = {
       date: '2025-01-01',
       situation: 'Migration test',
@@ -40,27 +41,19 @@ describe('CBT Redux-only persistence', () => {
     );
 
     const { result } = renderHook(() => useCBTDataManager(), { wrapper });
-    // Trigger effects
     void result.current;
 
-    // Wait a bit for the migration effect to run
-    return new Promise(resolve => {
-      setTimeout(() => {
-        // Check that situation was migrated
-        const state = store.getState().cbt.sessionData;
-        expect(state.situation?.situation).toBe('Migration test');
-        expect(state.emotions?.fear).toBe(1);
+    await waitFor(() => {
+      const flow = store.getState().cbt.flow;
+      expect(flow.context.situation?.situation).toBe('Migration test');
+      expect(flow.context.emotions?.fear).toBe(1);
+    }, { timeout: 2000 });
 
-        // Check that localStorage was cleaned up
-        expect(localStorage.getItem('cbt-draft')).toBeNull();
-        expect(localStorage.getItem('cbt-migration-completed')).toBe('true');
-
-        resolve(void 0);
-      }, 100);
-    });
+    expect(localStorage.getItem('cbt-draft')).toBeNull();
+    expect(localStorage.getItem('cbt-migration-completed')).toBe('true');
   });
 
-  it('does not migrate if Redux already has data', () => {
+  it('does not migrate if Redux already has data', async () => {
     const draft = {
       date: '2025-01-01',
       situation: 'Should not migrate',
@@ -73,31 +66,27 @@ describe('CBT Redux-only persistence', () => {
     try { localStorage.setItem('cbt-draft', JSON.stringify(draft)); } catch {}
 
     // Pre-populate Redux with data
-    store.dispatch({
-      type: 'cbt/updateSituation',
-      payload: { situation: 'Existing Redux data', date: '2025-01-01' }
-    });
+    store.dispatch(startCBTSession({ sessionId: 'existing-session' }));
+    store.dispatch(
+      applyCBTEvent({
+        type: 'UPDATE_STEP',
+        stepId: 'situation',
+        payload: { situation: 'Existing Redux data', date: '2025-01-01' },
+      })
+    );
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
       <Provider store={store}>{children}</Provider>
     );
 
     const { result } = renderHook(() => useCBTDataManager(), { wrapper });
-    // Trigger effects
     void result.current;
 
-    // Wait a bit for the migration effect to run
-    return new Promise(resolve => {
-      setTimeout(() => {
-        // Check that existing Redux data was preserved
-        const state = store.getState().cbt.sessionData;
-        expect(state.situation?.situation).toBe('Existing Redux data');
+    await waitFor(() => {
+      const flow = store.getState().cbt.flow;
+      expect(flow.context.situation?.situation).toBe('Existing Redux data');
+    }, { timeout: 2000 });
 
-        // Check that localStorage draft was not cleaned up (migration didn't run)
-        expect(localStorage.getItem('cbt-draft')).toBe(JSON.stringify(draft));
-
-        resolve(void 0);
-      }, 100);
-    });
+    expect(localStorage.getItem('cbt-draft')).toBe(JSON.stringify(draft));
   });
 });

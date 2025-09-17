@@ -2,12 +2,13 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { store } from '@/store';
+import { clearCBTSession } from '@/store/slices/cbtSlice';
 import { CBTForm } from '@/features/therapy/cbt/cbt-form';
 
 describe('CBTForm', () => {
   beforeEach(() => {
     // Reset the Redux store before each test
-    store.dispatch({ type: 'cbt/clearCBTSession' });
+    store.dispatch(clearCBTSession());
   });
 
   it('renders and validates situation field', async () => {
@@ -46,7 +47,7 @@ describe('CBTForm', () => {
     await new Promise(resolve => setTimeout(resolve, 700));
 
     // Check that data was saved to Redux
-    const state = store.getState().cbt.sessionData;
-    expect(state.situation?.situation).toBe('Test situation for Redux auto-save');
+    const flow = store.getState().cbt.flow;
+    expect(flow.context.situation?.situation).toBe('Test situation for Redux auto-save');
   });
 });
