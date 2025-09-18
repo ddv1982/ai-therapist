@@ -13,7 +13,7 @@ STAMP_NODE := node_modules/.installed
 SHELL := /bin/sh
 
 .PHONY: help setup dev start build bootstrap install env db redis encryption prisma api-types playwright doctor \
-        lint fix tsc-check prisma-validate test test-watch coverage e2e e2e-ui e2e-debug \
+        lint fix tsc-check prisma-validate test test-watch coverage e2e e2e-ui e2e-debug qa-smoke qa-full \
         db-studio migrate push generate clean clean-all redis-up redis-stop db-reset \
         auth-reset auth-setup auth-status auth-health
 
@@ -32,6 +32,8 @@ help: ## Show help
 	"  Daily dev           make setup             # or: make dev (after initial setup)" \
 	"  Run tests           make test              # unit/integration (Jest)" \
 	"  Run E2E             make e2e               # Playwright; auto-starts server" \
+"  QA (smoke)          make qa-smoke          # lint + typecheck + jest" \
+"  QA (full)           make qa-full           # smoke + coverage + e2e" \
 	"  Reset database      make db-reset          # deletes local DB and re-initializes" \
 	"  Prod build/start    make build && make start" \
 	"" \
@@ -138,6 +140,14 @@ e2e-ui: playwright ## Run Playwright E2E with UI
 
 e2e-debug: playwright ## Run Playwright E2E in debug mode
 	@npm run test:e2e:debug
+
+# ----- QA bundles -----
+
+qa-smoke: ## Lint, type-check, and run unit/integration tests
+	@npm run qa:smoke
+
+qa-full: ## Full QA: smoke + coverage + E2E
+	@npm run qa:full
 
 # ----- DB/Prisma utilities -----
 

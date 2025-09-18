@@ -1,5 +1,5 @@
 import { sendToChat } from '@/features/therapy/cbt/utils/send-to-chat';
-import type { CBTFlowState } from '@/features/therapy/cbt/flow';
+import type { CBTFlowState } from '@/features/therapy/cbt/flow/types';
 
 jest.mock('@/lib/api/client', () => ({
   apiClient: {
@@ -65,11 +65,11 @@ const sampleFlowState = (): CBTFlowState => ({
     schemaModes: {
       selectedModes: [
         {
-          mode: 'healthy-adult',
+          id: 'healthy-adult',
           name: 'Healthy Adult',
           description: 'Balanced perspective',
+          selected: true,
           intensity: 7,
-          isActive: true,
         },
       ],
     },

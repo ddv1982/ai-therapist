@@ -23,12 +23,14 @@ const mockRemoveToast = jest.fn((id) => {
 });
 
 // Mock hook for testing - intentionally unused
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const _useToast = () => ({
   toasts: mockToasts,
   showToast: mockShowToast,
   removeToast: mockRemoveToast,
 });
+
+// Mark as used to satisfy TypeScript unused variable checks in test context
+void _useToast;
 
 const ToastProvider = ({ children }: { children: React.ReactNode }) => {
   return <div data-testid="toast-provider">{children}</div>;

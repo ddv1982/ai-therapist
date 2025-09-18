@@ -71,3 +71,10 @@ Tracking implementation against refactorplan.md.
 ## Phase 6.4 – Security Settings
 - [x] Refactor SecuritySettings to use typed API client for devices/logout.
 - [x] Disable backup code regeneration in UI (server-side only).
+
+## Phase 7 – Testing & QA Strategy
+- [x] Expand Section 7 in `refactorplan.md` with detailed Testing & QA plan.
+- [x] Add documentation: `docs/testing/strategy.md` (test pyramid, gates, commands).
+- [x] Add manual QA checklist: `docs/testing/manual-qa-checklist.md`.
+- [x] Add npm scripts: `qa:smoke` and `qa:full`.
+- [x] Add Makefile targets: `qa-smoke` and `qa-full`.

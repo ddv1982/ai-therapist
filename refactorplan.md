@@ -121,11 +121,46 @@ This document captures the proposed restructuring of the AI Therapist codebase t
 - Prepare migration notes for team (changelog, follow-up tasks).
 
 ## 7. Testing & QA Strategy
-- Unit tests for new chat modules (model selector, streaming adapter, session service).
-- Contract tests for `createErrorResponse` and middleware wrappers.
-- Component tests for chat UI pieces using Testing Library.
-- Regression E2E flows (Playwright) for chat, CBT diary, memory management.
-- Manual QA across light/dark theme, mobile viewport, offline/online toggles.
+The goal is to prevent regressions while enabling rapid refactors. We follow a small-fast-first pyramid with quality gates.
+
+- Unit tests
+  - Chat modules: model selector, streaming adapter, session service, encryption utilities.
+  - API middleware units: auth, rate limit, validation, logging helpers.
+  - Deterministic factories and zod schemas for inputs/outputs.
+
+- Contract tests
+  - `createErrorResponse` and API wrappers to assert standardized `ApiResponse<T>` envelopes and `X-Request-Id` propagation.
+  - Typed-client parity checks against `docs/api.yaml` (generate types before tests).
+
+- Component tests
+  - Chat UI units (composer, message list, sidebar) with Testing Library.
+  - Accessibility assertions for interactive controls and focus management.
+
+- Integration tests
+  - Route-level tests for `/api/sessions/:id/messages` covering streaming happy-path, truncation, persistence, and error handling.
+  - Auth flows (login, TOTP verify) including device trust and logout.
+
+- E2E (Playwright)
+  - Regression flows: chat streaming, CBT diary (full flow), memory banner/reporting, device management.
+  - Desktop Safari/Firefox/Chrome projects enabled; screenshots, video, and traces on failure.
+
+- Manual QA checklist
+  - Light/dark themes, mobile viewport (iPhone 12) UI sanity.
+  - Offline/online toggles and retry UX.
+  - First-load behavior (no sessions), new-session creation, report export.
+
+- Gates and thresholds
+  - Jest coverage thresholds (global): branches/functions/lines/statements ≥ 70% (enforced in `jest.config.js`).
+  - Smoke gate: lint + typecheck + unit/integration tests must pass before merging.
+  - Full gate (pre-release): add Playwright E2E in CI with retries on CI only.
+
+- Commands (developer ergonomics)
+  - Smoke: `npm run qa:smoke` or `make qa-smoke` → eslint + `tsc --noEmit` + jest.
+  - Full: `npm run qa:full` or `make qa-full` → smoke + jest coverage + playwright.
+
+- CI recommendations
+  - Cache node_modules and Playwright browsers; run `api:types` before tests.
+  - Upload HTML reports for Playwright; store coverage `lcov.info` as artifact.
 
 ## 8. Risks & Mitigations
 | Risk | Mitigation |

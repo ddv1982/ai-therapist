@@ -88,13 +88,13 @@ describe('SessionReportViewer', () => {
 
       expect(screen.getByText('Key Therapeutic Insights')).toBeInTheDocument();
       // Check if insights are rendered as badge elements (they may be truncated at 40 chars)
-      const cbtInsights = screen.getAllByText((content, element) => {
-        return element?.textContent?.includes('Significant progress in CBT');
+      const cbtInsights = screen.getAllByText((_, element) => {
+        return !!element?.textContent?.includes('Significant progress in CBT');
       });
       expect(cbtInsights.length).toBeGreaterThan(0);
       
-      const thoughtInsights = screen.getAllByText((content, element) => {
-        return element?.textContent?.includes('Improved understanding of thought');
+      const thoughtInsights = screen.getAllByText((_, element) => {
+        return !!element?.textContent?.includes('Improved understanding of thought');
       });
       expect(thoughtInsights.length).toBeGreaterThan(0);
     });
@@ -134,13 +134,13 @@ describe('SessionReportViewer', () => {
       render(<SessionReportViewer reportDetail={longInsightReport} />);
 
       // Long insight should be truncated - check for truncated text with ellipsis
-      const truncatedInsights = screen.getAllByText((content, element) => {
-        return element?.textContent?.includes('This is a very long therapeutic insight') && 
-               element?.textContent?.includes('...');
+      const truncatedInsights = screen.getAllByText((_, element) => {
+        return !!(element?.textContent?.includes('This is a very long therapeutic insight') && 
+               element?.textContent?.includes('...'));
       });
       expect(truncatedInsights.length).toBeGreaterThan(0);
       // Short insight should not be truncated
-      const shortInsights = screen.getAllByText((content, element) => {
+      const shortInsights = screen.getAllByText((_, element) => {
         return element?.textContent === 'Short insight';
       });
       expect(shortInsights.length).toBeGreaterThan(0);

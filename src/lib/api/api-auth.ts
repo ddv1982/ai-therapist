@@ -28,6 +28,10 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthValidat
   const headerHost = request.headers.get('host') || '';
   const forwardedHost = request.headers.get('x-forwarded-host');
   let host = headerHost;
+  // If Host header is unavailable (forbidden header in some polyfills), fallback to forwarded host
+  if (!host && forwardedHost) {
+    host = forwardedHost;
+  }
   try {
     // Fallback to URL parsing when host header is unavailable in test mocks
     if (!host) {

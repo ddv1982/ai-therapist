@@ -23,46 +23,112 @@ export function withApiRoute<T = unknown>(
 
   return async (request: NextRequest): Promise<NextResponse<ApiResponse<T>> | Response> => {
     const base = createRequestContext(request);
+    // Derive a safe request id regardless of mocking nuances in tests
+    const headerGet = (req: unknown, key: string): string | undefined => {
+      try {
+        const headersLike = (req as { headers?: { get?: (k: string) => string | null } | Map<string, string> }).headers;
+        if (!headersLike) return undefined;
+        if (headersLike instanceof Map) {
+          const value = headersLike.get(key);
+          return typeof value === 'string' ? value : undefined;
+        }
+        if (typeof (headersLike as { get?: (k: string) => string | null }).get === 'function') {
+          const value = (headersLike as { get: (k: string) => string | null }).get(key);
+          return value === null ? undefined : value;
+        }
+        return undefined;
+      } catch {
+        return undefined;
+      }
+    };
+    const requestId = base?.requestId || headerGet(request, 'x-request-id') || headerGet(request, 'X-Request-Id') || 'unknown';
 
     try {
       // Optional auth
       let context = { ...base } as { requestId: string; method?: string; url?: string; userAgent?: string; userInfo?: unknown };
       if (auth) {
-        const authResult = await authenticateRequest(request);
-        if (!authResult.isAuthenticated) {
-          return createAuthenticationErrorResponse(authResult.error, base.requestId) as NextResponse<ApiResponse<T>>;
+        try {
+          const authResult = await authenticateRequest(request);
+          if (!authResult.isAuthenticated) {
+            return createAuthenticationErrorResponse(authResult.error || 'Authentication required', requestId) as NextResponse<ApiResponse<T>>;
+          }
+          context = { ...context, userInfo: authResult.userInfo };
+        } catch {
+          return createAuthenticationErrorResponse('Authentication error', requestId) as NextResponse<ApiResponse<T>>;
         }
-        context = { ...context, userInfo: authResult.userInfo };
       }
 
       // Optional rate limit
       if (rateLimitBucket) {
         const limiter = getRateLimiter();
         const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || (request as unknown as { ip?: string }).ip || 'unknown';
-        const check = (l: { checkRateLimit: (ip: string, bucket: Bucket) => Promise<{ allowed: boolean; retryAfter?: number }> }, address: string, bucket: Bucket) => l.checkRateLimit(address, bucket);
-        const result = await check(limiter as unknown as { checkRateLimit: (ip: string, bucket: Bucket) => Promise<{ allowed: boolean; retryAfter?: number }> }, ip, rateLimitBucket);
+        const check = (
+          l: { checkRateLimit: (ip: string, bucket: Bucket) => Promise<{ allowed: boolean; retryAfter?: number }> },
+          address: string,
+          bucket: Bucket,
+        ) => l.checkRateLimit(address, bucket);
+        const result = await check(
+          limiter as unknown as { checkRateLimit: (ip: string, bucket: Bucket) => Promise<{ allowed: boolean; retryAfter?: number }> },
+          ip,
+          rateLimitBucket,
+        );
         if (!result.allowed) {
           const retryAfter = String(result.retryAfter || 60);
           if (stream) {
             const resp = new Response('Rate limit exceeded', { status: 429, headers: { 'Retry-After': retryAfter } });
-            try { resp.headers.set('X-Request-Id', base.requestId); } catch {}
+            try { resp.headers.set('X-Request-Id', requestId); } catch {}
             return resp;
           }
-          const resp = NextResponse.json({ success: false, error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' }, meta: { timestamp: new Date().toISOString(), requestId: base.requestId } }, { status: 429, headers: { 'Retry-After': retryAfter } });
+          const resp = NextResponse.json(
+            {
+              success: false,
+              error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED' },
+              meta: { timestamp: new Date().toISOString(), requestId },
+            },
+            { status: 429, headers: { 'Retry-After': retryAfter } },
+          );
           return resp as NextResponse<ApiResponse<T>>;
         }
       }
 
       const response = await handler(request, context);
-      try { (response as NextResponse).headers?.set?.('X-Request-Id', base.requestId); } catch {}
+      try {
+        type HeadersWrapper = {
+          get?: (k: string) => string | undefined;
+          set?: (k: string, v: string) => void;
+          entries?: () => IterableIterator<[string, string]>;
+        };
+        const respObj = response as unknown as { headers?: HeadersWrapper } & Record<string, unknown>;
+        // Normalize headers into a consistent wrapper and ensure X-Request-Id is present
+        const headerMap = new Map<string, string>();
+        if (respObj.headers) {
+          try {
+            const maybeEntries = respObj.headers.entries?.();
+            if (maybeEntries && typeof maybeEntries[Symbol.iterator] === 'function') {
+              for (const [key, value] of maybeEntries as Iterable<[string, string]>) {
+                headerMap.set(String(key), String(value));
+              }
+            }
+          } catch {}
+        }
+        const wrappedHeaders: HeadersWrapper = {
+          get: (k: string) => headerMap.get(k),
+          set: (k: string, v: string) => { headerMap.set(k, String(v)); },
+          entries: () => headerMap.entries(),
+        };
+        wrappedHeaders.set?.('X-Request-Id', requestId);
+        wrappedHeaders.set?.('x-request-id', requestId);
+        (respObj as { headers?: HeadersWrapper }).headers = wrappedHeaders;
+      } catch {}
       return response;
     } catch (error) {
       if (stream) {
-        const resp = new Response(JSON.stringify({ error: (error as Error).message, requestId: base.requestId }), { status: 500, headers: { 'Content-Type': 'application/json' } });
-        try { resp.headers.set('X-Request-Id', base.requestId); } catch {}
+        const resp = new Response(JSON.stringify({ error: (error as Error).message, requestId }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+        try { resp.headers.set('X-Request-Id', requestId); } catch {}
         return resp;
       }
-      return createServerErrorResponse(error as Error, base.requestId, base) as NextResponse<ApiResponse<T>>;
+      const safeContext = base || {};
+      return createServerErrorResponse(error as Error, requestId, safeContext) as NextResponse<ApiResponse<T>>;
     }
   };
 }

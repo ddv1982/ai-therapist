@@ -218,28 +218,48 @@ jest.mock('next/server', () => ({
   NextRequest: jest.fn().mockImplementation((url, init) => ({
     url,
     method: init?.method || 'GET',
-    headers: new Map(Object.entries(init?.headers || {})),
-    cookies: new Map(),
-    nextUrl: { pathname: new URL(url).pathname },
+    headers: new Headers(init?.headers || {}),
+    cookies: {
+      get: (key) => {
+        const cookieHeader = (init?.headers && (init.headers['cookie'] || init.headers['Cookie'])) || '';
+        if (!cookieHeader) return undefined;
+        const map = new Map(String(cookieHeader).split(/;\s*/).filter(Boolean).map((p) => p.split('=')));
+        const value = map.get(key);
+        return value ? { name: key, value } : undefined;
+      },
+      set: jest.fn(),
+      delete: jest.fn(),
+    },
+    nextUrl: { pathname: new URL(url).pathname, host: new URL(url).host },
     json: jest.fn(),
     text: jest.fn(),
     clone: jest.fn(),
   })),
   NextResponse: {
-    json: jest.fn((data, init) => {
-      const headers = new Map(Object.entries(init?.headers || {}));
+    json: (data, init) => {
+      const initial = init || {};
+      const headerMap = new Map(Object.entries(initial.headers || {}));
+      // Provide a DOM-like Headers API subset used by our code/tests
+      const headers = {
+        _map: headerMap,
+        get: (key) => headerMap.get(key),
+        set: (key, value) => headerMap.set(key, String(value)),
+        has: (key) => headerMap.has(key),
+        delete: (key) => headerMap.delete(key),
+        entries: () => headerMap.entries(),
+      };
       const body = JSON.stringify(data);
       return {
-        status: init?.status || 200,
+        status: initial.status || 200,
         headers,
         body,
         json: async () => data,
         text: async () => body,
         cookies: { set: jest.fn(), delete: jest.fn() },
       };
-    }),
-    next: jest.fn(),
-    redirect: jest.fn(),
+    },
+    next: () => ({ type: 'next', cookies: { set: jest.fn(), delete: jest.fn() } }),
+    redirect: (_url, _status) => ({ type: 'redirect', cookies: { set: jest.fn(), delete: jest.fn() } }),
   },
 }))
 

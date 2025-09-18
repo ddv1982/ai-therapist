@@ -2,27 +2,13 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { store } from '@/store';
 import { Message } from '@/features/chat/messages';
-import chatReducer from '@/store/slices/chatSlice';
-import sessionsReducer from '@/store/slices/sessionsSlice';
-import cbtReducer from '@/store/slices/cbtSlice';
-
-// Create a test store
-const createTestStore = (preloadedState?: any) => {
-  return configureStore({
-    reducer: {
-      chat: chatReducer,
-      sessions: sessionsReducer,
-      cbt: cbtReducer,
-    },
-    preloadedState,
-  });
-};
+// reducers are provided by the app store; individual imports are unnecessary here
 
 // Test wrapper with Redux Provider
-const TestWrapper = ({ children, initialState }: { children: React.ReactNode; initialState?: any }) => (
-  <Provider store={createTestStore(initialState)}>
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Provider store={store}>
     {children}
   </Provider>
 );
