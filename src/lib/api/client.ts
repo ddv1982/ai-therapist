@@ -89,20 +89,20 @@ export class ApiClient {
   // Reports (legacy POST /api/reports removed)
 
   // Reports (detailed generate endpoint)
-  async generateReportDetailed(body: paths['/reports/generate']['post']['requestBody']['content']['application/json']) {
-    return this.request<unknown>('/api/reports/generate', {
+  async generateReportDetailed(body: paths['/reports/generate']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<{ reportContent: string; modelUsed: string; modelDisplayName: string; cbtDataSource: string; cbtDataAvailable: boolean }>> {
+    return this.request<ApiResponse<{ reportContent: string; modelUsed: string; modelDisplayName: string; cbtDataSource: string; cbtDataAvailable: boolean }>>('/api/reports/generate', {
       method: 'POST',
       body: JSON.stringify(body),
     });
   }
 
   // Current session
-  async getCurrentSession(): Promise<{ success?: boolean; data?: { currentSession?: { id: string; messageCount?: number } }; currentSession?: { id: string; messageCount?: number } } | null> {
-    return this.request('/api/sessions/current');
+  async getCurrentSession(): Promise<ApiResponse<{ currentSession: { id: string; title: string; startedAt: string; updatedAt: string; status: string; messageCount: number } | null }>> {
+    return this.request<ApiResponse<{ currentSession: { id: string; title: string; startedAt: string; updatedAt: string; status: string; messageCount: number } | null }>>('/api/sessions/current');
   }
 
-  async setCurrentSession(sessionId: string): Promise<{ success?: boolean } | null> {
-    return this.request('/api/sessions/current', {
+  async setCurrentSession(sessionId: string): Promise<ApiResponse<{ success: boolean; session: components['schemas']['Session'] }>> {
+    return this.request<ApiResponse<{ success: boolean; session: components['schemas']['Session'] }>>('/api/sessions/current', {
       method: 'POST',
       body: JSON.stringify({ sessionId }),
     });
@@ -114,8 +114,8 @@ export class ApiClient {
   }
 
   // Auth/session status
-  async getSessionStatus(): Promise<unknown> {
-    return this.request<unknown>('/api/auth/session');
+  async getSessionStatus(): Promise<ApiResponse<{ isAuthenticated: boolean; needsSetup: boolean; needsVerification: boolean; device?: { name: string; deviceId: string } }>> {
+    return this.request<ApiResponse<{ isAuthenticated: boolean; needsSetup: boolean; needsVerification: boolean; device?: { name: string; deviceId: string } }>>('/api/auth/session');
   }
 
   async revokeCurrentSession(): Promise<ApiResponse<{ success: true }>> {

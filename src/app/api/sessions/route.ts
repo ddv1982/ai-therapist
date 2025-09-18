@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/database/db';
 import { createSessionSchema } from '@/lib/utils/validation';
 import { logger } from '@/lib/utils/logger';
-import { withValidation, withAuth, errorHandlers } from '@/lib/api/api-middleware';
+import { withValidation, withAuth } from '@/lib/api/api-middleware';
+import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
 import { getUserSessions } from '@/lib/database/queries';
 import { createSuccessResponse } from '@/lib/api/api-response';
 import { deduplicateRequest } from '@/lib/utils/request-deduplication';
@@ -59,7 +60,7 @@ export const POST = withValidation(
 
       return createSuccessResponse(session, { requestId: context.requestId });
     } catch (error) {
-      return errorHandlers.handleDatabaseError(
+      return enhancedErrorHandlers.handleDatabaseError(
         error as Error,
         'create session',
         context
@@ -82,7 +83,7 @@ export const GET = withAuth(
 
         return createSuccessResponse(sessions, { requestId: context.requestId });
       } catch (error) {
-        return errorHandlers.handleDatabaseError(
+        return enhancedErrorHandlers.handleDatabaseError(
           error as Error,
           'fetch sessions',
           context

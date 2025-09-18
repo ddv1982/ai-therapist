@@ -24,6 +24,20 @@ function mapApiResponse<T>(response: ApiResponse<T>): T {
   return data;
 }
 
+function extractReportContentFlexible(resp: unknown): string {
+  if (!resp || typeof resp !== 'object') {
+    throw new Error('Failed to generate session report');
+  }
+  const r = resp as { success?: boolean; data?: unknown; reportContent?: unknown };
+  if (r.success && r.data && typeof (r.data as { reportContent?: unknown }).reportContent === 'string') {
+    return (r.data as { reportContent: string }).reportContent;
+  }
+  if (typeof r.reportContent === 'string') {
+    return r.reportContent;
+  }
+  throw new Error('Failed to generate session report');
+}
+
 export async function sendToChat({
   title,
   flowState,
@@ -49,11 +63,7 @@ export async function sendToChat({
     model,
   });
 
-  const reportSuccess = (reportResponse as { success?: boolean }).success;
-  const reportContent = (reportResponse as { reportContent?: string }).reportContent;
-  if (!reportSuccess || !reportContent) {
-    throw new Error('Failed to generate session report');
-  }
+  const reportContent = extractReportContentFlexible(reportResponse);
 
   await apiClient.postMessage(sessionId, { role: 'user', content: summaryCard });
 

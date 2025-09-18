@@ -17,7 +17,7 @@ interface EnvironmentResponse {
 export const GET = withApiRoute(async (_request, context) => {
   const response: EnvironmentResponse = {
     hasGroqApiKey: !!process.env.GROQ_API_KEY,
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   };
 
   return createSuccessResponse(response, { requestId: context.requestId });

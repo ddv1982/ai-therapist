@@ -1,9 +1,10 @@
 import { prisma } from '@/lib/database/db';
 import { updateSessionSchema } from '@/lib/utils/validation';
-import { withAuth, withValidationAndParams, errorHandlers } from '@/lib/api/api-middleware';
+import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership, getSessionWithMessages } from '@/lib/database/queries';
 import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
+import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
 
 interface SessionUpdateData {
   updatedAt: Date;
@@ -50,7 +51,7 @@ export const PATCH = withValidationAndParams(
 
       return createSuccessResponse(session, { requestId: context.requestId });
     } catch (error) {
-      return errorHandlers.handleDatabaseError(
+      return enhancedErrorHandlers.handleDatabaseError(
         error as Error,
         'update session',
         context
@@ -78,7 +79,7 @@ export const GET = withAuth(async (_request, context, params) => {
 
     return createSuccessResponse(session, { requestId: context.requestId });
   } catch (error) {
-    return errorHandlers.handleDatabaseError(
+    return enhancedErrorHandlers.handleDatabaseError(
       error as Error,
       'fetch session',
       context
@@ -111,7 +112,7 @@ export const DELETE = withAuth(async (_request, context, params) => {
 
     return createSuccessResponse({ success: true }, { requestId: context.requestId });
   } catch (error) {
-    return errorHandlers.handleDatabaseError(
+    return enhancedErrorHandlers.handleDatabaseError(
       error as Error,
       'delete session',
       context

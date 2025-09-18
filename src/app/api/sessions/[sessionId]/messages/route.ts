@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/database/db';
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
-import { withAuth, withValidationAndParams, errorHandlers } from '@/lib/api/api-middleware';
+import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership } from '@/lib/database/queries';
 import { 
   createSuccessResponse, 
@@ -12,6 +12,7 @@ import {
 } from '@/lib/api/api-response';
 import { MessageCache } from '@/lib/cache';
 import { logger } from '@/lib/utils/logger';
+import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
 
 const postBodySchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -127,7 +128,7 @@ export const POST = withValidationAndParams(
         messageCount,
       }, { requestId: context.requestId });
     } catch (error) {
-      return errorHandlers.handleDatabaseError(error as Error, 'create message (nested)', context);
+      return enhancedErrorHandlers.handleDatabaseError(error as Error, 'create message (nested)', context);
     }
   }
 );
@@ -176,7 +177,7 @@ export const GET = withAuth(
         return response;
       } catch (error) {
         logger.apiError('/api/sessions/[sessionId]/messages', error as Error, { requestId: context.requestId });
-        return errorHandlers.handleDatabaseError(error as Error, 'fetch messages (nested)', context);
+        return enhancedErrorHandlers.handleDatabaseError(error as Error, 'fetch messages (nested)', context);
       }
     }
 );

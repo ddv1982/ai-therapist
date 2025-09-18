@@ -14,6 +14,7 @@ import { createErrorResponse } from '@/lib/api/api-response';
 import { prisma } from '@/lib/database/db';
 import { verifySessionOwnership } from '@/lib/database/queries';
 import { encryptMessage } from '@/lib/chat/message-encryption';
+import { recordModelUsage } from '@/lib/metrics/metrics';
 
 type ApiChatMessage = { role: 'user' | 'assistant'; content: string; id?: string };
 
@@ -158,6 +159,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     });
 
     const systemPrompt = await buildSystemPrompt(req, hasWebSearch);
+    try { recordModelUsage(modelId, toolChoiceHeader); } catch {}
     const result = streamChatCompletion({
       model: languageModels[modelId as ModelID] as unknown as string,
       system: systemPrompt,
@@ -182,6 +184,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       return uiResponse as Response;
     }
 
+    // Abort handling: if client disconnects, reader will error; we also hook into "abort" events
     if ('body' in uiResponse && (uiResponse as Response).body && typeof (uiResponse as Response).body!.tee === 'function') {
       const responseWithHeaders = await teeAndPersistStream(
         uiResponse as Response,

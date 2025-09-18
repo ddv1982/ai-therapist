@@ -1,14 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { generateSessionReport, extractStructuredAnalysis, type ReportMessage } from '@/lib/api/groq-client';
 import { REPORT_GENERATION_PROMPT, ANALYSIS_EXTRACTION_PROMPT } from '@/lib/therapy/therapy-prompts';
 import { prisma } from '@/lib/database/db';
-import { logger, createRequestLogger, devLog } from '@/lib/utils/logger';
+import { logger, devLog } from '@/lib/utils/logger';
 import { reportGenerationSchema, validateRequest } from '@/lib/utils/validation';
 import { encryptSessionReportContent, encryptEnhancedAnalysisData } from '@/lib/chat/message-encryption';
 import { validateTherapeuticContext, calculateContextualConfidence } from '@/lib/therapy/context-validator';
 import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/cbt-data-parser';
 import { deduplicateRequest } from '@/lib/utils/request-deduplication';
 import type { Prisma } from '@prisma/client';
+import { generateFallbackAnalysis as generateFallbackAnalysisExternal } from '@/lib/reports/fallback-analysis';
+import { withApiRoute } from '@/lib/api/with-route';
+import { createErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
 
 // Note: CognitiveDistortion interface removed - using types from report.ts instead
 
@@ -55,271 +58,17 @@ interface ParsedAnalysis {
  * Generates fallback analysis when JSON parsing fails by extracting insights from the human-readable report
  */
 function generateFallbackAnalysis(reportContent: string): ParsedAnalysis {
-  const fallbackAnalysis: ParsedAnalysis = {
-    sessionOverview: {
-      themes: extractThemes(reportContent),
-      emotionalTone: extractEmotionalTone(reportContent),
-      engagement: 'medium' // Default value since hard to extract
-    },
-    cognitiveDistortions: extractCognitiveDistortions(reportContent),
-    schemaAnalysis: {
-      activeModes: extractSchemaModes(reportContent),
-      triggeredSchemas: [],
-      behavioralPatterns: extractBehavioralPatterns(reportContent),
-      predominantMode: null,
-      copingStrategies: { adaptive: [], maladaptive: [] },
-      therapeuticRecommendations: extractRecommendations(reportContent)
-    },
-    therapeuticFrameworks: extractTherapeuticFrameworks(reportContent),
-    recommendations: [],
-    keyPoints: extractKeyInsights(reportContent),
-    therapeuticInsights: {
-      primaryInsights: extractPrimaryInsights(reportContent),
-      growthAreas: extractGrowthAreas(reportContent),
-      strengths: extractClientStrengths(reportContent),
-      fallbackGenerated: true // Flag to indicate this was a fallback analysis
-    },
-    patternsIdentified: extractIdentifiedPatterns(reportContent),
-    actionItems: extractActionItems(reportContent),
-    moodAssessment: extractMoodAssessment(reportContent),
-    progressNotes: `Fallback analysis generated from human-readable report on ${new Date().toISOString()}`,
-    analysisConfidence: 60, // Lower confidence for fallback analysis
-    contentTierMetadata: {
-      tier: 'fallback-analysis',
-      analysisScope: 'basic',
-      userDataReliability: 40,
-      dataSource: 'human-readable-extraction'
-    }
-  };
-
-  return fallbackAnalysis;
+  return generateFallbackAnalysisExternal(reportContent) as unknown as ParsedAnalysis;
 }
 
-// Helper functions for fallback analysis
-function extractThemes(content: string): string[] {
-  const themes: string[] = [];
-  const themePatterns = [
-    /anxiety|worried|scared|fear/i,
-    /depression|sad|hopeless|down/i,
-    /relationships|family|friends|partner/i,
-    /work|career|job|professional/i,
-    /self-esteem|self-worth|confidence/i,
-    /trauma|past|childhood/i,
-    /stress|overwhelming|pressure/i,
-    /anger|frustrated|irritated/i
-  ];
-  
-  const themeNames = [
-    'Anxiety and Fear', 'Depression and Mood', 'Relationships', 'Work/Career', 
-    'Self-Esteem', 'Trauma/Past Experiences', 'Stress Management', 'Anger Management'
-  ];
-  
-  themePatterns.forEach((pattern, index) => {
-    if (pattern.test(content)) {
-      themes.push(themeNames[index]);
-    }
-  });
-  
-  return themes.length > 0 ? themes : ['General Wellbeing'];
-}
-
-function extractEmotionalTone(content: string): string {
-  if (/distress|crisis|severe|intense|overwhelming/i.test(content)) return 'High emotional distress';
-  if (/moderate|manageable|some difficulty/i.test(content)) return 'Moderate emotional engagement';
-  if (/positive|hopeful|optimistic|progress/i.test(content)) return 'Positive emotional tone';
-  return 'Balanced emotional presentation';
-}
-
-function extractCognitiveDistortions(content: string): unknown[] {
-  const distortions: unknown[] = [];
-  const distortionPatterns = [
-    { name: 'Catastrophizing', pattern: /catastroph|worst.*case|disaster|terrible|awful/i },
-    { name: 'All-or-Nothing Thinking', pattern: /always|never|everything|nothing|completely|totally/i },
-    { name: 'Mind Reading', pattern: /think.*about.*me|judge|everyone.*knows/i },
-    { name: 'Emotional Reasoning', pattern: /feel.*therefore|because.*feel|feel.*must.*be/i },
-    { name: 'Should Statements', pattern: /should|must|ought.*to|have.*to/i }
-  ];
-
-  distortionPatterns.forEach(({ name, pattern }) => {
-    if (pattern.test(content)) {
-      distortions.push({
-        name,
-        severity: 'moderate',
-        contextAwareConfidence: 50, // Lower confidence for fallback
-        falsePositiveRisk: 'medium',
-        source: 'fallback-extraction'
-      });
-    }
-  });
-
-  return distortions;
-}
-
-function extractSchemaModes(content: string): unknown[] {
-  const modes: unknown[] = [];
-  const modePatterns = [
-    { name: 'Vulnerable Child', pattern: /vulnerable|scared|helpless|abandoned|alone/i },
-    { name: 'Angry Child', pattern: /angry|furious|rage|mad|frustrated/i },
-    { name: 'Punitive Parent', pattern: /harsh.*self|critical|blame.*self|punish/i },
-    { name: 'Demanding Parent', pattern: /perfect|standard|expect|demand|should/i },
-    { name: 'Detached Protector', pattern: /detach|withdraw|avoid|distance|numb/i }
-  ];
-
-  modePatterns.forEach(({ name, pattern }) => {
-    if (pattern.test(content)) {
-      modes.push({
-        name,
-        intensity: 5, // Default moderate intensity
-        isActive: true,
-        source: 'fallback-extraction'
-      });
-    }
-  });
-
-  return modes;
-}
-
-function extractBehavioralPatterns(content: string): string[] {
-  const patterns: string[] = [];
-  if (/avoid|withdrawal|isolat/i.test(content)) patterns.push('Avoidance behaviors');
-  if (/perfectionist|control|check/i.test(content)) patterns.push('Perfectionist tendencies');
-  if (/people.*pleas|approval.*seek/i.test(content)) patterns.push('People-pleasing behaviors');
-  if (/procrastinat|delay|put.*off/i.test(content)) patterns.push('Procrastination patterns');
-  return patterns;
-}
-
-function extractRecommendations(content: string): string[] {
-  const recommendations: string[] = [];
-  if (/cbt|cognitive.*behav/i.test(content)) recommendations.push('Cognitive Behavioral Therapy techniques');
-  if (/mindful|meditat|breathe/i.test(content)) recommendations.push('Mindfulness and relaxation practices');
-  if (/schema|mode/i.test(content)) recommendations.push('Schema therapy interventions');
-  if (/exposure|gradual/i.test(content)) recommendations.push('Gradual exposure exercises');
-  return recommendations;
-}
-
-function extractKeyInsights(content: string): string[] {
-  // Extract sentences that appear to be key insights
-  const insights: string[] = [];
-  const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 20);
-  
-  sentences.forEach(sentence => {
-    if (/insight|pattern|understand|recogniz|aware/i.test(sentence)) {
-      insights.push(sentence.trim());
-    }
-  });
-  
-  return insights.slice(0, 5); // Limit to 5 key insights
-}
-
-function extractPrimaryInsights(content: string): string[] {
-  const insights: string[] = [];
-  if (/strength|resilient|coping|resource/i.test(content)) {
-    insights.push('Client demonstrates therapeutic resilience and coping resources');
-  }
-  if (/progress|growth|develop|improv/i.test(content)) {
-    insights.push('Evidence of personal growth and therapeutic progress');
-  }
-  if (/aware|insight|understand|recogniz/i.test(content)) {
-    insights.push('Increased self-awareness and emotional insight');
-  }
-  return insights;
-}
-
-function extractGrowthAreas(content: string): string[] {
-  const areas: string[] = [];
-  if (/anxiety|worry|fear/i.test(content)) areas.push('Anxiety management and emotional regulation');
-  if (/relationship|communication/i.test(content)) areas.push('Interpersonal skills and relationship dynamics');
-  if (/self.*esteem|confidence|worth/i.test(content)) areas.push('Self-esteem and self-acceptance');
-  return areas;
-}
-
-function extractClientStrengths(content: string): string[] {
-  const strengths: string[] = [];
-  if (/open|honest|willing|engag/i.test(content)) strengths.push('Openness to therapeutic process');
-  if (/insight|aware|understand/i.test(content)) strengths.push('Self-reflective capacity');
-  if (/motiv|commit|effort/i.test(content)) strengths.push('Motivation for change');
-  if (/support|friend|family/i.test(content)) strengths.push('Social support network');
-  return strengths;
-}
-
-function extractIdentifiedPatterns(content: string): string[] {
-  const patterns: string[] = [];
-  if (/pattern|recurring|repeat/i.test(content)) {
-    patterns.push('Recurring thought and behavior patterns identified');
-  }
-  if (/trigger|situation|when/i.test(content)) {
-    patterns.push('Environmental and situational triggers recognized');
-  }
-  return patterns;
-}
-
-function extractActionItems(content: string): string[] {
-  const actions: string[] = [];
-  if (/practice|exercise|homework/i.test(content)) actions.push('Complete therapeutic exercises between sessions');
-  if (/journal|write|record/i.test(content)) actions.push('Maintain therapeutic journaling practice');
-  if (/mindful|meditat/i.test(content)) actions.push('Incorporate mindfulness practices into daily routine');
-  return actions;
-}
-
-function extractMoodAssessment(content: string): string {
-  if (/severe|crisis|high.*distress/i.test(content)) return 'High distress levels requiring immediate attention';
-  if (/moderate|some.*difficulty/i.test(content)) return 'Moderate mood challenges with therapeutic potential';
-  if (/stable|improving|positive/i.test(content)) return 'Stable mood with positive therapeutic indicators';
-  return 'Mood assessment extracted from session content';
-}
-
-function extractTherapeuticFrameworks(content: string): unknown[] {
-  const frameworks: unknown[] = [];
-  
-  if (/cbt|cognitive.*behav|thought.*record|automatic.*thought/i.test(content)) {
-    frameworks.push({
-      name: 'CBT',
-      applicability: 'high',
-      specificTechniques: ['Thought record work', 'Cognitive restructuring'],
-      priority: 4
-    });
-  }
-  
-  if (/schema|mode|early.*maladaptiv/i.test(content)) {
-    frameworks.push({
-      name: 'Schema Therapy',
-      applicability: 'high',
-      specificTechniques: ['Mode work', 'Schema exploration'],
-      priority: 3
-    });
-  }
-  
-  if (/mindful|meditat|present.*moment|acceptance/i.test(content)) {
-    frameworks.push({
-      name: 'Mindfulness-Based Therapy',
-      applicability: 'medium',
-      specificTechniques: ['Mindfulness exercises', 'Present-moment awareness'],
-      priority: 2
-    });
-  }
-  
-  if (/exposure|gradual|hierarchy|systematic/i.test(content)) {
-    frameworks.push({
-      name: 'Exposure Therapy',
-      applicability: 'medium',
-      specificTechniques: ['Gradual exposure', 'Response prevention'],
-      priority: 3
-    });
-  }
-  
-  return frameworks;
-}
-
-export async function POST(request: NextRequest) {
-  const requestContext = createRequestLogger(request);
-  
+export const POST = withApiRoute(async (request: NextRequest, context) => {
   try {
     // Always use analytical model for detailed session reports
     const { REPORT_MODEL_ID } = await import('@/features/chat/config');
     const reportModel = REPORT_MODEL_ID;
     
     logger.info('Report generation request received', {
-      ...requestContext,
+      ...context,
       modelUsed: reportModel,
       modelDisplayName: 'GPT OSS 120B (Deep Analysis)',
       selectionReason: 'Report generation requires analytical model',
@@ -331,15 +80,12 @@ export async function POST(request: NextRequest) {
     // Validate request body using proper schema
     const validation = validateRequest(reportGenerationSchema, body);
     if (!validation.success) {
-      logger.validationError('/api/reports/generate', validation.error, requestContext);
-      return NextResponse.json(
-        { 
-          error: 'Invalid request data',
-          details: validation.error,
-          code: 'VALIDATION_ERROR'
-        },
-        { status: 400 }
-      );
+      logger.validationError('/api/reports/generate', validation.error, context);
+      return createErrorResponse('Validation failed', 400, {
+        code: 'VALIDATION_ERROR',
+        details: validation.error,
+        requestId: context.requestId,
+      });
     }
 
     const { sessionId, messages } = validation.data;
@@ -364,7 +110,7 @@ export async function POST(request: NextRequest) {
       dataSource = 'parsed';
       
       logger.info('CBT data extracted from messages', {
-        ...requestContext,
+        ...context,
         hasSituation: !!cbtData.situation,
         hasEmotions: !!cbtData.emotions,
         hasThoughts: !!cbtData.thoughts,
@@ -377,7 +123,7 @@ export async function POST(request: NextRequest) {
 
     // Generate the human-readable session report using AI
     logger.info('Generating session report with AI model', {
-      ...requestContext,
+      ...context,
       modelUsed: reportModel,
       messageCount: messages.length,
       reportGenerationStep: 'ai_generation'
@@ -399,10 +145,7 @@ ${languageDirective}`;
     const completion = await generateSessionReport(messages as ReportMessage[], reportPrompt, reportModel);
     
     if (!completion) {
-      return NextResponse.json(
-        { error: 'Failed to generate session report' },
-        { status: 500 }
-      );
+      return createErrorResponse('Failed to generate session report', 500, { requestId: context.requestId });
     }
 
     // Extract structured analysis data from the report
@@ -458,7 +201,7 @@ ${languageDirective}`;
                 const enhancedConfidence = calculateContextualConfidence(
                   distortion.contextAwareConfidence,
                   contextValidation,
-                  false // TODO: Add CBT alignment check
+                  Boolean(hasCBTContent)
                 );
                 distortion.contextAwareConfidence = enhancedConfidence;
               }
@@ -486,7 +229,7 @@ ${languageDirective}`;
       } catch (error) {
         // Enhanced error logging with detailed debugging information
         logger.error('JSON parsing failed for structured analysis', {
-          ...requestContext,
+          ...context,
           error: error instanceof Error ? error.message : 'Unknown error',
           rawDataLength: analysisData?.length || 0,
           rawDataSample: analysisData?.substring(0, 200) || 'No data',
@@ -506,13 +249,13 @@ ${languageDirective}`;
           devLog('Successfully generated fallback analysis from human-readable content');
           
           logger.info('Fallback analysis generated successfully', {
-            ...requestContext,
+            ...context,
             fallbackStrategy: 'human_readable_content_analysis',
             extractedInsights: Object.keys(parsedAnalysis).length
           });
         } catch (fallbackError) {
           logger.error('Fallback analysis also failed', {
-            ...requestContext,
+            ...context,
             fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown error'
           });
           // Continue with empty analysis - the human-readable report is still valuable
@@ -571,7 +314,7 @@ ${languageDirective}`;
       }
       
       if (typeof parsedAnalysis.therapeuticInsights === 'object' && parsedAnalysis.therapeuticInsights !== null) {
-        logger.therapeuticOperation('CBT data inclusion in therapeutic insights', {
+      logger.therapeuticOperation('CBT data inclusion in therapeutic insights', {
           dataSource,
           hasData: !!cbtData,
           dataKeyCount: Object.keys(cbtData).length,
@@ -648,13 +391,13 @@ ${languageDirective}`;
       });
       
       logger.info('Session report saved to database for therapeutic memory', {
-        ...requestContext,
+        ...context,
         sessionId,
         reportLength: completion.length
       });
     } catch (dbError) {
       logger.error('Failed to save report to database', {
-        ...requestContext,
+        ...context,
         error: dbError instanceof Error ? dbError.message : 'Unknown error',
         sessionId
       });
@@ -662,32 +405,27 @@ ${languageDirective}`;
     }
 
     logger.info('Session report generated successfully', {
-      ...requestContext,
+      ...context,
       modelUsed: reportModel,
       reportLength: completion.length,
       reportGenerationStep: 'completed_successfully',
       cbtDataSource: dataSource
     });
 
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Report generated successfully',
+        return createSuccessResponse({
           reportContent: completion,
-          modelUsed: reportModel, // Include model info in response
+          modelUsed: reportModel,
           modelDisplayName: 'GPT OSS 120B (Deep Analysis)',
-          cbtDataSource: dataSource, // Indicate data source for debugging
+          cbtDataSource: dataSource,
           cbtDataAvailable: dataSource !== 'none'
-        });
+        }, { requestId: context.requestId });
       },
       undefined, // No additional resource identifier needed
       30000 // 30 second TTL for report generation deduplication
     );
 
   } catch (error) {
-    logger.apiError('/api/reports/generate', error as Error, createRequestLogger(request));
-    return NextResponse.json(
-      { error: 'Failed to generate report' },
-      { status: 500 }
-    );
+    logger.apiError('/api/reports/generate', error as Error, context);
+    return createErrorResponse('Failed to generate report', 500, { requestId: context.requestId });
   }
-}
+});

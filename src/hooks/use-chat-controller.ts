@@ -385,11 +385,17 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
         messages: messages.filter(m => !m.content.startsWith('📊 **Session Report**')).map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp.toISOString?.() })),
         model: REPORT_MODEL_ID,
       });
-      if (result && typeof (result as { reportContent?: unknown }).reportContent === 'string') {
+      // Accept both standardized ApiResponse and legacy shape
+      const dataObj = (result as { success?: boolean; data?: { reportContent?: unknown } }).data;
+      const legacyReport = (result as { reportContent?: unknown }).reportContent;
+      const content = (typeof dataObj?.reportContent === 'string')
+        ? (dataObj.reportContent as string)
+        : (typeof legacyReport === 'string' ? legacyReport as string : undefined);
+      if (content) {
         const reportMessage = {
           id: Date.now().toString(),
           role: 'assistant' as const,
-          content: `📊 **Session Report**\n\n${(result as { reportContent: string }).reportContent}`,
+          content: `📊 **Session Report**\n\n${content}`,
           timestamp: new Date(),
           modelUsed: REPORT_MODEL_ID,
         };

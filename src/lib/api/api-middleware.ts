@@ -12,6 +12,7 @@ import {
   ApiResponse,
 } from '@/lib/api/api-response';
 import { getRateLimiter } from '@/lib/api/rate-limiter';
+import { recordEndpointError, recordEndpointSuccess } from '@/lib/metrics/metrics';
 
 /**
  * Shared API middleware to eliminate DRY violations across routes
@@ -60,6 +61,7 @@ export function withApiMiddleware<T = unknown>(
       try { res.headers.set('X-Request-Id', context.requestId); } catch {}
       try { res.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
       logger.info('API request completed', { requestId: context.requestId, url: context.url, method: context.method, durationMs });
+      try { recordEndpointSuccess(context.method, context.url); } catch {}
       return res;
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
@@ -69,6 +71,7 @@ export function withApiMiddleware<T = unknown>(
       const durationMs = Math.round(performance.now() - startHighRes);
       try { resp.headers.set('X-Request-Id', rid); } catch {}
       try { resp.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+      try { recordEndpointError((ctx.method as string | undefined), (ctx.url as string | undefined)); } catch {}
       return resp;
     }
   };
@@ -173,6 +176,7 @@ export function withAuthStreaming(
       try { (res as Response).headers.set('X-Request-Id', authenticatedContext.requestId); } catch {}
       try { (res as Response).headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
       logger.info('Streaming request completed', { requestId: authenticatedContext.requestId, url: authenticatedContext.url, method: authenticatedContext.method, durationMs });
+      try { recordEndpointSuccess(authenticatedContext.method, authenticatedContext.url); } catch {}
       return res;
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
@@ -183,6 +187,7 @@ export function withAuthStreaming(
       const durationMs = Math.round(performance.now() - startHighRes);
       try { resp.headers.set('X-Request-Id', baseContext.requestId || 'unknown'); } catch {}
       try { resp.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+      try { recordEndpointError(baseContext.method as string | undefined, baseContext.url as string | undefined); } catch {}
       return resp;
     }
   };
@@ -272,6 +277,7 @@ export function withAuthAndRateLimitStreaming(
           const durationMs = Math.round(performance.now() - startHighRes);
           try { limited.headers.set('X-Request-Id', baseContext.requestId || 'unknown'); } catch {}
           try { limited.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+          try { recordEndpointError(baseContext.method as string | undefined, baseContext.url as string | undefined); } catch {}
           return limited;
         }
       }
@@ -331,6 +337,7 @@ export function withAuthAndRateLimitStreaming(
       try { response.headers.set('X-Request-Id', authenticatedContext.requestId); } catch {}
       try { response.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
       logger.info('Rate-limited streaming request completed', { requestId: authenticatedContext.requestId, url: authenticatedContext.url, method: authenticatedContext.method, durationMs });
+      try { recordEndpointSuccess(authenticatedContext.method, authenticatedContext.url); } catch {}
       return response;
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
@@ -341,6 +348,7 @@ export function withAuthAndRateLimitStreaming(
       const durationMs = Math.round(performance.now() - startHighRes);
       try { resp.headers.set('X-Request-Id', baseContext.requestId || 'unknown'); } catch {}
       try { resp.headers.set('Server-Timing', `total;dur=${durationMs}`); } catch {}
+      try { recordEndpointError(baseContext.method as string | undefined, baseContext.url as string | undefined); } catch {}
       return resp;
     }
     finally {

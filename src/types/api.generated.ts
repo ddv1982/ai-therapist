@@ -532,9 +532,13 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            message?: string;
-                            reportContent?: string;
-                            modelUsed?: string;
+                            data?: {
+                                reportContent?: string;
+                                modelUsed?: string;
+                                modelDisplayName?: string;
+                                cbtDataSource?: string;
+                                cbtDataAvailable?: boolean;
+                            };
                         };
                     };
                 };
