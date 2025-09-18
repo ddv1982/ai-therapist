@@ -344,9 +344,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
 
   }, [currentDraft, autoSaveDelay, dispatch]);
 
-  // UI-saving indicator: whenever session data changes, briefly show "saving" then "saved"
+  // UI-saving indicator: whenever a draft/save occurs, briefly show "saving" then "saved"
   useEffect(() => {
-    if (!sessionData?.lastModified) return;
+    if (!lastAutoSave) return;
     setIsSavingUI(true);
     if (uiSavingTimeout.current) {
       clearTimeout(uiSavingTimeout.current);
@@ -359,7 +359,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         clearTimeout(uiSavingTimeout.current);
       }
     };
-  }, [sessionData?.lastModified]);
+  }, [lastAutoSave]);
   
   useEffect(() => {
     if (sessionId && sessionId !== sessionData?.sessionId) {

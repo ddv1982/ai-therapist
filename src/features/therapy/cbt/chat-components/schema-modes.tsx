@@ -94,8 +94,9 @@ export function SchemaModes({
     if (schemaModesData && schemaModesData.length > 0) {
       const selectedModes = DEFAULT_SCHEMA_MODES.map(mode => ({
         ...mode,
-        selected: schemaModesData.some(reduxMode => reduxMode.mode === mode.name && reduxMode.isActive),
-        intensity: schemaModesData.find(reduxMode => reduxMode.mode === mode.name)?.intensity || 5
+        // Compare using stable id, not display name
+        selected: schemaModesData.some(reduxMode => reduxMode.mode === mode.id && reduxMode.isActive),
+        intensity: schemaModesData.find(reduxMode => reduxMode.mode === mode.id)?.intensity || 5
       }));
       return { selectedModes };
     }
@@ -109,7 +110,8 @@ export function SchemaModes({
       const reduxModes = modesData.selectedModes
         .filter(mode => mode.selected)
         .map(mode => ({
-          mode: mode.name,
+          // Persist stable id into store for consistency
+          mode: mode.id,
           description: mode.description,
           intensity: mode.intensity || 5,
           isActive: mode.selected
@@ -159,7 +161,7 @@ export function SchemaModes({
     if (selectedModes.length > 0) {
       // Update store with final data
       const reduxModes = selectedModes.map(mode => ({
-        mode: mode.name,
+        mode: mode.id,
         description: mode.description,
         intensity: mode.intensity || 5,
         isActive: mode.selected
