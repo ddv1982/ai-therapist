@@ -36,6 +36,8 @@ export interface paths {
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["X-Request-Id"];
+                        "X-Model-Id": components["headers"]["X-Model-Id"];
+                        "X-Tool-Choice": components["headers"]["X-Tool-Choice"];
                         [name: string]: unknown;
                     };
                     content: {
@@ -79,7 +81,11 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Session"][];
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Session"][];
+                        };
                     };
                 };
                 500: components["responses"]["InternalServerError"];
@@ -110,7 +116,11 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Session"];
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Session"];
+                        };
                     };
                 };
                 400: components["responses"]["BadRequest"];
@@ -151,7 +161,11 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            currentSession?: components["schemas"]["Session"] | null;
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                currentSession?: components["schemas"]["Session"] | null;
+                            };
                         };
                     };
                 };
@@ -360,7 +374,11 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Message"];
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Message"];
+                        };
                     };
                 };
                 400: components["responses"]["BadRequest"];
@@ -1369,6 +1387,10 @@ export interface components {
     headers: {
         /** @description Correlation ID for tracing this request */
         "X-Request-Id": string;
+        /** @description Model identifier used to generate the response */
+        "X-Model-Id": string;
+        /** @description Tool choice directive for the model (e.g., required/none) */
+        "X-Tool-Choice": string;
     };
     pathItems: never;
 }

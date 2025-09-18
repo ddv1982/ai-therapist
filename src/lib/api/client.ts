@@ -12,6 +12,39 @@ async function parseJsonSafe(response: Response) {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function extractApiErrorDetails(parsed: unknown): string | undefined {
+  if (!isRecord(parsed)) return undefined;
+  const maybeError = (parsed as { error?: unknown }).error;
+  if (isRecord(maybeError)) {
+    const details = typeof (maybeError as { details?: unknown }).details === 'string' ? (maybeError as { details: string }).details : undefined;
+    const message = typeof (maybeError as { message?: unknown }).message === 'string' ? (maybeError as { message: string }).message : undefined;
+    return details || message;
+  }
+  try {
+    return JSON.stringify(parsed);
+  } catch {
+    return undefined;
+  }
+}
+
+function getHeaderSafe(res: Response, key: string): string | undefined {
+  try {
+    const anyRes = res as unknown as { headers?: { get?: (k: string) => string | null } };
+    const getter = anyRes.headers?.get;
+    if (typeof getter === 'function') {
+      const value = getter.call(anyRes.headers, key);
+      return value === null ? undefined : value;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export class ApiClient {
   constructor(private readonly baseUrl: string = '') {}
 
@@ -46,10 +79,23 @@ export class ApiClient {
       clearTimeout(timeout);
     }
 
-    // If unauthorized, surface the 401 response to the caller without retry
+    // If unauthorized or other non-OK status, throw with best-effort details
     // Auth is managed via DB-backed session cookie; no token refresh
-
-    return (await parseJsonSafe(res)) as T;
+    const contentType = getHeaderSafe(res, 'content-type') || '';
+    const isJson = contentType.toLowerCase().includes('json');
+    const parsed = await parseJsonSafe(res);
+    if (!res.ok) {
+      if (isJson) {
+        const detail = extractApiErrorDetails(parsed);
+        const message = detail || res.statusText || 'Request failed';
+        const error = new Error(message) as Error & { status?: number };
+        error.status = res.status;
+        throw error;
+      }
+      // Non-JSON error responses return null to preserve legacy behavior
+      return null as unknown as T;
+    }
+    return parsed as T;
   }
 
   // Token refresh removed; DB-backed session cookie handles auth.

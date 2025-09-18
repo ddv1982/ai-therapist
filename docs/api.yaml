@@ -18,8 +18,10 @@ info:
     - Secure API key handling
     
     ## Authentication
-    Currently, the API uses API keys for Groq service authentication. In a production environment, 
-    additional authentication layers would be implemented.
+    The application authenticates requests using a cookie-backed session bound to a trusted device
+    (TOTP-based verification with device fingerprinting). Client requests include the session cookie;
+    server routes validate it and enforce rate limits. Provider API keys (e.g., Groq) are used only
+    server-side and are never exposed to clients.
   version: 1.0.0
   contact:
     name: AI Therapist Support
@@ -67,6 +69,10 @@ paths:
           headers:
             X-Request-Id:
               $ref: '#/components/headers/X-Request-Id'
+            X-Model-Id:
+              $ref: '#/components/headers/X-Model-Id'
+            X-Tool-Choice:
+              $ref: '#/components/headers/X-Tool-Choice'
           content:
             text/event-stream:
               schema:
@@ -101,9 +107,15 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Session'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Session'
         500:
           $ref: '#/components/responses/InternalServerError'
     
@@ -132,7 +144,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Session'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Session'
         400:
           $ref: '#/components/responses/BadRequest'
         500:
@@ -155,10 +173,16 @@ paths:
               schema:
                 type: object
                 properties:
-                  currentSession:
-                    oneOf:
-                      - $ref: '#/components/schemas/Session'
-                      - type: 'null'
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      currentSession:
+                        oneOf:
+                          - $ref: '#/components/schemas/Session'
+                          - type: 'null'
         500:
           $ref: '#/components/responses/InternalServerError'
     post:
@@ -363,7 +387,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Message'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Message'
         400:
           $ref: '#/components/responses/BadRequest'
         500:
@@ -961,6 +991,14 @@ components:
   headers:
     X-Request-Id:
       description: Correlation ID for tracing this request
+      schema:
+        type: string
+    X-Model-Id:
+      description: Model identifier used to generate the response
+      schema:
+        type: string
+    X-Tool-Choice:
+      description: Tool choice directive for the model (e.g., required/none)
       schema:
         type: string
   schemas:

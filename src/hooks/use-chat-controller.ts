@@ -351,7 +351,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
         parts: [{ type: 'text', text: userMessage.content }],
       }, {
         body: {
-          sessionId: currentSession ?? undefined,
+          sessionId: sessionId ?? undefined,
           webSearchEnabled: options?.webSearchEnabled ?? false,
           selectedModel: options?.model,
           state: {},

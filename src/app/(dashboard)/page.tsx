@@ -242,15 +242,15 @@ function ChatPageContent() {
               <p className="text-sm text-muted-foreground">{t('sidebar.noSessions')}</p>
             </div>
           ) : (
-            sessions.map((session, index) => (
+          sessions.map((session) => (
             <Card 
               key={session.id}
-              className={`p-4 mb-3 group transition-all duration-300 hover:shadow-lg cursor-pointer animate-fade-in ${
+              className={`p-4 mb-3 group transition-all duration-300 hover:shadow-lg cursor-pointer ${
                 currentSession === session.id 
                   ? 'ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/5 border-primary/30 shadow-md' 
                   : 'hover:border-primary/20 bg-white/50 dark:bg-card/50 hover:bg-white/80 dark:hover:bg-card/70'
               }`}
-              style={{ animationDelay: `${index * 0.1}s` }}
+              
             >
               <div 
                 className="flex items-start gap-3"
