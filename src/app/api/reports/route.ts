@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/database/db';
 import { logger } from '@/lib/utils/logger';
-import { withApiRoute } from '@/lib/api/with-route';
+import { withAuth } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // Legacy POST removed; use /api/reports/generate for report generation
 
-export const GET = withApiRoute(async (_request: NextRequest, context) => {
+export const GET = withAuth(async (_request: NextRequest, context) => {
   try {
     const reports = await prisma.sessionReport.findMany({
       include: {

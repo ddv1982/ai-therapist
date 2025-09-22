@@ -6,13 +6,13 @@
  */
 
 import { NextRequest } from 'next/server';
-import { withApiRoute } from '@/lib/api/with-route';
+import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { CacheHealthMonitor, cache } from '@/lib/cache';
 import { redisManager } from '@/lib/cache/redis-client';
 import { logger } from '@/lib/utils/logger';
 
-export const GET = withApiRoute(async (_request: NextRequest, context) => {
+export const GET = withRateLimitUnauthenticated(async (_request: NextRequest, context) => {
   try {
     // Get Redis health
     const redisHealth = await redisManager.healthCheck();
@@ -77,9 +77,9 @@ export const GET = withApiRoute(async (_request: NextRequest, context) => {
       }
     );
   }
-});
+}, { bucket: 'api' });
 
-export const POST = withApiRoute(async (request: NextRequest, context) => {
+export const POST = withRateLimitUnauthenticated(async (request: NextRequest, context) => {
   try {
     const body = await request.json();
     const { action } = body;
@@ -135,4 +135,4 @@ export const POST = withApiRoute(async (request: NextRequest, context) => {
       }
     );
   }
-});
+}, { bucket: 'api' });

@@ -31,3 +31,4 @@ Global (configured in `jest.config.js`):
 
 ## Manual QA
 See `docs/testing/manual-qa-checklist.md`.
+

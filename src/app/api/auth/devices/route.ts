@@ -2,11 +2,11 @@ import { NextRequest } from 'next/server';
 import { getTrustedDevices, revokeDeviceTrust, verifyAuthSession } from '@/lib/auth/device-fingerprint';
 import { getUnusedBackupCodesCount } from '@/lib/auth/totp-service';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
-import { withApiRoute } from '@/lib/api/with-route';
+import { withAuthAndRateLimit } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // GET /api/auth/devices - Get trusted devices and backup codes info
-export const GET = withApiRoute(async (request: NextRequest, context) => {
+export const GET = withAuthAndRateLimit(async (request: NextRequest, context) => {
   try {
     // Verify authentication (also needed for device context)
     const sessionToken = request.cookies.get('auth-session-token')?.value;
@@ -33,10 +33,10 @@ export const GET = withApiRoute(async (request: NextRequest, context) => {
     logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
     return createErrorResponse('Failed to get devices', 500, { requestId: context.requestId });
   }
-}, { auth: true, rateLimitBucket: 'api' });
+}, { windowMs: 5 * 60 * 1000 });
 
 // DELETE /api/auth/devices - Revoke device trust
-export const DELETE = withApiRoute(async (request: NextRequest, context) => {
+export const DELETE = withAuthAndRateLimit(async (request: NextRequest, context) => {
   try {
     // Verify authentication (needed for current device id)
     const sessionToken = request.cookies.get('auth-session-token')?.value;
@@ -72,10 +72,10 @@ export const DELETE = withApiRoute(async (request: NextRequest, context) => {
     logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
     return createErrorResponse('Failed to revoke device', 500, { requestId: context.requestId });
   }
-}, { auth: true, rateLimitBucket: 'api' });
+}, { windowMs: 5 * 60 * 1000 });
 
 // POST /api/auth/devices - Device management (backup code regeneration removed for security)
-export const POST = withApiRoute(async (request: NextRequest, context) => {
+export const POST = withAuthAndRateLimit(async (request: NextRequest, context) => {
   try {
     // Verify authentication
     const sessionToken = request.cookies.get('auth-session-token')?.value;
@@ -93,4 +93,4 @@ export const POST = withApiRoute(async (request: NextRequest, context) => {
     logger.apiError('/api/auth/devices', error as Error, createRequestLogger(request));
     return createErrorResponse('Failed to process request', 500, { requestId: context.requestId });
   }
-}, { auth: true, rateLimitBucket: 'api' });
+}, { windowMs: 5 * 60 * 1000 });

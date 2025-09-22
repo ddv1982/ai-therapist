@@ -16,6 +16,61 @@ interface CreateSessionRequest {
 
 type CreateSessionResponse = SessionData;
 
+// Exported pure transform helpers for testing and reuse
+export function transformFetchSessionsResponse(response: ApiResponse<SessionData[]> | SessionData[]): SessionData[] {
+  if ((response as { success?: boolean }).success && Array.isArray((response as { data?: SessionData[] }).data)) {
+    return (response as { data: SessionData[] }).data;
+  }
+  if (Array.isArray(response as unknown as SessionData[])) {
+    return response as unknown as SessionData[];
+  }
+  throw new Error((response as { error?: { message?: string } })?.error?.message || 'Failed to fetch sessions');
+}
+
+export function transformCreateSessionResponse(response: ApiResponse<CreateSessionResponse> | CreateSessionResponse): CreateSessionResponse {
+  if ((response as { success?: boolean }).success && (response as { data?: CreateSessionResponse }).data) {
+    return (response as { data: CreateSessionResponse }).data;
+  }
+  if ((response as unknown as CreateSessionResponse)?.id) {
+    return response as unknown as CreateSessionResponse;
+  }
+  throw new Error((response as { error?: { message?: string } })?.error?.message || 'Failed to create session');
+}
+
+export function transformDeleteSessionResponse(response: ApiResponse<{ success: boolean }> | { success?: boolean }): { success: boolean } {
+  if ((response as { success?: boolean }).success && (response as { data?: { success: boolean } }).data) {
+    return (response as { data: { success: boolean } }).data;
+  }
+  if (typeof (response as unknown as { success?: boolean })?.success === 'boolean') {
+    return { success: Boolean((response as unknown as { success?: boolean }).success) };
+  }
+  throw new Error((response as { error?: { message?: string } })?.error?.message || 'Failed to delete session');
+}
+
+export function transformGetCurrentSessionResponse(
+  response: ApiResponse<{ currentSession: { id: string } | null } | { currentSession?: { id: string } | null }>
+): { id: string } | null {
+  if ((response as { success?: boolean }).success && (response as { data?: { currentSession?: { id: string } | null } }).data) {
+    return ((response as { data: { currentSession?: { id: string } | null } }).data.currentSession) ?? null;
+  }
+  if ((response as { currentSession?: { id: string } | null })?.currentSession !== undefined) {
+    return ((response as { currentSession?: { id: string } | null }).currentSession) ?? null;
+  }
+  return null;
+}
+
+export function transformSetCurrentSessionResponse(
+  response: ApiResponse<{ success: boolean } | { session?: unknown } | { data?: { success?: boolean } }>
+): { success: boolean } {
+  if ((response as { success?: boolean }).success) {
+    return { success: true };
+  }
+  if ((response as { data?: { success?: boolean } }).data?.success) {
+    return { success: true };
+  }
+  return { success: false };
+}
+
 export const sessionsApi = createApi({
   reducerPath: 'sessionsApi',
   baseQuery: fetchBaseQuery({
@@ -33,16 +88,7 @@ export const sessionsApi = createApi({
   endpoints: (builder) => ({
     fetchSessions: builder.query<SessionData[], void>({
       query: () => 'sessions',
-      transformResponse: (response: ApiResponse<SessionData[]>) => {
-        if ((response as { success?: boolean }).success && Array.isArray((response as { data?: SessionData[] }).data)) {
-          return (response as { data: SessionData[] }).data;
-        }
-        // If server returns plain array, accept for now; prefer canonical wrapper
-        if (Array.isArray(response as unknown as SessionData[])) {
-          return response as unknown as SessionData[];
-        }
-        throw new Error((response as { error?: { message?: string } })?.error?.message || 'Failed to fetch sessions');
-      },
+      transformResponse: (response: ApiResponse<SessionData[]>) => transformFetchSessionsResponse(response),
       providesTags: (result) =>
         result
           ? [
@@ -57,16 +103,7 @@ export const sessionsApi = createApi({
         method: 'POST',
         body,
       }),
-      transformResponse: (response: ApiResponse<CreateSessionResponse>) => {
-        if ((response as { success?: boolean }).success && (response as { data?: CreateSessionResponse }).data) {
-          return (response as { data: CreateSessionResponse }).data;
-        }
-        // Some endpoints may return plain object
-        if ((response as unknown as CreateSessionResponse)?.id) {
-          return response as unknown as CreateSessionResponse;
-        }
-        throw new Error((response as { error?: { message?: string } })?.error?.message || 'Failed to create session');
-      },
+      transformResponse: (response: ApiResponse<CreateSessionResponse>) => transformCreateSessionResponse(response),
       invalidatesTags: [{ type: 'Sessions', id: 'LIST' }],
     }),
     deleteSession: builder.mutation<{ success: boolean }, string>({
@@ -74,31 +111,12 @@ export const sessionsApi = createApi({
         url: `sessions/${sessionId}`,
         method: 'DELETE',
       }),
-      transformResponse: (response: ApiResponse<{ success: boolean }>) => {
-        if ((response as { success?: boolean }).success && (response as { data?: { success: boolean } }).data) {
-          return (response as { data: { success: boolean } }).data;
-        }
-        // Some endpoints may return plain success
-        if (typeof (response as unknown as { success?: boolean })?.success === 'boolean') {
-          return { success: Boolean((response as unknown as { success?: boolean }).success) };
-        }
-        throw new Error((response as { error?: { message?: string } })?.error?.message || 'Failed to delete session');
-      },
+      transformResponse: (response: ApiResponse<{ success: boolean }>) => transformDeleteSessionResponse(response),
       invalidatesTags: (_result, _error, id) => [{ type: 'Sessions', id }],
     }),
     getCurrentSession: builder.query<{ id: string } | null, void>({
       query: () => 'sessions/current',
-      transformResponse: (response: ApiResponse<{ currentSession: { id: string } | null } | { currentSession?: { id: string } }>) => {
-        // Standardized wrapper
-        if ((response as { success?: boolean }).success && (response as { data?: { currentSession?: { id: string } | null } }).data) {
-          return ((response as { data: { currentSession?: { id: string } | null } }).data.currentSession) ?? null;
-        }
-        // Legacy direct shape
-        if ((response as { currentSession?: { id: string } | null })?.currentSession !== undefined) {
-          return ((response as { currentSession?: { id: string } | null }).currentSession) ?? null;
-        }
-        return null;
-      },
+      transformResponse: (response: ApiResponse<{ currentSession: { id: string } | null } | { currentSession?: { id: string } }>) => transformGetCurrentSessionResponse(response),
       providesTags: [{ type: 'CurrentSession', id: 'SINGLE' }],
     }),
     setCurrentSession: builder.mutation<{ success: boolean }, string>({
@@ -107,15 +125,7 @@ export const sessionsApi = createApi({
         method: 'POST',
         body: { sessionId },
       }),
-      transformResponse: (response: ApiResponse<{ success: boolean } | { session?: unknown }>) => {
-        if ((response as { success?: boolean }).success) {
-          return { success: true };
-        }
-        if ((response as { data?: { success?: boolean } }).data?.success) {
-          return { success: true };
-        }
-        return { success: false };
-      },
+      transformResponse: (response: ApiResponse<{ success: boolean } | { session?: unknown } | { data?: { success?: boolean } }>) => transformSetCurrentSessionResponse(response),
       invalidatesTags: [{ type: 'CurrentSession', id: 'SINGLE' }],
     }),
   }),

@@ -15,6 +15,7 @@ import { prisma } from '@/lib/database/db';
 import { verifySessionOwnership } from '@/lib/database/queries';
 import { encryptMessage } from '@/lib/chat/message-encryption';
 import { recordModelUsage } from '@/lib/metrics/metrics';
+import { appendWithLimit as appendWithLimitUtil, teeAndPersistStream as teeAndPersistStreamUtil, persistFromClonedStream as persistFromClonedStreamUtil, attachResponseHeadersRaw as attachResponseHeadersRawUtil } from '@/lib/chat/stream-utils';
 
 type ApiChatMessage = { role: 'user' | 'assistant'; content: string; id?: string };
 
@@ -32,13 +33,7 @@ export const maxDuration = 30;
 
 type SessionOwnership = Awaited<ReturnType<typeof verifySessionOwnership>>;
 
-type StreamPart = { type?: string; text?: unknown } | null | undefined;
-
-type StreamPayload = {
-  text?: unknown;
-  parts?: StreamPart[];
-  delta?: { text?: unknown };
-};
+// Stream types and helpers are imported from stream-utils
 
 class AssistantResponseCollector {
   private buffer = '';
@@ -53,7 +48,7 @@ class AssistantResponseCollector {
 
   append(chunk: string): boolean {
     if (!chunk || this.truncated) return this.truncated;
-    const appended = appendWithLimit(this.buffer, chunk);
+    const appended = appendWithLimitUtil(this.buffer, chunk, MAX_ASSISTANT_RESPONSE_CHARS);
     this.buffer = appended.value;
     this.truncated = this.truncated || appended.truncated;
     return this.truncated;
@@ -186,7 +181,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
 
     // Abort handling: if client disconnects, reader will error; we also hook into "abort" events
     if ('body' in uiResponse && (uiResponse as Response).body && typeof (uiResponse as Response).body!.tee === 'function') {
-      const responseWithHeaders = await teeAndPersistStream(
+      const responseWithHeaders = await teeAndPersistStreamUtil(
         uiResponse as Response,
         collector,
         context.requestId,
@@ -196,7 +191,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       if (responseWithHeaders) return responseWithHeaders;
     }
 
-    await persistFromClonedStream(uiResponse as Response, collector);
+    await persistFromClonedStreamUtil(uiResponse as Response, collector);
     attachResponseHeaders(uiResponse as Response, context.requestId, modelId, toolChoiceHeader);
     return uiResponse as Response;
   } catch (error) {
@@ -326,132 +321,10 @@ function createStreamErrorHandler(params: {
   };
 }
 
-async function teeAndPersistStream(
-  response: Response,
-  collector: AssistantResponseCollector,
-  requestId: string,
-  modelId: string,
-  toolChoice: string,
-): Promise<Response | null> {
-  try {
-    const [clientStream, serverStream] = response.body!.tee();
-
-    const consume = async () => {
-      const reader = serverStream.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      const processBuffer = () => {
-        let newlineIndex = buffer.indexOf('\n');
-        while (newlineIndex !== -1) {
-          const line = buffer.slice(0, newlineIndex);
-          buffer = buffer.slice(newlineIndex + 1);
-          const trimmed = line.trim();
-          if (!trimmed.startsWith('data:')) {
-            newlineIndex = buffer.indexOf('\n');
-            continue;
-          }
-          const payloadRaw = trimmed.slice(5).trim();
-          try {
-            const payload = JSON.parse(payloadRaw) as StreamPayload;
-            const chunk = extractChunk(payload);
-            if (collector.append(chunk)) {
-              return true;
-            }
-          } catch {
-            // ignore parse errors
-          }
-          newlineIndex = buffer.indexOf('\n');
-        }
-        return false;
-      };
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        if (processBuffer()) break;
-      }
-
-      if (!collector.wasTruncated() && buffer.length > 0) {
-        processBuffer();
-      }
-
-      await collector.persist();
-    };
-
-    if (process.env.NODE_ENV === 'test') {
-      await consume();
-    } else {
-      void consume();
-    }
-
-    const headers = new Headers(response.headers);
-    attachResponseHeadersRaw(headers, requestId, modelId, toolChoice);
-    return new Response(clientStream, { status: response.status, headers });
-  } catch {
-    return null;
-  }
-}
-
-async function persistFromClonedStream(response: Response, collector: AssistantResponseCollector): Promise<void> {
-  try {
-    const clone = response.clone?.() ?? response;
-    const text = await clone.text?.();
-    if (typeof text !== 'string') return;
-
-    for (const rawLine of text.split('\n')) {
-      const line = rawLine.trim();
-      if (!line.startsWith('data:')) continue;
-      try {
-        const payload = JSON.parse(line.slice(5).trim()) as StreamPayload;
-        if (collector.append(extractChunk(payload))) break;
-      } catch {
-        // ignore parse errors
-      }
-      if (collector.wasTruncated()) break;
-    }
-
-    await collector.persist();
-  } catch {
-    // ignore
-  }
-}
-
-function extractChunk(payload: StreamPayload | undefined): string {
-  if (!payload || typeof payload !== 'object') return '';
-  if (typeof payload.text === 'string') return payload.text;
-  if (Array.isArray(payload.parts)) {
-    return payload.parts
-      .map((part: StreamPart) => (part && part.type === 'text' && typeof part.text === 'string' ? part.text : ''))
-      .join('');
-  }
-  if (typeof payload.delta?.text === 'string') return payload.delta.text;
-  return '';
-}
-
-function appendWithLimit(current: string, addition: string): { value: string; truncated: boolean } {
-  if (!addition) return { value: current, truncated: false };
-  if (current.length >= MAX_ASSISTANT_RESPONSE_CHARS) {
-    return { value: current, truncated: true };
-  }
-  const remaining = MAX_ASSISTANT_RESPONSE_CHARS - current.length;
-  if (addition.length <= remaining) {
-    return { value: current + addition, truncated: false };
-  }
-  return { value: current + addition.slice(0, remaining), truncated: true };
-}
-
 function attachResponseHeaders(response: Response, requestId: string, modelId: string, toolChoice: string) {
   try {
-    attachResponseHeadersRaw(response.headers, requestId, modelId, toolChoice);
+    attachResponseHeadersRawUtil(response.headers, requestId, modelId, toolChoice);
   } catch {
     // ignore header failures
   }
-}
-
-function attachResponseHeadersRaw(headers: Headers, requestId: string, modelId: string, toolChoice: string) {
-  headers.set('X-Request-Id', requestId);
-  headers.set('X-Model-Id', modelId);
-  headers.set('X-Tool-Choice', toolChoice);
 }

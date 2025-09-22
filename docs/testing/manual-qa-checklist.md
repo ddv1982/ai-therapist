@@ -38,3 +38,4 @@ Run after smoke tests pass. Use a clean profile or incognito.
 ## Regression Checks
 - `/api/sessions/:id/messages` headers include `X-Request-Id`.
 - Standardized `ApiResponse<T>` envelopes for non-chat routes.
+

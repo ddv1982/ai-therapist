@@ -1,4 +1,4 @@
-import { withApiRoute } from '@/lib/api/with-route';
+import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { createSuccessResponse, createServerErrorResponse } from '@/lib/api/api-response';
 
@@ -25,7 +25,7 @@ interface ModelsResponse {
  * 
  * @returns {ModelsResponse} List of available models with metadata
  */
-export const GET = withApiRoute(async (_request, context) => {
+export const GET = withApiMiddleware(async (_request, context, _params) => {
   try {
     const availableModels: ModelInfo[] = [
       { 

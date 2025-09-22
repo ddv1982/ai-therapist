@@ -375,6 +375,9 @@ export function devLog(...args: unknown[]): void {
 
 // Helper to get header value from NextRequest
 function getHeaderValue(headers: Headers | Record<string, string | string[] | undefined>, key: string): string | undefined {
+  if (!headers) {
+    return undefined;
+  }
   if (headers instanceof Headers) {
     return headers.get(key) || undefined;
   }

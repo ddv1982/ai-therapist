@@ -369,15 +369,26 @@ export function handleClientError(
 } {
   const classification = classifyError(error);
   const errorMessage = error instanceof Error ? error.message : String(error);
+  const lower = errorMessage.toLowerCase();
   
   // Determine user-friendly message
   let userMessage = context.fallbackMessage || 'An unexpected error occurred. Please try again.';
   
-  if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+  const isNetworkIssue = (
+    lower.includes('network') ||
+    lower.includes('failed to fetch') ||
+    lower.includes('fetch') ||
+    lower.includes('unreachable') ||
+    lower.includes('econn') ||
+    lower.includes('net::err') ||
+    lower.includes('offline')
+  );
+
+  if (isNetworkIssue) {
     userMessage = 'Network connection issue. Please check your internet connection.';
-  } else if (errorMessage.includes('timeout')) {
+  } else if (lower.includes('timeout') || lower.includes('timed out')) {
     userMessage = 'The request timed out. Please try again.';
-  } else if (errorMessage.includes('authentication')) {
+  } else if (lower.includes('authentication') || lower.includes('unauthorized') || lower.includes('forbidden')) {
     userMessage = 'Please log in again to continue.';
   }
   

@@ -81,7 +81,7 @@ export function extractTableDataFromTokens(tokens: Token[], startIndex: number):
       case 'th_close':
       case 'td_close':
         // Cell content should be in inline tokens between open/close
-        const cellContent = extractCellContent(tokens, index - 1);
+        const cellContent = extractCellContent(tokens, index);
         currentRow.push(cellContent);
         break;
         

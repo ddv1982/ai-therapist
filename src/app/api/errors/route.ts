@@ -1,8 +1,8 @@
-import { withApiRoute } from '@/lib/api/with-route';
+import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 
-export const POST = withApiRoute(async (request, context) => {
+export const POST = withRateLimitUnauthenticated(async (request, context) => {
   try {
     const errorData = await request.json();
 
@@ -20,9 +20,9 @@ export const POST = withApiRoute(async (request, context) => {
     logger.apiError('/api/errors', error as Error, context);
     return createErrorResponse('Failed to log error', 500, { requestId: context.requestId });
   }
-});
+}, { bucket: 'api' });
 
-export const GET = withApiRoute(async (_request, context) => {
+export const GET = withRateLimitUnauthenticated(async (_request, context) => {
   return createSuccessResponse(
     {
       timestamp: new Date().toISOString(),
@@ -33,4 +33,4 @@ export const GET = withApiRoute(async (_request, context) => {
     },
     { requestId: context.requestId }
   );
-});
+}, { bucket: 'api' });

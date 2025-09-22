@@ -66,7 +66,7 @@ describe('/api/errors standardized responses and headers', () => {
 
   it('GET returns standardized ApiResponse and sets X-Request-Id', async () => {
     const mod = await import('@/app/api/errors/route');
-    const res = await mod.GET(createReq('GET') as any);
+    const res = await mod.GET(createReq('GET') as any, { params: Promise.resolve({}) } as any);
     expect(res.status).toBe(200);
 
     const body = await res.json();
@@ -77,7 +77,7 @@ describe('/api/errors standardized responses and headers', () => {
 
   it('POST returns standardized success and X-Request-Id', async () => {
     const mod = await import('@/app/api/errors/route');
-    const res = await mod.POST(createReq('POST', { message: 'client error' }) as any);
+    const res = await mod.POST(createReq('POST', { message: 'client error' }) as any, { params: Promise.resolve({}) } as any);
     expect(res.status).toBe(200);
 
     const body = await res.json();

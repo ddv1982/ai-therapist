@@ -10,7 +10,7 @@ import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/c
 import { deduplicateRequest } from '@/lib/utils/request-deduplication';
 import type { Prisma } from '@prisma/client';
 import { generateFallbackAnalysis as generateFallbackAnalysisExternal } from '@/lib/reports/fallback-analysis';
-import { withApiRoute } from '@/lib/api/with-route';
+import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { createErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
 
 // Note: CognitiveDistortion interface removed - using types from report.ts instead
@@ -61,7 +61,7 @@ function generateFallbackAnalysis(reportContent: string): ParsedAnalysis {
   return generateFallbackAnalysisExternal(reportContent) as unknown as ParsedAnalysis;
 }
 
-export const POST = withApiRoute(async (request: NextRequest, context) => {
+export const POST = withApiMiddleware(async (request: NextRequest, context) => {
   try {
     // Always use analytical model for detailed session reports
     const { REPORT_MODEL_ID } = await import('@/features/chat/config');

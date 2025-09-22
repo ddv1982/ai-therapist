@@ -1,22 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getClientIPFromRequest } from './src/lib/api/middleware/request-utils';
 import createMiddleware from 'next-intl/middleware';
 import { locales, defaultLocale } from './src/i18n/config';
 
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIP = request.headers.get('x-real-ip');
-  
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
-  }
-  
-  if (realIP) {
-    return realIP;
-  }
-  
-  // NextRequest does not expose .ip in Edge runtime, rely on headers only
-  return 'unknown';
-}
+// Use shared helper for consistent IP extraction across the app
+const getClientIP = getClientIPFromRequest;
 
 const handleI18n = createMiddleware({
   locales,

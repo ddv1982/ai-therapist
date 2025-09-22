@@ -1,5 +1,5 @@
 import { checkDatabaseHealth, prisma } from '@/lib/database/db';
-import { withApiRoute } from '@/lib/api/with-route';
+import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { getCircuitBreakerStatus } from '@/lib/utils/graceful-degradation';
 import { getDeduplicationStats } from '@/lib/utils/request-deduplication';
@@ -213,7 +213,7 @@ function checkSystemMetrics(): HealthCheck {
   }
 }
 
-export const GET = withApiRoute(async (_request, context) => {
+export const GET = withRateLimitUnauthenticated(async (_request, context) => {
   try {
     logger.debug('Comprehensive health check requested', { requestId: context.requestId });
     
@@ -295,7 +295,7 @@ export const GET = withApiRoute(async (_request, context) => {
       { requestId: context.requestId }
     );
   }
-});
+}, { bucket: 'api' });
 
 /**
  * Liveness probe - simple endpoint to check if the API is responsive

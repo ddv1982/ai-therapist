@@ -2,11 +2,11 @@ import { NextRequest } from 'next/server';
 import { getTOTPDiagnostics, isTOTPSetup } from '@/lib/auth/totp-service';
 import { getClientIP } from '@/lib/auth/auth-middleware';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
-import { withApiRoute } from '@/lib/api/with-route';
+import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
 // GET /api/auth/mobile-debug - Get detailed mobile debugging info
-export const GET = withApiRoute(async (request: NextRequest, context) => {
+export const GET = withRateLimitUnauthenticated(async (request: NextRequest, context) => {
   try {
     const userAgent = request.headers.get('user-agent') || 'unknown';
     const ipAddress = getClientIP(request);
@@ -91,10 +91,10 @@ export const GET = withApiRoute(async (request: NextRequest, context) => {
     logger.apiError('/api/auth/mobile-debug', error as Error, createRequestLogger(request));
     return createErrorResponse('Debug failed', 500, { requestId: context.requestId });
   }
-});
+}, { bucket: 'api' });
 
 // POST /api/auth/mobile-debug - Test token with mobile debugging
-export const POST = withApiRoute(async (request: NextRequest, context) => {
+export const POST = withRateLimitUnauthenticated(async (request: NextRequest, context) => {
   try {
     const body = await request.json();
     const { token, clientTime } = body;
@@ -167,4 +167,4 @@ export const POST = withApiRoute(async (request: NextRequest, context) => {
     logger.apiError('/api/auth/mobile-debug', error as Error, createRequestLogger(request));
     return createErrorResponse('Debug test failed', 500, { requestId: context.requestId });
   }
-});
+}, { bucket: 'api' });
