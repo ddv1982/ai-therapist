@@ -10,7 +10,6 @@ import {
   createPaginatedResponse, 
   addTherapeuticHeaders 
 } from '@/lib/api/api-response';
-import { MessageCache } from '@/lib/cache';
 import { logger } from '@/lib/utils/logger';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
 
@@ -114,8 +113,7 @@ export const POST = withValidationAndParams(
         });
       }
 
-      // Invalidate message cache for this session
-      await MessageCache.invalidate(sessionId);
+      // TODO: If a message cache is introduced, invalidate here
 
       // Lightweight observability: log model if provided
       if (validatedData.modelUsed) {

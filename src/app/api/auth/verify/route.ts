@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import { verifyTOTPToken, verifyBackupCode, isTOTPSetup, getTOTPDiagnostics } from '@/lib/auth/totp-service';
 import { getOrCreateDevice, createAuthSession } from '@/lib/auth/device-fingerprint';
 import { getClientIP } from '@/lib/auth/auth-middleware';
-import { generateSecureRandomString } from '@/lib/utils/utils';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
 import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { 
@@ -11,8 +10,8 @@ import {
 } from '@/lib/api/api-response';
 
 // POST /api/auth/verify - Verify TOTP token or backup code
-export const POST = withRateLimitUnauthenticated(async (request: NextRequest) => {
-  const requestId = generateSecureRandomString(8, 'abcdefghijklmnopqrstuvwxyz0123456789');
+export const POST = withRateLimitUnauthenticated(async (request: NextRequest, context) => {
+  const requestId = context.requestId;
   const startTime = Date.now();
   
   try {
@@ -136,8 +135,6 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
       processingTime: duration
     });
     logger.secureDevLog(`=== AUTH REQUEST END [${requestId}] ERROR ===\n`);
-    
-    console.timeEnd(`[${requestId}] total`);
     return createErrorResponse('Verification failed', 500, { requestId });
   }
 });

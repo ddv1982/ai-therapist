@@ -65,7 +65,7 @@ export function createApiMiddleware(deps: Partial<ApiMiddlewareDeps> = {}) {
       request: NextRequest,
       routeParams: { params: Promise<Record<string, string>> }
     ): Promise<NextResponse<ApiResponse<T>>> => {
-      const requestContext = toRequestContext(createRequestLoggerLocal(request), 'test-request');
+      const requestContext = toRequestContext(createRequestLoggerLocal(request), 'unknown');
       const startHighRes = performance.now();
       try {
         const res = await handler(request, requestContext, routeParams?.params);
@@ -77,7 +77,7 @@ export function createApiMiddleware(deps: Partial<ApiMiddlewareDeps> = {}) {
         return res;
       } catch (error) {
         const err = error instanceof Error ? error : new Error('Unknown error');
-        const rid = requestContext.requestId || 'test-request';
+        const rid = requestContext.requestId || 'unknown';
         const resp = createServerErrorResponse(err, rid, requestContext) as NextResponse<ApiResponse<T>>;
         const durationMs = Math.round(performance.now() - startHighRes);
         setResponseHeaders(resp, rid, durationMs);

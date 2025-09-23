@@ -38,9 +38,11 @@ export function createSuccessResponse<T>(
       ...meta,
     },
   });
+  // Fallback: set X-Request-Id only if not already present (middleware is authoritative)
   try {
-    if (meta?.requestId && (response as unknown as { headers?: { set?: (k: string, v: string) => void } }).headers?.set) {
-      (response as unknown as { headers: { set: (k: string, v: string) => void } }).headers.set('X-Request-Id', String(meta.requestId));
+    const headersObj = (response as unknown as { headers?: { set?: (k: string, v: string) => void; get?: (k: string) => string | null } }).headers;
+    if (meta?.requestId && headersObj?.set && (!headersObj.get || !headersObj.get('X-Request-Id'))) {
+      headersObj.set('X-Request-Id', String(meta.requestId));
     }
   } catch {}
   return response;
@@ -72,9 +74,11 @@ export function createErrorResponse(
     },
     { status }
   );
+  // Fallback: set X-Request-Id only if not already present (middleware is authoritative)
   try {
-    if (options.requestId && (response as unknown as { headers?: { set?: (k: string, v: string) => void } }).headers?.set) {
-      (response as unknown as { headers: { set: (k: string, v: string) => void } }).headers.set('X-Request-Id', String(options.requestId));
+    const headersObj = (response as unknown as { headers?: { set?: (k: string, v: string) => void; get?: (k: string) => string | null } }).headers;
+    if (options.requestId && headersObj?.set && (!headersObj.get || !headersObj.get('X-Request-Id'))) {
+      headersObj.set('X-Request-Id', String(options.requestId));
     }
   } catch {}
   return response;

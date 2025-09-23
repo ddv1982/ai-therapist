@@ -1,4 +1,5 @@
 import { ObsessionsCompulsionsData, ObsessionData, CompulsionData } from '@/types/therapy';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Format obsessions and compulsions data for chat display
@@ -99,7 +100,8 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
       lastModified: new Date().toISOString()
     };
   } catch (error) {
-    console.error('Error parsing obsessions and compulsions data:', error);
+    // Structured logging; parser runs in client or server contexts
+    logger.error('Error parsing obsessions and compulsions data', { module: 'format-obsessions-compulsions' }, error as Error);
     return null;
   }
 }

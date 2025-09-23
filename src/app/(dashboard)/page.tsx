@@ -35,6 +35,8 @@ import { updateSettings } from '@/store/slices/chatSlice';
 import { useChatController } from '@/hooks';
 import { ObsessionsCompulsionsData } from '@/types/therapy';
 import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
+import { useToast } from '@/components/ui/toast';
+import { logger } from '@/lib/utils/logger';
  
 
 // types are provided by the controller; no local re-definitions needed
@@ -73,6 +75,7 @@ function ChatPageContent() {
     addMessageToChat,
     createObsessionsCompulsionsTable,
   } = useChatController({ model: settings.model, webSearchEnabled: settings.webSearchEnabled });
+  const { showToast } = useToast();
   const [showMemoryModal, setShowMemoryModal] = useState(false);
   // kept for backward compatibility; no longer used since height is managed by hook
   // const inputHeightRef = useRef(0);
@@ -118,9 +121,10 @@ function ChatPageContent() {
         sessionId: currentSession
       });
     } catch (error) {
-      console.error('Failed to save obsessions and compulsions data:', error);
+      showToast({ type: 'error', title: 'Save failed', message: 'Could not add your data to the chat. Please try again.' });
+      logger.error('Failed to save obsessions and compulsions data', { component: 'ChatPageContent' }, error as Error);
     }
-  }, [currentSession, addMessageToChat]);
+  }, [currentSession, addMessageToChat, showToast]);
 
   const handleWebSearchToggle = () => {
     const newWebSearchEnabled = !settings.webSearchEnabled;

@@ -11,6 +11,8 @@ import {
 // import { useTranslations } from 'next-intl';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setCurrentSession as setCurrentSessionAction } from '@/store/slices/sessionsSlice';
+import { useToast } from '@/components/ui/toast';
+import { logger } from '@/lib/utils/logger';
 import { useSelectSession } from '@/hooks';
 
 export function SessionSidebarContainer({
@@ -36,6 +38,7 @@ export function SessionSidebarContainer({
   const { data: currentServerSession, refetch: refetchCurrent } = useGetCurrentSessionQuery();
   const currentSessionId = useAppSelector(state => state.sessions.currentSessionId);
   const { selectSession } = useSelectSession();
+  const { showToast } = useToast();
 
   // Hydrate from server on mount
   useEffect(() => {
@@ -65,7 +68,8 @@ export function SessionSidebarContainer({
         } catch {}
       }
     } catch (err) {
-      console.error('Failed to delete session:', err);
+      showToast({ type: 'error', title: 'Delete failed', message: 'Could not delete the session. Please try again.' });
+      logger.error('Failed to delete session', { component: 'SessionSidebarContainer', sessionId }, err as Error);
     }
   };
 

@@ -3,6 +3,8 @@
 import React, { useState, useRef } from 'react';
 import { ChatComposer } from './chat-composer';
 import { useSendMessageMutation } from '@/store/slices/chatApi';
+import { useToast } from '@/components/ui/toast';
+import { logger } from '@/lib/utils/logger';
 
 interface ChatComposerContainerProps {
   sessionId: string;
@@ -14,6 +16,7 @@ export function ChatComposerContainer({ sessionId, isMobile }: ChatComposerConta
   const [sendMessage, { isLoading }] = useSendMessageMutation();
   const inputContainerRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const { showToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,13 +30,14 @@ export function ChatComposerContainer({ sessionId, isMobile }: ChatComposerConta
       }).unwrap();
       setInput('');
     } catch (err) {
-      console.error('Failed to send message:', err);
+      showToast({ type: 'error', title: 'Send failed', message: 'Could not send your message. Please try again.' });
+      logger.error('Failed to send message', { component: 'ChatComposerContainer', sessionId }, err as Error);
     }
   };
 
   const handleStop = () => {
     // TODO: integrate with streaming cancellation if supported
-    console.log('Stop streaming not yet implemented');
+    logger.info('Stop streaming requested (not yet implemented)', { component: 'ChatComposerContainer', sessionId });
   };
 
   return (

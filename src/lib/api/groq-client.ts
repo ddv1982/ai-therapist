@@ -68,7 +68,11 @@ export const streamTextWithBrowserSearch = async (
 
     return result;
   } catch (error) {
-    console.error('Browser search failed:', error);
+    // Use structured logger; avoid console noise
+    try {
+      const { logger } = await import('@/lib/utils/logger');
+      logger.error('Browser search failed', { module: 'groq-client' }, error as Error);
+    } catch {}
     
     // Fallback: Use regular text generation without browser search
     const fallbackResult = streamText({
