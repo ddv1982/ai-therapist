@@ -36,7 +36,6 @@ export function ChatComposerContainer({ sessionId, isMobile }: ChatComposerConta
   };
 
   const handleStop = () => {
-    // TODO: integrate with streaming cancellation if supported
     logger.info('Stop streaming requested (not yet implemented)', { component: 'ChatComposerContainer', sessionId });
   };
 

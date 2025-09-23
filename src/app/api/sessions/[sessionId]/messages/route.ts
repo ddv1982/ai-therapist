@@ -11,6 +11,8 @@ import {
   addTherapeuticHeaders 
 } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
+import { MessageCache } from '@/lib/cache';
+import type { MessageData as CacheMessageData } from '@/lib/cache/api-cache';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
 
 const postBodySchema = z.object({
@@ -113,7 +115,8 @@ export const POST = withValidationAndParams(
         });
       }
 
-      // TODO: If a message cache is introduced, invalidate here
+      // Invalidate message cache (optional caching)
+      try { await MessageCache.invalidate(sessionId); } catch {}
 
       // Lightweight observability: log model if provided
       if (validatedData.modelUsed) {
@@ -152,30 +155,49 @@ export const GET = withAuth(
         const limit = parsed.success ? (parsed.data.limit ?? 50) : 50;
 
         const total = await prisma.message.count({ where: { sessionId } });
-        const messages = await prisma.message.findMany({
-          where: { sessionId },
-          orderBy: { timestamp: 'asc' },
-          skip: (page - 1) * limit,
-          take: limit,
-        });
 
-        const decrypted = safeDecryptMessages(messages.map(m => ({
-          role: m.role,
-          content: m.content,
-          timestamp: m.timestamp,
-        })));
-        // Guard against length mismatch to avoid undefined indexing
-        const items = messages.map((m, i) => ({
-          id: m.id,
-          sessionId: m.sessionId,
-          role: decrypted[i]?.role ?? m.role,
-          content: decrypted[i]?.content ?? '',
-          modelUsed: m.modelUsed ?? undefined,
-          timestamp: decrypted[i]?.timestamp ?? m.timestamp,
-          createdAt: m.createdAt,
-        }));
+        const useCache = process.env.MESSAGES_CACHE_ENABLED !== 'false';
+        type MessageListItem = { id: string; sessionId: string; role: 'user' | 'assistant'; content: string; modelUsed?: string; timestamp: Date; createdAt: Date };
+        let items: MessageListItem[] | null = null;
+        if (useCache) {
+          try {
+            const cached = await MessageCache.get(sessionId, page) as unknown;
+            if (Array.isArray(cached)) {
+              items = cached as unknown as MessageListItem[];
+            }
+          } catch {}
+        }
 
-        let response = createPaginatedResponse(items, page, limit, total, context.requestId);
+        if (!items) {
+          const messages = await prisma.message.findMany({
+            where: { sessionId },
+            orderBy: { timestamp: 'asc' },
+            skip: (page - 1) * limit,
+            take: limit,
+          });
+
+          const decrypted = safeDecryptMessages(messages.map(m => ({
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp,
+          })));
+          // Guard against length mismatch to avoid undefined indexing
+          items = messages.map((m, i) => ({
+            id: m.id,
+            sessionId: m.sessionId,
+            role: (decrypted[i]?.role ?? m.role) as 'user' | 'assistant',
+            content: decrypted[i]?.content ?? '',
+            modelUsed: m.modelUsed ?? undefined,
+            timestamp: decrypted[i]?.timestamp ?? m.timestamp,
+            createdAt: m.createdAt,
+          }));
+
+          if (useCache) {
+            try { await MessageCache.set(sessionId, items as unknown as CacheMessageData[], page); } catch {}
+          }
+        }
+
+        let response = createPaginatedResponse(items!, page, limit, total, context.requestId);
         response = addTherapeuticHeaders(response);
         return response;
       } catch (error) {

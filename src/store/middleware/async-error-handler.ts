@@ -1,6 +1,7 @@
 import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit';
 import { setError as setSessionError } from '../slices/sessionsSlice';
 import { setError as setChatError } from '../slices/chatSlice';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Centralized async error handler for Redux thunks.
@@ -20,8 +21,8 @@ export function handleThunkError(
     dispatch(setChatError(message));
   }
 
-  // Optionally log to console or external service
+  // Structured logging with filtering; still gated in dev for noise
   if (process.env.NODE_ENV !== 'production') {
-    console.error(`[ThunkError][${scope}]`, message, error);
+    logger.error('ThunkError', { scope, message }, error as Error);
   }
 }

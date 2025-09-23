@@ -70,6 +70,10 @@ class AssistantResponseCollector {
           modelUsed: this.modelId,
         },
       });
+      try {
+        const { MessageCache } = await import('@/lib/cache');
+        await MessageCache.invalidate(this.sessionId);
+      } catch {}
       logger.info('Assistant message persisted after stream', {
         apiEndpoint: '/api/chat',
         requestId: this.requestId,

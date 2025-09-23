@@ -5,6 +5,7 @@ import { getClientIP } from '@/lib/auth/auth-middleware';
 import { handleApiError } from '@/lib/utils/error-utils';
 import { withRateLimitUnauthenticated, withApiMiddleware } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse, createForbiddenErrorResponse } from '@/lib/api/api-response';
+import { logger } from '@/lib/utils/logger';
 
 // Type declaration for global cache
 declare global {
@@ -36,7 +37,7 @@ export const GET = withRateLimitUnauthenticated(async () => {
     if (globalThis.totpSetupCache &&
         globalThis.totpSetupCache.timestamp &&
         (Date.now() - globalThis.totpSetupCache.timestamp) < cacheExpiry) {
-      console.log('Reusing cached TOTP setup data');
+      logger.info('Reusing cached TOTP setup data', { endpoint: '/api/auth/setup', phase: 'cache-hit' });
       return createSuccessResponse({
         qrCodeUrl: globalThis.totpSetupCache.data.qrCodeUrl,
         manualEntryKey: globalThis.totpSetupCache.data.manualEntryKey,
@@ -45,7 +46,7 @@ export const GET = withRateLimitUnauthenticated(async () => {
       });
     }
 
-    console.log('Generating new TOTP setup data at:', new Date().toISOString());
+    logger.info('Generating new TOTP setup data', { endpoint: '/api/auth/setup', timestamp: new Date().toISOString() });
 
     // Generate TOTP setup data
     const setupData = await generateTOTPSetup();
