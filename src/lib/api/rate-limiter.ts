@@ -56,18 +56,23 @@ class RedisRateLimiter {
 
   private getConfigForBucket(name: string) {
     const blockMs = Number(process.env.RATE_LIMIT_BLOCK_MS || 5 * 60 * 1000);
+    const read = (key: string, fallback: number) => {
+      const raw = (process.env as Record<string, string | undefined>)[key];
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+    };
     if (name === 'chat') {
-      const windowMs = Number(process.env.CHAT_WINDOW_MS || 5 * 60 * 1000);
-      const maxAttempts = Number(process.env.CHAT_MAX_REQS || 120);
+      const windowMs = read('CHAT_WINDOW_MS', 5 * 60 * 1000);
+      const maxAttempts = read('CHAT_MAX_REQS', 120);
       return { windowMs, maxAttempts, blockDuration: blockMs };
     }
     if (name === 'api') {
-      const windowMs = Number(process.env.API_WINDOW_MS || 5 * 60 * 1000);
-      const maxAttempts = Number(process.env.API_MAX_REQS || 300);
+      const windowMs = read('API_WINDOW_MS', 5 * 60 * 1000);
+      const maxAttempts = read('API_MAX_REQS', 300);
       return { windowMs, maxAttempts, blockDuration: blockMs };
     }
-    const windowMs = Number(process.env.RATE_LIMIT_WINDOW_MS || 5 * 60 * 1000);
-    const maxAttempts = Number(process.env.RATE_LIMIT_MAX_REQS || 50);
+    const windowMs = read('RATE_LIMIT_WINDOW_MS', 5 * 60 * 1000);
+    const maxAttempts = read('RATE_LIMIT_MAX_REQS', 50);
     return { windowMs, maxAttempts, blockDuration: blockMs };
   }
 }

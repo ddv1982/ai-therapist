@@ -140,7 +140,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       : [{ role: 'user' as const, content: normalized.data.message }];
 
     const decision = selectModelAndTools({ message: normalized.data.message, preferredModel: normalized.data.model, webSearchEnabled: Boolean(raw?.webSearchEnabled) });
-    const modelId = (decision.tools.includes('web-search')) ? decision.model : decision.model;
+    const modelId = decision.model;
     const hasWebSearch = decision.tools.includes('web-search');
     const toolChoiceHeader = hasWebSearch ? 'required' : 'none';
 

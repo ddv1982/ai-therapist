@@ -92,7 +92,9 @@ export class ApiClient {
         error.status = res.status;
         throw error;
       }
-      // Non-JSON error responses return null to preserve legacy behavior
+      // Non-JSON error responses return null to preserve legacy behavior.
+      // NOTE: This is intentional to avoid breaking older callers that treat
+      // null as a signal for non-JSON responses from legacy endpoints.
       return null as unknown as T;
     }
     return parsed as T;
