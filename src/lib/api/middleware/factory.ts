@@ -12,7 +12,7 @@ import {
   ApiResponse,
 } from '@/lib/api/api-response';
 import { getRateLimiter } from '@/lib/api/rate-limiter';
-import { recordEndpointError, recordEndpointSuccess } from '@/lib/metrics/metrics';
+import { recordEndpointError, recordEndpointSuccess, recordEndpointLatency } from '@/lib/metrics/metrics';
 import { getClientIPFromRequest, toRequestContext, setResponseHeaders } from '@/lib/api/middleware/request-utils';
 import { buildWithAuth, buildWithAuthStreaming } from '@/lib/api/middleware/builders/auth';
 import { buildValidation } from '@/lib/api/middleware/builders/validation';
@@ -71,6 +71,7 @@ export function createApiMiddleware(deps: Partial<ApiMiddlewareDeps> = {}) {
         const res = await handler(request, requestContext, routeParams?.params);
         const durationMs = Math.round(performance.now() - startHighRes);
         setResponseHeaders(res, requestContext.requestId, durationMs);
+        try { recordEndpointLatency(requestContext.method, requestContext.url, durationMs); } catch {}
         logger.info('API request completed', { requestId: requestContext.requestId, url: requestContext.url, method: requestContext.method, durationMs });
         try { recordEndpointSuccess(requestContext.method, requestContext.url); } catch {}
         return res;
@@ -80,6 +81,7 @@ export function createApiMiddleware(deps: Partial<ApiMiddlewareDeps> = {}) {
         const resp = createServerErrorResponse(err, rid, requestContext) as NextResponse<ApiResponse<T>>;
         const durationMs = Math.round(performance.now() - startHighRes);
         setResponseHeaders(resp, rid, durationMs);
+        try { recordEndpointLatency(requestContext.method, requestContext.url, durationMs); } catch {}
         try { recordEndpointError(requestContext.method, requestContext.url); } catch {}
         return resp;
       }

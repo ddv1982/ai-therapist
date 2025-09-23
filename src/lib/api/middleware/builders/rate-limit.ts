@@ -1,11 +1,19 @@
+/**
+ * Rate limit builder
+ *
+ * Contract: Wraps a handler with IP-based rate limiting. On limit, returns
+ * standardized ApiResponse with 429 and sets `Retry-After`, `X-Request-Id`,
+ * and `Server-Timing` headers (the latter two via the core middleware).
+ */
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import type { ApiResponse } from '@/lib/api/api-response';
+import type { RequestContext } from '@/lib/api/middleware/factory';
 
 export type WithApiMiddleware = <T = unknown>(
   handler: (
     request: NextRequest,
-    context: { requestId: string; method?: string; url?: string; userAgent?: string },
+    context: RequestContext,
     params?: unknown
   ) => Promise<NextResponse<ApiResponse<T>>>
 ) => (
@@ -23,7 +31,7 @@ export function buildRateLimit(
   function withRateLimitUnauthenticated<T = unknown>(
     handler: (
       request: NextRequest,
-      context: { requestId: string; method?: string; url?: string; userAgent?: string },
+      context: RequestContext,
       params?: unknown
     ) => Promise<NextResponse<ApiResponse<T>>>,
     options: { bucket?: 'api' | 'chat' | 'default'; windowMs?: number } = {}

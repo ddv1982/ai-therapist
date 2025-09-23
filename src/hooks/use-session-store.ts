@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { apiClient } from '@/lib/api/client';
+import * as sessionsApi from '@/lib/api/client/sessions';
 import { getApiData } from '@/lib/api/api-response';
 import { mapApiSessionToUiSession } from '@/lib/chat/session-mapper';
 import type { components } from '@/types/api.generated';
@@ -16,7 +16,7 @@ export function useSessionStore() {
     if (loadingRef.current) return;
     loadingRef.current = true;
     try {
-      const sessionsData = await apiClient.listSessions();
+      const sessionsData = await sessionsApi.listSessions();
       const sessions = getApiData(sessionsData);
       const uiSessions: UiSession[] = (sessions || []).map(mapApiSessionToUiSession) as UiSession[];
       setSessions(uiSessions);
@@ -26,14 +26,14 @@ export function useSessionStore() {
   }, []);
 
   const removeSession = useCallback(async (sessionId: string) => {
-    const resp = await apiClient.deleteSession(sessionId);
+    const resp = await sessionsApi.deleteSession(sessionId);
     if (resp) {
       setSessions(prev => prev.filter(s => s.id !== sessionId));
     }
   }, []);
 
   const createSession = useCallback(async (title: string) => {
-    const result = await apiClient.createSession({ title });
+    const result = await sessionsApi.createSession({ title });
     const created = getApiData(result) as components['schemas']['Session'];
     const ui = mapApiSessionToUiSession(created) as UiSession;
     setSessions(prev => [ui, ...prev]);

@@ -117,6 +117,11 @@ export const POST = withValidationAndParams(
       // Invalidate message cache for this session
       await MessageCache.invalidate(sessionId);
 
+      // Lightweight observability: log model if provided
+      if (validatedData.modelUsed) {
+        logger.info('Message POST model used', { apiEndpoint: '/api/sessions/[sessionId]/messages', requestId: context.requestId, modelId: validatedData.modelUsed });
+      }
+
       return createSuccessResponse({
         id: message.id,
         sessionId,

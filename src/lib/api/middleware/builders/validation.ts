@@ -1,11 +1,19 @@
+/**
+ * Validation builder
+ *
+ * Contract: Validates request body or query via Zod schema after auth. On
+ * failure, returns standardized 400 ApiResponse. Applies `X-Request-Id` and
+ * `Server-Timing` headers via core middleware; context includes `userInfo`.
+ */
 import type { NextRequest, NextResponse } from 'next/server';
 import type { z } from 'zod';
 import type { ApiResponse } from '@/lib/api/api-response';
+import type { AuthenticatedRequestContext } from '@/lib/api/middleware/factory';
 
 export type WithAuth = <T = unknown>(
   handler: (
     request: NextRequest,
-    context: { requestId: string; method?: string; url?: string; userAgent?: string; userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> | undefined },
+    context: AuthenticatedRequestContext,
     params: Promise<Record<string, string>>
   ) => Promise<NextResponse<ApiResponse<T>>>
 ) => (
@@ -25,7 +33,7 @@ export function buildValidation(
     schema: TSchema,
     handler: (
       request: NextRequest,
-      context: { requestId: string; method?: string; url?: string; userAgent?: string; userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> | undefined },
+      context: AuthenticatedRequestContext,
       validatedData: z.infer<TSchema>,
       params?: unknown
     ) => Promise<NextResponse<ApiResponse<TResponse>>>
@@ -63,7 +71,7 @@ export function buildValidation(
     schema: TSchema,
     handler: (
       request: NextRequest,
-      context: { requestId: string; method?: string; url?: string; userAgent?: string; userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> | undefined },
+      context: AuthenticatedRequestContext,
       validatedData: z.infer<TSchema>,
       params: Record<string, string>
     ) => Promise<NextResponse<ApiResponse<TResponse>>>

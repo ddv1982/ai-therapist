@@ -11,7 +11,7 @@
 import { useState, useCallback } from 'react';
 import type { MessageData } from '@/features/chat/messages/message';
 import { logger } from '@/lib/utils/logger';
-import { apiClient } from '@/lib/api/client';
+import * as messagesApi from '@/lib/api/client/messages';
 import { getApiData } from '@/lib/api/api-response';
 import type { components } from '@/types/api.generated';
 
@@ -39,7 +39,7 @@ export function useChatMessages() {
    */
   const loadMessages = useCallback(async (sessionId: string): Promise<void> => {
     try {
-      const resp: ListMessagesResponse = await apiClient.listMessages(sessionId);
+      const resp: ListMessagesResponse = await messagesApi.listMessages(sessionId);
       if (resp) {
         const page = getApiData(resp);
         const items = page.items as Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: string }>;
@@ -101,7 +101,7 @@ export function useChatMessages() {
       setMessages(prev => [...prev, uiMessage]);
 
       // Save to database
-      const saved = await apiClient.postMessage(message.sessionId, {
+      const saved = await messagesApi.postMessage(message.sessionId, {
         role: message.role,
         content: message.content,
         modelUsed: message.modelUsed,

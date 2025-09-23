@@ -1,16 +1,24 @@
+/**
+ * Auth + Rate Limit builder
+ *
+ * Contract: Authenticates request, applies global and streaming-specific rate
+ * limiting. On limit, returns standardized 429 with `Retry-After`. Always sets
+ * `X-Request-Id` and `Server-Timing` headers. Adds `userInfo` to context.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { performance } from 'node:perf_hooks';
 import type { ApiResponse } from '@/lib/api/api-response';
 import { setResponseHeaders } from '@/lib/api/middleware/request-utils';
+import type { RequestContext, AuthenticatedRequestContext } from '@/lib/api/middleware/factory';
 
 export function buildAuthAndRateLimit(
   deps: {
-    toRequestContext: (raw: unknown, fallbackId?: string) => { requestId: string; method?: string; url?: string; userAgent?: string };
+    toRequestContext: (raw: unknown, fallbackId?: string) => RequestContext;
     createRequestLogger: (req: NextRequest) => unknown;
     validateApiAuth: (req: NextRequest) => Promise<{ isValid: boolean; error?: string }>;
     getClientIPFromRequest: (req: NextRequest) => string;
     getRateLimiter: () => { checkRateLimit: (ip: string, bucket?: string) => Promise<{ allowed: boolean; retryAfter?: number }> };
-    getSingleUserInfo: (req: NextRequest) => unknown;
+    getSingleUserInfo: (req: NextRequest) => ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo>;
     recordEndpointError?: (method?: string, url?: string) => void;
     recordEndpointSuccess?: (method?: string, url?: string) => void;
     createAuthenticationErrorResponse: (message: string, requestId: string) => NextResponse<ApiResponse>;
@@ -22,7 +30,7 @@ export function buildAuthAndRateLimit(
   function withAuthAndRateLimit<T = unknown>(
     handler: (
       request: NextRequest,
-      context: { requestId: string; method?: string; url?: string; userAgent?: string; userInfo: unknown },
+      context: AuthenticatedRequestContext,
       params: Promise<Record<string, string>>
     ) => Promise<NextResponse<ApiResponse<T>>>,
     options: { maxRequests?: number; windowMs?: number } = {}
@@ -70,7 +78,7 @@ export function buildAuthAndRateLimit(
         }
 
         const userInfo = deps.getSingleUserInfo(request);
-        const authenticatedContext = { ...requestContext, userInfo } as const;
+        const authenticatedContext: AuthenticatedRequestContext = { ...requestContext, userInfo } as AuthenticatedRequestContext;
         const res = await handler(request, authenticatedContext, routeParams?.params);
         const durationMs = Math.round(performance.now() - startHighRes);
         setResponseHeaders(res, authenticatedContext.requestId, durationMs);
@@ -88,7 +96,7 @@ export function buildAuthAndRateLimit(
   function withAuthAndRateLimitStreaming(
     handler: (
       request: NextRequest,
-      context: { requestId: string; method?: string; url?: string; userAgent?: string; userInfo: unknown },
+      context: AuthenticatedRequestContext,
       params: Promise<Record<string, string>>
     ) => Promise<Response>,
     _options: { maxRequests?: number; windowMs?: number; maxConcurrent?: number } = {}
@@ -169,7 +177,7 @@ export function buildAuthAndRateLimit(
         }
 
         const userInfo = deps.getSingleUserInfo(request);
-        const authenticatedContext = {
+        const authenticatedContext: AuthenticatedRequestContext = {
           requestId: baseContext.requestId || 'unknown',
           method: baseContext.method,
           url: baseContext.url,

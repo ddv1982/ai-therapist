@@ -17,6 +17,15 @@ export interface ApiResponse<T = unknown> {
   };
 }
 
+// Type guard to detect standardized ApiResponse<T> objects at runtime
+export function isApiResponse<T = unknown>(value: unknown): value is ApiResponse<T> {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  if (!('success' in obj)) return false;
+  const success = (obj as { success?: unknown }).success;
+  return typeof success === 'boolean';
+}
+
 export function createSuccessResponse<T>(
   data: T,
   meta?: Partial<ApiResponse['meta']>

@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { ApiResponse } from '@/lib/api/api-response';
+import { isApiResponse } from '@/lib/api/api-response';
 
 export interface SessionData {
   id: string;
@@ -18,7 +19,7 @@ type CreateSessionResponse = SessionData;
 
 // Exported pure transform helpers for testing and reuse
 export function transformFetchSessionsResponse(response: ApiResponse<SessionData[]> | SessionData[]): SessionData[] {
-  if ((response as { success?: boolean }).success && Array.isArray((response as { data?: SessionData[] }).data)) {
+  if (isApiResponse<SessionData[]>(response) && Array.isArray(response.data)) {
     return (response as { data: SessionData[] }).data;
   }
   if (Array.isArray(response as unknown as SessionData[])) {
@@ -28,8 +29,8 @@ export function transformFetchSessionsResponse(response: ApiResponse<SessionData
 }
 
 export function transformCreateSessionResponse(response: ApiResponse<CreateSessionResponse> | CreateSessionResponse): CreateSessionResponse {
-  if ((response as { success?: boolean }).success && (response as { data?: CreateSessionResponse }).data) {
-    return (response as { data: CreateSessionResponse }).data;
+  if (isApiResponse<CreateSessionResponse>(response) && response.data) {
+    return response.data;
   }
   if ((response as unknown as CreateSessionResponse)?.id) {
     return response as unknown as CreateSessionResponse;
@@ -38,11 +39,11 @@ export function transformCreateSessionResponse(response: ApiResponse<CreateSessi
 }
 
 export function transformDeleteSessionResponse(response: ApiResponse<{ success: boolean }> | { success?: boolean }): { success: boolean } {
-  if ((response as { success?: boolean }).success && (response as { data?: { success: boolean } }).data) {
-    return (response as { data: { success: boolean } }).data;
+  if (isApiResponse<{ success: boolean }>(response) && response.data) {
+    return response.data;
   }
-  if (typeof (response as unknown as { success?: boolean })?.success === 'boolean') {
-    return { success: Boolean((response as unknown as { success?: boolean }).success) };
+  if (typeof (response as { success?: boolean })?.success === 'boolean') {
+    return { success: Boolean((response as { success?: boolean }).success) };
   }
   throw new Error((response as { error?: { message?: string } })?.error?.message || 'Failed to delete session');
 }
@@ -50,8 +51,8 @@ export function transformDeleteSessionResponse(response: ApiResponse<{ success: 
 export function transformGetCurrentSessionResponse(
   response: ApiResponse<{ currentSession: { id: string } | null } | { currentSession?: { id: string } | null }>
 ): { id: string } | null {
-  if ((response as { success?: boolean }).success && (response as { data?: { currentSession?: { id: string } | null } }).data) {
-    return ((response as { data: { currentSession?: { id: string } | null } }).data.currentSession) ?? null;
+  if (isApiResponse<{ currentSession: { id: string } | null }>(response) && (response.data as { currentSession?: { id: string } | null } | undefined)) {
+    return ((response.data as { currentSession?: { id: string } | null }).currentSession) ?? null;
   }
   if ((response as { currentSession?: { id: string } | null })?.currentSession !== undefined) {
     return ((response as { currentSession?: { id: string } | null }).currentSession) ?? null;
@@ -62,7 +63,7 @@ export function transformGetCurrentSessionResponse(
 export function transformSetCurrentSessionResponse(
   response: ApiResponse<{ success: boolean } | { session?: unknown } | { data?: { success?: boolean } }>
 ): { success: boolean } {
-  if ((response as { success?: boolean }).success) {
+  if (isApiResponse(response) && response.success) {
     return { success: true };
   }
   if ((response as { data?: { success?: boolean } }).data?.success) {
