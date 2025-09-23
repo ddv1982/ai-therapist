@@ -33,9 +33,15 @@ jest.mock('@/lib/chat/message-encryption', () => ({
 }));
 
 // Avoid touching Redis/cache in tests
+const invalidateMock = jest.fn().mockResolvedValue(true);
+const getMock = jest.fn().mockResolvedValue(null);
+const setMock = jest.fn().mockResolvedValue(true);
+
 jest.mock('@/lib/cache', () => ({
   MessageCache: {
-    invalidate: jest.fn().mockResolvedValue(true),
+    invalidate: invalidateMock,
+    get: getMock,
+    set: setMock,
   },
 }));
 
@@ -105,6 +111,11 @@ jest.mock('@/lib/api/api-response', () => {
 describe('Nested messages route: /api/sessions/[sessionId]/messages', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    invalidateMock.mockClear();
+    getMock.mockClear();
+    getMock.mockResolvedValue(null);
+    setMock.mockClear();
+    setMock.mockResolvedValue(true);
   });
 
   it('POST creates an encrypted message and returns standardized success', async () => {
@@ -141,6 +152,7 @@ describe('Nested messages route: /api/sessions/[sessionId]/messages', () => {
     const mod = await import('@/app/api/sessions/[sessionId]/messages/route');
 
     const sessionId = 'session-2';
+    getMock.mockResolvedValueOnce(null);
     prisma.message.count.mockResolvedValue(2);
     const t1 = new Date();
     const t2 = new Date(t1.getTime() + 1000);
@@ -165,6 +177,8 @@ describe('Nested messages route: /api/sessions/[sessionId]/messages', () => {
       expect(body.data?.items?.length).toBe(2);
       expect(body.data?.items?.[0]?.content).toBe('Hi');
       expect(body.data?.items?.[1]?.content).toBe('Hello');
+      expect(getMock).toHaveBeenCalledWith(sessionId, 1, 2);
+      expect(setMock).toHaveBeenCalledWith(sessionId, expect.any(Array), 1, 2);
     } else {
       expect(body.success).toBe(false);
       expect(body.error?.message).toBeTruthy();

@@ -92,8 +92,16 @@ export const CACHE_TTL = {
 // Cache key patterns
 export const CACHE_KEYS = {
   SESSION: (sessionId: string) => `session:${sessionId}`,
-  MESSAGES: (sessionId: string, page?: number) => 
-    `messages:${sessionId}${page ? `:page:${page}` : ''}`,
+  MESSAGES: (sessionId: string, page?: number, limit?: number) => {
+    let key = `messages:${sessionId}`;
+    if (typeof page === 'number') {
+      key += `:page:${page}`;
+    }
+    if (typeof limit === 'number') {
+      key += `:limit:${limit}`;
+    }
+    return key;
+  },
   CBT_DATA: (sessionId: string) => `cbt:${sessionId}`,
   REPORT: (sessionId: string, reportId?: string) => 
     `report:${sessionId}${reportId ? `:${reportId}` : ''}`,
@@ -170,8 +178,8 @@ export class MessageCache {
   /**
    * Get messages from cache
    */
-  static async get(sessionId: string, page?: number) {
-    return cache.get(CACHE_KEYS.MESSAGES(sessionId, page), {}, {
+  static async get(sessionId: string, page?: number, limit?: number) {
+    return cache.get(CACHE_KEYS.MESSAGES(sessionId, page, limit), {}, {
       ttl: CACHE_TTL.MESSAGES,
       prefix: 'therapist'
     });
@@ -180,8 +188,8 @@ export class MessageCache {
   /**
    * Set messages in cache
    */
-  static async set(sessionId: string, data: MessageData[], page?: number) {
-    return cache.set(CACHE_KEYS.MESSAGES(sessionId, page), data, {}, {
+  static async set(sessionId: string, data: MessageData[], page?: number, limit?: number) {
+    return cache.set(CACHE_KEYS.MESSAGES(sessionId, page, limit), data, {}, {
       ttl: CACHE_TTL.MESSAGES,
       prefix: 'therapist'
     });

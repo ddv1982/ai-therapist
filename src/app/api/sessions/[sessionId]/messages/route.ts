@@ -161,7 +161,7 @@ export const GET = withAuth(
         let items: MessageListItem[] | null = null;
         if (useCache) {
           try {
-            const cached = await MessageCache.get(sessionId, page) as unknown;
+            const cached = await MessageCache.get(sessionId, page, limit) as unknown;
             if (Array.isArray(cached)) {
               items = cached as unknown as MessageListItem[];
             }
@@ -193,7 +193,7 @@ export const GET = withAuth(
           }));
 
           if (useCache) {
-            try { await MessageCache.set(sessionId, items as unknown as CacheMessageData[], page); } catch {}
+            try { await MessageCache.set(sessionId, items as unknown as CacheMessageData[], page, limit); } catch {}
           }
         }
 
