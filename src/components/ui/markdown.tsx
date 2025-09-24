@@ -90,7 +90,7 @@ export function Markdown({ children, className, defaultOrigin, isUser }: Markdow
       parseIncompleteMarkdown
       className={['markdown-content', className].filter(Boolean).join(' ')}
       allowedImagePrefixes={[]}
-      allowedLinkPrefixes={['/', 'https://', 'mailto:', 'tel:']}
+      allowedLinkPrefixes={['*']}
       defaultOrigin={resolvedOrigin}
     >
       {finalText}
