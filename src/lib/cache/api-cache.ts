@@ -150,9 +150,9 @@ export class SessionCache {
   static async invalidateAll(sessionId: string) {
     const patterns = [
       CACHE_KEYS.SESSION(sessionId),
-      CACHE_KEYS.MESSAGES(sessionId),
+      `messages:${sessionId}*`,
       CACHE_KEYS.CBT_DATA(sessionId),
-      CACHE_KEYS.REPORT(sessionId)
+      `report:${sessionId}*`
     ];
 
     let totalDeleted = 0;
