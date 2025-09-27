@@ -55,7 +55,7 @@ export function useChatMessages() {
         metadataKey = 'metadata-error';
       }
     }
-    const contentKey = hashString(`${message.content.length}:${message.content}`);
+    const contentKey = hashString(message.content);
     return `${message.id}:${message.timestamp.getTime()}:${contentKey}:${metadataKey}`;
   }, []);
 
@@ -68,11 +68,15 @@ export function useChatMessages() {
       timestamp: normalizedTimestamp,
       metadata: nextMetadata,
     });
-    metadataCacheRef.current.set(raw.id, {
-      contentHash: hashString(`${raw.content.length}:${raw.content}`),
-      metadata: nextMetadata,
-      digest,
-    });
+    const contentHash = hashString(raw.content);
+    const existing = metadataCacheRef.current.get(raw.id);
+    if (!existing || existing.digest !== digest) {
+      metadataCacheRef.current.set(raw.id, {
+        contentHash,
+        metadata: nextMetadata,
+        digest,
+      });
+    }
     return {
       ...raw,
       timestamp: normalizedTimestamp,
@@ -111,7 +115,7 @@ export function useChatMessages() {
           modelUsed: typeof msg.modelUsed === 'string' && msg.modelUsed.length > 0 ? msg.modelUsed : undefined,
         };
         const cacheEntry = metadataCacheRef.current.get(msg.id);
-        const contentHash = hashString(`${msg.content.length}:${msg.content}`);
+        const contentHash = hashString(msg.content);
         const metadata = cacheEntry && cacheEntry.contentHash === contentHash
           ? cacheEntry.metadata
           : deriveMetadataFromContent(msg.content);

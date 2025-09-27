@@ -555,24 +555,39 @@ export const VirtualizedMessageList = memo(VirtualizedMessageListComponent, (pre
     return false;
   }
 
-  const visibleCount = Math.max(prevProps.maxVisible ?? 50, nextProps.maxVisible ?? 50);
-  const prevSlice = prevProps.messages.slice(-visibleCount);
-  const nextSlice = nextProps.messages.slice(-visibleCount);
-
-  if (prevSlice.length !== nextSlice.length) {
-    return false;
-  }
-
-  for (let i = 0; i < prevSlice.length; i += 1) {
-    const prevMessage = prevSlice[i];
-    const nextMessage = nextSlice[i];
-    if (!nextMessage || prevMessage.id !== nextMessage.id) {
+  const equalWindow = (windowSize: number) => {
+    if (windowSize <= 0) return true;
+    const prevSliceStart = Math.max(prevProps.messages.length - windowSize, 0);
+    const nextSliceStart = Math.max(nextProps.messages.length - windowSize, 0);
+    if (prevProps.messages.length - prevSliceStart !== nextProps.messages.length - nextSliceStart) {
       return false;
     }
-    if (getMessageDigest(prevMessage) !== getMessageDigest(nextMessage)) {
-      return false;
+    const prevDigests = new Array(windowSize);
+    const nextDigests = new Array(windowSize);
+    for (let i = 0; i < windowSize; i += 1) {
+      const prevMessage = prevProps.messages[prevSliceStart + i];
+      const nextMessage = nextProps.messages[nextSliceStart + i];
+      if (!prevMessage || !nextMessage) {
+        return false;
+      }
+      if (prevMessage.id !== nextMessage.id) {
+        return false;
+      }
+      prevDigests[i] = getMessageDigest(prevMessage);
+      nextDigests[i] = getMessageDigest(nextMessage);
     }
-  }
+    for (let i = 0; i < prevDigests.length; i += 1) {
+      if (prevDigests[i] !== nextDigests[i]) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const prevVisible = prevProps.maxVisible ?? 50;
+  const nextVisible = nextProps.maxVisible ?? 50;
+  if (!equalWindow(prevVisible)) return false;
+  if (prevVisible !== nextVisible && !equalWindow(nextVisible)) return false;
 
   return (
     prevProps.isStreaming === nextProps.isStreaming &&

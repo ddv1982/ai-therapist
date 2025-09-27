@@ -109,7 +109,7 @@ const nextConfig = {
       // Fallback for unmatched origins
       headers.push({
         source: '/(.*)',
-        headers: securityHeaders('null', false),
+        headers: securityHeaders(allowedOrigins[0], true),
       });
     } else {
       // Allow all origins without credentials if wildcard configured

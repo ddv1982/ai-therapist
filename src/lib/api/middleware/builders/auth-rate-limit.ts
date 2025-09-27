@@ -30,6 +30,8 @@ export function buildAuthAndRateLimit(
   const cleanupIntervalMs = Math.max(Number(process.env.CHAT_CLEANUP_INTERVAL_MS ?? 30_000), 5_000);
   let lastCleanupAt = Date.now();
   let cleanupTimer: NodeJS.Timeout | null = null;
+  let cleanupListenersAttached = false;
+  const boundListeners: Array<{ event: string; handler: () => void }> = [];
 
   function cleanupExpiredCounters(now: number, windowMs: number): void {
     streamingCounters.forEach((entry, key) => {
@@ -57,6 +59,30 @@ export function buildAuthAndRateLimit(
     }, cleanupIntervalMs);
   };
   scheduleCleanup();
+
+  if (!cleanupListenersAttached && typeof process !== 'undefined' && process.on) {
+    cleanupListenersAttached = true;
+    const clearTimer = () => {
+      if (cleanupTimer) {
+        clearTimeout(cleanupTimer);
+        cleanupTimer = null;
+      }
+    };
+    const register = (event: string) => {
+      const handler = () => {
+        clearTimer();
+        if (typeof process !== 'undefined' && process?.off) {
+          boundListeners.forEach((entry) => process.off(entry.event, entry.handler));
+          boundListeners.length = 0;
+        }
+      };
+      process.on(event, handler);
+      boundListeners.push({ event, handler });
+    };
+    register('exit');
+    register('SIGINT');
+    register('SIGTERM');
+  }
   function withAuthAndRateLimit<T = unknown>(
     handler: (
       request: NextRequest,
