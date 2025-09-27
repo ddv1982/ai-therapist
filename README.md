@@ -15,6 +15,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Simplified Scripts**: Unified TOTP management with `totp-manager.js`
 - **Better Diagnostics**: Health checks and troubleshooting tools
 - **Cleaner Repository**: Removed obsolete files and scripts
+- **Contributor Guide**: Follow the workflows documented in [`AGENTS.md`](./AGENTS.md)
 
 ## ✨ Features
 

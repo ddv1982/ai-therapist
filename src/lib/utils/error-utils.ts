@@ -47,6 +47,94 @@ export interface ErrorLogEntry {
 }
 
 // ============================================================================
+// ERROR REPORTING AND METRICS (placed early to avoid forward references)
+// ============================================================================
+
+/**
+ * Error metrics collection for monitoring
+ */
+export const ErrorMetrics = {
+  recordError: (
+    category: ErrorCategory,
+    severity: ErrorSeverity,
+    operation: string,
+    additionalData?: Record<string, unknown>
+  ) => {
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Error metric recorded', {
+        category,
+        severity,
+        operation,
+        additionalData,
+        metricType: 'errorTracking'
+      });
+    }
+    // In-memory counters (kept small and process-local)
+    try {
+      totalErrorCount++;
+      errorsByCategory[category] = (errorsByCategory[category] || 0) + 1;
+      errorsBySeverity[severity] = (errorsBySeverity[severity] || 0) + 1;
+      if (operation) {
+        errorsByOperation.set(operation, (errorsByOperation.get(operation) || 0) + 1);
+        // Cap map size to prevent unbounded growth (FIFO style)
+        const MAX_OP_ENTRIES = 200;
+        if (errorsByOperation.size > MAX_OP_ENTRIES) {
+          const firstKey = errorsByOperation.keys().next().value as string | undefined;
+          if (firstKey) errorsByOperation.delete(firstKey);
+        }
+      }
+    } catch {}
+  },
+  
+  getErrorStats: () => {
+    return {
+      totalErrors: totalErrorCount,
+      errorsByCategory: { ...errorsByCategory },
+      errorsBySeverity: { ...errorsBySeverity },
+      errorsByOperation: Object.fromEntries(errorsByOperation.entries()),
+    } as {
+      totalErrors: number;
+      errorsByCategory: Record<ErrorCategory, number>;
+      errorsBySeverity: Record<ErrorSeverity, number>;
+      errorsByOperation: Record<string, number>;
+    };
+  },
+};
+
+// Local counters used by ErrorMetrics
+const errorsByOperation: Map<string, number> = new Map();
+let totalErrorCount = 0;
+const errorsByCategory = {
+  authentication: 0,
+  validation: 0,
+  database: 0,
+  external_api: 0,
+  permission: 0,
+  business_logic: 0,
+  system: 0,
+} as Record<ErrorCategory, number>;
+
+const errorsBySeverity = {
+  low: 0,
+  medium: 0,
+  high: 0,
+  critical: 0,
+} as Record<ErrorSeverity, number>;
+
+// Lightweight indirection so we can record metrics without reordering declarations
+function recordErrorMetricProxy(
+  category: ErrorCategory,
+  severity: ErrorSeverity,
+  operation: string,
+  additionalData?: Record<string, unknown>
+) {
+  try {
+    // ErrorMetrics is defined later; this indirection ensures late binding
+    ErrorMetrics.recordError(category, severity, operation, additionalData);
+  } catch {}
+}
+
+// ============================================================================
 // THERAPEUTIC ERROR PATTERNS
 // ============================================================================
 
@@ -226,6 +314,14 @@ export function handleApiError(
       errorMessage: actualError.message,
       operation: enhancedContext.operation || 'unknown',
     });
+
+    // Record basic error metrics
+    recordErrorMetricProxy(
+      enhancedContext.category!,
+      enhancedContext.severity!,
+      enhancedContext.operation || 'unknown',
+      { requestId: context.requestId }
+    );
   }
   
   // Return appropriate response based on category
@@ -484,38 +580,5 @@ export const enhancedErrorHandlers = {
 };
 
 // ============================================================================
-// ERROR REPORTING AND METRICS
+// END ERROR REPORTING AND METRICS
 // ============================================================================
-
-/**
- * Error metrics collection for monitoring
- */
-export const ErrorMetrics = {
-  recordError: (
-    category: ErrorCategory,
-    severity: ErrorSeverity,
-    operation: string,
-    additionalData?: Record<string, unknown>
-  ) => {
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug('Error metric recorded', {
-        category,
-        severity,
-        operation,
-        additionalData,
-        metricType: 'errorTracking'
-      });
-    }
-    
-    // TODO: Implement actual metrics collection (e.g., send to monitoring service)
-  },
-  
-  getErrorStats: () => {
-    // TODO: Implement error statistics collection
-    return {
-      totalErrors: 0,
-      errorsByCategory: {},
-      errorsBySeverity: {},
-    };
-  },
-};

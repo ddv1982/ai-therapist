@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState, useCallback, useEffect } from 'react';
 import { CheckCircle, Heart } from 'lucide-react';
 import { Message, type MessageData } from '@/features/chat/messages';
 import {
@@ -15,6 +15,7 @@ import {
   ActionPlan
 } from '@/features/therapy/cbt/chat-components';
 import { ObsessionsCompulsionsFlow } from '@/features/therapy/obsessions-compulsions/obsessions-compulsions-flow';
+import { isObsessionsCompulsionsMessage } from '@/features/therapy/obsessions-compulsions/utils/obsessions-message-detector';
 import type {
   SituationData,
   EmotionData,
@@ -294,6 +295,15 @@ function VirtualizedMessageListComponent({
   onCBTActionComplete,
   onObsessionsCompulsionsComplete
 }: VirtualizedMessageListProps) {
+  const [hiddenFlowIds, setHiddenFlowIds] = useState<Set<string>>(new Set());
+  const markFlowMessageHidden = useCallback((id: string) => {
+    setHiddenFlowIds((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
   // For conversations with many messages, only render the most recent ones to improve performance
   const visibleMessages = useMemo(() => {
     if (messages.length <= maxVisible) {
@@ -322,6 +332,30 @@ function VirtualizedMessageListComponent({
     [isMobile]
   );
 
+  // Auto-hide the obsessions/compulsions flow message when a formatted tracker message appears later
+  useEffect(() => {
+    const toHide: string[] = [];
+    for (let i = 0; i < visibleMessages.length; i++) {
+      const msg = visibleMessages[i];
+      if (msg?.metadata?.step === 'obsessions-compulsions') {
+        for (let j = i + 1; j < visibleMessages.length; j++) {
+          const later = visibleMessages[j];
+          if (typeof later.content === 'string' && isObsessionsCompulsionsMessage(later.content)) {
+            if (!hiddenFlowIds.has(msg.id)) toHide.push(msg.id);
+            break;
+          }
+        }
+      }
+    }
+    if (toHide.length > 0) {
+      setHiddenFlowIds((prev) => {
+        const next = new Set(prev);
+        toHide.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  }, [visibleMessages, hiddenFlowIds]);
+
   // Function to render CBT components based on step
   const renderCBTComponent = (message: MessageData) => {
     const rawStep = message.metadata?.step;
@@ -334,7 +368,10 @@ function VirtualizedMessageListComponent({
     if (rawStep === 'obsessions-compulsions') {
       return onObsessionsCompulsionsComplete ? (
         <ObsessionsCompulsionsFlow
-          onComplete={onObsessionsCompulsionsComplete}
+          onComplete={async (data) => {
+            await onObsessionsCompulsionsComplete(data);
+            markFlowMessageHidden(message.id);
+          }}
           initialData={message.metadata?.data as ObsessionsCompulsionsData}
         />
       ) : null;
@@ -442,6 +479,9 @@ function VirtualizedMessageListComponent({
       aria-relevant="additions text"
     >
       {visibleMessages.map((message, index) => {
+        if (hiddenFlowIds.has(message.id)) {
+          return null;
+        }
         const isLastMessage = index === visibleMessages.length - 1;
         const isAssistantMessage = message.role === 'assistant';
         const shouldShowTypingIndicator = isStreaming && isLastMessage && isAssistantMessage && message.content === '';

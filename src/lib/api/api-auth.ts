@@ -24,28 +24,24 @@ export interface AuthValidationResult {
  * Returns true for localhost during development, otherwise checks TOTP and session
  */
 export async function validateApiAuth(request: NextRequest): Promise<AuthValidationResult> {
-  // Robust host detection for localhost allowance in tests and local runs
-  const headerHost = request.headers.get('host') || '';
-  const forwardedHost = request.headers.get('x-forwarded-host');
-  let host = headerHost;
-  // If Host header is unavailable (forbidden header in some polyfills), fallback to forwarded host
-  if (!host && forwardedHost) {
-    host = forwardedHost;
-  }
-  try {
-    // Fallback to URL parsing when host header is unavailable in test mocks
-    if (!host) {
-      const url = (request as unknown as { url?: string; nextUrl?: URL }).nextUrl?.host ||
-                  (request as unknown as { url?: string }).url ? new URL((request as unknown as { url?: string }).url as string).host : '';
-      host = url || '';
-    }
-  } catch {}
-  
-  // Always allow localhost access during development
-  if (isLocalhost(host) && (!forwardedHost || isLocalhost(forwardedHost))) {
+  const forwardedHostHeader = request.headers.get('x-forwarded-host') || '';
+  const forwardedHost = forwardedHostHeader.split(',')[0]?.trim();
+  const hostname = request.nextUrl?.hostname || request.headers.get('host') || '';
+  const ipAttribute = (request as unknown as { ip?: string | null }).ip || '';
+  const remoteAddress = (request as unknown as { socket?: { remoteAddress?: string | null } }).socket?.remoteAddress || '';
+  const normalizedIp = normalizeLoopback(ipAttribute) || normalizeLoopback(remoteAddress);
+
+  const isDevEnvironment = process.env.NODE_ENV !== 'production';
+  // Unified dev bypass flag (matches auth-middleware semantics)
+  const localBypassEnabled = isDevEnvironment && process.env.BYPASS_AUTH === 'true';
+  const hostnameIsLocal = isLocalhost(hostname || '');
+  const forwardedHostIsLocal = !forwardedHost || isLocalhost(forwardedHost);
+  const clientIpIsLocal = normalizedIp ? isLocalhost(normalizedIp) : false;
+
+  if (localBypassEnabled && hostnameIsLocal && forwardedHostIsLocal && clientIpIsLocal) {
     return { isValid: true };
   }
-  
+
   // Check if TOTP is set up
   const isSetup = await isTOTPSetup();
   if (!isSetup) {
@@ -87,3 +83,13 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthValidat
  * Create a standardized error response for authentication failures
  */
 // Deprecated: createAuthErrorResponse has been replaced by standardized helpers in api-response.ts
+
+function normalizeLoopback(value: string | null | undefined): string {
+  if (!value) return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (trimmed.startsWith('::ffff:')) {
+    return trimmed.slice('::ffff:'.length);
+  }
+  return trimmed;
+}

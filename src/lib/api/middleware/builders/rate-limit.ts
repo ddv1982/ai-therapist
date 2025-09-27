@@ -37,7 +37,7 @@ export function buildRateLimit(
     options: { bucket?: 'api' | 'chat' | 'default'; windowMs?: number } = {}
   ) {
     return deps.withApiMiddleware<T>(async (request, context, params) => {
-      const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
+      const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true' && process.env.NODE_ENV !== 'production';
       if (!rateLimitDisabled) {
         const clientIP = deps.getClientIPFromRequest(request);
         const limiter = deps.getRateLimiter();

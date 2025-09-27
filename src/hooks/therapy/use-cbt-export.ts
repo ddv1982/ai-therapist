@@ -104,13 +104,11 @@ export function useCBTExportActions(
 ) {
   const { exportDiary, isExporting, exportingFormat, exportError, clearError } = useCBTExport(options);
 
-  const exportAsPDF = useCallback(() => exportDiary('pdf', formData, markdownContent), [exportDiary, formData, markdownContent]);
   const exportAsJSON = useCallback(() => exportDiary('json', formData, markdownContent), [exportDiary, formData, markdownContent]);
   const exportAsMarkdown = useCallback(() => exportDiary('markdown', formData, markdownContent), [exportDiary, formData, markdownContent]);
   const exportAsText = useCallback(() => exportDiary('text', formData, markdownContent), [exportDiary, formData, markdownContent]);
 
   return {
-    exportAsPDF,
     exportAsJSON,
     exportAsMarkdown,
     exportAsText,

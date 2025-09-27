@@ -45,7 +45,6 @@ export function CBTExportButton({
   const [showDropdown, setShowDropdown] = useState(false);
 
   const {
-    exportAsPDF,
     exportAsJSON,
     exportAsMarkdown,
     exportAsText,
@@ -169,18 +168,6 @@ export function CBTExportButton({
       {showDropdown && (
         <div className="absolute top-full right-0 mt-1 w-56 bg-background border rounded-md shadow-lg z-50">
           <div className="p-1">
-            <button
-              onClick={() => handleExport(exportAsPDF)}
-              disabled={isDisabled}
-              className="w-full flex items-center px-2 py-2 text-sm hover:bg-accent rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <FileText className="w-4 h-4 mr-2 text-red-600" />
-              <div className="flex flex-col items-start">
-                <span>Export as PDF</span>
-                <span className="text-sm text-muted-foreground">Professional report format</span>
-              </div>
-            </button>
-            
             <button
               onClick={() => handleExport(exportAsMarkdown)}
               disabled={isDisabled}

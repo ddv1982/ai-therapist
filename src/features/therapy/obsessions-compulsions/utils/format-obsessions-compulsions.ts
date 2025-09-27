@@ -46,62 +46,125 @@ export function formatObsessionsCompulsionsForChat(data: ObsessionsCompulsionsDa
  */
 export function parseObsessionsCompulsionsFromMarkdown(content: string): ObsessionsCompulsionsData | null {
   try {
-    // This is a simplified parser - in a real implementation, you might want to use a more robust markdown parser
     const obsessions: ObsessionData[] = [];
     const compulsions: CompulsionData[] = [];
-    
-    // Extract obsessions
-    const obsessionMatches = content.match(/### Obsession \d+\n([\s\S]*?)(?=### (?:Obsession \d+|Compulsion \d+)|## Compulsions|$)/g);
-    if (obsessionMatches) {
-      obsessionMatches.forEach((match, index) => {
-        const description = match.match(/\*\*Description:\*\* (.+?)\n/)?.[1];
-        const intensity = parseInt(match.match(/\*\*Intensity:\*\* (\d+)\/10/)?.[1] || '5');
-        const triggers = match.match(/\*\*Triggers:\*\* (.+?)\n/)?.[1]?.split(', ').map(t => t.trim()) || [];
-        const createdAt = match.match(/\*\*Recorded:\*\* (.+?)\n/)?.[1] || new Date().toISOString();
-        
-        if (description) {
-          obsessions.push({
-            id: `obsession-${index}`,
-            obsession: description,
-            intensity,
-            triggers,
-            createdAt
-          });
+
+    const pairRegex = /## Pair \d+[\s\S]*?(?=## Pair \d+|$)/g;
+    const pairMatches = content.match(pairRegex);
+
+    if (pairMatches && pairMatches.length > 0) {
+      pairMatches.forEach((pairContent, pairIndex) => {
+        const obsessionSection = pairContent.match(/### [^\n]*Obsession[\s\S]*?(?=### [^\n]*|$)/);
+        if (obsessionSection) {
+          const description = extractMarkdownField(obsessionSection[0], 'Description');
+          if (description) {
+            const intensity = parseInt(extractMarkdownField(obsessionSection[0], 'Intensity')?.replace('/10', '') || '5', 10);
+            const triggersRaw = extractMarkdownField(obsessionSection[0], 'Triggers');
+            const triggers = triggersRaw ? triggersRaw.split(',').map(trigger => trigger.trim()).filter(Boolean) : [];
+            const createdAtRaw = extractMarkdownField(obsessionSection[0], 'Recorded');
+            const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
+
+            obsessions.push({
+              id: `obsession-${pairIndex}`,
+              obsession: description,
+              intensity: clampRating(intensity),
+              triggers,
+              createdAt,
+            });
+          }
+        }
+
+        const compulsionSection = pairContent.match(/### [^\n]*Compulsion[\s\S]*?(?=### [^\n]*|$)/);
+        if (compulsionSection) {
+          const description = extractMarkdownField(compulsionSection[0], 'Description');
+          if (description) {
+            const frequency = parseInt(extractMarkdownField(compulsionSection[0], 'Frequency')?.replace('/10', '') || '5', 10);
+            const duration = parseInt(extractMarkdownField(compulsionSection[0], 'Duration')?.replace('minutes', '').trim() || '10', 10);
+            const reliefLevel = parseInt(extractMarkdownField(compulsionSection[0], 'Relief Level')?.replace('/10', '') || '5', 10);
+            const createdAtRaw = extractMarkdownField(compulsionSection[0], 'Recorded');
+            const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
+
+            compulsions.push({
+              id: `compulsion-${pairIndex}`,
+              compulsion: description,
+              frequency: clampRating(frequency),
+              duration: Number.isFinite(duration) ? duration : 10,
+              reliefLevel: clampRating(reliefLevel),
+              createdAt,
+            });
+          }
         }
       });
     }
-    
-    // Extract compulsions
-    const compulsionMatches = content.match(/### Compulsion \d+\n([\s\S]*?)(?=### (?:Obsession \d+|Compulsion \d+)|$)/g);
-    if (compulsionMatches) {
-      compulsionMatches.forEach((match, index) => {
-        const description = match.match(/\*\*Description:\*\* (.+?)\n/)?.[1];
-        const frequency = parseInt(match.match(/\*\*Frequency:\*\* (\d+)\/10/)?.[1] || '5');
-        const duration = parseInt(match.match(/\*\*Duration:\*\* (\d+) minutes/)?.[1] || '10');
-        const reliefLevel = parseInt(match.match(/\*\*Relief Level:\*\* (\d+)\/10/)?.[1] || '5');
-        const createdAt = match.match(/\*\*Recorded:\*\* (.+?)\n/)?.[1] || new Date().toISOString();
-        
-        if (description) {
-          compulsions.push({
-            id: `compulsion-${index}`,
-            compulsion: description,
-            frequency,
-            duration,
-            reliefLevel,
-            createdAt
-          });
-        }
+
+    // Fallback for legacy format without Pair headings
+    if (obsessions.length === 0) {
+      const legacyObsessionMatches = content.match(/### [^\n]*Obsession[\s\S]*?(?=### [^\n]*|$)/g);
+      legacyObsessionMatches?.forEach((match, index) => {
+        const description = extractMarkdownField(match, 'Description');
+        if (!description) return;
+        const intensity = parseInt(extractMarkdownField(match, 'Intensity')?.replace('/10', '') || '5', 10);
+        const triggersRaw = extractMarkdownField(match, 'Triggers');
+        const triggers = triggersRaw ? triggersRaw.split(',').map(trigger => trigger.trim()).filter(Boolean) : [];
+        const createdAtRaw = extractMarkdownField(match, 'Recorded');
+        const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
+
+        obsessions.push({
+          id: `obsession-${index}`,
+          obsession: description,
+          intensity: clampRating(intensity),
+          triggers,
+          createdAt,
+        });
       });
     }
-    
+
+    if (compulsions.length === 0) {
+      const legacyCompulsionMatches = content.match(/### [^\n]*Compulsion[\s\S]*?(?=### [^\n]*|$)/g);
+      legacyCompulsionMatches?.forEach((match, index) => {
+        const description = extractMarkdownField(match, 'Description');
+        if (!description) return;
+        const frequency = parseInt(extractMarkdownField(match, 'Frequency')?.replace('/10', '') || '5', 10);
+        const duration = parseInt(extractMarkdownField(match, 'Duration')?.replace('minutes', '').trim() || '10', 10);
+        const reliefLevel = parseInt(extractMarkdownField(match, 'Relief Level')?.replace('/10', '') || '5', 10);
+        const createdAtRaw = extractMarkdownField(match, 'Recorded');
+        const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
+
+        compulsions.push({
+          id: `compulsion-${index}`,
+          compulsion: description,
+          frequency: clampRating(frequency),
+          duration: Number.isFinite(duration) ? duration : 10,
+          reliefLevel: clampRating(reliefLevel),
+          createdAt,
+        });
+      });
+    }
+
+    const lastUpdatedMatch = content.match(/\*Last updated: ([^*]+)\*/);
+    const lastModifiedCandidate = lastUpdatedMatch?.[1]?.trim() ?? '';
+    const lastModifiedDate = lastModifiedCandidate && !Number.isNaN(Date.parse(lastModifiedCandidate))
+      ? new Date(lastModifiedCandidate)
+      : new Date();
+
     return {
       obsessions,
       compulsions,
-      lastModified: new Date().toISOString()
+      lastModified: lastModifiedDate.toISOString(),
     };
   } catch (error) {
-    // Structured logging; parser runs in client or server contexts
     logger.error('Error parsing obsessions and compulsions data', { module: 'format-obsessions-compulsions' }, error as Error);
     return null;
   }
+}
+
+function extractMarkdownField(section: string, field: string): string | undefined {
+  const regex = new RegExp(`\\*\\*${field}:\\*\\*\\s*([^\\n]+)`);
+  const match = section.match(regex);
+  return match?.[1]?.trim();
+}
+
+function clampRating(value: number): number {
+  if (!Number.isFinite(value)) return 5;
+  return Math.min(Math.max(value, 0), 10);
 }

@@ -1,7 +1,9 @@
+import React from 'react';
+
 import { ObsessionsCompulsionsData } from '@/types/therapy';
 import { parseObsessionsCompulsionsFromMarkdown } from './format-obsessions-compulsions';
 
-export type ObsessionsExportFormat = 'pdf' | 'json' | 'markdown' | 'text';
+export type ObsessionsExportFormat = 'json' | 'markdown' | 'text';
 
 export interface ObsessionsExportOptions {
   format: ObsessionsExportFormat;
@@ -20,16 +22,7 @@ export class ObsessionsExportManager {
     this.content = content;
   }
 
-  /**
-   * Export as PDF
-   */
-  async exportAsPDF(_options: ObsessionsExportOptions): Promise<void> {
-    // For now, we'll use a simple text-based approach
-    // In a real implementation, you might want to use a PDF library like jsPDF
-    const textContent = this.exportAsText(_options);
-    const blob = new Blob([textContent], { type: 'text/plain' });
-    this.downloadBlob(blob, `${_options.filename || 'obsessions-compulsions'}.txt`);
-  }
+  // PDF export removed
 
   /**
    * Export as JSON
@@ -131,26 +124,7 @@ export function useObsessionsExportActions(
   const [exportingFormat, setExportingFormat] = React.useState<ObsessionsExportFormat | null>(null);
   const [exportError, setExportError] = React.useState<Error | null>(null);
 
-  const exportAsPDF = React.useCallback(async () => {
-    if (!data) return;
-    
-    setIsExporting(true);
-    setExportingFormat('pdf');
-    setExportError(null);
-    
-    try {
-      const manager = new ObsessionsExportManager(data, content);
-      await manager.exportAsPDF({ format: 'pdf' });
-      options.onSuccess?.('pdf');
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error('Export failed');
-      setExportError(err);
-      options.onError?.(err, 'pdf');
-    } finally {
-      setIsExporting(false);
-      setExportingFormat(null);
-    }
-  }, [data, content, options]);
+  // PDF export removed
 
   const exportAsJSON = React.useCallback(async () => {
     if (!data) return;
@@ -229,7 +203,6 @@ export function useObsessionsExportActions(
   }, []);
 
   return {
-    exportAsPDF,
     exportAsJSON,
     exportAsMarkdown,
     exportAsText,
@@ -239,6 +212,3 @@ export function useObsessionsExportActions(
     clearError
   };
 }
-
-// Add React import for the hook
-import React from 'react';

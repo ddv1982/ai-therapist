@@ -14,6 +14,9 @@ import { logger } from '@/lib/utils/logger';
 import * as messagesApi from '@/lib/api/client/messages';
 import { getApiData } from '@/lib/api/api-response';
 import type { components } from '@/types/api.generated';
+import { parseObsessionsCompulsionsFromMarkdown } from '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions';
+import { isObsessionsCompulsionsMessage } from '@/features/therapy/obsessions-compulsions/utils/obsessions-message-detector';
+import type { ObsessionsCompulsionsData } from '@/types/therapy';
 
 type ListMessagesResponse = import('@/lib/api/api-response').ApiResponse<import('@/lib/api/api-response').PaginatedResponse<components['schemas']['Message']>>;
 
@@ -42,15 +45,20 @@ export function useChatMessages() {
       const resp: ListMessagesResponse = await messagesApi.listMessages(sessionId);
       if (resp) {
         const page = getApiData(resp);
-        const items = page.items as Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: string }>;
-        
+        const items = page.items as Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: string; modelUsed?: string | null }>;
+
         // Convert timestamp strings to Date objects
-        const formattedMessages = items.map((msg: { id: string; role: string; content: string; timestamp: string }) => ({
-          id: msg.id,
-          content: msg.content,
-          role: msg.role as 'user' | 'assistant',
-          timestamp: new Date(msg.timestamp)
-        }));
+        const formattedMessages = items.map(msg => {
+          const baseMessage: Message = {
+            id: msg.id,
+            content: msg.content,
+            role: msg.role as 'user' | 'assistant',
+            timestamp: new Date(msg.timestamp),
+            modelUsed: typeof msg.modelUsed === 'string' && msg.modelUsed.length > 0 ? msg.modelUsed : undefined,
+          };
+          const metadata = deriveMetadataFromContent(msg.content);
+          return metadata ? { ...baseMessage, metadata } : baseMessage;
+        });
         setMessages(formattedMessages);
       } else {
         logger.error('Failed to load messages from API', {
@@ -90,12 +98,15 @@ export function useChatMessages() {
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
       // Create message object for UI
-      const uiMessage: Message = {
+      const baseMessage: Message = {
         id: tempId,
         role: message.role,
         content: message.content,
-        timestamp: new Date()
+        timestamp: new Date(),
+        modelUsed: message.modelUsed,
       };
+      const metadata = deriveMetadataFromContent(message.content);
+      const uiMessage: Message = metadata ? { ...baseMessage, metadata } : baseMessage;
 
       // Immediately add to UI state
       setMessages(prev => [...prev, uiMessage]);
@@ -111,14 +122,15 @@ export function useChatMessages() {
         throw new Error('Failed to save message');
       }
 
-      const savedMessage = saved.data;
+      const savedMessage = saved.data as components['schemas']['Message'] & { modelUsed?: string | null };
       setMessages(prev => prev.map(msg => 
         msg.id === tempId 
-          ? { 
-              ...msg, 
+          ? {
+              ...msg,
               id: savedMessage.id as string,
-              timestamp: new Date(savedMessage.timestamp as string)
-            } 
+              timestamp: new Date(savedMessage.timestamp as string),
+              modelUsed: typeof savedMessage.modelUsed === 'string' ? savedMessage.modelUsed : msg.modelUsed,
+            }
           : msg
       ));
 
@@ -181,5 +193,24 @@ export function useChatMessages() {
     addTemporaryMessage,
     removeTemporaryMessage,
     setMessages // For backward compatibility with existing chat interface
+  };
+}
+
+function deriveMetadataFromContent(content: string): Message['metadata'] | undefined {
+  if (!content || !isObsessionsCompulsionsMessage(content)) {
+    return undefined;
+  }
+
+  const parsed: ObsessionsCompulsionsData | null = parseObsessionsCompulsionsFromMarkdown(content);
+  const data: ObsessionsCompulsionsData = parsed ?? {
+    obsessions: [],
+    compulsions: [],
+    lastModified: new Date().toISOString(),
+  };
+
+  return {
+    type: 'obsessions-compulsions-table',
+    step: 'obsessions-compulsions',
+    data,
   };
 }

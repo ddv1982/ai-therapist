@@ -64,8 +64,10 @@ class RedisManager {
               });
               return new Error('Max reconnection attempts reached');
             }
-            
-            const delay = Math.min(this.reconnectDelay * Math.pow(2, retries), 30000);
+            // Exponential backoff with jitter to avoid thundering herd
+            const baseDelay = Math.min(this.reconnectDelay * Math.pow(2, retries), 30000);
+            const jitterFactor = 0.8 + Math.random() * 0.4; // 0.8x - 1.2x
+            const delay = Math.round(baseDelay * jitterFactor);
             logger.warn('Redis reconnecting', {
               operation: 'redis_reconnect',
               attempt: retries + 1,

@@ -1,9 +1,7 @@
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { CBTFormData, type SchemaReflectionData } from '@/types/therapy';
 
 // Export format types
-export type CBTExportFormat = 'pdf' | 'json' | 'markdown' | 'text';
+export type CBTExportFormat = 'json' | 'markdown' | 'text';
 
 export interface CBTExportData {
   formData: CBTFormData;
@@ -381,199 +379,6 @@ ${s.exportedFooter(new Date().toLocaleDateString())}`;
 }
 
 // PDF Export
-export function exportAsPDF(formData: CBTFormData, localeStrings?: Partial<ExportLocaleStrings>): Promise<void> {
-  return new Promise((resolve, reject) => {
-    try {
-      const s = { ...defaultExportStrings, ...(localeStrings || {}) };
-      // Create a temporary container for PDF content
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      container.style.top = '0';
-      container.style.width = '800px';
-      container.style.padding = '40px';
-      container.style.backgroundColor = '#ffffff';
-      container.style.fontFamily = 'Arial, sans-serif';
-      container.style.lineHeight = '1.5';
-      container.style.color = '#333333';
-      
-      // Generate HTML content for PDF
-      const initialEmotions = formatEmotionsForExport(formData.initialEmotions);
-      const finalEmotions = formatEmotionsForExport(formData.finalEmotions);
-      const validThoughts = formData.automaticThoughts.filter(t => t.thought.trim());
-      const rationalThoughts = formData.rationalThoughts.filter(t => t.thought.trim());
-      const selectedModes = formData.schemaModes.filter(mode => mode.selected);
-      type OptionalBehaviorFields = Partial<{ confirmingBehaviors: string; avoidantBehaviors: string; overridingBehaviors: string }>;
-      const behaviorPatterns = formData as CBTFormData & OptionalBehaviorFields;
-      type OptionalReflectionFields = { schemaReflection?: SchemaReflectionData };
-      const formWithOptionalReflection = formData as CBTFormData & OptionalReflectionFields;
-      
-      container.innerHTML = `
-        <div style="max-width: 720px; margin: 0 auto;">
-          <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #4A90E2; padding-bottom: 20px;">
-            <h1 style="color: #4A90E2; margin: 0 0 10px 0; font-size: 28px;">🌟 ${s.diaryTitle}</h1>
-            <p style="margin: 5px 0; color: #666; font-size: 14px;">${s.dateLabel} ${formData.date}</p>
-            <p style="margin: 5px 0; color: #666; font-size: 12px;">${s.exportedFooter(new Date().toLocaleDateString())}</p>
-          </div>
-          
-          <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">📍 ${s.situationTitle}</h2>
-            <p style="margin: 0; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #e3f2fd;">${formData.situation || s.noSituation}</p>
-          </div>
-          
-          <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">💭 ${s.initialEmotionsTitle}</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
-              ${initialEmotions.map(e => `
-                <div style="padding: 10px; background-color: #f8f9fa; border-radius: 6px; border-left: 3px solid #ff6b6b;">
-                  <strong>${e.name}:</strong> ${e.intensity}/10
-                  <div style="width: 100%; background-color: #e0e0e0; border-radius: 3px; height: 8px; margin-top: 5px;">
-                    <div style="width: ${(e.intensity / 10) * 100}%; background-color: #ff6b6b; height: 100%; border-radius: 3px;"></div>
-                  </div>
-                </div>
-              `).join('') || '<p style="color: #666; font-style: italic;">No emotions rated</p>'}
-            </div>
-          </div>
-          
-          <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🧠 ${s.automaticThoughtsTitle}</h2>
-            ${validThoughts.map(t => `
-              <div style="margin-bottom: 10px; padding: 12px; background-color: #f8f9fa; border-radius: 6px; border-left: 3px solid #ffa726;">
-                <p style="margin: 0 0 5px 0; font-style: italic;">"${t.thought}"</p>
-                <small style="color: #666;">${s.credibilityLabel} ${t.credibility}/10</small>
-              </div>
-            `).join('') || '<p style="color: #666; font-style: italic;">No thoughts entered</p>'}
-          </div>
-          
-          <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🎯 ${s.coreSchemaTitle}</h2>
-            <div style="padding: 15px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #ab47bc;">
-              <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">${s.coreBeliefLabel} (${formData.coreBeliefCredibility}/10)</h3>
-              <p style="margin: 0 0 15px 0; font-style: italic;">${formData.coreBeliefText || s.noCoreBelief}</p>
-              
-              <h4 style="margin: 15px 0 5px 0; font-size: 14px; color: #333;">${s.behavioralPatternsTitle}:</h4>
-              <ul style="margin: 5px 0; padding-left: 20px;">
-                <li><strong>${s.confirmingBehaviors}</strong> ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}</li>
-                <li><strong>${s.avoidantBehaviors}</strong> ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}</li>
-                <li><strong>${s.overridingBehaviors}</strong> ${behaviorPatterns.overridingBehaviors || '[Not specified]'}</li>
-              </ul>
-              
-              ${selectedModes.length > 0 ? `
-                <h4 style="margin: 15px 0 5px 0; font-size: 14px; color: #333;">${s.activeSchemaModesTitle}:</h4>
-                <ul style="margin: 5px 0; padding-left: 20px;">
-                  ${selectedModes.map(mode => `<li><strong>${mode.name}</strong> (${mode.description})</li>`).join('')}
-                </ul>
-              ` : ''}
-            </div>
-          </div>
-          
-          ${(formWithOptionalReflection.schemaReflection?.enabled && (formWithOptionalReflection.schemaReflection.selfAssessment.trim() || formWithOptionalReflection.schemaReflection.questions.some(q => q.answer.trim()))) ? `
-          <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🔍 ${s.schemaReflectionTitle}</h2>
-            <div style="padding: 15px; background-color: #f3e5f5; border-radius: 8px; border-left: 4px solid #9c27b0;">
-              ${formWithOptionalReflection.schemaReflection?.selfAssessment ? `
-                <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">${s.personalAssessmentTitle}</h3>
-                <p style="margin: 0 0 15px 0; font-style: italic;">"${formWithOptionalReflection.schemaReflection.selfAssessment}"</p>
-              ` : ''}
-              
-              ${formWithOptionalReflection.schemaReflection && formWithOptionalReflection.schemaReflection.questions.filter(q => q.answer.trim()).length > 0 ? `
-                <h3 style="margin: 15px 0 10px 0; font-size: 16px; color: #333;">${s.reflectionQuestionsTitle}</h3>
-                ${formWithOptionalReflection.schemaReflection.questions.filter(q => q.answer.trim()).map(q => `
-                  <div style="margin-bottom: 10px; padding: 10px; background-color: #ffffff; border-radius: 4px;">
-                    <p style="margin: 0 0 5px 0; font-weight: bold; color: #9c27b0;">${q.category.toUpperCase()}: ${q.question}</p>
-                    <p style="margin: 0; font-style: italic;">${q.answer}</p>
-                  </div>
-                `).join('')}
-              ` : ''}
-            </div>
-          </div>
-          ` : ''}
-          
-          <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">🔄 ${s.rationalThoughtsTitle}</h2>
-            ${rationalThoughts.map(t => `
-              <div style="margin-bottom: 10px; padding: 12px; background-color: #e8f5e8; border-radius: 6px; border-left: 3px solid #4caf50;">
-                <p style="margin: 0 0 5px 0; font-style: italic;">"${t.thought}"</p>
-                <small style="color: #666;">${s.rationalSubtitle.replace(' (1-10)', '')}: ${t.confidence}/10</small>
-              </div>
-            `).join('') || `<p style=\"color: #666; font-style: italic;\">${s.noRationalThoughts}</p>`}
-          </div>
-          
-          <div style="margin-bottom: 25px;">
-            <h2 style="color: #4A90E2; font-size: 18px; margin-bottom: 10px; border-left: 4px solid #4A90E2; padding-left: 10px;">✨ ${s.finalReflectionTitle}</h2>
-            
-            <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #333;">${s.updatedEmotionsTitle}</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 15px;">
-              ${finalEmotions.map(e => `
-                <div style="padding: 10px; background-color: #e8f5e8; border-radius: 6px; border-left: 3px solid #4caf50;">
-                  <strong>${e.name}:</strong> ${e.intensity}/10
-                  <div style="width: 100%; background-color: #e0e0e0; border-radius: 3px; height: 8px; margin-top: 5px;">
-                    <div style="width: ${(e.intensity / 10) * 100}%; background-color: #4caf50; height: 100%; border-radius: 3px;"></div>
-                  </div>
-                </div>
-              `).join('') || '<p style="color: #666; font-style: italic;">No final emotions rated</p>'}
-            </div>
-            
-            <p style="margin: 10px 0;"><strong>${s.originalThoughtCredibilityLabel}</strong> ${formData.originalThoughtCredibility}/10</p>
-            
-            <h3 style="margin: 15px 0 5px 0; font-size: 16px; color: #333;">${s.newBehaviorsTitle}</h3>
-            <p style="margin: 5px 0 15px 0; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">${formData.newBehaviors || s.noNewBehaviors}</p>
-            
-            
-          </div>
-          
-          <div style="margin-top: 30px; padding: 20px; background-color: #e3f2fd; border-radius: 8px; text-align: center;">
-            <p style="margin: 0; font-style: italic; color: #1565c0;">${s.footerNote.replace('. ', '.<br>')}</p>
-          </div>
-        </div>
-      `;
-      
-      document.body.appendChild(container);
-      
-      // Generate PDF
-      html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff'
-      }).then((canvas) => {
-        document.body.removeChild(container);
-        
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
-        });
-        
-        const imgWidth = 210;
-        const pageHeight = 295;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        let heightLeft = imgHeight;
-        let position = 0;
-        
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-        
-        while (heightLeft >= 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-        
-        const filename = generateFileName('pdf');
-        pdf.save(filename);
-        resolve();
-      }).catch(error => {
-        document.body.removeChild(container);
-        reject(error);
-      });
-    } catch (error) {
-      reject(error);
-    }
-  });
-}
 
 // Main export function that handles all formats
 export async function exportCBTDiary(
@@ -583,8 +388,6 @@ export async function exportCBTDiary(
   localeStrings?: Partial<ExportLocaleStrings>
 ): Promise<void> {
   switch (format) {
-    case 'pdf':
-      return exportAsPDF(formData, localeStrings);
     case 'json':
       return exportAsJSON(formData);
     case 'markdown':

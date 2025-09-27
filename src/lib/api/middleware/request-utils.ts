@@ -23,15 +23,24 @@ export function readHeaderValue(
 
 // Extracts the client IP address from request headers
 export function getClientIPFromRequest(request: NextRequest): string {
+  // Prefer explicit proxy headers when present
   const forwarded = readHeaderValue(request.headers, 'x-forwarded-for');
+  if (forwarded && typeof forwarded === 'string') {
+    const first = forwarded
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean)[0];
+    if (first) return first;
+  }
+
   const realIP = readHeaderValue(request.headers, 'x-real-ip');
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
+  if (realIP && typeof realIP === 'string' && realIP.trim().length > 0) {
+    return realIP.trim();
   }
-  if (realIP) {
-    return realIP;
-  }
-  return (request as { ip?: string }).ip || 'unknown';
+
+  // Fallback to request.ip if provided by runtime
+  const ip = (request as { ip?: string | null }).ip;
+  return (ip && ip.length > 0) ? ip : 'unknown';
 }
 
 // Safely extracts request context information from a raw request logger result

@@ -1,16 +1,14 @@
 # Data Export Feature
 
 ## **Overview**
-Comprehensive data export system supporting multiple formats (PDF, JSON, CSV, Markdown) with professional formatting, therapeutic content organization, and privacy-compliant data portability.
+Comprehensive data export system supporting multiple formats (JSON, Markdown, Text) with therapeutic content organization and privacy-compliant data portability.
 
 ## **Key Components**
 
 ### **Export Formats**
-- **PDF** - Professional formatted documents with charts and visualizations
 - **JSON** - Raw structured data for analysis and backup
-- **CSV** - Spreadsheet compatible format for data processing
 - **Markdown** - Human-readable format with formatting preservation
-- **HTML** - Web-ready format with styling and interactivity
+- **Text** - Plain text format for universal compatibility
 
 ### **Content Types**
 - **CBT Sessions** - Complete cognitive behavioral therapy workflows
@@ -47,59 +45,7 @@ interface ExportConfig {
 ```
 
 ### **Export Processing**
-```typescript
-// Export pipeline (src/lib/cbt/export-utils.ts)
-export const processExport = async (
-  data: ExportData,
-  config: ExportConfig
-): Promise<ExportResult> => {
-  // Data preparation
-  const preparedData = await prepareData(data, config)
-  
-  // Format-specific processing
-  switch (config.format) {
-    case 'pdf':
-      return await generatePDF(preparedData, config)
-    case 'json':
-      return await generateJSON(preparedData, config)
-    case 'csv':
-      return await generateCSV(preparedData, config)
-    case 'markdown':
-      return await generateMarkdown(preparedData, config)
-    case 'html':
-      return await generateHTML(preparedData, config)
-    default:
-      throw new Error(`Unsupported format: ${config.format}`)
-  }
-}
-
-// PDF generation with professional formatting
-const generatePDF = async (data: PreparedData, config: ExportConfig): Promise<ExportResult> => {
-  const doc = new jsPDF()
-  
-  // Add header with branding
-  addPDFHeader(doc, config)
-  
-  // Add content sections
-  for (const section of data.sections) {
-    await addPDFSection(doc, section, config)
-  }
-  
-  // Add charts and visualizations
-  if (data.charts) {
-    await addPDFCharts(doc, data.charts)
-  }
-  
-  // Add footer with metadata
-  addPDFFooter(doc, config)
-  
-  return {
-    content: doc.output('blob'),
-    filename: generateFilename(data, config),
-    mimeType: 'application/pdf'
-  }
-}
-```
+Implementation focuses on JSON, Markdown, and Text generation using existing utilities and templates. PDF/CSV/HTML generation has been removed.
 
 ## **File Structure**
 ```
@@ -121,7 +67,7 @@ src/lib/therapy/
 
 ### **CBT Session Export**
 ```typescript
-// Export CBT session to PDF
+// Export CBT session to Markdown
 const exportCBTSession = async (sessionId: string) => {
   const exportButton = document.getElementById('export-cbt-btn')
   exportButton.disabled = true
@@ -131,7 +77,7 @@ const exportCBTSession = async (sessionId: string) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        format: 'pdf',
+        format: 'markdown',
         includeMetadata: true,
         language: getCurrentLanguage()
       })
@@ -140,10 +86,9 @@ const exportCBTSession = async (sessionId: string) => {
     const blob = await response.blob()
     const url = URL.createObjectURL(blob)
     
-    // Trigger download
     const a = document.createElement('a')
     a.href = url
-    a.download = `cbt-session-${sessionId}.pdf`
+    a.download = `cbt-session-${sessionId}.md`
     a.click()
     
     URL.revokeObjectURL(url)
@@ -405,12 +350,8 @@ const validateExport = (data: ExportData, format: ExportFormat): ValidationResul
 // Format-specific validation
 const validateFormat = (data: ExportData, format: ExportFormat): ValidationResult => {
   switch (format) {
-    case 'pdf':
-      return validatePDFData(data)
     case 'json':
       return validateJSONData(data)
-    case 'csv':
-      return validateCSVData(data)
     default:
       return { passed: true, errors: [], warnings: [] }
   }
@@ -447,9 +388,4 @@ describe('Data Export', () => {
 ```
 
 ## **Dependencies**
-- **jsPDF** - PDF generation and formatting
-- **html2canvas** - HTML to image conversion for PDFs
-- **papaparse** - CSV parsing and generation
-- **marked** - Markdown parsing and rendering
-- **chart.js** - Chart and visualization generation
 - **date-fns** - Date formatting and localization

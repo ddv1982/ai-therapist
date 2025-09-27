@@ -50,7 +50,6 @@ export function MessageActions({
   const parsedObsessionsData = parseObsessionsCompulsionsFromMarkdown(messageContent);
   
   const {
-    exportAsPDF: cbtExportAsPDF,
     exportAsJSON: cbtExportAsJSON,
     exportAsMarkdown: cbtExportAsMarkdown,
     exportAsText: cbtExportAsText,
@@ -87,7 +86,6 @@ export function MessageActions({
   });
 
   const {
-    exportAsPDF: obsessionsExportAsPDF,
     exportAsJSON: obsessionsExportAsJSON,
     exportAsMarkdown: obsessionsExportAsMarkdown,
     exportAsText: obsessionsExportAsText,
@@ -124,7 +122,6 @@ export function MessageActions({
   });
 
   // Use the appropriate export functions based on message type
-  const exportAsPDF = isCBTMessage ? cbtExportAsPDF : obsessionsExportAsPDF;
   const exportAsJSON = isCBTMessage ? cbtExportAsJSON : obsessionsExportAsJSON;
   const exportAsMarkdown = isCBTMessage ? cbtExportAsMarkdown : obsessionsExportAsMarkdown;
   const exportAsText = isCBTMessage ? cbtExportAsText : obsessionsExportAsText;
@@ -216,18 +213,6 @@ export function MessageActions({
             </div>
             
             <div className="p-1">
-              <button
-                onClick={() => handleExport(exportAsPDF)}
-                disabled={isExporting}
-                className="w-full flex items-center px-2 py-2 text-sm hover:bg-accent rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FileText className="w-4 h-4 mr-2 text-red-600" />
-                <div className="flex flex-col items-start">
-                  <span>Export as PDF</span>
-                  <span className="text-sm text-muted-foreground">Professional report format</span>
-                </div>
-              </button>
-              
               <button
                 onClick={() => handleExport(exportAsMarkdown)}
                 disabled={isExporting}

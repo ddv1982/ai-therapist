@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getClientIPFromRequest } from './src/lib/api/middleware/request-utils';
+import { getClientIPFromRequest } from '@/lib/api/middleware/request-utils';
 import createMiddleware from 'next-intl/middleware';
-import { locales, defaultLocale } from './src/i18n/config';
+import { locales, defaultLocale } from '@/i18n/config';
 
 // Use shared helper for consistent IP extraction across the app
 const getClientIP = getClientIPFromRequest;

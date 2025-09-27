@@ -15,7 +15,7 @@
 ### **Completed Features We Can Extend**
 
 **1. Data Export System** ([Data Export Feature](../completed/data-export.md))
-- ✅ Multiple export formats (PDF, JSON, CSV, Markdown, HTML)
+- ✅ Multiple export formats (JSON, Markdown, Text)
 - ✅ Professional therapeutic templates
 - ✅ Privacy-compliant data anonymization
 - ✅ Batch export capabilities
@@ -192,7 +192,7 @@ export const ShareManager: React.FC<ShareManagerProps> = ({
   return (
     <TherapeuticShareInterface
       shareUrl={validatedShareUrl}
-      exportFormats={['pdf', 'json', 'csv', 'markdown']}
+      exportFormats={['json', 'markdown', 'text']}
       onExport={async (format) => {
         // Use Server Actions for export operations
         'use server'

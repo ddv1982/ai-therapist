@@ -26,6 +26,8 @@ const nextConfig = {
   // Secure CORS configuration
   async headers() {
     const isDevelopment = process.env.NODE_ENV === 'development';
+    const allowedOrigin = isDevelopment ? '*' : (process.env.CORS_ALLOWED_ORIGIN || 'https://your-domain.com');
+    const allowCredentials = allowedOrigin !== '*' ? 'true' : 'false';
     
     return [
       {
@@ -33,8 +35,12 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            // Allow network access for development
-            value: isDevelopment ? '*' : 'https://your-domain.com',
+            // Allow network access for development or env-driven origin in prod
+            value: allowedOrigin,
+          },
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: allowCredentials,
           },
           {
             key: 'Access-Control-Allow-Methods',
@@ -79,7 +85,7 @@ const nextConfig = {
           },
           {
             key: 'Vary',
-            value: 'Accept-Encoding, User-Agent',
+            value: 'Accept-Encoding, User-Agent, Origin',
           },
         ],
       },

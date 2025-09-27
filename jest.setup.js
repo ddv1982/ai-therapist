@@ -212,6 +212,8 @@ global.restoreCrypto = () => {
 process.env.ENCRYPTION_KEY = 'test-encryption-key-32-chars-long-for-testing';
 process.env.CSRF_SECRET = 'test-csrf-secret-for-testing';
 process.env.NODE_ENV = 'test';
+// Ensure rate limiting is enabled by default in tests (individual suites may override)
+process.env.RATE_LIMIT_DISABLED = 'false';
 
 // Mock Next.js specific classes
 jest.mock('next/server', () => ({
@@ -328,19 +330,7 @@ global.HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
 global.HTMLCanvasElement.prototype.toDataURL = jest.fn(() => 'data:image/png;base64,test');
 global.HTMLCanvasElement.prototype.getImageData = jest.fn(() => ({ data: new Array(4) }));
 
-// Mock jsPDF
-jest.mock('jspdf', () => ({
-  jsPDF: jest.fn(() => ({
-    addPage: jest.fn(),
-    setFontSize: jest.fn(),
-    text: jest.fn(),
-    save: jest.fn(),
-    output: jest.fn(() => 'mock-pdf-output'),
-    internal: {
-      pageSize: { width: 210, height: 297 }
-    }
-  }))
-}));
+// Removed jsPDF mocks (PDF export removed)
 
 // Suppress console warnings in tests
 global.console = {

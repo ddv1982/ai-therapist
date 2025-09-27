@@ -50,7 +50,7 @@ export function buildAuthAndRateLimit(
           return unauthorized;
         }
 
-        const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
+        const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true' && process.env.NODE_ENV !== 'production';
         const clientIP = deps.getClientIPFromRequest(request);
         const limiter = deps.getRateLimiter();
         const windowMs = Number(process.env.API_WINDOW_MS ?? options.windowMs ?? 5 * 60 * 1000);
@@ -107,7 +107,7 @@ export function buildAuthAndRateLimit(
     ): Promise<Response> => {
       const baseContext = deps.toRequestContext(deps.createRequestLogger(request));
       const startHighRes = performance.now();
-      const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true';
+      const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true' && process.env.NODE_ENV !== 'production';
       let didIncrement = false;
       try {
         // Early concurrency control
