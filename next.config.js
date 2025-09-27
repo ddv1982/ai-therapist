@@ -31,87 +31,95 @@ const nextConfig = {
         ? raw.split(',').map((value) => value.trim()).filter(Boolean)
         : [];
 
+    const escapeForRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
     const devOrigins = parseOriginList(process.env.DEV_CORS_ORIGIN);
     const prodOrigins = parseOriginList(process.env.CORS_ALLOWED_ORIGIN);
 
-    let resolvedOrigin = 'https://your-domain.com';
-    let allowCredentials = 'false';
+    const allowedOrigins = isDevelopment ? devOrigins : prodOrigins;
 
-    if (isDevelopment) {
-      if (devOrigins.length === 0) {
-        resolvedOrigin = '*';
-      } else if (devOrigins.length === 1) {
-        resolvedOrigin = devOrigins[0];
-        allowCredentials = resolvedOrigin !== '*' ? 'true' : 'false';
-      } else {
-        resolvedOrigin = '*';
-      }
-    } else if (prodOrigins.length > 0) {
-      resolvedOrigin = prodOrigins[0];
-      allowCredentials = resolvedOrigin !== '*' ? 'true' : 'false';
-    }
-    
-    return [
+    const baseHeaders = [
       {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            // Allow network access for development or env-driven origin in prod
-            value: resolvedOrigin,
-          },
-          {
-            key: 'Access-Control-Allow-Credentials',
-            value: allowCredentials,
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET,POST,PUT,DELETE,OPTIONS',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization, X-Requested-With',
-          },
-          // Add security headers
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          // Content Security Policy - Prevents XSS attacks
-          {
-            key: 'Content-Security-Policy',
-            value: isDevelopment 
-              ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.groq.com ws:;"
-              : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.groq.com;",
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
-          },
-          // Mobile Safari specific headers
-          {
-            key: 'Cache-Control',
-            value: isDevelopment ? 'no-cache, no-store, must-revalidate' : 'public, max-age=31536000, immutable',
-          },
-          {
-            key: 'Vary',
-            value: 'Accept-Encoding, User-Agent, Origin',
-          },
-        ],
+        key: 'Access-Control-Allow-Methods',
+        value: 'GET,POST,PUT,DELETE,OPTIONS',
       },
-    ]
+      {
+        key: 'Access-Control-Allow-Headers',
+        value: 'Content-Type, Authorization, X-Requested-With',
+      },
+      {
+        key: 'X-Content-Type-Options',
+        value: 'nosniff',
+      },
+      {
+        key: 'X-Frame-Options',
+        value: 'DENY',
+      },
+      {
+        key: 'X-XSS-Protection',
+        value: '1; mode=block',
+      },
+      {
+        key: 'Referrer-Policy',
+        value: 'strict-origin-when-cross-origin',
+      },
+      {
+        key: 'Permissions-Policy',
+        value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+      },
+      {
+        key: 'Cache-Control',
+        value: isDevelopment ? 'no-cache, no-store, must-revalidate' : 'public, max-age=31536000, immutable',
+      },
+      {
+        key: 'Vary',
+        value: 'Accept-Encoding, User-Agent, Origin',
+      },
+    ];
+
+    const securityHeaders = (originValue, credentialsAllowed) => ([
+      {
+        key: 'Access-Control-Allow-Origin',
+        value: originValue,
+      },
+      {
+        key: 'Access-Control-Allow-Credentials',
+        value: credentialsAllowed ? 'true' : 'false',
+      },
+      ...baseHeaders,
+      {
+        key: 'Content-Security-Policy',
+        value: isDevelopment
+          ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.groq.com ws:;"
+          : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.groq.com;"
+      }
+    ]);
+
+    const headers = [];
+
+    if (allowedOrigins.length > 0 && !allowedOrigins.includes('*')) {
+      allowedOrigins.forEach((origin) => {
+        headers.push({
+          source: '/(.*)',
+          has: [{ type: 'header', key: 'origin', value: escapeForRegex(origin) }],
+          headers: securityHeaders(origin, true),
+        });
+      });
+
+      // Fallback for unmatched origins
+      headers.push({
+        source: '/(.*)',
+        headers: securityHeaders('null', false),
+      });
+    } else {
+      // Allow all origins without credentials if wildcard configured
+      headers.push({
+        source: '/(.*)',
+        headers: securityHeaders('*', false),
+      });
+    }
+
+    return headers;
   },
 }
 

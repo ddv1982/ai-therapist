@@ -533,24 +533,45 @@ const TypingIndicator = memo(function TypingIndicator() {
   );
 });
 
-function areMessagesEqual(prev: MessageData[], next: MessageData[]): boolean {
-  if (prev === next) return true;
-  if (prev.length !== next.length) return false;
-  for (let i = 0; i < prev.length; i += 1) {
-    const previous = prev[i];
-    const current = next[i];
-    if (!current) return false;
-    if (previous.id !== current.id) return false;
-    const prevDigest = previous.digest ?? `${previous.content}:${previous.metadata?.step ?? ''}`;
-    const currentDigest = current.digest ?? `${current.content}:${current.metadata?.step ?? ''}`;
-    if (prevDigest !== currentDigest) return false;
-  }
-  return true;
+function getMessageDigest(message: MessageData): string {
+  if (message.digest) return message.digest;
+  const contentKey = `${message.content.length}:${message.content}`;
+  const stepKey = message.metadata?.step ?? '';
+  return `${message.id}:${contentKey}:${stepKey}`;
 }
 
 export const VirtualizedMessageList = memo(VirtualizedMessageListComponent, (prevProps, nextProps) => {
-  if (!areMessagesEqual(prevProps.messages, nextProps.messages)) {
+  if (prevProps.messages === nextProps.messages) {
+    return (
+      prevProps.isStreaming === nextProps.isStreaming &&
+      prevProps.isMobile === nextProps.isMobile &&
+      prevProps.maxVisible === nextProps.maxVisible &&
+      prevProps.activeCBTStep === nextProps.activeCBTStep &&
+      prevProps.onCBTStepNavigate === nextProps.onCBTStepNavigate
+    );
+  }
+
+  if (prevProps.messages.length !== nextProps.messages.length) {
     return false;
+  }
+
+  const visibleCount = Math.max(prevProps.maxVisible ?? 50, nextProps.maxVisible ?? 50);
+  const prevSlice = prevProps.messages.slice(-visibleCount);
+  const nextSlice = nextProps.messages.slice(-visibleCount);
+
+  if (prevSlice.length !== nextSlice.length) {
+    return false;
+  }
+
+  for (let i = 0; i < prevSlice.length; i += 1) {
+    const prevMessage = prevSlice[i];
+    const nextMessage = nextSlice[i];
+    if (!nextMessage || prevMessage.id !== nextMessage.id) {
+      return false;
+    }
+    if (getMessageDigest(prevMessage) !== getMessageDigest(nextMessage)) {
+      return false;
+    }
   }
 
   return (

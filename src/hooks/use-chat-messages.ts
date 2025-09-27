@@ -44,7 +44,7 @@ const hashString = (value: string): string => {
 
 export function useChatMessages() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const metadataCacheRef = useRef(new Map<string, { content: string; metadata?: Message['metadata']; digest: string }>());
+  const metadataCacheRef = useRef(new Map<string, { contentHash: string; metadata?: Message['metadata']; digest: string }>());
 
   const computeDigest = useCallback((message: { id: string; content: string; timestamp: Date; metadata?: Message['metadata'] }) => {
     let metadataKey = '';
@@ -69,7 +69,7 @@ export function useChatMessages() {
       metadata: nextMetadata,
     });
     metadataCacheRef.current.set(raw.id, {
-      content: raw.content,
+      contentHash: hashString(`${raw.content.length}:${raw.content}`),
       metadata: nextMetadata,
       digest,
     });
@@ -111,7 +111,8 @@ export function useChatMessages() {
           modelUsed: typeof msg.modelUsed === 'string' && msg.modelUsed.length > 0 ? msg.modelUsed : undefined,
         };
         const cacheEntry = metadataCacheRef.current.get(msg.id);
-        const metadata = cacheEntry && cacheEntry.content === msg.content
+        const contentHash = hashString(`${msg.content.length}:${msg.content}`);
+        const metadata = cacheEntry && cacheEntry.contentHash === contentHash
           ? cacheEntry.metadata
           : deriveMetadataFromContent(msg.content);
         const hydrated = hydrateMessage(baseMessage, metadata);

@@ -29,6 +29,7 @@ export function buildAuthAndRateLimit(
   const inflightCounters: Map<string, { count: number; lastUpdated: number }> = new Map();
   const cleanupIntervalMs = Math.max(Number(process.env.CHAT_CLEANUP_INTERVAL_MS ?? 30_000), 5_000);
   let lastCleanupAt = Date.now();
+  let cleanupTimer: NodeJS.Timeout | null = null;
 
   function cleanupExpiredCounters(now: number, windowMs: number): void {
     streamingCounters.forEach((entry, key) => {
@@ -43,6 +44,19 @@ export function buildAuthAndRateLimit(
       }
     });
   }
+
+  const scheduleCleanup = () => {
+    if (cleanupTimer || typeof setTimeout === 'undefined') return;
+    cleanupTimer = setTimeout(() => {
+      cleanupTimer = null;
+      const now = Date.now();
+      const windowMs = Number(process.env.CHAT_WINDOW_MS ?? 5 * 60 * 1000);
+      cleanupExpiredCounters(now, windowMs);
+      lastCleanupAt = now;
+      scheduleCleanup();
+    }, cleanupIntervalMs);
+  };
+  scheduleCleanup();
   function withAuthAndRateLimit<T = unknown>(
     handler: (
       request: NextRequest,
@@ -128,6 +142,7 @@ export function buildAuthAndRateLimit(
       if (!rateLimitDisabled && now - lastCleanupAt >= cleanupIntervalMs) {
         cleanupExpiredCounters(now, Number(process.env.CHAT_WINDOW_MS ?? 5 * 60 * 1000));
         lastCleanupAt = now;
+        scheduleCleanup();
       }
       let didIncrement = false;
       try {
