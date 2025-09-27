@@ -7,10 +7,11 @@
 import { NextResponse } from 'next/server';
 import { logger } from './logger';
 import { RequestContext } from '../api/api-middleware';
-import { 
+import {
   createServerErrorResponse,
   createValidationErrorResponse,
   createForbiddenErrorResponse,
+  createAuthenticationErrorResponse,
   ApiResponse
 } from '@/lib/api/api-response';
 
@@ -327,13 +328,9 @@ export function handleApiError(
   // Return appropriate response based on category
   switch (enhancedContext.category) {
     case 'authentication':
-      return createServerErrorResponse(
-        actualError, 
-        context.requestId,
-        { 
-          userMessage: enhancedContext.userMessage || 'Authentication required',
-          shouldRetry: enhancedContext.shouldRetry || false,
-        }
+      return createAuthenticationErrorResponse(
+        enhancedContext.userMessage || actualError.message || 'Authentication required',
+        context.requestId
       );
       
     case 'validation':

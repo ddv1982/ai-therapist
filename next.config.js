@@ -26,8 +26,30 @@ const nextConfig = {
   // Secure CORS configuration
   async headers() {
     const isDevelopment = process.env.NODE_ENV === 'development';
-    const allowedOrigin = isDevelopment ? '*' : (process.env.CORS_ALLOWED_ORIGIN || 'https://your-domain.com');
-    const allowCredentials = allowedOrigin !== '*' ? 'true' : 'false';
+    const parseOriginList = (raw) =>
+      typeof raw === 'string'
+        ? raw.split(',').map((value) => value.trim()).filter(Boolean)
+        : [];
+
+    const devOrigins = parseOriginList(process.env.DEV_CORS_ORIGIN);
+    const prodOrigins = parseOriginList(process.env.CORS_ALLOWED_ORIGIN);
+
+    let resolvedOrigin = 'https://your-domain.com';
+    let allowCredentials = 'false';
+
+    if (isDevelopment) {
+      if (devOrigins.length === 0) {
+        resolvedOrigin = '*';
+      } else if (devOrigins.length === 1) {
+        resolvedOrigin = devOrigins[0];
+        allowCredentials = resolvedOrigin !== '*' ? 'true' : 'false';
+      } else {
+        resolvedOrigin = '*';
+      }
+    } else if (prodOrigins.length > 0) {
+      resolvedOrigin = prodOrigins[0];
+      allowCredentials = resolvedOrigin !== '*' ? 'true' : 'false';
+    }
     
     return [
       {
@@ -36,7 +58,7 @@ const nextConfig = {
           {
             key: 'Access-Control-Allow-Origin',
             // Allow network access for development or env-driven origin in prod
-            value: allowedOrigin,
+            value: resolvedOrigin,
           },
           {
             key: 'Access-Control-Allow-Credentials',
@@ -48,7 +70,7 @@ const nextConfig = {
           },
           {
             key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization',
+            value: 'Content-Type, Authorization, X-Requested-With',
           },
           // Add security headers
           {

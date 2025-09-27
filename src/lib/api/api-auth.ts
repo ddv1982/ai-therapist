@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
 import { isTOTPSetup } from '@/lib/auth/totp-service';
-import { isLocalhost } from '@/lib/utils/utils';
+import { isLocalhost, isPrivateNetworkAccess } from '@/lib/utils/utils';
 
 export interface AuthValidationResult {
   isValid: boolean;
@@ -34,11 +34,11 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthValidat
   const isDevEnvironment = process.env.NODE_ENV !== 'production';
   // Unified dev bypass flag (matches auth-middleware semantics)
   const localBypassEnabled = isDevEnvironment && process.env.BYPASS_AUTH === 'true';
-  const hostnameIsLocal = isLocalhost(hostname || '');
-  const forwardedHostIsLocal = !forwardedHost || isLocalhost(forwardedHost);
-  const clientIpIsLocal = normalizedIp ? isLocalhost(normalizedIp) : false;
+  const hostnameIsLocalOrPrivate = isLocalhost(hostname || '') || isPrivateNetworkAccess(hostname || '');
+  const forwardedHostIsLocalOrPrivate = !forwardedHost || isLocalhost(forwardedHost) || isPrivateNetworkAccess(forwardedHost);
+  const clientIpIsLocalOrPrivate = normalizedIp ? (isLocalhost(normalizedIp) || isPrivateNetworkAccess(normalizedIp)) : false;
 
-  if (localBypassEnabled && hostnameIsLocal && forwardedHostIsLocal && clientIpIsLocal) {
+  if (localBypassEnabled && hostnameIsLocalOrPrivate && forwardedHostIsLocalOrPrivate && clientIpIsLocalOrPrivate) {
     return { isValid: true };
   }
 

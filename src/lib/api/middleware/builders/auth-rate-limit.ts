@@ -26,7 +26,23 @@ export function buildAuthAndRateLimit(
 ) {
   // Per-instance counters for streaming rate limits
   const streamingCounters: Map<string, { count: number; resetTime: number }> = new Map();
-  const inflightCounters: Map<string, number> = new Map();
+  const inflightCounters: Map<string, { count: number; lastUpdated: number }> = new Map();
+  const cleanupIntervalMs = Math.max(Number(process.env.CHAT_CLEANUP_INTERVAL_MS ?? 30_000), 5_000);
+  let lastCleanupAt = Date.now();
+
+  function cleanupExpiredCounters(now: number, windowMs: number): void {
+    streamingCounters.forEach((entry, key) => {
+      if (entry.resetTime <= now) {
+        streamingCounters.delete(key);
+      }
+    });
+    const inflightExpiryWindow = Math.max(windowMs, 60_000);
+    inflightCounters.forEach((entry, key) => {
+      if (entry.count <= 0 && entry.lastUpdated + inflightExpiryWindow <= now) {
+        inflightCounters.delete(key);
+      }
+    });
+  }
   function withAuthAndRateLimit<T = unknown>(
     handler: (
       request: NextRequest,
@@ -108,6 +124,11 @@ export function buildAuthAndRateLimit(
       const baseContext = deps.toRequestContext(deps.createRequestLogger(request));
       const startHighRes = performance.now();
       const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true' && process.env.NODE_ENV !== 'production';
+      const now = Date.now();
+      if (!rateLimitDisabled && now - lastCleanupAt >= cleanupIntervalMs) {
+        cleanupExpiredCounters(now, Number(process.env.CHAT_WINDOW_MS ?? 5 * 60 * 1000));
+        lastCleanupAt = now;
+      }
       let didIncrement = false;
       try {
         // Early concurrency control
@@ -116,7 +137,7 @@ export function buildAuthAndRateLimit(
           ? Number(process.env.CHAT_MAX_CONCURRENCY)
           : (_options.maxConcurrent ?? 2);
         if (!rateLimitDisabled && process.env.NODE_ENV !== 'development') {
-          const inflightEarly = inflightCounters.get(clientIPForEarly) || 0;
+          const inflightEarly = inflightCounters.get(clientIPForEarly)?.count ?? 0;
           if (inflightEarly >= maxConcurrentEarly) {
             const earlyTooMany = new Response('Too many concurrent requests. Please wait.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' } });
             const durationMs = Math.round(performance.now() - startHighRes);
@@ -165,14 +186,14 @@ export function buildAuthAndRateLimit(
             entry.count++;
           }
 
-          const currentInflight = inflightCounters.get(clientIP) || 0;
+          const currentInflight = inflightCounters.get(clientIP)?.count ?? 0;
           if (currentInflight >= maxConcurrent) {
             const tooMany = new Response('Too many concurrent requests. Please wait.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' } });
             const durationMs = Math.round(performance.now() - startHighRes);
             setResponseHeaders(tooMany, baseContext.requestId || 'unknown', durationMs);
             return tooMany;
           }
-          inflightCounters.set(clientIP, currentInflight + 1);
+          inflightCounters.set(clientIP, { count: currentInflight + 1, lastUpdated: now });
           didIncrement = true;
         }
 
@@ -203,8 +224,15 @@ export function buildAuthAndRateLimit(
         if (!rateLimitDisabled && didIncrement) {
           try {
             const key = deps.getClientIPFromRequest(request);
-            const current = inflightCounters.get(key) || 0;
-            if (current > 0) inflightCounters.set(key, current - 1);
+            const entry = inflightCounters.get(key);
+            if (entry) {
+              const nextCount = Math.max(0, entry.count - 1);
+              if (nextCount === 0) {
+                inflightCounters.set(key, { count: 0, lastUpdated: Date.now() });
+              } else {
+                inflightCounters.set(key, { count: nextCount, lastUpdated: Date.now() });
+              }
+            }
           } catch {}
         }
       }

@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { MessageData } from '@/features/chat/messages/message';
 import { logger } from '@/lib/utils/logger';
 import * as messagesApi from '@/lib/api/client/messages';
@@ -34,8 +34,52 @@ export interface ChatMessage {
 /**
  * Hook for managing chat messages with both UI state and database persistence
  */
+const hashString = (value: string): string => {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return hash.toString(16);
+};
+
 export function useChatMessages() {
   const [messages, setMessages] = useState<Message[]>([]);
+  const metadataCacheRef = useRef(new Map<string, { content: string; metadata?: Message['metadata']; digest: string }>());
+
+  const computeDigest = useCallback((message: { id: string; content: string; timestamp: Date; metadata?: Message['metadata'] }) => {
+    let metadataKey = '';
+    if (message.metadata) {
+      try {
+        metadataKey = hashString(JSON.stringify(message.metadata));
+      } catch {
+        metadataKey = 'metadata-error';
+      }
+    }
+    const contentKey = hashString(`${message.content.length}:${message.content}`);
+    return `${message.id}:${message.timestamp.getTime()}:${contentKey}:${metadataKey}`;
+  }, []);
+
+  const hydrateMessage = useCallback((raw: Message, metadata?: Message['metadata']) => {
+    const normalizedTimestamp = raw.timestamp instanceof Date ? raw.timestamp : new Date(raw.timestamp);
+    const nextMetadata = metadata ?? raw.metadata;
+    const digest = computeDigest({
+      id: raw.id,
+      content: raw.content,
+      timestamp: normalizedTimestamp,
+      metadata: nextMetadata,
+    });
+    metadataCacheRef.current.set(raw.id, {
+      content: raw.content,
+      metadata: nextMetadata,
+      digest,
+    });
+    return {
+      ...raw,
+      timestamp: normalizedTimestamp,
+      metadata: nextMetadata,
+      digest,
+    } as Message;
+  }, [computeDigest]);
 
   /**
    * Load messages from the database for a session
@@ -43,24 +87,7 @@ export function useChatMessages() {
   const loadMessages = useCallback(async (sessionId: string): Promise<void> => {
     try {
       const resp: ListMessagesResponse = await messagesApi.listMessages(sessionId);
-      if (resp) {
-        const page = getApiData(resp);
-        const items = page.items as Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: string; modelUsed?: string | null }>;
-
-        // Convert timestamp strings to Date objects
-        const formattedMessages = items.map(msg => {
-          const baseMessage: Message = {
-            id: msg.id,
-            content: msg.content,
-            role: msg.role as 'user' | 'assistant',
-            timestamp: new Date(msg.timestamp),
-            modelUsed: typeof msg.modelUsed === 'string' && msg.modelUsed.length > 0 ? msg.modelUsed : undefined,
-          };
-          const metadata = deriveMetadataFromContent(msg.content);
-          return metadata ? { ...baseMessage, metadata } : baseMessage;
-        });
-        setMessages(formattedMessages);
-      } else {
+      if (!resp) {
         logger.error('Failed to load messages from API', {
           component: 'useChatMessages',
           operation: 'loadMessages',
@@ -68,17 +95,37 @@ export function useChatMessages() {
           status: 500,
           statusText: 'Client wrapper error'
         });
-        setMessages([]);
+        return;
       }
+
+      const page = getApiData(resp);
+      const items = page.items as Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: string; modelUsed?: string | null }>;
+
+      // Convert timestamp strings to Date objects
+      const formattedMessages = items.map(msg => {
+        const baseMessage: Message = {
+          id: msg.id,
+          content: msg.content,
+          role: msg.role as 'user' | 'assistant',
+          timestamp: new Date(msg.timestamp),
+          modelUsed: typeof msg.modelUsed === 'string' && msg.modelUsed.length > 0 ? msg.modelUsed : undefined,
+        };
+        const cacheEntry = metadataCacheRef.current.get(msg.id);
+        const metadata = cacheEntry && cacheEntry.content === msg.content
+          ? cacheEntry.metadata
+          : deriveMetadataFromContent(msg.content);
+        const hydrated = hydrateMessage(baseMessage, metadata);
+        return hydrated;
+      });
+      setMessages(formattedMessages);
     } catch (error) {
       logger.error('Error loading messages', {
         component: 'useChatMessages',
         operation: 'loadMessages',
         sessionId
       }, error instanceof Error ? error : new Error(String(error)));
-      setMessages([]);
     }
-  }, []);
+  }, [hydrateMessage]);
 
   /**
    * Add a message to both UI state and database
@@ -96,7 +143,7 @@ export function useChatMessages() {
     try {
       // Generate a temporary ID for immediate UI update
       const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+
       // Create message object for UI
       const baseMessage: Message = {
         id: tempId,
@@ -106,7 +153,7 @@ export function useChatMessages() {
         modelUsed: message.modelUsed,
       };
       const metadata = deriveMetadataFromContent(message.content);
-      const uiMessage: Message = metadata ? { ...baseMessage, metadata } : baseMessage;
+      const uiMessage = hydrateMessage(baseMessage, metadata);
 
       // Immediately add to UI state
       setMessages(prev => [...prev, uiMessage]);
@@ -123,16 +170,17 @@ export function useChatMessages() {
       }
 
       const savedMessage = saved.data as components['schemas']['Message'] & { modelUsed?: string | null };
-      setMessages(prev => prev.map(msg => 
-        msg.id === tempId 
-          ? {
-              ...msg,
-              id: savedMessage.id as string,
-              timestamp: new Date(savedMessage.timestamp as string),
-              modelUsed: typeof savedMessage.modelUsed === 'string' ? savedMessage.modelUsed : msg.modelUsed,
-            }
-          : msg
-      ));
+      setMessages(prev => prev.map(msg => {
+        if (msg.id !== tempId) return msg;
+        const updated: Message = {
+          ...msg,
+          id: savedMessage.id as string,
+          timestamp: new Date(savedMessage.timestamp as string),
+          modelUsed: typeof savedMessage.modelUsed === 'string' ? savedMessage.modelUsed : msg.modelUsed,
+        };
+        metadataCacheRef.current.delete(tempId);
+        return hydrateMessage(updated, msg.metadata);
+      }));
 
       return { success: true };
     } catch (error) {
@@ -146,12 +194,13 @@ export function useChatMessages() {
       }, error instanceof Error ? error : new Error(String(error)));
       return { success: false, error: errorMessage };
     }
-  }, []);
+  }, [hydrateMessage]);
 
   /**
    * Clear all messages (for new session)
    */
   const clearMessages = useCallback(() => {
+    metadataCacheRef.current.clear();
     setMessages([]);
   }, []);
 
@@ -159,10 +208,16 @@ export function useChatMessages() {
    * Update a specific message (for streaming responses)
    */
   const updateMessage = useCallback((messageId: string, updates: Partial<Message>) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, ...updates } : msg
-    ));
-  }, []);
+    setMessages(prev => prev.map(msg => {
+      if (msg.id !== messageId) return msg;
+      const next: Message = {
+        ...msg,
+        ...updates,
+      };
+      const metadata = updates.metadata ?? msg.metadata;
+      return hydrateMessage(next, metadata);
+    }));
+  }, [hydrateMessage]);
 
   /**
    * Add a message to UI only (without saving to database)
@@ -173,14 +228,16 @@ export function useChatMessages() {
       id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       ...message
     };
-    setMessages(prev => [...prev, tempMessage]);
-    return tempMessage.id;
-  }, []);
+    const hydrated = hydrateMessage(tempMessage, tempMessage.metadata);
+    setMessages(prev => [...prev, hydrated]);
+    return hydrated.id;
+  }, [hydrateMessage]);
 
   /**
    * Remove a temporary message
    */
   const removeTemporaryMessage = useCallback((messageId: string) => {
+    metadataCacheRef.current.delete(messageId);
     setMessages(prev => prev.filter(msg => msg.id !== messageId));
   }, []);
 

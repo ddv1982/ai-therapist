@@ -24,6 +24,7 @@ interface MessageData {
     sessionData?: unknown;
     data?: unknown;
   };
+  digest?: string;
 }
 
 interface MessageProps {

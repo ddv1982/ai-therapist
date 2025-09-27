@@ -1,6 +1,15 @@
 import { ObsessionsCompulsionsData, ObsessionData, CompulsionData } from '@/types/therapy';
 import { logger } from '@/lib/utils/logger';
 
+function generateStableId(prefix: string, seed: string): string {
+  const normalized = seed.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48) || 'entry';
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return `${prefix}-${normalized}-${hash.toString(16)}`;
+}
+
 /**
  * Format obsessions and compulsions data for chat display
  */
@@ -53,7 +62,7 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
     const pairMatches = content.match(pairRegex);
 
     if (pairMatches && pairMatches.length > 0) {
-      pairMatches.forEach((pairContent, pairIndex) => {
+      pairMatches.forEach((pairContent) => {
         const obsessionSection = pairContent.match(/### [^\n]*Obsession[\s\S]*?(?=### [^\n]*|$)/);
         if (obsessionSection) {
           const description = extractMarkdownField(obsessionSection[0], 'Description');
@@ -64,8 +73,9 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
             const createdAtRaw = extractMarkdownField(obsessionSection[0], 'Recorded');
             const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
 
+            const obsessionSeed = `${description}-${intensity}-${triggers.join(',')}`;
             obsessions.push({
-              id: `obsession-${pairIndex}`,
+              id: generateStableId('obsession', obsessionSeed),
               obsession: description,
               intensity: clampRating(intensity),
               triggers,
@@ -84,8 +94,9 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
             const createdAtRaw = extractMarkdownField(compulsionSection[0], 'Recorded');
             const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
 
+            const compulsionSeed = `${description}-${frequency}-${duration}-${reliefLevel}`;
             compulsions.push({
-              id: `compulsion-${pairIndex}`,
+              id: generateStableId('compulsion', compulsionSeed),
               compulsion: description,
               frequency: clampRating(frequency),
               duration: Number.isFinite(duration) ? duration : 10,
@@ -100,7 +111,7 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
     // Fallback for legacy format without Pair headings
     if (obsessions.length === 0) {
       const legacyObsessionMatches = content.match(/### [^\n]*Obsession[\s\S]*?(?=### [^\n]*|$)/g);
-      legacyObsessionMatches?.forEach((match, index) => {
+      legacyObsessionMatches?.forEach((match) => {
         const description = extractMarkdownField(match, 'Description');
         if (!description) return;
         const intensity = parseInt(extractMarkdownField(match, 'Intensity')?.replace('/10', '') || '5', 10);
@@ -109,8 +120,9 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
         const createdAtRaw = extractMarkdownField(match, 'Recorded');
         const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
 
+        const obsessionSeed = `${description}-${intensity}-${triggers.join(',')}`;
         obsessions.push({
-          id: `obsession-${index}`,
+          id: generateStableId('obsession', obsessionSeed),
           obsession: description,
           intensity: clampRating(intensity),
           triggers,
@@ -121,7 +133,7 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
 
     if (compulsions.length === 0) {
       const legacyCompulsionMatches = content.match(/### [^\n]*Compulsion[\s\S]*?(?=### [^\n]*|$)/g);
-      legacyCompulsionMatches?.forEach((match, index) => {
+      legacyCompulsionMatches?.forEach((match) => {
         const description = extractMarkdownField(match, 'Description');
         if (!description) return;
         const frequency = parseInt(extractMarkdownField(match, 'Frequency')?.replace('/10', '') || '5', 10);
@@ -130,8 +142,9 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
         const createdAtRaw = extractMarkdownField(match, 'Recorded');
         const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
 
+        const seed = `${description}-${frequency}-${duration}-${reliefLevel}`;
         compulsions.push({
-          id: `compulsion-${index}`,
+          id: generateStableId('compulsion', seed),
           compulsion: description,
           frequency: clampRating(frequency),
           duration: Number.isFinite(duration) ? duration : 10,

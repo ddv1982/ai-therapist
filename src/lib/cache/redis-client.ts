@@ -15,6 +15,8 @@
 import { createClient, RedisClientType, RedisClientOptions } from 'redis';
 import { logger } from '@/lib/utils/logger';
 
+const isNodeRuntime = typeof globalThis.process?.versions?.node === 'string';
+
 export interface RedisConfig {
   url?: string;
   host?: string;
@@ -43,6 +45,11 @@ class RedisManager {
    * Initialize Redis connection with configuration
    */
   async connect(config?: RedisConfig): Promise<void> {
+    if (!isNodeRuntime) {
+      logger.debug('Redis connect skipped outside Node runtime', { operation: 'redis_connect_skip' });
+      return;
+    }
+
     if (this.isConnected || this.isConnecting) {
       return;
     }
@@ -126,7 +133,7 @@ class RedisManager {
    */
   private setupEventHandlers(): void {
     // Handle process termination gracefully (only in Node.js runtime)
-    if (typeof process !== 'undefined' && process.on) {
+    if (isNodeRuntime && typeof process !== 'undefined' && process.on) {
       process.on('SIGINT', () => this.disconnect());
       process.on('SIGTERM', () => this.disconnect());
       process.on('beforeExit', () => this.disconnect());
@@ -200,6 +207,10 @@ class RedisManager {
     command: (client: RedisClientType<Record<string, never>, Record<string, never>, Record<string, never>>) => Promise<T>,
     fallback?: T
   ): Promise<T | null> {
+    if (!isNodeRuntime) {
+      return fallback ?? null;
+    }
+
     // Try to connect if not already connected (lazy connection)
     if (!this.isConnected && !this.isConnecting) {
       try {
@@ -245,6 +256,10 @@ class RedisManager {
    * Disconnect from Redis
    */
   async disconnect(): Promise<void> {
+    if (!isNodeRuntime) {
+      return;
+    }
+
     if (this.client && this.isConnected) {
       try {
         await this.client.quit();
@@ -273,6 +288,15 @@ class RedisManager {
     error?: string;
   }> {
     try {
+      if (!isNodeRuntime) {
+        return {
+          healthy: false,
+          connected: false,
+          ready: false,
+          error: 'Redis not available in this runtime'
+        };
+      }
+
       if (!this.client) {
         return {
           healthy: false,

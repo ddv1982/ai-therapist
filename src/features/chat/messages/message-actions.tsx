@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { 
   Download,
   FileText,
@@ -20,6 +20,7 @@ import { CBTExportFormat } from '@/lib/cbt/export-utils';
 import { isObsessionsCompulsionsMessage } from '@/features/therapy/obsessions-compulsions/utils/obsessions-message-detector';
 import { parseObsessionsCompulsionsFromMarkdown } from '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions';
 import { useObsessionsExportActions, ObsessionsExportFormat } from '@/features/therapy/obsessions-compulsions/utils/obsessions-export-utils';
+import { createInitialCBTFormData } from '@/types/therapy';
 
 interface MessageActionsProps {
   messageId: string;
@@ -39,15 +40,17 @@ export function MessageActions({
   const [lastExportedFormat, setLastExportedFormat] = useState<CBTExportFormat | ObsessionsExportFormat | null>(null);
   const [showSuccessIcon, setShowSuccessIcon] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Check for CBT or obsessions content
   const isCBTMessage = messageRole === 'user' && isCBTDiaryMessage(messageContent, 0.6);
   const isObsessionsMessage = messageRole === 'user' && isObsessionsCompulsionsMessage(messageContent);
   const shouldShowActions = isCBTMessage || isObsessionsMessage;
   
-  // Parse data for export (always call hooks to avoid conditional hook usage)
-  const parsedCBTData = parseCBTFromMarkdown(messageContent);
-  const parsedObsessionsData = parseObsessionsCompulsionsFromMarkdown(messageContent);
+  const emptyCBTForm = useMemo(() => createInitialCBTFormData(), []);
+  const parsedCBTData = useMemo(() => (isCBTMessage ? parseCBTFromMarkdown(messageContent) : null), [isCBTMessage, messageContent]);
+  const parsedObsessionsData = useMemo(() => (isObsessionsMessage ? parseObsessionsCompulsionsFromMarkdown(messageContent) : null), [isObsessionsMessage, messageContent]);
   
   const {
     exportAsJSON: cbtExportAsJSON,
@@ -57,14 +60,15 @@ export function MessageActions({
     exportingFormat: cbtExportingFormat,
     exportError: cbtExportError,
     clearError: cbtClearError
-  } = useCBTExportActions(parsedCBTData.formData, messageContent, {
+  } = useCBTExportActions(parsedCBTData?.formData ?? emptyCBTForm, isCBTMessage ? messageContent : undefined, {
     onSuccess: (format: CBTExportFormat) => {
       setLastExportedFormat(format);
       setShowSuccessIcon(true);
       setShowDropdown(false);
-      
-      // Clear success icon after 2 seconds
-      setTimeout(() => {
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+      successTimeoutRef.current = setTimeout(() => {
         setShowSuccessIcon(false);
         setLastExportedFormat(null);
       }, 2000);
@@ -77,9 +81,10 @@ export function MessageActions({
         messageId: _messageId
       }, error);
       setShowDropdown(false);
-      
-      // Clear error after 3 seconds
-      setTimeout(() => {
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+      errorTimeoutRef.current = setTimeout(() => {
         cbtClearError();
       }, 3000);
     }
@@ -98,9 +103,10 @@ export function MessageActions({
       setLastExportedFormat(format);
       setShowSuccessIcon(true);
       setShowDropdown(false);
-      
-      // Clear success icon after 2 seconds
-      setTimeout(() => {
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+      successTimeoutRef.current = setTimeout(() => {
         setShowSuccessIcon(false);
         setLastExportedFormat(null);
       }, 2000);
@@ -113,9 +119,10 @@ export function MessageActions({
         messageId: _messageId
       }, error);
       setShowDropdown(false);
-      
-      // Clear error after 3 seconds
-      setTimeout(() => {
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+      errorTimeoutRef.current = setTimeout(() => {
         obsessionsClearError();
       }, 3000);
     }
@@ -128,6 +135,26 @@ export function MessageActions({
   const isExporting = isCBTMessage ? cbtIsExporting : obsessionsIsExporting;
   const exportingFormat = isCBTMessage ? cbtExportingFormat : obsessionsExportingFormat;
   const exportError = isCBTMessage ? cbtExportError : obsessionsExportError;
+
+  // Analyze CBT content for confidence display
+  const cbtAnalysis = useMemo(() => (isCBTMessage ? analyzeCBTMessage(messageContent) : null), [isCBTMessage, messageContent]);
+  const confidencePercentage = cbtAnalysis ? Math.round(cbtAnalysis.confidence * 100) : null;
+
+  const handleExport = (exportFunction: () => Promise<void>) => {
+    exportFunction();
+    setShowDropdown(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (successTimeoutRef.current) {
+        clearTimeout(successTimeoutRef.current);
+      }
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Only render if this is a CBT or obsessions message
   if (!shouldShowActions) {
@@ -161,21 +188,12 @@ export function MessageActions({
     return 'Export CBT diary entry';
   };
 
-  // Analyze CBT content for confidence display
-  const cbtAnalysis = analyzeCBTMessage(messageContent);
-  const confidencePercentage = Math.round(cbtAnalysis.confidence * 100);
-
-  const handleExport = (exportFunction: () => Promise<void>) => {
-    exportFunction();
-    setShowDropdown(false);
-  };
-
   return (
-    <div 
+    <div
       className={cn(
-        "absolute top-2 right-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100",
+        'absolute top-2 right-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100',
         {
-          'opacity-100': isVisible || isExporting || showSuccessIcon || exportError || showDropdown
+          'opacity-100': isVisible || isExporting || showSuccessIcon || exportError || showDropdown,
         },
         className
       )}
@@ -187,31 +205,31 @@ export function MessageActions({
           variant="ghost"
           size="sm"
           className={cn(
-            "h-8 w-8 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:shadow-md transition-all duration-200",
+            'h-8 w-8 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:shadow-md transition-all duration-200',
             {
               'text-green-600 border-green-200 hover:bg-green-50': showSuccessIcon,
               'text-red-600 border-red-200 hover:bg-red-50': exportError,
-              'hover:bg-blue-50 border-blue-200': !showSuccessIcon && !exportError
+              'hover:bg-blue-50 border-blue-200': !showSuccessIcon && !exportError,
             }
           )}
           title={getTooltipText()}
           disabled={isExporting}
-          onClick={() => setShowDropdown(!showDropdown)}
+          onClick={() => setShowDropdown((prev) => !prev)}
         >
           {getActionIcon()}
         </Button>
-        
+
         {showDropdown && (
           <div className="absolute top-full right-0 mt-1 w-56 bg-background border rounded-md shadow-lg z-50">
             <div className="px-2 py-1.5 text-sm text-muted-foreground border-b">
-              CBT Diary Entry ({confidencePercentage}% confidence)
-              {parsedCBTData.isComplete ? (
+              {isObsessionsMessage ? 'Obsessions & Compulsions Tracker' : 'CBT Diary Entry'}
+              {isCBTMessage && confidencePercentage !== null ? ` (${confidencePercentage}% confidence)` : ''}
+              {isCBTMessage && parsedCBTData?.isComplete ? (
                 <span className="text-green-600 ml-1">✓ Complete</span>
-              ) : (
+              ) : isCBTMessage ? (
                 <span className="text-yellow-600 ml-1">⚠ Partial</span>
-              )}
+              ) : null}
             </div>
-            
             <div className="p-1">
               <button
                 onClick={() => handleExport(exportAsMarkdown)}
@@ -224,9 +242,9 @@ export function MessageActions({
                   <span className="text-sm text-muted-foreground">Formatted text document</span>
                 </div>
               </button>
-              
+
               <hr className="my-1" />
-              
+
               <button
                 onClick={() => handleExport(exportAsJSON)}
                 disabled={isExporting}
@@ -238,7 +256,7 @@ export function MessageActions({
                   <span className="text-sm text-muted-foreground">Structured data backup</span>
                 </div>
               </button>
-              
+
               <button
                 onClick={() => handleExport(exportAsText)}
                 disabled={isExporting}
@@ -251,7 +269,7 @@ export function MessageActions({
                 </div>
               </button>
 
-              {parsedCBTData.missingFields.length > 0 && (
+              {isCBTMessage && parsedCBTData && parsedCBTData.missingFields.length > 0 && (
                 <>
                   <hr className="my-1" />
                   <div className="px-2 py-1.5 text-sm text-yellow-600">
@@ -263,11 +281,10 @@ export function MessageActions({
             </div>
           </div>
         )}
-        
-        {/* Click outside to close dropdown */}
+
         {showDropdown && (
-          <div 
-            className="fixed inset-0 z-40" 
+          <div
+            className="fixed inset-0 z-40"
             onClick={() => setShowDropdown(false)}
           />
         )}

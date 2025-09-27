@@ -533,13 +533,27 @@ const TypingIndicator = memo(function TypingIndicator() {
   );
 });
 
+function areMessagesEqual(prev: MessageData[], next: MessageData[]): boolean {
+  if (prev === next) return true;
+  if (prev.length !== next.length) return false;
+  for (let i = 0; i < prev.length; i += 1) {
+    const previous = prev[i];
+    const current = next[i];
+    if (!current) return false;
+    if (previous.id !== current.id) return false;
+    const prevDigest = previous.digest ?? `${previous.content}:${previous.metadata?.step ?? ''}`;
+    const currentDigest = current.digest ?? `${current.content}:${current.metadata?.step ?? ''}`;
+    if (prevDigest !== currentDigest) return false;
+  }
+  return true;
+}
+
 export const VirtualizedMessageList = memo(VirtualizedMessageListComponent, (prevProps, nextProps) => {
-  // Only re-render if messages changed, streaming status changed, or mobile status changed
+  if (!areMessagesEqual(prevProps.messages, nextProps.messages)) {
+    return false;
+  }
+
   return (
-    prevProps.messages.length === nextProps.messages.length &&
-    prevProps.messages[prevProps.messages.length - 1]?.id === nextProps.messages[nextProps.messages.length - 1]?.id &&
-    prevProps.messages[prevProps.messages.length - 1]?.content === nextProps.messages[nextProps.messages.length - 1]?.content &&
-    prevProps.messages[prevProps.messages.length - 1]?.metadata?.step === nextProps.messages[nextProps.messages.length - 1]?.metadata?.step &&
     prevProps.isStreaming === nextProps.isStreaming &&
     prevProps.isMobile === nextProps.isMobile &&
     prevProps.maxVisible === nextProps.maxVisible &&
