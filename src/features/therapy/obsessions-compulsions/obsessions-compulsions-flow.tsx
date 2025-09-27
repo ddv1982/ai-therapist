@@ -28,6 +28,13 @@ import {
 } from '@/types/therapy';
 import { v4 as uuidv4 } from 'uuid';
 
+const MetricTile = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div className="rounded-lg border border-muted/30 bg-background/40 px-3 py-2">
+    <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
+    <div className="mt-1 text-sm font-semibold text-foreground">{value}</div>
+  </div>
+);
+
 interface ObsessionsCompulsionsFlowProps {
   onComplete: (data: ObsessionsCompulsionsData) => void;
   initialData?: ObsessionsCompulsionsData;
@@ -422,7 +429,18 @@ export function ObsessionsCompulsionsFlow({
               {t('back')}
             </Button>
           ) : (
-            <div />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                resetForms();
+                setErrors({});
+                setBuilderState({ mode: 'closed', step: 'obsession', editingIndex: null });
+              }}
+              disabled={isSaving}
+            >
+              {t('cancelAction')}
+            </Button>
           )}
           <Button
             size="sm"
@@ -471,78 +489,98 @@ export function ObsessionsCompulsionsFlow({
     }
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         {data.obsessions.map((obsession, index) => {
           const compulsion = data.compulsions[index];
+          const triggersLabel = t('triggersLabel', { defaultMessage: 'Triggers' });
           return (
-            <Card key={obsession.id} className="p-4 border border-muted bg-card/60">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-muted-foreground">
+            <Card
+              key={obsession.id}
+              className="rounded-xl border border-muted/30 bg-card/70 px-6 py-6 shadow-sm md:px-8 md:py-7"
+            >
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-3">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       {t('pair')} {index + 1}
-                    </h3>
-                    <div className="mt-1 space-y-1">
-                      <p className="text-sm font-medium flex items-center gap-2">
-                        🧠 {t('obsessionLabel')}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                        <span aria-hidden>🧠</span>
+                        <span>{t('obsessionLabel')}</span>
+                      </div>
+                      <p className="text-sm leading-relaxed text-foreground/90">
+                        {obsession.obsession}
                       </p>
-                      <p className="text-sm leading-relaxed">{obsession.obsession}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {t('intensityLabel')}: {obsession.intensity}/10
-                      </p>
-                      {obsession.triggers.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {obsession.triggers.map((trigger, triggerIndex) => (
-                            <Badge key={triggerIndex} variant="outline" className="text-xs px-1.5 py-0.5">
-                              {trigger}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        {t('recorded')}: {new Date(obsession.createdAt).toLocaleDateString()}
-                      </p>
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <MetricTile label={t('intensityLabel')} value={`${obsession.intensity}/10`} />
+                        <MetricTile
+                          label={t('recorded')}
+                          value={new Date(obsession.createdAt).toLocaleDateString()}
+                        />
+                        {obsession.triggers.length > 0 && (
+                          <div className="rounded-lg border border-muted/30 bg-background/40 px-3 py-2">
+                            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                              {triggersLabel}
+                            </span>
+                            <div className="mt-1 flex flex-wrap gap-1.5">
+                              {obsession.triggers.map((trigger) => (
+                                <Badge key={trigger} variant="secondary" className="text-xs font-medium">
+                                  {trigger}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {compulsion && (
-                    <div>
-                      <p className="text-sm font-medium flex items-center gap-2">
-                        🔁 {t('compulsionLabel')}
-                      </p>
-                      <p className="text-sm leading-relaxed">{compulsion.compulsion}</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-muted-foreground mt-1">
-                        <span>{t('frequencyLabel')}: {compulsion.frequency}/10</span>
-                        <span>{t('durationLabel')}: {compulsion.duration} {t('minutes')}</span>
-                        <span>{t('reliefLabel')}: {compulsion.reliefLevel}/10</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {t('recorded')}: {new Date(compulsion.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 sm:self-start">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() => handleEditPair(index)}
+                    >
+                      <Pencil className="w-4 h-4" />
+                      {t('editPair')}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() => handleDeletePair(index)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {t('deletePair')}
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-1"
-                    onClick={() => handleEditPair(index)}
-                  >
-                    <Pencil className="w-4 h-4" />
-                    {t('editPair')}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-1 text-destructive"
-                    onClick={() => handleDeletePair(index)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    {t('deletePair')}
-                  </Button>
-                </div>
+                {compulsion && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                      <span aria-hidden>🔁</span>
+                      <span>{t('compulsionLabel')}</span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-foreground/90">
+                      {compulsion.compulsion}
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      <MetricTile label={t('frequencyLabel')} value={`${compulsion.frequency}/10`} />
+                      <MetricTile
+                        label={t('durationLabel')}
+                        value={`${compulsion.duration} ${t('minutes')}`}
+                      />
+                      <MetricTile label={t('reliefLabel')} value={`${compulsion.reliefLevel}/10`} />
+                      <MetricTile
+                        label={t('recorded')}
+                        value={new Date(compulsion.createdAt).toLocaleDateString()}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           );
@@ -552,14 +590,14 @@ export function ObsessionsCompulsionsFlow({
   };
 
   return (
-    <div className={cn('max-w-4xl mx-auto space-y-6', className)}>
+    <div className={cn('mx-auto max-w-5xl space-y-8', className)}>
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
             <List className="w-5 h-5 text-primary" />
-            <h1 className="text-xl font-semibold">{t('title')}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
           </div>
-          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
+          <p className="max-w-2xl text-sm text-muted-foreground">{t('subtitle')}</p>
         </div>
         {builderState.mode === 'closed' && (
           <Button size="sm" className="flex items-center gap-2" onClick={handleBeginAdd}>

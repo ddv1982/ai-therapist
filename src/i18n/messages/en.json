@@ -398,6 +398,7 @@
   "obsessions.complete": "Complete & Send to Chat",
   "obsessions.editLabel": "Editing",
   "obsessions.editPair": "Edit Pair",
+  "obsessions.cancelAction": "Cancel",
   "obsessions.deletePair": "Delete Pair",
   
   "obsessions.emptyState.title": "No obsessions or compulsions recorded yet",
