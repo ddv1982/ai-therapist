@@ -393,6 +393,7 @@
   "obsessions.validation.durationMin": "Duur moet minimaal 1 minuut zijn",
   "obsessions.validation.durationMax": "Duur kan niet meer dan 999 minuten zijn",
   "obsessions.addPairButton": "Paar toevoegen",
+"obsessions.removeBlock": "Blok verwijderen",
   "obsessions.complete": "Voltooien en naar chat sturen",
   "obsessions.editLabel": "Bewerken",
   "obsessions.editPair": "Paar bewerken",

@@ -32,7 +32,7 @@ jest.mock('@/features/chat/messages/message-timestamp', () => ({
   ),
 }));
 
-jest.mock('@/lib/design-system/message', () => ({
+jest.mock('@/lib/ui/design-system/message', () => ({
   buildMessageClasses: jest.fn((role: string, type: string) => `mock-${role}-${type}-class`),
 }));
 

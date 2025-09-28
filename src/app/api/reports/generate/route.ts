@@ -12,6 +12,7 @@ import type { Prisma } from '@prisma/client';
 import { generateFallbackAnalysis as generateFallbackAnalysisExternal } from '@/lib/reports/fallback-analysis';
 import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { createErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
+import { getModelDisplayName, supportsWebSearch, type ModelID } from '@/ai/providers';
 
 // Note: CognitiveDistortion interface removed - using types from report.ts instead
 
@@ -67,10 +68,16 @@ export const POST = withApiMiddleware(async (request: NextRequest, context) => {
     const { REPORT_MODEL_ID } = await import('@/features/chat/config');
     const reportModel = REPORT_MODEL_ID;
     
+    const modelDisplay = (() => {
+      const id = reportModel as ModelID;
+      const base = getModelDisplayName(id) || reportModel;
+      return supportsWebSearch(id) ? `${base} (Deep Analysis)` : base;
+    })();
+
     logger.info('Report generation request received', {
       ...context,
       modelUsed: reportModel,
-      modelDisplayName: 'GPT OSS 120B (Deep Analysis)',
+      modelDisplayName: modelDisplay,
       selectionReason: 'Report generation requires analytical model',
       reportGenerationFlow: true
     });
@@ -415,7 +422,7 @@ ${languageDirective}`;
         return createSuccessResponse({
           reportContent: completion,
           modelUsed: reportModel,
-          modelDisplayName: 'GPT OSS 120B (Deep Analysis)',
+          modelDisplayName: modelDisplay,
           cbtDataSource: dataSource,
           cbtDataAvailable: dataSource !== 'none'
         }, { requestId: context.requestId });

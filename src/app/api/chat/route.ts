@@ -13,9 +13,10 @@ import { createErrorResponse } from '@/lib/api/api-response';
 
 import { prisma } from '@/lib/database/db';
 import { verifySessionOwnership } from '@/lib/database/queries';
-import { encryptMessage } from '@/lib/chat/message-encryption';
 import { recordModelUsage } from '@/lib/metrics/metrics';
 import { appendWithLimit as appendWithLimitUtil, teeAndPersistStream as teeAndPersistStreamUtil, persistFromClonedStream as persistFromClonedStreamUtil, attachResponseHeadersRaw as attachResponseHeadersRawUtil } from '@/lib/chat/stream-utils';
+import { AssistantResponseCollector } from '@/lib/chat/assistant-response-collector';
+import { readJsonBody } from '@/lib/api/request';
 
 type ApiChatMessage = { role: 'user' | 'assistant'; content: string; id?: string };
 
@@ -35,68 +36,11 @@ type SessionOwnership = Awaited<ReturnType<typeof verifySessionOwnership>>;
 
 // Stream types and helpers are imported from stream-utils
 
-class AssistantResponseCollector {
-  private buffer = '';
-  private truncated = false;
-
-  constructor(
-    private readonly sessionId: string | undefined,
-    private readonly ownership: SessionOwnership,
-    private readonly modelId: string,
-    private readonly requestId: string,
-  ) {}
-
-  append(chunk: string): boolean {
-    if (!chunk || this.truncated) return this.truncated;
-    const appended = appendWithLimitUtil(this.buffer, chunk, MAX_ASSISTANT_RESPONSE_CHARS);
-    this.buffer = appended.value;
-    this.truncated = this.truncated || appended.truncated;
-    return this.truncated;
-  }
-
-  async persist(): Promise<void> {
-    if (!this.sessionId || !this.ownership.valid) return;
-    const trimmed = this.buffer.trim();
-    if (!trimmed) return;
-
-    const encrypted = encryptMessage({ role: 'assistant', content: trimmed, timestamp: new Date() });
-    try {
-      await prisma.message.create({
-        data: {
-          sessionId: this.sessionId,
-          role: encrypted.role,
-          content: encrypted.content,
-          timestamp: encrypted.timestamp,
-          modelUsed: this.modelId,
-        },
-      });
-      try {
-        const { MessageCache } = await import('@/lib/cache');
-        await MessageCache.invalidate(this.sessionId);
-      } catch {}
-      logger.info('Assistant message persisted after stream', {
-        apiEndpoint: '/api/chat',
-        requestId: this.requestId,
-        sessionId: this.sessionId,
-        truncated: this.truncated,
-      });
-    } catch (error) {
-      logger.error(
-        'Failed to persist assistant message after stream',
-        { apiEndpoint: '/api/chat', requestId: this.requestId, sessionId: this.sessionId },
-        error instanceof Error ? error : new Error(String(error)),
-      );
-    }
-  }
-
-  wasTruncated(): boolean {
-    return this.truncated;
-  }
-}
+// moved AssistantResponseCollector to lib/chat/assistant-response-collector
 
 export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, context) => {
   try {
-    const parsedBody = await readRequestBody(req);
+    const parsedBody = await readJsonBody(req);
     const maxSize = Number(process.env.CHAT_INPUT_MAX_BYTES || DEFAULT_MAX_INPUT_BYTES);
     if (parsedBody.size > maxSize) return createErrorResponse('Request too large', 413, { requestId: context.requestId });
 
@@ -167,7 +111,14 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       ...(hasWebSearch ? { tools: { browser_search: groq.tools.browserSearch({}) }, toolChoice: 'required' as const } : {}),
     });
 
-    const collector = new AssistantResponseCollector(providedSessionId, ownership, modelId, context.requestId);
+    const collector = new AssistantResponseCollector(
+      providedSessionId,
+      ownership,
+      modelId,
+      context.requestId,
+      MAX_ASSISTANT_RESPONSE_CHARS,
+      appendWithLimitUtil
+    );
 
     const uiResponse = (await result).toUIMessageStreamResponse({
       onError: createStreamErrorHandler({
@@ -204,18 +155,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
   }
 });
 
-async function readRequestBody(req: NextRequest): Promise<{ body: unknown; size: number }> {
-  const parser = req as unknown as { json?: () => Promise<unknown>; text?: () => Promise<string> };
-  if (typeof parser.json === 'function') {
-    const data = await parser.json();
-    return { body: data, size: Buffer.byteLength(JSON.stringify(data), 'utf8') };
-  }
-  if (typeof parser.text === 'function') {
-    const text = await parser.text();
-    return { body: JSON.parse(text), size: Buffer.byteLength(text, 'utf8') };
-  }
-  throw new Error('Unsupported request body');
-}
+// moved to lib/api/request.ts as readJsonBody
 
 // normalizeMessages inlined into normalizeChatRequest usage
 

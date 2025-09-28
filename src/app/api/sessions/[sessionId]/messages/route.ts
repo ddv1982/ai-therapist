@@ -15,10 +15,13 @@ import { MessageCache } from '@/lib/cache';
 import type { MessageData as CacheMessageData } from '@/lib/cache/api-cache';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
 
+const metadataSchema = z.record(z.string(), z.unknown());
+
 const postBodySchema = z.object({
   role: z.enum(['user', 'assistant']),
   content: z.string().min(1, 'Message content cannot be empty').max(50000, 'Message content too long'),
   modelUsed: z.string().min(1).max(100).optional(),
+  metadata: metadataSchema.optional(),
 });
 
 const querySchema = z.object({
@@ -43,12 +46,17 @@ export const POST = withValidationAndParams(
         timestamp: new Date(),
       });
 
+      const sanitizedMetadata = validatedData.metadata
+        ? JSON.parse(JSON.stringify(validatedData.metadata))
+        : undefined;
+
       const message = await prisma.message.create({
         data: {
           sessionId,
           role: encrypted.role,
           content: encrypted.content,
           modelUsed: validatedData.modelUsed,
+          metadata: sanitizedMetadata,
           timestamp: encrypted.timestamp,
         },
       });
@@ -129,6 +137,7 @@ export const POST = withValidationAndParams(
         role: validatedData.role,
         content: validatedData.content,
         modelUsed: validatedData.modelUsed,
+        metadata: sanitizedMetadata,
         timestamp: message.timestamp,
         createdAt: message.createdAt,
         messageCount,
@@ -190,6 +199,7 @@ export const GET = withAuth(
             modelUsed: m.modelUsed ?? undefined,
             timestamp: decrypted[i]?.timestamp ?? m.timestamp,
             createdAt: m.createdAt,
+            metadata: (m.metadata as Record<string, unknown> | null) ?? undefined,
           }));
 
           if (useCache) {

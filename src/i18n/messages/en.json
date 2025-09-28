@@ -395,6 +395,7 @@
   "obsessions.validation.durationMin": "Duration must be at least 1 minute",
   "obsessions.validation.durationMax": "Duration cannot exceed 999 minutes",
   "obsessions.addPairButton": "Add Pair",
+"obsessions.removeBlock": "Remove block",
   "obsessions.complete": "Complete & Send to Chat",
   "obsessions.editLabel": "Editing",
   "obsessions.editPair": "Edit Pair",

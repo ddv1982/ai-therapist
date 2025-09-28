@@ -3,17 +3,16 @@
 import React from 'react';
 import { Streamdown } from 'streamdown';
 import { CBTSessionSummaryCard, type CBTSessionSummaryData } from '@/components/ui/cbt-session-summary-card';
+import { safeParseFromMatch } from '@/lib/utils/safe-json';
 
 function extractCBTSummaryData(text: string): { summaryData: CBTSessionSummaryData | null; cleanText: string } {
   const cbtPattern = /<!-- CBT_SUMMARY_CARD:(.*?) -->[\s\S]*?<!-- END_CBT_SUMMARY_CARD -->/;
   const match = text.match(cbtPattern);
   if (match) {
-    try {
-      const summaryData = JSON.parse(match[1]!) as CBTSessionSummaryData;
+    const parsed = safeParseFromMatch<CBTSessionSummaryData>(match[1]);
+    if (parsed.ok) {
       const cleanText = text.replace(cbtPattern, '').trim();
-      return { summaryData, cleanText };
-    } catch {
-      // Fall through to standard markdown rendering if JSON parse fails
+      return { summaryData: parsed.data, cleanText };
     }
   }
   return { summaryData: null, cleanText: text };
@@ -24,7 +23,27 @@ export type MarkdownProps = {
   isUser?: boolean; // reserved for future role-based tweaks (unused for now)
   className?: string;
   defaultOrigin?: string;
+  allowedLinkPrefixes?: string[]; // optional override
 };
+
+function extractLinkOrigins(markdown: string): string[] {
+  if (!markdown) return [];
+  const origins = new Set<string>();
+  const urlPattern = /(https?:\/\/[^\s<>"')]+)/gi;
+
+  let match: RegExpExecArray | null;
+  while ((match = urlPattern.exec(markdown)) !== null) {
+    const candidate = match[1];
+    try {
+      const url = new URL(candidate);
+      origins.add(url.origin);
+    } catch {
+      // Ignore invalid URLs
+    }
+  }
+
+  return Array.from(origins);
+}
 
 /**
  * Convert markdown tables with more than 3 columns into definition-like lists.
@@ -70,7 +89,7 @@ function convertWideTablesToLists(markdown: string): string {
   return processed.join('');
 }
 
-export function Markdown({ children, className, defaultOrigin, isUser }: MarkdownProps) {
+export function Markdown({ children, className, defaultOrigin, isUser, allowedLinkPrefixes }: MarkdownProps) {
   if (!children) return null;
 
   const { summaryData, cleanText } = extractCBTSummaryData(children);
@@ -85,12 +104,39 @@ export function Markdown({ children, className, defaultOrigin, isUser }: Markdow
   // Convert wide tables to lists for assistant messages only
   const finalText = isUser ? cleanText : convertWideTablesToLists(cleanText);
 
+  const allowHttp = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP === 'true';
+  const allowMailto = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO === 'true';
+  const normalizedOrigin = (() => {
+    try {
+      const parsed = new URL(resolvedOrigin);
+      return parsed.origin;
+    } catch {
+      return resolvedOrigin;
+    }
+  })();
+
+  const dynamicPrefixes = new Set<string>([normalizedOrigin]);
+  if (allowHttp) {
+    dynamicPrefixes.add(normalizedOrigin.replace(/^https:/, 'http:'));
+  }
+  extractLinkOrigins(finalText).forEach((origin) => {
+    dynamicPrefixes.add(origin);
+    if (allowHttp && origin.startsWith('https://')) {
+      dynamicPrefixes.add(origin.replace('https://', 'http://'));
+    }
+  });
+
+  const computedPrefixes = allowedLinkPrefixes ?? [
+    ...dynamicPrefixes,
+    ...(allowMailto ? ['mailto:'] : []),
+  ];
+
   return (
     <Streamdown
       parseIncompleteMarkdown
       className={['markdown-content', className].filter(Boolean).join(' ')}
       allowedImagePrefixes={[]}
-      allowedLinkPrefixes={['*']}
+      allowedLinkPrefixes={computedPrefixes}
       defaultOrigin={resolvedOrigin}
     >
       {finalText}

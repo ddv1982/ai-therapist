@@ -33,6 +33,7 @@ export interface MessageData {
   modelUsed?: string;
   timestamp: Date;
   createdAt: Date;
+  metadata?: Record<string, unknown> | null;
 }
 
 export interface CBTData {

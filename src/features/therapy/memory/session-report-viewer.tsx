@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils/utils';
 import { MessageContent } from '@/features/chat/messages/message-content';
 import { MessageAvatar } from '@/features/chat/messages/message-avatar';
 import { MessageTimestamp } from '@/features/chat/messages/message-timestamp';
-import { buildMessageClasses } from '@/lib/design-system/message';
+import { buildMessageClasses } from '@/lib/ui/design-system/message';
 import { type SessionReportDetail } from '@/lib/chat/memory-utils';
-import { type ExtractedCBTData } from '@/lib/therapy/cbt-data-parser';
+import { type CBTStructuredAssessment } from '@/lib/therapy/cbt-data-parser';
 import { Calendar, FileText, CheckCircle, Brain, Heart, Target, Users, Activity } from 'lucide-react';
 
 interface SessionReportViewerProps {
@@ -16,7 +16,7 @@ interface SessionReportViewerProps {
 }
 
 // Component to display detailed CBT data in tables
-function DetailedCBTDataTables({ structuredData }: { structuredData: ExtractedCBTData }) {
+function DetailedCBTDataTables({ structuredData }: { structuredData: CBTStructuredAssessment }) {
   const hasAnyData = structuredData.situation || 
                      structuredData.emotions || 
                      structuredData.thoughts || 
@@ -245,7 +245,7 @@ function DetailedCBTDataDisplay({ reportDetail }: { reportDetail: SessionReportD
   // Only show detailed CBT data if we have structured data
   if (reportDetail.structuredCBTData && typeof reportDetail.structuredCBTData === 'object') {
     try {
-      const structuredData = reportDetail.structuredCBTData as ExtractedCBTData;
+      const structuredData = reportDetail.structuredCBTData as CBTStructuredAssessment;
       return <DetailedCBTDataTables structuredData={structuredData} />;
     } catch {
       // Silently handle error

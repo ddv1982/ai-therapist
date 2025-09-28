@@ -4,7 +4,7 @@
 
 import React, { memo } from 'react';
 import { cn } from '@/lib/utils/utils';
-import { buildMessageClasses, type MessageRole } from '@/lib/design-system/message';
+import { buildMessageClasses, type MessageRole } from '@/lib/ui/design-system/message';
 import { MessageAvatar } from './message-avatar';
 import { MessageContent } from './message-content';
 import { MessageTimestamp } from './message-timestamp';
@@ -23,6 +23,8 @@ interface MessageData {
     totalSteps?: number;
     sessionData?: unknown;
     data?: unknown;
+    dismissed?: boolean;
+    dismissedReason?: 'auto' | 'manual' | null;
   };
   digest?: string;
 }

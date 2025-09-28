@@ -503,8 +503,17 @@ export interface CBTCompleteSessionData {
   isComplete: boolean;
 }
 
-/** @deprecated Use CBTExtractionResult instead */
-export interface ExtractedCBTData {
+export interface EmotionComparisonData {
+  changes: Array<{
+    emotion: string;
+    initial: number;
+    final: number;
+    direction: 'increased' | 'decreased';
+    change: number;
+  }>;
+}
+
+export interface CBTStructuredAssessment {
   situation?: {
     date: string;
     description: string;
@@ -538,13 +547,5 @@ export interface ExtractedCBTData {
     // Keep optional for compatibility with older UX; parser may populate when present
     alternativeResponses?: string[];
   };
-  emotionComparison?: {
-    changes: Array<{
-      emotion: string;
-      initial: number;
-      final: number;
-      direction: 'increased' | 'decreased';
-      change: number;
-    }>;
-  };
+  emotionComparison?: EmotionComparisonData;
 }

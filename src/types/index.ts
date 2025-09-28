@@ -5,7 +5,7 @@
 
 // Message types from their actual location
 export type { MessageData as Message } from '@/features/chat/messages/message';
-export type { MessageRole } from '@/lib/design-system/message';
+export type { MessageRole } from '@/lib/ui/design-system/message';
 export type { ApiResponse } from '@/lib/api/api-response';
 
 // Session types

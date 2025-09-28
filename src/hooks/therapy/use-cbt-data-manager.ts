@@ -49,6 +49,78 @@ import { buildMarkdownSummary } from '@/features/therapy/cbt/flow/summary';
 import { generateUUID } from '@/lib/utils/utils';
 import { type CBTStepId } from '@/features/therapy/cbt/flow';
 
+// Narrowing helpers to avoid any-casts during legacy migration/adapters
+const asEmotionData = (e: unknown): EmotionData => {
+  const src = (e ?? {}) as Partial<Record<string, unknown>>;
+  return {
+    fear: Number(src.fear ?? 0),
+    anger: Number(src.anger ?? 0),
+    sadness: Number(src.sadness ?? 0),
+    joy: Number(src.joy ?? 0),
+    anxiety: Number(src.anxiety ?? 0),
+    shame: Number(src.shame ?? 0),
+    guilt: Number(src.guilt ?? 0),
+    other: typeof src.other === 'string' ? src.other : '',
+    otherIntensity: Number(src.otherIntensity ?? 0),
+  };
+};
+
+const asThoughtDataArray = (arr: unknown): ThoughtData[] => {
+  if (!Array.isArray(arr)) return [];
+  return arr.map((t) => {
+    if (t && typeof t === 'object') {
+      const o = t as Record<string, unknown>;
+      const text = String((o.thought ?? o.text ?? o.content ?? ''));
+      const credibility = Number(o.credibility ?? 5);
+      return { thought: text, credibility };
+    }
+    return { thought: String(t ?? ''), credibility: 5 };
+  }).filter((t) => t.thought.length > 0);
+};
+
+const asCoreBeliefData = (input: unknown): CoreBeliefData => {
+  const src = (input ?? {}) as Partial<Record<string, unknown>>;
+  return {
+    coreBeliefText: String(src.coreBeliefText ?? ''),
+    coreBeliefCredibility: Number(src.coreBeliefCredibility ?? 5),
+  };
+};
+
+const asChallengeQuestionsArray = (arr: unknown): ChallengeQuestionData[] => {
+  if (!Array.isArray(arr)) return [];
+  return arr.map((q) => {
+    if (q && typeof q === 'object') {
+      const o = q as Record<string, unknown>;
+      const question = String(o.question ?? o.q ?? o.prompt ?? '');
+      const answer = String(o.answer ?? o.a ?? o.response ?? '');
+      return { question, answer };
+    }
+    return { question: String(q ?? ''), answer: '' };
+  }).filter((q) => q.question.length > 0);
+};
+
+const asRationalThoughtsArray = (arr: unknown): RationalThoughtData[] => {
+  if (!Array.isArray(arr)) return [];
+  return arr.map((t) => {
+    if (t && typeof t === 'object') {
+      const o = t as Record<string, unknown>;
+      const thought = String(o.thought ?? o.text ?? o.content ?? '');
+      const confidence = Number(o.confidence ?? 5);
+      return { thought, confidence };
+    }
+    return { thought: String(t ?? ''), confidence: 5 };
+  }).filter((t) => t.thought.length > 0);
+};
+
+const asActionPlanData = (input: unknown): ActionPlanData => {
+  const src = (input ?? {}) as Partial<Record<string, unknown>>;
+  return {
+    finalEmotions: asEmotionData(src.finalEmotions ?? {}),
+    originalThoughtCredibility: Number(src.originalThoughtCredibility ?? 5),
+    newBehaviors: String(src.newBehaviors ?? ''),
+  };
+};
+
 const selectCBTCurrentDraft = (state: RootState) => state.cbt?.currentDraft;
 const selectCBTFlowState = (state: RootState) => state.cbt?.flow;
 
@@ -292,18 +364,8 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
 
 
       if (data?.initialEmotions) {
-        const emotions = {
-          fear: data.initialEmotions.fear || 0,
-          anger: data.initialEmotions.anger || 0,
-          sadness: data.initialEmotions.sadness || 0,
-          joy: data.initialEmotions.joy || 0,
-          anxiety: data.initialEmotions.anxiety || 0,
-          shame: data.initialEmotions.shame || 0,
-          guilt: data.initialEmotions.guilt || 0,
-          other: data.initialEmotions.other || '',
-          otherIntensity: data.initialEmotions.otherIntensity || 0,
-        };
-        flowUpdate('emotions', emotions as EmotionData);
+        const emotions = asEmotionData(data.initialEmotions);
+        flowUpdate('emotions', emotions);
       }
     }, options.autoSaveDelay || 600);
 
@@ -405,36 +467,33 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       }
 
       if (draft.initialEmotions) {
-        flowUpdate('emotions', draft.initialEmotions as unknown as EmotionData);
+        flowUpdate('emotions', asEmotionData(draft.initialEmotions));
 
       }
 
       if (Array.isArray(draft.automaticThoughts) && draft.automaticThoughts.length > 0) {
-        flowUpdate('thoughts', draft.automaticThoughts as unknown as ThoughtData[]);
+        flowUpdate('thoughts', asThoughtDataArray(draft.automaticThoughts));
 
       }
 
       if (draft.coreBeliefText && draft.coreBeliefText.trim().length > 0) {
-        flowUpdate(
-          'core-belief',
-          {
-            coreBeliefText: draft.coreBeliefText,
-            coreBeliefCredibility: draft.coreBeliefCredibility,
-          } as unknown as CoreBeliefData,
-        );
+        flowUpdate('core-belief', asCoreBeliefData({
+          coreBeliefText: draft.coreBeliefText,
+          coreBeliefCredibility: draft.coreBeliefCredibility,
+        }));
 
       }
 
       if (Array.isArray(draft.challengeQuestions)) {
         flowUpdate('challenge-questions', {
-          challengeQuestions: draft.challengeQuestions as unknown as ChallengeQuestionData[],
+          challengeQuestions: asChallengeQuestionsArray(draft.challengeQuestions),
         } as ChallengeQuestionsData);
 
       }
 
       if (Array.isArray(draft.rationalThoughts)) {
         flowUpdate('rational-thoughts', {
-          rationalThoughts: draft.rationalThoughts as unknown as RationalThoughtData[],
+          rationalThoughts: asRationalThoughtsArray(draft.rationalThoughts),
         } as RationalThoughtsData);
 
       }
@@ -454,11 +513,11 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       }
 
       if (draft.newBehaviors) {
-        const actionPlan = {
+        const actionPlan = asActionPlanData({
           finalEmotions: draft.finalEmotions,
           originalThoughtCredibility: draft.originalThoughtCredibility,
           newBehaviors: draft.newBehaviors,
-        } as unknown as ActionPlanData;
+        });
         flowUpdate('actions', actionPlan);
       }
 

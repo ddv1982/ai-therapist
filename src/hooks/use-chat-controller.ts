@@ -59,7 +59,8 @@ export interface ChatController {
   setMemoryContext: (info: MemoryContextInfo) => void;
 
   // bridge helper
-  addMessageToChat: (message: { content: string; role: 'user' | 'assistant'; sessionId: string; modelUsed?: string; source?: string }) => Promise<{ success: boolean; error?: string }>;
+  addMessageToChat: (message: { content: string; role: 'user' | 'assistant'; sessionId: string; modelUsed?: string; source?: string; metadata?: Record<string, unknown> }) => Promise<{ success: boolean; error?: string }>;
+  updateMessageMetadata: (sessionId: string, messageId: string, metadata: Record<string, unknown>, options?: { mergeStrategy?: 'merge' | 'replace' }) => Promise<{ success: boolean; error?: string }>;
   
   // obsessions and compulsions
   createObsessionsCompulsionsTable: () => Promise<void>;
@@ -72,6 +73,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     addMessageToChat: _addMessageToChat,
     clearMessages,
     setMessages,
+    updateMessageMetadata,
   } = useChatMessages();
 
   const dispatch = useAppDispatch();
@@ -187,9 +189,15 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     }
   }, [loadSessionsFromStore]);
 
-  const saveMessage = useCallback(async (sessionId: string, role: 'user' | 'assistant', content: string, modelUsed?: string) => {
+  const saveMessage = useCallback(async (
+    sessionId: string,
+    role: 'user' | 'assistant',
+    content: string,
+    modelUsed?: string,
+    metadata?: Record<string, unknown>
+  ) => {
     try {
-      const resp = await apiClient.postMessage(sessionId, { role, content, modelUsed });
+      const resp = await apiClient.postMessage(sessionId, { role, content, modelUsed, metadata });
       if (resp && resp.success && resp.data) {
         return resp.data as components['schemas']['Message'];
       }
@@ -445,6 +453,8 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
         type: 'obsessions-compulsions-table',
         step: 'obsessions-compulsions',
         data: baseData,
+        dismissed: false,
+        dismissedReason: null,
       },
     };
 
@@ -453,7 +463,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
 
     // Save to backend
     try {
-      await saveMessage(sessionId, 'user', tableContent);
+      await saveMessage(sessionId, 'user', tableContent, undefined, tableMessage.metadata ?? undefined);
     } catch (error) {
       logger.error('Failed to save obsessions table message', { error });
     }
@@ -485,6 +495,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     setShowSidebar,
     showSidebar,
     addMessageToChat: _addMessageToChat,
+    updateMessageMetadata,
     setMemoryContext,
     createObsessionsCompulsionsTable,
   };

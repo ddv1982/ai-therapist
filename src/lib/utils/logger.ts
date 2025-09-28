@@ -10,6 +10,7 @@
  */
 
 import { generateRequestId } from '../auth/crypto-secure';
+import { SENSITIVE_THERAPEUTIC_KEYS, SENSITIVE_PATTERNS } from './logger.data';
 
 export enum LogLevel {
   ERROR = 'error',
@@ -18,46 +19,7 @@ export enum LogLevel {
   DEBUG = 'debug'
 }
 
-// Sensitive data keys that must NEVER be logged (therapeutic + PII/IP)
-const SENSITIVE_THERAPEUTIC_KEYS = new Set([
-  // CBT Data Fields
-  'situation', 'emotions', 'thoughts', 'automaticThoughts', 'rationalThoughts',
-  'coreBeliefText', 'coreBelief', 'coreBeliefs', 'challengeQuestions', 'schemaModes',
-  'initialEmotions', 'finalEmotions', 'newBehaviors', 'alternativeResponses',
-  'schemaReflection', 'confirmingBehaviors', 'avoidantBehaviors', 'overridingBehaviors',
-  
-  // Session Content
-  'content', 'message', 'messages', 'sessionReport', 'therapeuticContent',
-  'sessionData', 'chatHistory', 'conversationData', 'therapeuticData',
-  
-  // User Information
-  'email', 'phone', 'address', 'personalInfo', 'medicalInfo', 'healthData',
-  'patientId', 'patientData', 'userProfile', 'personalDetails',
-  
-  // Authentication & Security
-  'password', 'token', 'secret', 'key', 'credential', 'apiKey', 'sessionKey',
-  'refreshToken', 'accessToken', 'authToken', 'csrfToken', 'totpSecret',
-  // Network/PII keys (IPs)
-  'ip', 'clientIP', 'clientIp', 'remoteAddress', 'x-forwarded-for', 'x-real-ip',
-  
-  // Emotional & Mental Health Data
-  'fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt', 'depression',
-  'trauma', 'mentalState', 'mood', 'emotionalState', 'psychologicalData',
-  
-  // Form Data
-  'formData', 'inputData', 'userInput', 'therapeuticInput', 'sessionInput',
-  'cbtFormData', 'diaryEntry', 'thoughtRecord'
-]);
-
-// Patterns for sensitive content detection
-const SENSITIVE_PATTERNS = [
-  /I feel/i, /I think/i, /I believe/i, /My thoughts/i, /My emotions/i,
-  /depression/i, /anxiety/i, /trauma/i, /abuse/i, /suicidal/i, /self-harm/i,
-  /therapy/i, /therapist/i, /counseling/i, /psychiatric/i, /medication/i,
-  /\b\d{3}-\d{2}-\d{4}\b/, // SSN pattern
-  /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/, // Email pattern
-  /\b\d{10,}\b/ // Phone number pattern
-];
+// Keys and patterns now come from logger.data.ts
 
 interface ErrorWithCode extends Error {
   code?: string | number;

@@ -5,7 +5,7 @@
 import React from 'react';
 import { User, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils/utils';
-import { buildMessageClasses, type MessageRole } from '@/lib/design-system/message';
+import { buildMessageClasses, type MessageRole } from '@/lib/ui/design-system/message';
 
 interface MessageAvatarProps {
   role: MessageRole;

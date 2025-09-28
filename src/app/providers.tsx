@@ -4,7 +4,7 @@ import React from 'react';
 import { ReduxProvider } from '@/providers/redux-provider';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { ToastProvider } from '@/components/ui/toast';
-import { ErrorBoundary } from '@/components/layout/error-boundary';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 interface RootProvidersProps {
   children: React.ReactNode;

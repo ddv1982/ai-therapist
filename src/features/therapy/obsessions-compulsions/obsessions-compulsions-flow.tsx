@@ -37,6 +37,7 @@ const MetricTile = ({ label, value }: { label: string; value: React.ReactNode })
 
 interface ObsessionsCompulsionsFlowProps {
   onComplete: (data: ObsessionsCompulsionsData) => void;
+  onDismiss?: () => void;
   initialData?: ObsessionsCompulsionsData;
   className?: string;
 }
@@ -59,6 +60,7 @@ const DEFAULT_COMPULSION_FORM = {
 
 export function ObsessionsCompulsionsFlow({
   onComplete,
+  onDismiss,
   initialData,
   className,
 }: ObsessionsCompulsionsFlowProps) {
@@ -263,23 +265,49 @@ export function ObsessionsCompulsionsFlow({
 
   const handleDeletePair = useCallback(
     (index: number) => {
-      setData((prev) => {
-        const nextObsessions = prev.obsessions.filter((_, i) => i !== index);
-        const nextCompulsions = prev.compulsions.filter((_, i) => i !== index);
-        return {
-          obsessions: nextObsessions,
-          compulsions: nextCompulsions,
-          lastModified: new Date().toISOString(),
-        };
-      });
+      const nextObsessions = data.obsessions.filter((_, i) => i !== index);
+      const nextCompulsions = data.compulsions.filter((_, i) => i !== index);
+      const updated: ObsessionsCompulsionsData = {
+        obsessions: nextObsessions,
+        compulsions: nextCompulsions,
+        lastModified: new Date().toISOString(),
+      };
 
-      if (builderState.mode === 'edit' && builderState.editingIndex === index) {
+      setData(updated);
+
+      const isEditingTarget = builderState.mode === 'edit' && builderState.editingIndex === index;
+      const noPairsRemain = updated.obsessions.length === 0;
+
+      if (noPairsRemain) {
+        resetForms();
+        setBuilderState({ mode: 'add', step: 'obsession', editingIndex: null });
+      } else if (isEditingTarget) {
         resetForms();
         setBuilderState({ mode: 'closed', step: 'obsession', editingIndex: null });
+      } else if (builderState.mode === 'edit' && builderState.editingIndex !== null && builderState.editingIndex > index) {
+        setBuilderState({ mode: 'edit', step: builderState.step, editingIndex: builderState.editingIndex - 1 });
       }
+
+      void (async () => {
+        try {
+          setIsSaving(true);
+          const maybePromise = onComplete(updated) as unknown as Promise<void> | void;
+          if (maybePromise && typeof (maybePromise as Promise<void>).then === 'function') {
+            await (maybePromise as Promise<void>);
+          }
+        } finally {
+          setIsSaving(false);
+        }
+      })();
     },
-    [builderState.mode, builderState.editingIndex, resetForms],
+    [builderState.editingIndex, builderState.mode, builderState.step, data, onComplete, resetForms],
   );
+
+  const handleDismiss = useCallback(() => {
+    resetForms();
+    setBuilderState((prev) => ({ ...prev, mode: 'closed', step: 'obsession', editingIndex: null }));
+    onDismiss?.();
+  }, [onDismiss, resetForms]);
 
   // Removed separate complete action; Save also sends to chat
 
@@ -599,12 +627,25 @@ export function ObsessionsCompulsionsFlow({
           </div>
           <p className="max-w-2xl text-sm text-muted-foreground">{t('subtitle')}</p>
         </div>
-        {builderState.mode === 'closed' && (
-          <Button size="sm" className="flex items-center gap-2" onClick={handleBeginAdd}>
-            <Plus className="w-4 h-4" />
-            {t('addPairButton')}
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {builderState.mode === 'closed' && data.obsessions.length > 0 && (
+            <Button size="sm" className="flex items-center gap-2" onClick={handleBeginAdd}>
+              <Plus className="w-4 h-4" />
+              {t('addPairButton')}
+            </Button>
+          )}
+          {onDismiss && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="flex items-center gap-1 text-muted-foreground hover:text-destructive"
+              onClick={handleDismiss}
+            >
+              <Trash2 className="w-4 h-4" />
+              {t('removeBlock')}
+            </Button>
+          )}
+        </div>
       </div>
 
       {builderState.mode !== 'closed' && renderBuilder()}

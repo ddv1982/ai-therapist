@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils/utils';
-import { buildMessageClasses, type MessageRole } from '@/lib/design-system/message';
+import { buildMessageClasses, type MessageRole } from '@/lib/ui/design-system/message';
 import { Markdown } from '@/components/ui/markdown';
 import { logger } from '@/lib/utils/logger';
 

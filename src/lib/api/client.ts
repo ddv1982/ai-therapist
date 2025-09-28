@@ -127,9 +127,26 @@ export class ApiClient {
     return this.request<ApiResponse<PaginatedResponse<components['schemas']['Message']>>>(url);
   }
 
-  async postMessage(sessionId: string, body: paths['/sessions/{sessionId}/messages']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<components['schemas']['Message']>> {
+  async postMessage(
+    sessionId: string,
+    body: paths['/sessions/{sessionId}/messages']['post']['requestBody']['content']['application/json'] & { metadata?: Record<string, unknown> }
+  ): Promise<ApiResponse<components['schemas']['Message']>> {
     return this.request<ApiResponse<components['schemas']['Message']>>(`/api/sessions/${sessionId}/messages`, {
       method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
+  async patchMessageMetadata(
+    sessionId: string,
+    messageId: string,
+    body: {
+      metadata: Record<string, unknown>;
+      mergeStrategy?: 'merge' | 'replace';
+    }
+  ): Promise<ApiResponse<components['schemas']['Message']>> {
+    return this.request<ApiResponse<components['schemas']['Message']>>(`/api/sessions/${sessionId}/messages/${messageId}`, {
+      method: 'PATCH',
       body: JSON.stringify(body),
     });
   }

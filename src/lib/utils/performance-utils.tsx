@@ -372,19 +372,22 @@ export const preloadTherapeuticComponents = () => {
   // Settings panel removed - models are now automatically selected
 };
 
-// Development-only performance reporting
 if (process.env.NODE_ENV === 'development') {
-  // Report performance metrics every 30 seconds
-  setInterval(() => {
-    const report = performanceMonitor.getPerformanceReport();
-    const cacheStats = messageCache.getCacheStats();
-    
-    if (Object.keys(report).length > 0) {
-      logger.debug('Therapeutic app performance report', {
-        performanceReport: report,
-        cacheStatistics: cacheStats,
-        operation: 'performanceReporting'
-      });
-    }
-  }, 30000);
+  const g = globalThis as unknown as { __THERA_PERF_REPORTER_SET__?: boolean };
+  if (!g.__THERA_PERF_REPORTER_SET__) {
+    g.__THERA_PERF_REPORTER_SET__ = true;
+    // Report performance metrics every 30 seconds
+    setInterval(() => {
+      const report = performanceMonitor.getPerformanceReport();
+      const cacheStats = messageCache.getCacheStats();
+      
+      if (Object.keys(report).length > 0) {
+        logger.debug('Therapeutic app performance report', {
+          performanceReport: report,
+          cacheStatistics: cacheStats,
+          operation: 'performanceReporting'
+        });
+      }
+    }, 30000);
+  }
 }

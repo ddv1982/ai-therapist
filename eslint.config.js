@@ -16,9 +16,7 @@ const compat = new FlatCompat({
 /** @type {import('eslint').Linter.Config[]} */
 /** @type {import("eslint").Linter.Config[]} */
 export default [...compat.extends("next/core-web-vitals", "next/typescript"), {
-  ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts"]
-}, {
-  ignores: ["node_modules", "dist", ".next", "coverage"],
+  ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "dist", "coverage" ]
 }, {
   files: ["__tests__/**/*.{ts,tsx}", "e2e/**/*.{ts,tsx}", "scripts/**/*.js"],
   rules: {

@@ -77,9 +77,7 @@ export const updateSessionSchema = z.object({
 
 // Message validation schema
 export const messageSchema = z.object({
-  role: z.enum(['user', 'assistant']).refine((val) => val === 'user' || val === 'assistant', {
-    message: "Role must be 'user' or 'assistant'"
-  }),
+  role: z.enum(['user', 'assistant']),
   content: z.string()
     .min(1, 'Message content cannot be empty')
     .max(50000, 'Message content too long'),
@@ -134,9 +132,7 @@ export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown):
 
 // Simple message schema for report generation (only needs role and content)
 export const reportMessageSchema = z.object({
-  role: z.enum(['user', 'assistant']).refine((val) => val === 'user' || val === 'assistant', {
-    message: "Role must be 'user' or 'assistant'"
-  }),
+  role: z.enum(['user', 'assistant']),
   content: z.string()
     .min(1, 'Message content cannot be empty')
     .max(50000, 'Message content too long'),

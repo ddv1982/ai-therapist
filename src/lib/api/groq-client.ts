@@ -1,6 +1,6 @@
 import { generateText, streamText } from 'ai';
 import { groq } from "@ai-sdk/groq";
-import { languageModels } from '@/ai/providers';
+import { languageModels, supportsWebSearch, type ModelID } from '@/ai/providers';
 
 // Simplified message type for report generation (only needs role and content)
 export interface ReportMessage {
@@ -49,14 +49,15 @@ export const streamTextWithBrowserSearch = async (
   modelId: string = ANALYTICAL_MODEL_ID
 ) => {
   // Ensure we're using a supported model for browser search
-  if (modelId !== ANALYTICAL_MODEL_ID) {
-    throw new Error('Browser search is only supported with openai/gpt-oss-120b model');
+  const isModelID = (m: string): m is ModelID => Object.prototype.hasOwnProperty.call(languageModels, m);
+  if (!isModelID(modelId) || !supportsWebSearch(modelId)) {
+    throw new Error('Browser search is only supported for models with web search capability');
   }
 
   try {
     // Use direct Groq model instance with browser search tool
     const result = streamText({
-      model: languageModels[modelId as keyof typeof languageModels],
+      model: languageModels[modelId],
       system: systemPrompt,
       messages: messages,
       tools: {
@@ -76,7 +77,7 @@ export const streamTextWithBrowserSearch = async (
     
     // Fallback: Use regular text generation without browser search
     const fallbackResult = streamText({
-      model: languageModels[modelId as keyof typeof languageModels],
+      model: languageModels[modelId],
       system: systemPrompt,
       messages: messages,
       experimental_telemetry: { isEnabled: false },

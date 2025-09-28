@@ -23,6 +23,11 @@ type ListMessagesResponse = import('@/lib/api/api-response').ApiResponse<import(
 // Using MessageData from the message system
 export type Message = MessageData;
 
+type ApiMessage = components['schemas']['Message'] & {
+  metadata?: Record<string, unknown> | null;
+  modelUsed?: string | null;
+};
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -103,7 +108,14 @@ export function useChatMessages() {
       }
 
       const page = getApiData(resp);
-      const items = page.items as Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: string; modelUsed?: string | null }>;
+      const items = page.items as Array<{
+        id: string;
+        role: 'user' | 'assistant';
+        content: string;
+        timestamp: string;
+        modelUsed?: string | null;
+        metadata?: Record<string, unknown> | null;
+      }>;
 
       // Convert timestamp strings to Date objects
       const formattedMessages = items.map(msg => {
@@ -116,9 +128,10 @@ export function useChatMessages() {
         };
         const cacheEntry = metadataCacheRef.current.get(msg.id);
         const contentHash = hashString(msg.content);
-        const metadata = cacheEntry && cacheEntry.contentHash === contentHash
+        const metadataFromServer = msg.metadata ?? undefined;
+        const metadata = metadataFromServer ?? (cacheEntry && cacheEntry.contentHash === contentHash
           ? cacheEntry.metadata
-          : deriveMetadataFromContent(msg.content);
+          : deriveMetadataFromContent(msg.content));
         const hydrated = hydrateMessage(baseMessage, metadata);
         return hydrated;
       });
@@ -143,6 +156,7 @@ export function useChatMessages() {
       sessionId: string;
       modelUsed?: string;
       source?: string;
+      metadata?: Record<string, unknown>;
     }
   ): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -157,7 +171,8 @@ export function useChatMessages() {
         timestamp: new Date(),
         modelUsed: message.modelUsed,
       };
-      const metadata = deriveMetadataFromContent(message.content);
+      const metadataFromContent = deriveMetadataFromContent(message.content);
+      const metadata = message.metadata ? { ...metadataFromContent, ...message.metadata } : metadataFromContent;
       const uiMessage = hydrateMessage(baseMessage, metadata);
 
       // Immediately add to UI state
@@ -168,23 +183,26 @@ export function useChatMessages() {
         role: message.role,
         content: message.content,
         modelUsed: message.modelUsed,
+        metadata: message.metadata,
       });
       if (!saved.success || !saved.data) {
         setMessages(prev => prev.filter(msg => msg.id !== tempId));
         throw new Error('Failed to save message');
       }
 
-      const savedMessage = saved.data as components['schemas']['Message'] & { modelUsed?: string | null };
+      const savedMessage = saved.data as ApiMessage;
       setMessages(prev => prev.map(msg => {
         if (msg.id !== tempId) return msg;
+        const updatedMetadata = (savedMessage.metadata as Record<string, unknown> | null) ?? message.metadata ?? metadata;
         const updated: Message = {
           ...msg,
           id: savedMessage.id as string,
           timestamp: new Date(savedMessage.timestamp as string),
           modelUsed: typeof savedMessage.modelUsed === 'string' ? savedMessage.modelUsed : msg.modelUsed,
+          metadata: updatedMetadata,
         };
         metadataCacheRef.current.delete(tempId);
-        return hydrateMessage(updated, msg.metadata);
+        return hydrateMessage(updated, updatedMetadata ?? msg.metadata);
       }));
 
       return { success: true };
@@ -246,6 +264,55 @@ export function useChatMessages() {
     setMessages(prev => prev.filter(msg => msg.id !== messageId));
   }, []);
 
+  const updateMessageMetadata = useCallback(
+    async (
+      sessionId: string,
+      messageId: string,
+      metadata: Record<string, unknown>,
+      options?: { mergeStrategy?: 'merge' | 'replace' }
+    ): Promise<{ success: boolean; error?: string }> => {
+      try {
+        const response = await messagesApi.patchMessageMetadata(sessionId, messageId, {
+          metadata,
+          mergeStrategy: options?.mergeStrategy,
+        });
+        if (!response || !response.success) {
+          throw new Error('Failed to update message metadata');
+        }
+
+        const data = (getApiData(response) ?? response.data) as ApiMessage | undefined;
+        if (!data) {
+          throw new Error('Empty response when updating metadata');
+        }
+
+        const normalizedTimestamp = data.timestamp ? new Date(data.timestamp as string) : new Date();
+        const messageMetadata = (data.metadata as Record<string, unknown> | null) ?? undefined;
+
+        setMessages(prev => prev.map(msg => {
+          if (msg.id !== data.id) return msg;
+          const next: Message = {
+            ...msg,
+            content: data.content,
+            timestamp: normalizedTimestamp,
+            modelUsed: typeof data.modelUsed === 'string' && data.modelUsed.length > 0 ? data.modelUsed : msg.modelUsed,
+            metadata: messageMetadata,
+          };
+          return hydrateMessage(next, messageMetadata ?? next.metadata);
+        }));
+
+        return { success: true };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to update message metadata';
+        logger.error('Failed to update message metadata', {
+          component: 'useChatMessages',
+          operation: 'updateMessageMetadata',
+          sessionId,
+          messageId,
+        }, error instanceof Error ? error : new Error(String(error)));
+        return { success: false, error: errorMessage };
+      }
+    }, [hydrateMessage]);
+
   return {
     messages,
     loadMessages,
@@ -254,7 +321,8 @@ export function useChatMessages() {
     updateMessage,
     addTemporaryMessage,
     removeTemporaryMessage,
-    setMessages // For backward compatibility with existing chat interface
+    setMessages, // For backward compatibility with existing chat interface
+    updateMessageMetadata,
   };
 }
 

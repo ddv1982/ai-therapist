@@ -12,4 +12,4 @@ export { MessageTimestamp } from './message-timestamp';
 export type { MessageData, MessageProps } from './message';
 
 // Re-export design system types for convenience
-export type { MessageRole } from '@/lib/design-system/message';
+export type { MessageRole } from '@/lib/ui/design-system/message';

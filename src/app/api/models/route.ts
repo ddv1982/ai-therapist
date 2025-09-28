@@ -1,5 +1,6 @@
 import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
+import { getModelDisplayName, supportsWebSearch, type ModelID } from '@/ai/providers';
 import { createSuccessResponse, createServerErrorResponse } from '@/lib/api/api-response';
 
 /**
@@ -27,24 +28,15 @@ interface ModelsResponse {
  */
 export const GET = withApiMiddleware(async (_request, context, _params) => {
   try {
-    const availableModels: ModelInfo[] = [
-      { 
-        id: DEFAULT_MODEL_ID, 
-        name: 'GPT OSS 20B (Fast)', 
-        provider: 'OpenAI', 
-        maxTokens: 30000, 
-        category: 'production',
-        description: 'Fast model for regular conversations'
-      },
-      { 
-        id: ANALYTICAL_MODEL_ID, 
-        name: 'GPT OSS 120B (Deep Analysis)', 
-        provider: 'OpenAI', 
-        maxTokens: 30000, 
-        category: 'featured',
-        description: 'Advanced model for CBT analysis and session reports'
-      }
-    ];
+    const ids: ModelID[] = [DEFAULT_MODEL_ID as ModelID, ANALYTICAL_MODEL_ID as ModelID];
+    const availableModels: ModelInfo[] = ids.map((id) => ({
+      id,
+      name: supportsWebSearch(id) ? `${getModelDisplayName(id)} (Deep Analysis)` : getModelDisplayName(id),
+      provider: 'OpenAI',
+      maxTokens: 30000,
+      category: id === ANALYTICAL_MODEL_ID ? 'featured' : 'production',
+      description: id === ANALYTICAL_MODEL_ID ? 'Advanced model for CBT analysis and session reports' : 'Fast model for regular conversations'
+    }));
 
     const response: ModelsResponse = {
       models: availableModels,

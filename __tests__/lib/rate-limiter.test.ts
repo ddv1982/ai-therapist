@@ -1,4 +1,4 @@
-import { getRateLimiter } from '@/lib/rate-limiter';
+import { getRateLimiter } from '@/lib/api/rate-limiter';
 
 // Mock console for development logging tests
 const mockConsole = {

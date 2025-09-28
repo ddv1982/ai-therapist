@@ -73,6 +73,7 @@ function ChatPageContent() {
     setShowSidebar,
     showSidebar,
     addMessageToChat,
+    updateMessageMetadata,
     createObsessionsCompulsionsTable,
   } = useChatController({ model: settings.model, webSearchEnabled: settings.webSearchEnabled });
   const { showToast } = useToast();
@@ -118,7 +119,11 @@ function ChatPageContent() {
       await addMessageToChat({
         content: messageContent,
         role: 'user',
-        sessionId: currentSession
+        sessionId: currentSession,
+        metadata: {
+          type: 'obsessions-compulsions-table',
+          data,
+        },
       });
     } catch (error) {
       showToast({ type: 'error', title: 'Save failed', message: 'Could not add your data to the chat. Please try again.' });
@@ -413,7 +418,9 @@ function ChatPageContent() {
               messages={messages}
               isStreaming={isLoading}
               isMobile={isMobile}
+              sessionId={currentSession ?? undefined}
               onObsessionsCompulsionsComplete={handleObsessionsCompulsionsComplete}
+              onUpdateMessageMetadata={updateMessageMetadata}
             />
           )}
           

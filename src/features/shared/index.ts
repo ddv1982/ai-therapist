@@ -9,7 +9,7 @@ export { ErrorBoundary as ChatErrorBoundary, withErrorBoundary } from '@/compone
 export { SuspenseChat, SuspenseChatConnection, SuspenseChatMessages } from '@/components/chat/suspense-chat';
 
 // Layout components
-export { ErrorBoundary } from '@/components/layout/error-boundary';
+export { ErrorBoundary } from '@/components/ui/error-boundary';
 export { MobileDebugInfo } from '@/components/layout/mobile-debug-info';
 
 // UI utilities
