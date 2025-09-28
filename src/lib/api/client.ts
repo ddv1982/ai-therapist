@@ -80,21 +80,30 @@ export class ApiClient {
     // Auth is managed via DB-backed session cookie; no token refresh
     const contentType = getHeaderSafe(res, 'content-type') || '';
     const isJson = contentType.toLowerCase().includes('json');
-    const parsed = await parseJsonSafe(res);
+    let payload: unknown;
+    if (isJson) {
+      payload = await parseJsonSafe(res);
+    } else {
+      const textFn = (res as { text?: () => Promise<string> }).text;
+      payload = typeof textFn === 'function' ? await textFn.call(res) : null;
+    }
+
     if (!res.ok) {
-      if (isJson) {
-        const detail = extractApiErrorDetails(parsed);
-        const message = detail || res.statusText || 'Request failed';
-        const error = new Error(message) as Error & { status?: number };
-        error.status = res.status;
-        throw error;
+      const detail = isJson ? extractApiErrorDetails(payload) : (typeof payload === 'string' ? payload : undefined);
+      const message = detail && detail.length > 0 ? detail : (res.statusText || 'Request failed');
+      const error = new Error(message) as Error & { status?: number; body?: unknown };
+      error.status = res.status;
+      if (payload !== undefined && payload !== null && payload !== '') {
+        error.body = payload;
       }
-      // Non-JSON error responses return null to preserve legacy behavior.
-      // NOTE: This is intentional to avoid breaking older callers that treat
-      // null as a signal for non-JSON responses from legacy endpoints.
+      throw error;
+    }
+
+    if (!isJson) {
       return null as unknown as T;
     }
-    return parsed as T;
+
+    return (payload as T);
   }
 
   // Token refresh removed; DB-backed session cookie handles auth.

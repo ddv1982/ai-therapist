@@ -3,12 +3,13 @@
  * For local network usage with improved memory management
  */
 
+import { createHash } from 'crypto';
 import { logger } from '@/lib/utils/logger';
 
 interface RateLimitEntry {
   count: number;
   resetTime: number;
-  attempts: Array<{ timestamp: number; ip: string }>;
+  attempts: Array<{ timestamp: number }>;
 }
 
 interface RateLimitConfig {
@@ -23,7 +24,17 @@ class RedisRateLimiter {
   private prefix = 'rate_limit';
 
   private getKey(ip: string, bucket: string): string {
-    return `${this.prefix}:${bucket}:${ip}`;
+    const hashedIp = this.hashIp(ip);
+    return `${this.prefix}:${bucket}:${hashedIp}`;
+  }
+
+  private hashIp(ip: string): string {
+    if (!ip) return 'anonymous';
+    try {
+      return createHash('sha256').update(ip).digest('hex');
+    } catch {
+      return 'anonymous';
+    }
   }
 
   async checkRateLimit(ip: string, bucketName: 'default' | 'api' | 'chat' = 'default'): Promise<{ allowed: boolean; retryAfter?: number }> {
@@ -130,6 +141,24 @@ class NetworkRateLimiter {
     }
   }
 
+  private fingerprintIp(ip: string): string {
+    if (!ip) {
+      return 'anonymous';
+    }
+    try {
+      return createHash('sha256').update(ip).digest('hex');
+    } catch {
+      return 'anonymous';
+    }
+  }
+
+  private formatLegacyIpField(fingerprint: string): string {
+    if (!fingerprint || fingerprint === 'anonymous') {
+      return 'hashed:anonymous';
+    }
+    return `hashed:${fingerprint.slice(0, 12)}`;
+  }
+
   /**
    * Check if IP should be exempt from rate limiting
    */
@@ -187,14 +216,15 @@ class NetworkRateLimiter {
       return { allowed: true };
     }
     const now = Date.now();
-    const entry = bucket.store.get(ip);
+    const storageKey = this.fingerprintIp(ip);
+    const entry = bucket.store.get(storageKey);
 
     // No previous attempts
     if (!entry || now > entry.resetTime) {
-      bucket.store.set(ip, {
+      bucket.store.set(storageKey, {
         count: 1,
         resetTime: now + bucket.config.windowMs,
-        attempts: [{ timestamp: now, ip }]
+        attempts: [{ timestamp: now }]
       });
       return { allowed: true };
     }
@@ -219,17 +249,17 @@ class NetworkRateLimiter {
         };
       }
       // Block expired, reset
-      bucket.store.set(ip, {
+      bucket.store.set(storageKey, {
         count: 1,
         resetTime: now + bucket.config.windowMs,
-        attempts: [{ timestamp: now, ip }]
+        attempts: [{ timestamp: now }]
       });
       return { allowed: true };
     }
 
     // Increment count
     entry.count++;
-    entry.attempts.push({ timestamp: now, ip });
+    entry.attempts.push({ timestamp: now });
     
     // Keep only recent attempts for analysis
     entry.attempts = entry.attempts.filter(
@@ -245,7 +275,7 @@ class NetworkRateLimiter {
   getStatus(ip: string, bucketName: 'default' | 'api' | 'chat' = 'default'): { count: number; remaining: number; resetTime: number } {
     this.ensureBucket(bucketName);
     const bucket = this.buckets.get(bucketName)!;
-    const entry = bucket.store.get(ip);
+    const entry = bucket.store.get(this.fingerprintIp(ip));
     const now = Date.now();
 
     if (!entry || now > entry.resetTime) {
@@ -285,14 +315,14 @@ class NetworkRateLimiter {
   /**
    * Get suspicious activity report
    */
-  getSuspiciousActivity(): Array<{ ip: string; attempts: number; lastAttempt: number }> {
-    const suspicious: Array<{ ip: string; attempts: number; lastAttempt: number }> = [];
+  getSuspiciousActivity(): Array<{ fingerprint: string; ip: string; attempts: number; lastAttempt: number }> {
+    const suspicious: Array<{ fingerprint: string; ip: string; attempts: number; lastAttempt: number }> = [];
     // Aggregate across all buckets
     this.buckets.forEach((bucket) => {
       bucket.store.forEach((entry, ip) => {
         if (entry.count >= bucket.config.maxAttempts) {
           const lastAttempt = Math.max(...entry.attempts.map(a => a.timestamp));
-          suspicious.push({ ip, attempts: entry.count, lastAttempt });
+          suspicious.push({ fingerprint: ip, ip: this.formatLegacyIpField(ip), attempts: entry.count, lastAttempt });
         }
       });
     });

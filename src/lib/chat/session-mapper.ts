@@ -9,13 +9,25 @@ export interface UiSession {
 }
 
 export function mapApiSessionToUiSession(s: components['schemas']['Session']): UiSession {
-  return {
-    ...(s as unknown as Record<string, unknown>),
+  const messageCount = ((s as { _count?: { messages?: number } })._count?.messages)
+    ?? ((s as { messageCount?: number }).messageCount);
+
+  const mapped: UiSession = {
     id: String((s as { id: string }).id),
     title: String((s as { title: string }).title),
-    lastMessage: (s as { lastMessage?: string })?.lastMessage,
     startedAt: (s as { startedAt?: string })?.startedAt ? new Date((s as { startedAt?: string }).startedAt as string) : undefined,
-  } as UiSession;
+  };
+
+  const lastMessage = (s as { lastMessage?: string }).lastMessage;
+  if (typeof lastMessage === 'string') {
+    mapped.lastMessage = lastMessage;
+  }
+
+  if (typeof messageCount === 'number' && Number.isFinite(messageCount)) {
+    mapped._count = { messages: messageCount };
+  }
+
+  return mapped;
 }
 
 

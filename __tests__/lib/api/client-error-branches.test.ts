@@ -8,7 +8,7 @@ describe('ApiClient error branches', () => {
     global.fetch = originalFetch as any;
   });
 
-  it('returns null on non-JSON error responses', async () => {
+  it('throws on non-JSON error responses and surfaces text fallback', async () => {
     global.fetch = jest.fn(async () => {
       return {
         ok: false,
@@ -16,10 +16,10 @@ describe('ApiClient error branches', () => {
         statusText: 'Server Error',
         headers: { get: (k: string) => (k.toLowerCase() === 'content-type' ? 'text/plain' : null) },
         json: async () => { throw new Error('not json'); },
+        text: async () => 'plain-error',
       } as unknown as Response;
     });
-    const result = await (client as unknown as { request: (p: string) => Promise<unknown> }).request('/x');
-    expect(result).toBeNull();
+    await expect((client as unknown as { request: (p: string) => Promise<unknown> }).request('/x')).rejects.toThrow('plain-error');
   });
 
   it('throws Error with parsed details on JSON error responses', async () => {

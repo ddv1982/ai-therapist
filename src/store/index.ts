@@ -53,7 +53,7 @@ const safeStorage: Storage =
 const persistConfig = {
   key: 'therapeuticAI',
   storage: safeStorage,
-  whitelist: ['cbt', 'sessions'],
+  whitelist: ['sessions'],
   blacklist: ['chat'],
 };
 

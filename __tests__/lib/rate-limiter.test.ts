@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { getRateLimiter } from '@/lib/api/rate-limiter';
 
 // Mock console for development logging tests
@@ -205,10 +206,12 @@ describe('RateLimiter', () => {
       
       const suspicious: any[] = (rateLimiter as any).getSuspiciousActivity();
       expect(suspicious.length).toBeGreaterThanOrEqual(1);
-      const foundSuspicious = suspicious.find((entry: { ip: string; attempts: number; lastAttempt: number }) => entry.ip === suspiciousIP);
+      const fingerprint = createHash('sha256').update(suspiciousIP).digest('hex');
+      const foundSuspicious = suspicious.find((entry: { fingerprint: string; ip: string; attempts: number; lastAttempt: number }) => entry.fingerprint === fingerprint);
       expect(foundSuspicious).toBeDefined();
       expect(foundSuspicious!.attempts).toBeGreaterThanOrEqual(50);
       expect(foundSuspicious!.lastAttempt).toBeGreaterThan(0);
+      expect(foundSuspicious!.ip).toBe(`hashed:${fingerprint.slice(0, 12)}`);
     });
 
     it('should sort suspicious activity by last attempt time', () => {
@@ -247,7 +250,8 @@ describe('RateLimiter', () => {
       }
       
       const suspicious: any[] = (rateLimiter as any).getSuspiciousActivity();
-      const foundIP = suspicious.find((entry: { ip: string }) => entry.ip === normalIP);
+      const normalFingerprint = createHash('sha256').update(normalIP).digest('hex');
+      const foundIP = suspicious.find((entry: { fingerprint: string }) => entry.fingerprint === normalFingerprint);
       expect(foundIP).toBeUndefined();
     });
   });

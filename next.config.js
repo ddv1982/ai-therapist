@@ -36,7 +36,15 @@ const nextConfig = {
     const devOrigins = parseOriginList(process.env.DEV_CORS_ORIGIN);
     const prodOrigins = parseOriginList(process.env.CORS_ALLOWED_ORIGIN);
 
-    const allowedOrigins = isDevelopment ? devOrigins : prodOrigins;
+    let allowedOrigins = isDevelopment ? devOrigins : prodOrigins;
+
+    if (allowedOrigins.length === 0) {
+      if (isDevelopment) {
+        allowedOrigins = ['http://127.0.0.1:4000', 'http://localhost:4000'];
+      } else {
+        throw new Error('CORS configuration missing: set CORS_ALLOWED_ORIGIN or APP_ORIGIN for production builds.');
+      }
+    }
 
     const baseHeaders = [
       {
@@ -97,27 +105,23 @@ const nextConfig = {
 
     const headers = [];
 
-    if (allowedOrigins.length > 0 && !allowedOrigins.includes('*')) {
-      allowedOrigins.forEach((origin) => {
-        headers.push({
-          source: '/(.*)',
-          has: [{ type: 'header', key: 'origin', value: escapeForRegex(origin) }],
-          headers: securityHeaders(origin, true),
-        });
-      });
-
-      // Fallback for unmatched origins
-      headers.push({
-        source: '/(.*)',
-        headers: securityHeaders(allowedOrigins[0], true),
-      });
-    } else {
-      // Allow all origins without credentials if wildcard configured
-      headers.push({
-        source: '/(.*)',
-        headers: securityHeaders('*', false),
-      });
+    if (allowedOrigins.includes('*')) {
+      throw new Error('Wildcard CORS origin is not supported when credentials are required.');
     }
+
+    allowedOrigins.forEach((origin) => {
+      headers.push({
+        source: '/(.*)',
+        has: [{ type: 'header', key: 'origin', value: escapeForRegex(origin) }],
+        headers: securityHeaders(origin, true),
+      });
+    });
+
+    // Fallback for unmatched origins (defaults to first allowed origin without origin header)
+    headers.push({
+      source: '/(.*)',
+      headers: securityHeaders(allowedOrigins[0], true),
+    });
 
     return headers;
   },

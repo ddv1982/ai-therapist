@@ -36,7 +36,6 @@ const customJestConfig = {
     '!src/lib/utils/error-reporter.ts',
     '!src/lib/api/with-route.ts',
     '!src/lib/api/groq-client.ts',
-    '!src/lib/api/validation.ts',
     '!src/lib/auth/crypto-utils.ts',
     '!src/lib/reports/fallback-analysis.ts',
     '!src/lib/chat/message-encryption.ts',

@@ -39,7 +39,13 @@ describe('ApiClient', () => {
     expect(data).toEqual({ hello: 'world' });
 
     // non-json
-    fetchMock.mockResolvedValueOnce({ json: jest.fn(async () => { throw new Error('no json'); }) } as any);
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'text/plain' }),
+      json: jest.fn(async () => { throw new Error('no json'); }),
+      text: jest.fn(async () => 'noop'),
+    } as any);
     const data2 = await client.getSessionStatus();
     expect(data2).toBeNull();
   });

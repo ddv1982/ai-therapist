@@ -10,7 +10,7 @@ describe('ApiClient branches', () => {
     jest.clearAllMocks();
   });
 
-  it('returns null for non-JSON error responses', async () => {
+  it('throws for non-JSON error responses', async () => {
     const client = new ApiClient('');
     (global.fetch as unknown as jest.Mock).mockResolvedValue({
       ok: false,
@@ -18,9 +18,9 @@ describe('ApiClient branches', () => {
       statusText: 'Server Error',
       headers: { get: () => 'text/plain' },
       json: async () => { throw new Error('not json'); },
+      text: async () => 'error-body',
     });
-    const res = await client.listSessions();
-    expect(res).toBeNull();
+    await expect(client.listSessions()).rejects.toThrow('error-body');
   });
 
   it('throws error with status from JSON error body', async () => {

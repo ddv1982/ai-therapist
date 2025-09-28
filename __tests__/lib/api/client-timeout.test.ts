@@ -22,16 +22,16 @@ describe('ApiClient timeout/abort and content-type fallbacks', () => {
     await expect((client as unknown as { request: (p: string, init?: RequestInit, t?: number) => Promise<unknown> }).request('/slow', {}, 1)).rejects.toBeInstanceOf(Error);
   }, 2000);
 
-  it('returns null on non-JSON error content-type', async () => {
+  it('throws on non-JSON error content-type', async () => {
     global.fetch = jest.fn(async () => ({
       ok: false,
       status: 500,
       statusText: 'Server Error',
       headers: { get: (k: string) => (k.toLowerCase() === 'content-type' ? 'text/plain' : null) },
       json: async () => { throw new Error('not json'); },
+      text: async () => 'fail',
     })) as any;
-    const result = await (client as unknown as { request: (p: string) => Promise<unknown> }).request('/x');
-    expect(result).toBeNull();
+    await expect((client as unknown as { request: (p: string) => Promise<unknown> }).request('/x')).rejects.toThrow('fail');
   });
 });
 
