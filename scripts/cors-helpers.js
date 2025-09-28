@@ -36,7 +36,8 @@ export function resolveAllowedOrigins(env = process.env) {
   return { allowedOrigins, isDevelopment, usedFallback };
 }
 
-export function ensureAllowedOrigins(env = process.env) {
+export function ensureAllowedOrigins(env = process.env, options = {}) {
+  const { silent = false } = options;
   const result = resolveAllowedOrigins(env);
 
   if (result.allowedOrigins.includes('*')) {
@@ -47,18 +48,23 @@ export function ensureAllowedOrigins(env = process.env) {
     if (result.allowedOrigins.length === 0 || result.usedFallback) {
       throw new Error('CORS configuration missing: set CORS_ALLOWED_ORIGIN or APP_ORIGIN for production builds.');
     }
+  } else if (!silent && result.usedFallback) {
+    console.warn(`[CORS] Using development fallback origins: ${result.allowedOrigins.join(', ')}`);
   }
 
   return result;
 }
 
-export function ensureCorsEnvValue(env = process.env) {
+export function ensureCorsEnvValue(env = process.env, options = {}) {
+  const { silent = false } = options;
   const { allowedOrigins, isDevelopment, usedFallback } = resolveAllowedOrigins(env);
 
   if (!isDevelopment) {
     if (allowedOrigins.length === 0 || usedFallback) {
       throw new Error('CORS configuration missing: set CORS_ALLOWED_ORIGIN or APP_ORIGIN for production builds.');
     }
+  } else if (!silent && usedFallback) {
+    console.warn(`[CORS] Using development fallback origins: ${allowedOrigins.join(', ')}`);
   }
 
   return { value: allowedOrigins.join(','), allowedOrigins, isDevelopment, usedFallback };

@@ -1,12 +1,7 @@
 import { ensureCorsEnvValue, isMainModule } from './cors-helpers.js';
 
 export function ensureCorsOriginCli(env = process.env) {
-  const { value, allowedOrigins, isDevelopment, usedFallback } = ensureCorsEnvValue(env);
-
-  if (usedFallback && isDevelopment) {
-    console.warn(`[CORS] No CORS_ALLOWED_ORIGIN set; using development fallback origins: ${allowedOrigins.join(', ')}`);
-  }
-
+  const { value } = ensureCorsEnvValue(env, { silent: true });
   return value;
 }
 

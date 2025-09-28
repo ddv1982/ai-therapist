@@ -26,7 +26,7 @@ const nextConfig = {
   },
   // Secure CORS configuration
   async headers() {
-    const { allowedOrigins, isDevelopment, usedFallback } = ensureAllowedOrigins(process.env);
+    const { allowedOrigins, isDevelopment, usedFallback } = ensureAllowedOrigins(process.env, { silent: true });
 
     if (usedFallback && isDevelopment) {
       console.warn(`[CORS] Using development fallback origins: ${allowedOrigins.join(', ')}`);

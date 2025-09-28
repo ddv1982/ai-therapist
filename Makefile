@@ -12,7 +12,7 @@ STAMP_NODE := node_modules/.installed
 
 SHELL := /bin/sh
 
-.PHONY: help setup dev start build bootstrap install env db redis encryption prisma api-types playwright doctor \
+.PHONY: help setup dev start build next-build bootstrap install env db redis encryption prisma api-types playwright doctor \
         lint fix tsc-check prisma-validate test test-watch coverage e2e e2e-ui e2e-debug qa-smoke qa-full \
         db-studio migrate push generate clean clean-all redis-up redis-stop db-reset \
         auth-reset auth-setup auth-status auth-health
@@ -70,6 +70,9 @@ start: redis-up encryption-ok ## Start prod server (db setup runs via npm script
 	@npm run start
 
 build: install db ## Build for production (db setup runs via npm script)
+	@$(MAKE) next-build
+
+next-build: ## Always run the Next.js build
 	@CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} npm run build
 
 # ----- Setup building blocks -----
