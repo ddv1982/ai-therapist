@@ -176,6 +176,12 @@ The goal is to prevent regressions while enabling rapid refactors. We follow a s
 - Add lint rules enforcing Max LOC per file to avoid future mega modules.
 - Document streaming patterns for other AI endpoints to keep consistency.
 
+## 10. Recent Updates (September 2024)
+- Decomposed `src/app/(dashboard)/page.tsx` by introducing `ChatSidebar` and `ChatEmptyState` under `src/features/chat/components/dashboard`, shifting presentation logic out of the page shell.
+- Delegated session and viewport orchestration to the new `useChatSessions` and `useChatViewport` hooks, keeping `useChatController` focused on AI transport and message flow.
+- Tightened lint gates via `max-lines`, `max-lines-per-function`, `complexity`, and `eslint-plugin-react-perf` to catch regressions early in CI.
+- Expanded automated coverage with sidebar/component Jest suites, a hook-level session manager test, and a Playwright smoke test scaffold for authenticated sidebar toggling.
+
 ---
 
 **Next Step**: Save this file (e.g., `docs/refactor-plan.md`) and use it as the living source for tracking the refactor milestones.

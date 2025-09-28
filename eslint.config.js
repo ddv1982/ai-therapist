@@ -1,6 +1,7 @@
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import nextPlugin from '@next/eslint-plugin-next';
+import reactPerfPlugin from 'eslint-plugin-react-perf';
 
 import { FlatCompat } from "@eslint/eslintrc";
 import { fileURLToPath } from "url";
@@ -40,10 +41,29 @@ export default [...compat.extends("next/core-web-vitals", "next/typescript"), {
   plugins: {
     '@typescript-eslint': tsPlugin,
     '@next/next': nextPlugin,
+    'react-perf': reactPerfPlugin,
   },
   rules: {
     ...nextPlugin.configs['core-web-vitals'].rules,
     ...tsPlugin.configs.recommended.rules,
+    'react-perf/jsx-no-new-object-as-prop': 'off',
+    'react-perf/jsx-no-new-function-as-prop': 'off',
+    'react-perf/jsx-no-new-array-as-prop': 'off',
+  },
+}, {
+  files: [
+    'src/app/(dashboard)/**/*.{ts,tsx}',
+    'src/features/chat/components/dashboard/**/*.{ts,tsx}',
+    'src/hooks/use-chat-controller.ts',
+    'src/hooks/chat/**/*.{ts,tsx}',
+  ],
+  rules: {
+    'max-lines': ['warn', { max: 360, skipBlankLines: true, skipComments: true }],
+    'max-lines-per-function': ['warn', { max: 320, skipBlankLines: true, skipComments: true }],
+    complexity: ['warn', 25],
+    'react-perf/jsx-no-new-object-as-prop': 'off',
+    'react-perf/jsx-no-new-function-as-prop': 'off',
+    'react-perf/jsx-no-new-array-as-prop': 'off',
   },
 }, {
   files: ["__tests__/**/*.{ts,tsx,js}", "e2e/**/*.{ts,tsx,js}"],
