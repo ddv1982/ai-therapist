@@ -189,6 +189,12 @@ export function useChatMessages() {
     }
   }, [hydrateMessage]);
 
+  const schedulePendingFlush = useCallback((messageId: string, delayMs = 60) => {
+    setTimeout(() => {
+      void flushPendingMetadata(messageId);
+    }, delayMs);
+  }, [flushPendingMetadata]);
+
   /**
    * Load messages from the database for a session
    */
@@ -309,7 +315,7 @@ export function useChatMessages() {
             mergeStrategy: pending.mergeStrategy,
             retries: pending.retries,
           });
-          void flushPendingMetadata(savedMessage.id as string);
+          schedulePendingFlush(savedMessage.id as string);
         }
         return hydrateMessage(updated, updatedMetadata ?? msg.metadata);
       }));
@@ -326,7 +332,7 @@ export function useChatMessages() {
       }, error instanceof Error ? error : new Error(String(error)));
       return { success: false, error: errorMessage };
     }
-  }, [hydrateMessage, flushPendingMetadata]);
+  }, [hydrateMessage, schedulePendingFlush]);
 
   /**
    * Clear all messages (for new session)
@@ -376,14 +382,14 @@ export function useChatMessages() {
   }, []);
 
   useEffect(() => {
-    pendingMetadataRef.current.forEach((_entry, messageId) => {
+    pendingMetadataRef.current.forEach((entry, messageId) => {
       if (messageId.startsWith('temp-')) return;
       const exists = messages.some(msg => msg.id === messageId);
-      if (exists) {
-        void flushPendingMetadata(messageId);
+      if (exists && entry.retries < MAX_METADATA_RETRY_ATTEMPTS) {
+        schedulePendingFlush(messageId);
       }
     });
-  }, [messages, flushPendingMetadata]);
+  }, [messages, schedulePendingFlush]);
 
   const updateMessageMetadata = useCallback(
     async (
@@ -430,24 +436,27 @@ export function useChatMessages() {
         return hydrateMessage(next, nextMetadataClone);
       }));
 
-      const queuePendingUpdate = (strategy: 'merge' | 'replace') => {
+      const queuePendingUpdate = (strategy: 'merge' | 'replace', shouldSchedule: boolean) => {
         pendingMetadataRef.current.set(messageId, {
           sessionId,
           metadata: cloneMetadata(nextMetadataClone) ?? {},
           mergeStrategy: strategy,
           retries: 0,
         });
+        if (shouldSchedule) {
+          schedulePendingFlush(messageId);
+        }
       };
 
       if (messageId.startsWith('temp-')) {
-        queuePendingUpdate(mergeStrategy);
+        queuePendingUpdate(mergeStrategy, false);
         return { success: true };
       }
 
       try {
         const response = await messagesApi.patchMessageMetadata(sessionId, messageId, {
           metadata: cloneMetadata(nextMetadataClone) ?? {},
-          mergeStrategy: 'replace',
+          mergeStrategy,
         });
 
         if (!response || !response.success) {
@@ -479,7 +488,7 @@ export function useChatMessages() {
       } catch (error) {
         const status = (error as { status?: number }).status;
         if (status === 404) {
-          queuePendingUpdate(mergeStrategy);
+          queuePendingUpdate(mergeStrategy, true);
           logger.info('Queued metadata update for message awaiting persistence', {
             component: 'useChatMessages',
             operation: 'updateMessageMetadata',
@@ -508,7 +517,7 @@ export function useChatMessages() {
         }, error instanceof Error ? error : new Error(String(error)));
         return { success: false, error: errorMessage };
       }
-    }, [hydrateMessage]);
+    }, [hydrateMessage, schedulePendingFlush]);
 
   return {
     messages,

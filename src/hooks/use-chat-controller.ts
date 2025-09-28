@@ -63,7 +63,7 @@ export interface ChatController {
   updateMessageMetadata: (sessionId: string, messageId: string, metadata: Record<string, unknown>, options?: { mergeStrategy?: 'merge' | 'replace' }) => Promise<{ success: boolean; error?: string }>;
   
   // obsessions and compulsions
-  createObsessionsCompulsionsTable: () => Promise<void>;
+  createObsessionsCompulsionsTable: () => Promise<{ success: boolean; error?: string }>;
 }
 
 export function useChatController(options?: { model: string; webSearchEnabled: boolean }): ChatController {
@@ -325,10 +325,14 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
       try {
         const defaultTitle = resolveDefaultTitle();
         const newSession = await createSession(defaultTitle);
-        if (!newSession) return;
+        if (!newSession) {
+          logger.error('Failed to create session before sending message', { component: 'useChatController' });
+          return;
+        }
         await setCurrentSessionAndSync(newSession.id);
         sessionId = newSession.id;
-      } catch {
+      } catch (error) {
+        logger.error('Error creating session before send', { component: 'useChatController' }, error instanceof Error ? error : new Error(String(error)));
         return;
       }
     }
@@ -418,19 +422,21 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     }
   }, [currentSession, messages, setMessages, saveMessage, loadSessions]);
 
-  const createObsessionsCompulsionsTable = useCallback(async () => {
+  const createObsessionsCompulsionsTable = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     let sessionId = currentSession;
     if (!sessionId) {
       // Create new session if none exists
       try {
         const defaultTitle = resolveDefaultTitle();
         const newSession = await createSession(defaultTitle);
-        if (!newSession) return;
+        if (!newSession) {
+          return { success: false, error: 'Could not start a new session for the tracker.' };
+        }
         await setCurrentSessionAndSync(newSession.id);
         sessionId = newSession.id;
       } catch (error) {
         logger.error('Failed to create session for obsessions table', { error });
-        return;
+        return { success: false, error: 'Could not create a session for the tracker.' };
       }
     }
 
@@ -444,7 +450,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     const tableContent = formatObsessionsCompulsionsForChat(baseData);
 
     // Create obsessions and compulsions table message
-    await _addMessageToChat({
+    const result = await _addMessageToChat({
       content: tableContent,
       role: 'user',
       sessionId,
@@ -456,6 +462,17 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
         dismissedReason: null,
       },
     });
+    if (!result.success) {
+      logger.error('Failed to add obsessions tracker message', {
+        component: 'useChatController',
+        operation: 'createObsessionsCompulsionsTable',
+        sessionId,
+        error: result.error,
+      });
+      return { success: false, error: result.error ?? 'Failed to add the tracker message.' };
+    }
+
+    return { success: true };
   }, [currentSession, resolveDefaultTitle, setCurrentSessionAndSync, createSession, _addMessageToChat]);
 
   return {

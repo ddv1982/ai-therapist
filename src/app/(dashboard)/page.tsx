@@ -126,6 +126,23 @@ function ChatPageContent() {
     }
   }, [currentSession, addMessageToChat, showToast]);
 
+  const handleCreateObsessionsTable = useCallback(async () => {
+    const result = await createObsessionsCompulsionsTable();
+    if (!result.success) {
+      showToast({
+        type: 'error',
+        title: 'Could not create tracker',
+        message: result.error ?? 'Please try again.',
+      });
+      return;
+    }
+    showToast({
+      type: 'success',
+      title: 'Tracker added',
+      message: 'You can begin logging obsessions and compulsions now.',
+    });
+  }, [createObsessionsCompulsionsTable, showToast]);
+
   const handleWebSearchToggle = () => {
     const newWebSearchEnabled = !settings.webSearchEnabled;
     dispatch(updateSettings({ 
@@ -347,7 +364,7 @@ function ChatPageContent() {
           onGenerateReport={generateReport}
           onStopGenerating={stopGenerating}
           onOpenCBTDiary={openCBTDiary}
-          onCreateObsessionsTable={createObsessionsCompulsionsTable}
+          onCreateObsessionsTable={() => { void handleCreateObsessionsTable(); }}
         />
 
         {/* Messages */}
