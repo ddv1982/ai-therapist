@@ -13,19 +13,6 @@ import type { EmotionData } from '@/types/therapy';
 import {useTranslations} from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
-// Remove local interface - use the one from cbtSlice
-// export interface EmotionData {
-//   fear: number;
-//   anger: number;
-//   sadness: number;
-//   joy: number;
-//   anxiety: number;
-//   shame: number;
-//   guilt: number;
-//   other?: string;
-//   otherIntensity?: number;
-// }
-
 interface EmotionScaleProps {
   onComplete?: (data: EmotionData) => void;
   type?: 'initial' | 'final';

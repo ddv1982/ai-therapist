@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-// import { z } from 'zod';
 import { languageModels, ModelID } from "@/ai/providers";
 import { groq } from "@ai-sdk/groq";
 import { THERAPY_SYSTEM_PROMPT } from '@/lib/therapy/therapy-prompts';
@@ -19,9 +18,6 @@ import { AssistantResponseCollector } from '@/lib/chat/assistant-response-collec
 import { readJsonBody } from '@/lib/api/request';
 
 type ApiChatMessage = { role: 'user' | 'assistant'; content: string; id?: string };
-
-// legacy schema kept commented for reference; now using normalizeChatRequest
-// const chatRequestSchema = ...
 
 const DEFAULT_MAX_INPUT_BYTES = 128 * 1024;
 const MAX_ASSISTANT_RESPONSE_CHARS = (() => {

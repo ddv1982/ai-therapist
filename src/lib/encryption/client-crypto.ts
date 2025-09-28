@@ -25,12 +25,7 @@ const ALGORITHM = 'AES-GCM';
 const KEY_LENGTH = 256;
 const IV_LENGTH = 12; // 96 bits for GCM
 const SALT_LENGTH = 16; // 128 bits
-// const TAG_LENGTH = 16; // 128 bits - Reserved for future use
 const ITERATIONS = 100000; // Same as server PBKDF2 iterations
-
-// Key storage constants - Reserved for future IndexedDB implementation
-// const KEY_STORE_NAME = 'therapeutic-keys';
-// const KEY_STORE_VERSION = 1;
 
 /**
  * Client-side encryption error class

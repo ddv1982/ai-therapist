@@ -32,7 +32,6 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
   const dispatch = useAppDispatch();
   const currentDraft = useAppSelector(state => state.cbt?.currentDraft);
   const currentStep = useAppSelector(state => state.cbt?.currentStep || 1);
-  // const isSubmitting = useAppSelector(state => state.cbt.isSubmitting);
 
   const progressPercentage = (currentStep / CBT_STEPS.length) * 100;
   const currentStepData = CBT_STEPS.find(step => step.id === currentStep);

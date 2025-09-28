@@ -8,31 +8,9 @@ import { TherapySlider } from '@/components/ui/therapy-slider';
 import { CheckSquare, Target } from 'lucide-react';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-// Removed CBTFormValidationError import - validation errors not displayed
 import type { ActionPlanData, EmotionData } from '@/types/therapy';
-// Removed chat bridge imports - individual data no longer sent during session
 import {useTranslations} from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
-
-// Remove local interfaces - use the ones from cbtSlice
-// export interface EmotionData {
-//   fear: number;
-//   anger: number;
-//   sadness: number;
-//   joy: number;
-//   anxiety: number;
-//   shame: number;
-//   guilt: number;
-//   other?: string;
-//   otherIntensity?: number;
-// }
-
-// export interface ActionPlanData {
-//   finalEmotions: EmotionData;
-//   originalThoughtCredibility: number;
-//   newBehaviors: string;
-//   alternativeResponses: Array<{ response: string }>;
-// }
 
 interface ActionPlanProps {
   onComplete: (data: ActionPlanData) => void;
@@ -144,13 +122,6 @@ export function ActionPlan({
     // Note: Sending to chat happens in the final reflection step.
     onComplete(actionData);
   }, [actionData, actionActions, onComplete]);
-
-  // Check if emotions have been rated
-  // const hasRatedEmotions = Object.entries(actionData.finalEmotions).some(([key, value]) => {
-  //   if (key === 'other') return false;
-  //   if (key === 'otherIntensity') return customEmotion && value > 0;
-  //   return typeof value === 'number' && value > 0;
-  // });
 
   const emotionChanges = coreEmotions.map(emotion => {
     const current = actionData.finalEmotions[emotion.key as keyof EmotionData] as number;

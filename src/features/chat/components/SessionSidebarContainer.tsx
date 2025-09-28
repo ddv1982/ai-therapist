@@ -8,7 +8,6 @@ import {
   useGetCurrentSessionQuery,
   SessionData
 } from '@/store/slices/sessionsApi';
-// import { useTranslations } from 'next-intl';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setCurrentSession as setCurrentSessionAction } from '@/store/slices/sessionsSlice';
 import { useToast } from '@/components/ui/toast';
@@ -22,7 +21,6 @@ export function SessionSidebarContainer({
   children,
 }: { isMobile: boolean; showSidebar: boolean; setShowSidebar: (show: boolean) => void; children?: React.ReactNode }) {
   // i18n available if needed in future; unused here as we defer creation
-  // const t = useTranslations();
   const dispatch = useAppDispatch();
   // Normalize SessionData to match SessionSidebarProps expectations
   const { data: apiSessions = [] } = useFetchSessionsQuery() as unknown as { data: SessionData[] };

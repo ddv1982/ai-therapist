@@ -3,11 +3,7 @@
  * Testing DELETE /api/reports/memory functionality
  */
 
-// import { NextRequest } from 'next/server'; // unused after removing createMockRequest
 import { prisma } from '@/lib/database/db';
-// Unused imports for potential future use:
-// import { DELETE } from '@/app/api/reports/memory/route';
-// import { GET as GET_MANAGE } from '@/app/api/reports/memory/route';
 
 // Mock the dependencies
 jest.mock('@/lib/database/db', () => ({
@@ -147,8 +143,6 @@ describe('Memory Deletion API', () => {
     it('should handle DELETE request with excludeSessionId', async () => {
       mockPrisma.sessionReport.deleteMany.mockResolvedValueOnce({ count: 3 });
 
-      // const _request = createMockRequest({ excludeSessionId: 'current-session-id' });
-      
       // Test the database operation directly since we're focusing on the core logic
       const result = await mockPrisma.sessionReport.deleteMany({
         where: {

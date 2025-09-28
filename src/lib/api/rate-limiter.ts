@@ -29,7 +29,6 @@ class RedisRateLimiter {
   async checkRateLimit(ip: string, bucketName: 'default' | 'api' | 'chat' = 'default'): Promise<{ allowed: boolean; retryAfter?: number }> {
     const config = this.getConfigForBucket(bucketName);
     const key = this.getKey(ip, bucketName);
-    // const now = Date.now(); // removed unused variable
 
     const result = await redisManager.executeCommand<{ allowed: boolean; retryAfter?: number }>(async (client) => {
       const tx = client.multi();

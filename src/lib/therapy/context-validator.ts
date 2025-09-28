@@ -102,13 +102,6 @@ const LOW_STRENGTH_DISTRESS_PATTERNS = [
   /(starting to worry|I'm worried|I worry)\s?(that|about)/i,
 ];
 
-// Combined array for backward compatibility
-// const EMOTIONAL_DISTRESS_PATTERNS = [
-//   ...HIGH_STRENGTH_DISTRESS_PATTERNS,
-//   ...MEDIUM_STRENGTH_DISTRESS_PATTERNS, 
-//   ...LOW_STRENGTH_DISTRESS_PATTERNS
-// ];
-
 // Patterns indicating neutral, non-therapeutic contexts
 const NEUTRAL_CONTEXT_PATTERNS = [
   // Routine and habitual descriptions - stronger patterns

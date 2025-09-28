@@ -38,9 +38,6 @@ import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { useToast } from '@/components/ui/toast';
 import { logger } from '@/lib/utils/logger';
  
-
-// types are provided by the controller; no local re-definitions needed
-
 function ChatPageContent() {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -78,8 +75,6 @@ function ChatPageContent() {
   } = useChatController({ model: settings.model, webSearchEnabled: settings.webSearchEnabled });
   const { showToast } = useToast();
   const [showMemoryModal, setShowMemoryModal] = useState(false);
-  // kept for backward compatibility; no longer used since height is managed by hook
-  // const inputHeightRef = useRef(0);
 
   // Keep CSS var for footer height in sync
   useInputFooterHeight(inputContainerRef, messagesContainerRef);

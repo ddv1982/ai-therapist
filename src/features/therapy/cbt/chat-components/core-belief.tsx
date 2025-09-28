@@ -13,12 +13,6 @@ import {useTranslations} from 'next-intl';
 import { cn } from '@/lib/utils/utils';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
-// Remove local interface - use the one from cbtSlice
-// export interface CoreBeliefData {
-//   coreBeliefText: string;
-//   coreBeliefCredibility: number;
-// }
-
 interface CoreBeliefProps {
   onComplete: (data: CoreBeliefData) => void;
   initialData?: CoreBeliefData;

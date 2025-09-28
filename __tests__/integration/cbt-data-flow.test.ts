@@ -6,7 +6,6 @@
  */
 
 import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/cbt-data-parser';
-// import type { ExtractedCBTData } from '@/lib/therapy/cbt-data-parser';
 
 describe('CBT Data Flow Integration', () => {
   describe('Card Format Data Flow', () => {

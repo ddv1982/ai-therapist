@@ -1,9 +1,6 @@
 import type { paths, components } from '@/types/api.generated';
 import type { ApiResponse, PaginatedResponse } from '@/lib/api/api-response';
 
-// Legacy alias no longer used; keeping for reference only
-// type ApiResult<T> = SuccessResponse<T> | ErrorResponse;
-
 async function parseJsonSafe(response: Response) {
   try {
     return await response.json();

@@ -4,8 +4,6 @@
  */
 
 import { NextRequest } from 'next/server';
-// Unused import for potential future use:
-// import { ComponentTestUtils } from '../../utils/test-utilities';
 
 // Mock the dependencies using traditional approach
 jest.mock('@/lib/database/db', () => ({

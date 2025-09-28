@@ -15,12 +15,6 @@ import type { ThoughtData } from '@/types/therapy';
 import {useTranslations} from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
-// Remove local interface - use the one from cbtSlice
-// export interface ThoughtData {
-//   thought: string;
-//   credibility: number;
-// }
-
 interface ThoughtRecordProps {
   onComplete: (data: ThoughtData[]) => void;
   initialData?: ThoughtData[];

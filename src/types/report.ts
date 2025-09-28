@@ -51,8 +51,6 @@ export interface GenerateReportRequest {
 
 import type { Session, Message } from './index';
 import type { ValidationResult } from '@/lib/therapy/context-validator';
-// import type { ContentTierAnalysis, AnalysisRecommendation } from '@/lib/therapy/content-priority';
-// Removed broken imports - simplified approach
 
 export interface ReportContent {
   summary: string;
