@@ -456,7 +456,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
         dismissedReason: null,
       },
     });
-  }, [currentSession, resolveDefaultTitle, setCurrentSessionAndSync, setMessages, saveMessage, createSession]);
+  }, [currentSession, resolveDefaultTitle, setCurrentSessionAndSync, createSession, _addMessageToChat]);
 
   return {
     messages,

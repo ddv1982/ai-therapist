@@ -430,17 +430,17 @@ export function useChatMessages() {
         return hydrateMessage(next, nextMetadataClone);
       }));
 
-      const queuePendingUpdate = () => {
+      const queuePendingUpdate = (strategy: 'merge' | 'replace') => {
         pendingMetadataRef.current.set(messageId, {
           sessionId,
           metadata: cloneMetadata(nextMetadataClone) ?? {},
-          mergeStrategy: 'replace',
+          mergeStrategy: strategy,
           retries: 0,
         });
       };
 
       if (messageId.startsWith('temp-')) {
-        queuePendingUpdate();
+        queuePendingUpdate(mergeStrategy);
         return { success: true };
       }
 
@@ -479,7 +479,7 @@ export function useChatMessages() {
       } catch (error) {
         const status = (error as { status?: number }).status;
         if (status === 404) {
-          queuePendingUpdate();
+          queuePendingUpdate(mergeStrategy);
           logger.info('Queued metadata update for message awaiting persistence', {
             component: 'useChatMessages',
             operation: 'updateMessageMetadata',
