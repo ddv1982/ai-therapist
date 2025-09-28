@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { CheckCircle, Heart } from 'lucide-react';
 import { Message, type MessageData } from '@/features/chat/messages';
 import {
@@ -15,7 +15,6 @@ import {
   ActionPlan
 } from '@/features/therapy/cbt/chat-components';
 import { ObsessionsCompulsionsFlow } from '@/features/therapy/obsessions-compulsions/obsessions-compulsions-flow';
-import { isObsessionsCompulsionsMessage } from '@/features/therapy/obsessions-compulsions/utils/obsessions-message-detector';
 import type {
   SituationData,
   EmotionData,
@@ -318,7 +317,6 @@ function VirtualizedMessageListComponent({
   sessionId,
 }: VirtualizedMessageListProps) {
   const { showToast } = useSafeToast();
-  const autoHiddenRef = useRef(new Set<string>());
   // For conversations with many messages, only render the most recent ones to improve performance
   const visibleMessages = useMemo(() => {
     if (messages.length <= maxVisible) {
@@ -347,57 +345,6 @@ function VirtualizedMessageListComponent({
     [isMobile]
   );
 
-  // Auto-hide the obsessions/compulsions flow message when a formatted tracker message appears later
-  useEffect(() => {
-    if (!sessionId || !onUpdateMessageMetadata) {
-      return;
-    }
-
-    const toHide: string[] = [];
-    for (let i = 0; i < visibleMessages.length; i++) {
-      const msg = visibleMessages[i];
-      const metadata = (msg?.metadata as Record<string, unknown> | undefined) ?? undefined;
-      if (metadata?.step === 'obsessions-compulsions') {
-        const dismissed = typeof metadata?.dismissed === 'boolean' ? metadata.dismissed : undefined;
-        const dismissedReason = typeof metadata?.dismissedReason === 'string' ? (metadata.dismissedReason as string) : undefined;
-        if (dismissed === true && dismissedReason === 'auto') {
-          continue;
-        }
-        for (let j = i + 1; j < visibleMessages.length; j++) {
-          const later = visibleMessages[j];
-          if (typeof later.content === 'string' && isObsessionsCompulsionsMessage(later.content)) {
-            if (!autoHiddenRef.current.has(msg.id)) {
-              toHide.push(msg.id);
-            }
-            break;
-          }
-        }
-      }
-    }
-
-    if (toHide.length === 0) {
-      return;
-    }
-
-    const hideFlows = async () => {
-      for (const id of toHide) {
-        if (autoHiddenRef.current.has(id)) {
-          continue;
-        }
-        autoHiddenRef.current.add(id);
-        const result = await onUpdateMessageMetadata(sessionId, id, {
-          dismissed: true,
-          dismissedReason: 'auto',
-        });
-        if (!result.success) {
-          autoHiddenRef.current.delete(id);
-        }
-      }
-    };
-
-    void hideFlows();
-  }, [visibleMessages, sessionId, onUpdateMessageMetadata]);
-
   const handleDismissObsessionsFlow = useCallback(async (messageId: string) => {
     if (!sessionId || !onUpdateMessageMetadata) {
       showToast({ type: 'error', title: 'Unable to hide tracker', message: 'No active session selected.' });
@@ -417,40 +364,10 @@ function VirtualizedMessageListComponent({
       });
       return;
     }
-
-    autoHiddenRef.current.delete(messageId);
     showToast({
       type: 'info',
       title: 'Tracker removed',
-      message: 'You can restore it at any time.',
-    });
-  }, [sessionId, onUpdateMessageMetadata, showToast]);
-
-  const handleRestoreObsessionsFlow = useCallback(async (messageId: string) => {
-    if (!sessionId || !onUpdateMessageMetadata) {
-      showToast({ type: 'error', title: 'Unable to restore tracker', message: 'No active session selected.' });
-      return;
-    }
-
-    const result = await onUpdateMessageMetadata(sessionId, messageId, {
-      dismissed: false,
-      dismissedReason: null,
-    });
-
-    if (!result.success) {
-      showToast({
-        type: 'error',
-        title: 'Could not restore tracker',
-        message: result.error ?? 'Please try again.',
-      });
-      return;
-    }
-
-    autoHiddenRef.current.delete(messageId);
-    showToast({
-      type: 'success',
-      title: 'Tracker restored',
-      message: 'The obsessions tracker is visible again.',
+      message: 'You can create a new tracker from the sidebar when needed.',
     });
   }, [sessionId, onUpdateMessageMetadata, showToast]);
 
@@ -476,17 +393,15 @@ function VirtualizedMessageListComponent({
       return (
         <ObsessionsCompulsionsFlow
           onComplete={async (data) => {
-            await onObsessionsCompulsionsComplete(data);
             if (sessionId && onUpdateMessageMetadata) {
-              autoHiddenRef.current.add(message.id);
-              const result = await onUpdateMessageMetadata(sessionId, message.id, {
-                dismissed: true,
-                dismissedReason: 'auto',
-              });
-              if (!result.success) {
-                autoHiddenRef.current.delete(message.id);
-              }
+              await onUpdateMessageMetadata(sessionId, message.id, {
+                step: 'obsessions-compulsions',
+                data,
+                dismissed: false,
+                dismissedReason: null,
+              }, { mergeStrategy: 'merge' });
             }
+            await onObsessionsCompulsionsComplete(data);
           }}
           onDismiss={() => handleDismissObsessionsFlow(message.id)}
           initialData={initialData}
@@ -598,31 +513,13 @@ function VirtualizedMessageListComponent({
       {visibleMessages.map((message, index) => {
         const metadata = (message.metadata as Record<string, unknown> | undefined) ?? undefined;
         const isDismissed = Boolean(metadata?.dismissed);
-        const dismissedReason = typeof metadata?.dismissedReason === 'string' ? metadata.dismissedReason as string : undefined;
-        const isObsessionsFlow = metadata?.step === 'obsessions-compulsions';
 
         if (isDismissed) {
-          if (!isObsessionsFlow || dismissedReason === 'auto') {
-            return null;
-          }
+          return null;
+        }
 
-          return (
-            <div key={message.id} className="space-y-2">
-              <Card className="border border-dashed border-muted/60 bg-background/60">
-                <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h3 className="text-sm font-semibold text-muted-foreground">Obsessions tracker hidden</h3>
-                    <p className="text-sm text-muted-foreground/80">Restore it whenever you need to add new entries.</p>
-                  </div>
-                  {sessionId && onUpdateMessageMetadata ? (
-                    <Button size="sm" onClick={() => handleRestoreObsessionsFlow(message.id)}>
-                      Show tracker
-                    </Button>
-                  ) : null}
-                </CardContent>
-              </Card>
-            </div>
-          );
+        if (!metadata?.step && metadata?.type === 'obsessions-compulsions-table') {
+          return null;
         }
 
         const isLastMessage = index === visibleMessages.length - 1;

@@ -444,11 +444,10 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     const tableContent = formatObsessionsCompulsionsForChat(baseData);
 
     // Create obsessions and compulsions table message
-    const tableMessage: Message = {
-      id: generateUUID(),
-      role: 'user',
+    await _addMessageToChat({
       content: tableContent,
-      timestamp: new Date(),
+      role: 'user',
+      sessionId,
       metadata: {
         type: 'obsessions-compulsions-table',
         step: 'obsessions-compulsions',
@@ -456,17 +455,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
         dismissed: false,
         dismissedReason: null,
       },
-    };
-
-    // Add message to chat
-    setMessages(prev => [...prev, tableMessage]);
-
-    // Save to backend
-    try {
-      await saveMessage(sessionId, 'user', tableContent, undefined, tableMessage.metadata ?? undefined);
-    } catch (error) {
-      logger.error('Failed to save obsessions table message', { error });
-    }
+    });
   }, [currentSession, resolveDefaultTitle, setCurrentSessionAndSync, setMessages, saveMessage, createSession]);
 
   return {
