@@ -2,6 +2,7 @@
 import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 import path from 'path';
+import { ensureAllowedOrigins } from './scripts/cors-helpers.js';
 
 const nextConfig = {
   serverExternalPackages: ['prisma'],
@@ -25,26 +26,13 @@ const nextConfig = {
   },
   // Secure CORS configuration
   async headers() {
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const parseOriginList = (raw) =>
-      typeof raw === 'string'
-        ? raw.split(',').map((value) => value.trim()).filter(Boolean)
-        : [];
+    const { allowedOrigins, isDevelopment, usedFallback } = ensureAllowedOrigins(process.env);
+
+    if (usedFallback && isDevelopment) {
+      console.warn(`[CORS] Using development fallback origins: ${allowedOrigins.join(', ')}`);
+    }
 
     const escapeForRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-    const devOrigins = parseOriginList(process.env.DEV_CORS_ORIGIN);
-    const prodOrigins = parseOriginList(process.env.CORS_ALLOWED_ORIGIN);
-
-    let allowedOrigins = isDevelopment ? devOrigins : prodOrigins;
-
-    if (allowedOrigins.length === 0) {
-      if (isDevelopment) {
-        allowedOrigins = ['http://127.0.0.1:4000', 'http://localhost:4000'];
-      } else {
-        throw new Error('CORS configuration missing: set CORS_ALLOWED_ORIGIN or APP_ORIGIN for production builds.');
-      }
-    }
 
     const baseHeaders = [
       {
@@ -104,10 +92,6 @@ const nextConfig = {
     ]);
 
     const headers = [];
-
-    if (allowedOrigins.includes('*')) {
-      throw new Error('Wildcard CORS origin is not supported when credentials are required.');
-    }
 
     allowedOrigins.forEach((origin) => {
       headers.push({

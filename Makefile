@@ -61,16 +61,16 @@ help: ## Show help
 # ----- Single intelligent entrypoints -----
 
 setup: $(STAMP_NODE) env $(DB_FILE) redis-up encryption-ok $(API_TYPES) prisma-generate playwright ## Intelligent setup + start dev
-	@CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-http://127.0.0.1:4000} npm run dev
+	@CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} npm run dev
 
 dev: ## Start dev server (assumes setup done)
-	CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-http://127.0.0.1:4000} npm run dev
+	CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} npm run dev
 
 start: redis-up encryption-ok ## Start prod server (db setup runs via npm script)
 	@npm run start
 
 build: install db ## Build for production (db setup runs via npm script)
-	@CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-http://127.0.0.1:4000} npm run build
+	@CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} npm run build
 
 # ----- Setup building blocks -----
 
