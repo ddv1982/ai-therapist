@@ -30,41 +30,24 @@
   padding-left: 1.5rem; /* 24px - grid compliant */
   margin: 1rem 0; /* 16px - grid compliant */
   line-height: 1.6;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem; /* 12px - grid compliant */
 }
 
-.therapeutic-content ol > li {
-  counter-increment: therapeutic-counter;
-  list-style: none;
-  position: relative;
+.therapeutic-content li {
+  margin-top: 0.75rem; /* 12px - grid compliant */
 }
 
-.therapeutic-content ol > li::before {
-  content: counter(therapeutic-counter) ".";
-  position: absolute;
-  left: -1.5rem; /* 24px - grid compliant */
-  top: 0;
+.therapeutic-content li:first-child {
+  margin-top: 0;
+}
+
+.therapeutic-content li::marker {
   font-weight: 600; /* Semibold only */
   color: hsl(var(--primary));
-  min-width: 1rem; /* 16px - grid compliant */
-  text-align: right;
 }
 
-.therapeutic-content ul > li {
-  list-style: none;
-  position: relative;
-}
-
-.therapeutic-content ul > li::before {
-  content: "•";
-  position: absolute;
-  left: -1rem; /* 16px - grid compliant */
-  top: 0;
-  color: hsl(var(--primary));
-  font-weight: 600; /* Semibold only */
-  line-height: inherit;
+.therapeutic-content li > ul,
+.therapeutic-content li > ol {
+  margin-top: 0.5rem; /* 8px - grid compliant */
 }
 
 .therapeutic-content blockquote {
@@ -97,12 +80,5 @@
   .therapeutic-content ol,
   .therapeutic-content ul {
     padding-left: 1.25rem; /* 20px - close to grid */
-  }
-  .therapeutic-content ol > li::before {
-    left: -1.25rem;
-    min-width: 0.75rem; /* 12px - grid compliant */
-  }
-  .therapeutic-content ul > li::before {
-    left: -1rem;
   }
 }
