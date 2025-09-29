@@ -104,20 +104,22 @@
   border-collapse: collapse;
   margin: 1rem 0; /* 16px - grid compliant */
   font-size: 0.875rem; /* text-sm - Size 4 */
-  table-layout: fixed;
+  table-layout: auto;
 }
 
-.markdown-content th {
-  border: 1px solid hsl(var(--border));
-  padding: 0.75rem; /* 12px - grid compliant */
-  text-align: left;
-  font-weight: 600; /* font-semibold */
-  background-color: hsl(var(--muted));
-}
-
+.markdown-content th,
 .markdown-content td {
   border: 1px solid hsl(var(--border));
   padding: 0.75rem; /* 12px - grid compliant */
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.markdown-content th {
+  font-weight: 600; /* font-semibold */
+  background-color: hsl(var(--muted));
 }
 
 .markdown-content tr:nth-child(even) {
@@ -137,12 +139,15 @@
 
 .markdown-content .table-container {
   overflow-x: auto;
-  margin-left: -0.5rem;
-  margin-right: -0.5rem;
+  max-width: 100%;
+  margin: 0;
+  padding-bottom: 0.5rem;
+  scrollbar-gutter: stable both-edges;
+  -webkit-overflow-scrolling: touch;
 }
 
 .markdown-content .table-container table {
-  min-width: 800px;
+  min-width: min(800px, 100%);
 }
 
 /* Mobile adjustments - maintain Fire Your Design Team compliance */

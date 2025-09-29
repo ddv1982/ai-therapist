@@ -90,10 +90,10 @@ function convertWideTablesToLists(markdown: string): string {
 }
 
 export function Markdown({ children, className, defaultOrigin, isUser, allowedLinkPrefixes }: MarkdownProps) {
-  if (!children) return null;
+  const rawContent = children ?? '';
+  const hasContent = rawContent.length > 0;
 
-  const { summaryData, cleanText } = extractCBTSummaryData(children);
-  if (summaryData) return <CBTSessionSummaryCard data={summaryData} />;
+  const { summaryData, cleanText } = extractCBTSummaryData(rawContent);
 
   const resolvedOrigin = defaultOrigin ?? (
     typeof window !== 'undefined' && typeof window.location?.origin === 'string'
@@ -131,17 +131,48 @@ export function Markdown({ children, className, defaultOrigin, isUser, allowedLi
     ...(allowMailto ? ['mailto:'] : []),
   ];
 
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    if (isUser || summaryData) return;
+    const node = containerRef.current;
+    if (!node) return;
+
+    const frame = requestAnimationFrame(() => {
+      const tables = node.querySelectorAll('table');
+      tables.forEach((table) => {
+        if (!(table instanceof HTMLTableElement)) return;
+        const parent = table.parentElement;
+        if (!parent) return;
+        const currentWrapper = table.closest('.table-container');
+        if (currentWrapper) return;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'table-container';
+        wrapper.setAttribute('data-scroll-wrapper', 'true');
+        wrapper.tabIndex = 0;
+        parent.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [finalText, isUser, summaryData]);
+
+  if (!hasContent) return null;
+  if (summaryData) return <CBTSessionSummaryCard data={summaryData} />;
+
   return (
-    <Streamdown
-      parseIncompleteMarkdown
-      className={['markdown-content', className].filter(Boolean).join(' ')}
-      allowedImagePrefixes={[]}
-      allowedLinkPrefixes={computedPrefixes}
-      defaultOrigin={resolvedOrigin}
-    >
-      {finalText}
-    </Streamdown>
+    <div ref={containerRef}>
+      <Streamdown
+        parseIncompleteMarkdown
+        className={['markdown-content', className].filter(Boolean).join(' ')}
+        allowedImagePrefixes={[]}
+        allowedLinkPrefixes={computedPrefixes}
+        defaultOrigin={resolvedOrigin}
+      >
+        {finalText}
+      </Streamdown>
+    </div>
   );
 }
-
-
