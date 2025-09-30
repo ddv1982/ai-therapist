@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { generateSessionReport, extractStructuredAnalysis, type ReportMessage } from '@/lib/api/groq-client';
-import { REPORT_GENERATION_PROMPT, ANALYSIS_EXTRACTION_PROMPT } from '@/lib/therapy/therapy-prompts';
+import { ANALYSIS_EXTRACTION_PROMPT } from '@/lib/therapy/therapy-prompts';
+import { getReportPrompt } from '@/lib/therapy/prompts';
 import { prisma } from '@/lib/database/db';
 import { logger, devLog } from '@/lib/utils/logger';
 import { reportGenerationSchema, validateRequest } from '@/lib/utils/validation';
@@ -136,18 +137,10 @@ export const POST = withApiMiddleware(async (request: NextRequest, context) => {
       reportGenerationStep: 'ai_generation'
     });
 
-    // Locale-aware report prompt
+    // Locale-aware report prompt (dedicated per-locale prompt)
     const { getApiRequestLocale } = await import('@/i18n/request');
     const locale = getApiRequestLocale(request);
-    const languageDirective =
-      locale === 'nl'
-        ? `LANGUAGE REQUIREMENT:
-Write the entire therapeutic report in Dutch (Nederlands) with natural phrasing. Keep any code blocks, special markers, and JSON keys exactly as-is.`
-        : `LANGUAGE REQUIREMENT:
-Write the entire therapeutic report in English. Keep any code blocks, special markers, and JSON keys exactly as-is.`;
-    const reportPrompt = `${REPORT_GENERATION_PROMPT}
-
-${languageDirective}`;
+    const reportPrompt = getReportPrompt(locale);
 
     const completion = await generateSessionReport(messages as ReportMessage[], reportPrompt, reportModel);
     

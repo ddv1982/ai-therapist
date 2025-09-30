@@ -31,7 +31,7 @@ const querySchema = z.object({
 
 export const POST = withValidationAndParams(
   postBodySchema,
-  async (_request, context, validatedData, params) => {
+  async (request, context, validatedData, params) => {
     try {
       const { sessionId } = params as { sessionId: string };
 
@@ -80,6 +80,7 @@ export const POST = withValidationAndParams(
         } else if (userMessageCount === 2 || userMessageCount === 4) {
           // Generate or regenerate title after 2 and 4 user messages
           const { generateChatTitle } = await import('@/lib/chat/title-generator');
+          const { getApiRequestLocale } = await import('@/i18n/request');
 
           // Fetch first few user messages for context
           const firstMessages = await prisma.message.findMany({
@@ -99,7 +100,8 @@ export const POST = withValidationAndParams(
             .map(m => m.content)
             .join('\n\n');
 
-          const title = await generateChatTitle(combinedContent);
+          const locale = getApiRequestLocale(request);
+          const title = await generateChatTitle(combinedContent, locale);
 
           await prisma.session.update({
             where: { id: sessionId },

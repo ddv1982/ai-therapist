@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { languageModels, ModelID } from "@/ai/providers";
 import { groq } from "@ai-sdk/groq";
-import { THERAPY_SYSTEM_PROMPT } from '@/lib/therapy/therapy-prompts';
+import { getTherapySystemPrompt } from '@/lib/therapy/prompts';
 import { streamChatCompletion } from '@/lib/chat/streaming';
 import { normalizeChatRequest } from '@/lib/chat/chat-request';
 import { selectModelAndTools } from '@/lib/chat/model-selector';
@@ -189,24 +189,12 @@ async function loadSessionHistory(sessionId: string, ownership: SessionOwnership
 async function buildSystemPrompt(req: NextRequest, hasWebSearch: boolean): Promise<string> {
   const { getApiRequestLocale } = await import('@/i18n/request');
   const locale = getApiRequestLocale(req);
-  const languageDirective = process.env.NODE_ENV === 'test'
-    ? ''
-    : locale === 'nl'
-      ? `LANGUAGE REQUIREMENT:
-Provide all responses in Dutch (Nederlands). Use natural Dutch phrasing. Preserve any code blocks, special markers (e.g., "CBT_SUMMARY_CARD"), and JSON keys exactly as-is.`
-      : `LANGUAGE REQUIREMENT:
-Provide all responses in English. Preserve any code blocks, special markers (e.g., "CBT_SUMMARY_CARD"), and JSON keys exactly as-is.`;
-
-  const basePrompt = hasWebSearch
-    ? `${THERAPY_SYSTEM_PROMPT}
-
-**WEB SEARCH CAPABILITIES ACTIVE:**
-You have access to browser search tools. When users ask for current information, research, or resources that would support their therapeutic journey, USE the browser search tool actively to provide helpful, up-to-date information. Web searches can enhance therapy by finding evidence-based resources, current research, mindfulness videos, support groups, or practical tools. After searching, integrate the findings therapeutically and relate them back to the client's needs and goals.`
-    : THERAPY_SYSTEM_PROMPT;
-
-  return languageDirective ? `${basePrompt}
-
-${languageDirective}` : basePrompt;
+  const base = getTherapySystemPrompt(locale, { webSearch: hasWebSearch });
+  // Strong, localized language directive to ensure the next response follows the current app locale
+  const directive = locale === 'nl'
+    ? 'TAALBELEID: Antwoord uitsluitend in natuurlijk Nederlands. Als de app‑taal wijzigt of de gebruiker daarom vraagt, schakel direct over en ga verder in die taal; bevestig de wijziging éénmaal.'
+    : 'LANGUAGE POLICY: Respond exclusively in natural English. If the app locale changes or the user requests a language change, switch immediately and continue in that language; acknowledge the change once.';
+  return `${directive}\n\n${base}`;
 }
 
 function createStreamErrorHandler(params: {

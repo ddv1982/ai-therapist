@@ -157,7 +157,7 @@ describe('/api/chat route', () => {
     expect(streamTextMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'mock-model-20b',
-        system: 'Mock therapeutic system prompt',
+        system: expect.stringContaining('Mock therapeutic system prompt'),
         messages: [
           { id: '1', role: 'user', content: 'Hello' },
           { id: '2', role: 'assistant', content: 'Hi!' },
