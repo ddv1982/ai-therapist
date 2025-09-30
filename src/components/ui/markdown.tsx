@@ -89,20 +89,100 @@ function convertWideTablesToLists(markdown: string): string {
   return processed.join('');
 }
 
+type TableSectionProps = { children?: React.ReactNode };
+type TableCellProps = { children?: React.ReactNode };
+
+const extractTextContent = (node: React.ReactNode): string => {
+  if (node === null || node === undefined || typeof node === 'boolean') {
+    return '';
+  }
+  if (typeof node === 'string' || typeof node === 'number') {
+    return String(node).trim();
+  }
+  if (Array.isArray(node)) {
+    return node.map(extractTextContent).join(' ').trim();
+  }
+  if (React.isValidElement(node)) {
+    const element = node as React.ReactElement<{ children?: React.ReactNode }>;
+    return extractTextContent(element.props.children);
+  }
+  return '';
+};
+
+const ResponsiveMarkdownTable = ({ children }: { children?: React.ReactNode }) => {
+  const childArray = React.Children.toArray(children);
+  if (childArray.length === 0) return null;
+
+  const headerNode = childArray.find((child) => React.isValidElement(child) && child.type === 'thead') as React.ReactElement<TableSectionProps> | undefined;
+  const bodyNodes = childArray.filter((child) => React.isValidElement(child) && child.type === 'tbody') as Array<React.ReactElement<TableSectionProps>>;
+
+  const headers: string[] = [];
+  if (headerNode) {
+    const headerElement = headerNode as React.ReactElement<TableSectionProps>;
+    React.Children.forEach(headerElement.props.children, (row) => {
+      if (!React.isValidElement(row)) return;
+      const headerRow = row as React.ReactElement<TableSectionProps>;
+      React.Children.forEach(headerRow.props.children, (cell) => {
+        if (!React.isValidElement(cell)) return;
+        const headerCell = cell as React.ReactElement<TableCellProps>;
+        headers.push(extractTextContent(headerCell.props.children));
+      });
+    });
+  }
+
+  const mobileCards = bodyNodes.flatMap((tbody, tbodyIndex) => {
+    const rows: React.ReactNode[] = [];
+    React.Children.forEach(tbody.props.children, (row, rowIndex) => {
+      if (!React.isValidElement(row)) return;
+      const bodyRow = row as React.ReactElement<TableSectionProps>;
+      const cells: Array<{ label: string; content: React.ReactNode; key: string }> = [];
+      React.Children.forEach(bodyRow.props.children, (cell, cellIndex) => {
+        if (!React.isValidElement(cell)) return;
+        const bodyCell = cell as React.ReactElement<TableCellProps>;
+        const label = headers[cellIndex] ?? `Column ${cellIndex + 1}`;
+        cells.push({ label, content: bodyCell.props.children, key: `${tbodyIndex}-${rowIndex}-${cellIndex}` });
+      });
+      rows.push(
+        <div className="markdown-table-card" key={`${tbodyIndex}-${rowIndex}`}>
+          {cells.map((cell) => (
+            <div className="markdown-table-card-row" key={cell.key}>
+              <span className="markdown-table-card-label">{cell.label}</span>
+              <div className="markdown-table-card-value">{cell.content}</div>
+            </div>
+          ))}
+        </div>
+      );
+    });
+    return rows;
+  });
+
+  return (
+    <div className="markdown-table" data-responsive="true">
+      <div className="markdown-table-desktop" tabIndex={0} role="group">
+        <table>{children}</table>
+      </div>
+      <div className="markdown-table-mobile" aria-hidden="true">
+        {mobileCards}
+      </div>
+    </div>
+  );
+};
+
+const streamdownComponents = {
+  table: ResponsiveMarkdownTable,
+};
+
 export function Markdown({ children, className, defaultOrigin, isUser, allowedLinkPrefixes }: MarkdownProps) {
   const rawContent = children ?? '';
   const hasContent = rawContent.length > 0;
 
   const { summaryData, cleanText } = extractCBTSummaryData(rawContent);
-
+  const finalText = isUser ? cleanText : convertWideTablesToLists(cleanText);
   const resolvedOrigin = defaultOrigin ?? (
     typeof window !== 'undefined' && typeof window.location?.origin === 'string'
       ? window.location.origin
       : 'http://localhost'
   );
-
-  // Convert wide tables to lists for assistant messages only
-  const finalText = isUser ? cleanText : convertWideTablesToLists(cleanText);
 
   const allowHttp = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP === 'true';
   const allowMailto = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO === 'true';
@@ -131,48 +211,19 @@ export function Markdown({ children, className, defaultOrigin, isUser, allowedLi
     ...(allowMailto ? ['mailto:'] : []),
   ];
 
-  const containerRef = React.useRef<HTMLDivElement | null>(null);
-
-  React.useEffect(() => {
-    if (isUser || summaryData) return;
-    const node = containerRef.current;
-    if (!node) return;
-
-    const frame = requestAnimationFrame(() => {
-      const tables = node.querySelectorAll('table');
-      tables.forEach((table) => {
-        if (!(table instanceof HTMLTableElement)) return;
-        const parent = table.parentElement;
-        if (!parent) return;
-        const currentWrapper = table.closest('.table-container');
-        if (currentWrapper) return;
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'table-container';
-        wrapper.setAttribute('data-scroll-wrapper', 'true');
-        wrapper.tabIndex = 0;
-        parent.insertBefore(wrapper, table);
-        wrapper.appendChild(table);
-      });
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [finalText, isUser, summaryData]);
-
   if (!hasContent) return null;
   if (summaryData) return <CBTSessionSummaryCard data={summaryData} />;
 
   return (
-    <div ref={containerRef}>
-      <Streamdown
-        parseIncompleteMarkdown
-        className={['markdown-content', className].filter(Boolean).join(' ')}
-        allowedImagePrefixes={[]}
-        allowedLinkPrefixes={computedPrefixes}
-        defaultOrigin={resolvedOrigin}
-      >
-        {finalText}
-      </Streamdown>
-    </div>
+    <Streamdown
+      parseIncompleteMarkdown
+      className={['markdown-content', className].filter(Boolean).join(' ')}
+      allowedImagePrefixes={[]}
+      allowedLinkPrefixes={computedPrefixes}
+      defaultOrigin={resolvedOrigin}
+      components={streamdownComponents}
+    >
+      {finalText}
+    </Streamdown>
   );
 }

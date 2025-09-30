@@ -17,9 +17,9 @@ export const messageVariants = {
   user: {
     container: "flex-row md:flex-row-reverse md:gap-reverse",
     avatar: "bg-primary text-primary-foreground shadow-lg",
-    contentWrapper: "text-left md:text-right",
+    contentWrapper: "text-left",
     bubble: "bg-primary text-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-md shadow-sm hover:shadow-md transition-shadow duration-200 max-w-none md:max-w-[min(80%,_42rem)] md:ml-auto",
-    timestamp: "text-white/80 text-left md:text-right",
+    timestamp: "text-white/80 text-left",
   },
   assistant: {
     container: "flex-row",
