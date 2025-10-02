@@ -181,7 +181,7 @@ describe('/api/chat route', () => {
       expect.objectContaining({
         model: 'mock-model-120b',
         tools: { browser_search: expect.any(Object) },
-        toolChoice: 'required',
+        toolChoice: 'auto',
       }),
     );
   });

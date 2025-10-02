@@ -5,7 +5,6 @@ import { getTherapySystemPrompt } from '@/lib/therapy/prompts';
 import { streamChatCompletion } from '@/lib/chat/streaming';
 import { normalizeChatRequest } from '@/lib/chat/chat-request';
 import { selectModelAndTools } from '@/lib/chat/model-selector';
-// no auto-creation here; session is optional and created client-side on first send
 import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
 import { createErrorResponse } from '@/lib/api/api-response';
@@ -86,7 +85,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     const decision = selectModelAndTools({ message: normalized.data.message, preferredModel: normalized.data.model, webSearchEnabled: Boolean(raw?.webSearchEnabled) });
     const modelId = decision.model;
     const hasWebSearch = decision.tools.includes('web-search');
-    const toolChoiceHeader = hasWebSearch ? 'required' : 'none';
+    const toolChoiceHeader = hasWebSearch ? 'auto' : 'none';
 
     logger.info('Model selection for chat request', {
       apiEndpoint: '/api/chat',
@@ -104,7 +103,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       system: systemPrompt,
       messages: [...history, ...forwarded],
       telemetry: { isEnabled: false },
-      ...(hasWebSearch ? { tools: { browser_search: groq.tools.browserSearch({}) }, toolChoice: 'required' as const } : {}),
+      ...(hasWebSearch ? { tools: { browser_search: groq.tools.browserSearch({}) }, toolChoice: 'auto' as const } : {}),
     });
 
     const collector = new AssistantResponseCollector(
@@ -151,9 +150,6 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
   }
 });
 
-// moved to lib/api/request.ts as readJsonBody
-
-// normalizeMessages inlined into normalizeChatRequest usage
 
 async function resolveSessionOwnership(sessionId: string | undefined, userId: string) {
   if (!sessionId) return { valid: false } as SessionOwnership;
