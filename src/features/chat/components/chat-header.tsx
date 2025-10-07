@@ -18,6 +18,7 @@ interface ChatHeaderProps {
   onStopGenerating: () => void;
   onOpenCBTDiary: () => void;
   onCreateObsessionsTable: () => void;
+  modelLabel: string;
 }
 
 export function ChatHeader({
@@ -32,6 +33,7 @@ export function ChatHeader({
   onStopGenerating,
   onOpenCBTDiary,
   onCreateObsessionsTable,
+  modelLabel,
 }: ChatHeaderProps) {
   const t = useTranslations('chat');
 
@@ -52,6 +54,15 @@ export function ChatHeader({
           >
             <Menu className="w-4 h-4 relative z-10" />
           </Button> 
+          <div
+            className="hidden sm:flex items-center gap-2 ml-2"
+            aria-label={t('main.modelChipAria', { model: modelLabel })}
+          >
+            <span className="text-xs uppercase tracking-wide text-muted-foreground">{t('main.modelChipLabel')}</span>
+            <span className="px-2 py-1 rounded-full bg-muted/80 dark:bg-muted/40 text-sm font-medium text-foreground">
+              {modelLabel}
+            </span>
+          </div>
         </div>
         <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
           {hasActiveSession && (

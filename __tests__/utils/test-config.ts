@@ -11,7 +11,7 @@
  */
 
 import '@testing-library/jest-dom';
-import { configure } from '@testing-library/react';
+import { configure, type Config } from '@testing-library/react';
 import { TextEncoder, TextDecoder } from 'util';
 import { MockFactory, TestSetupUtils } from './test-utilities';
 
@@ -22,12 +22,19 @@ import { MockFactory, TestSetupUtils } from './test-utilities';
 /**
  * Configure Testing Library for optimal performance
  */
-configure({
+type ExtendedTestingLibraryConfig = Config & {
+  asyncUtilTimeout?: number;
+  computedStyleSupportsPseudoElements?: boolean;
+};
+
+const testingLibraryConfig: Partial<ExtendedTestingLibraryConfig> = {
   // Increase timeout for complex therapeutic components
   asyncUtilTimeout: 5000,
   // Configure for better debugging
   computedStyleSupportsPseudoElements: true,
-});
+};
+
+configure(testingLibraryConfig as unknown as Partial<Config>);
 
 /**
  * Polyfill required APIs for Node.js test environment

@@ -15,6 +15,7 @@ import {
   Sparkles,
   Brain,
   Globe,
+  EyeOff,
 } from 'lucide-react';
 
 interface ChatSidebarProps {
@@ -30,6 +31,8 @@ interface ChatSidebarProps {
   onToggleWebSearch: () => void;
   webSearchEnabled: boolean;
   smartModelActive: boolean;
+  onToggleLocalModel: () => void;
+  localModelActive: boolean;
   translate: (key: string) => string;
 }
 
@@ -45,8 +48,10 @@ export function ChatSidebar(props: ChatSidebarProps) {
     onDeleteSession,
     onToggleSmartModel,
     onToggleWebSearch,
+    onToggleLocalModel,
     webSearchEnabled,
     smartModelActive,
+    localModelActive,
     translate,
   } = props;
 
@@ -205,6 +210,25 @@ export function ChatSidebar(props: ChatSidebarProps) {
             >
               <Globe className="w-4 h-4" />
             </button>
+            <div className="relative group">
+              <button
+                onClick={onToggleLocalModel}
+                className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 ${
+                  localModelActive
+                    ? 'bg-violet-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.65)]'
+                    : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+                }`}
+                aria-pressed={localModelActive}
+                aria-label={localModelActive ? translate('sidebar.localModelEnabled') : translate('sidebar.localModelDisabled')}
+                title={localModelActive ? translate('sidebar.localModelTooltipActive') : translate('sidebar.localModelTooltipInactive')}
+              >
+                <EyeOff className="w-4 h-4" />
+              </button>
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                {localModelActive ? translate('sidebar.localModelTooltipActive') : translate('sidebar.localModelTooltipInactive')}
+              </div>
+            </div>
             <LanguageToggle />
           </div>
         </div>

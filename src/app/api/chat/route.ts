@@ -98,7 +98,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
 
     const systemPrompt = await buildSystemPrompt(req, hasWebSearch);
     try { recordModelUsage(modelId, toolChoiceHeader); } catch {}
-    const result = streamChatCompletion({
+    const streamResultPromise = streamChatCompletion({
       model: languageModels[modelId as ModelID] as unknown as string,
       system: systemPrompt,
       messages: [...history, ...forwarded],
@@ -114,15 +114,48 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       MAX_ASSISTANT_RESPONSE_CHARS,
       appendWithLimitUtil
     );
+    const streamResult = await streamResultPromise;
 
-    const uiResponse = (await result).toUIMessageStreamResponse({
+    let resolvedModelId = modelId;
+    const updateResolvedModel = (candidate?: string) => {
+      if (typeof candidate !== 'string' || candidate.length === 0) return;
+      if (candidate === resolvedModelId) return;
+      resolvedModelId = candidate;
+      collector.setModelId(candidate);
+    };
+
+    const uiResponse = streamResult.toUIMessageStreamResponse({
       onError: createStreamErrorHandler({
         context,
         systemPrompt,
         modelId,
         webSearchEnabled: hasWebSearch,
       }),
+      messageMetadata: ({ part }) => {
+        const partType = (part as { type?: string }).type;
+        if (partType === 'response-metadata') {
+          const metadataPart = part as unknown as { type: 'response-metadata'; modelId?: string };
+          updateResolvedModel(metadataPart.modelId);
+          return { modelId: resolvedModelId };
+        }
+        if (partType === 'start' || partType === 'finish') {
+          return { modelId: resolvedModelId };
+        }
+        return undefined;
+      },
     });
+
+    streamResult.response
+      .then((responseMeta) => {
+        updateResolvedModel(responseMeta?.modelId);
+      })
+      .catch((error: unknown) => {
+        logger.warn('Failed to resolve final model metadata for stream', {
+          apiEndpoint: '/api/chat',
+          requestId: context.requestId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
 
     if (!normalized.data.sessionId) {
       attachResponseHeaders(uiResponse as Response, context.requestId, modelId, toolChoiceHeader);

@@ -27,6 +27,7 @@ describe('ChatHeader', () => {
         onStopGenerating={() => {}}
         onOpenCBTDiary={() => {}}
         onCreateObsessionsTable={() => {}}
+        modelLabel="GPT-OSS 20B"
       />
     );
 
@@ -49,6 +50,7 @@ describe('ChatHeader', () => {
         onStopGenerating={() => {}}
         onOpenCBTDiary={() => {}}
         onCreateObsessionsTable={() => {}}
+        modelLabel="GPT-OSS 20B"
       />
     );
 

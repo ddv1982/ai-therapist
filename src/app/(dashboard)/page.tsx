@@ -20,17 +20,24 @@ import { selectChatSettings } from '@/store/selectors';
 import { updateSettings } from '@/store/slices/chatSlice';
 import { useChatController } from '@/hooks';
 import { ObsessionsCompulsionsData } from '@/types/therapy';
-import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
+import { LOCAL_MODEL_ID, DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { useToast } from '@/components/ui/toast';
 import { logger } from '@/lib/utils/logger';
 import { ChatSidebar } from '@/features/chat/components/dashboard/chat-sidebar';
 import { ChatEmptyState } from '@/features/chat/components/dashboard/chat-empty-state';
+import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
  
 function ChatPageContent() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const settings = useAppSelector(selectChatSettings);
   const t = useTranslations('chat');
+
+  const effectiveModelId = settings.webSearchEnabled ? ANALYTICAL_MODEL_ID : settings.model;
+  const modelLabel = useMemo(() => {
+    const base = getModelDisplayName(effectiveModelId);
+    return supportsWebSearch(effectiveModelId) ? `${base} (Deep Analysis)` : base;
+  }, [effectiveModelId]);
 
   const {
     messages,
@@ -150,6 +157,63 @@ function ChatPageContent() {
     }));
   };
 
+  const handleLocalModelToggle = async () => {
+    const isLocal = settings.model === LOCAL_MODEL_ID;
+    
+    if (isLocal) {
+      // Switching away from local model - always allow
+      dispatch(updateSettings({
+        model: DEFAULT_MODEL_ID,
+        webSearchEnabled: false,
+      }));
+      return;
+    }
+    
+    // Switching to local model - check availability first
+    showToast({
+      type: 'info',
+      title: 'Checking Local Model',
+      message: 'Verifying Ollama server connection...',
+    });
+    
+    try {
+      const response = await fetch('/api/ollama/health', { cache: 'no-store' });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok || !payload?.success) {
+        throw new Error(payload?.error?.message ?? 'Unexpected response from Ollama health endpoint.');
+      }
+
+      const health = payload.data as { ok?: boolean; message?: string; status?: string } | undefined;
+
+      if (health?.ok) {
+        dispatch(updateSettings({
+          model: LOCAL_MODEL_ID,
+          webSearchEnabled: false,
+        }));
+        showToast({
+          type: 'success',
+          title: 'Local Model Ready',
+          message: health.message ?? 'Connected to Ollama successfully.',
+        });
+      } else {
+        const statusMessage = health?.message ?? 'Could not connect to Ollama. Please ensure the daemon is running and the model is installed.';
+        showToast({
+          type: 'error',
+          title: 'Local Model Unavailable',
+          message: statusMessage,
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to check Ollama availability', { component: 'ChatPageContent' }, error as Error);
+      showToast({
+        type: 'error',
+        title: 'Connection Error',
+        message: 'Failed to connect to Ollama server. Please check your local setup.',
+      });
+    }
+  };
+
   // Create the chat UI bridge for CBT components
   const chatUIBridge: ChatUIBridge = {
     addMessageToChat: async (message) => {
@@ -197,8 +261,10 @@ function ChatPageContent() {
         onDeleteSession={deleteSession}
         onToggleSmartModel={handleSmartModelToggle}
         onToggleWebSearch={handleWebSearchToggle}
+        onToggleLocalModel={handleLocalModelToggle}
         webSearchEnabled={settings.webSearchEnabled}
         smartModelActive={!settings.webSearchEnabled && settings.model === ANALYTICAL_MODEL_ID}
+        localModelActive={!settings.webSearchEnabled && settings.model === LOCAL_MODEL_ID}
         translate={t}
       />
 
@@ -217,6 +283,7 @@ function ChatPageContent() {
           onStopGenerating={stopGenerating}
           onOpenCBTDiary={openCBTDiary}
           onCreateObsessionsTable={() => { void handleCreateObsessionsTable(); }}
+          modelLabel={modelLabel}
         />
 
         {/* Messages */}

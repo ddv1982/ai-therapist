@@ -1,5 +1,8 @@
-export const DEFAULT_MODEL_ID = 'openai/gpt-oss-20b';
-export const ANALYTICAL_MODEL_ID = 'openai/gpt-oss-120b';
+import { MODEL_IDS } from '@/ai/model-metadata';
+
+export const DEFAULT_MODEL_ID = MODEL_IDS.default;
+export const ANALYTICAL_MODEL_ID = MODEL_IDS.analytical;
+export const LOCAL_MODEL_ID = MODEL_IDS.local;
 
 export const DEFAULT_CHAT_SETTINGS = {
   model: DEFAULT_MODEL_ID,

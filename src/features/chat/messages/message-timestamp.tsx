@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { supportsWebSearch, getModelDisplayName, languageModels, type ModelID } from '@/ai/providers';
+import { supportsWebSearch, getModelDisplayName, resolveModelIdentifier } from '@/ai/model-metadata';
 import { cn } from '@/lib/utils/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/ui/design-system/message';
 
@@ -25,10 +25,12 @@ export function MessageTimestamp({ timestamp, role, modelUsed, className }: Mess
   // Format model name for display using providers
   const formatModelName = (model?: string): string => {
     if (!model) return '';
-    const isModelID = (m: string): m is ModelID => Object.prototype.hasOwnProperty.call(languageModels, m);
-    const base = isModelID(model) ? getModelDisplayName(model) : model.replace(/^[^/]+\//, '').toUpperCase();
-    // Add hint for models with web search/deep analysis capability
-    return (isModelID(model) && supportsWebSearch(model)) ? `${base} (Deep Analysis)` : base;
+    const resolved = resolveModelIdentifier(model);
+    const base = resolved
+      ? getModelDisplayName(resolved)
+      : String(model).replace(/^[^/]+\//, '').toUpperCase();
+    const includeSuffix = resolved ? supportsWebSearch(resolved) : supportsWebSearch(model);
+    return includeSuffix ? `${base} (Deep Analysis)` : base;
   };
   
   return (

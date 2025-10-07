@@ -13,7 +13,7 @@ import type { Prisma } from '@prisma/client';
 import { generateFallbackAnalysis as generateFallbackAnalysisExternal } from '@/lib/reports/fallback-analysis';
 import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { createErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
-import { getModelDisplayName, supportsWebSearch, type ModelID } from '@/ai/providers';
+import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
 
 // Note: CognitiveDistortion interface removed - using types from report.ts instead
 
@@ -70,9 +70,8 @@ export const POST = withApiMiddleware(async (request: NextRequest, context) => {
     const reportModel = REPORT_MODEL_ID;
     
     const modelDisplay = (() => {
-      const id = reportModel as ModelID;
-      const base = getModelDisplayName(id) || reportModel;
-      return supportsWebSearch(id) ? `${base} (Deep Analysis)` : base;
+      const base = getModelDisplayName(reportModel) || reportModel;
+      return supportsWebSearch(reportModel) ? `${base} (Deep Analysis)` : base;
     })();
 
     logger.info('Report generation request received', {

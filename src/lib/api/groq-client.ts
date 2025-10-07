@@ -1,6 +1,7 @@
 import { generateText, streamText } from 'ai';
 import { groq } from "@ai-sdk/groq";
-import { languageModels, supportsWebSearch, type ModelID } from '@/ai/providers';
+import { languageModels, type ModelID } from '@/ai/providers';
+import { supportsWebSearch } from '@/ai/model-metadata';
 
 // Simplified message type for report generation (only needs role and content)
 export interface ReportMessage {

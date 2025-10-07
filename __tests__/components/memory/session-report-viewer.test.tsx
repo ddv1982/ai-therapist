@@ -88,13 +88,13 @@ describe('SessionReportViewer', () => {
 
       expect(screen.getByText('Key Therapeutic Insights')).toBeInTheDocument();
       // Check if insights are rendered as badge elements (they may be truncated at 40 chars)
-      const cbtInsights = screen.getAllByText((_, element) => {
-        return !!element?.textContent?.includes('Significant progress in CBT');
+      const cbtInsights = screen.getAllByText((content: string, element: Element | null) => {
+        return content.length > 0 && element?.textContent?.includes('Significant progress in CBT') === true;
       });
       expect(cbtInsights.length).toBeGreaterThan(0);
       
-      const thoughtInsights = screen.getAllByText((_, element) => {
-        return !!element?.textContent?.includes('Improved understanding of thought');
+      const thoughtInsights = screen.getAllByText((content: string, element: Element | null) => {
+        return content.length > 0 && element?.textContent?.includes('Improved understanding of thought') === true;
       });
       expect(thoughtInsights.length).toBeGreaterThan(0);
     });
@@ -134,14 +134,14 @@ describe('SessionReportViewer', () => {
       render(<SessionReportViewer reportDetail={longInsightReport} />);
 
       // Long insight should be truncated - check for truncated text with ellipsis
-      const truncatedInsights = screen.getAllByText((_, element) => {
-        return !!(element?.textContent?.includes('This is a very long therapeutic insight') && 
-               element?.textContent?.includes('...'));
+      const truncatedInsights = screen.getAllByText((content: string, element: Element | null) => {
+        const textContent = element?.textContent ?? content;
+        return textContent.includes('This is a very long therapeutic insight') && textContent.includes('...');
       });
       expect(truncatedInsights.length).toBeGreaterThan(0);
       // Short insight should not be truncated
-      const shortInsights = screen.getAllByText((_, element) => {
-        return element?.textContent === 'Short insight';
+      const shortInsights = screen.getAllByText((content: string, element: Element | null) => {
+        return (element?.textContent ?? content) === 'Short insight';
       });
       expect(shortInsights.length).toBeGreaterThan(0);
     });

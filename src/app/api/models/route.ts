@@ -1,6 +1,6 @@
 import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
-import { getModelDisplayName, supportsWebSearch, type ModelID } from '@/ai/providers';
+import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
 import { createSuccessResponse, createServerErrorResponse } from '@/lib/api/api-response';
 
 /**
@@ -28,7 +28,7 @@ interface ModelsResponse {
  */
 export const GET = withApiMiddleware(async (_request, context, _params) => {
   try {
-    const ids: ModelID[] = [DEFAULT_MODEL_ID as ModelID, ANALYTICAL_MODEL_ID as ModelID];
+    const ids = [DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID] as const;
     const availableModels: ModelInfo[] = ids.map((id) => ({
       id,
       name: supportsWebSearch(id) ? `${getModelDisplayName(id)} (Deep Analysis)` : getModelDisplayName(id),

@@ -130,11 +130,20 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
         const textContent = (message.parts ?? [])
           .reduce((acc, part) => acc + (part.type === 'text' ? (part.text ?? '') : ''), '');
         const trimmedContent = textContent.trim();
+        const metadataModelId = (() => {
+          const meta = message.metadata as { modelId?: unknown } | undefined;
+          if (meta && typeof meta.modelId === 'string' && meta.modelId.length > 0) {
+            return meta.modelId;
+          }
+          return undefined;
+        })();
+        const requestedModel = options?.webSearchEnabled ? ANALYTICAL_MODEL_ID : options?.model;
+        const actualModelId = metadataModelId ?? requestedModel;
 
         if (aiPlaceholderIdRef.current) {
           const placeholderId = aiPlaceholderIdRef.current;
           setMessages(prev => prev.map(m => (
-            m.id === placeholderId ? { ...m, content: textContent } : m
+            m.id === placeholderId ? { ...m, content: textContent, modelUsed: actualModelId } : m
           )));
         }
 
@@ -146,10 +155,10 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
             const items = (page?.items || []) as Array<{ role: string; content: string }>;
             const alreadySaved = items.some(it => it.role === 'assistant' && it.content === trimmedContent);
             if (!alreadySaved) {
-              await saveMessage(sid, 'assistant', trimmedContent, options?.webSearchEnabled ? ANALYTICAL_MODEL_ID : options?.model);
+              await saveMessage(sid, 'assistant', trimmedContent, actualModelId);
             }
           } catch {
-            await saveMessage(sid, 'assistant', trimmedContent, options?.webSearchEnabled ? ANALYTICAL_MODEL_ID : options?.model);
+            await saveMessage(sid, 'assistant', trimmedContent, actualModelId);
           }
           await loadMessages(sid);
           await loadSessions();

@@ -139,6 +139,7 @@ describe('/api/chat route', () => {
     } as Response);
     streamTextMock.mockReturnValue({
       toUIMessageStreamResponse: toUIMessageStreamResponseMock,
+      response: Promise.resolve({ modelId: 'mock-model-20b' }),
     });
   });
 
@@ -164,7 +165,12 @@ describe('/api/chat route', () => {
         ],
       }),
     );
-    expect(toUIMessageStreamResponseMock).toHaveBeenCalledWith({ onError: expect.any(Function) });
+    expect(toUIMessageStreamResponseMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        onError: expect.any(Function),
+        messageMetadata: expect.any(Function),
+      })
+    );
     expect((response as Response).status).toBe(200);
   });
 
@@ -215,6 +221,7 @@ describe('/api/chat route', () => {
         expect(handler && handler(new Error('stream failure'))).toBe('An error occurred.');
         return { status: 500, headers: new Headers() } as Response;
       }),
+      response: Promise.resolve({ modelId: 'mock-model-20b' }),
     });
 
     const request = createRequest({ messages: [{ id: '1', role: 'user', content: 'hello' }] });

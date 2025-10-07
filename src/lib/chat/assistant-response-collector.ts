@@ -10,15 +10,24 @@ type SessionOwnership = {
 export class AssistantResponseCollector {
   private buffer = '';
   private truncated = false;
+  private currentModelId: string;
 
   constructor(
     private readonly sessionId: string | undefined,
     private readonly ownership: SessionOwnership,
-    private readonly modelId: string,
+    modelId: string,
     private readonly requestId: string,
     private readonly maxChars: number,
     private readonly appendWithLimit: (current: string, addition: string, maxChars: number) => { value: string; truncated: boolean }
-  ) {}
+  ) {
+    this.currentModelId = modelId;
+  }
+
+  setModelId(modelId: string | undefined) {
+    if (typeof modelId === 'string' && modelId.length > 0) {
+      this.currentModelId = modelId;
+    }
+  }
 
   append(chunk: string): boolean {
     if (!chunk || this.truncated) return this.truncated;
@@ -41,7 +50,7 @@ export class AssistantResponseCollector {
           role: encrypted.role,
           content: encrypted.content,
           timestamp: encrypted.timestamp,
-          modelUsed: this.modelId,
+          modelUsed: this.currentModelId,
         },
       });
       try {
@@ -52,6 +61,7 @@ export class AssistantResponseCollector {
         apiEndpoint: '/api/chat',
         requestId: this.requestId,
         sessionId: this.sessionId,
+        modelId: this.currentModelId,
         truncated: this.truncated,
       });
     } catch (error) {
