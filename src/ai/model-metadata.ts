@@ -1,7 +1,7 @@
 export const MODEL_IDS = {
   default: 'openai/gpt-oss-20b',
   analytical: 'openai/gpt-oss-120b',
-  local: 'ollama/llama3.1:8b',
+  local: 'ollama/gemma3:4b',
 } as const;
 
 export type ModelIdentifier = typeof MODEL_IDS[keyof typeof MODEL_IDS];
@@ -24,7 +24,7 @@ const metadata: Record<ModelIdentifier, ModelMetadata> = {
     supportsWebSearch: true,
   },
   [MODEL_IDS.local]: {
-    displayName: 'Local Llama 3.1 8B',
+    displayName: 'Local Gemma 3 4B',
     description: 'Local, private incognito mode via Ollama',
     supportsWebSearch: false,
   },
@@ -43,18 +43,6 @@ const MODEL_ALIAS_MAP: Record<string, ModelIdentifier> = (() => {
     const suffix = suffixIndex >= 0 ? lower.slice(suffixIndex + 1) : lower;
     map[suffix] = key;
   }
-  // Manual aliases for common shorthand variations
-  map['llama3.1-8b'] = MODEL_IDS.local;
-  map['llama3-8b'] = MODEL_IDS.local;
-  map['llama3.1:8b'] = MODEL_IDS.local;
-  map['ollama/llama3.1-8b'] = MODEL_IDS.local;
-  map['ollama/llama3-8b'] = MODEL_IDS.local;
-  map['ollama/llama3.1:8b'] = MODEL_IDS.local;
-  // Legacy aliases for previous local models
-  map['gemma3:4b'] = MODEL_IDS.local;
-  map['gemma3-4b'] = MODEL_IDS.local;
-  map['ollama/gemma3-4b'] = MODEL_IDS.local;
-  map['ollama/gemma3:4b'] = MODEL_IDS.local;
   return map;
 })();
 

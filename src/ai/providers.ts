@@ -15,7 +15,7 @@ const ollamaBaseUrl = trimTrailingSlash(rawOllamaBaseUrl);
 const ollamaApiBaseUrl = ensureApiBase(ollamaBaseUrl);
 const ollamaChatUrl = `${ollamaApiBaseUrl}/chat`;
 const ollamaTagsUrl = `${ollamaApiBaseUrl}/tags`;
-const localModelName = process.env.OLLAMA_MODEL_ID || 'llama3.1:8b';
+const localModelName = process.env.OLLAMA_MODEL_ID || 'gemma3:4b';
 
 let localOllamaModel: LanguageModel | undefined;
 
