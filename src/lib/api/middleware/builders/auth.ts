@@ -12,6 +12,20 @@ import { setResponseHeaders, toRequestContext } from '@/lib/api/middleware/reque
 import { createAuthenticationErrorResponse, type ApiResponse } from '@/lib/api/api-response';
 import type { RequestContext, AuthenticatedRequestContext } from '@/lib/api/middleware/factory';
 
+function createFallbackUserInfo(req: NextRequest): ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> {
+  const ua = req.headers.get('user-agent') || '';
+  let deviceType = 'Device';
+  if (ua.includes('Mobile') || ua.includes('Android') || ua.includes('iPhone')) deviceType = 'Mobile';
+  else if (ua.includes('iPad') || ua.includes('Tablet')) deviceType = 'Tablet';
+  else if (ua.includes('Windows') || ua.includes('Mac') || ua.includes('Linux')) deviceType = 'Computer';
+  return {
+    userId: 'therapeutic-ai-user',
+    email: 'user@therapeutic-ai.local',
+    name: 'Therapeutic AI User',
+    currentDevice: deviceType,
+  };
+}
+
 export type WithApiMiddleware = <T = unknown>(
   handler: (
     request: NextRequest,
@@ -49,19 +63,6 @@ export function buildWithAuth(
         return unauthorized as NextResponse<ApiResponse<T>>;
       }
 
-      function createFallbackUserInfo(req: NextRequest): ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> {
-        const ua = req.headers.get('user-agent') || '';
-        let deviceType = 'Device';
-        if (ua.includes('Mobile') || ua.includes('Android') || ua.includes('iPhone')) deviceType = 'Mobile';
-        else if (ua.includes('iPad') || ua.includes('Tablet')) deviceType = 'Tablet';
-        else if (ua.includes('Windows') || ua.includes('Mac') || ua.includes('Linux')) deviceType = 'Computer';
-        return {
-          userId: 'therapeutic-ai-user',
-          email: 'user@therapeutic-ai.local',
-          name: 'Therapeutic AI User',
-          currentDevice: deviceType,
-        };
-      }
       let userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo>;
       try { userInfo = deps.getSingleUserInfo(request); } catch { userInfo = createFallbackUserInfo(request); }
       const authenticatedContext: AuthenticatedRequestContext = { ...(baseContext as RequestContext), userInfo } as AuthenticatedRequestContext;
@@ -107,7 +108,12 @@ export function buildWithAuthStreaming(
           setResponseHeaders(unauthorized, baseContext.requestId || 'unknown', durationMs);
           return unauthorized;
         }
-        const userInfo = deps.getSingleUserInfo(request);
+        let userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo>;
+        try {
+          userInfo = deps.getSingleUserInfo(request);
+        } catch {
+          userInfo = createFallbackUserInfo(request);
+        }
         const authenticatedContext: AuthenticatedRequestContext = {
           requestId: baseContext.requestId || 'unknown',
           method: baseContext.method,

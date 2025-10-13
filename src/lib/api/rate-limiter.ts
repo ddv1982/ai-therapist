@@ -47,14 +47,17 @@ class RedisRateLimiter {
       tx.pTTL(key);
       const execResult = await tx.exec();
       const count = Number(execResult?.[0] ?? 0);
-      const ttl = Number(execResult?.[1] ?? config.windowMs);
+      let ttl = Number(execResult?.[1]);
+      if (!Number.isFinite(ttl) || ttl <= 0) {
+        ttl = config.windowMs;
+      }
 
       if (count === 1) {
         await client.pExpire(key, config.windowMs);
       }
 
       if (count > config.maxAttempts) {
-        return { allowed: false, retryAfter: Math.ceil(ttl / 1000) };
+        return { allowed: false, retryAfter: Math.max(1, Math.ceil(ttl / 1000)) };
       }
 
       return { allowed: true };
@@ -172,34 +175,46 @@ class NetworkRateLimiter {
     if (!ip) {
       return false;
     }
-    
-    // Allow localhost and private network ranges for development
-    const exemptIPs = [
-      'localhost',
-      '127.0.0.1',
-      '::1',
-      'unknown',
-      '192.168.',
-      '10.0.',
-      '172.16.',
-      '172.17.',
-      '172.18.',
-      '172.19.',
-      '172.20.',
-      '172.21.',
-      '172.22.',
-      '172.23.',
-      '172.24.',
-      '172.25.',
-      '172.26.',
-      '172.27.',
-      '172.28.',
-      '172.29.',
-      '172.30.',
-      '172.31.'
-    ];
-    
-    return exemptIPs.some(exemptIP => ip.includes(exemptIP));
+    const normalized = ip.trim().toLowerCase();
+    if (!normalized) return false;
+
+    if (normalized === 'unknown') return true;
+
+    let candidate = normalized;
+    if (candidate.startsWith('[') && candidate.endsWith(']')) {
+      candidate = candidate.slice(1, -1);
+    }
+    if (candidate.includes('.') && candidate.includes(':')) {
+      candidate = candidate.split(':')[0];
+    }
+
+    if (candidate === 'localhost' || candidate === '127.0.0.1' || candidate === '::1' || candidate === '::ffff:127.0.0.1') {
+      return true;
+    }
+
+    if (candidate.startsWith('10.')) {
+      return true;
+    }
+
+    if (candidate.startsWith('192.168.')) {
+      return true;
+    }
+
+    if (candidate.startsWith('172.')) {
+      const parts = candidate.split('.');
+      if (parts.length >= 2) {
+        const second = Number(parts[1]);
+        if (Number.isInteger(second) && second >= 16 && second <= 31) {
+          return true;
+        }
+      }
+    }
+
+    if (candidate.startsWith('fc') || candidate.startsWith('fd')) {
+      return true; // IPv6 unique local addresses
+    }
+
+    return false;
   }
 
   /**

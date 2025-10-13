@@ -183,6 +183,7 @@ export function buildAuthAndRateLimit(
             const earlyTooMany = new Response('Too many concurrent requests. Please wait.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' } });
             const durationMs = Math.round(performance.now() - startHighRes);
             setResponseHeaders(earlyTooMany, baseContext.requestId || 'unknown', durationMs);
+            try { deps.recordEndpointError?.(baseContext.method, baseContext.url); } catch {}
             return earlyTooMany;
           }
         }
@@ -221,8 +222,12 @@ export function buildAuthAndRateLimit(
           if (!entry || now > entry.resetTime) {
             streamingCounters.set(clientIP, { count: 1, resetTime: now + windowMs });
           } else if (entry.count >= maxRequests) {
-            const retryAfter = Math.ceil((entry.resetTime - now) / 1000);
-            return new Response('Rate limit exceeded. Please try again later.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': String(Math.max(retryAfter, 1)) } });
+            const retryAfter = Math.max(1, Math.ceil((entry.resetTime - now) / 1000));
+            const streamingLimited = new Response('Rate limit exceeded. Please try again later.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': String(retryAfter) } });
+            const durationMs = Math.round(performance.now() - startHighRes);
+            setResponseHeaders(streamingLimited, baseContext.requestId || 'unknown', durationMs);
+            try { deps.recordEndpointError?.(baseContext.method, baseContext.url); } catch {}
+            return streamingLimited;
           } else {
             entry.count++;
           }
@@ -232,6 +237,7 @@ export function buildAuthAndRateLimit(
             const tooMany = new Response('Too many concurrent requests. Please wait.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' } });
             const durationMs = Math.round(performance.now() - startHighRes);
             setResponseHeaders(tooMany, baseContext.requestId || 'unknown', durationMs);
+            try { deps.recordEndpointError?.(baseContext.method, baseContext.url); } catch {}
             return tooMany;
           }
           inflightCounters.set(clientIP, { count: currentInflight + 1, lastUpdated: now });

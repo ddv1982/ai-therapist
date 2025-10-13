@@ -58,7 +58,7 @@ describe('ApiClient error branches', () => {
   it('returns null payload for successful non-JSON response', async () => {
     global.fetch = jest.fn(async (_input, init) => {
       const headers = init?.headers as Headers;
-      expect(headers.get('Content-Type')).toBe('application/json');
+      expect(headers.get('Content-Type')).toBeNull();
       expect(headers.get('X-Request-Id')).toBeTruthy();
       return {
         ok: true,

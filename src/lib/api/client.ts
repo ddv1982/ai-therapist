@@ -58,7 +58,9 @@ export class ApiClient {
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
     const headers = new Headers(init.headers || {});
-    if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+    const method = (init.method || 'GET').toUpperCase();
+    const hasBody = init.body !== undefined && init.body !== null;
+    if (hasBody && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
     if (!headers.has('X-Request-Id')) headers.set('X-Request-Id', this.generateRequestId());
 
     let res: Response;
@@ -80,20 +82,31 @@ export class ApiClient {
     // Auth is managed via DB-backed session cookie; no token refresh
     const contentType = getHeaderSafe(res, 'content-type') || '';
     const isJson = contentType.toLowerCase().includes('json');
-    let payload: unknown;
+    let payload: unknown = null;
     if (isJson) {
       payload = await parseJsonSafe(res);
+    } else if (res.status === 204 || res.status === 205 || method === 'HEAD') {
+      payload = null;
     } else {
-      const textFn = (res as { text?: () => Promise<string> }).text;
-      payload = typeof textFn === 'function' ? await textFn.call(res) : null;
+      payload = null;
     }
 
     if (!res.ok) {
-      const detail = isJson ? extractApiErrorDetails(payload) : (typeof payload === 'string' ? payload : undefined);
+      let detail: string | undefined;
+      if (isJson) {
+        detail = extractApiErrorDetails(payload);
+      } else {
+        const textFn = (res as { text?: () => Promise<string> }).text;
+        const text = typeof textFn === 'function' ? await textFn.call(res) : undefined;
+        detail = typeof text === 'string' && text.length > 0 ? text : undefined;
+      }
       const message = detail && detail.length > 0 ? detail : (res.statusText || 'Request failed');
       const error = new Error(message) as Error & { status?: number; body?: unknown };
       error.status = res.status;
-      if (payload !== undefined && payload !== null && payload !== '') {
+      const bodyForError = isJson ? payload : detail;
+      if (bodyForError !== undefined && bodyForError !== null && bodyForError !== '') {
+        error.body = bodyForError;
+      } else if (payload !== undefined && payload !== null && payload !== '') {
         error.body = payload;
       }
       throw error;
@@ -103,7 +116,7 @@ export class ApiClient {
       return null as unknown as T;
     }
 
-    return (payload as T);
+    return payload as T;
   }
 
   // Token refresh removed; DB-backed session cookie handles auth.
@@ -129,8 +142,8 @@ export class ApiClient {
     const qs = new URLSearchParams();
     if (params?.page) qs.set('page', String(params.page));
     if (params?.limit) qs.set('limit', String(params.limit));
-    const url = this.withBase(`/api/sessions/${sessionId}/messages${qs.toString() ? `?${qs.toString()}` : ''}`);
-    return this.request<ApiResponse<PaginatedResponse<components['schemas']['Message']>>>(url);
+    const path = `/api/sessions/${sessionId}/messages${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return this.request<ApiResponse<PaginatedResponse<components['schemas']['Message']>>>(path);
   }
 
   async postMessage(
