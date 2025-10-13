@@ -27,6 +27,7 @@ jest.mock('@/ai/providers', () => ({
 // Mock therapeutic prompts
 jest.mock('@/lib/therapy/therapy-prompts', () => ({
   getTherapeuticSystemPrompt: jest.fn().mockReturnValue('You are a compassionate AI therapist.'),
+  buildTherapySystemPrompt: jest.fn().mockReturnValue('You are a compassionate AI therapist.'),
 }));
 
 // Mock database

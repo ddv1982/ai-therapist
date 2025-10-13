@@ -34,6 +34,71 @@ describe('ApiClient error branches', () => {
     });
     await expect((client as unknown as { request: (p: string) => Promise<unknown> }).request('/y')).rejects.toThrow('No token');
   });
+
+  it('returns parsed JSON on success and preserves provided headers', async () => {
+    global.fetch = jest.fn(async (_input, init) => {
+      const headers = init?.headers as Headers;
+      expect(headers.get('Content-Type')).toBe('application/custom');
+      expect(headers.get('X-Request-Id')).toBe('provided-id');
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: (k: string) => (k.toLowerCase() === 'content-type' ? 'application/json' : null) },
+        json: async () => ({ success: true }),
+      } as unknown as Response;
+    });
+
+    const result = await (client as unknown as { request: (p: string, init?: RequestInit) => Promise<unknown> }).request('/z', {
+      headers: new Headers({ 'Content-Type': 'application/custom', 'X-Request-Id': 'provided-id' }),
+    });
+
+    expect(result).toEqual({ success: true });
+  });
+
+  it('returns null payload for successful non-JSON response', async () => {
+    global.fetch = jest.fn(async (_input, init) => {
+      const headers = init?.headers as Headers;
+      expect(headers.get('Content-Type')).toBe('application/json');
+      expect(headers.get('X-Request-Id')).toBeTruthy();
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: (k: string) => (k.toLowerCase() === 'content-type' ? 'text/plain' : null) },
+        text: async () => 'plain-ok',
+      } as unknown as Response;
+    });
+
+    const result = await (client as unknown as { request: (p: string) => Promise<unknown> }).request('/text');
+    expect(result).toBeNull();
+  });
+
+  it('handles invalid JSON payloads gracefully on success response', async () => {
+    global.fetch = jest.fn(async () => {
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: (k: string) => (k.toLowerCase() === 'content-type' ? 'application/json' : null) },
+        json: async () => { throw new Error('bad json'); },
+      } as unknown as Response;
+    });
+
+    const result = await (client as unknown as { request: (p: string) => Promise<unknown> }).request('/invalid-json');
+    expect(result).toBeNull();
+  });
+
+  it('falls back when headers object lacks get method', async () => {
+    global.fetch = jest.fn(async () => {
+      return {
+        ok: true,
+        status: 200,
+        headers: {},
+        text: async () => 'no headers',
+      } as unknown as Response;
+    });
+
+    const result = await (client as unknown as { request: (p: string) => Promise<unknown> }).request('/no-headers');
+    expect(result).toBeNull();
+  });
 });
 
 

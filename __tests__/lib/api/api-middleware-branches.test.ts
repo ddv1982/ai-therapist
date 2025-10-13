@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { createApiMiddleware } from '@/lib/api/api-middleware';
+import type { ApiMiddlewareDeps } from '@/lib/api/middleware/factory';
 
 jest.mock('@/lib/api/api-auth', () => ({
   validateApiAuth: jest.fn(async () => ({ isValid: true })),
@@ -15,6 +16,15 @@ jest.mock('@/lib/auth/user-session', () => ({
 
 // Use global NextRequest/NextResponse mock from jest.setup.js
 const { NextRequest, NextResponse } = jest.requireMock('next/server');
+
+const setNodeEnv = (value?: string) => {
+  const env = process.env as Record<string, string | undefined>;
+  if (value === undefined) {
+    delete env.NODE_ENV;
+  } else {
+    env.NODE_ENV = value;
+  }
+};
 
 let errorHandlers: any;
 let apiMwModule: any;
@@ -246,9 +256,9 @@ it('withAuthAndRateLimit returns 429 when API limiter denies', async () => {
 
 it('withAuthAndRateLimitStreaming returns 429 on concurrency limit', async () => {
   stubRequestContext();
-  const originalEnv = process.env.NODE_ENV as unknown as string | undefined;
+  const originalEnv = process.env.NODE_ENV;
   const originalConc = process.env.CHAT_MAX_CONCURRENCY;
-  (process.env as Record<string, string>).NODE_ENV = 'production';
+  setNodeEnv('production');
   process.env.CHAT_MAX_CONCURRENCY = '0';
   apiMwModule.__setApiMiddlewareDepsForTests?.({
     validateApiAuth: async () => ({ isValid: true }),
@@ -260,16 +270,88 @@ it('withAuthAndRateLimitStreaming returns 429 on concurrency limit', async () =>
   const req = new NextRequest('http://localhost:4000/stream', { method: 'GET', headers: { 'user-agent': 'jest', host: 'localhost:4000', 'x-forwarded-for': '1.1.1.1' } });
   const res = await wrappedStream(req as any, { params: Promise.resolve({}) } as any);
   expect(res.status).toBe(429);
-  if (originalEnv === undefined) {
-    delete (process.env as Record<string, string>).NODE_ENV;
-  } else {
-    (process.env as Record<string, string>).NODE_ENV = originalEnv;
-  }
+  setNodeEnv(originalEnv);
   if (originalConc === undefined) {
     delete process.env.CHAT_MAX_CONCURRENCY;
   } else {
     process.env.CHAT_MAX_CONCURRENCY = originalConc;
   }
+});
+
+it('does not rebuild overrides when test-only setter is invoked outside test env', () => {
+  const originalEnv = process.env.NODE_ENV;
+  setNodeEnv('production');
+
+  jest.resetModules();
+  jest.isolateModules(() => {
+    const factorySpy = jest.fn(() => ({
+      withApiMiddleware: jest.fn((h) => h),
+      withAuth: jest.fn((h) => h),
+      withValidation: jest.fn(() => jest.fn()),
+      withValidationAndParams: jest.fn(() => jest.fn()),
+      withRateLimitUnauthenticated: jest.fn((h) => h),
+      withAuthAndRateLimit: jest.fn((h) => h),
+      withAuthStreaming: jest.fn((h) => h),
+      withAuthAndRateLimitStreaming: jest.fn((h) => h),
+    }));
+
+    jest.doMock('@/lib/api/middleware/factory', () => ({
+      createApiMiddleware: factorySpy,
+    }));
+
+    const apiMiddlewareModule = require('@/lib/api/api-middleware');
+    expect(factorySpy).toHaveBeenCalledTimes(1);
+    apiMiddlewareModule.__setCreateRequestLoggerForTests(() => ({ requestId: 'noop' }));
+    expect(factorySpy).toHaveBeenCalledTimes(1);
+  });
+
+  setNodeEnv(originalEnv);
+});
+
+it('rebuilds overrides with supplied dependencies in test env', () => {
+  const originalEnv = process.env.NODE_ENV;
+  setNodeEnv('test');
+
+  jest.resetModules();
+  jest.isolateModules(() => {
+    const factorySpy = jest.fn(() => ({
+      withApiMiddleware: jest.fn((h) => h),
+      withAuth: jest.fn((h) => h),
+      withValidation: jest.fn(() => jest.fn()),
+      withValidationAndParams: jest.fn(() => jest.fn()),
+      withRateLimitUnauthenticated: jest.fn((h) => h),
+      withAuthAndRateLimit: jest.fn((h) => h),
+      withAuthStreaming: jest.fn((h) => h),
+      withAuthAndRateLimitStreaming: jest.fn((h) => h),
+    }));
+
+    jest.doMock('@/lib/api/middleware/factory', () => ({
+      createApiMiddleware: factorySpy,
+    }));
+
+    const apiMiddlewareModule = require('@/lib/api/api-middleware');
+    expect(factorySpy).toHaveBeenCalledTimes(1);
+
+    const validateApiAuth = jest.fn(async () => ({ isValid: true }));
+    const getRateLimiter = jest.fn(() => ({ checkRateLimit: jest.fn(async () => ({ allowed: true })) }));
+    const getSingleUserInfo = jest.fn(() => ({
+      userId: 'tester',
+      email: 'tester@example.test',
+      name: 'Test User',
+      currentDevice: 'Computer',
+    }));
+
+    apiMiddlewareModule.__setApiMiddlewareDepsForTests({ validateApiAuth, getRateLimiter, getSingleUserInfo });
+
+    expect(factorySpy).toHaveBeenCalledTimes(2);
+    expect(factorySpy.mock.calls[1]).toBeDefined();
+    const [overrides] = factorySpy.mock.calls[1] as unknown as [ApiMiddlewareDeps];
+    expect(overrides.validateApiAuth).toBe(validateApiAuth);
+    expect(overrides.getRateLimiter).toBe(getRateLimiter);
+    expect(overrides.getSingleUserInfo).toBe(getSingleUserInfo);
+  });
+
+  setNodeEnv(originalEnv);
 });
 });
 

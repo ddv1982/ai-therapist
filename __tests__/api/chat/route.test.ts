@@ -4,6 +4,8 @@ const browserSearchFactoryMock = jest.fn((options?: unknown) => {
   return { tool: 'browser-search', options };
 });
 
+const buildTherapySystemPromptMock = jest.fn(() => 'Mock therapeutic system prompt');
+
 jest.mock('@ai-sdk/groq', () => ({
   groq: {
     tools: {
@@ -41,6 +43,9 @@ jest.mock('ai', () => ({
 
 jest.mock('@/lib/therapy/therapy-prompts', () => ({
   THERAPY_SYSTEM_PROMPT: 'Mock therapeutic system prompt',
+  buildTherapySystemPrompt: buildTherapySystemPromptMock,
+  buildMemoryEnhancedPrompt: buildTherapySystemPromptMock,
+  REPORT_GENERATION_PROMPT: 'Mock report prompt',
 }));
 
 const verifySessionOwnershipMock = jest.fn();
@@ -112,6 +117,12 @@ jest.mock('@/i18n/request', () => ({
   getApiRequestLocale: () => 'en',
 }));
 
+const getApiRequestLocaleMock = jest.fn((_request?: unknown) => 'en');
+
+jest.mock('@/i18n/request', () => ({
+  getApiRequestLocale: (request?: unknown) => getApiRequestLocaleMock(request),
+}));
+
 const { POST } = require('@/app/api/chat/route') as {
   POST: typeof import('@/app/api/chat/route').POST;
 };
@@ -128,6 +139,8 @@ function createRequest(body: unknown): NextRequest {
 describe('/api/chat route', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    getApiRequestLocaleMock.mockReturnValue('en');
+    buildTherapySystemPromptMock.mockReturnValue('Mock therapeutic system prompt');
     browserSearchFactoryMock.mockImplementation(
       (options?: unknown) => ({ tool: 'browser-search', options }),
     );
@@ -158,13 +171,16 @@ describe('/api/chat route', () => {
     expect(streamTextMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'mock-model-20b',
-        system: expect.stringContaining('Mock therapeutic system prompt'),
         messages: [
           { id: '1', role: 'user', content: 'Hello' },
           { id: '2', role: 'assistant', content: 'Hi!' },
         ],
       }),
     );
+
+    const systemPrompt = (streamTextMock.mock.calls[0]?.[0] as { system: string }).system;
+    expect(systemPrompt).toContain('LANGUAGE POLICY');
+    expect(systemPrompt).toContain('Mock therapeutic system prompt');
     expect(toUIMessageStreamResponseMock).toHaveBeenCalledWith(
       expect.objectContaining({
         onError: expect.any(Function),
@@ -231,5 +247,19 @@ describe('/api/chat route', () => {
     expect(response).toBeDefined();
     expect(response?.status).toBe(500);
     expect(loggerApiErrorMock).not.toHaveBeenCalled();
+  });
+
+  it('injects Dutch language directive for nl locale', async () => {
+    getApiRequestLocaleMock.mockReturnValue('nl');
+
+    const request = createRequest({
+      messages: [{ id: '1', role: 'user', content: 'Hallo' }],
+    });
+
+    await POST(request, { params: Promise.resolve({}) });
+
+    const dutchSystemPrompt = (streamTextMock.mock.calls[0]?.[0] as { system: string }).system;
+    expect(dutchSystemPrompt).toContain('TAALBELEID');
+    expect(dutchSystemPrompt).toContain('Mock therapeutic system prompt');
   });
 });
