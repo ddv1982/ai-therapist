@@ -115,8 +115,58 @@ export async function persistFromClonedStream(
   collector: { append: (chunk: string) => boolean; persist: () => Promise<void>; wasTruncated: () => boolean }
 ): Promise<void> {
   try {
-    const clone = (response as { clone?: () => Response }).clone?.() ?? response;
-    const text = await (clone as { text?: () => Promise<string> }).text?.();
+    const maybeClone = (response as { clone?: () => Response }).clone?.();
+    const stream = maybeClone?.body;
+
+    if (stream) {
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      const processBuffer = () => {
+        let newlineIndex = buffer.indexOf('\n');
+        while (newlineIndex !== -1) {
+          const line = buffer.slice(0, newlineIndex).trim();
+          buffer = buffer.slice(newlineIndex + 1);
+          if (!line.startsWith('data:')) {
+            newlineIndex = buffer.indexOf('\n');
+            continue;
+          }
+          try {
+            const payload = JSON.parse(line.slice(5).trim()) as StreamPayload;
+            if (collector.append(extractChunk(payload))) {
+              return true;
+            }
+          } catch {
+            // ignore parse errors
+          }
+          if (collector.wasTruncated()) {
+            return true;
+          }
+          newlineIndex = buffer.indexOf('\n');
+        }
+        return false;
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        if (processBuffer()) break;
+      }
+
+      buffer += decoder.decode();
+      if (buffer.length > 0) {
+        processBuffer();
+      }
+
+      await collector.persist();
+      await reader.cancel().catch(() => undefined);
+      return;
+    }
+
+    const fallbackTarget = maybeClone ?? response;
+    const text = await (fallbackTarget as { text?: () => Promise<string> }).text?.();
     if (typeof text !== 'string') return;
 
     for (const rawLine of text.split('\n')) {
@@ -136,5 +186,3 @@ export async function persistFromClonedStream(
     // ignore
   }
 }
-
-

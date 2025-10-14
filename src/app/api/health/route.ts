@@ -25,9 +25,12 @@ interface HealthCheckResponse {
     degraded: number;
     unhealthy: number;
   };
-  performance: {
-    deduplication: ReturnType<typeof getDeduplicationStats>;
-    circuitBreaker: ReturnType<typeof getCircuitBreakerStatus>;
+  details: {
+    deduplication: {
+      activeRequests: number;
+      totalKeys: number;
+    };
+    circuitBreaker: ReturnType<typeof getCircuitBreakerStatus>['summary'];
   };
 }
 
@@ -38,24 +41,14 @@ async function checkDatabaseHealthExtended(): Promise<HealthCheck> {
   const start = Date.now();
   try {
     const dbHealth = await checkDatabaseHealth();
-    
-    // Additional checks for tables and data
-    const userCount = await prisma.user.count();
-    const sessionCount = await prisma.session.count();
-    const authConfigCount = await prisma.authConfig.count();
-    
     const responseTime = Date.now() - start;
-    
+
     return {
       service: 'database',
-      status: dbHealth.healthy && responseTime < 1000 ? 'healthy' : 'degraded',
+      status: dbHealth.healthy ? 'healthy' : 'unhealthy',
       responseTime,
       details: {
         connection: dbHealth.healthy ? 'connected' : 'failed',
-        userCount,
-        sessionCount,
-        authConfigured: authConfigCount > 0,
-        queryTime: `${responseTime}ms`,
         message: dbHealth.message
       }
     };
@@ -75,19 +68,19 @@ async function checkDatabaseHealthExtended(): Promise<HealthCheck> {
 async function checkAuthentication(): Promise<HealthCheck> {
   const start = Date.now();
   try {
-    const configCount = await prisma.authConfig.count();
-    const deviceCount = await prisma.trustedDevice.count();
-    const sessionCount = await prisma.authSession.count();
-    
+    const [config, session] = await Promise.all([
+      prisma.authConfig.findFirst({ select: { id: true } }),
+      prisma.authSession.findFirst({ select: { id: true } }),
+    ]);
+
     return {
       service: 'authentication',
-      status: 'healthy',
+      status: config ? 'healthy' : 'degraded',
       responseTime: Date.now() - start,
       details: {
-        totpConfigured: configCount > 0,
-        trustedDevices: deviceCount,
-        activeSessions: sessionCount,
-        setupRequired: configCount === 0
+        totpConfigured: Boolean(config),
+        activeSessionPresent: Boolean(session),
+        setupRequired: !config
       }
     };
   } catch (error) {
@@ -113,7 +106,7 @@ async function checkEncryption(): Promise<HealthCheck> {
         service: 'encryption',
         status: 'unhealthy',
         responseTime: Date.now() - start,
-        error: 'ENCRYPTION_KEY environment variable not set'
+        error: 'Encryption key not configured'
       };
     }
 
@@ -126,7 +119,6 @@ async function checkEncryption(): Promise<HealthCheck> {
       responseTime: Date.now() - start,
       details: {
         keyConfigured: true,
-        keyLength: keyLength >= 32 ? 'adequate' : 'too_short',
         recommendation: !hasValidKeyLength ? 'Use a 32+ character encryption key' : undefined
       }
     };
@@ -153,7 +145,7 @@ async function checkAIService(): Promise<HealthCheck> {
         service: 'ai-service',
         status: 'unhealthy',
         responseTime: Date.now() - start,
-        error: 'GROQ_API_KEY environment variable not set'
+        error: 'Primary AI provider not configured'
       };
     }
 
@@ -162,9 +154,7 @@ async function checkAIService(): Promise<HealthCheck> {
       status: 'healthy',
       responseTime: Date.now() - start,
       details: {
-        provider: 'groq',
-        keyConfigured: true,
-        note: 'API key present (full connectivity requires actual API call)'
+        providerConfigured: true
       }
     };
   } catch (error) {
@@ -184,23 +174,19 @@ function checkSystemMetrics(): HealthCheck {
   const start = Date.now();
   try {
     const memoryUsage = process.memoryUsage();
-    const heapUsedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
-    const heapTotalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
-    const heapUtilization = (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100;
-    
-    // Consider degraded if heap utilization > 80% or heap > 512MB
-    const status = (heapUtilization > 80 || heapTotalMB > 512) ? 'degraded' : 'healthy';
-    
+    const heapUtilization = memoryUsage.heapTotal > 0
+      ? (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100
+      : 0;
+
+    const status = heapUtilization > 80 ? 'degraded' : 'healthy';
+
     return {
       service: 'system-metrics',
       status,
       responseTime: Date.now() - start,
       details: {
-        uptime: `${Math.floor(process.uptime())} seconds`,
-        heapUsed: `${heapUsedMB}MB`,
-        heapTotal: `${heapTotalMB}MB`,
-        heapUtilization: `${Math.round(heapUtilization)}%`,
-        rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`
+        uptimeSeconds: Math.floor(process.uptime()),
+        heapUtilization: Math.round(heapUtilization)
       }
     };
   } catch (error) {
@@ -254,9 +240,12 @@ export const GET = withRateLimitUnauthenticated(async (_request, context) => {
         degraded: degradedCounts,
         unhealthy: unhealthyCounts
       },
-      performance: {
-        deduplication: deduplicationStats,
-        circuitBreaker: circuitBreakerStatus
+      details: {
+        deduplication: {
+          activeRequests: deduplicationStats.activeRequests,
+          totalKeys: deduplicationStats.totalKeys,
+        },
+        circuitBreaker: circuitBreakerStatus.summary,
       }
     };
     
@@ -270,15 +259,7 @@ export const GET = withRateLimitUnauthenticated(async (_request, context) => {
     
     // Return appropriate status based on health
     if (overallStatus === 'unhealthy') {
-      return createErrorResponse(
-        'System health check failed',
-        503,
-        {
-          code: 'HEALTH_CHECK_FAILED',
-          details: `${unhealthyCounts} services unhealthy, ${degradedCounts} degraded`,
-          requestId: context.requestId,
-        }
-      );
+      return createErrorResponse('System health check failed', 503, { requestId: context.requestId });
     } else {
       return createSuccessResponse(healthResponse, { requestId: context.requestId });
     }

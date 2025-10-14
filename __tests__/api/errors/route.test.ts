@@ -25,10 +25,20 @@ function createReq(method: 'GET' | 'POST', body?: any): NextRequest {
 // Partially mock API middleware to pass-through with a minimal context
 jest.mock('@/lib/api/api-middleware', () => {
   const actual = jest.requireActual('@/lib/api/api-middleware');
+  const buildContext = () => ({
+    requestId: 'test-request-id',
+    userInfo: { userId: 'test-user' },
+  });
+
   return {
     ...actual,
     withApiMiddleware: (handler: any) => async (req: any, routeParams?: any) => {
       const ctx = { requestId: 'test-request-id' };
+      const params = routeParams?.params ?? Promise.resolve({});
+      return handler(req, ctx, params);
+    },
+    withAuthAndRateLimit: (handler: any) => async (req: any, routeParams?: any) => {
+      const ctx = buildContext();
       const params = routeParams?.params ?? Promise.resolve({});
       return handler(req, ctx, params);
     },
