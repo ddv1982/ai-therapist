@@ -32,6 +32,7 @@ function ChatPageContent() {
   const dispatch = useAppDispatch();
   const settings = useAppSelector(selectChatSettings);
   const t = useTranslations('chat');
+  const toastT = useTranslations('toast');
 
   const effectiveModelId = settings.webSearchEnabled ? ANALYTICAL_MODEL_ID : settings.model;
   const modelLabel = useMemo(() => {
@@ -116,27 +117,27 @@ function ChatPageContent() {
         },
       });
     } catch (error) {
-      showToast({ type: 'error', title: 'Save failed', message: 'Could not add your data to the chat. Please try again.' });
+      showToast({ type: 'error', title: toastT('saveFailedTitle'), message: toastT('saveFailedBody') });
       logger.error('Failed to save obsessions and compulsions data', { component: 'ChatPageContent' }, error as Error);
     }
-  }, [currentSession, addMessageToChat, showToast]);
+  }, [currentSession, addMessageToChat, showToast, toastT]);
 
   const handleCreateObsessionsTable = useCallback(async () => {
     const result = await createObsessionsCompulsionsTable();
     if (!result.success) {
       showToast({
         type: 'error',
-        title: 'Could not create tracker',
-        message: result.error ?? 'Please try again.',
+        title: toastT('trackerCreateFailedTitle'),
+        message: result.error ?? toastT('generalRetry'),
       });
       return;
     }
     showToast({
       type: 'success',
-      title: 'Tracker added',
-      message: 'You can begin logging obsessions and compulsions now.',
+      title: toastT('trackerCreateSuccessTitle'),
+      message: toastT('trackerCreateSuccessBody'),
     });
-  }, [createObsessionsCompulsionsTable, showToast]);
+  }, [createObsessionsCompulsionsTable, showToast, toastT]);
 
   const handleWebSearchToggle = () => {
     const newWebSearchEnabled = !settings.webSearchEnabled;
@@ -172,8 +173,8 @@ function ChatPageContent() {
     // Switching to local model - check availability first
     showToast({
       type: 'info',
-      title: 'Checking Local Model',
-      message: 'Verifying Ollama server connection...',
+      title: toastT('checkingLocalModelTitle'),
+      message: toastT('checkingLocalModelBody'),
     });
     
     try {
@@ -193,14 +194,14 @@ function ChatPageContent() {
         }));
         showToast({
           type: 'success',
-          title: 'Local Model Ready',
-          message: health.message ?? 'Connected to Ollama successfully.',
+          title: toastT('localModelReadyTitle'),
+          message: health.message ?? toastT('localModelReadyBody'),
         });
       } else {
-        const statusMessage = health?.message ?? 'Could not connect to Ollama. Please ensure the daemon is running and the model is installed.';
+        const statusMessage = health?.message ?? toastT('localModelUnavailableBody');
         showToast({
           type: 'error',
-          title: 'Local Model Unavailable',
+          title: toastT('localModelUnavailableTitle'),
           message: statusMessage,
         });
       }
@@ -208,8 +209,8 @@ function ChatPageContent() {
       logger.error('Failed to check Ollama availability', { component: 'ChatPageContent' }, error as Error);
       showToast({
         type: 'error',
-        title: 'Connection Error',
-        message: 'Failed to connect to Ollama server. Please check your local setup.',
+        title: toastT('connectionErrorTitle'),
+        message: toastT('connectionErrorBody'),
       });
     }
   };

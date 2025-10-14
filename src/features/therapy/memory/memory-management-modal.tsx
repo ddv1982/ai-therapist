@@ -34,6 +34,7 @@ import {
 } from '@/lib/chat/memory-utils';
 import { logger } from '@/lib/utils/logger';
 import { SessionReportDetailModal } from './session-report-detail-modal';
+import { useTranslations } from 'next-intl';
 
 interface MemoryManagementModalProps {
   open: boolean;
@@ -49,6 +50,7 @@ export function MemoryManagementModal({
   onMemoryUpdated 
 }: MemoryManagementModalProps) {
   const { showToast } = useToast();
+  const t = useTranslations('toast');
   const [memoryData, setMemoryData] = useState<MemoryManagementResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedReports, setSelectedReports] = useState<Set<string>>(new Set());
@@ -81,14 +83,14 @@ export function MemoryManagementModal({
         currentSessionId
       }, error as Error);
       showToast({
-        title: 'Error',
-        message: 'Failed to load memory data',
+        title: t('memoryLoadErrorTitle'),
+        message: t('memoryLoadErrorBody'),
         type: 'error',
       });
     } finally {
       setIsLoading(false);
     }
-  }, [open, currentSessionId, showToast]);
+  }, [open, currentSessionId, showToast, t]);
 
   useEffect(() => {
     loadMemoryData();
@@ -130,8 +132,8 @@ export function MemoryManagementModal({
         
         // Show success toast after modal closes
         showToast({
-          title: 'Memory Deleted',
-          message: result.message,
+          title: t('memoryDeleteSuccessTitle'),
+          message: result.message ?? t('memoryDeleteSuccessBody'),
           type: 'success',
         });
         
@@ -144,8 +146,8 @@ export function MemoryManagementModal({
         setMemoryData(null);
       } else {
         showToast({
-          title: 'Deletion Failed',
-          message: result.message,
+          title: t('memoryDeleteFailedTitle'),
+          message: result.message ?? t('memoryDeleteFailedBody'),
           type: 'error',
         });
       }
@@ -158,8 +160,8 @@ export function MemoryManagementModal({
         selectedCount: selectedReports.size
       }, error as Error);
       showToast({
-        title: 'Error',
-        message: 'Failed to delete memory',
+        title: t('memoryDeleteErrorTitle'),
+        message: t('memoryDeleteErrorBody'),
         type: 'error',
       });
     } finally {

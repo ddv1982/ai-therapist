@@ -35,6 +35,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
+import { useTranslations } from 'next-intl';
 
 type SchemaModeLike = SchemaMode | SchemaModeData;
 
@@ -317,6 +318,7 @@ function VirtualizedMessageListComponent({
   sessionId,
 }: VirtualizedMessageListProps) {
   const { showToast } = useSafeToast();
+  const t = useTranslations('toast');
   // For conversations with many messages, only render the most recent ones to improve performance
   const visibleMessages = useMemo(() => {
     if (messages.length <= maxVisible) {
@@ -347,7 +349,11 @@ function VirtualizedMessageListComponent({
 
   const handleDismissObsessionsFlow = useCallback(async (messageId: string) => {
     if (!sessionId || !onUpdateMessageMetadata) {
-      showToast({ type: 'error', title: 'Unable to hide tracker', message: 'No active session selected.' });
+      showToast({
+        type: 'error',
+        title: t('hideTrackerUnavailableTitle'),
+        message: t('hideTrackerUnavailableBody'),
+      });
       return;
     }
 
@@ -359,17 +365,17 @@ function VirtualizedMessageListComponent({
     if (!result.success) {
       showToast({
         type: 'error',
-        title: 'Could not hide tracker',
-        message: result.error ?? 'Please try again.',
+        title: t('hideTrackerFailedTitle'),
+        message: result.error ?? t('generalRetry'),
       });
       return;
     }
     showToast({
       type: 'info',
-      title: 'Tracker removed',
-      message: 'You can create a new tracker from the sidebar when needed.',
+      title: t('hideTrackerSuccessTitle'),
+      message: t('hideTrackerSuccessBody'),
     });
-  }, [sessionId, onUpdateMessageMetadata, showToast]);
+  }, [sessionId, onUpdateMessageMetadata, showToast, t]);
 
   // Function to render CBT components based on step
   const renderCBTComponent = (message: MessageData) => {

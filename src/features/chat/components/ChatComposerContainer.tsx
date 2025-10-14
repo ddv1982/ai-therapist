@@ -5,6 +5,7 @@ import { ChatComposer } from './chat-composer';
 import { useSendMessageMutation } from '@/store/slices/chatApi';
 import { useToast } from '@/components/ui/toast';
 import { logger } from '@/lib/utils/logger';
+import { useTranslations } from 'next-intl';
 
 interface ChatComposerContainerProps {
   sessionId: string;
@@ -17,6 +18,7 @@ export function ChatComposerContainer({ sessionId, isMobile }: ChatComposerConta
   const inputContainerRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { showToast } = useToast();
+  const t = useTranslations('toast');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,7 +32,7 @@ export function ChatComposerContainer({ sessionId, isMobile }: ChatComposerConta
       }).unwrap();
       setInput('');
     } catch (err) {
-      showToast({ type: 'error', title: 'Send failed', message: 'Could not send your message. Please try again.' });
+      showToast({ type: 'error', title: t('sendFailedTitle'), message: t('sendFailedBody') });
       logger.error('Failed to send message', { component: 'ChatComposerContainer', sessionId }, err as Error);
     }
   };

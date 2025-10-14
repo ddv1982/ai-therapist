@@ -5,6 +5,7 @@ import { apiClient } from '@/lib/api/client';
 import { generateUUID } from '@/lib/utils/utils';
 import { logger } from '@/lib/utils/logger';
 import { useToast } from '@/components/ui/toast';
+import { useTranslations } from 'next-intl';
 
 interface UseSendMessageParams {
   ensureActiveSession: () => Promise<string>;
@@ -18,6 +19,7 @@ interface UseSendMessageParams {
 export function useSendMessage(params: UseSendMessageParams) {
   const { ensureActiveSession, setMessages, setInput, setIsLoading, startStream, textareaRef } = params;
   const { showToast } = useToast();
+  const t = useTranslations('toast');
 
   const sendMessage = useCallback(async (text: string) => {
     setIsLoading(true);
@@ -47,12 +49,17 @@ export function useSendMessage(params: UseSendMessageParams) {
         component: 'useSendMessage',
         sessionId,
       }, error instanceof Error ? error : new Error(String(error)));
+
+      setMessages((prev) => prev.filter((message) => message.id !== userMessage.id));
       showToast({
         type: 'error',
-        title: 'Message not saved',
-        message: 'We couldn\'t save your message to the session. It will disappear if you reload.',
+        title: t('messageNotSavedTitle'),
+        message: t('messageNotSavedBody'),
         duration: 6000,
       });
+      setIsLoading(false);
+      setTimeout(() => textareaRef.current?.focus(), 50);
+      return;
     }
 
     const aiPlaceholder: MessageData = {
@@ -67,12 +74,19 @@ export function useSendMessage(params: UseSendMessageParams) {
       await startStream({ sessionId, placeholderId: aiPlaceholder.id, userMessage: text });
     } catch (error) {
       setIsLoading(false);
+      setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
       // remove placeholder on failure
       setMessages((prev) => prev.filter((m) => m.id !== aiPlaceholder.id));
       setTimeout(() => textareaRef.current?.focus(), 50);
+      showToast({
+        type: 'error',
+        title: t('messageNotSentTitle'),
+        message: t('messageNotSentBody'),
+        duration: 6000,
+      });
       throw error;
     }
-  }, [ensureActiveSession, setMessages, setInput, setIsLoading, startStream, textareaRef, showToast]);
+  }, [ensureActiveSession, setMessages, setInput, setIsLoading, startStream, textareaRef, showToast, t]);
 
   return { sendMessage } as const;
 }

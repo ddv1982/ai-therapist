@@ -33,6 +33,7 @@ function CBTDiaryPageContent() {
   const dispatch = useAppDispatch();
   const { showToast } = useToast();
   const t = useTranslations('cbt');
+  const toastT = useTranslations('toast');
   const { selectSession } = useSelectSession();
   
   // Get session ID from Redux
@@ -92,17 +93,17 @@ function CBTDiaryPageContent() {
       draftActions.reset();
       showToast({
         type: 'success',
-        title: 'Draft Deleted',
-        message: 'Your previous CBT draft has been removed.'
+        title: toastT('draftDeletedTitle'),
+        message: toastT('draftDeletedBody')
       });
     } catch {
       showToast({
         type: 'error',
-        title: 'Unable to delete draft',
-        message: 'Please try again.'
+        title: toastT('draftDeleteFailedTitle'),
+        message: toastT('draftDeleteFailedBody')
       });
     }
-  }, [draftActions, savedDrafts, showToast]);
+  }, [draftActions, savedDrafts, showToast, toastT]);
 
   // Mobile detection
   useEffect(() => {
@@ -125,8 +126,8 @@ function CBTDiaryPageContent() {
     
     showToast({
       type: 'success',
-      title: 'Draft Resumed',
-      message: 'Continuing your previous CBT session'
+      title: toastT('draftResumedTitle'),
+      message: toastT('draftResumedBody')
     });
     
     logger.info('Resumed CBT draft', {
@@ -134,7 +135,7 @@ function CBTDiaryPageContent() {
       operation: 'handleResumeDraft',
       sessionId: reduxSessionId || undefined
     });
-  }, [startCBTFlow, showToast, reduxSessionId]);
+  }, [startCBTFlow, showToast, reduxSessionId, toastT]);
 
   // Start fresh CBT session (clearing any existing draft)
   const handleStartFresh = useCallback(async () => {
@@ -143,10 +144,10 @@ function CBTDiaryPageContent() {
 
     showToast({
       type: 'info',
-      title: 'New Session Started',
-      message: 'Previous draft cleared, starting fresh'
+      title: toastT('newSessionStartedTitle'),
+      message: toastT('newSessionStartedBody')
     });
-  }, [draftActions, showToast]);
+  }, [draftActions, showToast, toastT]);
 
   // Start CBT session when user clicks start button
   const handleStartCBT = useCallback(async () => {
@@ -165,8 +166,8 @@ function CBTDiaryPageContent() {
     if (!hasStarted || !isCBTActive) {
       showToast({
         type: 'warning',
-        title: 'No CBT Session',
-        message: 'Please start and complete some CBT steps first.'
+        title: toastT('noCbtSessionTitle'),
+        message: toastT('noCbtSessionBody')
       });
       return;
     }
@@ -205,8 +206,8 @@ function CBTDiaryPageContent() {
       // Show success
       showToast({
         type: 'success',
-        title: 'CBT Session Analyzed & Sent',
-        message: 'Your CBT session and therapeutic analysis have been added to your chat!'
+        title: toastT('cbtSentTitle'),
+        message: toastT('cbtSentBody')
       });
       
       // Redirect back to root, chat will load current session
@@ -222,14 +223,14 @@ function CBTDiaryPageContent() {
       }, error instanceof Error ? error : new Error(String(error)));
       showToast({
         type: 'error',
-        title: 'Failed to Send',
-        message: 'There was an error analyzing and sending your session. Please try again.'
+        title: toastT('cbtSendFailedTitle'),
+        message: toastT('cbtSendFailedBody')
       });
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
     }
-  }, [hasStarted, isCBTActive, isLoading, isStreaming, cbtFlowState, messages, router, showToast, draftActions, reduxSessionId, dispatch, t, selectSession]);
+  }, [hasStarted, isCBTActive, isLoading, isStreaming, cbtFlowState, messages, router, showToast, draftActions, reduxSessionId, dispatch, t, selectSession, toastT]);
 
   return (
     <div className={cn("h-screen bg-background flex flex-col", isMobile && "cbt-compact")} style={{ height: '100dvh' }}>

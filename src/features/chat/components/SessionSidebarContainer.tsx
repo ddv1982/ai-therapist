@@ -13,6 +13,7 @@ import { setCurrentSession as setCurrentSessionAction } from '@/store/slices/ses
 import { useToast } from '@/components/ui/toast';
 import { logger } from '@/lib/utils/logger';
 import { useSelectSession } from '@/hooks';
+import { useTranslations } from 'next-intl';
 
 export function SessionSidebarContainer({
   isMobile,
@@ -37,6 +38,7 @@ export function SessionSidebarContainer({
   const currentSessionId = useAppSelector(state => state.sessions.currentSessionId);
   const { selectSession } = useSelectSession();
   const { showToast } = useToast();
+  const t = useTranslations('toast');
 
   // Hydrate from server on mount
   useEffect(() => {
@@ -66,7 +68,7 @@ export function SessionSidebarContainer({
         } catch {}
       }
     } catch (err) {
-      showToast({ type: 'error', title: 'Delete failed', message: 'Could not delete the session. Please try again.' });
+      showToast({ type: 'error', title: t('deleteSessionFailedTitle'), message: t('deleteSessionFailedBody') });
       logger.error('Failed to delete session', { component: 'SessionSidebarContainer', sessionId }, err as Error);
     }
   };

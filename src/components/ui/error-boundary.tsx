@@ -1,19 +1,29 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/utils/logger';
 import { ToastContext, ToastContextType } from '@/components/ui/toast';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
-interface Props {
+interface ToastMessages {
+  issueReportedTitle: string;
+  issueReportedBody: string;
+  issueReportFailedTitle: string;
+  issueReportFailedBody: string;
+  reportIssueButtonLabel: string;
+}
+
+interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
   showErrorDetails?: boolean;
   resetKeys?: Array<string | number>;
   resetOnPropsChange?: boolean;
+  toastMessages?: Partial<ToastMessages>;
 }
 
 interface State {
@@ -23,11 +33,19 @@ interface State {
   errorId: string;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+const defaultToastMessages: ToastMessages = {
+  issueReportedTitle: 'Issue reported',
+  issueReportedBody: 'Thanks for letting us know—our team will take a look.',
+  issueReportFailedTitle: 'Unable to report issue',
+  issueReportFailedBody: 'We could not send the error report. Please try again later.',
+  reportIssueButtonLabel: 'Report this issue',
+};
+
+export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
   static contextType = ToastContext;
   private resetTimeoutId: number | null = null;
 
-  constructor(props: Props) {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
 
     this.state = {
@@ -69,7 +87,7 @@ export class ErrorBoundary extends Component<Props, State> {
     // Example: Sentry, LogRocket, etc.
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps: ErrorBoundaryProps) {
     const { resetKeys, resetOnPropsChange } = this.props;
     const { hasError } = this.state;
 
@@ -108,6 +126,7 @@ export class ErrorBoundary extends Component<Props, State> {
   handleReportError = () => {
     const { error, errorInfo, errorId } = this.state;
     const toastContext = this.context as ToastContextType | null;
+    const messages = { ...defaultToastMessages, ...this.props.toastMessages };
 
     logger.error('Error report generated for user feedback', {
       component: 'ErrorBoundary',
@@ -158,10 +177,8 @@ export class ErrorBoundary extends Component<Props, State> {
       if (toastContext) {
         toastContext.showToast({
           type: sent ? 'success' : 'error',
-          title: sent ? 'Issue reported' : 'Unable to report issue',
-          message: sent
-            ? 'Thanks for letting us know—our team will take a look.'
-            : 'We could not send the error report. Please try again later.',
+          title: sent ? messages.issueReportedTitle : messages.issueReportFailedTitle,
+          message: sent ? messages.issueReportedBody : messages.issueReportFailedBody,
           duration: 6000,
         });
       }
@@ -172,7 +189,8 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     const { hasError, error, errorInfo } = this.state;
-    const { children, fallback, showErrorDetails = false } = this.props;
+    const { children, fallback, showErrorDetails = false, toastMessages } = this.props;
+    const messages = { ...defaultToastMessages, ...toastMessages };
 
     if (hasError) {
       // Use custom fallback if provided
@@ -252,7 +270,7 @@ export class ErrorBoundary extends Component<Props, State> {
                     onClick={this.handleReportError}
                     className="mt-2"
                   >
-                    Copy Error Details
+                    {messages.reportIssueButtonLabel}
                   </Button>
                 </div>
               </details>
@@ -271,12 +289,27 @@ export class ErrorBoundary extends Component<Props, State> {
 }
 
 // Higher-order component wrapper for easier usage
+type PublicErrorBoundaryProps = ErrorBoundaryProps;
+
+export function ErrorBoundary(props: PublicErrorBoundaryProps) {
+  const t = useTranslations('toast');
+  const translations: ToastMessages = {
+    issueReportedTitle: t('issueReportedTitle'),
+    issueReportedBody: t('issueReportedBody'),
+    issueReportFailedTitle: t('issueReportFailedTitle'),
+    issueReportFailedBody: t('issueReportFailedBody'),
+    reportIssueButtonLabel: t('reportIssueButton'),
+  };
+  const mergedMessages = { ...translations, ...props.toastMessages };
+  return <ErrorBoundaryBase {...props} toastMessages={mergedMessages} />;
+}
+
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<Props, 'children'>
+  errorBoundaryProps?: Omit<PublicErrorBoundaryProps, 'children'>
 ) {
   const WrappedComponent = (props: P) => (
-    <ErrorBoundary {...errorBoundaryProps}>
+    <ErrorBoundary {...(errorBoundaryProps ?? {})}>
       <Component {...props} />
     </ErrorBoundary>
   );
