@@ -36,11 +36,11 @@ describe('Message Component', () => {
     expect(screen.getByText(/Hello, this is a test message with bold text\./)).toBeInTheDocument();
   });
 
-  it('displays timestamp correctly', () => {
+  it('does not render inline timestamp metadata', () => {
     render(<Message message={mockMessage} />, { wrapper: TestWrapper });
     
-    // Timestamp will show based on local timezone, so just check it's there
-    expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument();
+    // Inline timestamps were removed from chat bubbles to avoid duplication
+    expect(screen.queryByText(/\d{1,2}:\d{2}/)).not.toBeInTheDocument();
   });
 
   it('renders assistant avatar for assistant messages', () => {
@@ -76,7 +76,7 @@ describe('Message Component', () => {
     const emptyMessage = { ...mockMessage, content: '' };
     render(<Message message={emptyMessage} />, { wrapper: TestWrapper });
     
-    // Should not crash and should render a timestamp
-    expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument();
+    // Should not crash even when no timestamp is rendered inline
+    expect(screen.queryByText(/\d{1,2}:\d{2}/)).not.toBeInTheDocument();
   });
 });

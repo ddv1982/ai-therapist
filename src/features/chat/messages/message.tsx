@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/ui/design-system/message';
 import { MessageAvatar } from './message-avatar';
 import { MessageContent } from './message-content';
-import { MessageTimestamp } from './message-timestamp';
 import { MessageActions } from './message-actions';
 
 interface MessageData {
@@ -60,13 +59,6 @@ function MessageComponent({
           messageId={message.id}
         />
         
-        {/* Timestamp */}
-        <MessageTimestamp 
-          timestamp={message.timestamp}
-          role={message.role}
-          modelUsed={message.modelUsed}
-        />
-
         {/* Message Actions (CBT Export) */}
         <MessageActions
           messageId={message.id}

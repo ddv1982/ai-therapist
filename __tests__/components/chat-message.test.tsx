@@ -53,8 +53,6 @@ describe('ChatMessage Component', () => {
     renderWithRedux(<Message message={mockMessage} />)
     
     expect(screen.getByText('Hello, how can I manage stress?')).toBeInTheDocument()
-    // The timestamp will be formatted based on local timezone, so we'll look for the time pattern
-    expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument()
   })
 
   it('renders assistant message correctly', () => {
@@ -147,32 +145,28 @@ describe('ChatMessage Component', () => {
     }
 
     renderWithRedux(<Message message={emptyMessage} />)
-    
-    // Component should still render without crashing - check for timestamp pattern
-    expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument()
   })
 
-  it('formats timestamp correctly', () => {
+  it('does not render inline timestamps', () => {
     const morningMessage = {
       ...mockMessage,
       timestamp: new Date('2024-01-01T09:30:00Z')
     }
-    
+
     const eveningMessage = {
       ...mockMessage,
+      role: 'assistant' as const,
       timestamp: new Date('2024-01-01T21:45:00Z')
     }
 
     const { rerender } = renderWithRedux(<Message message={morningMessage} />)
-    // Check that timestamp is rendered in correct format (will be local timezone)
-    expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument()
+    expect(screen.queryByText(/\d{1,2}:\d{2}/)).not.toBeInTheDocument()
 
     rerender(<TestWrapper><Message message={eveningMessage} /></TestWrapper>)
-    // Check that a different timestamp is rendered 
-    expect(screen.getByText(/\d{1,2}:\d{2}/)).toBeInTheDocument()
+    expect(screen.queryByText(/\d{1,2}:\d{2}/)).not.toBeInTheDocument()
   })
 
-  it('displays model name for assistant messages', () => {
+  it('does not duplicate model name for assistant messages', () => {
     const assistantMessage = {
       ...mockMessage,
       role: 'assistant' as const,
@@ -182,11 +176,11 @@ describe('ChatMessage Component', () => {
 
     renderWithRedux(<Message message={assistantMessage} />)
     
-    // Check that model name is displayed for assistant messages
-    expect(screen.getByText(/GPT OSS 20B/)).toBeInTheDocument()
+    // Model name should not appear within the message timestamp row anymore
+    expect(screen.queryByText(/GPT OSS 20B/)).not.toBeInTheDocument()
   })
 
-  it('displays enhanced model name for larger models', () => {
+  it('omits enhanced model name suffix in assistant messages', () => {
     const assistantMessage = {
       ...mockMessage,
       role: 'assistant' as const,
@@ -196,8 +190,8 @@ describe('ChatMessage Component', () => {
 
     renderWithRedux(<Message message={assistantMessage} />)
     
-    // Check that enhanced model name is displayed for larger models
-    expect(screen.getByText(/GPT OSS 120B \(Deep Analysis\)/)).toBeInTheDocument()
+    // Enhanced suffix should no longer be rendered beneath the chat message
+    expect(screen.queryByText(/GPT OSS 120B \(Deep Analysis\)/)).not.toBeInTheDocument()
   })
 
   it('does not display model name for user messages', () => {

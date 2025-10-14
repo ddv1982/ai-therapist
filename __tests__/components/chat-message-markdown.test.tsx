@@ -161,14 +161,14 @@ describe('ChatMessage Lightweight Rendering', () => {
     expect(screen.queryByTestId('user-icon')).not.toBeInTheDocument();
   });
 
-  it('should format timestamp correctly', () => {
+  it('should omit inline timestamp metadata', () => {
     render(
       <TestWrapper>
         <Message message={mockMessage} />
       </TestWrapper>
     );
     
-    // Check that a timestamp is displayed (may vary based on timezone)
-    expect(screen.getByText(/\d{2}:\d{2}/)).toBeInTheDocument();
+    // Timestamp below bubble has been removed to avoid duplication
+    expect(screen.queryByText(/\d{2}:\d{2}/)).not.toBeInTheDocument();
   });
 });
