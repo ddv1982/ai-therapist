@@ -14,5 +14,3 @@ describe('store hooks/selectors (export coverage)', () => {
     expect(res).toHaveProperty('model');
   });
 });
-
-

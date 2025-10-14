@@ -11,14 +11,14 @@ export const selectCurrentSession = (state: RootState) => {
   return currentId ? { id: currentId } : null;
 };
 
+export const selectCurrentCBTDraft = (state: RootState) => state.cbt?.currentDraft;
+
+export const selectCBTValidationErrors = (state: RootState) => state.cbt?.validationErrors || {};
+
 export const selectChatMessages = (state: RootState): unknown[] => {
   const chatState = state.chat as { messages?: Record<string, unknown> } | undefined;
   return chatState?.messages ? Object.values(chatState.messages) : [];
 };
-
-export const selectCurrentCBTDraft = (state: RootState) => state.cbt?.currentDraft;
-
-export const selectCBTValidationErrors = (state: RootState) => state.cbt?.validationErrors || {};
 
 export const selectIsStreaming = (state: RootState) => state.chat?.isStreaming || false;
 

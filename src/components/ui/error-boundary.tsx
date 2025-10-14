@@ -4,6 +4,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/utils/logger';
+import { ToastContext, ToastContextType } from '@/components/ui/toast';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
 interface Props {
@@ -23,6 +24,7 @@ interface State {
 }
 
 export class ErrorBoundary extends Component<Props, State> {
+  static contextType = ToastContext;
   private resetTimeoutId: number | null = null;
 
   constructor(props: Props) {
@@ -105,17 +107,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   handleReportError = () => {
     const { error, errorInfo, errorId } = this.state;
-    
-    // In a real app, you'd send this to your error reporting service
-    const errorReport = {
-      errorId,
-      message: error?.message,
-      stack: error?.stack,
-      componentStack: errorInfo?.componentStack,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    };
+    const toastContext = this.context as ToastContextType | null;
 
     logger.error('Error report generated for user feedback', {
       component: 'ErrorBoundary',
@@ -124,10 +116,58 @@ export class ErrorBoundary extends Component<Props, State> {
       url: window.location.href,
       userAgent: navigator.userAgent
     });
-    
-    // Copy to clipboard for easy reporting
-    navigator.clipboard?.writeText(JSON.stringify(errorReport, null, 2));
-    alert('Error details copied to clipboard. Please share with support if this issue persists.');
+
+    const jsonPayload = JSON.stringify({
+      error: {
+        message: error?.message,
+        name: error?.name,
+        stack: error?.stack?.slice(0, 2000),
+      },
+      context: {
+        errorId,
+        componentStack: errorInfo?.componentStack,
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+      },
+    });
+
+    const sendErrorReport = async () => {
+      let sent = false;
+      try {
+        if (navigator.sendBeacon) {
+          const blob = new Blob([jsonPayload], { type: 'application/json' });
+          sent = navigator.sendBeacon('/api/errors', blob);
+        }
+        if (!sent) {
+          await fetch('/api/errors', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: jsonPayload,
+            credentials: 'include',
+          });
+          sent = true;
+        }
+      } catch (err) {
+        logger.error('Failed to report error via ErrorBoundary', {
+          component: 'ErrorBoundary',
+          operation: 'handleReportError',
+          errorId,
+        }, err instanceof Error ? err : new Error(String(err)));
+      }
+
+      if (toastContext) {
+        toastContext.showToast({
+          type: sent ? 'success' : 'error',
+          title: sent ? 'Issue reported' : 'Unable to report issue',
+          message: sent
+            ? 'Thanks for letting us know—our team will take a look.'
+            : 'We could not send the error report. Please try again later.',
+          duration: 6000,
+        });
+      }
+    };
+
+    void sendErrorReport();
   };
 
   render() {

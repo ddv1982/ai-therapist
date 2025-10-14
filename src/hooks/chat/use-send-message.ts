@@ -3,6 +3,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { MessageData } from '@/features/chat/messages/message';
 import { apiClient } from '@/lib/api/client';
 import { generateUUID } from '@/lib/utils/utils';
+import { logger } from '@/lib/utils/logger';
+import { useToast } from '@/components/ui/toast';
 
 interface UseSendMessageParams {
   ensureActiveSession: () => Promise<string>;
@@ -15,6 +17,7 @@ interface UseSendMessageParams {
 
 export function useSendMessage(params: UseSendMessageParams) {
   const { ensureActiveSession, setMessages, setInput, setIsLoading, startStream, textareaRef } = params;
+  const { showToast } = useToast();
 
   const sendMessage = useCallback(async (text: string) => {
     setIsLoading(true);
@@ -39,8 +42,17 @@ export function useSendMessage(params: UseSendMessageParams) {
 
     try {
       await apiClient.postMessage(sessionId, { role: 'user', content: text });
-    } catch {
-      // Non-fatal: keep optimistic UI
+    } catch (error) {
+      logger.error('Failed to persist user chat message', {
+        component: 'useSendMessage',
+        sessionId,
+      }, error instanceof Error ? error : new Error(String(error)));
+      showToast({
+        type: 'error',
+        title: 'Message not saved',
+        message: 'We couldn\'t save your message to the session. It will disappear if you reload.',
+        duration: 6000,
+      });
     }
 
     const aiPlaceholder: MessageData = {
@@ -60,7 +72,7 @@ export function useSendMessage(params: UseSendMessageParams) {
       setTimeout(() => textareaRef.current?.focus(), 50);
       throw error;
     }
-  }, [ensureActiveSession, setMessages, setInput, setIsLoading, startStream, textareaRef]);
+  }, [ensureActiveSession, setMessages, setInput, setIsLoading, startStream, textareaRef, showToast]);
 
   return { sendMessage } as const;
 }

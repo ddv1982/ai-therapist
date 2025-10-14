@@ -13,13 +13,13 @@ export interface Toast {
   duration?: number;
 }
 
-interface ToastContextType {
+export interface ToastContextType {
   toasts: Toast[];
   showToast: (toast: Omit<Toast, 'id'>) => void;
   removeToast: (id: string) => void;
 }
 
-const ToastContext = createContext<ToastContextType | null>(null);
+export const ToastContext = createContext<ToastContextType | null>(null);
 
 export function useToast() {
   const context = useContext(ToastContext);

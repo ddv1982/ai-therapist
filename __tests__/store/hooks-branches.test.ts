@@ -46,5 +46,3 @@ describe('store/hooks selector branches', () => {
     expect(safe.model).toBe(DEFAULT_MODEL_ID);
   });
 });
-
-
