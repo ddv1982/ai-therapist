@@ -534,8 +534,8 @@ export class CacheHealthMonitor {
   private static async getCacheTypeHealth(type: string) {
     try {
       const pattern = `${type}:*`;
-      const keys = await cache.invalidatePattern(pattern, {}, { prefix: 'therapist' });
-      return { available: true, keyCount: keys };
+      const keyCount = await cache.countPattern(pattern, {}, { prefix: 'therapist' });
+      return { available: true, keyCount };
     } catch (error) {
       return { available: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
