@@ -382,6 +382,46 @@ class CacheManager {
   }
 
   /**
+   * Count keys matching a pattern without mutating the cache
+   */
+  async countPattern(
+    pattern: string,
+    options: CacheKeyOptions = {},
+    cacheOptions: CacheOptions = {}
+  ): Promise<number> {
+    const searchPattern = this.generateKey(pattern, options, cacheOptions.prefix);
+
+    try {
+      const result = await redisManager.executeCommand(
+        async (client) => {
+          let cursor = 0;
+          let totalCount = 0;
+          do {
+            const scanResult = await client.scan(String(cursor), {
+              MATCH: searchPattern,
+              COUNT: 100,
+            });
+            cursor = Number(scanResult.cursor);
+            const keys: string[] = scanResult.keys;
+            totalCount += keys.length;
+          } while (cursor !== 0);
+          return totalCount;
+        },
+        0
+      );
+
+      return result ?? 0;
+    } catch (error) {
+      logger.error('Cache pattern count failed', {
+        operation: 'cache_count_pattern',
+        pattern: searchPattern,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      return 0;
+    }
+  }
+
+  /**
    * Clear all cache for a namespace
    */
   async clearNamespace(prefix: string): Promise<number> {
@@ -482,6 +522,9 @@ export const cache = {
   
   invalidatePattern: (pattern: string, options?: CacheKeyOptions, cacheOptions?: CacheOptions) => 
     cacheManager.invalidatePattern(pattern, options, cacheOptions),
+  
+  countPattern: (pattern: string, options?: CacheKeyOptions, cacheOptions?: CacheOptions) => 
+    cacheManager.countPattern(pattern, options, cacheOptions),
   
   clearNamespace: (prefix: string) => cacheManager.clearNamespace(prefix),
   

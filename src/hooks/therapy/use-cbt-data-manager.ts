@@ -354,6 +354,10 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       clearTimeout(autoSaveTimeout.current);
     }
     
+    const effectiveDelay = typeof autoSaveDelay === 'number' && autoSaveDelay > 0
+      ? autoSaveDelay
+      : 600;
+
     autoSaveTimeout.current = setTimeout(() => {
       if (data?.situation) {
         flowUpdate('situation', {
@@ -367,9 +371,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         const emotions = asEmotionData(data.initialEmotions);
         flowUpdate('emotions', emotions);
       }
-    }, options.autoSaveDelay || 600);
+    }, effectiveDelay);
 
-  }, [flowUpdate, options.autoSaveDelay]);
+  }, [flowUpdate, autoSaveDelay]);
 
   useEffect(() => {
     return () => {

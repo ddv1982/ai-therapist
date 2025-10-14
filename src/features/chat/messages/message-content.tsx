@@ -28,7 +28,7 @@ function detectCBTSessionReport(content: string): boolean {
   ];
   
   return cbtIndicators.some(pattern => 
-    new RegExp(pattern, 'i').test(content)
+    new RegExp(pattern, 'is').test(content)
   );
 }
 
