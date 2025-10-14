@@ -4,9 +4,8 @@ import { useCallback } from 'react';
 import type { MessageData } from '@/features/chat/messages/message';
 import { useChatMessages } from './use-chat-messages';
 import { useScrollToBottom } from './use-scroll-to-bottom';
-import { apiClient } from '@/lib/api/client';
 import { logger } from '@/lib/utils/logger';
-import { generateUUID } from '@/lib/utils/utils';
+import { apiClient } from '@/lib/api/client';
 import { useTranslations } from 'next-intl';
 import { useChatTransport } from '@/hooks/use-chat-transport';
 import { useMemoryContext } from '@/hooks/use-memory-context';
@@ -18,6 +17,7 @@ import type { UiSession } from '@/lib/chat/session-mapper';
 import type { MemoryContextInfo } from '@/lib/chat/memory-utils';
 import { useChatUiState } from '@/hooks/chat/use-chat-ui-state';
 import { useChatStreaming } from '@/hooks/chat/use-chat-streaming';
+import { useSendMessage } from '@/hooks/chat/use-send-message';
 
 type Message = MessageData;
 
@@ -118,24 +118,6 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     respectUserScroll: true,
   });
 
-  const saveMessage = useCallback(async (
-    sessionId: string,
-    role: 'user' | 'assistant',
-    content: string,
-    modelUsed?: string,
-    metadata?: Record<string, unknown>
-  ) => {
-    try {
-      await apiClient.postMessage(sessionId, { role, content, modelUsed, metadata });
-    } catch (error) {
-      logger.error('Failed to persist chat message', {
-        component: 'useChatController',
-        sessionId,
-        role,
-      }, error instanceof Error ? error : new Error(String(error)));
-    }
-  }, []);
-
   const transport = useChatTransport({ sessionId: currentSession });
 
   const { startStream, stopStream } = useChatStreaming({
@@ -143,10 +125,17 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     transport,
     options,
     setMessages,
-    loadMessages,
     loadSessions,
     setIsLoading,
-    saveMessage,
+  });
+
+  const { sendMessage } = useSendMessage({
+    ensureActiveSession,
+    setMessages,
+    setInput,
+    setIsLoading,
+    startStream,
+    textareaRef,
   });
 
   const setCurrentSessionAndSync = useCallback(async (sessionId: string) => {
@@ -160,63 +149,15 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     })();
   }, [resetSessionState, textareaRef]);
 
-  const sendMessage = useCallback(async () => {
-    if (!input.trim() || isLoading) return;
-    setIsLoading(true);
-
-    let sessionId: string;
+  const sendMessageHandler = useCallback(async () => {
+    const messageText = input;
+    if (!messageText.trim() || isLoading) return;
     try {
-      sessionId = await ensureActiveSession();
+      await sendMessage(messageText);
     } catch (error) {
-      setIsLoading(false);
-      logger.error('Error ensuring session before send', { component: 'useChatController' }, error instanceof Error ? error : new Error(String(error)));
-      return;
+      logger.error('Error sending message to AI', { component: 'useChatController' }, error instanceof Error ? error : new Error(String(error)));
     }
-
-    const userMessage: Message = {
-      id: generateUUID(),
-      role: 'user',
-      content: input,
-      timestamp: new Date(),
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    await saveMessage(sessionId, 'user', userMessage.content);
-
-    const aiMessage: Message = {
-      id: generateUUID(),
-      role: 'assistant',
-      content: '',
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, aiMessage]);
-
-    try {
-      await startStream({
-        sessionId,
-        placeholderId: aiMessage.id,
-        userMessage: userMessage.content,
-      });
-    } catch (error) {
-      setIsLoading(false);
-      logger.error('Error sending message to AI', {
-        component: 'useChatController',
-        sessionId,
-        model: options?.model,
-      }, error instanceof Error ? error : new Error(String(error)));
-    }
-  }, [
-    input,
-    isLoading,
-    ensureActiveSession,
-    setMessages,
-    setInput,
-    saveMessage,
-    startStream,
-    options?.model,
-    setIsLoading,
-  ]);
+  }, [input, isLoading, sendMessage]);
 
   const stopGenerating = useCallback(() => {
     stopStream();
@@ -248,14 +189,14 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
         };
         setMessages(prev => [...prev, reportMessage]);
         try {
-          await saveMessage(currentSession, 'assistant', reportMessage.content, REPORT_MODEL_ID);
+          await apiClient.postMessage(currentSession, { role: 'assistant', content: reportMessage.content, modelUsed: REPORT_MODEL_ID });
           await loadSessions();
         } catch {}
       }
     } finally {
       setIsGeneratingReport(false);
     }
-  }, [currentSession, messages, setMessages, saveMessage, loadSessions, setIsGeneratingReport]);
+  }, [currentSession, messages, setMessages, loadSessions, setIsGeneratingReport]);
 
   const createObsessionsCompulsionsTable = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     let sessionId: string;
@@ -317,7 +258,7 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     isNearBottom,
     scrollToBottom,
     setInput,
-    sendMessage,
+    sendMessage: sendMessageHandler,
     stopGenerating,
     startNewSession,
     deleteSession,

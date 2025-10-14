@@ -199,7 +199,7 @@ function checkSystemMetrics(): HealthCheck {
   }
 }
 
-export const GET = withRateLimitUnauthenticated(async (_request, context) => {
+export const GET = withRateLimitUnauthenticated(async (request, context) => {
   try {
     logger.debug('Comprehensive health check requested', { requestId: context.requestId });
     
@@ -261,7 +261,24 @@ export const GET = withRateLimitUnauthenticated(async (_request, context) => {
     if (overallStatus === 'unhealthy') {
       return createErrorResponse('System health check failed', 503, { requestId: context.requestId });
     } else {
-      return createSuccessResponse(healthResponse, { requestId: context.requestId });
+      // Support compact vs verbose modes
+      let url: URL | null = null;
+      try { url = new URL(request.url); } catch {}
+      const verbose = url?.searchParams.get('verbose') === '1';
+
+      if (verbose) {
+        return createSuccessResponse(healthResponse, { requestId: context.requestId });
+      }
+
+      const minimal = {
+        status: healthResponse.status,
+        timestamp: healthResponse.timestamp,
+        version: healthResponse.version,
+        uptime: healthResponse.uptime,
+        summary: healthResponse.summary,
+        details: healthResponse.details,
+      };
+      return createSuccessResponse(minimal, { requestId: context.requestId });
     }
     
   } catch (error) {

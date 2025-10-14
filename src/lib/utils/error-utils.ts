@@ -56,83 +56,47 @@ export interface ErrorLogEntry {
  */
 export const ErrorMetrics = {
   recordError: (
-    category: ErrorCategory,
-    severity: ErrorSeverity,
-    operation: string,
-    additionalData?: Record<string, unknown>
+    _category: ErrorCategory,
+    _severity: ErrorSeverity,
+    _operation: string,
+    _additionalData?: Record<string, unknown>
   ) => {
+    // Intentionally minimal to avoid memory growth; logging already handled elsewhere
     if (process.env.NODE_ENV === 'development') {
-      logger.debug('Error metric recorded', {
-        category,
-        severity,
-        operation,
-        additionalData,
-        metricType: 'errorTracking'
-      });
+      logger.debug('Error metric recorded', { metricType: 'errorTracking' });
     }
-    // In-memory counters (kept small and process-local)
-    try {
-      totalErrorCount++;
-      errorsByCategory[category] = (errorsByCategory[category] || 0) + 1;
-      errorsBySeverity[severity] = (errorsBySeverity[severity] || 0) + 1;
-      if (operation) {
-        errorsByOperation.set(operation, (errorsByOperation.get(operation) || 0) + 1);
-        // Cap map size to prevent unbounded growth (FIFO style)
-        const MAX_OP_ENTRIES = 200;
-        if (errorsByOperation.size > MAX_OP_ENTRIES) {
-          const firstKey = errorsByOperation.keys().next().value as string | undefined;
-          if (firstKey) errorsByOperation.delete(firstKey);
-        }
-      }
-    } catch {}
   },
-  
   getErrorStats: () => {
     return {
-      totalErrors: totalErrorCount,
-      errorsByCategory: { ...errorsByCategory },
-      errorsBySeverity: { ...errorsBySeverity },
-      errorsByOperation: Object.fromEntries(errorsByOperation.entries()),
-    } as {
-      totalErrors: number;
-      errorsByCategory: Record<ErrorCategory, number>;
-      errorsBySeverity: Record<ErrorSeverity, number>;
-      errorsByOperation: Record<string, number>;
+      totalErrors: 0,
+      errorsByCategory: {
+        authentication: 0,
+        validation: 0,
+        database: 0,
+        external_api: 0,
+        permission: 0,
+        business_logic: 0,
+        system: 0,
+      } as Record<ErrorCategory, number>,
+      errorsBySeverity: {
+        low: 0,
+        medium: 0,
+        high: 0,
+        critical: 0,
+      } as Record<ErrorSeverity, number>,
+      errorsByOperation: {},
     };
   },
 };
 
-// Local counters used by ErrorMetrics
-const errorsByOperation: Map<string, number> = new Map();
-let totalErrorCount = 0;
-const errorsByCategory = {
-  authentication: 0,
-  validation: 0,
-  database: 0,
-  external_api: 0,
-  permission: 0,
-  business_logic: 0,
-  system: 0,
-} as Record<ErrorCategory, number>;
-
-const errorsBySeverity = {
-  low: 0,
-  medium: 0,
-  high: 0,
-  critical: 0,
-} as Record<ErrorSeverity, number>;
-
-// Lightweight indirection so we can record metrics without reordering declarations
+// No-op metrics proxy to keep API stable while minimizing code paths
 function recordErrorMetricProxy(
-  category: ErrorCategory,
-  severity: ErrorSeverity,
-  operation: string,
-  additionalData?: Record<string, unknown>
+  _category: ErrorCategory,
+  _severity: ErrorSeverity,
+  _operation: string,
+  _additionalData?: Record<string, unknown>
 ) {
-  try {
-    // ErrorMetrics is defined later; this indirection ensures late binding
-    ErrorMetrics.recordError(category, severity, operation, additionalData);
-  } catch {}
+  // no-op
 }
 
 // ============================================================================

@@ -31,4 +31,28 @@ export function normalizeChatRequest(input: unknown): { success: true; data: Cha
   }
 }
 
+type RawPart = { type?: string; text?: unknown } | null | undefined;
+type RawMsg = { role?: string; content?: unknown; parts?: RawPart[]; id?: unknown } | null | undefined;
+
+export function buildForwardedMessages(rawMessages: unknown, fallbackMessage: string): Array<{ role: 'user' | 'assistant'; content: string; id?: string }> {
+  const isForwardable = (m: RawMsg): m is { role: 'user' | 'assistant'; content?: unknown; parts?: RawPart[]; id?: unknown } => !!m && (m.role === 'user' || m.role === 'assistant');
+  if (!Array.isArray(rawMessages)) {
+    return [{ role: 'user', content: fallbackMessage }];
+  }
+  const coerceText = (m: { content?: unknown; parts?: RawPart[] }): string => {
+    if (typeof m.content === 'string') return m.content;
+    if (Array.isArray(m.parts)) {
+      return m.parts.map(p => (p && p.type === 'text' && typeof p.text === 'string' ? p.text : '')).join('');
+    }
+    return '';
+  };
+  return (rawMessages as RawMsg[])
+    .filter(isForwardable)
+    .map((m) => ({
+      role: m!.role as 'user' | 'assistant',
+      id: typeof m!.id === 'string' ? (m!.id as string) : undefined,
+      content: coerceText(m as { content?: unknown; parts?: RawPart[] }),
+    }));
+}
+
 

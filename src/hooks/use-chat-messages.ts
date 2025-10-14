@@ -11,7 +11,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { MessageData } from '@/features/chat/messages/message';
 import { logger } from '@/lib/utils/logger';
-import * as messagesApi from '@/lib/api/client/messages';
+import { apiClient } from '@/lib/api/client';
 import { getApiData } from '@/lib/api/api-response';
 import type { components } from '@/types/api.generated';
 import { parseObsessionsCompulsionsFromMarkdown } from '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions';
@@ -39,14 +39,6 @@ export interface ChatMessage {
 /**
  * Hook for managing chat messages with both UI state and database persistence
  */
-const hashString = (value: string): string => {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) {
-    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
-  }
-  return hash.toString(16);
-};
-
 const MAX_METADATA_RETRY_ATTEMPTS = 3;
 
 const cloneMetadata = (value?: Record<string, unknown>) => {
@@ -60,7 +52,6 @@ const cloneMetadata = (value?: Record<string, unknown>) => {
 
 export function useChatMessages() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const metadataCacheRef = useRef(new Map<string, { contentHash: string; metadata?: Message['metadata']; digest: string }>());
   const messagesRef = useRef<Message[]>([]);
   const pendingMetadataRef = useRef(new Map<string, { sessionId: string; metadata: Record<string, unknown>; mergeStrategy: 'merge' | 'replace'; retries: number }>());
   const pendingFlushRef = useRef(new Set<string>());
@@ -69,44 +60,15 @@ export function useChatMessages() {
     messagesRef.current = messages;
   }, [messages]);
 
-  const computeDigest = useCallback((message: { id: string; content: string; timestamp: Date; metadata?: Message['metadata'] }) => {
-    let metadataKey = '';
-    if (message.metadata) {
-      try {
-        metadataKey = hashString(JSON.stringify(message.metadata));
-      } catch {
-        metadataKey = 'metadata-error';
-      }
-    }
-    const contentKey = hashString(message.content);
-    return `${message.id}:${message.timestamp.getTime()}:${contentKey}:${metadataKey}`;
-  }, []);
-
   const hydrateMessage = useCallback((raw: Message, metadata?: Message['metadata']) => {
     const normalizedTimestamp = raw.timestamp instanceof Date ? raw.timestamp : new Date(raw.timestamp);
     const nextMetadata = metadata ?? raw.metadata;
-    const digest = computeDigest({
-      id: raw.id,
-      content: raw.content,
-      timestamp: normalizedTimestamp,
-      metadata: nextMetadata,
-    });
-    const contentHash = hashString(raw.content);
-    const existing = metadataCacheRef.current.get(raw.id);
-    if (!existing || existing.digest !== digest) {
-      metadataCacheRef.current.set(raw.id, {
-        contentHash,
-        metadata: nextMetadata,
-        digest,
-      });
-    }
     return {
       ...raw,
       timestamp: normalizedTimestamp,
       metadata: nextMetadata,
-      digest,
     } as Message;
-  }, [computeDigest]);
+  }, []);
 
   const flushPendingMetadata = useCallback(async (messageId: string) => {
     const pending = pendingMetadataRef.current.get(messageId);
@@ -117,7 +79,7 @@ export function useChatMessages() {
     pendingFlushRef.current.add(messageId);
 
     try {
-      const response = await messagesApi.patchMessageMetadata(pending.sessionId, messageId, {
+      const response = await apiClient.patchMessageMetadata(pending.sessionId, messageId, {
         metadata: pending.metadata,
         mergeStrategy: pending.mergeStrategy,
       });
@@ -200,7 +162,7 @@ export function useChatMessages() {
    */
   const loadMessages = useCallback(async (sessionId: string): Promise<void> => {
     try {
-      const resp: ListMessagesResponse = await messagesApi.listMessages(sessionId);
+      const resp: ListMessagesResponse = await apiClient.listMessages(sessionId);
       if (!resp) {
         logger.error('Failed to load messages from API', {
           component: 'useChatMessages',
@@ -231,12 +193,8 @@ export function useChatMessages() {
           timestamp: new Date(msg.timestamp),
           modelUsed: typeof msg.modelUsed === 'string' && msg.modelUsed.length > 0 ? msg.modelUsed : undefined,
         };
-        const cacheEntry = metadataCacheRef.current.get(msg.id);
-        const contentHash = hashString(msg.content);
         const metadataFromServer = msg.metadata ?? undefined;
-        const metadata = metadataFromServer ?? (cacheEntry && cacheEntry.contentHash === contentHash
-          ? cacheEntry.metadata
-          : deriveMetadataFromContent(msg.content));
+        const metadata = metadataFromServer ?? deriveMetadataFromContent(msg.content);
         const hydrated = hydrateMessage(baseMessage, metadata);
         return hydrated;
       });
@@ -283,7 +241,7 @@ export function useChatMessages() {
       setMessages(prev => [...prev, uiMessage]);
 
       // Save to database
-      const saved = await messagesApi.postMessage(message.sessionId, {
+      const saved = await apiClient.postMessage(message.sessionId, {
         role: message.role,
         content: message.content,
         modelUsed: message.modelUsed,
@@ -305,7 +263,6 @@ export function useChatMessages() {
           modelUsed: typeof savedMessage.modelUsed === 'string' ? savedMessage.modelUsed : msg.modelUsed,
           metadata: updatedMetadata,
         };
-        metadataCacheRef.current.delete(tempId);
         const pending = pendingMetadataRef.current.get(tempId);
         if (pending) {
           pendingMetadataRef.current.delete(tempId);
@@ -338,7 +295,6 @@ export function useChatMessages() {
    * Clear all messages (for new session)
    */
   const clearMessages = useCallback(() => {
-    metadataCacheRef.current.clear();
     pendingMetadataRef.current.clear();
     pendingFlushRef.current.clear();
     setMessages([]);
@@ -377,7 +333,6 @@ export function useChatMessages() {
    * Remove a temporary message
    */
   const removeTemporaryMessage = useCallback((messageId: string) => {
-    metadataCacheRef.current.delete(messageId);
     setMessages(prev => prev.filter(msg => msg.id !== messageId));
   }, []);
 
@@ -454,7 +409,7 @@ export function useChatMessages() {
       }
 
       try {
-        const response = await messagesApi.patchMessageMetadata(sessionId, messageId, {
+        const response = await apiClient.patchMessageMetadata(sessionId, messageId, {
           metadata: cloneMetadata(nextMetadataClone) ?? {},
           mergeStrategy,
         });

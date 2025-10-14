@@ -3,7 +3,7 @@ import { languageModels, ModelID } from "@/ai/providers";
 import { groq } from "@ai-sdk/groq";
 import { getTherapySystemPrompt } from '@/lib/therapy/prompts';
 import { streamChatCompletion } from '@/lib/chat/streaming';
-import { normalizeChatRequest } from '@/lib/chat/chat-request';
+import { normalizeChatRequest, buildForwardedMessages } from '@/lib/chat/chat-request';
 import { selectModelAndTools } from '@/lib/chat/model-selector';
 import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
@@ -64,23 +64,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     const history = providedSessionId && ownership.valid ? await loadSessionHistory(providedSessionId, ownership) : [];
     // Prefer forwarding original payload messages (with ids) when available; otherwise build from normalized
     const payloadMessages = Array.isArray(raw?.messages) ? raw.messages : null;
-    type RawMsg = { role?: string; content?: unknown; parts?: Array<{ type?: string; text?: unknown }>; id?: unknown };
-    const isForwardable = (m: RawMsg | null | undefined): m is { role: 'user' | 'assistant'; content?: unknown; parts?: Array<{ type?: string; text?: unknown }>; id?: unknown } =>
-      !!m && (m.role === 'user' || m.role === 'assistant');
-
-    const forwarded: Array<{ role: 'user' | 'assistant'; content: string; id?: string }> = payloadMessages
-      ? (payloadMessages as RawMsg[])
-          .filter(isForwardable)
-          .map((m) => ({
-            role: m.role,
-            id: typeof m.id === 'string' ? m.id : undefined,
-            content: typeof m.content === 'string'
-              ? m.content
-              : Array.isArray(m.parts)
-                ? m.parts.map((p) => (p && p.type === 'text' && typeof p.text === 'string' ? p.text : '')).join('')
-                : '',
-          }))
-      : [{ role: 'user' as const, content: normalized.data.message }];
+    const forwarded = buildForwardedMessages(payloadMessages, normalized.data.message);
 
     const decision = selectModelAndTools({ message: normalized.data.message, preferredModel: normalized.data.model, webSearchEnabled: Boolean(raw?.webSearchEnabled) });
     const modelId = decision.model;
@@ -190,12 +174,18 @@ async function resolveSessionOwnership(sessionId: string | undefined, userId: st
 }
 
 async function loadSessionHistory(sessionId: string, ownership: SessionOwnership): Promise<ApiChatMessage[]> {
-  const sessionMessages = Array.isArray(ownership.session?.messages)
+  const HISTORY_LIMIT = 30;
+  const sessionMessagesRaw = Array.isArray(ownership.session?.messages)
     ? ownership.session!.messages
     : await prisma.message.findMany({
         where: { sessionId },
-        orderBy: { timestamp: 'asc' },
+        orderBy: { timestamp: 'desc' },
+        take: HISTORY_LIMIT,
       });
+
+  const sessionMessages = (Array.isArray(sessionMessagesRaw) ? sessionMessagesRaw : [])
+    .sort((a, b) => new Date(a.timestamp as Date).getTime() - new Date(b.timestamp as Date).getTime())
+    .slice(-HISTORY_LIMIT);
 
   const { safeDecryptMessages } = await import('@/lib/chat/message-encryption');
   const decrypted = safeDecryptMessages(

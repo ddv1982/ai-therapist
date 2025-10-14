@@ -5,16 +5,15 @@ import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { logger } from '@/lib/utils/logger';
 import type { MessageData } from '@/features/chat/messages/message';
 import type { useChatTransport } from '../use-chat-transport';
+import { apiClient } from '@/lib/api/client';
 
 interface UseChatStreamingParams {
   currentSession: string | null;
   transport: ReturnType<typeof useChatTransport>;
   options?: { model?: string; webSearchEnabled: boolean };
   setMessages: Dispatch<SetStateAction<MessageData[]>>;
-  loadMessages: (sessionId: string) => Promise<void>;
   loadSessions: () => Promise<void>;
   setIsLoading: (value: boolean) => void;
-  saveMessage: (sessionId: string, role: 'user' | 'assistant', content: string, modelUsed?: string) => Promise<void>;
 }
 
 interface StartStreamArgs {
@@ -29,10 +28,8 @@ export function useChatStreaming(params: UseChatStreamingParams) {
     transport,
     options,
     setMessages,
-    loadMessages,
     loadSessions,
     setIsLoading,
-    saveMessage,
   } = params;
 
   const optionsRef = useRef(options);
@@ -91,8 +88,11 @@ export function useChatStreaming(params: UseChatStreamingParams) {
         const sid = sessionIdRef.current;
         if (sid && trimmedContent.length > 0) {
           try {
-            await saveMessage(sid, 'assistant', trimmedContent, actualModelId);
-            await loadMessages(sid);
+            await apiClient.postMessage(sid, {
+              role: 'assistant',
+              content: trimmedContent,
+              modelUsed: actualModelId,
+            });
             await loadSessions();
           } catch (error) {
             logger.error('Failed to persist assistant stream result', {
