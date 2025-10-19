@@ -8,15 +8,22 @@ import {
   createSuccessResponse, 
   createErrorResponse
 } from '@/lib/api/api-response';
+import { z } from 'zod';
 
 // POST /api/auth/verify - Verify TOTP token or backup code
+const verifySchema = z.object({ token: z.string().min(1, 'Token is required'), isBackupCode: z.boolean().optional() });
+
 export const POST = withRateLimitUnauthenticated(async (request: NextRequest, context) => {
   const requestId = context.requestId;
   const startTime = Date.now();
   
   try {
     const body = await request.json();
-    const { token, isBackupCode = false } = body;
+    const parsed = verifySchema.safeParse(body);
+    if (!parsed.success) {
+      return createErrorResponse('Token is required', 400, { requestId: context.requestId });
+    }
+    const { token, isBackupCode = false } = parsed.data;
 
     // Enhanced mobile debugging - capture all relevant headers
     const userAgent = request.headers.get('user-agent') || 'unknown';

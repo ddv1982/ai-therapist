@@ -6,6 +6,7 @@ import { handleApiError } from '@/lib/utils/error-utils';
 import { withRateLimitUnauthenticated, withApiMiddleware } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse, createForbiddenErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
+import { z } from 'zod';
 
 // Type declaration for global cache
 declare global {
@@ -75,14 +76,20 @@ export const GET = withRateLimitUnauthenticated(async () => {
 
 // POST /api/auth/setup - Complete TOTP setup with verification
 // Note: Also accessible pre-auth; guarded by isTOTPSetup() to prevent reconfiguration
+const setupSchema = z.object({
+  secret: z.string().min(1, 'Secret is required'),
+  backupCodes: z.array(z.string().min(4)).min(1, 'At least one backup code is required'),
+  verificationToken: z.string().min(1, 'Verification token is required'),
+});
+
 export const POST = withRateLimitUnauthenticated(async (request: NextRequest) => {
   try {
     const body = await request.json();
-    const { secret, backupCodes, verificationToken } = body;
-
-    if (!secret || !backupCodes || !verificationToken) {
-      return createErrorResponse('Missing required fields', 400);
+    const parsed = setupSchema.safeParse(body);
+    if (!parsed.success) {
+      return createErrorResponse('Missing or invalid fields', 400);
     }
+    const { secret, backupCodes, verificationToken } = parsed.data;
 
     // Check if TOTP is already set up
     const isSetup = await isTOTPSetup();

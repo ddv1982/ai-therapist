@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/database/db';
 import { logger } from '@/lib/utils/logger';
-import { withAuth } from '@/lib/api/api-middleware';
+import { withAuth, withValidation } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
+import { z } from 'zod';
 
 export const GET = withAuth(async (_request, context) => {
   try {
@@ -59,14 +60,12 @@ export const GET = withAuth(async (_request, context) => {
   }
 });
 
-export const POST = withAuth(async (request: NextRequest, context) => {
+const setCurrentSessionSchema = z.object({ sessionId: z.string().uuid('Invalid session ID format') });
+
+export const POST = withValidation(setCurrentSessionSchema, async (_request: NextRequest, context, validated) => {
   try {
     logger.debug('Setting current active session', context);
-    const body = await request.json();
-    const { sessionId } = body as { sessionId?: string };
-    if (!sessionId) {
-      return createErrorResponse('Session ID is required', 400, { requestId: context.requestId });
-    }
+    const { sessionId } = validated;
 
     // Update the session's updatedAt to mark it as current
     const session = await prisma.session.update({

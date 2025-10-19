@@ -79,10 +79,17 @@ export const GET = withRateLimitUnauthenticated(async (_request: NextRequest, co
   }
 }, { bucket: 'api' });
 
+import { z } from 'zod';
+const cacheActionSchema = z.object({ action: z.enum(['clear_stats', 'warm_up', 'get_stats']) });
+
 export const POST = withRateLimitUnauthenticated(async (request: NextRequest, context) => {
   try {
     const body = await request.json();
-    const { action } = body;
+    const parsed = cacheActionSchema.safeParse(body);
+    if (!parsed.success) {
+      return createErrorResponse('Invalid action', 400, { requestId: context.requestId, code: 'INVALID_ACTION' });
+    }
+    const { action } = parsed.data;
 
     switch (action) {
       case 'clear_stats':

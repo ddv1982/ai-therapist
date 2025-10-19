@@ -4,6 +4,7 @@ import { getClientIP } from '@/lib/auth/auth-middleware';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
 import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
+import { z } from 'zod';
 
 // GET /api/auth/mobile-debug - Get detailed mobile debugging info
 export const GET = withRateLimitUnauthenticated(async (request: NextRequest, context) => {
@@ -94,10 +95,16 @@ export const GET = withRateLimitUnauthenticated(async (request: NextRequest, con
 }, { bucket: 'api' });
 
 // POST /api/auth/mobile-debug - Test token with mobile debugging
+const mobileDebugSchema = z.object({ token: z.string().min(1, 'Token is required'), clientTime: z.number().optional() });
+
 export const POST = withRateLimitUnauthenticated(async (request: NextRequest, context) => {
   try {
     const body = await request.json();
-    const { token, clientTime } = body;
+    const parsed = mobileDebugSchema.safeParse(body);
+    if (!parsed.success) {
+      return createErrorResponse('Token is required', 400, { requestId: context.requestId });
+    }
+    const { token, clientTime } = parsed.data;
     
     const userAgent = request.headers.get('user-agent') || 'unknown';
     const ipAddress = getClientIP(request);

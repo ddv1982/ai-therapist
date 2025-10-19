@@ -30,7 +30,7 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
   }
 
   return (
-    <div className={`inline-flex items-center gap-1 rounded-full bg-gray-200 dark:bg-gray-700 p-1 ${className ?? ''}`} aria-label="Language toggle">
+    <div className={`inline-flex items-center gap-1 rounded-full bg-gray-200 dark:bg-gray-700 p-1 ${className ?? ''}`} role="group" aria-label="Language toggle">
       <button
         type="button"
         className={`px-2 py-1 text-sm rounded-full transition-colors ${locale === 'en' ? 'bg-white text-gray-900 dark:text-gray-900' : 'text-gray-700 dark:text-gray-200'}`}

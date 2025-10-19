@@ -3,6 +3,7 @@ import { getTOTPDiagnostics, isTOTPSetup } from '@/lib/auth/totp-service';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
 import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
+import { z } from 'zod';
 
 // GET /api/auth/diagnostics - Get TOTP diagnostics for debugging
 export const GET = withRateLimitUnauthenticated(async (_request, context) => {
@@ -26,14 +27,16 @@ export const GET = withRateLimitUnauthenticated(async (_request, context) => {
 }, { bucket: 'api' });
 
 // POST /api/auth/diagnostics - Test a specific token
+const diagnosticsSchema = z.object({ token: z.string().min(1, 'Token is required') });
+
 export const POST = withRateLimitUnauthenticated(async (request: NextRequest, context) => {
   try {
     const body = await request.json();
-    const { token } = body as { token?: string };
-
-    if (!token) {
+    const parsed = diagnosticsSchema.safeParse(body);
+    if (!parsed.success) {
       return createErrorResponse('Token is required', 400, { requestId: context.requestId });
     }
+    const { token } = parsed.data;
 
     const isSetup = await isTOTPSetup();
     if (!isSetup) {

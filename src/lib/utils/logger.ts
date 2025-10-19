@@ -177,9 +177,13 @@ class Logger {
           console.error(formattedLog);
           break;
         case LogLevel.WARN:
-          console.warn(formattedLog);
-          // Ensure tests expecting console.log capture warnings in dev
-          try { console.log(formattedLog); } catch {}
+          // In tests, avoid duplicating warn into console.log to reduce noise
+          if (process.env.NODE_ENV === 'test') {
+            console.warn(formattedLog);
+          } else {
+            console.warn(formattedLog);
+            try { console.log(formattedLog); } catch {}
+          }
           break;
         case LogLevel.INFO:
           console.info(formattedLog);

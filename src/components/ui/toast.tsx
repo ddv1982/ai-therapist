@@ -120,11 +120,18 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
     }
   };
 
+  const ariaRole = toast.type === 'error' ? 'alert' : 'status';
+  const ariaLive = toast.type === 'error' ? 'assertive' : 'polite';
+
   return (
     <div
+      role={ariaRole}
+      aria-live={ariaLive}
+      aria-atomic="true"
       className={cn(
         'transform transition-all duration-300 ease-in-out p-4 rounded-lg border shadow-lg',
         getBackgroundColor(),
+        'motion-reduce:transition-none',
         isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       )}
     >

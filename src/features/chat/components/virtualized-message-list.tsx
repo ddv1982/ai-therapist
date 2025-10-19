@@ -510,12 +510,7 @@ function VirtualizedMessageListComponent({
   };
 
   return (
-    <div
-      className={containerClassName}
-      role="log"
-      aria-live="polite"
-      aria-relevant="additions text"
-    >
+    <div className={containerClassName}>
       {visibleMessages.map((message, index) => {
         const metadata = (message.metadata as Record<string, unknown> | undefined) ?? undefined;
         const isDismissed = Boolean(metadata?.dismissed);
@@ -565,10 +560,10 @@ const TypingIndicator = memo(function TypingIndicator() {
         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 shadow-lg flex items-center justify-center">
           <Heart className="w-4 h-4 text-red-500 fill-red-500" />
         </div>
-        <div className="flex space-x-2 animate-pulse" aria-label="Assistant is typing">
-          <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-          <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+        <div className="flex space-x-2 animate-pulse motion-reduce:animate-none" aria-label="Assistant is typing">
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce motion-reduce:animate-none"></div>
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce motion-reduce:animate-none" style={{ animationDelay: '0.1s' }}></div>
+          <div className="w-2 h-2 bg-primary rounded-full animate-bounce motion-reduce:animate-none" style={{ animationDelay: '0.2s' }}></div>
         </div>
       </div>
     </div>

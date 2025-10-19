@@ -4,6 +4,7 @@ import { getUnusedBackupCodesCount } from '@/lib/auth/totp-service';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
 import { withAuthAndRateLimit } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
+import { z } from 'zod';
 
 // GET /api/auth/devices - Get trusted devices and backup codes info
 export const GET = withAuthAndRateLimit(async (request: NextRequest, context) => {
@@ -36,6 +37,8 @@ export const GET = withAuthAndRateLimit(async (request: NextRequest, context) =>
 }, { windowMs: 5 * 60 * 1000 });
 
 // DELETE /api/auth/devices - Revoke device trust
+const revokeSchema = z.object({ deviceId: z.string().min(1, 'Device ID is required') });
+
 export const DELETE = withAuthAndRateLimit(async (request: NextRequest, context) => {
   try {
     // Verify authentication (needed for current device id)
@@ -50,11 +53,11 @@ export const DELETE = withAuthAndRateLimit(async (request: NextRequest, context)
     }
 
     const body = await request.json();
-    const { deviceId } = body;
-
-    if (!deviceId) {
+    const parsed = revokeSchema.safeParse(body);
+    if (!parsed.success) {
       return createErrorResponse('Device ID is required', 400, { requestId: context.requestId });
     }
+    const { deviceId } = parsed.data;
 
     // Don't allow revoking the current device
     if (deviceId === deviceInfo.deviceId) {

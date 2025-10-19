@@ -302,6 +302,8 @@ function ChatPageContent() {
           aria-label={t('main.messagesAria')}
           aria-live="polite"
           aria-atomic="false"
+          aria-relevant="additions text"
+          aria-busy={Boolean(isLoading)}
         >
           <SystemBanner
             hasMemory={memoryContext.hasMemory}

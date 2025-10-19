@@ -5,19 +5,20 @@ import type { MessageData } from '@/features/chat/messages/message';
 import { useChatMessages } from './use-chat-messages';
 import { useScrollToBottom } from './use-scroll-to-bottom';
 import { logger } from '@/lib/utils/logger';
-import { apiClient } from '@/lib/api/client';
+// import { apiClient } from '@/lib/api/client';
 import { useTranslations } from 'next-intl';
 import { useChatTransport } from '@/hooks/use-chat-transport';
 import { useMemoryContext } from '@/hooks/use-memory-context';
 import { useChatSessions } from '@/hooks/chat/use-chat-sessions';
 import { useChatViewport } from '@/hooks/chat/use-chat-viewport';
-import { REPORT_MODEL_ID } from '@/features/chat/config';
+// import { REPORT_MODEL_ID } from '@/features/chat/config';
 import type { ObsessionsCompulsionsData } from '@/types/therapy';
 import type { UiSession } from '@/lib/chat/session-mapper';
 import type { MemoryContextInfo } from '@/lib/chat/memory-utils';
 import { useChatUiState } from '@/hooks/chat/use-chat-ui-state';
 import { useChatStreaming } from '@/hooks/chat/use-chat-streaming';
 import { useSendMessage } from '@/hooks/chat/use-send-message';
+import { useGenerateReport } from '@/hooks/chat/use-generate-report';
 
 type Message = MessageData;
 
@@ -164,39 +165,13 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     setTimeout(() => textareaRef.current?.focus(), 50);
   }, [stopStream, textareaRef]);
 
-  const generateReport = useCallback(async () => {
-    if (!currentSession || messages.length === 0) return;
-    setIsGeneratingReport(true);
-    try {
-      const result = await apiClient.generateReportDetailed({
-        sessionId: currentSession,
-        messages: messages.filter(m => !m.content.startsWith('📊 **Session Report**')).map(m => ({ role: m.role, content: m.content, timestamp: m.timestamp.toISOString?.() })),
-        model: REPORT_MODEL_ID,
-      });
-      // Accept both standardized ApiResponse and legacy shape
-      const dataObj = (result as { success?: boolean; data?: { reportContent?: unknown } }).data;
-      const legacyReport = (result as { reportContent?: unknown }).reportContent;
-      const content = (typeof dataObj?.reportContent === 'string')
-        ? (dataObj.reportContent as string)
-        : (typeof legacyReport === 'string' ? legacyReport as string : undefined);
-      if (content) {
-        const reportMessage = {
-          id: Date.now().toString(),
-          role: 'assistant' as const,
-          content: `📊 **Session Report**\n\n${content}`,
-          timestamp: new Date(),
-          modelUsed: REPORT_MODEL_ID,
-        };
-        setMessages(prev => [...prev, reportMessage]);
-        try {
-          await apiClient.postMessage(currentSession, { role: 'assistant', content: reportMessage.content, modelUsed: REPORT_MODEL_ID });
-          await loadSessions();
-        } catch {}
-      }
-    } finally {
-      setIsGeneratingReport(false);
-    }
-  }, [currentSession, messages, setMessages, loadSessions, setIsGeneratingReport]);
+  const { generateReport } = useGenerateReport({
+    currentSession,
+    messages,
+    setMessages,
+    loadSessions,
+    setIsGeneratingReport,
+  });
 
   const createObsessionsCompulsionsTable = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     let sessionId: string;
