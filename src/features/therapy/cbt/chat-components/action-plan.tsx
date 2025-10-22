@@ -8,7 +8,7 @@ import { TherapySlider } from '@/components/ui/therapy-slider';
 import { CheckSquare, Target } from 'lucide-react';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { ActionPlanData, EmotionData } from '@/types/therapy';
+import type { ActionPlanData, CBTStepType, EmotionData } from '@/types/therapy';
 import {useTranslations} from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
@@ -22,16 +22,18 @@ interface ActionPlanProps {
   stepNumber?: number;
   totalSteps?: number;
   className?: string;
+  onNavigateStep?: (step: CBTStepType) => void;
 }
 
-export function ActionPlan({ 
-  onComplete, 
+export function ActionPlan({
+  onComplete,
   initialData,
   initialEmotions,
   customEmotion,
   title,
   subtitle,
-  className 
+  className,
+  onNavigateStep,
 }: ActionPlanProps) {
   const t = useTranslations('cbt');
   const { sessionData, actionActions } = useCBTDataManager();
@@ -158,6 +160,7 @@ export function ActionPlan({
       nextButtonText={t('actionPlan.nextToReflection')}
       hideProgressBar={true}
       className={className}
+      onNavigateStep={onNavigateStep}
     >
       <Card className="border-border bg-card">
         <CardHeader className="p-4 pb-4">

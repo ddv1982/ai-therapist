@@ -458,51 +458,6 @@ export const getInitialCBTFormData = (): CBTFormData & { schemaReflection: Schem
   } as CBTFormData & { schemaReflection: SchemaReflectionData };
 };
 
-// Legacy collection types for backward compatibility
-/** @deprecated Use SituationData instead */
-export interface CBTSituationData {
-  date: string;
-  situation: string;
-}
-
-/** @deprecated Use ThoughtData[] instead */
-export interface CBTThoughtsData {
-  automaticThoughts: string[];
-}
-
-/** @deprecated Use ChallengeQuestionData[] instead */
-export interface CBTChallengeData {
-  challengeQuestions: Array<{
-    question: string;
-    answer: string;
-  }>;
-}
-
-/** @deprecated Use RationalThoughtData[] instead */
-export interface CBTRationalData {
-  rationalThoughts: string[];
-}
-
-/** @deprecated Use ActionPlanData instead */
-export interface CBTActionPlanData {
-  finalEmotions: EmotionData;
-  newBehaviors: string[];
-}
-
-/** @deprecated Use CBTSessionState instead */
-export interface CBTCompleteSessionData {
-  situation?: CBTSituationData;
-  emotions?: EmotionData;
-  thoughts?: CBTThoughtsData;
-  coreBeliefs?: CoreBeliefData;
-  challenges?: CBTChallengeData;
-  rationalThoughts?: CBTRationalData;
-  schemaModes?: SchemaModesData;
-  actionPlan?: CBTActionPlanData;
-  timestamp: string;
-  isComplete: boolean;
-}
-
 export interface EmotionComparisonData {
   changes: Array<{
     emotion: string;

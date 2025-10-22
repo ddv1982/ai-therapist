@@ -1,20 +1,9 @@
 'use client';
 
 import React, { memo, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { CheckCircle, Heart } from 'lucide-react';
 import { Message, type MessageData } from '@/features/chat/messages';
-import {
-  SituationPrompt,
-  EmotionScale,
-  ThoughtRecord,
-  CoreBelief,
-  ChallengeQuestions,
-  RationalThoughts,
-  SchemaModes,
-  FinalEmotionReflection,
-  ActionPlan
-} from '@/features/therapy/cbt/chat-components';
-import { ObsessionsCompulsionsFlow } from '@/features/therapy/obsessions-compulsions/obsessions-compulsions-flow';
 import type {
   SituationData,
   EmotionData,
@@ -36,6 +25,46 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';
+
+const SituationPrompt = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/situation-prompt').then((mod) => ({ default: mod.SituationPrompt }))
+);
+
+const EmotionScale = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/emotion-scale').then((mod) => ({ default: mod.EmotionScale }))
+);
+
+const ThoughtRecord = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/thought-record').then((mod) => ({ default: mod.ThoughtRecord }))
+);
+
+const CoreBelief = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/core-belief').then((mod) => ({ default: mod.CoreBelief }))
+);
+
+const ChallengeQuestions = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/challenge-questions').then((mod) => ({ default: mod.ChallengeQuestions }))
+);
+
+const RationalThoughts = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/rational-thoughts').then((mod) => ({ default: mod.RationalThoughts }))
+);
+
+const SchemaModes = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/schema-modes').then((mod) => ({ default: mod.SchemaModes }))
+);
+
+const FinalEmotionReflection = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/final-emotion-reflection').then((mod) => ({ default: mod.FinalEmotionReflection }))
+);
+
+const ActionPlan = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/action-plan').then((mod) => ({ default: mod.ActionPlan }))
+);
+
+const ObsessionsCompulsionsFlow = dynamic(() =>
+  import('@/features/therapy/obsessions-compulsions/obsessions-compulsions-flow').then((mod) => ({ default: mod.ObsessionsCompulsionsFlow }))
+);
 
 type SchemaModeLike = SchemaMode | SchemaModeData;
 
@@ -100,6 +129,7 @@ function renderCompletedStepSummary(
   step: CBTStepType,
   sessionData: CBTChatFlowSessionData | undefined,
   onNavigate?: (step: CBTStepType) => void,
+  isFinalStep: boolean = false,
 ) {
   if (step === 'complete') {
     return null;
@@ -255,7 +285,7 @@ function renderCompletedStepSummary(
         {content.length > 0 ? content : (
           <p className="text-sm text-muted-foreground">Completed.</p>
         )}
-        {onNavigate ? (
+        {onNavigate && isFinalStep ? (
           <div className="flex justify-end pt-2">
             <Button variant="ghost" size="sm" onClick={() => onNavigate(step)}>
               Edit step
@@ -416,7 +446,9 @@ function VirtualizedMessageListComponent({
     }
 
     const step = rawStep as CBTStepType;
+    const isFinalStep = step === 'final-emotions';
     const isActive = activeCBTStep && step === activeCBTStep;
+    const allowCompletedSummary = !activeCBTStep;
     const isLatestForStep = message.id === lastStepMessageId.get(step);
 
     if (!isLatestForStep) {
@@ -424,7 +456,10 @@ function VirtualizedMessageListComponent({
     }
 
     if (!isActive) {
-      return renderCompletedStepSummary(step, sessionData, onCBTStepNavigate);
+      if (!allowCompletedSummary) {
+        return null;
+      }
+      return renderCompletedStepSummary(step, sessionData, onCBTStepNavigate, isFinalStep);
     }
 
     switch (step) {
@@ -432,6 +467,7 @@ function VirtualizedMessageListComponent({
         return onCBTSituationComplete ? (
           <SituationPrompt
             onComplete={onCBTSituationComplete}
+            onNavigateStep={onCBTStepNavigate}
           />
         ) : null;
 
@@ -439,6 +475,7 @@ function VirtualizedMessageListComponent({
         return onCBTEmotionComplete ? (
           <EmotionScale
             onComplete={onCBTEmotionComplete}
+            onNavigateStep={onCBTStepNavigate}
           />
         ) : null;
 
@@ -448,6 +485,7 @@ function VirtualizedMessageListComponent({
             onComplete={onCBTThoughtComplete}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={onCBTStepNavigate}
           />
         ) : null;
 
@@ -457,6 +495,7 @@ function VirtualizedMessageListComponent({
             onComplete={onCBTCoreBeliefComplete}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={onCBTStepNavigate}
           />
         ) : null;
 
@@ -466,6 +505,7 @@ function VirtualizedMessageListComponent({
             onComplete={onCBTChallengeQuestionsComplete}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={onCBTStepNavigate}
           />
         ) : null;
 
@@ -475,6 +515,7 @@ function VirtualizedMessageListComponent({
             onComplete={onCBTRationalThoughtsComplete}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={onCBTStepNavigate}
           />
         ) : null;
 
@@ -484,6 +525,7 @@ function VirtualizedMessageListComponent({
             onComplete={onCBTSchemaModesComplete}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={onCBTStepNavigate}
           />
         ) : null;
 
@@ -492,6 +534,7 @@ function VirtualizedMessageListComponent({
           <FinalEmotionReflection 
             onComplete={onCBTFinalEmotionsComplete}
             onSendToChat={onCBTSendToChat}
+            onNavigateStep={onCBTStepNavigate}
           />
         );
 
@@ -501,11 +544,17 @@ function VirtualizedMessageListComponent({
             onComplete={onCBTActionComplete}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={onCBTStepNavigate}
           />
         ) : null;
 
       default:
-        return renderCompletedStepSummary(step, sessionData, onCBTStepNavigate);
+        return renderCompletedStepSummary(
+          step,
+          sessionData,
+          onCBTStepNavigate,
+          isFinalStep
+        );
     }
   };
 

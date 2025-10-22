@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Trash2, Brain, Sparkles } from 'lucide-react';
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 interface DraftPanelProps {
   hasDraft: boolean;
@@ -39,15 +39,15 @@ export function DraftPanel({ hasDraft, draftLastSaved, onDeleteDraft, onResume, 
             <h3 className="font-semibold">📝 Previous Session Found</h3>
             {hasDraft && (
               <span className="px-2 py-1 text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
-                {t('status.saved')}
+                {t('draft.statusSaved')}
               </span>
             )}
           </div>
           <Button
             variant="ghost"
             size="icon"
-            aria-label={t('actions.deleteDraft')}
-            title={t('actions.deleteDraft')}
+            aria-label={t('draft.delete')}
+            title={t('draft.delete')}
             onClick={onDeleteDraft}
           >
             <Trash2 className="w-4 h-4" />

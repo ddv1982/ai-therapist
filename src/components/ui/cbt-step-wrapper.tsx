@@ -26,31 +26,30 @@
 'use client';
 
 import React, { ReactNode, useCallback, useEffect, useState } from 'react';
-import { cn } from '@/lib/utils/utils';
-import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import { logger } from '@/lib/utils/logger';
-import { CBTStepType, CBTFormValidationError } from '@/types/therapy';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  CheckCircle, 
-  AlertCircle, 
-  Clock,
-  Brain,
-  Heart,
+import { useTranslations } from 'next-intl';
+import {
   MessageCircle,
+  Heart,
+  Brain,
   Target,
   HelpCircle,
   Lightbulb,
   Users,
-  Activity
+  Activity,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import {useTranslations} from 'next-intl';
-import { getStepInfo, CBT_STEPS } from '@/features/therapy/cbt/utils/step-mapping';
+import { cn } from '@/lib/utils';
+import { logger } from '@/lib/utils/logger';
+import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import { CBT_STEP_CONFIG } from '@/features/therapy/cbt/flow';
+import { CBT_STEPS, getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
+import type { CBTStepType, CBTFormValidationError } from '@/types/therapy';
 
 // =============================================================================
 // TYPES & INTERFACES
@@ -79,6 +78,7 @@ export interface CBTStepWrapperProps {
   onNext?: () => void | Promise<void>;
   onPrevious?: () => void | Promise<void>;
   onSkip?: () => void;
+  onNavigateStep?: (step: CBTStepType) => void;
   
   // Step Behavior
   autoSave?: boolean;
@@ -102,32 +102,30 @@ export interface CBTStepWrapperProps {
 // =============================================================================
 
 const STEP_ICONS: Record<CBTStepType, ReactNode> = {
-  'situation': <MessageCircle className="w-6 h-6" />,
-  'emotions': <Heart className="w-6 h-6" />,
+  situation: <MessageCircle className="w-6 h-6" />,
+  emotions: <Heart className="w-6 h-6" />,
   'final-emotions': <Heart className="w-6 h-6" />,
-  'thoughts': <Brain className="w-6 h-6" />,
+  thoughts: <Brain className="w-6 h-6" />,
   'core-belief': <Target className="w-6 h-6" />,
   'challenge-questions': <HelpCircle className="w-6 h-6" />,
   'rational-thoughts': <Lightbulb className="w-6 h-6" />,
   'schema-modes': <Users className="w-6 h-6" />,
-  'actions': <Activity className="w-6 h-6" />,
-  'complete': <CheckCircle className="w-6 h-6" />
+  actions: <Activity className="w-6 h-6" />,
+  complete: <CheckCircle className="w-6 h-6" />,
 };
 
 const STEP_COLORS: Record<CBTStepType, string> = {
-  'situation': 'bg-muted/50 border-border/50 text-foreground',
-  'emotions': 'bg-muted/50 border-border/50 text-foreground',
+  situation: 'bg-muted/50 border-border/50 text-foreground',
+  emotions: 'bg-muted/50 border-border/50 text-foreground',
   'final-emotions': 'bg-muted/50 border-border/50 text-foreground',
-  'thoughts': 'bg-muted/50 border-border/50 text-foreground',
+  thoughts: 'bg-muted/50 border-border/50 text-foreground',
   'core-belief': 'bg-muted/50 border-border/50 text-foreground',
   'challenge-questions': 'bg-muted/50 border-border/50 text-foreground',
   'rational-thoughts': 'bg-muted/50 border-border/50 text-foreground',
   'schema-modes': 'bg-muted/50 border-border/50 text-foreground',
-  'actions': 'bg-muted/50 border-border/50 text-foreground',
-  'complete': 'bg-accent/10 border-primary/30 text-foreground'
+  actions: 'bg-muted/50 border-border/50 text-foreground',
+  complete: 'bg-accent/10 border-primary/30 text-foreground',
 };
-
-// Step order and numbering are sourced from step-mapping to avoid DRY.
 
 // =============================================================================
 // MAIN COMPONENT
@@ -157,433 +155,217 @@ export function CBTStepWrapper({
   contentClassName,
   headerClassName,
   ariaLabel,
-  helpText
+  helpText,
+  onNavigateStep,
 }: CBTStepWrapperProps) {
   const t = useTranslations('cbt');
-  
-  // =============================================================================
-  // HOOKS & STATE
-  // =============================================================================
-  
-  const { 
-    navigation, 
-    validation, 
-    status 
-  } = useCBTDataManager();
 
-  const stepConfig = step !== 'complete' ? CBT_STEP_CONFIG[step as keyof typeof CBT_STEP_CONFIG] : undefined;
-  const resolvedTitle = title ?? (
-    stepConfig
-      ? (t(stepConfig.metadata.title.translationKey as unknown as Parameters<typeof t>[0], {
+  const { navigation, validation, status } = useCBTDataManager();
+
+  const stepConfig =
+    step !== 'complete' ? CBT_STEP_CONFIG[step as keyof typeof CBT_STEP_CONFIG] : undefined;
+  const resolvedTitle = title ??
+    (stepConfig
+      ? (t(stepConfig.metadata.title.translationKey as Parameters<typeof t>[0], {
           default: stepConfig.metadata.title.defaultText,
         }) as string)
-      : 'Session Complete'
-  );
-  const resolvedSubtitle = subtitle ?? (
-    stepConfig?.metadata.subtitle
-      ? (t(stepConfig.metadata.subtitle.translationKey as unknown as Parameters<typeof t>[0], {
+      : t('complete.title'));
+  const resolvedSubtitle = subtitle ??
+    (stepConfig?.metadata.subtitle
+      ? (t(stepConfig.metadata.subtitle.translationKey as Parameters<typeof t>[0], {
           default: stepConfig.metadata.subtitle.defaultText,
         }) as string)
-      : undefined
-  );
-  const resolvedHelpText = helpText ?? (
-    stepConfig?.metadata.helpText
-      ? (t(stepConfig.metadata.helpText.translationKey as unknown as Parameters<typeof t>[0], {
+      : undefined);
+  const resolvedHelpText = helpText ??
+    (stepConfig?.metadata.helpText
+      ? (t(stepConfig.metadata.helpText.translationKey as Parameters<typeof t>[0], {
           default: stepConfig.metadata.helpText.defaultText,
         }) as string)
-      : undefined
-  );
-  
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [hasAdvanced, setHasAdvanced] = useState(false);
+      : undefined);
 
-  // Reset one-shot state when step changes
-  useEffect(() => {
-    setHasAdvanced(false);
-  }, [step]);
-  
-  // =============================================================================
-  // COMPUTED VALUES
-  // =============================================================================
-  
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const { stepNumber, totalSteps } =
     step === 'complete'
       ? { stepNumber: CBT_STEPS.length, totalSteps: CBT_STEPS.length }
       : getStepInfo(step);
   const progressPercentage = showProgress ? (stepNumber / totalSteps) * 100 : 0;
-  
-  // Determine step validation state (avoid operator precedence pitfalls)
+
   let stepValidationErrors: CBTFormValidationError[] = [];
-  if (propValidationErrors !== undefined) {
+  if (propValidationErrors) {
     stepValidationErrors = propValidationErrors;
   } else if (typeof customValidation === 'function') {
     stepValidationErrors = customValidation() || [];
   } else if (validation.errors[step]) {
     stepValidationErrors = [{ field: step, message: validation.errors[step] }];
-  } else {
-    stepValidationErrors = [];
   }
-   
-  const isStepValid = propIsValid ?? (
-    stepValidationErrors.length === 0 && 
-    (allowPartialCompletion || validation.isFormValid)
+
+  const isStepValid =
+    propIsValid ?? (stepValidationErrors.length === 0 && (!validation.errors[step] || allowPartialCompletion));
+
+  const handleNavigation = useCallback(
+    async (action: 'next' | 'previous' | 'skip') => {
+      if (isProcessing) return;
+      setIsProcessing(true);
+
+      try {
+        if (action === 'next') {
+          if (!isStepValid) {
+            logger.warn('Attempted to advance with invalid step', { step });
+            return;
+          }
+          await onNext?.();
+          navigation.goNext();
+        } else if (action === 'previous') {
+          await onPrevious?.();
+          // Keep Redux progress in sync when possible
+          if (navigation.canGoPrevious) {
+            navigation.goPrevious();
+          }
+          // Always inform parent to navigate the flow engine if a previous step exists
+          if (onNavigateStep && step !== 'complete') {
+            const stepIndex = CBT_STEPS.indexOf(step as Exclude<CBTStepType, 'complete'>);
+            if (stepIndex > 0) {
+              const previousStep = CBT_STEPS[stepIndex - 1];
+              onNavigateStep(previousStep);
+            }
+          }
+        } else if (action === 'skip') {
+          onSkip?.();
+          navigation.goNext();
+        }
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [isProcessing, isStepValid, navigation, onNext, onPrevious, onSkip, onNavigateStep, step],
   );
-  
-  const stepIcon = icon || STEP_ICONS[step];
-  const stepColorClass = STEP_COLORS[step];
-  
-  // Navigation state
-  const canGoNext = navigation.canGoNext && (isStepValid || allowPartialCompletion);
-  const canGoPrevious = navigation.canGoPrevious;
-  
-  // =============================================================================
-  // EVENT HANDLERS
-  // =============================================================================
-  
-  const handleNext = useCallback(async () => {
-    if (isProcessing || hasAdvanced) return;
-    setIsProcessing(true);
-    
-    try {
-      if (onNext) {
-        await onNext();
-        setHasAdvanced(true);
-      } else {
-        navigation.goNext();
-        setHasAdvanced(true);
+
+  useEffect(() => {
+    if (!autoSave) return;
+    const timer = setTimeout(() => {
+      if (status.progress) {
+        logger.debug?.('Auto-save tick', { step });
       }
-    } catch (error) {
-      logger.error('Error in CBT step navigation forward', {
-        component: 'CBTStepWrapper',
-        operation: 'handleNext',
-        step
-      }, error instanceof Error ? error : new Error(String(error)));
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [onNext, navigation, step, isProcessing, hasAdvanced]);
-  
-  const handlePrevious = useCallback(async () => {
-    setIsProcessing(true);
-    
-    try {
-      if (onPrevious) {
-        await onPrevious();
-      } else {
-        navigation.goPrevious();
-      }
-    } catch (error) {
-      logger.error('Error in CBT step navigation backward', {
-        component: 'CBTStepWrapper',
-        operation: 'handlePrevious',
-        step
-      }, error instanceof Error ? error : new Error(String(error)));
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [onPrevious, navigation, step]);
-  
-  const handleSkip = useCallback(() => {
-    if (onSkip) {
-      onSkip();
-    } else {
-      navigation.goNext();
-    }
-  }, [onSkip, navigation]);
-  
-  // =============================================================================
-  // AUTO-SAVE EFFECT (visual handled in render; no timestamp tracking)
-  // =============================================================================
-  
-  // =============================================================================
-  // RENDER HELPERS
-  // =============================================================================
-  
-  const renderProgressBar = () => {
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [autoSave, status.progress, step]);
+
+  const renderProgress = () => {
     if (!showProgress || hideProgressBar) return null;
-    
     return (
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground">
-            {t('progress.step', { current: stepNumber, total: CBT_STEPS.length })}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {t('progress.complete', { percent: Math.round(progressPercentage) })}
-          </span>
+      <div className="flex items-center gap-2">
+        <div className="h-2 flex-1 rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all"
+            style={{ width: `${progressPercentage}%` }}
+          />
         </div>
-        <Progress value={progressPercentage} className="h-2" />
+        <span className="text-xs font-medium text-muted-foreground">
+          {stepNumber}/{totalSteps}
+        </span>
       </div>
     );
   };
-  
-  const renderStepHeader = () => (
-    <div className={cn(
-      "mb-3 p-3 rounded border",
-      stepColorClass,
-      headerClassName
-    )}>
-      <div className="flex items-center gap-3 mb-2">
-        <div className="flex-shrink-0">
-          {React.isValidElement(stepIcon)
-            ? React.cloneElement(stepIcon as React.ReactElement<{ className?: string }>, { className: "w-6 h-6" })
-            : stepIcon}
-        </div>
-        <div className="flex-1">
-          <h2 className="text-xl font-semibold">{resolvedTitle}</h2>
-          {resolvedSubtitle && (
-            <p className="text-sm opacity-80 mt-1">{resolvedSubtitle}</p>
-          )}
-        </div>
-        {isStepValid && (
-          <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
-        )}
-      </div>
-      
-      {resolvedHelpText && (
-        <p className="text-sm opacity-70 mt-2">{resolvedHelpText}</p>
-      )}
-    </div>
-  );
-  
-  const renderValidationErrors = () => {
-    if (stepValidationErrors.length === 0) return null;
-    
+
+  const renderValidation = () => {
+    if (isStepValid || stepValidationErrors.length === 0) return null;
     return (
-      <Alert className="mb-4" variant="destructive">
-        <AlertCircle className="h-4 w-4 shrink-0" />
-        <AlertDescription className="ml-2">
-          <div className="space-y-1 text-sm">
-            {stepValidationErrors.map((error, index) => (
-              <div key={index} className="font-semibold">{error.message}</div>
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          <ul className="space-y-1 text-sm">
+            {stepValidationErrors.map((error) => (
+              <li key={error.field}>{error.message}</li>
             ))}
-          </div>
+          </ul>
         </AlertDescription>
       </Alert>
     );
   };
-  
-  const renderAutoSaveStatus = () => {
-    if (!autoSave) return null;
-    
-    return (
-      <div className="flex items-center gap-2 autosave">
-        {status.isDraftSaved ? (
-          <div className="flex items-center gap-2 text-xs px-2 py-1 rounded-md bg-green-50 text-green-700 ring-1 ring-green-600/10 dark:bg-green-900/20 dark:text-green-400 dark:ring-green-500/20">
-            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-            <span>{t('status.saved')}</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 text-xs px-2 py-1 rounded-md bg-muted/40 text-muted-foreground">
-            <Clock className="w-3 h-3" />
-            <span>{t('status.saving')}</span>
-          </div>
-        )}
-      </div>
-    );
-  };
-  
-  const renderNavigationControls = () => {
+
+  const renderNavigation = () => {
     if (hideNavigation) return null;
-    
     return (
-      <div className="pt-6 border-t border-border sticky-footer">
-        <div className="flex items-center justify-between nav-container">
-          <div className="flex items-center gap-2 nav-left">
-            {canGoPrevious && (
-              <Button
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={isProcessing}
-                className="flex items-center gap-2 h-12"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                {previousButtonText || t('nav.back')}
-              </Button>
-            )}
-            
-            {canSkip && (
-              <Button
-                variant="ghost"
-                onClick={handleSkip}
-                disabled={isProcessing}
-                className="text-muted-foreground h-12"
-              >
-                {t('nav.skip')}
-              </Button>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-3 nav-right">
-            <div className="autosave flex items-center">
-              {renderAutoSaveStatus()}
-            </div>
-            {canGoNext && (
-              <Button
-                onClick={handleNext}
-                disabled={isProcessing || hasAdvanced || (!isStepValid && !allowPartialCompletion)}
-                className="flex items-center gap-2 h-12"
-              >
-                {nextButtonText || t('nav.next')}
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Clock className="h-4 w-4" />
+          <span>
+            {t('progress.status', {
+              step: stepNumber,
+              total: totalSteps,
+            })}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => handleNavigation('previous')}
+            disabled={isProcessing || stepNumber <= 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          {previousButtonText ?? (t('nav.back', { default: 'Back' }) as string)}
+          </Button>
+          {canSkip && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => handleNavigation('skip')}
+              disabled={isProcessing}
+            >
+            {t('nav.skip', { default: 'Skip' })}
+            </Button>
+          )}
+          <Button
+            type="button"
+            onClick={() => handleNavigation('next')}
+            disabled={isProcessing || (!allowPartialCompletion && !isStepValid)}
+          >
+          {nextButtonText ?? (t('nav.next', { default: 'Continue' }) as string)}
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
         </div>
       </div>
     );
   };
-  
-  // =============================================================================
-  // MAIN RENDER
-  // =============================================================================
-  
+
+  const resolvedIcon = icon ?? STEP_ICONS[step];
+  const headerStyle = cn(
+    'flex flex-col gap-2 rounded-xl border px-4 py-3 transition-colors sm:flex-row sm:items-start sm:justify-between',
+    STEP_COLORS[step],
+    headerClassName,
+  );
+
   return (
-    <div 
-      className={cn(
-        "bg-card rounded-lg p-6 shadow-sm",
-        className
-      )}
-      role="region"
-      aria-label={ariaLabel || `CBT Step: ${resolvedTitle}`}
-    >
-      {renderProgressBar()}
-      {renderStepHeader()}
-      {renderValidationErrors()}
-      
-      <div className={cn("space-y-4", contentClassName)}>
+    <section className={cn('space-y-5', className)} aria-label={ariaLabel}>
+      <header className={headerStyle}>
+        <div className="flex items-start gap-3">
+          <div className="rounded-xl bg-background/80 p-2 shadow-sm">
+            {resolvedIcon}
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">{resolvedTitle}</h2>
+            {resolvedSubtitle ? (
+              <p className="text-sm text-muted-foreground">{resolvedSubtitle}</p>
+            ) : null}
+            {resolvedHelpText ? (
+              <p className="text-xs text-muted-foreground/80">{resolvedHelpText}</p>
+            ) : null}
+          </div>
+        </div>
+        {renderProgress()}
+      </header>
+
+      {renderValidation()}
+
+      <div className={cn('rounded-2xl border border-muted/30 bg-card/80 p-5 shadow-sm', contentClassName)}>
         {children}
       </div>
-      
-      {renderNavigationControls()}
-    </div>
+
+      {renderNavigation()}
+    </section>
   );
 }
-
-// =============================================================================
-// STEP-SPECIFIC WRAPPER COMPONENTS
-// =============================================================================
-
-export function SituationStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
-  const t = useTranslations('cbt');
-  return (
-    <CBTStepWrapper
-      step="situation"
-      title={t('situation.title')}
-      subtitle={t('situation.subtitle')}
-      {...props}
-    />
-  );
-}
-
-export function EmotionStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
-  const t = useTranslations('cbt');
-  return (
-    <CBTStepWrapper
-      step="emotions"
-      title={t('emotions.title')}
-      subtitle={t('emotions.subtitle')}
-      {...props}
-    />
-  );
-}
-
-export function FinalEmotionStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
-  const t = useTranslations('cbt');
-  return (
-    <CBTStepWrapper
-      step="final-emotions"
-      title={t('emotions.titleNow')}
-      subtitle={t('emotions.subtitleNow')}
-      {...props}
-    />
-  );
-}
-
-export function ThoughtStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
-  const t = useTranslations('cbt');
-  return (
-    <CBTStepWrapper
-      step="thoughts"
-      title={t('thoughts.title')}
-      subtitle={t('thoughts.subtitle')}
-      {...props}
-    />
-  );
-}
-
-export function CoreBeliefStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
-  const t = useTranslations('cbt');
-  return (
-    <CBTStepWrapper
-      step="core-belief"
-      title={t('coreBelief.title')}
-      subtitle={t('coreBelief.subtitle')}
-      {...props}
-    />
-  );
-}
-
-export function ChallengeStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
-  const t = useTranslations('cbt');
-  return (
-    <CBTStepWrapper
-      step="challenge-questions"
-      title={t('challenge.title')}
-      subtitle={t('challenge.subtitle')}
-      {...props}
-    />
-  );
-}
-
-export function RationalStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
-  const t = useTranslations('cbt');
-  return (
-    <CBTStepWrapper
-      step="rational-thoughts"
-      title={t('rational.title')}
-      subtitle={t('rational.subtitle')}
-      {...props}
-    />
-  );
-}
-
-export function SchemaStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
-  const t = useTranslations('cbt');
-  return (
-    <CBTStepWrapper
-      step="schema-modes"
-      title={t('schema.title')}
-      subtitle={t('schema.subtitle')}
-      {...props}
-    />
-  );
-}
-
-export function ActionStepWrapper(props: Omit<CBTStepWrapperProps, 'step' | 'title'>) {
-  const t = useTranslations('cbt');
-  return (
-    <CBTStepWrapper
-      step="actions"
-      title={t('actionPlan.title')}
-      subtitle={t('actionPlan.subtitle')}
-      {...props}
-    />
-  );
-}
-
-// =============================================================================
-// COMPOUND COMPONENT PATTERN
-// =============================================================================
-
-CBTStepWrapper.Situation = SituationStepWrapper;
-CBTStepWrapper.Emotion = EmotionStepWrapper;
-CBTStepWrapper.FinalEmotion = FinalEmotionStepWrapper;
-CBTStepWrapper.Thought = ThoughtStepWrapper;
-CBTStepWrapper.CoreBelief = CoreBeliefStepWrapper;
-CBTStepWrapper.Challenge = ChallengeStepWrapper;
-CBTStepWrapper.Rational = RationalStepWrapper;
-CBTStepWrapper.Schema = SchemaStepWrapper;
-CBTStepWrapper.Action = ActionStepWrapper;
-
-export default CBTStepWrapper;

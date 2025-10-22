@@ -25,7 +25,7 @@ describe('ChatComposer', () => {
       />
     );
 
-    const textarea = screen.getByLabelText('input.ariaLabel');
+    const textarea = screen.getByLabelText('Type your message');
     fireEvent.change(textarea, { target: { value: 'Hello' } });
     expect(onChange).toHaveBeenCalledWith('Hello');
 
@@ -49,7 +49,7 @@ describe('ChatComposer', () => {
       />
     );
 
-    const sendBtn = screen.getByLabelText('input.send');
+    const sendBtn = screen.getByLabelText('Send message');
     expect(sendBtn).toBeDisabled();
 
     // Error message should be visible
@@ -75,7 +75,7 @@ describe('ChatComposer', () => {
     const textarea = screen.getByRole('textbox');
     expect(textarea).toHaveValue('Hello');
 
-    const sendBtn = screen.getByLabelText('input.send');
+    const sendBtn = screen.getByLabelText('Send message');
     expect(sendBtn).not.toBeDisabled();
 
     fireEvent.submit(sendBtn.closest('form')!);
@@ -95,7 +95,7 @@ describe('ChatComposer', () => {
       />
     );
 
-    const stopBtn = screen.getByLabelText('main.stopGenerating');
+    const stopBtn = screen.getByLabelText('Stop generating');
     fireEvent.click(stopBtn);
     expect(onStop).toHaveBeenCalled();
   });

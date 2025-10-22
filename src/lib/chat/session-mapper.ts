@@ -1,4 +1,4 @@
-import type { components } from '@/types/api.generated';
+import type { components } from '@/types/api/sessions';
 
 export interface UiSession {
   id: string;

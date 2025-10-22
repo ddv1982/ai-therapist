@@ -39,6 +39,7 @@ interface CBTMessageProps {
   initialRationalThoughtsData?: RationalThoughtsData;
   initialActionData?: ActionPlanData;
   className?: string;
+  onNavigateStep?: (step: CBTStepType) => void;
 }
 
 export function CBTMessage({ 
@@ -58,7 +59,8 @@ export function CBTMessage({
   initialChallengeQuestionsData,
   initialRationalThoughtsData,
   initialActionData,
-  className 
+  className,
+  onNavigateStep,
 }: CBTMessageProps) {
   
   const renderCBTComponent = () => {
@@ -67,6 +69,7 @@ export function CBTMessage({
         return (
           <SituationPrompt
             onComplete={onSituationComplete!}
+            onNavigateStep={onNavigateStep}
           />
         );
         
@@ -74,6 +77,7 @@ export function CBTMessage({
         return (
           <EmotionScale
             onComplete={onEmotionComplete!}
+            onNavigateStep={onNavigateStep}
           />
         );
         
@@ -84,6 +88,7 @@ export function CBTMessage({
             initialData={initialThoughtData}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={onNavigateStep}
           />
         );
         
@@ -94,6 +99,7 @@ export function CBTMessage({
             initialData={initialCoreBeliefData}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={onNavigateStep}
           />
         );
         
@@ -105,6 +111,7 @@ export function CBTMessage({
             coreBeliefText={initialCoreBeliefData?.coreBeliefText}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={onNavigateStep}
           />
         );
         
@@ -116,6 +123,7 @@ export function CBTMessage({
             coreBeliefText={initialCoreBeliefData?.coreBeliefText}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={onNavigateStep}
           />
         );
       
@@ -123,6 +131,7 @@ export function CBTMessage({
         return (
           <FinalEmotionReflection
             onComplete={() => {}}
+            onNavigateStep={onNavigateStep}
           />
         );
         
@@ -135,6 +144,7 @@ export function CBTMessage({
             customEmotion={initialEmotionData?.other}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={onNavigateStep}
           />
         );
         

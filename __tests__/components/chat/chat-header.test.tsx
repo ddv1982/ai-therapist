@@ -1,5 +1,6 @@
 import React from 'react';
 import { screen, fireEvent, render } from '@testing-library/react';
+import { NextIntlClientProvider } from 'next-intl';
 
 // Mock lucide-react before importing ChatHeader
 jest.mock('lucide-react', () => ({
@@ -11,10 +12,19 @@ jest.mock('lucide-react', () => ({
 }));
 
 import { ChatHeader } from '@/features/chat/components/chat-header';
+import enMessages from '@/i18n/messages/en.json';
+
+function renderWithIntl(ui: React.ReactNode) {
+  return render(
+    <NextIntlClientProvider locale="en" messages={enMessages}>
+      {ui}
+    </NextIntlClientProvider>
+  );
+}
 
 describe('ChatHeader', () => {
   test('renders new conversation title when no active session', () => {
-    render(
+    renderWithIntl(
       <ChatHeader
         showSidebar={false}
         onToggleSidebar={() => {}}
@@ -31,13 +41,12 @@ describe('ChatHeader', () => {
       />
     );
 
-    // Uses next-intl mock: label equals key
-    expect(screen.getByText('main.newConversation')).toBeInTheDocument();
+    expect(screen.getByText('New Conversation')).toBeInTheDocument();
   });
 
   test('invokes toggle sidebar on button click', () => {
     const onToggle = jest.fn();
-    render(
+    renderWithIntl(
       <ChatHeader
         showSidebar={false}
         onToggleSidebar={onToggle}
@@ -54,7 +63,7 @@ describe('ChatHeader', () => {
       />
     );
 
-    const btn = screen.getByLabelText('main.toggleSidebar');
+    const btn = screen.getByLabelText('Toggle session sidebar');
     fireEvent.click(btn);
     expect(onToggle).toHaveBeenCalled();
   });

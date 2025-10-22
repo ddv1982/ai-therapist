@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Heart, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { TherapySlider } from '@/components/ui/therapy-slider';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { EmotionData, ActionPlanData } from '@/types/therapy';
+import type { EmotionData, ActionPlanData, CBTStepType } from '@/types/therapy';
 import {useTranslations} from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
@@ -17,9 +17,10 @@ interface FinalEmotionReflectionProps {
   onComplete?: (data: EmotionData) => void;
   onSendToChat?: () => void;
   className?: string;
+  onNavigateStep?: (step: CBTStepType) => void;
 }
 
-export function FinalEmotionReflection({ onComplete, onSendToChat, className }: FinalEmotionReflectionProps) {
+export function FinalEmotionReflection({ onComplete, onSendToChat, className, onNavigateStep }: FinalEmotionReflectionProps) {
   const { sessionData, actionActions } = useCBTDataManager();
   const t = useTranslations('cbt');
 
@@ -42,13 +43,13 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
   const [showCustom, setShowCustom] = useState(Boolean(localFinal.other));
 
   const coreEmotions = [
-    { key: 'fear', label: 'Fear', emoji: '😨', color: 'bg-emotion-fear' },
-    { key: 'anger', label: 'Anger', emoji: '😠', color: 'bg-emotion-anger' },
-    { key: 'sadness', label: 'Sadness', emoji: '😢', color: 'bg-emotion-sadness' },
-    { key: 'joy', label: 'Joy', emoji: '😊', color: 'bg-emotion-joy' },
-    { key: 'anxiety', label: 'Anxiety', emoji: '😰', color: 'bg-emotion-anxiety' },
-    { key: 'shame', label: 'Shame', emoji: '😳', color: 'bg-emotion-shame' },
-    { key: 'guilt', label: 'Guilt', emoji: '😔', color: 'bg-emotion-guilt' }
+    { key: 'fear', label: t('emotions.labels.fear'), emoji: '😨', color: 'bg-emotion-fear' },
+    { key: 'anger', label: t('emotions.labels.anger'), emoji: '😠', color: 'bg-emotion-anger' },
+    { key: 'sadness', label: t('emotions.labels.sadness'), emoji: '😢', color: 'bg-emotion-sadness' },
+    { key: 'joy', label: t('emotions.labels.joy'), emoji: '😊', color: 'bg-emotion-joy' },
+    { key: 'anxiety', label: t('emotions.labels.anxiety'), emoji: '😰', color: 'bg-emotion-anxiety' },
+    { key: 'shame', label: t('emotions.labels.shame'), emoji: '😳', color: 'bg-emotion-shame' },
+    { key: 'guilt', label: t('emotions.labels.guilt'), emoji: '😔', color: 'bg-emotion-guilt' }
   ];
 
   const handleEmotionChange = useCallback((key: keyof EmotionData, value: number) => {
@@ -105,6 +106,7 @@ export function FinalEmotionReflection({ onComplete, onSendToChat, className }: 
       nextButtonText={t('actions.sendToChat')}
       hideProgressBar={true}
       className={className}
+      onNavigateStep={onNavigateStep}
     >
       <div className="space-y-6">
         {hasSelectedEmotions && (

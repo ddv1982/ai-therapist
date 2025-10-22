@@ -391,7 +391,7 @@ describe('Toast System', () => {
         expect(screen.getByText('Success message!')).toBeInTheDocument();
       });
 
-      const closeButton = screen.getByLabelText('Close notification');
+      const closeButton = screen.getByLabelText('Close');
       fireEvent.click(closeButton);
 
       await waitFor(() => {
@@ -494,7 +494,7 @@ describe('Toast System', () => {
       fireEvent.click(screen.getByTestId('show-success'));
 
       await waitFor(() => {
-        expect(screen.getByLabelText('Close notification')).toBeInTheDocument();
+        expect(screen.getByLabelText('Close')).toBeInTheDocument();
         expect(screen.getByTestId('x-icon')).toBeInTheDocument();
       });
     });
@@ -714,7 +714,7 @@ describe('Toast System', () => {
       });
 
       // Manually remove before timeout
-      const closeButton = screen.getByLabelText('Close notification');
+      const closeButton = screen.getByLabelText('Close');
       fireEvent.click(closeButton);
 
       await waitFor(() => {

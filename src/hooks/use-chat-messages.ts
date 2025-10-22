@@ -13,7 +13,7 @@ import type { MessageData } from '@/features/chat/messages/message';
 import { logger } from '@/lib/utils/logger';
 import { apiClient } from '@/lib/api/client';
 import { getApiData } from '@/lib/api/api-response';
-import type { components } from '@/types/api.generated';
+import type { components } from '@/types/api/messages';
 import { parseObsessionsCompulsionsFromMarkdown } from '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions';
 import { isObsessionsCompulsionsMessage } from '@/features/therapy/obsessions-compulsions/utils/obsessions-message-detector';
 import type { ObsessionsCompulsionsData } from '@/types/therapy';
@@ -344,6 +344,12 @@ export function useChatMessages() {
         schedulePendingFlush(messageId);
       }
     });
+    // Snapshot the current ref value for cleanup to satisfy react-hooks rules
+    const pendingFlushAtEffectTime = pendingFlushRef.current;
+    return () => {
+      // Prevent dangling scheduled flushes after unmount
+      pendingFlushAtEffectTime.clear();
+    };
   }, [messages, schedulePendingFlush]);
 
   const updateMessageMetadata = useCallback(

@@ -22,13 +22,13 @@ exports[`DraftPanel renders with draft found 1`] = `
           <span
             class="px-2 py-1 text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full"
           >
-            status.saved
+            Saved
           </span>
         </div>
         <button
-          aria-label="actions.deleteDraft"
+          aria-label="Delete draft"
           class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-muted hover:text-foreground h-12 w-12"
-          title="actions.deleteDraft"
+          title="Delete draft"
         >
           <div
             class="w-4 h-4"
@@ -39,12 +39,12 @@ exports[`DraftPanel renders with draft found 1`] = `
       <p
         class="text-sm opacity-90"
       >
-        draft.found
+        We found an in-progress CBT session.
       </p>
       <p
         class="text-sm opacity-75 mt-1"
       >
-        draft.choice
+        Choose to continue where you left off or start fresh.
       </p>
     </div>
     <div
@@ -64,7 +64,7 @@ exports[`DraftPanel renders with draft found 1`] = `
         <span
           class="font-semibold"
         >
-          actions.resume
+          Resume Previous Session
         </span>
         <div
           class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"
@@ -74,7 +74,7 @@ exports[`DraftPanel renders with draft found 1`] = `
       <button
         class="inline-flex items-center gap-2 whitespace-nowrap text-base transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border-input bg-background shadow-sm py-2 justify-center h-12 rounded-xl border-2 hover:bg-accent hover:text-accent-foreground px-6 font-semibold"
       >
-        actions.startNew
+        Start New Session
       </button>
     </div>
   </div>
@@ -100,7 +100,7 @@ exports[`DraftPanel renders without draft (begin button) 1`] = `
       <span
         class="font-semibold"
       >
-        actions.begin
+        Begin CBT Session
       </span>
       <div
         class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"

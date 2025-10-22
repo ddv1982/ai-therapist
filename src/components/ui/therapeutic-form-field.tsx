@@ -138,8 +138,9 @@ export function TherapeuticFormField({
   ...props
 }: TherapeuticFormFieldProps) {
   const t = useTranslations('ui');
+  const cbtT = useTranslations('cbt');
   
-  const [, setDraftTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [, setDraftTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   
   // Fix: Move emotion scale hooks to component level (prevents React hooks rules violation)
@@ -225,7 +226,7 @@ export function TherapeuticFormField({
                         {emotion.emoji}
                       </div>
                       <div>
-                        <h4 className="font-semibold text-sm">{emotion.label}</h4>
+                        <h4 className="font-semibold text-sm">{emotion.label.startsWith('cbt.') ? (cbtT(emotion.label as Parameters<typeof cbtT>[0]) as string) : emotion.label}</h4>
                         {isSelected && (
                           <p className="text-sm text-muted-foreground">
                             {getIntensityLabel(emotionValue)}
@@ -289,13 +290,13 @@ export function TherapeuticFormField({
                 className="w-full border-dashed"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Custom Emotion
+                {cbtT('emotions.addCustom')}
               </Button>
             ) : (
               <div className="space-y-3">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Custom emotion (e.g., grateful, excited)"
+                    placeholder={cbtT('emotions.customPlaceholder')}
                     value={customEmotion}
                     onChange={(e) => setCustomEmotion(e.target.value)}
                     className="flex-1"

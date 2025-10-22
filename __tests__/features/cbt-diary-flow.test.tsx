@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import { ComponentTestUtils } from '__tests__/utils/test-utilities';
 import { useCbtDiaryFlow } from '@/features/therapy/cbt/hooks/use-cbt-diary-flow';
 
 const flush = () => new Promise<void>(r => setTimeout(r, 0));
@@ -25,6 +26,8 @@ function TestHarness() {
 }
 
 describe('useCbtDiaryFlow', () => {
+  ComponentTestUtils.setupComponentTest();
+
   it('inserts next step component deterministically after completing Situation', async () => {
     render(<TestHarness />);
 

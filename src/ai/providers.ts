@@ -145,7 +145,6 @@ export async function checkOllamaAvailability(): Promise<OllamaHealthResult> {
 }
 
 // Legacy compatibility
-export const DEFAULT_CHAT_MODEL = defaultModel;
 
 function createLocalOllamaLanguageModel(params: { chatUrl: string; modelId: string }): LanguageModel {
   const { chatUrl, modelId } = params;

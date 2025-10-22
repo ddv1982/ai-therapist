@@ -579,8 +579,8 @@ export interface paths {
         };
         /**
          * Get available AI models
-         * @description Retrieves a list of available AI models from the Groq API with their specifications,
-         *     token limits, and categorization (featured, production, preview).
+         * @description Retrieves a list of available AI models configured in the application (Groq defaults
+         *     and optional local Ollama). Includes token limits and categorization (featured, production).
          *
          */
         get: {

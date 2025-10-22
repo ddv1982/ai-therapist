@@ -1,4 +1,6 @@
-import type { paths, components } from '@/types/api.generated';
+import type { paths as SessionPaths, components as SessionComponents } from '@/types/api/sessions';
+import type { paths as MessagePaths, components as MessageComponents } from '@/types/api/messages';
+import type { paths as ReportPaths } from '@/types/api/reports';
 import type { ApiResponse, PaginatedResponse } from '@/lib/api/api-response';
 
 async function parseJsonSafe(response: Response) {
@@ -122,12 +124,12 @@ export class ApiClient {
   // Token refresh removed; DB-backed session cookie handles auth.
 
   // Sessions
-  async listSessions(): Promise<ApiResponse<components['schemas']['Session'][]>> {
-    return this.request<ApiResponse<components['schemas']['Session'][]>>('/api/sessions');
+  async listSessions(): Promise<ApiResponse<SessionComponents['schemas']['Session'][]>> {
+    return this.request<ApiResponse<SessionComponents['schemas']['Session'][]>>('/api/sessions');
   }
 
-  async createSession(body: paths['/sessions']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<components['schemas']['Session']>> {
-    return this.request<ApiResponse<components['schemas']['Session']>>('/api/sessions', {
+  async createSession(body: SessionPaths['/sessions']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<SessionComponents['schemas']['Session']>> {
+    return this.request<ApiResponse<SessionComponents['schemas']['Session']>>('/api/sessions', {
       method: 'POST',
       body: JSON.stringify(body),
     });
@@ -138,19 +140,19 @@ export class ApiClient {
   }
 
   // Messages
-  async listMessages(sessionId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<PaginatedResponse<components['schemas']['Message']>>> {
+  async listMessages(sessionId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<PaginatedResponse<MessageComponents['schemas']['Message']>>> {
     const qs = new URLSearchParams();
     if (params?.page) qs.set('page', String(params.page));
     if (params?.limit) qs.set('limit', String(params.limit));
     const path = `/api/sessions/${sessionId}/messages${qs.toString() ? `?${qs.toString()}` : ''}`;
-    return this.request<ApiResponse<PaginatedResponse<components['schemas']['Message']>>>(path);
+    return this.request<ApiResponse<PaginatedResponse<MessageComponents['schemas']['Message']>>>(path);
   }
 
   async postMessage(
     sessionId: string,
-    body: paths['/sessions/{sessionId}/messages']['post']['requestBody']['content']['application/json'] & { metadata?: Record<string, unknown> }
-  ): Promise<ApiResponse<components['schemas']['Message']>> {
-    return this.request<ApiResponse<components['schemas']['Message']>>(`/api/sessions/${sessionId}/messages`, {
+    body: MessagePaths['/sessions/{sessionId}/messages']['post']['requestBody']['content']['application/json'] & { metadata?: Record<string, unknown> }
+  ): Promise<ApiResponse<MessageComponents['schemas']['Message']>> {
+    return this.request<ApiResponse<MessageComponents['schemas']['Message']>>(`/api/sessions/${sessionId}/messages`, {
       method: 'POST',
       body: JSON.stringify(body),
     });
@@ -163,8 +165,8 @@ export class ApiClient {
       metadata: Record<string, unknown>;
       mergeStrategy?: 'merge' | 'replace';
     }
-  ): Promise<ApiResponse<components['schemas']['Message']>> {
-    return this.request<ApiResponse<components['schemas']['Message']>>(`/api/sessions/${sessionId}/messages/${messageId}`, {
+  ): Promise<ApiResponse<MessageComponents['schemas']['Message']>> {
+    return this.request<ApiResponse<MessageComponents['schemas']['Message']>>(`/api/sessions/${sessionId}/messages/${messageId}`, {
       method: 'PATCH',
       body: JSON.stringify(body),
     });
@@ -173,7 +175,7 @@ export class ApiClient {
   // Reports (legacy POST /api/reports removed)
 
   // Reports (detailed generate endpoint)
-  async generateReportDetailed(body: paths['/reports/generate']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<{ reportContent: string; modelUsed: string; modelDisplayName: string; cbtDataSource: string; cbtDataAvailable: boolean }>> {
+  async generateReportDetailed(body: ReportPaths['/reports/generate']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<{ reportContent: string; modelUsed: string; modelDisplayName: string; cbtDataSource: string; cbtDataAvailable: boolean }>> {
     return this.request<ApiResponse<{ reportContent: string; modelUsed: string; modelDisplayName: string; cbtDataSource: string; cbtDataAvailable: boolean }>>('/api/reports/generate', {
       method: 'POST',
       body: JSON.stringify(body),
@@ -185,16 +187,16 @@ export class ApiClient {
     return this.request<ApiResponse<{ currentSession: { id: string; title: string; startedAt: string; updatedAt: string; status: string; messageCount: number } | null }>>('/api/sessions/current');
   }
 
-  async setCurrentSession(sessionId: string): Promise<ApiResponse<{ success: boolean; session: components['schemas']['Session'] }>> {
-    return this.request<ApiResponse<{ success: boolean; session: components['schemas']['Session'] }>>('/api/sessions/current', {
+  async setCurrentSession(sessionId: string): Promise<ApiResponse<{ success: boolean; session: SessionComponents['schemas']['Session'] }>> {
+    return this.request<ApiResponse<{ success: boolean; session: SessionComponents['schemas']['Session'] }>>('/api/sessions/current', {
       method: 'POST',
       body: JSON.stringify({ sessionId }),
     });
   }
 
   // Single session
-  async getSessionById(sessionId: string): Promise<ApiResponse<components['schemas']['Session']>> {
-    return this.request<ApiResponse<components['schemas']['Session']>>(`/api/sessions/${sessionId}`);
+  async getSessionById(sessionId: string): Promise<ApiResponse<SessionComponents['schemas']['Session']>> {
+    return this.request<ApiResponse<SessionComponents['schemas']['Session']>>(`/api/sessions/${sessionId}`);
   }
 
   // Auth/session status

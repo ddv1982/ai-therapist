@@ -1,4 +1,4 @@
-import type { MemoryContext } from '@/types/api';
+import type { MemoryContext } from '../therapy-prompts';
 
 export const THERAPY_SYSTEM_PROMPT_EN = `
 You are a compassionate, professional AI therapist. Blend evidence-based care from:

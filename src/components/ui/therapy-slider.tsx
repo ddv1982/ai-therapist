@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import {useTranslations} from 'next-intl';
+import { Slider } from '@/components/ui/slider';
 
 export type SliderType = 'credibility' | 'confidence' | 'intensity' | 'generic';
 
@@ -95,10 +96,7 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
   // Ensure value is within bounds
   const clampedValue = Math.max(minValue, Math.min(maxValue, value));
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = parseInt(event.target.value, 10);
-    onChange(newValue);
-  };
+  // no-op: Radix Slider handles value change via onValueChange above
 
   const labelClassName = labelSize === 'xs' ? 'text-sm' : 'text-sm';
 
@@ -114,19 +112,18 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
         </span>
       </div>
 
-      {/* Slider Input */}
-      <input
-        type="range"
+      {/* Slider Input (Radix) */}
+      <Slider
+        value={[clampedValue]}
+        onValueChange={([next]) => {
+          const nextValue = typeof next === 'number' ? next : minValue;
+          onChange(Math.max(minValue, Math.min(maxValue, nextValue)));
+        }}
         min={minValue}
         max={maxValue}
-        step="1"
-        value={clampedValue}
-        onChange={handleChange}
-        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 slider-thumb:rounded-full slider-thumb:bg-primary slider-thumb:cursor-pointer slider-track:bg-muted slider-track:rounded-lg"
+        step={1}
         aria-label={label}
-        aria-valuemin={minValue}
-        aria-valuemax={maxValue}
-        aria-valuenow={clampedValue}
+        className="w-full"
       />
 
       {/* Scale Labels */}

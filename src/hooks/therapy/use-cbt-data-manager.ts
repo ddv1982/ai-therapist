@@ -46,7 +46,7 @@ import { useChatUI } from '@/contexts/chat-ui-context';
 import { useCBTChatBridge, type SendStepOptions } from '@/lib/therapy/use-cbt-chat-bridge';
 import { buildSessionSummaryCard } from '@/features/therapy/cbt/flow/cards';
 import { buildMarkdownSummary } from '@/features/therapy/cbt/flow/summary';
-import { generateUUID } from '@/lib/utils/utils';
+import { generateUUID } from '@/lib/utils';
 import { type CBTStepId } from '@/features/therapy/cbt/flow';
 
 // Narrowing helpers to avoid any-casts during legacy migration/adapters
@@ -345,8 +345,8 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   const lastAutoSave = useSelector((state: RootState) => state.cbt?.lastAutoSave);
   
 
-  const autoSaveTimeout = useRef<NodeJS.Timeout | null>(null);
-  const uiSavingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const uiSavingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isSavingUI, setIsSavingUI] = useState<boolean>(false);
   
   const debouncedAutoSave = useCallback((data: Partial<CBTFormInput>) => {
@@ -503,9 +503,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       }
 
       if (Array.isArray(draft.schemaModes)) {
-        const mapped: SchemaMode[] = draft.schemaModes.map((mode, index) => ({
+    const mapped: SchemaMode[] = draft.schemaModes.map((mode, index) => ({
           id: mode.id ?? mode.name ?? `legacy-schema-mode-${index}`,
-          name: mode.name ?? mode.id ?? `Schema Mode ${index + 1}`,
+          name: mode.name ?? mode.id ?? '',
           description: mode.description ?? '',
           selected: Boolean(mode.selected),
           intensity: typeof mode.intensity === 'number' ? mode.intensity : 5,
@@ -704,7 +704,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       const current = sessionData.schemaModes ?? [];
       const mapped: SchemaMode[] = current.map((mode, idx) => ({
         id: mode.mode ?? `schema-mode-${idx}`,
-        name: mode.mode ?? `Schema Mode ${idx + 1}`,
+        name: mode.mode ?? '',
         description: mode.description ?? '',
         selected: idx === index ? isActive : Boolean(mode.isActive),
         intensity: typeof mode.intensity === 'number' ? mode.intensity : 0,

@@ -1,7 +1,8 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Circle, AlertCircle } from "lucide-react";
+import * as React from 'react';
+import { useTranslations } from 'next-intl';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, Circle, AlertCircle } from 'lucide-react';
 
 interface ProgressStep {
   id: string;
@@ -44,6 +45,7 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
     const completedSteps = steps.filter(step => step.completed).length;
     const totalSteps = steps.length;
     const progressPercentage = (completedSteps / totalSteps) * 100;
+    const t = useTranslations('cbt');
 
     return (
       <div
@@ -55,14 +57,14 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
         <div className="mb-therapy-md">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-semibold text-foreground">
-              Overall Progress
+              {t('progress.overall')}
             </span>
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-primary">
-                {Math.round(progressPercentage)}%
+                {t('progress.complete', { percent: Math.round(progressPercentage) })}
               </span>
               <Badge variant="outline" size="sm">
-                {completedSteps}/{totalSteps}
+                {t('progress.step', { current: completedSteps, total: totalSteps })}
               </Badge>
             </div>
           </div>
@@ -145,7 +147,7 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
                         size="sm"
                         className="absolute -top-2 -right-2 text-[10px] px-1 py-0.5 h-4"
                       >
-                        Optional
+                        {t('progress.optional')}
                       </Badge>
                     )}
                   </div>

@@ -1,5 +1,11 @@
 import type { AppLocale } from '@/i18n/config';
-import type { MemoryContext } from '@/types/api';
+export type MemoryContext = {
+  sessionTitle: string;
+  sessionDate: string;
+  reportDate: string;
+  summary: string;
+  content: string;
+};
 
 import {
   THERAPY_SYSTEM_PROMPT_EN,
@@ -12,7 +18,7 @@ import { THERAPY_SYSTEM_PROMPT_NL, WEB_SEARCH_NL, MEMORY_SECTION_NL } from './pr
 export const THERAPY_SYSTEM_PROMPT = THERAPY_SYSTEM_PROMPT_EN;
 export const REPORT_GENERATION_PROMPT = REPORT_PROMPT_EN;
 
-export type { MemoryContext } from '@/types/api';
+
 
 const EN_MEMORY_ANCHOR = 'Remember: Your primary role is to listen deeply';
 

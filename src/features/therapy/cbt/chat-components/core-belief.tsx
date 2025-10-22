@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TherapySlider } from '@/components/ui/therapy-slider';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { Target } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { CoreBeliefData } from '@/types/therapy';
+import type { CBTStepType, CoreBeliefData } from '@/types/therapy';
 // Removed chat bridge imports - individual data no longer sent during session
 import {useTranslations} from 'next-intl';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
 interface CoreBeliefProps {
@@ -21,12 +21,14 @@ interface CoreBeliefProps {
   stepNumber?: number;
   totalSteps?: number;
   className?: string;
+  onNavigateStep?: (step: CBTStepType) => void;
 }
 
-export function CoreBelief({ 
-  onComplete, 
+export function CoreBelief({
+  onComplete,
   initialData,
-  className 
+  className,
+  onNavigateStep,
 }: CoreBeliefProps) {
   const t = useTranslations('cbt');
   const { sessionData, beliefActions } = useCBTDataManager();
@@ -57,11 +59,23 @@ export function CoreBelief({
     }, 500); // Debounce updates by 500ms
 
     return () => clearTimeout(timeoutId);
-  }, [beliefData, beliefActions]);
+  }, [beliefData, beliefData.coreBeliefText, beliefData.coreBeliefCredibility, beliefActions]);
+
+  // Rehydrate local state if unified session data changes while mounted
+  useEffect(() => {
+    const source = coreBelifsData && coreBelifsData.length > 0 ? coreBelifsData[0] : null;
+    if (!source) return;
+    if (source.coreBeliefText !== beliefData.coreBeliefText || source.coreBeliefCredibility !== beliefData.coreBeliefCredibility) {
+      setBeliefData(source);
+    }
+    const prompts = (t.raw('coreBelief.prompts') as string[]) || [];
+    setSelectedPrompt(prompts.includes(source.coreBeliefText) ? source.coreBeliefText : '');
+  }, [coreBelifsData, beliefData.coreBeliefText, beliefData.coreBeliefCredibility, t]);
   
   // Note: Chat bridge no longer used - data sent only in final comprehensive summary
 
   const [selectedPrompt, setSelectedPrompt] = useState<string>('');
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const handleBeliefChange = useCallback((value: string) => {
     setBeliefData(prev => ({ ...prev, coreBeliefText: value }));
@@ -71,8 +85,16 @@ export function CoreBelief({
 
   const handlePromptSelect = useCallback((prompt: string) => {
     setSelectedPrompt(prompt);
-    setBeliefData(prev => ({ ...prev, coreBeliefText: prompt }));
-  }, []);
+    const next = { ...beliefData, coreBeliefText: prompt };
+    setBeliefData(next);
+    beliefActions.updateCoreBeliefs([next]);
+    const el = textareaRef.current;
+    if (el) {
+      el.focus();
+      const len = prompt.length;
+      try { el.setSelectionRange(len, len); } catch {}
+    }
+  }, [beliefData, beliefActions]);
 
   const handleCredibilityChange = useCallback((value: number) => {
     setBeliefData(prev => ({ ...prev, coreBeliefCredibility: value }));
@@ -116,6 +138,7 @@ export function CoreBelief({
       helpText={t('coreBelief.help')}
       hideProgressBar={true}
       className={className}
+      onNavigateStep={onNavigateStep}
     >
       <div className="space-y-6">
           {/* Quick Belief Prompts */}
@@ -126,6 +149,7 @@ export function CoreBelief({
                 const isSelected = selectedPrompt === prompt;
                 return (
                   <Button
+                    type="button"
                     key={index}
                     variant={isSelected ? 'default' : 'outline'}
                     size="sm"
@@ -150,6 +174,7 @@ export function CoreBelief({
               placeholder={t('coreBelief.placeholder')}
               value={beliefData.coreBeliefText}
               onChange={(e) => handleBeliefChange(e.target.value)}
+              ref={(el) => { textareaRef.current = el; }}
               className="min-h-[80px] resize-none"
               maxLength={500}
             />

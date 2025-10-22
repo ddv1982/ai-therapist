@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { MessageContent } from '@/features/chat/messages/message-content';
 import { MessageAvatar } from '@/features/chat/messages/message-avatar';
 import { MessageTimestamp } from '@/features/chat/messages/message-timestamp';

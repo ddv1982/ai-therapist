@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { apiClient } from '@/lib/api/client';
 import { getApiData } from '@/lib/api/api-response';
 import { mapApiSessionToUiSession } from '@/lib/chat/session-mapper';
-import type { components } from '@/types/api.generated';
+import type { components } from '@/types/api/sessions';
 
 type UiSession = ReturnType<typeof mapApiSessionToUiSession>;
 

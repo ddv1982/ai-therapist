@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Brain } from 'lucide-react';
 import {useTranslations} from 'next-intl';
 import { useToast } from '@/components/ui/toast';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
 import { DraftPanel } from '@/features/therapy/cbt/components/draft-panel';
 import { FooterInfo } from '@/features/therapy/cbt/components/footer-info';
@@ -20,7 +20,6 @@ import { useChatMessages } from '@/hooks/use-chat-messages';
 import { useSelectSession } from '@/hooks';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { apiClient } from '@/lib/api/client';
-import type { components } from '@/types/api.generated';
 //
 import { useCbtDiaryFlow } from '@/features/therapy/cbt/hooks/use-cbt-diary-flow';
 import { sendToChat } from '@/features/therapy/cbt/utils/send-to-chat';
@@ -336,9 +335,8 @@ function CBTDiaryPageContent() {
 export default function CBTDiaryPage() {
   const { addMessageToChat } = useChatMessages();
   const [currentSession, setCurrentSession] = useState<string | null>(null);
-  const t = useTranslations('cbt');
 
-  // Session management for CBT diary
+  // Session management for CBT diary (do not auto-create sessions)
   const ensureSession = useCallback(async (): Promise<string | null> => {
     try {
       // Try to get current session first
@@ -351,20 +349,6 @@ export default function CBTDiaryPage() {
         setCurrentSession(sessionId);
         return sessionId;
       }
-
-      // If no current session, create a new one for CBT diary
-      const title = t('sessionReportTitle');
-      const createResp = await apiClient.createSession({ title });
-      if (createResp && createResp.success && createResp.data) {
-        const newSession = createResp.data as components['schemas']['Session'];
-        const sessionId = newSession.id;
-        setCurrentSession(sessionId);
-        
-        // Set as current session
-        await apiClient.setCurrentSession(sessionId);
-        
-        return sessionId;
-      }
     } catch (error) {
       logger.error('Failed to ensure session for CBT diary', {
         component: 'CBTDiaryPage',
@@ -372,7 +356,7 @@ export default function CBTDiaryPage() {
       }, error instanceof Error ? error : new Error(String(error)));
     }
     return null;
-  }, [t]);
+  }, []);
 
   // Initialize session when component mounts
   useEffect(() => {

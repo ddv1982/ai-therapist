@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { MessageData } from '@/features/chat/messages/message';
 import { apiClient } from '@/lib/api/client';
-import { generateUUID } from '@/lib/utils/utils';
+import { generateUUID } from '@/lib/utils';
 import { logger } from '@/lib/utils/logger';
 import { useToast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';

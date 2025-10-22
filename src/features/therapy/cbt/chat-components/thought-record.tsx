@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TherapySlider } from '@/components/ui/therapy-slider';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { Brain, Plus, Minus, Lightbulb } from 'lucide-react';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { ThoughtData } from '@/types/therapy';
+import type { CBTStepType, ThoughtData } from '@/types/therapy';
 // Removed CBTFormValidationError import - validation errors not displayed
 // Removed chat bridge imports - individual data no longer sent during session
 import {useTranslations} from 'next-intl';
@@ -23,6 +23,7 @@ interface ThoughtRecordProps {
   stepNumber?: number;
   totalSteps?: number;
   className?: string;
+  onNavigateStep?: (step: CBTStepType) => void;
 }
 
 export function ThoughtRecord({ 
@@ -30,7 +31,8 @@ export function ThoughtRecord({
   initialData,
   title,
   subtitle,
-  className 
+  className,
+  onNavigateStep,
 }: ThoughtRecordProps) {
   const t = useTranslations('cbt');
   const { sessionData, thoughtActions } = useCBTDataManager();
@@ -52,12 +54,34 @@ export function ThoughtRecord({
     return thoughtsData && thoughtsData.length > 0 ? thoughtsData : defaultThoughts;
   });
 
-  const [selectedPrompts, setSelectedPrompts] = useState<string[]>(() => 
-    new Array(thoughts.length).fill('')
-  );
+  const [selectedPrompts, setSelectedPrompts] = useState<string[]>(() => new Array(thoughts.length).fill(''));
+  const [focusedThoughtIndex, setFocusedThoughtIndex] = useState<number>(0);
   const [errors, setErrors] = useState<string[]>(() => 
     new Array(thoughts.length).fill('')
   );
+  // Prevent rehydrate effect from overwriting fresh local changes
+  const skipNextRehydrateRef = useRef<boolean>(false);
+  const textareaRefs = useRef<Array<HTMLTextAreaElement | null>>([]);
+
+  // Rehydrate local state if unified session data changes while mounted
+  useEffect(() => {
+    if (!thoughtsData || thoughtsData.length === 0) return;
+    if (skipNextRehydrateRef.current) {
+      // A local change just occurred; skip a single rehydrate pass
+      skipNextRehydrateRef.current = false;
+      // still refresh highlight from store
+    }
+    const equalLength = thoughtsData.length === thoughts.length;
+    const isSame = equalLength && thoughtsData.every((t, i) => t.thought === thoughts[i]?.thought && t.credibility === thoughts[i]?.credibility);
+    if (!isSame) {
+      setThoughts(thoughtsData);
+      setErrors(new Array(thoughtsData.length).fill(''));
+    }
+    // Always recompute highlight from store values to persist selection when navigating
+    const prompts = (t.raw('thoughts.prompts') as string[]) || [];
+    const rehydratedSelections = thoughtsData.map((item) => (prompts.includes(item.thought) ? item.thought : ''));
+    setSelectedPrompts(rehydratedSelections);
+  }, [thoughtsData, thoughts, t]);
 
   // Auto-save to unified CBT state when thoughts change
   useEffect(() => {
@@ -77,6 +101,7 @@ export function ThoughtRecord({
     const updatedThoughts = [...thoughts];
     updatedThoughts[index] = { ...updatedThoughts[index], thought: newThought };
     setThoughts(updatedThoughts);
+    skipNextRehydrateRef.current = true;
     
     // Clear selection when manually typing (unless it matches exactly)
     const updatedSelectedPrompts = [...selectedPrompts];
@@ -95,22 +120,45 @@ export function ThoughtRecord({
     const updatedThoughts = [...thoughts];
     updatedThoughts[index] = { ...updatedThoughts[index], credibility };
     setThoughts(updatedThoughts);
+    skipNextRehydrateRef.current = true;
   }, [thoughts]);
 
   const handlePromptSelect = useCallback((prompt: string, index: number) => {
-    handleThoughtChange(index, prompt);
-    
-    // Set the selected prompt for this thought index
+    // Update local thoughts immediately
+    const updated = [...thoughts];
+    const at = updated[index] ?? { thought: '', credibility: 5 };
+    updated[index] = { ...at, thought: prompt };
+    setThoughts(updated);
+    skipNextRehydrateRef.current = true;
+
+    // Highlight the chosen prompt for the active thought
     const updatedSelectedPrompts = [...selectedPrompts];
     updatedSelectedPrompts[index] = prompt;
     setSelectedPrompts(updatedSelectedPrompts);
-  }, [handleThoughtChange, selectedPrompts]);
+
+    // Persist to unified state without waiting for debounce
+    thoughtActions.updateThoughts(updated);
+    // Move focus to the targeted textarea to make the change visible
+    setFocusedThoughtIndex(index);
+    const el = textareaRefs.current[index];
+    if (el) {
+      el.focus();
+      // place caret at end
+      const len = prompt.length;
+      try {
+        el.setSelectionRange(len, len);
+      } catch {}
+    }
+  }, [thoughts, selectedPrompts, thoughtActions]);
 
   const addThought = useCallback(() => {
     if (thoughts.length < 5) {
       setThoughts(prev => [...prev, { thought: '', credibility: 5 }]);
       setSelectedPrompts(prev => [...prev, '']);
       setErrors(prev => [...prev, '']);
+      // Focus newly added thought
+      setFocusedThoughtIndex(thoughts.length);
+      skipNextRehydrateRef.current = true;
     }
   }, [thoughts.length]);
 
@@ -119,6 +167,12 @@ export function ThoughtRecord({
       setThoughts(prev => prev.filter((_, i) => i !== index));
       setSelectedPrompts(prev => prev.filter((_, i) => i !== index));
       setErrors(prev => prev.filter((_, i) => i !== index));
+      setFocusedThoughtIndex((prev) => {
+        if (prev === index) return Math.max(0, index - 1);
+        if (prev > index) return prev - 1;
+        return prev;
+      });
+      skipNextRehydrateRef.current = true;
     }
   }, [thoughts.length]);
 
@@ -174,6 +228,7 @@ export function ThoughtRecord({
       helpText={t('thoughts.help')}
       hideProgressBar={true}
       className={className}
+      onNavigateStep={onNavigateStep}
     >
 
       <div className="space-y-6">
@@ -185,13 +240,15 @@ export function ThoughtRecord({
           </div>
           <div className="flex flex-wrap gap-2">
             {thoughtPrompts.map((prompt, index) => {
-              const isSelected = selectedPrompts[0] === prompt;
+              const activeIndex = Math.min(Math.max(focusedThoughtIndex, 0), Math.max(thoughts.length - 1, 0));
+              const isSelected = selectedPrompts[activeIndex] === prompt;
               return (
                 <Button
+                  type="button"
                   key={index}
                   variant={isSelected ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handlePromptSelect(prompt, 0)}
+                  onClick={() => handlePromptSelect(prompt, activeIndex)}
                   className={cn(
                     "text-sm h-7 px-2",
                     isSelected 
@@ -232,6 +289,8 @@ export function ThoughtRecord({
                     placeholder={t('thoughts.placeholder')}
                     value={thought.thought}
                     onChange={(e) => handleThoughtChange(index, e.target.value)}
+                    onFocus={() => setFocusedThoughtIndex(index)}
+                    ref={(el) => { textareaRefs.current[index] = el; }}
                     className="min-h-[100px] resize-none w-full max-w-full break-words overflow-hidden"
                   />
                   {errors[index] && (
@@ -259,7 +318,7 @@ export function ThoughtRecord({
               className="w-full h-12 border-dashed hover:bg-accent hover:text-accent-foreground"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Another Thought
+              {t('thoughts.addAnother')}
             </Button>
           </div>
         )}

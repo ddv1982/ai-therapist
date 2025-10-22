@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
 import { isTOTPSetup } from '@/lib/auth/totp-service';
-import { isLocalhost, isPrivateNetworkAccess } from '@/lib/utils/utils';
+import { isLocalhost, isPrivateNetworkAccess } from '@/lib/utils';
 
 export interface AuthValidationResult {
   isValid: boolean;

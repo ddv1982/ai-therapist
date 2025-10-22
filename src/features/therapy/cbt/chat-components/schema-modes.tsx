@@ -3,13 +3,14 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 // Removed CBTFormValidationError import - validation errors not displayed
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
+import { TherapySlider } from '@/components/ui/therapy-slider';
 
-import type { SchemaMode, SchemaModesData } from '@/types/therapy';
+import type { CBTStepType, SchemaMode, SchemaModesData } from '@/types/therapy';
 
 interface SchemaModesProps {
   onComplete: (data: SchemaModesData) => void;
@@ -19,61 +20,56 @@ interface SchemaModesProps {
   stepNumber?: number;
   totalSteps?: number;
   className?: string;
+  onNavigateStep?: (step: CBTStepType) => void;
 }
 
 // Default schema modes based on Schema Therapy
-const DEFAULT_SCHEMA_MODES: SchemaMode[] = [
-  {
-    id: 'vulnerable-child',
-    name: 'The Vulnerable Child',
-    description: 'scared, helpless, needy',
-    selected: false,
-    intensity: 5
+const SCHEMA_MODE_TRANSLATIONS: Record<string, { name: string; description: string }> = {
+  'vulnerable-child': {
+    name: 'schema.mode.vulnerableChild.name',
+    description: 'schema.mode.vulnerableChild.description',
   },
-  {
-    id: 'angry-child',
-    name: 'The Angry Child', 
-    description: 'frustrated, defiant, rebellious',
-    selected: false,
-    intensity: 5
+  'angry-child': {
+    name: 'schema.mode.angryChild.name',
+    description: 'schema.mode.angryChild.description',
   },
-  {
-    id: 'punishing-parent',
-    name: 'The Punishing Parent',
-    description: 'critical, harsh, demanding',
-    selected: false,
-    intensity: 5
+  'punishing-parent': {
+    name: 'schema.mode.punishingParent.name',
+    description: 'schema.mode.punishingParent.description',
   },
-  {
-    id: 'demanding-parent',
-    name: 'The Demanding Parent',
-    description: 'controlling, entitled, impatient',
-    selected: false,
-    intensity: 5
+  'demanding-parent': {
+    name: 'schema.mode.demandingParent.name',
+    description: 'schema.mode.demandingParent.description',
   },
-  {
-    id: 'detached-self-soother',
-    name: 'The Detached Self-Soother',
-    description: 'withdrawn, disconnected, avoiding',
-    selected: false,
-    intensity: 5
+  'detached-self-soother': {
+    name: 'schema.mode.detachedSelfSoother.name',
+    description: 'schema.mode.detachedSelfSoother.description',
   },
-  {
-    id: 'healthy-adult',
-    name: 'The Healthy Adult',
-    description: 'balanced, rational, caring',
-    selected: false,
-    intensity: 5
-  }
-];
+  'healthy-adult': {
+    name: 'schema.mode.healthyAdult.name',
+    description: 'schema.mode.healthyAdult.description',
+  },
+};
 
-export function SchemaModes({ 
-  onComplete, 
+const DEFAULT_SCHEMA_MODES: SchemaMode[] = Object.entries(SCHEMA_MODE_TRANSLATIONS).map(
+  ([id, keys]) => ({
+    id,
+    name: keys.name,
+    description: keys.description,
+    selected: false,
+    intensity: 5,
+  })
+);
+
+export function SchemaModes({
+  onComplete,
   initialData,
-  className 
+  className,
+  onNavigateStep,
 }: SchemaModesProps) {
-  const { sessionData, schemaActions } = useCBTDataManager();
+  const { sessionData, schemaActions, navigation } = useCBTDataManager();
   const t = useTranslations('cbt');
+  const modeTranslations = useTranslations();
   
   // Get schema modes data from unified CBT hook
   const schemaModesData = sessionData?.schemaModes;
@@ -92,11 +88,11 @@ export function SchemaModes({
     
     // Convert Redux schema modes to component format
     if (schemaModesData && schemaModesData.length > 0) {
-      const selectedModes = DEFAULT_SCHEMA_MODES.map(mode => ({
+      const selectedModes = DEFAULT_SCHEMA_MODES.map((mode) => ({
         ...mode,
         // Compare using stable id, not display name
-        selected: schemaModesData.some(reduxMode => reduxMode.mode === mode.id && reduxMode.isActive),
-        intensity: schemaModesData.find(reduxMode => reduxMode.mode === mode.id)?.intensity || 5
+        selected: schemaModesData.some((reduxMode) => reduxMode.mode === mode.id && reduxMode.isActive),
+        intensity: schemaModesData.find((reduxMode) => reduxMode.mode === mode.id)?.intensity || 5,
       }));
       return { selectedModes };
     }
@@ -108,11 +104,11 @@ export function SchemaModes({
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       const reduxModes = modesData.selectedModes
-        .filter(mode => mode.selected)
-        .map(mode => ({
+        .filter((mode) => mode.selected)
+        .map((mode) => ({
           // Persist stable id into store for consistency
           mode: mode.id,
-          description: mode.description,
+          description: SCHEMA_MODE_TRANSLATIONS[mode.id]?.description ?? mode.description,
           intensity: mode.intensity || 5,
           isActive: mode.selected
         }));
@@ -128,41 +124,57 @@ export function SchemaModes({
   // CBT chat bridge for sending data to session
   // Note: Chat bridge no longer used - data sent only in final comprehensive summary
 
+  const translateMode = useCallback(
+    (mode: SchemaMode) => {
+      const keys = SCHEMA_MODE_TRANSLATIONS[mode.id];
+
+      if (!keys) {
+        return mode;
+      }
+
+      return {
+        ...mode,
+        name: modeTranslations(keys.name as Parameters<typeof modeTranslations>[0]),
+        description: modeTranslations(keys.description as Parameters<typeof modeTranslations>[0]),
+      };
+    },
+    [modeTranslations]
+  );
+
   const handleModeToggle = useCallback((modeId: string) => {
-    setModesData(prev => ({
+    setModesData((prev) => ({
       ...prev,
-      selectedModes: prev.selectedModes.map(mode => 
-        mode.id === modeId 
+      selectedModes: prev.selectedModes.map((mode) =>
+        mode.id === modeId
           ? { ...mode, selected: !mode.selected }
           : mode
-      )
+      ),
     }));
   }, []);
 
   const handleIntensityChange = useCallback((modeId: string, intensity: number) => {
-    setModesData(prev => ({
+    setModesData((prev) => ({
       ...prev,
-      selectedModes: prev.selectedModes.map(mode => 
-        mode.id === modeId 
-          ? { ...mode, intensity }
-          : mode
-      )
+      selectedModes: prev.selectedModes.map((mode) =>
+        mode.id === modeId ? { ...mode, intensity } : mode
+      ),
     }));
   }, []);
 
-  const selectedModes = modesData.selectedModes.filter(mode => mode.selected);
+  const translatedModes = modesData.selectedModes.map(translateMode);
+  const selectedModes = translatedModes.filter((mode) => mode.selected);
   const isValid = selectedModes.length > 0;
 
   // Validation logic - keeps form functional without showing error messages
 
   // Next handler for CBTStepWrapper
   const handleNext = useCallback(async () => {
-    const selectedModes = modesData.selectedModes.filter(mode => mode.selected);
+    const selectedModes = modesData.selectedModes.filter((mode) => mode.selected);
     if (selectedModes.length > 0) {
       // Update store with final data
-      const reduxModes = selectedModes.map(mode => ({
+      const reduxModes = selectedModes.map((mode) => ({
         mode: mode.id,
-        description: mode.description,
+        description: SCHEMA_MODE_TRANSLATIONS[mode.id]?.description ?? mode.description,
         intensity: mode.intensity || 5,
         isActive: mode.selected
       }));
@@ -194,7 +206,11 @@ export function SchemaModes({
       isValid={isValid}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
+      onPrevious={() => {
+        navigation.goPrevious();
+      }}
       className={className}
+      onNavigateStep={onNavigateStep}
     >
       <div className="flex items-center justify-center gap-4 mb-4">
         {selectedModes.length > 0 && (
@@ -221,7 +237,7 @@ export function SchemaModes({
 
           {/* Schema Modes Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {modesData.selectedModes.map((mode) => {
+            {translatedModes.map((mode) => {
               const isSelected = mode.selected;
               
               return (
@@ -280,20 +296,16 @@ export function SchemaModes({
                     {/* Intensity Slider (only shown when selected) */}
                     {isSelected && (
                       <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="range"
-                          min="1"
-                          max="10"
-                          step="1"
+                        <TherapySlider
+                          type="intensity"
+                          label=""
                           value={mode.intensity || 5}
-                          onChange={(e) => handleIntensityChange(mode.id, parseInt(e.target.value))}
-                          className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer slider-thumb:appearance-none slider-thumb:w-4 slider-thumb:h-4 slider-thumb:rounded-full slider-thumb:bg-primary slider-thumb:cursor-pointer"
+                          onChange={(val) => handleIntensityChange(mode.id, val)}
+                          min={1}
+                          max={10}
+                          className="w-full"
+                          labelSize="xs"
                         />
-                        <div className="flex justify-between text-sm text-muted-foreground px-1">
-                          <span>1</span>
-                          <span className="hidden sm:inline">5</span>
-                          <span>10</span>
-                        </div>
                       </div>
                     )}
                   </div>

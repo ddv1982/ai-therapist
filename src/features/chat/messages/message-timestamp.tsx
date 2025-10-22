@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/ui/design-system/message';
 
 interface MessageTimestampProps {

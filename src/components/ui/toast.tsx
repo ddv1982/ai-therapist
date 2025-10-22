@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
-import { cn, generateSecureRandomString } from '@/lib/utils/utils';
+import { cn, generateSecureRandomString } from '@/lib/utils';
 import {useTranslations} from 'next-intl';
 
 export interface Toast {

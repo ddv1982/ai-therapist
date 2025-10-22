@@ -1,42 +1,50 @@
-// Mock for next-intl to avoid ESM issues in tests
-function useTranslations(_namespace) {
-  return function t(key) {
-    // Normalize by stripping known prefixes
-    const normalized = key.replace(/^chat\./, '').replace(/^ui\./, '');
+// Mock for next-intl to avoid ESM issues in tests while still providing sensible translations
+const defaultMessages = require('../../src/i18n/messages/en.json');
 
-    // Special-case for UI close button
-    if (normalized === 'close' || normalized === 'Close notification') {
-      return 'Close notification';
+function resolveMessage(namespace, key) {
+  const fullKey = namespace ? `${namespace}.${key}` : key;
+  if (Object.prototype.hasOwnProperty.call(defaultMessages, fullKey)) {
+    return defaultMessages[fullKey];
+  }
+
+  const segments = fullKey.split('.');
+  return segments.reduce((acc, segment) => (acc && acc[segment] !== undefined ? acc[segment] : undefined), defaultMessages);
+}
+
+function interpolate(message, values = {}) {
+  if (typeof message !== 'string') return message;
+  return message.replace(/\{(\w+)\}/g, (_, token) => (values[token] ?? `{${token}}`));
+}
+
+function useTranslations(namespace) {
+  const translate = (key, values) => {
+    const message = resolveMessage(namespace, key);
+    if (message === undefined) {
+      if (values && Object.keys(values).length > 0) {
+        const fallbackTemplate = namespace ? `${namespace}.${key}` : key;
+        return interpolate(fallbackTemplate, values);
+      }
+      return undefined;
     }
-    // Special-case for input.send
-    if (normalized === 'input.send') {
-      return 'input.send';
+
+    if (Array.isArray(message) || typeof message === 'object') {
+      return message;
     }
-    // Special-case for input.ariaLabel
-    if (normalized === 'input.ariaLabel') {
-      return 'input.ariaLabel';
-    }
-    // Special-case for stopGenerating
-    if (normalized === 'main.stopGenerating' || normalized === 'stopGenerating') {
-      return 'main.stopGenerating';
-    }
-    // Special-case for newConversation
-    if (normalized === 'main.newConversation' || normalized === 'newConversation') {
-      return 'main.newConversation';
-    }
-    // Special-case for toggleSidebar
-    if (normalized === 'main.toggleSidebar' || normalized === 'toggleSidebar') {
-      return 'main.toggleSidebar';
-    }
-    return normalized;
+
+    return interpolate(message, values);
   };
+
+  translate.raw = key => resolveMessage(namespace, key);
+  translate.rich = translate;
+
+  return translate;
 }
 
 function useFormatter() {
   return {
-    dateTime: (value) => value,
-    number: (value) => value,
-    relativeTime: (value) => value,
+    dateTime: value => value,
+    number: value => value,
+    relativeTime: value => value,
   };
 }
 
@@ -46,5 +54,7 @@ function NextIntlClientProvider({ children }) {
 
 const nextIntlMock = { useTranslations, useFormatter, NextIntlClientProvider };
 
-export { useTranslations, useFormatter, NextIntlClientProvider };
-export default nextIntlMock;
+module.exports = nextIntlMock;
+module.exports.useTranslations = useTranslations;
+module.exports.useFormatter = useFormatter;
+module.exports.NextIntlClientProvider = NextIntlClientProvider;

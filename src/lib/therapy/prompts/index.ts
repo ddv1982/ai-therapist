@@ -1,5 +1,13 @@
 import type { AppLocale } from '@/i18n/config';
-import type { MemoryContext } from '@/types/api';
+import type { MemoryContext } from '../therapy-prompts';
+
+type LocalMemoryContext = {
+  sessionTitle: string;
+  sessionDate: string;
+  reportDate: string;
+  summary: string;
+  content: string;
+};
 
 import {
   THERAPY_SYSTEM_PROMPT_EN,
@@ -17,6 +25,19 @@ import {
 
 import { buildTherapySystemPrompt, REPORT_GENERATION_PROMPT } from '../therapy-prompts';
 
+type PromptOptions = { memory?: LocalMemoryContext[]; webSearch?: boolean } | undefined;
+
+function mapMemoryContext(memory?: MemoryContext[]): LocalMemoryContext[] | undefined {
+  if (!memory) return undefined;
+  return memory.map((entry) => ({
+    sessionTitle: entry.sessionTitle,
+    sessionDate: entry.sessionDate,
+    reportDate: entry.reportDate,
+    summary: entry.summary,
+    content: entry.content,
+  }));
+}
+
 export {
   THERAPY_SYSTEM_PROMPT_EN,
   REPORT_PROMPT_EN,
@@ -32,7 +53,10 @@ export function getTherapySystemPrompt(
   locale: AppLocale,
   opts?: { memory?: MemoryContext[]; webSearch?: boolean }
 ): string {
-  return buildTherapySystemPrompt(locale, opts);
+  const mapped: PromptOptions = opts
+    ? { memory: mapMemoryContext(opts.memory), webSearch: opts.webSearch }
+    : undefined;
+  return buildTherapySystemPrompt(locale, mapped as PromptOptions);
 }
 
 export function getReportPrompt(locale: AppLocale): string {

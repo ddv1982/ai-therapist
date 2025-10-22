@@ -22,7 +22,7 @@ exports[`DiaryHeader renders mobile header 1`] = `
           <span
             class="text-sm"
           >
-            nav.back
+            Back
           </span>
         </button>
         <span
@@ -72,7 +72,7 @@ exports[`DiaryHeader renders simplified desktop header 1`] = `
             <span
               class="hidden sm:inline"
             >
-              nav.backToChat
+              Back to Chat
             </span>
           </button>
           <div
@@ -86,18 +86,11 @@ exports[`DiaryHeader renders simplified desktop header 1`] = `
                 data-testid="icon-brain"
               />
             </div>
-            <div>
-              <h1
-                class="text-3xl font-semibold"
-              >
-                Interactive CBT Session
-              </h1>
-              <p
-                class="text-sm text-muted-foreground capitalize mt-1"
-              >
-                emotions
-              </p>
-            </div>
+            <h1
+              class="text-3xl font-semibold"
+            >
+              Interactive CBT Session
+            </h1>
           </div>
         </div>
       </div>

@@ -11,7 +11,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { isCBTDiaryMessage, analyzeCBTMessage } from '@/lib/chat/cbt-message-detector';
 import { logger } from '@/lib/utils/logger';
 import { parseCBTFromMarkdown } from '@/lib/therapy/cbt-data-parser';

@@ -1,4 +1,4 @@
-import type { MemoryContext } from '@/types/api';
+import type { MemoryContext } from '../therapy-prompts';
 
 export const THERAPY_SYSTEM_PROMPT_NL = `
 Je bent een warme, professionele AI-therapeut. Combineer:

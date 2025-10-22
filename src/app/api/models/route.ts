@@ -1,7 +1,7 @@
 import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
-import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
 import { createSuccessResponse, createServerErrorResponse } from '@/lib/api/api-response';
+import { MODEL_IDS, getModelDisplayName } from '@/ai/model-metadata';
 
 /**
  * Available AI models for therapeutic conversations
@@ -28,12 +28,16 @@ interface ModelsResponse {
  */
 export const GET = withApiMiddleware(async (_request, context, _params) => {
   try {
-    const ids = [DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID] as const;
-    const availableModels: ModelInfo[] = ids.map((id) => ({
+    const providerForId = (id: string): string => {
+      if (id === MODEL_IDS.local) return 'ollama.local';
+      return 'Groq';
+    };
+
+    const availableModels: ModelInfo[] = [DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID].map((id) => ({
       id,
-      name: supportsWebSearch(id) ? `${getModelDisplayName(id)} (Deep Analysis)` : getModelDisplayName(id),
-      provider: 'OpenAI',
-      maxTokens: 30000,
+      name: id === ANALYTICAL_MODEL_ID ? `${getModelDisplayName(id)} (Deep Analysis)` : getModelDisplayName(id),
+      provider: providerForId(id),
+      maxTokens: 32000,
       category: id === ANALYTICAL_MODEL_ID ? 'featured' : 'production',
       description: id === ANALYTICAL_MODEL_ID ? 'Advanced model for CBT analysis and session reports' : 'Fast model for regular conversations'
     }));
@@ -41,7 +45,7 @@ export const GET = withApiMiddleware(async (_request, context, _params) => {
     const response: ModelsResponse = {
       models: availableModels,
       total: availableModels.length,
-      note: 'Models are now automatically selected based on content type'
+      note: 'Models are selected based on content type and availability'
     };
 
     return createSuccessResponse(response, { requestId: context.requestId });

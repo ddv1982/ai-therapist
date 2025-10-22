@@ -22,7 +22,7 @@ import {
   RefreshCw,
   Eye
 } from 'lucide-react';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
 import { 
   getMemoryManagementData, 

@@ -591,8 +591,8 @@ paths:
     get:
       summary: Get available AI models
       description: |
-        Retrieves a list of available AI models from the Groq API with their specifications,
-        token limits, and categorization (featured, production, preview).
+        Retrieves a list of available AI models configured in the application (Groq defaults
+        and optional local Ollama). Includes token limits and categorization (featured, production).
       tags:
         - Models
       responses:
@@ -618,13 +618,13 @@ paths:
                   value:
                     models:
                       - id: "openai/gpt-oss-120b"
-                        name: "GPT OSS 120B"
-                        provider: "OpenAI"
+                        name: "GPT OSS 120B (Deep Analysis)"
+                        provider: "Groq"
                         maxTokens: 32000
                         category: "featured"
-                      - id: "llama-3.1-8b-instant"
-                        name: "Llama 3.1 8B Instant"
-                        provider: "Meta"
+                      - id: "openai/gpt-oss-20b"
+                        name: "GPT OSS 20B"
+                        provider: "Groq"
                         maxTokens: 32000
                         category: "production"
         500:

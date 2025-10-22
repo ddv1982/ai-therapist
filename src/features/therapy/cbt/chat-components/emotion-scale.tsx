@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Heart, Plus } from 'lucide-react';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { TherapySlider } from '@/components/ui/therapy-slider';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { EmotionData } from '@/types/therapy';
+import type { CBTStepType, EmotionData } from '@/types/therapy';
 import {useTranslations} from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
 
@@ -17,17 +17,16 @@ interface EmotionScaleProps {
   onComplete?: (data: EmotionData) => void;
   type?: 'initial' | 'final';
   className?: string;
+  onNavigateStep?: (step: CBTStepType) => void;
 }
 
 export function EmotionScale({ 
   onComplete,
   type = 'initial',
-  className 
+  className,
+  onNavigateStep,
 }: EmotionScaleProps) {
-  const { 
-    sessionData,
-    sessionActions 
-  } = useCBTDataManager();
+  const { sessionData, sessionActions } = useCBTDataManager();
   const t = useTranslations('cbt');
   
   // Get current emotion data from unified state (sessionData stores current emotions)
@@ -50,13 +49,13 @@ export function EmotionScale({
 
   // Core emotions with visual styling using emotionColor mapping
   const coreEmotions = [
-    { key: 'fear', label: 'Fear', emoji: '😨', color: emotionColor.fear || 'bg-muted-foreground' },
-    { key: 'anger', label: 'Anger', emoji: '😠', color: emotionColor.anger || 'bg-muted-foreground' },
-    { key: 'sadness', label: 'Sadness', emoji: '😢', color: emotionColor.sadness || 'bg-muted-foreground' },
-    { key: 'joy', label: 'Joy', emoji: '😊', color: emotionColor.joy || 'bg-primary' },
-    { key: 'anxiety', label: 'Anxiety', emoji: '😰', color: emotionColor.anxiety || 'bg-muted-foreground' },
-    { key: 'shame', label: 'Shame', emoji: '😳', color: emotionColor.shame || 'bg-muted-foreground' },
-    { key: 'guilt', label: 'Guilt', emoji: '😔', color: emotionColor.guilt || 'bg-muted-foreground' }
+    { key: 'fear', label: t('emotions.labels.fear'), emoji: '😨', color: emotionColor.fear || 'bg-muted-foreground' },
+    { key: 'anger', label: t('emotions.labels.anger'), emoji: '😠', color: emotionColor.anger || 'bg-muted-foreground' },
+    { key: 'sadness', label: t('emotions.labels.sadness'), emoji: '😢', color: emotionColor.sadness || 'bg-muted-foreground' },
+    { key: 'joy', label: t('emotions.labels.joy'), emoji: '😊', color: emotionColor.joy || 'bg-primary' },
+    { key: 'anxiety', label: t('emotions.labels.anxiety'), emoji: '😰', color: emotionColor.anxiety || 'bg-muted-foreground' },
+    { key: 'shame', label: t('emotions.labels.shame'), emoji: '😳', color: emotionColor.shame || 'bg-muted-foreground' },
+    { key: 'guilt', label: t('emotions.labels.guilt'), emoji: '😔', color: emotionColor.guilt || 'bg-muted-foreground' }
   ];
 
   // Validation logic - keeps form functional without showing error messages
@@ -109,6 +108,7 @@ export function EmotionScale({
       helpText={t('emotions.help')}
       hideProgressBar={true} // Parent page shows progress
       className={className}
+      onNavigateStep={onNavigateStep}
     >
       <div className="space-y-6">
         {hasSelectedEmotions && (
@@ -153,12 +153,12 @@ export function EmotionScale({
                         <h4 className={therapeuticTypography.label}>{emotion.label}</h4>
                         {isSelected && (
                           <p className={therapeuticTypography.smallSecondary}>
-                            {value === 0 && "Not present"}
-                            {value > 0 && value <= 2 && "Mild"}
-                            {value > 2 && value <= 5 && "Moderate"} 
-                            {value > 5 && value <= 7 && "Strong"}
-                            {value > 7 && value <= 9 && "Very strong"}
-                            {value === 10 && "Overwhelming"}
+                            {value === 0 && t('emotionIntensity.none')}
+                            {value > 0 && value <= 2 && t('emotionIntensity.mild')}
+                            {value > 2 && value <= 5 && t('emotionIntensity.moderate')} 
+                            {value > 5 && value <= 7 && t('emotionIntensity.strong')}
+                            {value > 7 && value <= 9 && t('emotionIntensity.veryStrong')}
+                            {value === 10 && t('emotionIntensity.overwhelming')}
                           </p>
                         )}
                       </div>
@@ -215,13 +215,13 @@ export function EmotionScale({
                 className="w-full border-dashed hover:bg-accent hover:text-accent-foreground h-10"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Custom Emotion
+                {t('emotions.addCustom')}
               </Button>
             ) : (
               <div className="space-y-3">
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Custom emotion (e.g., jealousy, excitement, grateful)"
+                    placeholder={t('emotions.customPlaceholder')}
                     value={currentEmotions.other || ''}
                     onChange={(e) => handleCustomEmotionChange(e.target.value)}
                     className="flex-1"
@@ -249,12 +249,12 @@ export function EmotionScale({
                           <div>
                             <h4 className="font-semibold text-sm text-foreground">{currentEmotions.other}</h4>
                             <p className="text-sm text-muted-foreground">
-                              {(currentEmotions.otherIntensity || 0) === 0 && "Not present"}
-                              {(currentEmotions.otherIntensity || 0) > 0 && (currentEmotions.otherIntensity || 0) <= 2 && "Mild"}
-                              {(currentEmotions.otherIntensity || 0) > 2 && (currentEmotions.otherIntensity || 0) <= 5 && "Moderate"} 
-                              {(currentEmotions.otherIntensity || 0) > 5 && (currentEmotions.otherIntensity || 0) <= 7 && "Strong"}
-                              {(currentEmotions.otherIntensity || 0) > 7 && (currentEmotions.otherIntensity || 0) <= 9 && "Very strong"}
-                              {(currentEmotions.otherIntensity || 0) === 10 && "Overwhelming"}
+                              {(currentEmotions.otherIntensity || 0) === 0 && t('emotionIntensity.none')}
+                              {(currentEmotions.otherIntensity || 0) > 0 && (currentEmotions.otherIntensity || 0) <= 2 && t('emotionIntensity.mild')}
+                              {(currentEmotions.otherIntensity || 0) > 2 && (currentEmotions.otherIntensity || 0) <= 5 && t('emotionIntensity.moderate')}
+                              {(currentEmotions.otherIntensity || 0) > 5 && (currentEmotions.otherIntensity || 0) <= 7 && t('emotionIntensity.strong')}
+                              {(currentEmotions.otherIntensity || 0) > 7 && (currentEmotions.otherIntensity || 0) <= 9 && t('emotionIntensity.veryStrong')}
+                              {(currentEmotions.otherIntensity || 0) === 10 && t('emotionIntensity.overwhelming')}
                             </p>
                           </div>
                         </div>

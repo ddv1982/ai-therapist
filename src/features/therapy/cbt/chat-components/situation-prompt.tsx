@@ -1,24 +1,26 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from 'lucide-react';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { SituationData } from '@/types/therapy';
+import type { CBTStepType, SituationData } from '@/types/therapy';
 import {useTranslations} from 'next-intl';
-import CBTStepWrapper from '@/components/ui/cbt-step-wrapper';
+import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 
 interface SituationPromptProps {
   onComplete?: (data: SituationData) => void;
   className?: string;
+  onNavigateStep?: (step: CBTStepType) => void;
 }
 
-export function SituationPrompt({ 
+export function SituationPrompt({
   onComplete,
-  className 
+  className,
+  onNavigateStep,
 }: SituationPromptProps) {
   const t = useTranslations('cbt');
   const { sessionData, sessionActions } = useCBTDataManager();
@@ -43,6 +45,15 @@ export function SituationPrompt({
   
   // Common situation prompts for quick selection
   const situationPrompts = t.raw('situation.prompts') as string[];
+  // Rehydrate highlight if stored situation matches a quick prompt
+  useEffect(() => {
+    // Always recompute highlight when source data changes
+    if (currentSituation && situationPrompts.includes(currentSituation)) {
+      setSelectedPrompt(currentSituation);
+    } else {
+      setSelectedPrompt('');
+    }
+  }, [currentSituation, situationPrompts]);
 
   // Validation logic - keeps form functional without showing error messages
   const isValid = currentSituation.trim().length >= 5;
@@ -97,13 +108,15 @@ export function SituationPrompt({
   const charCount = currentSituation.length;
 
   return (
-    <CBTStepWrapper.Situation
+    <CBTStepWrapper
+      step="situation"
       onNext={handleNext}
       isValid={isValid}
       nextButtonText={t('situation.next')}
       hideProgressBar={true}
       helpText={t('situation.helper')}
       className={className}
+      onNavigateStep={onNavigateStep}
     >
       <div className="space-y-6">
         {/* Date Selection */}
@@ -128,7 +141,8 @@ export function SituationPrompt({
             {situationPrompts.slice(0, 4).map((prompt, index) => {
               const isSelected = selectedPrompt === prompt;
               return (
-                <Button
+              <Button
+                type="button"
                   key={index}
                   variant={isSelected ? "default" : "outline"}
                   size="sm"
@@ -164,6 +178,6 @@ export function SituationPrompt({
           </div>
         </div>
       </div>
-    </CBTStepWrapper.Situation>
+    </CBTStepWrapper>
   );
 }

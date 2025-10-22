@@ -12,7 +12,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { CBTFormData } from '@/types/therapy';
 import { useCBTExportActions } from '@/hooks/therapy/use-cbt-export';
 import { CBTExportFormat } from '@/lib/cbt/export-utils';

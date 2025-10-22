@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TherapySlider } from '@/components/ui/therapy-slider';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { Lightbulb, Plus, Minus } from 'lucide-react';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { RationalThoughtsData } from '@/types/therapy';
+import type { CBTStepType, RationalThoughtsData } from '@/types/therapy';
 // Removed CBTFormValidationError import - validation errors not displayed
 import {useTranslations} from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
@@ -23,13 +23,15 @@ interface RationalThoughtsProps {
   stepNumber?: number;
   totalSteps?: number;
   className?: string;
+  onNavigateStep?: (step: CBTStepType) => void;
 }
 
-export function RationalThoughts({ 
-  onComplete, 
+export function RationalThoughts({
+  onComplete,
   initialData,
   coreBeliefText,
-  className 
+  className,
+  onNavigateStep,
 }: RationalThoughtsProps) {
   const t = useTranslations('cbt');
   const { sessionData, rationalActions } = useCBTDataManager();
@@ -57,6 +59,9 @@ export function RationalThoughts({
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>(() =>
     new Array(thoughtsData.rationalThoughts.length).fill('')
   );
+  const [focusedIndex, setFocusedIndex] = useState<number>(0);
+  const textareaRefs = useRef<Array<HTMLTextAreaElement | null>>([]);
+  const skipNextRehydrateRef = useRef<boolean>(false);
 
   // Auto-save to Redux when thoughts change
   useEffect(() => {
@@ -65,7 +70,24 @@ export function RationalThoughts({
     }, 500); // Debounce updates by 500ms
 
     return () => clearTimeout(timeoutId);
-  }, [thoughtsData, rationalActions]);
+  }, [thoughtsData, thoughtsData.rationalThoughts, rationalActions]);
+
+  // Rehydrate local state if unified session data changes while mounted
+  useEffect(() => {
+    if (!rationalThoughtsData || rationalThoughtsData.length === 0) return;
+    if (skipNextRehydrateRef.current) {
+      skipNextRehydrateRef.current = false;
+      // still recompute highlight below
+    }
+    const equalLen = rationalThoughtsData.length === thoughtsData.rationalThoughts.length;
+    const isSame = equalLen && rationalThoughtsData.every((t, i) => t.thought === thoughtsData.rationalThoughts[i]?.thought && t.confidence === thoughtsData.rationalThoughts[i]?.confidence);
+    if (!isSame) {
+      setThoughtsData({ rationalThoughts: rationalThoughtsData });
+    }
+    // Always refresh highlight from store values to persist selection when navigating
+    const prompts = (t.raw('rational.prompts') as string[]) || [];
+    setSelectedPrompts(rationalThoughtsData.map((rt) => prompts.includes(rt.thought) ? rt.thought : ''));
+  }, [rationalThoughtsData, thoughtsData.rationalThoughts, t]);
 
   const handleThoughtChange = useCallback((index: number, field: 'thought' | 'confidence', value: string | number) => {
     setThoughtsData(prev => ({
@@ -74,6 +96,7 @@ export function RationalThoughts({
         i === index ? { ...t, [field]: value } : t
       )
     }));
+    skipNextRehydrateRef.current = true;
 
     // Clear selection when manually typing (unless it matches exactly)
     if (field === 'thought') {
@@ -92,6 +115,8 @@ export function RationalThoughts({
         rationalThoughts: [...prev.rationalThoughts, { thought: '', confidence: 5 }]
       }));
       setSelectedPrompts(prev => [...prev, '']);
+      setFocusedIndex(thoughtsData.rationalThoughts.length);
+      skipNextRehydrateRef.current = true;
     }
   }, [thoughtsData.rationalThoughts.length]);
 
@@ -102,17 +127,45 @@ export function RationalThoughts({
         rationalThoughts: prev.rationalThoughts.filter((_, i) => i !== index)
       }));
       setSelectedPrompts(prev => prev.filter((_, i) => i !== index));
+      setFocusedIndex((prev) => {
+        if (prev === index) return Math.max(0, index - 1);
+        if (prev > index) return prev - 1;
+        return prev;
+      });
+      skipNextRehydrateRef.current = true;
     }
   }, [thoughtsData.rationalThoughts.length]);
 
   const handlePromptSelect = useCallback((prompt: string, index: number) => {
-    handleThoughtChange(index, 'thought', prompt);
-    
-    // Set the selected prompt for this thought index
+    // Update local state immediately
+    setThoughtsData(prev => {
+      const nextArray = [...prev.rationalThoughts];
+      const at = nextArray[index] ?? { thought: '', confidence: 5 };
+      nextArray[index] = { ...at, thought: prompt };
+      return { ...prev, rationalThoughts: nextArray };
+    });
+    skipNextRehydrateRef.current = true;
+
+    // Highlight
     const updatedSelectedPrompts = [...selectedPrompts];
     updatedSelectedPrompts[index] = prompt;
     setSelectedPrompts(updatedSelectedPrompts);
-  }, [handleThoughtChange, selectedPrompts]);
+
+    // Persist synchronously
+    const persistedArray = [...thoughtsData.rationalThoughts];
+    const at = persistedArray[index] ?? { thought: '', confidence: 5 };
+    persistedArray[index] = { ...at, thought: prompt };
+    rationalActions.updateRationalThoughts(persistedArray);
+
+    // Focus target textarea and move caret
+    setFocusedIndex(index);
+    const el = textareaRefs.current[index];
+    if (el) {
+      el.focus();
+      const len = prompt.length;
+      try { el.setSelectionRange(len, len); } catch {}
+    }
+  }, [selectedPrompts, thoughtsData.rationalThoughts, rationalActions]);
 
   const handleSubmit = useCallback(() => {
     const validThoughts = thoughtsData.rationalThoughts.filter(t => t.thought.trim());
@@ -150,20 +203,23 @@ export function RationalThoughts({
       helpText={t('rational.help')}
       hideProgressBar={true}
       className={className}
+      onNavigateStep={onNavigateStep}
     >
       <div className="space-y-6">
           {/* Quick Thought Prompts */}
           <div className="space-y-2">
             <p className={therapeuticTypography.smallSecondary}>{t('rational.promptLabel')}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {thoughtPrompts.slice(0, 4).map((prompt, index) => {
-                const isSelected = selectedPrompts[0] === prompt;
+              {thoughtPrompts.slice(0, 4).map((prompt, idx) => {
+                const activeIndex = Math.min(Math.max(focusedIndex, 0), Math.max(thoughtsData.rationalThoughts.length - 1, 0));
+                const isSelected = selectedPrompts[activeIndex] === prompt;
                 return (
                   <Button
-                    key={index}
+                    type="button"
+                    key={idx}
                     variant={isSelected ? "default" : "outline"}
                     size="sm"
-                    onClick={() => handlePromptSelect(prompt, 0)}
+                    onClick={() => handlePromptSelect(prompt, activeIndex)}
                     className={cn(
                       "text-sm h-8 px-3 text-left justify-start",
                       isSelected 
@@ -185,7 +241,7 @@ export function RationalThoughts({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className={therapeuticTypography.label}>
-                      Rational Thought {index + 1}
+                      {t('rational.thought', { index: index + 1 })}
                     </h4>
                     {thoughtsData.rationalThoughts.length > 1 && (
                       <Button
@@ -203,6 +259,8 @@ export function RationalThoughts({
                     placeholder={t('rational.placeholder')}
                     value={thoughtData.thought}
                     onChange={(e) => handleThoughtChange(index, 'thought', e.target.value)}
+                    onFocus={() => setFocusedIndex(index)}
+                    ref={(el) => { textareaRefs.current[index] = el; }}
                     className="min-h-[60px] resize-none"
                     maxLength={200}
                   />
@@ -234,7 +292,7 @@ export function RationalThoughts({
               size="sm"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Another Thought
+              {t('rational.addAnother')}
             </Button>
           )}
 

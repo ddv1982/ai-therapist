@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import {
   Sheet,
   SheetContent,
@@ -10,7 +11,25 @@ import {
 } from "@/components/ui/sheet";
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { setCurrentStep, updateDraft, completeCBTEntry } from '@/store/slices/cbtSlice';
-import { SituationPrompt, EmotionScale, ThoughtRecord, FinalEmotionReflection, ActionPlan } from '@/features/therapy/cbt/chat-components';
+const SituationPrompt = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/situation-prompt').then((mod) => ({ default: mod.SituationPrompt }))
+);
+
+const EmotionScale = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/emotion-scale').then((mod) => ({ default: mod.EmotionScale }))
+);
+
+const ThoughtRecord = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/thought-record').then((mod) => ({ default: mod.ThoughtRecord }))
+);
+
+const FinalEmotionReflection = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/final-emotion-reflection').then((mod) => ({ default: mod.FinalEmotionReflection }))
+);
+
+const ActionPlan = dynamic(() =>
+  import('@/features/therapy/cbt/chat-components/action-plan').then((mod) => ({ default: mod.ActionPlan }))
+);
 import { Progress } from "@/components/ui/progress";
 import { Brain } from 'lucide-react';
 import { logger } from '@/lib/utils/logger';
@@ -120,6 +139,10 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
         return (
           <SituationPrompt
             onComplete={handleSituationComplete}
+            onNavigateStep={(step) => {
+              const idx = CBT_STEPS.findIndex(s => s.component === step);
+              if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
+            }}
           />
         );
       
@@ -127,6 +150,10 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
         return (
           <EmotionScale
             onComplete={handleEmotionComplete}
+            onNavigateStep={(step) => {
+              const idx = CBT_STEPS.findIndex(s => s.component === step);
+              if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
+            }}
           />
         );
       
@@ -136,6 +163,10 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
             onComplete={handleThoughtComplete}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={(step) => {
+              const idx = CBT_STEPS.findIndex(s => s.component === step);
+              if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
+            }}
           />
         );
       
@@ -144,6 +175,10 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
           <FinalEmotionReflection
             onComplete={handleFinalEmotionsComplete}
             onSendToChat={handleSendToChat}
+            onNavigateStep={(step) => {
+              const idx = CBT_STEPS.findIndex(s => s.component === step);
+              if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
+            }}
           />
         );
 
@@ -153,6 +188,10 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
             onComplete={handleActionComplete}
             stepNumber={stepNumber}
             totalSteps={totalSteps}
+            onNavigateStep={(step) => {
+              const idx = CBT_STEPS.findIndex(s => s.component === step);
+              if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
+            }}
           />
         );
       

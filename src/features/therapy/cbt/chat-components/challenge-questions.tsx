@@ -7,11 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { HelpCircle, Plus, Minus } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { ChallengeQuestionsData } from '@/types/therapy';
+import type { CBTStepType, ChallengeQuestionsData } from '@/types/therapy';
 // Removed CBTFormValidationError import - validation errors not displayed
 import {useTranslations} from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 
 interface ChallengeQuestionsProps {
   onComplete: (data: ChallengeQuestionsData) => void;
@@ -22,25 +22,28 @@ interface ChallengeQuestionsProps {
   stepNumber?: number;
   totalSteps?: number;
   className?: string;
+  onNavigateStep?: (step: CBTStepType) => void;
 }
 
 // Default challenge questions
-const CHALLENGE_QUESTIONS = [
-  "What evidence supports this belief? What evidence contradicts it?",
-  "What would I say to a friend who had this belief?",
-  "Is this thought helping me or hurting me?",
-  "What would happen if I let go of this belief?",
-  "How has this belief affected my life positively and negatively?",
-  "Is this belief 100% true, or could there be exceptions?",
-  "What alternative perspectives could I consider?",
-  "How might someone who cares about me challenge this belief?"
-];
+const CHALLENGE_QUESTION_KEYS = [
+  'challenge.defaultQuestions.evidence',
+  'challenge.defaultQuestions.friend',
+  'challenge.defaultQuestions.helping',
+  'challenge.defaultQuestions.letGo',
+  'challenge.defaultQuestions.impact',
+  'challenge.defaultQuestions.truth',
+  'challenge.defaultQuestions.perspectives',
+  'challenge.defaultQuestions.support',
+  'challenge.defaultQuestions.fallback'
+] as const;
 
-export function ChallengeQuestions({ 
-  onComplete, 
+export function ChallengeQuestions({
+  onComplete,
   initialData,
   coreBeliefText,
-  className 
+  className,
+  onNavigateStep,
 }: ChallengeQuestionsProps) {
   const t = useTranslations('cbt');
   const { sessionData, challengeActions } = useCBTDataManager();
@@ -49,11 +52,16 @@ export function ChallengeQuestions({
   const challengeQuestionsData = sessionData?.challengeQuestions;
   
   // Default questions data
+  const translateQuestion = useCallback(
+    (key: (typeof CHALLENGE_QUESTION_KEYS)[number]) => t(key as Parameters<typeof t>[0]),
+    [t]
+  );
+
   const defaultQuestionsData: ChallengeQuestionsData = {
     challengeQuestions: [
-      { question: CHALLENGE_QUESTIONS[0], answer: '' },
-      { question: CHALLENGE_QUESTIONS[1], answer: '' }
-    ]
+      { question: translateQuestion(CHALLENGE_QUESTION_KEYS[0]), answer: '' },
+      { question: translateQuestion(CHALLENGE_QUESTION_KEYS[1]), answer: '' },
+    ],
   };
 
   const [questionsData, setQuestionsData] = useState<ChallengeQuestionsData>(() => {
@@ -63,7 +71,10 @@ export function ChallengeQuestions({
     }
     
     // Return Redux data if it has content, otherwise default
-    return (challengeQuestionsData && challengeQuestionsData.length > 0) ? { challengeQuestions: challengeQuestionsData } : defaultQuestionsData;
+    if (challengeQuestionsData && challengeQuestionsData.length > 0) {
+      return { challengeQuestions: challengeQuestionsData };
+    }
+    return defaultQuestionsData;
   });
 
   // Auto-save to unified CBT state when questions change
@@ -86,19 +97,24 @@ export function ChallengeQuestions({
 
   const addQuestion = useCallback(() => {
     if (questionsData.challengeQuestions.length < 6) {
-      const unusedQuestions = CHALLENGE_QUESTIONS.filter(q => 
-        !questionsData.challengeQuestions.some(existing => existing.question === q)
+      const unusedQuestions = CHALLENGE_QUESTION_KEYS.map((key) => translateQuestion(key)).filter(
+        (question) => !questionsData.challengeQuestions.some((existing) => existing.question === question)
       );
       
       setQuestionsData(prev => ({
         ...prev,
-        challengeQuestions: [...prev.challengeQuestions, { 
-          question: unusedQuestions[0] || "What else could I consider?", 
-          answer: '' 
-        }]
+        challengeQuestions: [
+          ...prev.challengeQuestions,
+          {
+          question:
+            unusedQuestions[0] ||
+            translateQuestion('challenge.defaultQuestions.fallback'),
+            answer: '',
+          },
+        ],
       }));
     }
-  }, [questionsData.challengeQuestions]);
+  }, [questionsData.challengeQuestions, translateQuestion]);
 
   const removeQuestion = useCallback((index: number) => {
     if (questionsData.challengeQuestions.length > 1) {
@@ -141,6 +157,7 @@ export function ChallengeQuestions({
       helpText={t('challenge.help')}
       hideProgressBar={true}
       className={className}
+      onNavigateStep={onNavigateStep}
     >
       <div className="space-y-6">
           {/* Questions */}

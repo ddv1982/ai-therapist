@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Brain } from 'lucide-react';
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils';
 import {useTranslations} from 'next-intl';
 import { getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
 import type { CBTStepType } from '@/types/therapy';
@@ -67,16 +67,9 @@ export function DiaryHeader({ isMobile, isCBTActive, cbtCurrentStep, onBack }: D
               <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
                 <Brain className="w-6 h-6 text-primary-foreground" />
               </div>
-              <div>
-                <h1 className="text-3xl font-semibold">
-                  Interactive CBT Session
-                </h1>
-                {isCBTActive && cbtCurrentStep !== 'complete' && (
-                  <p className="text-sm text-muted-foreground capitalize mt-1">
-                    {cbtCurrentStep.replace('-', ' ')}
-                  </p>
-                )}
-              </div>
+              <h1 className="text-3xl font-semibold">
+                Interactive CBT Session
+              </h1>
             </div>
           </div>
         </div>
