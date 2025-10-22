@@ -1,27 +1,44 @@
-import { streamText } from 'ai';
+import type { LanguageModel, ModelMessage, ToolChoice, ToolSet } from 'ai';
+import { streamText, type TelemetrySettings } from 'ai';
+import { getTelemetrySettings } from '@/lib/observability/telemetry';
 
-export type ToolChoice = 'none' | 'required' | string;
+type ChatTools = ToolSet;
+type ChatToolChoice = ToolChoice<ChatTools>;
 
 export async function streamChatCompletion(params: {
-  model: string;
+  model: LanguageModel;
   system?: string;
-  messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string; id?: string }>;
-  maxTokens?: number;
-  tools?: Record<string, unknown>;
-  toolChoice?: ToolChoice;
-  telemetry?: { isEnabled?: boolean };
+  messages: ModelMessage[];
+  maxOutputTokens?: number;
+  tools?: ChatTools;
+  toolChoice?: ChatToolChoice;
+  telemetry?: boolean | Partial<TelemetrySettings>;
 }) {
-  const { model, system, messages, maxTokens, tools, toolChoice, telemetry } = params;
-  const args: Record<string, unknown> = {
+  const { model, system, messages, maxOutputTokens, tools, toolChoice, telemetry } = params;
+
+  const args: Parameters<typeof streamText>[0] = {
     model,
-    system,
     messages,
-    experimental_telemetry: telemetry,
   };
-  if (typeof maxTokens === 'number') args.maxTokens = maxTokens;
-  if (tools) args.tools = tools;
-  if (toolChoice) args.toolChoice = toolChoice as unknown as 'auto' | 'none' | 'required';
-  return streamText(args as Parameters<typeof streamText>[0]);
+
+  if (typeof system === 'string' && system.length > 0) {
+    args.system = system;
+  }
+  if (typeof maxOutputTokens === 'number') {
+    args.maxOutputTokens = maxOutputTokens;
+  }
+  if (tools) {
+    args.tools = tools;
+  }
+  if (toolChoice) {
+    args.toolChoice = toolChoice;
+  }
+  const telemetrySettings = getTelemetrySettings(telemetry);
+  if (telemetrySettings) {
+    args.experimental_telemetry = telemetrySettings;
+  }
+
+  return streamText(args);
 }
 
 export async function teeReadableStream(stream: ReadableStream<Uint8Array>) {

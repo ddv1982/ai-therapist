@@ -35,10 +35,12 @@ jest.mock('@/ai/providers', () => ({
 }));
 
 const streamTextMock = jest.fn();
+const convertToModelMessagesMock = jest.fn();
 const toUIMessageStreamResponseMock = jest.fn();
 
 jest.mock('ai', () => ({
   streamText: (...args: unknown[]) => streamTextMock(...args),
+  convertToModelMessages: (...args: unknown[]) => convertToModelMessagesMock(...args),
 }));
 
 jest.mock('@/lib/therapy/therapy-prompts', () => ({
@@ -154,6 +156,7 @@ describe('/api/chat route', () => {
       toUIMessageStreamResponse: toUIMessageStreamResponseMock,
       response: Promise.resolve({ modelId: 'mock-model-20b' }),
     });
+    convertToModelMessagesMock.mockReturnValue([{ role: 'user', content: [{ type: 'text', text: 'converted' }] }]);
   });
 
   it('streams responses for valid requests', async () => {
@@ -171,10 +174,7 @@ describe('/api/chat route', () => {
     expect(streamTextMock).toHaveBeenCalledWith(
       expect.objectContaining({
         model: 'mock-model-20b',
-        messages: [
-          { id: '1', role: 'user', content: 'Hello' },
-          { id: '2', role: 'assistant', content: 'Hi!' },
-        ],
+        messages: convertToModelMessagesMock.mock.results[0]?.value,
       }),
     );
 

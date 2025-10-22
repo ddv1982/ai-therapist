@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
+import type { UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { logger } from '@/lib/utils/logger';
@@ -44,7 +45,7 @@ export function useChatStreaming(params: UseChatStreamingParams) {
     sessionIdRef.current = currentSession;
   }, [currentSession]);
 
-  const { sendMessage: sendAiMessage, stop: stopAi } = useChat({
+  const { sendMessage: sendAiMessage, stop: stopAi } = useChat<UIMessage>({
     id: currentSession ?? 'default',
     transport,
     onError: (error) => {
@@ -114,17 +115,20 @@ export function useChatStreaming(params: UseChatStreamingParams) {
     setIsLoading(true);
 
     try {
-      await sendAiMessage({
-        role: 'user',
-        parts: [{ type: 'text', text: userMessage }],
-      }, {
-        body: {
-          sessionId,
-          webSearchEnabled: optionsRef.current?.webSearchEnabled ?? false,
-          selectedModel: optionsRef.current?.model,
-          state: {},
+      await sendAiMessage(
+        {
+          role: 'user',
+          parts: [{ type: 'text', text: userMessage }],
         },
-      });
+        {
+          body: {
+            sessionId,
+            webSearchEnabled: optionsRef.current?.webSearchEnabled ?? false,
+            selectedModel: optionsRef.current?.model,
+            state: {},
+          },
+        },
+      );
     } catch (error) {
       const placeholder = aiPlaceholderIdRef.current;
       if (placeholder) {

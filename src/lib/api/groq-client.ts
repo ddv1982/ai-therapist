@@ -1,4 +1,5 @@
-import { generateText, streamText } from 'ai';
+import { generateText, convertToModelMessages, streamText } from 'ai';
+import type { UIMessage } from 'ai';
 import { groq } from "@ai-sdk/groq";
 import { languageModels, type ModelID } from '@/ai/providers';
 import { supportsWebSearch } from '@/ai/model-metadata';
@@ -55,17 +56,23 @@ export const streamTextWithBrowserSearch = async (
     throw new Error('Browser search is only supported for models with web search capability');
   }
 
+  const uiMessages: Array<Omit<UIMessage, 'id'>> = messages.map((message) => ({
+    role: message.role,
+    parts: [{ type: 'text', text: message.content }],
+  }));
+
   try {
     // Use direct Groq model instance with browser search tool
+    const modelMessages = convertToModelMessages(uiMessages);
+
     const result = streamText({
       model: languageModels[modelId],
       system: systemPrompt,
-      messages: messages,
+      messages: modelMessages,
       tools: {
         browser_search: groq.tools.browserSearch({}),
       },
       toolChoice: 'auto', // Let the model decide when to use web search
-      experimental_telemetry: { isEnabled: false },
     });
 
     return result;
@@ -80,8 +87,7 @@ export const streamTextWithBrowserSearch = async (
     const fallbackResult = streamText({
       model: languageModels[modelId],
       system: systemPrompt,
-      messages: messages,
-      experimental_telemetry: { isEnabled: false },
+      messages: convertToModelMessages(uiMessages),
     });
     
     return fallbackResult;

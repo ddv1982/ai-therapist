@@ -76,6 +76,18 @@ jest.mock('ai', () => ({
   convertToModelMessages: jest.fn((messages) => messages),
 }))
 
+// Polyfill web streams for Node test environment
+const { TransformStream, ReadableStream, WritableStream } = require('web-streams-polyfill');
+if (!global.TransformStream) {
+  global.TransformStream = TransformStream;
+}
+if (!global.ReadableStream) {
+  global.ReadableStream = ReadableStream;
+}
+if (!global.WritableStream) {
+  global.WritableStream = WritableStream;
+}
+
 // Mock AI SDK Groq Provider
 jest.mock('@ai-sdk/groq', () => ({
   groq: jest.fn((modelId) => ({ modelId })),

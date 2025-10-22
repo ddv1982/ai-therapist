@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
-import { languageModels, ModelID } from "@/ai/providers";
-import { groq } from "@ai-sdk/groq";
+import { convertToModelMessages } from 'ai';
+import type { UIMessage } from 'ai';
+import { languageModels, ModelID } from '@/ai/providers';
+import { groq } from '@ai-sdk/groq';
 import { getTherapySystemPrompt } from '@/lib/therapy/prompts';
 import { streamChatCompletion } from '@/lib/chat/streaming';
 import { normalizeChatRequest, buildForwardedMessages } from '@/lib/chat/chat-request';
@@ -82,11 +84,25 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
 
     const systemPrompt = await buildSystemPrompt(req, hasWebSearch);
     try { recordModelUsage(modelId, toolChoiceHeader); } catch {}
+    const toUiMessages = (messages: ApiChatMessage[]): Array<Omit<UIMessage, 'id'>> => (
+      messages.map((message) => ({
+        role: message.role,
+        parts: [{ type: 'text', text: message.content }],
+      }))
+    );
+
+    const uiMessages: Array<Omit<UIMessage, 'id'>> = [
+      ...toUiMessages(history),
+      ...toUiMessages(forwarded),
+    ];
+
+    const modelMessages = convertToModelMessages(uiMessages);
+
     const streamResultPromise = streamChatCompletion({
-      model: languageModels[modelId as ModelID] as unknown as string,
+      model: languageModels[modelId as ModelID],
       system: systemPrompt,
-      messages: [...history, ...forwarded],
-      telemetry: { isEnabled: false },
+      messages: modelMessages,
+      telemetry: { metadata: { requestId: context.requestId } },
       ...(hasWebSearch ? { tools: { browser_search: groq.tools.browserSearch({}) }, toolChoice: 'auto' as const } : {}),
     });
 

@@ -8,6 +8,7 @@ import type {
   LanguageModelV2ToolResultPart,
 } from '@ai-sdk/provider';
 import { MODEL_IDS } from '@/ai/model-metadata';
+import type { ModelIdentifier } from '@/ai/model-metadata';
 import { logger } from '@/lib/utils/logger';
 
 const rawOllamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434';
@@ -35,10 +36,16 @@ if (typeof window === 'undefined') {
   }
 }
 
-export const languageModels: Record<string, LanguageModel> = {
+const baseLanguageModels: Record<ModelIdentifier, LanguageModel> = {
   [MODEL_IDS.default]: groq(MODEL_IDS.default),
   [MODEL_IDS.analytical]: groq(MODEL_IDS.analytical),
-  ...(localOllamaModel ? { [MODEL_IDS.local]: localOllamaModel } : {}),
+  [MODEL_IDS.local]: localOllamaModel ?? groq(MODEL_IDS.default),
+};
+
+export const languageModels: Record<string, LanguageModel> = {
+  [MODEL_IDS.default]: baseLanguageModels[MODEL_IDS.default],
+  [MODEL_IDS.analytical]: baseLanguageModels[MODEL_IDS.analytical],
+  ...(localOllamaModel ? { [MODEL_IDS.local]: baseLanguageModels[MODEL_IDS.local] } : {}),
 };
 
 // Direct access to models with proper typing

@@ -1,4 +1,12 @@
-import { streamChatCompletion, teeReadableStream, collectStreamToString } from '@/lib/chat/streaming';
+import type { LanguageModel, ToolSet } from 'ai';
+import { tool } from '@ai-sdk/provider-utils';
+import { z } from 'zod';
+
+const {
+  streamChatCompletion,
+  teeReadableStream,
+  collectStreamToString,
+} = require('@/lib/chat/streaming');
 
 // Mock ai.streamText from jest.setup.js already returns a Response-like object
 const { streamText } = jest.requireMock('ai');
@@ -35,11 +43,19 @@ function makeReadableStreamFromStrings(parts: string[]): ReadableStream<Uint8Arr
 
 describe('chat streaming utils', () => {
   it('passes through args to streamText and supports toolChoice', async () => {
+    const tools: ToolSet = {
+      a: tool({
+        description: 'test tool',
+        inputSchema: z.object({}),
+        execute: jest.fn(),
+      }),
+    };
+
     await streamChatCompletion({
-      model: 'test-model',
-      messages: [{ role: 'user', content: 'hi' }],
-      maxTokens: 256,
-      tools: { a: true },
+      model: {} as unknown as LanguageModel,
+      messages: [{ role: 'user', content: [{ type: 'text', text: 'hi' }] }],
+      maxOutputTokens: 256,
+      tools,
       toolChoice: 'required',
       telemetry: { isEnabled: true },
     });
