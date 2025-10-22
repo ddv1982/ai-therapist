@@ -75,18 +75,26 @@ export function RationalThoughts({
   // Rehydrate local state if unified session data changes while mounted
   useEffect(() => {
     if (!rationalThoughtsData || rationalThoughtsData.length === 0) return;
-    if (skipNextRehydrateRef.current) {
-      skipNextRehydrateRef.current = false;
-      // still recompute highlight below
-    }
-    const equalLen = rationalThoughtsData.length === thoughtsData.rationalThoughts.length;
-    const isSame = equalLen && rationalThoughtsData.every((t, i) => t.thought === thoughtsData.rationalThoughts[i]?.thought && t.confidence === thoughtsData.rationalThoughts[i]?.confidence);
-    if (!isSame) {
-      setThoughtsData({ rationalThoughts: rationalThoughtsData });
-    }
     // Always refresh highlight from store values to persist selection when navigating
     const prompts = (t.raw('rational.prompts') as string[]) || [];
     setSelectedPrompts(rationalThoughtsData.map((rt) => prompts.includes(rt.thought) ? rt.thought : ''));
+    if (skipNextRehydrateRef.current) {
+      // A local change just occurred; skip a single rehydrate pass so slider edits persist
+      skipNextRehydrateRef.current = false;
+      return;
+    }
+
+    setThoughtsData((prev) => {
+      const equalLen = rationalThoughtsData.length === prev.rationalThoughts.length;
+      const isSame = equalLen && rationalThoughtsData.every((t, i) => t.thought === prev.rationalThoughts[i]?.thought && t.confidence === prev.rationalThoughts[i]?.confidence);
+      if (isSame) return prev;
+      return {
+        rationalThoughts: rationalThoughtsData.map((t, i) => ({
+          thought: t.thought,
+          confidence: typeof t.confidence === 'number' ? t.confidence : prev.rationalThoughts[i]?.confidence ?? 5,
+        })),
+      };
+    });
   }, [rationalThoughtsData, thoughtsData.rationalThoughts, t]);
 
   const handleThoughtChange = useCallback((index: number, field: 'thought' | 'confidence', value: string | number) => {

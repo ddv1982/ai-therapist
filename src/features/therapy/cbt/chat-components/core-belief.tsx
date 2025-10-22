@@ -32,6 +32,7 @@ export function CoreBelief({
 }: CoreBeliefProps) {
   const t = useTranslations('cbt');
   const { sessionData, beliefActions } = useCBTDataManager();
+  const skipNextRehydrateRef = useRef<boolean>(false);
   
   // Get core beliefs data from unified CBT hook
   const coreBelifsData = sessionData?.coreBeliefs;
@@ -65,11 +66,28 @@ export function CoreBelief({
   useEffect(() => {
     const source = coreBelifsData && coreBelifsData.length > 0 ? coreBelifsData[0] : null;
     if (!source) return;
-    if (source.coreBeliefText !== beliefData.coreBeliefText || source.coreBeliefCredibility !== beliefData.coreBeliefCredibility) {
-      setBeliefData(source);
-    }
     const prompts = (t.raw('coreBelief.prompts') as string[]) || [];
     setSelectedPrompt(prompts.includes(source.coreBeliefText) ? source.coreBeliefText : '');
+
+    if (skipNextRehydrateRef.current) {
+      // A local change just occurred; skip a single rehydrate pass so slider/text edits persist
+      skipNextRehydrateRef.current = false;
+      return;
+    }
+
+    setBeliefData((prev) => {
+      const isSame =
+        source.coreBeliefText === prev.coreBeliefText &&
+        source.coreBeliefCredibility === prev.coreBeliefCredibility;
+      if (isSame) return prev;
+      return {
+        coreBeliefText: source.coreBeliefText,
+        coreBeliefCredibility:
+          typeof source.coreBeliefCredibility === 'number'
+            ? source.coreBeliefCredibility
+            : prev.coreBeliefCredibility ?? 5,
+      };
+    });
   }, [coreBelifsData, beliefData.coreBeliefText, beliefData.coreBeliefCredibility, t]);
   
   // Note: Chat bridge no longer used - data sent only in final comprehensive summary
@@ -79,6 +97,7 @@ export function CoreBelief({
 
   const handleBeliefChange = useCallback((value: string) => {
     setBeliefData(prev => ({ ...prev, coreBeliefText: value }));
+    skipNextRehydrateRef.current = true;
     // If user types or value differs from selected prompt, clear highlight
     setSelectedPrompt(prev => (prev === value ? prev : ''));
   }, []);
@@ -98,6 +117,7 @@ export function CoreBelief({
 
   const handleCredibilityChange = useCallback((value: number) => {
     setBeliefData(prev => ({ ...prev, coreBeliefCredibility: value }));
+    skipNextRehydrateRef.current = true;
   }, []);
 
   const handleSubmit = useCallback(async () => {
