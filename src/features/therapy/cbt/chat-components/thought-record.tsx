@@ -66,22 +66,39 @@ export function ThoughtRecord({
   // Rehydrate local state if unified session data changes while mounted
   useEffect(() => {
     if (!thoughtsData || thoughtsData.length === 0) return;
-    if (skipNextRehydrateRef.current) {
-      // A local change just occurred; skip a single rehydrate pass
-      skipNextRehydrateRef.current = false;
-      // still refresh highlight from store
-    }
-    const equalLength = thoughtsData.length === thoughts.length;
-    const isSame = equalLength && thoughtsData.every((t, i) => t.thought === thoughts[i]?.thought && t.credibility === thoughts[i]?.credibility);
-    if (!isSame) {
-      setThoughts(thoughtsData);
-      setErrors(new Array(thoughtsData.length).fill(''));
-    }
+
     // Always recompute highlight from store values to persist selection when navigating
     const prompts = (t.raw('thoughts.prompts') as string[]) || [];
     const rehydratedSelections = thoughtsData.map((item) => (prompts.includes(item.thought) ? item.thought : ''));
     setSelectedPrompts(rehydratedSelections);
-  }, [thoughtsData, thoughts, t]);
+
+    if (skipNextRehydrateRef.current) {
+      // A local change just occurred; skip a single rehydrate pass so slider edits persist
+      skipNextRehydrateRef.current = false;
+      return;
+    }
+
+    setThoughts((prevThoughts) => {
+      const equalLength = prevThoughts.length === thoughtsData.length;
+      const isSame = equalLength && thoughtsData.every((nextThought, index) => {
+        const current = prevThoughts[index];
+        return current && nextThought.thought === current.thought && nextThought.credibility === current.credibility;
+      });
+
+      if (isSame) {
+        return prevThoughts;
+      }
+
+      setErrors(new Array(thoughtsData.length).fill(''));
+      return thoughtsData.map((thought, index) => ({
+        thought: thought.thought,
+        credibility:
+          typeof thought.credibility === 'number'
+            ? thought.credibility
+            : prevThoughts[index]?.credibility ?? 5,
+      }));
+    });
+  }, [thoughtsData, t]);
 
   // Auto-save to unified CBT state when thoughts change
   useEffect(() => {

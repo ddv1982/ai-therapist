@@ -33,6 +33,8 @@ import chatSlice from '@/store/slices/chatSlice';
 import sessionsSlice from '@/store/slices/sessionsSlice';
 import cbtSlice from '@/store/slices/cbtSlice';
 import type { AuthValidationResult } from '@/lib/api/api-auth';
+import type { RootState } from '@/store';
+import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 
 // =============================================================================
 // MOCK FACTORIES AND CONFIGURATIONS
@@ -524,22 +526,23 @@ export class ComponentTestUtils {
       DialogTitle: uiMocks.DialogTitle,
       DialogFooter: uiMocks.DialogFooter,
     }));
-    
+
     jest.mock('@/components/ui/button', () => ({
       Button: uiMocks.Button,
     }));
-    
+
     jest.mock('@/components/ui/textarea', () => ({
       Textarea: uiMocks.Textarea,
     }));
-    
+
     jest.mock('@/components/ui/card', () => ({
       Card: uiMocks.Card,
       CardHeader: uiMocks.CardHeader,
       CardContent: uiMocks.CardContent,
       CardTitle: uiMocks.CardTitle,
     }));
-    
+
+
     // Mock Lucide React icons
     jest.mock('lucide-react', () => MockFactory.createLucideIconMocks());
     
@@ -995,6 +998,29 @@ export class TestSetupUtils {
       jest.setTimeout(timeout);
     });
   }
+}
+
+export function createMockCBTStore(overrides: Partial<RootState> = {}): ReturnType<typeof ComponentTestUtils.createTestStore> {
+  return ComponentTestUtils.createTestStore(overrides);
+}
+
+export function renderWithCBT(ui: ReactElement, options: { state?: Partial<RootState> } = {}) {
+  const store = ComponentTestUtils.createTestStore(options.state);
+
+  const bridge: ChatUIBridge = {
+    addMessageToChat: async () => ({ success: true }),
+    currentSessionId: 'test-session',
+    isLoading: false,
+  };
+
+  const wrapper = ({ children }: { children: ReactNode }) =>
+    React.createElement(
+      Provider as any,
+      { store },
+      React.createElement(ChatUIProvider as any, { bridge }, children)
+    );
+
+  return render(ui, { wrapper });
 }
 
 // =============================================================================

@@ -124,6 +124,7 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
         step={1}
         aria-label={label}
         className="w-full"
+        data-testid={`therapy-slider-${type}`}
       />
 
       {/* Scale Labels */}
