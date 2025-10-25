@@ -7,22 +7,24 @@ export const listBySession = query({
     const limit_clamped = Math.min(limit, 200); // Max 200 messages per request (messages can be long)
     const offset_clamped = Math.max(offset, 0);
 
-    return await ctx.db
+    const all = await ctx.db
       .query('messages')
       .withIndex('by_session_time', q => q.eq('sessionId', sessionId))
       .order('asc')
-      .skip(offset_clamped)
-      .take(limit_clamped);
+      .collect();
+
+    return all.slice(offset_clamped, offset_clamped + limit_clamped);
   },
 });
 
 export const countBySession = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    return await ctx.db
+    const messages = await ctx.db
       .query('messages')
       .withIndex('by_session_time', q => q.eq('sessionId', sessionId))
-      .count();
+      .collect();
+    return messages.length;
   },
 });
 

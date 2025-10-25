@@ -5,6 +5,7 @@ import { apiClient } from '@/lib/api/client';
 import { getApiData } from '@/lib/api/api-response';
 import { mapApiSessionToUiSession } from '@/lib/chat/session-mapper';
 import type { components } from '@/types/api/sessions';
+import type { PaginatedResponse } from '@/lib/api/api-response';
 
 type UiSession = ReturnType<typeof mapApiSessionToUiSession>;
 
@@ -17,8 +18,9 @@ export function useSessionStore() {
     loadingRef.current = true;
     try {
       const sessionsData = await apiClient.listSessions();
-      const sessions = getApiData(sessionsData);
-      const uiSessions: UiSession[] = (sessions || []).map(mapApiSessionToUiSession) as UiSession[];
+      const response = getApiData(sessionsData) as PaginatedResponse<components['schemas']['Session']>;
+      const sessionsArray = response?.items || [];
+      const uiSessions: UiSession[] = sessionsArray.map(mapApiSessionToUiSession) as UiSession[];
       setSessions(uiSessions);
     } finally {
       loadingRef.current = false;

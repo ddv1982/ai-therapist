@@ -124,8 +124,8 @@ export class ApiClient {
   // Token refresh removed; DB-backed session cookie handles auth.
 
   // Sessions
-  async listSessions(): Promise<ApiResponse<SessionComponents['schemas']['Session'][]>> {
-    return this.request<ApiResponse<SessionComponents['schemas']['Session'][]>>('/api/sessions');
+  async listSessions(): Promise<ApiResponse<PaginatedResponse<SessionComponents['schemas']['Session']>>> {
+    return this.request<ApiResponse<PaginatedResponse<SessionComponents['schemas']['Session']>>>('/api/sessions');
   }
 
   async createSession(body: SessionPaths['/sessions']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<SessionComponents['schemas']['Session']>> {

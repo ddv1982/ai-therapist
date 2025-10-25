@@ -7,22 +7,25 @@ export const listByUser = query({
     const limit_clamped = Math.min(limit, 100); // Max 100 items per request
     const offset_clamped = Math.max(offset, 0);
 
-    return await ctx.db
+    // Fetch limit + 1 to determine if there are more results
+    const all = await ctx.db
       .query('sessions')
       .withIndex('by_user_created', q => q.eq('userId', userId))
       .order('desc')
-      .skip(offset_clamped)
-      .take(limit_clamped);
+      .collect();
+
+    return all.slice(offset_clamped, offset_clamped + limit_clamped);
   },
 });
 
 export const countByUser = query({
   args: { userId: v.id('users') },
   handler: async (ctx, { userId }) => {
-    return await ctx.db
+    const sessions = await ctx.db
       .query('sessions')
       .withIndex('by_user_created', q => q.eq('userId', userId))
-      .count();
+      .collect();
+    return sessions.length;
   },
 });
 

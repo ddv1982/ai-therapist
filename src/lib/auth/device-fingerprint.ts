@@ -2,6 +2,7 @@ import { UAParser } from 'ua-parser-js';
 import { createHash } from 'crypto';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { generateSecureRandomString } from '@/lib/utils/utils';
+import type { ConvexTrustedDevice, ConvexAuthSession } from '@/types/convex';
 
 export interface DeviceInfo {
   deviceId: string;
@@ -132,13 +133,14 @@ export async function getOrCreateDevice(
     userAgent,
     lastSeen: now,
   });
-  
+
+  const convexDevice = device as ConvexTrustedDevice;
   return {
-    deviceId: (device as any).deviceId,
-    fingerprint: (device as any).fingerprint,
-    name: (device as any).name,
-    userAgent: (device as any).userAgent,
-    ipAddress: (device as any).ipAddress,
+    deviceId: convexDevice.deviceId,
+    fingerprint: convexDevice.fingerprint,
+    name: convexDevice.name,
+    userAgent: convexDevice.userAgent,
+    ipAddress: convexDevice.ipAddress,
   };
 }
 
@@ -150,11 +152,12 @@ export async function createAuthSession(deviceId: string, ipAddress: string): Pr
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
   const client = getConvexHttpClient();
   const device = await client.query(anyApi.auth.getTrustedDeviceByDeviceId, { deviceId });
-  if (!device) throw new Error('Device not found');
+  const convexDevice = device as ConvexTrustedDevice | null;
+  if (!convexDevice) throw new Error('Device not found');
   await client.mutation(anyApi.auth.deleteExpiredAuthSessions, { now: Date.now() });
   await client.mutation(anyApi.auth.createAuthSession, {
     sessionToken,
-    deviceId: (device as any)._id,
+    deviceId: convexDevice._id,
     ipAddress,
     expiresAt: expiresAt.getTime(),
   });
@@ -167,19 +170,21 @@ export async function createAuthSession(deviceId: string, ipAddress: string): Pr
 export async function verifyAuthSession(sessionToken: string): Promise<DeviceInfo | null> {
   const client = getConvexHttpClient();
   const session = await client.query(anyApi.auth.getAuthSessionByToken, { sessionToken });
-  if (!session || (session as any).expiresAt < Date.now()) {
+  const convexSession = session as ConvexAuthSession | null;
+  if (!convexSession || convexSession.expiresAt < Date.now()) {
     await client.mutation(anyApi.auth.deleteExpiredAuthSessions, { now: Date.now() });
     return null;
   }
   await client.mutation(anyApi.auth.touchAuthSession, { sessionToken });
-  const device = await client.query(anyApi.auth.getTrustedDevice, { id: (session as any).deviceId });
-  if (!device) return null;
+  const device = await client.query(anyApi.auth.getTrustedDevice, { id: convexSession.deviceId });
+  const convexDevice = device as ConvexTrustedDevice | null;
+  if (!convexDevice) return null;
   return {
-    deviceId: (device as any).deviceId,
-    fingerprint: (device as any).fingerprint,
-    name: (device as any).name,
-    userAgent: (device as any).userAgent,
-    ipAddress: (device as any).ipAddress,
+    deviceId: convexDevice.deviceId,
+    fingerprint: convexDevice.fingerprint,
+    name: convexDevice.name,
+    userAgent: convexDevice.userAgent,
+    ipAddress: convexDevice.ipAddress,
   };
 }
 
@@ -208,17 +213,18 @@ export async function getTrustedDevices(): Promise<Array<{
 }>> {
   const client = getConvexHttpClient();
   const devices = await client.query(anyApi.auth.listTrustedDevices, {});
+  const convexDevices = Array.isArray(devices) ? (devices as ConvexTrustedDevice[]) : [];
   const now = Date.now();
-  return (Array.isArray(devices) ? devices : [])
-    .sort((a: any, b: any) => b.lastSeen - a.lastSeen)
-    .map((device: any) => ({
+  return convexDevices
+    .sort((a, b) => b.lastSeen - a.lastSeen)
+    .map((device) => ({
       id: String(device._id),
       deviceId: device.deviceId,
       name: device.name,
       lastSeen: new Date(device.lastSeen),
       trustedAt: new Date(device.trustedAt),
       ipAddress: device.ipAddress,
-      hasActiveSessions: (device as any).hasActiveSessions ?? (device.lastSeen > now - 30 * 24 * 60 * 60 * 1000),
+      hasActiveSessions: device.lastSeen > now - 30 * 24 * 60 * 60 * 1000,
     }));
 }
 
@@ -228,8 +234,9 @@ export async function getTrustedDevices(): Promise<Array<{
 export async function revokeDeviceTrust(deviceId: string): Promise<boolean> {
   const client = getConvexHttpClient();
   const device = await client.query(anyApi.auth.getTrustedDeviceByDeviceId, { deviceId });
-  if (!device) return false;
-  await client.mutation(anyApi.auth.deleteTrustedDevice, { fingerprint: (device as any).fingerprint });
+  const convexDevice = device as ConvexTrustedDevice | null;
+  if (!convexDevice) return false;
+  await client.mutation(anyApi.auth.deleteTrustedDevice, { fingerprint: convexDevice.fingerprint });
   return true;
 }
 
@@ -239,5 +246,6 @@ export async function revokeDeviceTrust(deviceId: string): Promise<boolean> {
 export async function cleanupExpiredSessions(): Promise<number> {
   const client = getConvexHttpClient();
   const res = await client.mutation(anyApi.auth.deleteExpiredAuthSessions, { now: Date.now() });
-  return (res as any)?.count ?? 0;
+  const result = res as { count?: number } | null;
+  return result?.count ?? 0;
 }

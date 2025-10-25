@@ -387,18 +387,18 @@ export const POST = withApiMiddleware(async (request: NextRequest, context) => {
       try {
         const client = getConvexHttpClient();
         await client.mutation(anyApi.reports.create, {
-          sessionId: reportData.sessionId as any,
+          sessionId: reportData.sessionId,
           reportContent: reportData.reportContent,
-          keyPoints: reportData.keyPoints as any,
-          therapeuticInsights: reportData.therapeuticInsights as any,
-          patternsIdentified: reportData.patternsIdentified as any,
-          actionItems: reportData.actionItems as any,
+          keyPoints: reportData.keyPoints,
+          therapeuticInsights: reportData.therapeuticInsights,
+          patternsIdentified: reportData.patternsIdentified,
+          actionItems: reportData.actionItems,
           moodAssessment: reportData.moodAssessment,
           progressNotes: reportData.progressNotes,
-          cognitiveDistortions: (reportData as any).cognitiveDistortions,
-          schemaAnalysis: (reportData as any).schemaAnalysis,
-          therapeuticFrameworks: (reportData as any).therapeuticFrameworks,
-          recommendations: (reportData as any).recommendations,
+          cognitiveDistortions: encryptedAnalysisData.cognitiveDistortions,
+          schemaAnalysis: encryptedAnalysisData.schemaAnalysis,
+          therapeuticFrameworks: encryptedAnalysisData.therapeuticFrameworks,
+          recommendations: encryptedAnalysisData.recommendations,
           analysisConfidence: reportData.analysisConfidence,
           analysisVersion: reportData.analysisVersion,
         });

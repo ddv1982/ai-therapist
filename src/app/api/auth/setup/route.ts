@@ -93,12 +93,12 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
     const { verificationToken } = parsed.data;
 
     // Prefer server-side cached setup data to avoid trusting/matching masked client values
-    const cache = (globalThis as any).totpSetupCache as (typeof globalThis.totpSetupCache);
+    const cache = globalThis.totpSetupCache;
     const cacheExpiry = 5 * 60 * 1000; // 5 minutes (matches GET)
     const cacheValid = !!(cache && cache.timestamp && (Date.now() - cache.timestamp) < cacheExpiry);
 
-    const secret = cacheValid ? cache!.data.secret : parsed.data.secret;
-    const backupCodes = cacheValid ? cache!.data.backupCodes : parsed.data.backupCodes;
+    const secret = cacheValid ? cache.data.secret : parsed.data.secret;
+    const backupCodes = cacheValid ? cache.data.backupCodes : parsed.data.backupCodes;
 
     // Check if TOTP is already set up
     const isSetup = await isTOTPSetup();
@@ -123,8 +123,8 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
     await saveTOTPConfig(secret, backupCodes);
 
     // Clear the setup cache since setup is now complete
-    if ((globalThis as any).totpSetupCache) {
-      try { delete (globalThis as any).totpSetupCache; } catch {}
+    if (globalThis.totpSetupCache) {
+      try { delete globalThis.totpSetupCache; } catch {}
     }
 
     // Create device and session for immediate authentication
