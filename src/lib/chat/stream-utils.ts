@@ -1,4 +1,5 @@
 // Streaming helpers for chat SSE parsing and header attachment
+import { isTest } from '@/config/env.public';
 
 export type StreamPart = { type?: string; text?: unknown } | null | undefined;
 
@@ -96,7 +97,7 @@ export async function teeAndPersistStream(
       await collector.persist();
     };
 
-    if (process.env.NODE_ENV === 'test') {
+    if (isTest) {
       await consume();
     } else {
       void consume();

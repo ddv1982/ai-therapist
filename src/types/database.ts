@@ -1,36 +1,26 @@
-/**
- * Database Types
- * Type definitions for database models and operations
- */
+import type { Doc, Id } from '../../convex/_generated/dataModel';
 
-// Database model types (defined here to avoid circular imports)
-// These match the Prisma schema definitions
+export type UserDoc = Doc<'users'>;
+export type SessionDoc = Doc<'sessions'>;
+export type MessageDoc = Doc<'messages'>;
+export type SessionReportDoc = Doc<'sessionReports'>;
 
-// Database operation types
-export interface DatabaseConnectionConfig {
-  url: string;
-  maxConnections?: number;
-  timeout?: number;
+export type SessionId = Id<'sessions'>;
+export type UserId = Id<'users'>;
+
+export interface SessionBundle {
+  session: SessionDoc;
+  messages: MessageDoc[];
+  reports: SessionReportDoc[];
 }
 
-export interface QueryOptions {
-  limit?: number;
-  offset?: number;
-  orderBy?: string;
-  orderDirection?: 'asc' | 'desc';
+export interface SessionOwnershipResult {
+  valid: boolean;
+  session?: SessionDoc | SessionWithMessages;
 }
 
-// Encryption-related database types
-export interface EncryptedField {
-  encrypted: string;
-  iv: string;
-  tag: string;
+export interface SessionWithMessages extends SessionDoc {
+  messages: MessageDoc[];
+  reports?: SessionReportDoc[];
 }
 
-export interface DatabaseStats {
-  totalUsers: number;
-  totalSessions: number;
-  totalMessages: number;
-  totalReports: number;
-  lastActivity: Date;
-}

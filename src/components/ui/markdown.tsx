@@ -4,6 +4,7 @@ import React from 'react';
 import { Streamdown } from 'streamdown';
 import { CBTSessionSummaryCard, type CBTSessionSummaryData } from '@/components/ui/cbt-session-summary-card';
 import { safeParseFromMatch } from '@/lib/utils/safe-json';
+import { publicEnv } from '@/config/env.public';
 
 function extractCBTSummaryData(text: string): { summaryData: CBTSessionSummaryData | null; cleanText: string } {
   const cbtPattern = /<!-- CBT_SUMMARY_CARD:(.*?) -->[\s\S]*?<!-- END_CBT_SUMMARY_CARD -->/;
@@ -184,8 +185,8 @@ export function Markdown({ children, className, defaultOrigin, isUser, allowedLi
       : 'http://localhost'
   );
 
-  const allowHttp = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP === 'true';
-  const allowMailto = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO === 'true';
+  const allowHttp = publicEnv.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP;
+  const allowMailto = publicEnv.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO;
   const normalizedOrigin = (() => {
     try {
       const parsed = new URL(resolvedOrigin);

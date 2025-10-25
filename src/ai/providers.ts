@@ -7,16 +7,16 @@ import type {
   LanguageModelV2StreamPart,
   LanguageModelV2ToolResultPart,
 } from '@ai-sdk/provider';
+import { logger } from '@/lib/utils/logger';
+import { env } from '@/config/env';
 import { MODEL_IDS } from '@/ai/model-metadata';
 import type { ModelIdentifier } from '@/ai/model-metadata';
-import { logger } from '@/lib/utils/logger';
 
-const rawOllamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434';
-const ollamaBaseUrl = trimTrailingSlash(rawOllamaBaseUrl);
+const ollamaBaseUrl = trimTrailingSlash(env.OLLAMA_BASE_URL);
 const ollamaApiBaseUrl = ensureApiBase(ollamaBaseUrl);
 const ollamaChatUrl = `${ollamaApiBaseUrl}/chat`;
 const ollamaTagsUrl = `${ollamaApiBaseUrl}/tags`;
-const localModelName = process.env.OLLAMA_MODEL_ID || 'gemma3:4b';
+const localModelName = env.OLLAMA_MODEL_ID;
 
 let localOllamaModel: LanguageModel | undefined;
 

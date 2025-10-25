@@ -130,7 +130,6 @@ function updateEnvFile() {
     const envContent = `# Local environment configuration
 # Fill in your values as needed. ENCRYPTION_KEY should be a 32-byte (base64) value.
 
-DATABASE_URL="file:./prisma/dev.db"
 GROQ_API_KEY=""
 ENCRYPTION_KEY=""
 NEXTAUTH_SECRET=""

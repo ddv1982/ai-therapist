@@ -11,4 +11,4 @@ export { logger } from './utils/logger';
 export { buildMemoryEnhancedPrompt } from './therapy/therapy-prompts';
 
 // Database
-export { prisma } from './database/db';
+// (Prisma removed; using Convex)

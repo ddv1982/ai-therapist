@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
 import { isTOTPSetup } from '@/lib/auth/totp-service';
+import { env } from '@/config/env';
 
 export interface AuthResult {
   isAuthenticated: boolean;
@@ -17,7 +18,7 @@ export async function checkAuth(request: NextRequest): Promise<AuthResult> {
   
   // SECURITY: Only allow bypassing authentication in development environment
   // Never trust host headers for security decisions - they can be spoofed
-  if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
+  if (env.NODE_ENV === 'development' && env.BYPASS_AUTH) {
     return { isAuthenticated: true, needsSetup: false, needsVerification: false };
   }
   
@@ -67,12 +68,12 @@ export async function checkAuth(request: NextRequest): Promise<AuthResult> {
  */
 export function createAuthResponse(sessionToken: string, redirectUrl?: string): NextResponse {
   const response = redirectUrl 
-    ? NextResponse.redirect(new URL(redirectUrl, process.env.NEXTAUTH_URL || 'http://localhost:3000'))
+    ? NextResponse.redirect(new URL(redirectUrl, env.NEXTAUTH_URL || 'http://localhost:3000'))
     : NextResponse.json({ success: true });
     
   response.cookies.set('auth-session-token', sessionToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: env.NODE_ENV === 'production',
     sameSite: 'strict',
     maxAge: 30 * 24 * 60 * 60, // 30 days
     path: '/',
@@ -86,7 +87,7 @@ export function createAuthResponse(sessionToken: string, redirectUrl?: string): 
  */
 export function createLogoutResponse(redirectUrl?: string): NextResponse {
   const response = redirectUrl 
-    ? NextResponse.redirect(new URL(redirectUrl, process.env.NEXTAUTH_URL || 'http://localhost:3000'))
+    ? NextResponse.redirect(new URL(redirectUrl, env.NEXTAUTH_URL || 'http://localhost:3000'))
     : NextResponse.json({ success: true });
     
   response.cookies.delete('auth-session-token');

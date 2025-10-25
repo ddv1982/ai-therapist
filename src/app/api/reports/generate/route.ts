@@ -2,14 +2,13 @@ import { NextRequest } from 'next/server';
 import { generateSessionReport, extractStructuredAnalysis, type ReportMessage } from '@/lib/api/groq-client';
 import { ANALYSIS_EXTRACTION_PROMPT } from '@/lib/therapy/therapy-prompts';
 import { getReportPrompt } from '@/lib/therapy/prompts';
-import { prisma } from '@/lib/database/db';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { logger, devLog } from '@/lib/utils/logger';
 import { reportGenerationSchema, validateRequest } from '@/lib/utils/validation';
 import { encryptSessionReportContent, encryptEnhancedAnalysisData } from '@/lib/chat/message-encryption';
 import { validateTherapeuticContext, calculateContextualConfidence } from '@/lib/therapy/context-validator';
 import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/cbt-data-parser';
 import { deduplicateRequest } from '@/lib/utils/request-deduplication';
-import type { Prisma } from '@prisma/client';
 import { generateFallbackAnalysis as generateFallbackAnalysisExternal } from '@/lib/reports/fallback-analysis';
 import { withApiMiddleware } from '@/lib/api/api-middleware';
 import { createErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
@@ -34,10 +33,10 @@ interface ParsedAnalysis {
   };
   therapeuticFrameworks?: unknown[];
   recommendations?: unknown[];
-  keyPoints?: Prisma.InputJsonValue;
-  therapeuticInsights?: Prisma.InputJsonValue;
-  patternsIdentified?: Prisma.InputJsonValue;
-  actionItems?: Prisma.InputJsonValue;
+  keyPoints?: unknown;
+  therapeuticInsights?: unknown;
+  patternsIdentified?: unknown;
+  actionItems?: unknown;
   moodAssessment?: string;
   progressNotes?: string;
   analysisConfidence?: number;
@@ -385,9 +384,27 @@ export const POST = withApiMiddleware(async (request: NextRequest, context) => {
         analysisVersion: "enhanced_v1.0" // Track version for future updates
       };
 
-      await prisma.sessionReport.create({
-        data: reportData
-      });
+      try {
+        const client = getConvexHttpClient();
+        await client.mutation(anyApi.reports.create, {
+          sessionId: reportData.sessionId as any,
+          reportContent: reportData.reportContent,
+          keyPoints: reportData.keyPoints as any,
+          therapeuticInsights: reportData.therapeuticInsights as any,
+          patternsIdentified: reportData.patternsIdentified as any,
+          actionItems: reportData.actionItems as any,
+          moodAssessment: reportData.moodAssessment,
+          progressNotes: reportData.progressNotes,
+          cognitiveDistortions: (reportData as any).cognitiveDistortions,
+          schemaAnalysis: (reportData as any).schemaAnalysis,
+          therapeuticFrameworks: (reportData as any).therapeuticFrameworks,
+          recommendations: (reportData as any).recommendations,
+          analysisConfidence: reportData.analysisConfidence,
+          analysisVersion: reportData.analysisVersion,
+        });
+      } catch (err) {
+        throw err;
+      }
       
       logger.info('Session report saved to database for therapeutic memory', {
         ...context,

@@ -116,18 +116,6 @@ export class APITestTemplate {
         });
       });
       
-      describe('Database Operations', () => {
-        it('should handle database errors gracefully', async () => {
-          (mocks.prisma.sessionReport.findMany as any).mockRejectedValueOnce(new Error('Database error'));
-          
-          const mockRequest = (ComponentTestUtils as any).createMockRequest(
-            'http://localhost:3000/api/test'
-          );
-          
-          const response = await apiHandler(mockRequest);
-          expect(response.status).toBeGreaterThanOrEqual(500);
-        });
-      });
     });
   }
   

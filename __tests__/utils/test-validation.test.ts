@@ -46,20 +46,6 @@ describe('Unified Test Utilities Validation', () => {
       expect(utilsMock.cn('class1', 'class2')).toBe('class1 class2');
     });
 
-    it('should create database mock', () => {
-      const dbMock = MockFactory.createDatabaseMock();
-      
-      expect(dbMock).toHaveProperty('prisma');
-      expect(dbMock.prisma).toHaveProperty('user');
-      expect(dbMock.prisma).toHaveProperty('session');
-      expect(dbMock.prisma).toHaveProperty('message');
-      
-      // Test mock methods exist
-      expect(dbMock.prisma.user).toHaveProperty('findFirst');
-      expect(dbMock.prisma.user).toHaveProperty('create');
-      expect(dbMock.prisma.user).toHaveProperty('update');
-    });
-
     it('should create auth mocks', () => {
       const authMocks = MockFactory.createAuthMocks();
       

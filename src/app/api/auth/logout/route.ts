@@ -1,6 +1,7 @@
 import { withAuth } from '@/lib/api/api-middleware';
 import { revokeAuthSession } from '@/lib/auth/device-fingerprint';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
+import { env } from '@/config/env';
 
 export const POST = withAuth(async (request, context) => {
   try {
@@ -12,7 +13,7 @@ export const POST = withAuth(async (request, context) => {
     try {
       res.cookies.set('auth-session-token', '', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 0,
         path: '/',
@@ -23,5 +24,4 @@ export const POST = withAuth(async (request, context) => {
     return createErrorResponse('Failed to logout', 500, { requestId: context.requestId });
   }
 });
-
 

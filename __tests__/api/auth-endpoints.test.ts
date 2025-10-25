@@ -6,34 +6,6 @@
 import { NextRequest } from 'next/server';
 import { validateApiAuth } from '@/lib/api/api-auth';
 
-// Mock the dependencies
-jest.mock('@/lib/database/db', () => ({
-  prisma: {
-    authConfig: {
-      findFirst: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-    },
-    trustedDevice: {
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-    },
-    authSession: {
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      deleteMany: jest.fn(),
-    },
-  },
-  checkDatabaseHealth: jest.fn(),
-  disconnectDatabase: jest.fn(),
-}));
-
 jest.mock('@/lib/auth/totp-service');
 jest.mock('@/lib/auth/device-fingerprint');
 

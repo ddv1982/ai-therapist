@@ -10,26 +10,23 @@ import { selectModelAndTools } from '@/lib/chat/model-selector';
 import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
 import { createErrorResponse } from '@/lib/api/api-response';
+import { env } from '@/config/env';
 
-import { prisma } from '@/lib/database/db';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { verifySessionOwnership } from '@/lib/database/queries';
 import { recordModelUsage } from '@/lib/metrics/metrics';
 import { appendWithLimit as appendWithLimitUtil, teeAndPersistStream as teeAndPersistStreamUtil, persistFromClonedStream as persistFromClonedStreamUtil, attachResponseHeadersRaw as attachResponseHeadersRawUtil } from '@/lib/chat/stream-utils';
 import { AssistantResponseCollector } from '@/lib/chat/assistant-response-collector';
 import { readJsonBody } from '@/lib/api/request';
+import type { SessionOwnershipResult, SessionWithMessages } from '@/types/database';
 
 type ApiChatMessage = { role: 'user' | 'assistant'; content: string; id?: string };
-
-const DEFAULT_MAX_INPUT_BYTES = 128 * 1024;
-const MAX_ASSISTANT_RESPONSE_CHARS = (() => {
-  const raw = Number(process.env.CHAT_RESPONSE_MAX_CHARS ?? 100_000);
-  return Number.isFinite(raw) && raw > 0 ? raw : 100_000;
-})();
+const MAX_ASSISTANT_RESPONSE_CHARS = env.CHAT_RESPONSE_MAX_CHARS;
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
-type SessionOwnership = Awaited<ReturnType<typeof verifySessionOwnership>>;
+type SessionOwnership = SessionOwnershipResult;
 
 // Stream types and helpers are imported from stream-utils
 
@@ -38,7 +35,7 @@ type SessionOwnership = Awaited<ReturnType<typeof verifySessionOwnership>>;
 export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, context) => {
   try {
     const parsedBody = await readJsonBody(req);
-    const maxSize = Number(process.env.CHAT_INPUT_MAX_BYTES || DEFAULT_MAX_INPUT_BYTES);
+    const maxSize = env.CHAT_INPUT_MAX_BYTES;
     if (parsedBody.size > maxSize) return createErrorResponse('Request too large', 413, { requestId: context.requestId });
 
     const input = parsedBody.body;
@@ -191,16 +188,34 @@ async function resolveSessionOwnership(sessionId: string | undefined, userId: st
 
 async function loadSessionHistory(sessionId: string, ownership: SessionOwnership): Promise<ApiChatMessage[]> {
   const HISTORY_LIMIT = 30;
-  const sessionMessagesRaw = Array.isArray(ownership.session?.messages)
-    ? ownership.session!.messages
-    : await prisma.message.findMany({
-        where: { sessionId },
-        orderBy: { timestamp: 'desc' },
-        take: HISTORY_LIMIT,
-      });
+  const sessionWithMessages: SessionWithMessages | undefined =
+    ownership.session && 'messages' in ownership.session
+      ? (ownership.session as SessionWithMessages)
+      : undefined;
 
-  const sessionMessages = (Array.isArray(sessionMessagesRaw) ? sessionMessagesRaw : [])
-    .sort((a, b) => new Date(a.timestamp as Date).getTime() - new Date(b.timestamp as Date).getTime())
+  const sessionMessagesRaw =
+    sessionWithMessages?.messages ??
+    (await (async () => {
+      const client = getConvexHttpClient();
+      const all = await client.query(anyApi.messages.listBySession, { sessionId: sessionId as any });
+      return (Array.isArray(all) ? all : []) as Array<{
+        _id: string;
+        role: 'user' | 'assistant';
+        content: string;
+        timestamp: number;
+      }>;
+    })());
+
+  const sessionMessages = sessionMessagesRaw
+    .map((message) => ({
+      id: 'id' in message ? (message as any).id ?? message._id : message._id,
+      role: message.role,
+      content: message.content,
+      timestamp: new Date(
+        typeof message.timestamp === 'number' ? message.timestamp : new Date(message.timestamp as any).getTime()
+      ),
+    }))
+    .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
     .slice(-HISTORY_LIMIT);
 
   const { safeDecryptMessages } = await import('@/lib/chat/message-encryption');
@@ -215,7 +230,7 @@ async function loadSessionHistory(sessionId: string, ownership: SessionOwnership
   return decrypted.map((message, index) => ({
     role: message.role as 'user' | 'assistant',
     content: message.content,
-    id: sessionMessages[index]?.id,
+    id: (sessionMessages[index] as any)?.id,
   }));
 }
 

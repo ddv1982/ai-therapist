@@ -36,10 +36,8 @@ async function setupAll() {
     await runCommand('node', [path.join(__dirname, 'setup-env-local.js')]);
     console.log('✅ Environment configuration complete\n');
 
-    // Step 2: Database setup
-    console.log('🗃️  Step 2: Setting up database...');
-    await runCommand('node', [path.join(__dirname, 'setup-database.js')]);
-    console.log('✅ Database setup complete\n');
+    // Step 2: Skip database setup (Convex backend replaces local DB)
+    console.log('🗃️  Step 2: Skipping local DB setup (using Convex backend)\n');
 
     // Step 3: Redis setup
     console.log('🔴 Step 3: Setting up Redis caching...');
@@ -61,10 +59,9 @@ async function setupAll() {
     await runCommand('npm', ['install']);
     console.log('✅ Dependencies installed\n');
 
-    // Step 6: Generate Prisma client
-    console.log('🔧 Step 6: Generating Prisma client...');
-    await runCommand('npm', ['run', 'db:generate']);
-    console.log('✅ Prisma client generated\n');
+    // Step 6: Convex setup hint
+    console.log('🔧 Step 6: Convex backend');
+    console.log('   You can start Convex with: make convex-dev (or npm run convex:dev)\n');
 
     // Final verification
     console.log('🔍 Step 7: Verifying setup...');
@@ -86,17 +83,16 @@ async function setupAll() {
     console.log('   • Start development: npm run dev');
     console.log('   • Check Redis status: npm run redis:status');
     console.log('   • Cache health check: npm run cache:health');
-    console.log('   • Database studio: npm run db:studio');
+    console.log('   • Convex dev: make convex-dev');
     console.log('   • Run tests: npm test');
 
   } catch (error) {
     console.error('\n❌ Setup failed:', error.message);
     console.log('\n🔧 Manual setup steps:');
     console.log('   1. npm install');
-    console.log('   2. npm run db:setup');
-    console.log('   3. npm run redis:setup');
-    console.log('   4. npm run encryption:setup');
-    console.log('   5. Fill in .env.local with your API keys');
+    console.log('   2. npm run redis:setup');
+    console.log('   3. npm run encryption:setup');
+    console.log('   4. Fill in .env.local with your API keys');
     process.exit(1);
   }
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { handleClientError } from '@/lib/utils/error-utils';
 import { logger } from '@/lib/utils/logger';
+import { isDevelopment } from '@/config/env.public';
 
 interface AuthStatus {
   isAuthenticated: boolean;
@@ -129,7 +130,7 @@ export function useAuth(): AuthStatus {
       });
       
       // Log with enhanced error info (in development only)
-      if (process.env.NODE_ENV === 'development') {
+      if (isDevelopment) {
         logger.error('Auth status check failed in development', {
           component: 'useAuth',
           operation: 'checkAuthStatus',

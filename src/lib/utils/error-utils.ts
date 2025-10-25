@@ -14,6 +14,9 @@ import {
   createAuthenticationErrorResponse,
   ApiResponse
 } from '@/lib/api/api-response';
+import { getPublicEnv } from '@/config/env.public';
+
+const runtimeIsDevelopment = () => getPublicEnv().NODE_ENV === 'development';
 
 // ============================================================================
 // ERROR TYPES AND INTERFACES
@@ -62,7 +65,7 @@ export const ErrorMetrics = {
     _additionalData?: Record<string, unknown>
   ) => {
     // Intentionally minimal to avoid memory growth; logging already handled elsewhere
-    if (process.env.NODE_ENV === 'development') {
+    if (runtimeIsDevelopment()) {
       logger.debug('Error metric recorded', { metricType: 'errorTracking' });
     }
   },
@@ -203,7 +206,7 @@ export function classifyError(error: Error | unknown): {
   const errorMessage = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
   
   // Database errors
-  if (errorMessage.includes('database') || errorMessage.includes('sqlite') || errorMessage.includes('prisma')) {
+  if (errorMessage.includes('database') || errorMessage.includes('sqlite')) {
     return { category: 'database', severity: 'high', isRetryable: false };
   }
   
@@ -238,7 +241,7 @@ export function shouldLogError(severity: ErrorSeverity, category: ErrorCategory)
   
   // Skip low severity validation errors unless in development
   if (severity === 'low' && category === 'validation') {
-    return process.env.NODE_ENV === 'development';
+    return runtimeIsDevelopment();
   }
   
   return true;
@@ -450,7 +453,7 @@ export function handleClientError(
   }
   
   // Log client errors if in development
-  if (process.env.NODE_ENV === 'development') {
+  if (runtimeIsDevelopment()) {
     logger.error('Client error encountered', {
       operation: context.operation,
       errorMessage,

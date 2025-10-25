@@ -9,6 +9,7 @@ import {
   createErrorResponse
 } from '@/lib/api/api-response';
 import { z } from 'zod';
+import { env } from '@/config/env';
 
 // POST /api/auth/verify - Verify TOTP token or backup code
 const verifySchema = z.object({ token: z.string().min(1, 'Token is required'), isBackupCode: z.boolean().optional() });
@@ -123,7 +124,7 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest, co
     
     // Set the authentication cookie with stricter security
     const isHttps = request.nextUrl.protocol === 'https:';
-    const isProd = process.env.NODE_ENV === 'production';
+    const isProd = env.NODE_ENV === 'production';
     response.cookies.set('auth-session-token', session.sessionToken, {
       httpOnly: true,
       // In development and on LAN over http, allow non-secure cookie so auth works

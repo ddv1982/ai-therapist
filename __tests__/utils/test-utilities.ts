@@ -85,42 +85,6 @@ export class MockFactory {
   }
 
   /**
-   * Database (Prisma) mock - used in 15+ test files
-   */
-  static createDatabaseMock() {
-    return {
-      prisma: {
-        user: MockFactory.createPrismaModelMock(),
-        session: MockFactory.createPrismaModelMock(),
-        message: MockFactory.createPrismaModelMock(),
-        sessionReport: MockFactory.createPrismaModelMock(),
-        authConfig: MockFactory.createPrismaModelMock(),
-        trustedDevice: MockFactory.createPrismaModelMock(),
-        authSession: MockFactory.createPrismaModelMock(),
-      },
-      checkDatabaseHealth: (jest.fn() as any).mockResolvedValue({ healthy: true, message: 'Test connection' }),
-      disconnectDatabase: (jest.fn() as any).mockResolvedValue(undefined),
-    };
-  }
-
-  /**
-   * Generic Prisma model mock with all common operations
-   */
-  private static createPrismaModelMock() {
-    return {
-      findFirst: jest.fn(),
-      findUnique: jest.fn(),
-      findMany: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      deleteMany: jest.fn(),
-      upsert: jest.fn(),
-      count: jest.fn(),
-    };
-  }
-
-  /**
    * Enhanced API test mocks with proper setup for Next.js API routes
    */
   static createAPITestMocks() {
@@ -129,34 +93,6 @@ export class MockFactory {
       jest.fn() as jest.MockedFunction<() => Promise<T>>;
 
     return {
-      // Database mocks
-      prisma: {
-        sessionReport: {
-          findMany: createMockFn<unknown[]>().mockResolvedValue([]),
-          findFirst: createMockFn<unknown | null>().mockResolvedValue(null),
-          findUnique: createMockFn<unknown | null>().mockResolvedValue(null),
-          create: createMockFn<unknown>().mockResolvedValue({}),
-          update: createMockFn<unknown>().mockResolvedValue({}),
-          delete: createMockFn<unknown>().mockResolvedValue({}),
-        },
-        session: {
-          findMany: createMockFn<unknown[]>().mockResolvedValue([]),
-          findFirst: createMockFn<unknown | null>().mockResolvedValue(null),
-          findUnique: createMockFn<unknown | null>().mockResolvedValue(null),
-          create: createMockFn<unknown>().mockResolvedValue({}),
-          update: createMockFn<unknown>().mockResolvedValue({}),
-          delete: createMockFn<unknown>().mockResolvedValue({}),
-        },
-        message: {
-          findMany: createMockFn<unknown[]>().mockResolvedValue([]),
-          create: createMockFn<unknown>().mockResolvedValue({}),
-        },
-        user: {
-          findFirst: createMockFn<unknown | null>().mockResolvedValue(null),
-          findUnique: createMockFn<unknown | null>().mockResolvedValue(null),
-          create: createMockFn<unknown>().mockResolvedValue({}),
-        },
-      },
       // Auth mocks
       apiAuth: {
         validateApiAuth: createMockFn<AuthValidationResult>()
@@ -646,12 +582,6 @@ export class ComponentTestUtils {
     
     beforeEach(() => {
       jest.clearAllMocks();
-      
-      // Mock database
-      jest.doMock('@/lib/database/db', () => ({
-        prisma: mocks.prisma,
-      }));
-      
       // Mock authentication
       jest.doMock('@/lib/api/api-auth', () => mocks.apiAuth);
       
@@ -971,10 +901,6 @@ export class TestSetupUtils {
       
       if (mocks.utils) {
         jest.mock('@/lib/utils/utils', () => MockFactory.createUtilsMock());
-      }
-      
-      if (mocks.database) {
-        jest.mock('@/lib/database/db', () => MockFactory.createDatabaseMock());
       }
       
       if (mocks.auth) {

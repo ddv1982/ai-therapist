@@ -14,6 +14,7 @@
 
 import { createClient, RedisClientType, RedisClientOptions } from 'redis';
 import { logger } from '@/lib/utils/logger';
+import { env } from '@/config/env';
 
 const isNodeRuntime = typeof globalThis.process?.versions?.node === 'string';
 
@@ -58,10 +59,10 @@ class RedisManager {
 
     try {
       const redisConfig: RedisClientOptions = {
-        url: config?.url || process.env.REDIS_URL,
+        url: config?.url || env.REDIS_URL,
         socket: {
-          host: config?.host || process.env.REDIS_HOST || 'localhost',
-          port: config?.port || parseInt(process.env.REDIS_PORT || '6379'),
+          host: config?.host || env.REDIS_HOST || 'localhost',
+          port: config?.port || env.REDIS_PORT,
           connectTimeout: 10000,
           reconnectStrategy: (retries) => {
             if (retries > this.maxReconnectAttempts) {
@@ -84,8 +85,8 @@ class RedisManager {
             return delay;
           }
         },
-        password: config?.password || process.env.REDIS_PASSWORD,
-        database: config?.db || parseInt(process.env.REDIS_DB || '0')
+        password: config?.password || env.REDIS_PASSWORD,
+        database: config?.db || env.REDIS_DB
       };
 
       // Remove undefined values to avoid Redis connection issues
@@ -122,7 +123,7 @@ class RedisManager {
       }, error instanceof Error ? error : new Error('Redis connection failed'));
 
       // Don't throw in development - allow graceful degradation
-      if (process.env.NODE_ENV === 'production') {
+      if (env.NODE_ENV === 'production') {
         throw error;
       }
     }

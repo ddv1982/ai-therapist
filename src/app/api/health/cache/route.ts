@@ -11,6 +11,7 @@ import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-respon
 import { CacheHealthMonitor, cache } from '@/lib/cache';
 import { redisManager } from '@/lib/cache/redis-client';
 import { logger } from '@/lib/utils/logger';
+import { env } from '@/config/env';
 
 export const GET = withRateLimitUnauthenticated(async (_request: NextRequest, context) => {
   try {
@@ -25,10 +26,10 @@ export const GET = withRateLimitUnauthenticated(async (_request: NextRequest, co
     
     // Get cache configuration
     const config = {
-      enabled: process.env.CACHE_ENABLED !== 'false',
-      defaultTTL: parseInt(process.env.CACHE_DEFAULT_TTL || '300'),
-      sessionTTL: parseInt(process.env.CACHE_SESSION_TTL || '1800'),
-      messageTTL: parseInt(process.env.CACHE_MESSAGE_TTL || '900'),
+      enabled: env.CACHE_ENABLED,
+      defaultTTL: env.CACHE_DEFAULT_TTL,
+      sessionTTL: env.CACHE_SESSION_TTL,
+      messageTTL: env.CACHE_MESSAGE_TTL,
     };
 
     const healthInfo = {

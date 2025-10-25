@@ -615,7 +615,7 @@ jobs:
       - name: Run integration tests
         run: npm run test:integration
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          CONVEX_URL: http://127.0.0.1:3210
           REDIS_URL: redis://localhost:6379
 
   e2e-tests:

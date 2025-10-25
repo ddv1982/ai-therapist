@@ -11,6 +11,7 @@
 
 import { generateRequestId } from '../auth/crypto-secure';
 import { SENSITIVE_THERAPEUTIC_KEYS, SENSITIVE_PATTERNS } from './logger.data';
+import { publicEnv, isDevelopment, isTest } from '@/config/env.public';
 
 export enum LogLevel {
   ERROR = 'error',
@@ -45,8 +46,8 @@ export interface LogEntry {
 }
 
 class Logger {
-  private isDevelopment = process.env.NODE_ENV === 'development';
-  private minLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || LogLevel.INFO;
+  private isDevelopment = isDevelopment;
+  private minLevel: LogLevel = (publicEnv.LOG_LEVEL as LogLevel) || LogLevel.INFO;
 
   /**
    * Filter sensitive therapeutic data from any object
@@ -178,7 +179,7 @@ class Logger {
           break;
         case LogLevel.WARN:
           // In tests, avoid duplicating warn into console.log to reduce noise
-          if (process.env.NODE_ENV === 'test') {
+          if (isTest) {
             console.warn(formattedLog);
           } else {
             console.warn(formattedLog);
@@ -334,7 +335,7 @@ export const logger = new Logger();
  * Use this for debug/development console.log statements
  */
 export function devLog(...args: unknown[]): void {
-  if (process.env.NODE_ENV === 'development') {
+if (isDevelopment) {
     console.log(...args);
   }
 }

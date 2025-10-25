@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync, pbkdf2 } from 'crypto';
 import { promisify } from 'util';
+import { env } from '@/config/env';
 
 /**
  * Encryption configuration
@@ -55,11 +56,11 @@ export function validateEncryptionKey(key: string): { valid: boolean; error?: st
  * Get encryption key from environment with secure initialization support
  */
 function getEncryptionKey(): Buffer {
-  const key = process.env.ENCRYPTION_KEY;
+  const key = env.ENCRYPTION_KEY;
   
   if (!key) {
     // In development, provide guidance for setup
-    if (process.env.NODE_ENV === 'development') {
+    if (env.NODE_ENV === 'development') {
       const generatedKey = generateSecureEncryptionKey();
       throw new Error(
         `ENCRYPTION_KEY environment variable is required. For development, you can use:\n` +

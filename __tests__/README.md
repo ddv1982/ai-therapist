@@ -45,7 +45,6 @@ __tests__/
 **Key Methods**:
 - `createLucideIconMocks()` - Standardized icon mocking (used in 12+ files)
 - `createUtilsMock()` - Common utility function mocks (used in 8+ files)
-- `createDatabaseMock()` - Prisma database mocking (used in 15+ files)
 - `createAuthMocks()` - Authentication service mocks (used in 10+ files)
 
 **Before/After Example**:

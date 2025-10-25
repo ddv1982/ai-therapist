@@ -5,17 +5,17 @@
 APP_PORT ?= 4000
 ENV_FILE := .env.local
 LOCKFILE := package-lock.json
-DB_FILE := prisma/dev.db
 API_SPEC := docs/api.yaml
 API_TYPES := src/types/api.generated.ts
 STAMP_NODE := node_modules/.installed
 
 SHELL := /bin/sh
 
-.PHONY: help setup dev start build next-build bootstrap install env db redis encryption prisma api-types playwright doctor \
-        lint fix tsc-check prisma-validate test test-watch coverage e2e e2e-ui e2e-debug qa-smoke qa-full \
-        db-studio migrate push generate clean clean-all redis-up redis-stop db-reset \
-        auth-reset auth-setup auth-status auth-health
+.PHONY: help setup dev start build next-build bootstrap install env redis encryption api-types playwright doctor \
+        lint fix tsc-check test test-watch coverage e2e e2e-ui e2e-debug qa-smoke qa-full \
+        clean clean-all redis-up redis-stop next-stop \
+        auth-reset auth-setup auth-status auth-health \
+        convex-dev convex-deploy convex-stop convex-health
 
 help: ## Show help
 	@printf "%s\n" \
@@ -34,8 +34,14 @@ help: ## Show help
 	"  Run E2E             make e2e               # Playwright; auto-starts server" \
 "  QA (smoke)          make qa-smoke          # lint + typecheck + jest" \
 "  QA (full)           make qa-full           # smoke + coverage + e2e" \
-	"  Reset database      make db-reset          # deletes local DB and re-initializes" \
 	"  Prod build/start    make build && make start" \
+	"" \
+	"Convex (serverless DB/functions):" \
+	"  Start Convex dev    make convex-dev       # runs 'npm run convex:dev'" \
+	"  Stop Convex dev     make convex-stop      # kill local Convex on common ports" \
+	"  Convex health       make convex-health    # curl Convex URL from env" \
+	"  Deploy Convex       make convex-deploy    # runs 'npm run convex:deploy'" \
+	"  Stop Next dev       make next-stop        # kill Next.js dev on APP_PORT (default 4000)" \
 	"" \
 	"Authorization (TOTP):" \
 	"  Reset auth          make auth-reset        # clears TOTP config, sessions, trusted devices" \
@@ -50,8 +56,8 @@ help: ## Show help
 	"" \
 	"Notes:" \
 	"- \"Intelligent\" targets verify and install prerequisites automatically:" \
-	"  • Node deps, .env.local, DB init, Redis install/start, encryption setup/validate," \
-	"    Prisma client generation, OpenAPI types, Playwright browsers (for E2E)." \
+	"  • Node deps, .env.local, Redis install/start, encryption setup/validate," \
+	"    OpenAPI types, Playwright browsers (for E2E)." \
 	"- Targets reuse your existing npm scripts and scripts/*.js to avoid duplication." \
 	"" \
 	"Targets:"
@@ -60,16 +66,42 @@ help: ## Show help
 
 # ----- Single intelligent entrypoints -----
 
-setup: $(STAMP_NODE) env $(DB_FILE) redis-up encryption-ok $(API_TYPES) prisma-generate playwright ## Intelligent setup + start dev
-	@CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} npm run dev
+setup: $(STAMP_NODE) env redis-up encryption-ok $(API_TYPES) playwright ## Intelligent setup + start dev (Convex + Next, stops on Ctrl+C)
+	@/bin/sh -c '\
+	  set -e; \
+	  echo "🔧 Ensuring Next.js is not already running..."; $(MAKE) -s next-stop >/dev/null 2>&1 || true; \
+	  echo "🔧 Ensuring Convex is not already running..."; $(MAKE) -s convex-stop >/dev/null 2>&1 || true; \
+	  echo "🚀 Starting Convex in background..."; \
+	  npm run convex:dev >/tmp/convex-dev.log 2>&1 & CONVEX_PID=$$!; \
+	  sleep 2; \
+	  trap "echo \"🛑 Stopping Next.js and Convex...\"; $(MAKE) -s next-stop >/dev/null 2>&1 || true; kill $$CONVEX_PID 2>/dev/null || true; $(MAKE) -s convex-stop >/dev/null 2>&1 || true" INT TERM EXIT; \
+	  echo "🌐 Starting Next dev..."; \
+	  CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} \
+	  CONVEX_URL=http://127.0.0.1:3210 \
+	  NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:3210 \
+	  npm run dev; \
+	'
 
-dev: ## Start dev server (assumes setup done)
-	CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} npm run dev
+dev: ## Start dev (Convex + Next; Ctrl+C cleanly stops both)
+	@/bin/sh -c '\
+	  set -e; \
+	  echo "🔧 Ensuring Next.js is not already running..."; $(MAKE) -s next-stop >/dev/null 2>&1 || true; \
+	  echo "🔧 Ensuring Convex is not already running..."; $(MAKE) -s convex-stop >/dev/null 2>&1 || true; \
+	  echo "🚀 Starting Convex in background..."; \
+	  npm run convex:dev >/tmp/convex-dev.log 2>&1 & CONVEX_PID=$$!; \
+	  sleep 2; \
+	  trap "echo \"🛑 Stopping Next.js and Convex...\"; $(MAKE) -s next-stop >/dev/null 2>&1 || true; kill $$CONVEX_PID 2>/dev/null || true; $(MAKE) -s convex-stop >/dev/null 2>&1 || true" INT TERM EXIT; \
+	  echo "🌐 Starting Next dev..."; \
+	  CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} \
+	  CONVEX_URL=http://127.0.0.1:3210 \
+	  NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:3210 \
+	  npm run dev; \
+	'
 
 start: redis-up encryption-ok ## Start prod server (db setup runs via npm script)
 	@npm run start
 
-build: install db ## Build for production (db setup runs via npm script)
+build: install ## Build for production
 	@$(MAKE) next-build
 
 next-build: ## Always run the Next.js build
@@ -77,7 +109,7 @@ next-build: ## Always run the Next.js build
 
 # ----- Setup building blocks -----
 
-bootstrap: env install db redis encryption prisma api-types playwright ## One-time full setup
+bootstrap: env install redis encryption api-types playwright ## One-time full setup
 	@echo "✅ Setup complete"
 
 install: $(STAMP_NODE) ## Install node dependencies
@@ -85,13 +117,9 @@ install: $(STAMP_NODE) ## Install node dependencies
 env: ## Ensure .env.local exists/up-to-date
 	@npm run env:init
 
-db: $(DB_FILE) ## Ensure DB is initialized
-
 redis: redis-up ## Ensure Redis installed and running
 
 encryption: encryption-ok ## Ensure encryption is set up/valid
-
-prisma: prisma-generate ## Generate Prisma client
 
 api-types: $(API_TYPES) ## Generate OpenAPI TS types
 
@@ -103,26 +131,23 @@ doctor: ## Quick health diagnostics
 	@echo "NPM:  $$(npm -v)"
 	@printf "Redis: "; (redis-cli ping >/dev/null 2>&1 && echo "PONG") || echo "not running"
 	@test -f $(ENV_FILE) && echo "Env: $(ENV_FILE) present" || echo "Env: MISSING"
-	@test -f $(DB_FILE) && echo "DB: $(DB_FILE) present" || echo "DB: MISSING"
 	@npm run -s encryption:validate >/dev/null 2>&1 && echo "Encryption: OK" || echo "Encryption: not set"
 	@test -f $(API_TYPES) && echo "API types: present" || echo "API types: MISSING"
 	@echo "Health endpoint:"; (curl -fsS http://localhost:$(APP_PORT)/api/health >/dev/null 2>&1 && echo "OK") || echo "unreachable (server not running)"
+	@echo "Convex URL:"; echo $${CONVEX_URL:-$$(grep -E '^NEXT_PUBLIC_CONVEX_URL=' $(ENV_FILE) 2>/dev/null | sed -E 's/.*=\"?//; s/\"$//')}
+	@echo "Convex health:"; (curl -fsS $${CONVEX_URL:-$$(grep -E '^NEXT_PUBLIC_CONVEX_URL=' $(ENV_FILE) 2>/dev/null | sed -E 's/.*=\"?//; s/\"$//')} >/dev/null 2>&1 && echo "OK") || echo "unreachable (ensure 'make convex-dev' is running)"
 
 # ----- Quality gates -----
 
-lint: ## Lint and validate (ESLint + TS + Prisma)
+lint: ## Lint and validate (ESLint + TS)
 	@npx eslint .
 	@npx tsc --noEmit
-	@npx prisma validate
 
 fix: ## Auto-fix lint issues
 	@npx eslint . --fix
 
 tsc-check: ## TypeScript type-check only
 	@npx tsc --noEmit
-
-prisma-validate: ## Validate Prisma schema
-	@npx prisma validate
 
 # ----- Testing -----
 
@@ -151,20 +176,6 @@ qa-smoke: ## Lint, type-check, and run unit/integration tests
 
 qa-full: ## Full QA: smoke + coverage + E2E
 	@npm run qa:full
-
-# ----- DB/Prisma utilities -----
-
-db-studio: ## Open Prisma Studio
-	@npm run db:studio
-
-migrate: ## Create/apply Prisma migration (interactive)
-	@npm run db:migrate
-
-push: ## Push schema to DB
-	@npm run db:push
-
-generate: prisma ## Generate Prisma client
-	@true
 
 # ----- Redis helpers -----
 
@@ -196,12 +207,6 @@ auth-status: ## Show TOTP status
 auth-health: ## TOTP health diagnostics
 	@npx tsx scripts/totp-manager.js health
 
-# ----- DB reset -----
-
-db-reset: ## Delete local dev DB and re-initialize (destructive)
-	@echo "⚠️  This will delete prisma/dev.db and re-initialize the database."
-	@rm -f prisma/dev.db
-	@npm run db:setup
 
 # ----- Files and stamps -----
 
@@ -214,17 +219,9 @@ $(STAMP_NODE): package.json $(LOCKFILE)
 $(ENV_FILE):
 	@set -e; npm run env:init
 
-$(DB_FILE): prisma/schema.prisma
-	@printf "🔎 Checking database... "
-	@([ -f $(DB_FILE) ] && echo "✅ present") || (echo "⬇️  setting up" && npm run -s db:setup >/dev/null 2>&1 && echo "✅ ready")
-
 $(API_TYPES): $(API_SPEC)
 	@printf "🔎 Generating API types... "
 	@npm run -s api:types >/dev/null 2>&1 && echo "✅ done"
-
-prisma-generate:
-	@printf "🔎 Generating Prisma client... "
-	@npm run -s db:generate >/dev/null 2>&1 && echo "✅ done"
 
 encryption-ok:
 	@printf "🔎 Checking encryption... "
@@ -238,4 +235,32 @@ clean: ## Clean build/test artifacts
 clean-all: clean ## Remove node_modules and local DB (destructive)
 	rm -rf node_modules
 	rm -f $(STAMP_NODE)
-	rm -f $(DB_FILE)
+	true
+
+# ----- Convex helpers -----
+
+convex-dev: ## Start Convex local backend (Ctrl+C to stop). If port busy, run 'make convex-stop' first.
+	@echo "Starting Convex dev..."
+	@npm run convex:dev
+
+convex-deploy: ## Deploy Convex functions/schema to the configured project
+	@npm run convex:deploy
+
+convex-health: ## Check Convex endpoint in env
+	@echo "Convex URL: $${CONVEX_URL:-$$(grep -E '^NEXT_PUBLIC_CONVEX_URL=' $(ENV_FILE) 2>/dev/null | sed -E 's/.*=\"?//; s/\"$//')}"
+	@curl -v -fsS $${CONVEX_URL:-$$(grep -E '^NEXT_PUBLIC_CONVEX_URL=' $(ENV_FILE) 2>/dev/null | sed -E 's/.*=\"?//; s/\"$//')} || true
+
+convex-stop: ## Stop any local Convex backend on common ports (3210 and 6790)
+	@echo "Stopping Convex on port 3210 (if running)..."; \
+  PID=$$(lsof -ti tcp:3210 2>/dev/null || true); \
+  if [ -n "$$PID" ]; then kill $$PID || true; sleep 1; fi; \
+  echo "Stopping Convex on port 6790 (if running)..."; \
+  PID2=$$(lsof -ti tcp:6790 2>/dev/null || true); \
+  if [ -n "$$PID2" ]; then kill $$PID2 || true; sleep 1; fi; \
+  echo "Done."
+
+next-stop: ## Stop any Next.js dev server on APP_PORT (default 4000)
+	@echo "Stopping Next.js on port $(APP_PORT) (if running)..."; \
+  PID=$$(lsof -ti tcp:$(APP_PORT) 2>/dev/null || true); \
+  if [ -n "$$PID" ]; then kill $$PID || true; sleep 1; fi; \
+  echo "Done."

@@ -1,5 +1,7 @@
 import { createHash } from 'crypto';
 import { getRateLimiter } from '@/lib/api/rate-limiter';
+import { reloadServerEnvForTesting } from '@/config/env';
+import { reloadPublicEnvForTesting } from '@/config/env.public';
 
 // Mock console for development logging tests
 const mockConsole = {
@@ -11,6 +13,18 @@ describe('RateLimiter', () => {
   let originalEnv: string | undefined;
   let rateLimiter: any;
 
+  const setNodeEnv = (value: string) => {
+    Object.defineProperty(process.env, 'NODE_ENV', { value, writable: true });
+    reloadServerEnvForTesting();
+    reloadPublicEnvForTesting();
+  };
+
+  const restoreNodeEnv = () => {
+    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, writable: true });
+    reloadServerEnvForTesting();
+    reloadPublicEnvForTesting();
+  };
+
   beforeAll(() => {
     originalConsole = global.console;
     originalEnv = process.env.NODE_ENV;
@@ -20,10 +34,13 @@ describe('RateLimiter', () => {
     // Reset console mock
     mockConsole.log.mockClear();
     global.console = mockConsole as any;
-    
+
     // Clear any existing rate limiter instance by creating new ones
     jest.clearAllMocks();
-    
+
+    reloadServerEnvForTesting();
+    reloadPublicEnvForTesting();
+
     // Get fresh rate limiter instance and clear its state
     rateLimiter = getRateLimiter();
     // Clear state via any-cast cleanup if available
@@ -36,7 +53,7 @@ describe('RateLimiter', () => {
 
   afterAll(() => {
     global.console = originalConsole;
-    Object.defineProperty(process.env, 'NODE_ENV', { value: originalEnv, writable: true });
+    restoreNodeEnv();
   });
 
   describe('Exempt IP Handling', () => {
@@ -75,13 +92,15 @@ describe('RateLimiter', () => {
     });
 
     it('should allow exempt IP in development mode', () => {
-      Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
+      setNodeEnv('development');
       
       const result = rateLimiter.checkRateLimit('127.0.0.1');
       
       // Exempt IPs should be allowed without logging
       expect(result.allowed).toBe(true);
       expect(result.retryAfter).toBeUndefined();
+
+      restoreNodeEnv();
     });
   });
 
@@ -136,7 +155,7 @@ describe('RateLimiter', () => {
     });
 
     it('should log block event without leaking IP in development mode', () => {
-      Object.defineProperty(process.env, 'NODE_ENV', { value: 'development', writable: true });
+      setNodeEnv('development');
       const ip = '203.0.113.103';
       
       // Exceed limit
@@ -154,6 +173,8 @@ describe('RateLimiter', () => {
       // Ensure no raw IPs are leaked in log output
       expect(output).not.toContain(ip);
       expect(output).not.toMatch(/"ip"\s*:/i);
+
+      restoreNodeEnv();
     });
   });
 
@@ -441,8 +462,14 @@ describe('RateLimiter', () => {
 
     it('should handle missing process.env gracefully', () => {
       const originalProcess = global.process;
-      // Provide a minimal stub to avoid breaking Node internals used elsewhere
-      global.process = { env: {} } as any;
+      // Provide a stub that preserves existing process methods while clearing env
+      global.process = {
+        ...originalProcess,
+        env: {
+          NEXTAUTH_SECRET: 'test-nextauth-secret-32-characters-long!!!!',
+          ENCRYPTION_KEY: 'test-encryption-key-32-chars-long-for-testing',
+        },
+      } as any;
       
       const rateLimiter = getRateLimiter();
       

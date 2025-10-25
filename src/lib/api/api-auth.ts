@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
 import { isTOTPSetup } from '@/lib/auth/totp-service';
 import { isLocalhost, isPrivateNetworkAccess } from '@/lib/utils';
+import { env } from '@/config/env';
 
 export interface AuthValidationResult {
   isValid: boolean;
@@ -31,9 +32,9 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthValidat
   const remoteAddress = (request as unknown as { socket?: { remoteAddress?: string | null } }).socket?.remoteAddress || '';
   const normalizedIp = normalizeLoopback(ipAttribute) || normalizeLoopback(remoteAddress);
 
-  const isDevEnvironment = process.env.NODE_ENV !== 'production';
+  const isDevEnvironment = env.NODE_ENV !== 'production';
   // Unified dev bypass flag (matches auth-middleware semantics)
-  const localBypassEnabled = isDevEnvironment && process.env.BYPASS_AUTH === 'true';
+  const localBypassEnabled = isDevEnvironment && env.BYPASS_AUTH;
   const hostnameIsLocalOrPrivate = isLocalhost(hostname || '') || isPrivateNetworkAccess(hostname || '');
   const forwardedHostIsLocalOrPrivate = !forwardedHost || isLocalhost(forwardedHost) || isPrivateNetworkAccess(forwardedHost);
   const clientIpIsLocalOrPrivate = normalizedIp ? (isLocalhost(normalizedIp) || isPrivateNetworkAccess(normalizedIp)) : false;

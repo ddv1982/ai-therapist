@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { prisma } from '@/lib/database/db';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
 import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership } from '@/lib/database/queries';
@@ -12,6 +12,7 @@ import {
 } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import { MessageCache } from '@/lib/cache';
+import { env } from '@/config/env';
 import type { MessageData as CacheMessageData } from '@/lib/cache/api-cache';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
 
@@ -49,52 +50,42 @@ export const POST = withValidationAndParams(
       const sanitizedMetadata = validatedData.metadata
         ? JSON.parse(JSON.stringify(validatedData.metadata))
         : undefined;
-
-      const message = await prisma.message.create({
-        data: {
-          sessionId,
-          role: encrypted.role,
-          content: encrypted.content,
-          modelUsed: validatedData.modelUsed,
-          metadata: sanitizedMetadata,
-          timestamp: encrypted.timestamp,
-        },
+      const client = getConvexHttpClient();
+      const message = await client.mutation(anyApi.messages.create, {
+        sessionId: sessionId as any,
+        role: encrypted.role,
+        content: encrypted.content,
+        modelUsed: validatedData.modelUsed,
+        metadata: sanitizedMetadata,
+        timestamp: encrypted.timestamp.getTime(),
       });
-
-      // Count messages in session
-      const messageCount = await prisma.message.count({ where: { sessionId } });
+      // Fetch updated session to get messageCount
+      const bundleAfter = await client.query(anyApi.sessions.getWithMessagesAndReports, { sessionId: sessionId as any });
+      const messageCount = bundleAfter?.session?.messageCount ?? 0;
 
       // Title generation logic (based on user message count)
       if (validatedData.role === 'user') {
         // Count only user messages
-        const userMessageCount = await prisma.message.count({
-          where: { sessionId, role: 'user' },
-        });
+        const allForCount = await client.query(anyApi.messages.listBySession, { sessionId: sessionId as any });
+        const userMessageCount = Array.isArray(allForCount) ? (allForCount as any[]).filter(m => m.role === 'user').length : 0;
 
         if (userMessageCount === 1) {
-          // First user message: keep placeholder title
-          await prisma.session.update({
-            where: { id: sessionId },
-            data: { messageCount },
-          });
+          // First user message: keep placeholder title; count already updated
         } else if (userMessageCount === 2 || userMessageCount === 4) {
           // Generate or regenerate title after 2 and 4 user messages
           const { generateChatTitle } = await import('@/lib/chat/title-generator');
           const { getApiRequestLocale } = await import('@/i18n/request');
 
           // Fetch first few user messages for context
-          const firstMessages = await prisma.message.findMany({
-            where: { sessionId, role: 'user' },
-            orderBy: { timestamp: 'asc' },
-            take: 5,
-          });
+          const allMsgs = await client.query(anyApi.messages.listBySession, { sessionId: sessionId as any });
+          const firstMessages = (allMsgs as any[])
+            .filter(m => m.role === 'user')
+            .sort((a, b) => a.timestamp - b.timestamp)
+            .slice(0, 5)
+            .map(m => ({ role: m.role, content: m.content, timestamp: new Date(m.timestamp) }));
 
           // Decrypt messages before generating title
-          const decryptedFirst = safeDecryptMessages(firstMessages.map(m => ({
-            role: m.role,
-            content: m.content,
-            timestamp: m.timestamp,
-          })));
+          const decryptedFirst = safeDecryptMessages(firstMessages);
 
           const combinedContent = decryptedFirst
             .map(m => m.content)
@@ -103,26 +94,14 @@ export const POST = withValidationAndParams(
           const locale = getApiRequestLocale(request);
           const title = await generateChatTitle(combinedContent, locale);
 
-          await prisma.session.update({
-            where: { id: sessionId },
-            data: {
-              title,
-              messageCount,
-            },
-          });
+          await client.mutation(anyApi.sessions.update, { sessionId: sessionId as any, title });
         } else {
           // Just increment message count
-          await prisma.session.update({
-            where: { id: sessionId },
-            data: { messageCount },
-          });
+          // already incremented in messages.create
         }
       } else {
         // Assistant or other roles: just increment message count
-        await prisma.session.update({
-          where: { id: sessionId },
-          data: { messageCount },
-        });
+        // already incremented in messages.create
       }
 
       // Invalidate message cache (optional caching)
@@ -134,14 +113,14 @@ export const POST = withValidationAndParams(
       }
 
       return createSuccessResponse({
-        id: message.id,
+        id: (message as any)._id as string,
         sessionId,
         role: validatedData.role,
         content: validatedData.content,
         modelUsed: validatedData.modelUsed,
         metadata: sanitizedMetadata,
-        timestamp: message.timestamp,
-        createdAt: message.createdAt,
+        timestamp: new Date((message as any).timestamp),
+        createdAt: new Date((message as any).createdAt),
         messageCount,
       }, { requestId: context.requestId });
     } catch (error) {
@@ -165,9 +144,11 @@ export const GET = withAuth(
         const page = parsed.success ? (parsed.data.page ?? 1) : 1;
         const limit = parsed.success ? (parsed.data.limit ?? 50) : 50;
 
-        const total = await prisma.message.count({ where: { sessionId } });
+        const client = getConvexHttpClient();
+        const all = await client.query(anyApi.messages.listBySession, { sessionId: sessionId as any });
+        const total = Array.isArray(all) ? all.length : 0;
 
-        const useCache = process.env.MESSAGES_CACHE_ENABLED !== 'false';
+        const useCache = env.MESSAGES_CACHE_ENABLED;
         type MessageListItem = { id: string; sessionId: string; role: 'user' | 'assistant'; content: string; modelUsed?: string; timestamp: Date; createdAt: Date };
         let items: MessageListItem[] | null = null;
         if (useCache) {
@@ -180,27 +161,19 @@ export const GET = withAuth(
         }
 
         if (!items) {
-          const messages = await prisma.message.findMany({
-            where: { sessionId },
-            orderBy: { timestamp: 'asc' },
-            skip: (page - 1) * limit,
-            take: limit,
-          });
-
-          const decrypted = safeDecryptMessages(messages.map(m => ({
-            role: m.role,
-            content: m.content,
-            timestamp: m.timestamp,
-          })));
-          // Guard against length mismatch to avoid undefined indexing
-          items = messages.map((m, i) => ({
-            id: m.id,
-            sessionId: m.sessionId,
+          const ordered = (all as any[]).sort((a, b) => a.timestamp - b.timestamp);
+          const pageItems = ordered.slice((page - 1) * limit, (page - 1) * limit + limit);
+          const decrypted = safeDecryptMessages(
+            pageItems.map(m => ({ role: m.role, content: m.content, timestamp: new Date(m.timestamp) }))
+          );
+          items = pageItems.map((m, i) => ({
+            id: m._id as string,
+            sessionId: m.sessionId as string,
             role: (decrypted[i]?.role ?? m.role) as 'user' | 'assistant',
             content: decrypted[i]?.content ?? '',
             modelUsed: m.modelUsed ?? undefined,
-            timestamp: decrypted[i]?.timestamp ?? m.timestamp,
-            createdAt: m.createdAt,
+            timestamp: decrypted[i]?.timestamp ?? new Date(m.timestamp),
+            createdAt: new Date(m.createdAt),
             metadata: (m.metadata as Record<string, unknown> | null) ?? undefined,
           }));
 

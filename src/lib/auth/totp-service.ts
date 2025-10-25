@@ -1,6 +1,6 @@
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
-import { prisma } from '@/lib/database/db';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { generateSecureRandomString } from '@/lib/utils/utils';
 import { encryptSensitiveData, decryptSensitiveData, encryptBackupCodes, decryptBackupCodes } from '@/lib/auth/crypto-utils';
 import { logger } from '@/lib/utils/logger';
@@ -60,24 +60,11 @@ export async function saveTOTPConfig(secret: string, backupCodes: string[]): Pro
   const encryptedSecret = encryptSensitiveData(secret);
   const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
 
-  // Use transaction to atomically handle delete+create to prevent race conditions
-  await prisma.$transaction(async (tx) => {
-    // Remove any existing config first
-    const existingConfig = await tx.authConfig.findFirst();
-    if (existingConfig) {
-      await tx.authConfig.delete({
-        where: { id: existingConfig.id }
-      });
-    }
-
-    // Create new config
-    await tx.authConfig.create({
-      data: {
-        secret: encryptedSecret,
-        backupCodes: encryptedBackupCodes,
-        isSetup: true,
-      },
-    });
+  const client = getConvexHttpClient();
+  await client.mutation(anyApi.auth.upsertAuthConfig, {
+    secret: encryptedSecret,
+    backupCodes: encryptedBackupCodes,
+    isSetup: true,
   });
 }
 
@@ -91,7 +78,8 @@ export async function getTOTPDiagnostics(token?: string): Promise<{
   providedToken?: string;
   providedTokenValid?: boolean;
 }> {
-  const config = await prisma.authConfig.findFirst();
+  const client = getConvexHttpClient();
+  const config = await client.query(anyApi.auth.getAuthConfig, {});
   if (!config || !config.isSetup) {
     throw new Error('TOTP not configured');
   }
@@ -134,7 +122,8 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
   logger.debug(`TOTP verification starting`, { verificationId });
 
   // Load config; surface DB errors
-  const config = await prisma.authConfig.findFirst();
+  const client = getConvexHttpClient();
+  const config = await client.query(anyApi.auth.getAuthConfig, {});
   if (!config || !config.isSetup) {
     logger.debug(`TOTP verification: no config or not setup`, { verificationId });
     return false;
@@ -207,65 +196,50 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
  * Verify backup code with concurrent access protection
  */
 export async function verifyBackupCode(code: string): Promise<boolean> {
-  return await prisma.$transaction(async (tx) => {
-    const config = await tx.authConfig.findFirst();
-    if (!config || !config.isSetup) {
-      return false;
-    }
-
-    let backupCodes: BackupCode[];
-    try {
-      backupCodes = decryptBackupCodes(config.backupCodes);
-    } catch {
-      return false;
-    }
-
-    // Find and verify the backup code
-    const codeIndex = backupCodes.findIndex(
-      backup => backup.code === code.toUpperCase() && !backup.used
-    );
-
-    if (codeIndex === -1) {
-      return false;
-    }
-
-    // Mark the backup code as used
-    backupCodes[codeIndex].used = true;
-    backupCodes[codeIndex].usedAt = new Date();
-
-    // Re-encrypt and update the database within the transaction
-    const encryptedBackupCodes = encryptBackupCodes(backupCodes);
-    await tx.authConfig.update({
-      where: { id: config.id },
-      data: {
-        backupCodes: encryptedBackupCodes,
-      },
-    });
-
-    return true;
+  const client = getConvexHttpClient();
+  const config = await client.query(anyApi.auth.getAuthConfig, {});
+  if (!config || !config.isSetup) return false;
+  let backupCodes: BackupCode[];
+  try {
+    backupCodes = decryptBackupCodes((config as any).backupCodes);
+  } catch {
+    return false;
+  }
+  const idx = backupCodes.findIndex(b => b.code === code.toUpperCase() && !b.used);
+  if (idx === -1) return false;
+  backupCodes[idx].used = true;
+  backupCodes[idx].usedAt = new Date();
+  const encryptedBackupCodes = encryptBackupCodes(backupCodes);
+  await client.mutation(anyApi.auth.upsertAuthConfig, {
+    secret: (config as any).secret,
+    backupCodes: encryptedBackupCodes,
+    isSetup: true,
   });
+  return true;
 }
 
 /**
  * Check if TOTP is set up
  */
 export async function isTOTPSetup(): Promise<boolean> {
-  const config = await prisma.authConfig.findFirst();
-  return config?.isSetup === true;
+  const client = getConvexHttpClient();
+  const config = await client.query(anyApi.auth.getAuthConfig, {});
+  return (config as any)?.isSetup === true;
 }
 
 /**
  * Get unused backup codes count
  */
 export async function getUnusedBackupCodesCount(): Promise<number> {
-  const config = await prisma.authConfig.findFirst();
+  const client = getConvexHttpClient();
+  const config = await client.query(anyApi.auth.getAuthConfig, {});
   if (!config || !config.isSetup) {
     return 0;
   }
 
   let backupCodes: BackupCode[];
   try {
-    backupCodes = decryptBackupCodes(config.backupCodes);
+    backupCodes = decryptBackupCodes((config as any).backupCodes);
   } catch {
     return 0;
   }
@@ -278,7 +252,8 @@ export async function getUnusedBackupCodesCount(): Promise<number> {
  * Returns the new plaintext codes
  */
 export async function regenerateBackupCodes(): Promise<string[]> {
-  const config = await prisma.authConfig.findFirst();
+  const client = getConvexHttpClient();
+  const config = await client.query(anyApi.auth.getAuthConfig, {});
   if (!config || !config.isSetup) {
     throw new Error('TOTP not set up');
   }
@@ -287,9 +262,10 @@ export async function regenerateBackupCodes(): Promise<string[]> {
   const backupCodesData: BackupCode[] = newCodes.map(code => ({ code, used: false }));
   const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
 
-  await prisma.authConfig.update({
-    where: { id: config.id },
-    data: { backupCodes: encryptedBackupCodes },
+  await client.mutation(anyApi.auth.upsertAuthConfig, {
+    secret: (config as any).secret,
+    backupCodes: encryptedBackupCodes,
+    isSetup: true,
   });
 
   return newCodes;
@@ -300,59 +276,37 @@ export async function regenerateBackupCodes(): Promise<string[]> {
  * This is useful for when users lose access to their authenticator device
  */
 export async function regenerateTOTPSecret(): Promise<TOTPSetupData> {
-  return await prisma.$transaction(async (tx) => {
-    const config = await tx.authConfig.findFirst();
-    if (!config || !config.isSetup) {
-      throw new Error('TOTP not configured. Use generateTOTPSetup() for initial setup.');
-    }
+  const client = getConvexHttpClient();
+  const config = await client.query(anyApi.auth.getAuthConfig, {});
+  if (!config || !config.isSetup) {
+    throw new Error('TOTP not configured. Use generateTOTPSetup() for initial setup.');
+  }
 
-    // Generate new TOTP setup data
-    const setupData = await generateTOTPSetup();
-
-    // Encrypt the new secret and backup codes
-    const encryptedSecret = encryptSensitiveData(setupData.secret);
-    const backupCodesData: BackupCode[] = setupData.backupCodes.map(code => ({
-      code,
-      used: false,
-    }));
-    const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
-
-    // Update the existing config with new secret and backup codes
-    await tx.authConfig.update({
-      where: { id: config.id },
-      data: {
-        secret: encryptedSecret,
-        backupCodes: encryptedBackupCodes,
-      },
-    });
-
-    // Clear all trusted devices and sessions since the secret changed
-    await tx.authSession.deleteMany({});
-    await tx.trustedDevice.deleteMany({});
-
-    return setupData;
+  const setupData = await generateTOTPSetup();
+  const encryptedSecret = encryptSensitiveData(setupData.secret);
+  const backupCodesData: BackupCode[] = setupData.backupCodes.map(code => ({ code, used: false }));
+  const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
+  await client.mutation(anyApi.auth.upsertAuthConfig, {
+    secret: encryptedSecret,
+    backupCodes: encryptedBackupCodes,
+    isSetup: true,
   });
+  // Clear sessions and devices
+  await client.mutation(anyApi.auth.resetAuthConfig, {});
+  return setupData;
 }
 
 /**
  * Reset TOTP configuration (for disabling 2FA)
  */
 export async function resetTOTPConfig(): Promise<void> {
-  const config = await prisma.authConfig.findFirst();
-  if (config) {
-    await prisma.authConfig.delete({
-      where: { id: config.id }
-    });
-  }
+  const client = getConvexHttpClient();
+  await client.mutation(anyApi.auth.resetAuthConfig, {});
 
   // Clear the setup cache so new setup data is generated
   if (globalThis.totpSetupCache) {
     delete globalThis.totpSetupCache;
   }
-
-  // Also clear all trusted devices and sessions
-  await prisma.authSession.deleteMany({});
-  await prisma.trustedDevice.deleteMany({});
 }
 
 /**
@@ -385,7 +339,8 @@ export async function performTOTPHealthCheck(): Promise<{
 
   try {
     // Check database connectivity
-    await prisma.$queryRaw`SELECT 1`;
+    const client = getConvexHttpClient();
+    await client.query(anyApi.auth.getAuthConfig, {});
     diagnostics.databaseAccessible = true;
   } catch {
     issues.push('Database connection failed');
@@ -395,7 +350,8 @@ export async function performTOTPHealthCheck(): Promise<{
 
   // Check TOTP configuration
   try {
-    const config = await prisma.authConfig.findFirst();
+    const client = getConvexHttpClient();
+    const config = await client.query(anyApi.auth.getAuthConfig, {});
     diagnostics.isConfigured = config?.isSetup === true;
 
     if (!diagnostics.isConfigured) {

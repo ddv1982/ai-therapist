@@ -1,10 +1,10 @@
-import { prisma } from '@/lib/database/db';
 import { updateSessionSchema } from '@/lib/utils/validation';
 import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership, getSessionWithMessages } from '@/lib/database/queries';
 import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 
 interface SessionUpdateData {
   updatedAt: Date;
@@ -34,12 +34,12 @@ export const PATCH = withValidationAndParams(
       if (endedAt !== undefined) updateData.endedAt = endedAt ? new Date(endedAt) : null;
       if (title !== undefined) updateData.title = title;
 
-      const session = await prisma.session.update({
-        where: { 
-          id: sessionId,
-          userId: context.userInfo.userId
-        },
-        data: updateData,
+      const client = getConvexHttpClient();
+      const updated = await client.mutation(anyApi.sessions.update, {
+        sessionId: sessionId as any,
+        status: updateData.status,
+        endedAt: updateData.endedAt ? updateData.endedAt.getTime() : null,
+        title: updateData.title,
       });
 
       logger.info('Session updated successfully', {
@@ -49,7 +49,17 @@ export const PATCH = withValidationAndParams(
         userId: context.userInfo.userId
       });
 
-      return createSuccessResponse(session, { requestId: context.requestId });
+      const mapped = {
+        id: String((updated as any)._id),
+        userId: context.userInfo.userId,
+        title: (updated as any).title as string,
+        status: (updated as any).status as string,
+        startedAt: new Date((updated as any).startedAt),
+        updatedAt: new Date((updated as any).updatedAt),
+        endedAt: (updated as any).endedAt ? new Date((updated as any).endedAt) : null,
+        _count: { messages: (updated as any).messageCount ?? 0 },
+      };
+      return createSuccessResponse(mapped, { requestId: context.requestId });
     } catch (error) {
       return enhancedErrorHandlers.handleDatabaseError(
         error as Error,
@@ -73,11 +83,43 @@ export const GET = withAuth(async (_request, context, params) => {
     logger.info('Session fetched successfully', {
       requestId: context.requestId,
       sessionId,
-      messageCount: session.messages.length,
+      messageCount: (session as any).messages?.length ?? 0,
       userId: context.userInfo.userId
     });
 
-    return createSuccessResponse(session, { requestId: context.requestId });
+    const s = session as any;
+    const mapped = {
+      id: String(s._id),
+      userId: context.userInfo.userId,
+      title: s.title as string,
+      status: s.status as string,
+      startedAt: new Date(s.startedAt),
+      updatedAt: new Date(s.updatedAt),
+      endedAt: s.endedAt ? new Date(s.endedAt) : null,
+      _count: { messages: s.messageCount ?? 0 },
+      messages: (Array.isArray(s.messages) ? s.messages : []).map((m: any) => ({
+        id: String(m._id),
+        sessionId: String(s._id),
+        role: m.role,
+        content: m.content,
+        modelUsed: m.modelUsed ?? undefined,
+        timestamp: new Date(m.timestamp),
+        createdAt: new Date(m.createdAt),
+      })),
+      reports: (Array.isArray(s.reports) ? s.reports : []).map((r: any) => ({
+        id: String(r._id),
+        sessionId: String(s._id),
+        reportContent: r.reportContent,
+        keyPoints: r.keyPoints,
+        therapeuticInsights: r.therapeuticInsights,
+        patternsIdentified: r.patternsIdentified,
+        actionItems: r.actionItems,
+        moodAssessment: r.moodAssessment ?? null,
+        progressNotes: r.progressNotes ?? null,
+        createdAt: new Date(r.createdAt),
+      })),
+    };
+    return createSuccessResponse(mapped, { requestId: context.requestId });
   } catch (error) {
     return enhancedErrorHandlers.handleDatabaseError(
       error as Error,
@@ -97,12 +139,8 @@ export const DELETE = withAuth(async (_request, context, params) => {
       return createNotFoundErrorResponse('Session', context.requestId);
     }
 
-    await prisma.session.delete({
-      where: { 
-        id: sessionId,
-        userId: context.userInfo.userId
-      },
-    });
+    const client = getConvexHttpClient();
+    await client.mutation(anyApi.sessions.remove, { sessionId: sessionId as any });
 
     logger.info('Session deleted successfully', {
       requestId: context.requestId,

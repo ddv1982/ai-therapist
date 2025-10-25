@@ -221,11 +221,28 @@ global.restoreCrypto = () => {
 }
 
 // Mock environment variables
-process.env.ENCRYPTION_KEY = 'test-encryption-key-32-chars-long-for-testing';
-process.env.CSRF_SECRET = 'test-csrf-secret-for-testing';
+process.env.ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'test-encryption-key-32-chars-long-for-testing';
+process.env.CSRF_SECRET = process.env.CSRF_SECRET || 'test-csrf-secret-for-testing';
+process.env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || 'test-nextauth-secret-32-characters-long!!!!';
+process.env.NEXTAUTH_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 process.env.NODE_ENV = 'test';
 // Ensure rate limiting is enabled by default in tests (individual suites may override)
 process.env.RATE_LIMIT_DISABLED = 'false';
+
+const REQUIRED_ENV_DEFAULTS = {
+  NEXTAUTH_SECRET: 'test-nextauth-secret-32-characters-long!!!!',
+  NEXTAUTH_URL: 'http://localhost:3000',
+  ENCRYPTION_KEY: 'test-encryption-key-32-chars-long-for-testing',
+  NEXT_PUBLIC_CONVEX_URL: 'http://127.0.0.1:4000',
+};
+
+beforeEach(() => {
+  for (const [key, value] of Object.entries(REQUIRED_ENV_DEFAULTS)) {
+    if (!process.env[key]) {
+      process.env[key] = value;
+    }
+  }
+});
 
 // Mock Next.js specific classes
 jest.mock('next/server', () => ({

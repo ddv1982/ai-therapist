@@ -172,6 +172,10 @@ const authSlice = createSlice({
       .addCase(checkSessionStatus.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message || 'Failed to check session';
+        // Fail-safe: if session check fails, require setup to force redirect to auth flow
+        state.isAuthenticated = false;
+        state.needsSetup = true;
+        state.needsVerification = false;
       })
 
       .addCase(loadSetupData.pending, (state) => {

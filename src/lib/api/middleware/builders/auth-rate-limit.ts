@@ -10,6 +10,7 @@ import { performance } from 'node:perf_hooks';
 import type { ApiResponse } from '@/lib/api/api-response';
 import { setResponseHeaders } from '@/lib/api/middleware/request-utils';
 import type { RequestContext, AuthenticatedRequestContext } from '@/lib/api/middleware/factory';
+import { env } from '@/config/env';
 
 export function buildAuthAndRateLimit(
   deps: {
@@ -27,7 +28,7 @@ export function buildAuthAndRateLimit(
   // Per-instance counters for streaming rate limits
   const streamingCounters: Map<string, { count: number; resetTime: number }> = new Map();
   const inflightCounters: Map<string, { count: number; lastUpdated: number }> = new Map();
-  const cleanupIntervalMs = Math.max(Number(process.env.CHAT_CLEANUP_INTERVAL_MS ?? 30_000), 5_000);
+  const cleanupIntervalMs = Math.max(env.CHAT_CLEANUP_INTERVAL_MS, 5_000);
   let lastCleanupAt = Date.now();
   let cleanupTimer: NodeJS.Timeout | null = null;
   let cleanupListenersAttached = false;
@@ -52,8 +53,7 @@ export function buildAuthAndRateLimit(
     cleanupTimer = setTimeout(() => {
       cleanupTimer = null;
       const now = Date.now();
-      const windowMs = Number(process.env.CHAT_WINDOW_MS ?? 5 * 60 * 1000);
-      cleanupExpiredCounters(now, windowMs);
+      cleanupExpiredCounters(now, env.CHAT_WINDOW_MS);
       lastCleanupAt = now;
       scheduleCleanup();
     }, cleanupIntervalMs);
@@ -106,10 +106,10 @@ export function buildAuthAndRateLimit(
           return unauthorized;
         }
 
-        const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true' && process.env.NODE_ENV !== 'production';
+        const rateLimitDisabled = env.RATE_LIMIT_DISABLED && env.NODE_ENV !== 'production';
         const clientIP = deps.getClientIPFromRequest(request);
         const limiter = deps.getRateLimiter();
-        const windowMs = Number(process.env.API_WINDOW_MS ?? options.windowMs ?? 5 * 60 * 1000);
+        const windowMs = options.windowMs ?? env.API_WINDOW_MS;
         if (!rateLimitDisabled) {
           const result = await limiter.checkRateLimit(clientIP, 'api');
           if (!result.allowed) {
@@ -163,10 +163,10 @@ export function buildAuthAndRateLimit(
     ): Promise<Response> => {
       const baseContext = deps.toRequestContext(deps.createRequestLogger(request));
       const startHighRes = performance.now();
-      const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true' && process.env.NODE_ENV !== 'production';
+      const rateLimitDisabled = env.RATE_LIMIT_DISABLED && env.NODE_ENV !== 'production';
       const now = Date.now();
       if (!rateLimitDisabled && now - lastCleanupAt >= cleanupIntervalMs) {
-        cleanupExpiredCounters(now, Number(process.env.CHAT_WINDOW_MS ?? 5 * 60 * 1000));
+        cleanupExpiredCounters(now, env.CHAT_WINDOW_MS);
         lastCleanupAt = now;
         scheduleCleanup();
       }
@@ -174,10 +174,8 @@ export function buildAuthAndRateLimit(
       try {
         // Early concurrency control
         const clientIPForEarly = deps.getClientIPFromRequest(request);
-        const maxConcurrentEarly = (process.env.CHAT_MAX_CONCURRENCY !== undefined)
-          ? Number(process.env.CHAT_MAX_CONCURRENCY)
-          : (_options.maxConcurrent ?? 2);
-        if (!rateLimitDisabled && process.env.NODE_ENV !== 'development') {
+        const maxConcurrentEarly = _options.maxConcurrent ?? env.CHAT_MAX_CONCURRENCY;
+        if (!rateLimitDisabled && env.NODE_ENV !== 'development') {
           const inflightEarly = inflightCounters.get(clientIPForEarly)?.count ?? 0;
           if (inflightEarly >= maxConcurrentEarly) {
             const earlyTooMany = new Response('Too many concurrent requests. Please wait.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' } });
@@ -204,7 +202,7 @@ export function buildAuthAndRateLimit(
           const limiter = deps.getRateLimiter();
           const globalResult = await limiter.checkRateLimit(clientIP, 'chat');
           if (!globalResult.allowed) {
-            const retryAfter = String(globalResult.retryAfter || Math.ceil(5 * 60));
+            const retryAfter = String(globalResult.retryAfter || Math.ceil(env.CHAT_WINDOW_MS / 1000));
             const limited = new Response('Rate limit exceeded. Please try again later.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': retryAfter } });
             const durationMs = Math.round(performance.now() - startHighRes);
             setResponseHeaders(limited, baseContext.requestId || 'unknown', durationMs);
@@ -213,10 +211,10 @@ export function buildAuthAndRateLimit(
           }
         }
 
-        const maxRequests = (process.env.CHAT_MAX_REQS !== undefined) ? Number(process.env.CHAT_MAX_REQS) : (_options.maxRequests ?? 120);
-        const windowMs = (process.env.CHAT_WINDOW_MS !== undefined) ? Number(process.env.CHAT_WINDOW_MS) : (_options.windowMs ?? 5 * 60 * 1000);
-        const maxConcurrent = (process.env.CHAT_MAX_CONCURRENCY !== undefined) ? Number(process.env.CHAT_MAX_CONCURRENCY) : (_options.maxConcurrent ?? 2);
-        if (!rateLimitDisabled && process.env.NODE_ENV !== 'development') {
+        const maxRequests = _options.maxRequests ?? env.CHAT_MAX_REQS;
+        const windowMs = _options.windowMs ?? env.CHAT_WINDOW_MS;
+        const maxConcurrent = _options.maxConcurrent ?? env.CHAT_MAX_CONCURRENCY;
+        if (!rateLimitDisabled && env.NODE_ENV !== 'development') {
           const now = Date.now();
           const entry = streamingCounters.get(clientIP);
           if (!entry || now > entry.resetTime) {
@@ -288,5 +286,3 @@ export function buildAuthAndRateLimit(
 
   return { withAuthAndRateLimit, withAuthAndRateLimitStreaming };
 }
-
-

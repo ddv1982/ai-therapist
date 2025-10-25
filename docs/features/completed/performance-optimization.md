@@ -117,6 +117,10 @@ export function Cacheable(ttl: number = 3600) {
 
 ### **Database Query Optimization**
 ```typescript
+> **Legacy Note**: Prior to the Convex migration we accessed data directly via Prisma.
+> The following snippet is retained for historical context only and no longer reflects
+> the production implementation.
+
 // Optimized database queries (src/lib/database/queries.ts)
 export class OptimizedQueries {
   private readonly prisma: PrismaClient

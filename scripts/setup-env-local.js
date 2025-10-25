@@ -22,6 +22,15 @@ if (fs.existsSync(target)) {
     changed = true;
   }
 
+  if (!/^NEXT_PUBLIC_CONVEX_URL=/m.test(existing)) {
+    fs.appendFileSync(
+      target,
+      `\n# Convex backend URL\nNEXT_PUBLIC_CONVEX_URL=""\nCONVEX_URL=""\n`,
+      { encoding: 'utf8' }
+    );
+    changed = true;
+  }
+
   if (changed) {
     console.log('✅ Updated .env.local with missing keys (e.g., GROQ_API_KEY).');
   } else {
@@ -33,10 +42,11 @@ if (fs.existsSync(target)) {
 const template = `# Local environment configuration
 # Fill in your values as needed. ENCRYPTION_KEY should be a 32-byte (base64) value.
 
-DATABASE_URL="file:./prisma/dev.db"
 GROQ_API_KEY=""
 ENCRYPTION_KEY=""
 NEXTAUTH_SECRET=""
+NEXT_PUBLIC_CONVEX_URL=""
+CONVEX_URL=""
 
 # Redis Configuration
 REDIS_URL="redis://localhost:6379"

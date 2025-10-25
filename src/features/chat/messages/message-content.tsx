@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/ui/design-system/message';
 import { Markdown } from '@/components/ui/markdown';
 import { logger } from '@/lib/utils/logger';
+import { isDevelopment } from '@/config/env.public';
 
 interface MessageContentProps {
   content: string;
@@ -37,7 +38,7 @@ export function MessageContent({ content, role, messageId, className }: MessageC
   const isCBTReport = role === 'assistant' && detectCBTSessionReport(content);
   
   // Debug logging (development only)
-  if (process.env.NODE_ENV === 'development' && isCBTReport) {
+  if (isDevelopment && isCBTReport) {
     logger.secureDevLog('CBT report detected', { component: 'MessageContent', messageId, role });
   }
   

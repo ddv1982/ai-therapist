@@ -36,7 +36,6 @@
     "e2e/**/*",
     "scripts/**/*",
     "i18n/**/*",
-    "prisma/**/*",
     "*.config.js",
     "*.config.ts",
     "*.config.mjs",

@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-Routes and layouts live in `src/app`; feature logic sits in `src/features`, `src/components`, `src/lib`, and `src/ai`. State, middleware, and selectors are in `src/store` with mirrored coverage in `__tests__/store`. Persisted assets stay in `public/`, data models in `prisma/`, automation in `scripts/`, and API specs or docs in `docs/` (`docs/api.yaml` drives generated types).
+Routes and layouts live in `src/app`; feature logic sits in `src/features`, `src/components`, `src/lib`, and `src/ai`. State, middleware, and selectors are in `src/store` with mirrored coverage in `__tests__/store`. Persisted assets stay in `public/`, Convex functions/schema live in `convex/`, automation in `scripts/`, and API specs or docs in `docs/` (`docs/api.yaml` drives generated types).
 
 ## Build, Test, and Development Commands
 - `npm run setup:all` — bootstrap database, Redis, encryption (or `make setup`).

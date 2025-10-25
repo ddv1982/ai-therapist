@@ -1,12 +1,11 @@
-import { Prisma } from '@prisma/client';
 import { z } from 'zod';
-import { prisma } from '@/lib/database/db';
 import { withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership } from '@/lib/database/queries';
 import { createNotFoundErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
 import { decryptMessage } from '@/lib/chat/message-encryption';
 import { MessageCache } from '@/lib/cache';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 
 const patchBodySchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
@@ -24,9 +23,8 @@ export const PATCH = withValidationAndParams(
         return createNotFoundErrorResponse('Session', context.requestId);
       }
 
-      const existing = await prisma.message.findUnique({
-        where: { id: messageId },
-      });
+      const client = getConvexHttpClient();
+      const existing = await client.query(anyApi.messages.getById, { messageId: messageId as any });
 
       if (!existing || existing.sessionId !== sessionId) {
         return createNotFoundErrorResponse('Message', context.requestId);
@@ -49,11 +47,9 @@ export const PATCH = withValidationAndParams(
         };
       })();
 
-      const updated = await prisma.message.update({
-        where: { id: messageId },
-        data: {
-          metadata: nextMetadata as Prisma.InputJsonValue,
-        },
+      const updated = await client.mutation(anyApi.messages.update, {
+        messageId: messageId as any,
+        metadata: nextMetadata as any,
       });
 
       try {
@@ -61,20 +57,20 @@ export const PATCH = withValidationAndParams(
       } catch {}
 
       const decrypted = decryptMessage({
-        role: updated.role,
-        content: updated.content,
-        timestamp: updated.timestamp,
+        role: (updated as any).role,
+        content: (updated as any).content,
+        timestamp: new Date((updated as any).timestamp),
       });
 
       return createSuccessResponse({
-        id: updated.id,
-        sessionId: updated.sessionId,
+        id: (updated as any)._id,
+        sessionId,
         role: decrypted.role as 'user' | 'assistant',
         content: decrypted.content,
-        modelUsed: updated.modelUsed ?? undefined,
+        modelUsed: (updated as any).modelUsed ?? undefined,
         metadata: nextMetadata,
         timestamp: decrypted.timestamp,
-        createdAt: updated.createdAt,
+        createdAt: new Date((updated as any).createdAt),
       }, { requestId: context.requestId });
     } catch (error) {
       return enhancedErrorHandlers.handleDatabaseError(error as Error, 'update message metadata', context);

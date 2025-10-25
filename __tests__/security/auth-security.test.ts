@@ -21,6 +21,9 @@ beforeEach(() => {
     ...originalEnv,
     ENCRYPTION_KEY: 'test-encryption-key-32-chars-long-for-testing',
     CSRF_SECRET: 'test-csrf-secret-for-testing',
+    NEXTAUTH_SECRET: 'test-nextauth-secret-32-characters-long!!!!',
+    NEXTAUTH_URL: 'http://localhost:3000',
+    NODE_ENV: 'test',
   };
 });
 

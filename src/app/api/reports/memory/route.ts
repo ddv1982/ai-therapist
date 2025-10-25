@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/database/db';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { logger, createRequestLogger } from '@/lib/utils/logger';
 import { decryptSessionReportContent } from '@/lib/chat/message-encryption';
 import { validateApiAuth } from '@/lib/api/api-auth';
@@ -127,38 +127,16 @@ async function handleMemoryManagement(
   includeFullContent: boolean
 ) {
   logger.info('Memory management request received', requestContext);
-  
-  // Get detailed session reports for management
-  const reports = await prisma.sessionReport.findMany({
-    where: excludeSessionId ? {
-      sessionId: {
-        not: excludeSessionId
-      }
-    } : undefined,
-    select: {
-      id: true,
-      sessionId: true,
-      reportContent: true,
-      keyPoints: true,
-      therapeuticInsights: true,
-      patternsIdentified: true,
-      createdAt: true,
-      session: {
-        select: {
-          title: true,
-          startedAt: true
-        }
-      }
-    },
-    orderBy: {
-      createdAt: 'desc'
-    },
-    take: Math.min(limit, 20) // Cap at 20 reports for performance
+  const client = getConvexHttpClient();
+  const limited = await client.query(anyApi.reports.listRecent, {
+    limit: Math.min(limit, 20),
+    excludeSessionId: excludeSessionId ? (excludeSessionId as any) : undefined,
   });
+  const limitedReports = Array.isArray(limited) ? (limited as any[]) : [];
   
   logger.info('Found session reports for memory management', {
     ...requestContext,
-    reportCount: reports.length
+    reportCount: limitedReports.length
   });
   
   // Process reports with detailed information for management
@@ -166,7 +144,7 @@ async function handleMemoryManagement(
   let successfulReports = 0;
   let failedDecryptions = 0;
   
-  for (const report of reports) {
+  for (const report of limitedReports) {
     try {
       // Attempt to decrypt content for preview and optionally full content
       let contentPreview = '';
@@ -197,7 +175,8 @@ async function handleMemoryManagement(
       const keyInsights: string[] = [];
       
       if (Array.isArray(report.keyPoints)) {
-        keyInsights.push(...report.keyPoints.filter(p => typeof p === 'string').slice(0, 3));
+        const points = (report.keyPoints as unknown[]).filter((point): point is string => typeof point === 'string');
+        keyInsights.push(...points.slice(0, 3));
       }
       
       if (report.therapeuticInsights && typeof report.therapeuticInsights === 'object') {
@@ -207,12 +186,13 @@ async function handleMemoryManagement(
         }
       }
       
+      const session = await client.query(anyApi.sessions.get, { sessionId: (report as any).sessionId });
       const reportDetail: MemoryReportDetail = {
-        id: report.id,
-        sessionId: report.sessionId,
-        sessionTitle: report.session.title,
-        sessionDate: report.session.startedAt.toISOString().split('T')[0],
-        reportDate: report.createdAt.toISOString().split('T')[0],
+        id: String((report as any)._id),
+        sessionId: String((report as any).sessionId),
+        sessionTitle: (session as any)?.title ?? 'Session',
+        sessionDate: session ? new Date((session as any).startedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        reportDate: new Date((report as any).createdAt).toISOString().split('T')[0],
         contentPreview,
         keyInsights: keyInsights.slice(0, 5), // Limit to top 5 insights
         hasEncryptedContent,
@@ -248,7 +228,7 @@ async function handleMemoryManagement(
   
   logger.info('Memory management processing completed', {
     ...requestContext,
-    totalReports: reports.length,
+    totalReports: limitedReports.length,
     successfulReports,
     failedDecryptions,
     memoryDetailsCount: memoryDetails.length
@@ -258,7 +238,7 @@ async function handleMemoryManagement(
     memoryDetails,
     reportCount: memoryDetails.length,
     stats: {
-      totalReportsFound: reports.length,
+      totalReportsFound: limitedReports.length,
       successfullyProcessed: successfulReports,
       failedDecryptions: failedDecryptions,
       hasMemory: memoryDetails.length > 0,
@@ -288,38 +268,16 @@ export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (reque
       excludeSessionId
     });
     
-    // Get recent session reports with structured data, excluding current session if specified
-    const reports = await prisma.sessionReport.findMany({
-      where: excludeSessionId ? {
-        sessionId: {
-          not: excludeSessionId
-        }
-      } : undefined,
-      select: {
-        id: true,
-        sessionId: true,
-        reportContent: true,
-        keyPoints: true,
-        therapeuticInsights: true,
-        patternsIdentified: true,
-        createdAt: true,
-        session: {
-          select: {
-            title: true,
-            startedAt: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      take: Math.min(limit, 10) // Cap at 10 reports max for performance
+    const client = getConvexHttpClient();
+    const reports = await client.query(anyApi.reports.listRecent, {
+      limit: Math.min(limit, 10),
+      excludeSessionId: excludeSessionId ? (excludeSessionId as any) : undefined,
     });
     
     logger.info('Found session reports for memory processing', {
       ...requestContext,
-      reportCount: reports.length,
-      reportIds: reports.map(r => r.id.substring(0, 8))
+      reportCount: (reports as any[]).length,
+      reportIds: (reports as any[]).map((r: any) => String(r._id).substring(0, 8))
     });
     
     // Process reports with graceful error handling
@@ -327,16 +285,16 @@ export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (reque
     let successfulReports = 0;
     let failedDecryptions = 0;
     
-    for (const report of reports) {
+    for (const report of (reports as any[])) {
       try {
         // Attempt to decrypt the report content
-        const decryptedContent = decryptSessionReportContent(report.reportContent);
+        const decryptedContent = decryptSessionReportContent((report as any).reportContent);
         
         // Create intelligent therapeutic summary from structured data
         const summary = createTherapeuticSummary(
-          report.keyPoints,
-          report.therapeuticInsights,
-          report.patternsIdentified,
+          (report as any).keyPoints,
+          (report as any).therapeuticInsights,
+          (report as any).patternsIdentified,
           decryptedContent
         );
         
@@ -352,10 +310,10 @@ export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (reque
         
         logger.info('Successfully processed session report for memory', {
           ...requestContext,
-          reportId: report.id.substring(0, 8),
-          sessionTitle: report.session.title,
+          reportId: String((report as any)._id).substring(0, 8),
+          sessionTitle: 'Session',
           summaryLength: summary.length,
-          hasStructuredData: !!(report.keyPoints || report.therapeuticInsights || report.patternsIdentified)
+          hasStructuredData: !!((report as any).keyPoints || (report as any).therapeuticInsights || (report as any).patternsIdentified)
         });
         
       } catch (decryptionError) {
@@ -363,8 +321,8 @@ export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (reque
         failedDecryptions++;
         logger.warn('Failed to decrypt session report, skipping', {
           ...requestContext,
-          reportId: report.id.substring(0, 8),
-          sessionTitle: report.session.title,
+          reportId: String((report as any)._id).substring(0, 8),
+          sessionTitle: 'Session',
           error: decryptionError instanceof Error ? decryptionError.message : 'Unknown decryption error'
         });
         
@@ -387,7 +345,7 @@ export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (reque
       memoryContext,
       reportCount: memoryContext.length,
       stats: {
-        totalReportsFound: reports.length,
+        totalReportsFound: (reports as any[]).length,
         successfullyDecrypted: successfulReports,
         failedDecryptions: failedDecryptions,
       },
@@ -443,79 +401,61 @@ export const DELETE = withApiMiddleware<DeleteResponseData>(async (request: Next
     const sessionIdsParam = searchParams.get('sessionIds');
     const sessionIds = sessionIdsParam ? sessionIdsParam.split(',') : undefined;
     
-    let deletionCriteria: Record<string, unknown> = {};
     let deletionDescription = '';
     
+    const client = getConvexHttpClient();
+    const userId = context.userInfo?.userId;
+    if (!userId) {
+      return createAuthenticationErrorResponse('Unauthorized', context.requestId) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
+    }
+
+    const user = await client.query(anyApi.users.getByLegacyId, { legacyId: userId });
+    if (!user) return createAuthenticationErrorResponse('Unauthorized', context.requestId) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
+    const sessions = await client.query(anyApi.sessions.listByUser, { userId: (user as any)._id });
+    const allReports: any[] = [];
+    for (const s of (Array.isArray(sessions) ? sessions : [])) {
+      const rs = await client.query(anyApi.reports.listBySession, { sessionId: (s as any)._id });
+      for (const r of (rs as any[])) allReports.push(r);
+    }
+    let toDelete: string[] = [];
     if (sessionIds && sessionIds.length > 0) {
-      // Delete specific session reports
-      deletionCriteria = {
-        sessionId: {
-          in: sessionIds
-        }
-      };
+      toDelete = allReports.filter(r => sessionIds.includes(String(r.sessionId))).map(r => String(r._id));
       deletionDescription = `specific sessions: ${sessionIds.join(', ')}`;
     } else if (limit) {
-      // Delete recent N reports (optionally excluding current session)
-      const reportsToDelete = await prisma.sessionReport.findMany({
-        where: excludeSessionId ? {
-          sessionId: {
-            not: excludeSessionId
-          }
-        } : undefined,
-        select: { id: true },
-        orderBy: { createdAt: 'desc' },
-        take: limit
-      });
-      
-      if (reportsToDelete.length === 0) {
-        logger.info('No reports found to delete', { ...requestContext, limit, excludeSessionId });
-        return createSuccessResponse<DeleteResponseData>({
-          deletedCount: 0,
-          message: 'No reports found matching deletion criteria',
-          deletionType: limit ? 'recent' : excludeSessionId ? 'all-except-current' : 'all',
-        }, { requestId: context.requestId });
-      }
-      
-      deletionCriteria = {
-        id: {
-          in: reportsToDelete.map(r => r.id)
-        }
-      };
-      deletionDescription = `${reportsToDelete.length} recent reports${excludeSessionId ? ` (excluding current session)` : ''}`;
+      const filtered = excludeSessionId ? allReports.filter(r => String(r.sessionId) !== excludeSessionId) : allReports;
+      const sorted = filtered.sort((a, b) => b.createdAt - a.createdAt);
+      toDelete = sorted.slice(0, limit).map(r => String(r._id));
+      deletionDescription = `${toDelete.length} recent reports${excludeSessionId ? ` (excluding current session)` : ''}`;
     } else if (excludeSessionId) {
-      // Delete all memory except current session
-      deletionCriteria = {
-        sessionId: {
-          not: excludeSessionId
-        }
-      };
+      toDelete = allReports.filter(r => String(r.sessionId) !== excludeSessionId).map(r => String(r._id));
       deletionDescription = 'all memory (excluding current session)';
     } else {
-      // Delete all memory
-      deletionCriteria = {};
+      toDelete = allReports.map(r => String(r._id));
       deletionDescription = 'all memory';
     }
     
     logger.info('Executing memory deletion', {
       ...requestContext,
       deletionDescription,
-      criteria: deletionCriteria
+      candidateCount: toDelete.length,
     });
-    
+
     // Execute the deletion
-    const deleteResult = await prisma.sessionReport.deleteMany({
-      where: deletionCriteria
-    });
-    
+    let deletedCount = 0;
+    if (toDelete.length > 0) {
+      const deletionResult = await client.mutation(anyApi.reports.removeMany, { ids: toDelete as any });
+      deletedCount = (deletionResult as { count?: number })?.count ?? toDelete.length;
+    }
+
     logger.info('Memory deletion completed successfully', {
       ...requestContext,
       deletionDescription,
-      deletedCount: deleteResult.count
+      deletedCount,
     });
-    
+
     return createSuccessResponse<DeleteResponseData>({
-      deletedCount: deleteResult.count,
-      message: `Successfully deleted ${deleteResult.count} session reports (${deletionDescription})`,
+      deletedCount,
+      message: `Successfully deleted ${deletedCount} session reports (${deletionDescription})`,
       deletionType: sessionIds ? 'specific' : limit ? 'recent' : excludeSessionId ? 'all-except-current' : 'all',
     }, { requestId: context.requestId });
     

@@ -85,17 +85,18 @@ This will automatically:
    ```
 
 2. **Set up environment**
-   ```bash
-   # Create .env.local and add your keys
-   cat > .env.local <<'EOF'
-   DATABASE_URL="file:./prisma/dev.db"
-   GROQ_API_KEY=your_groq_api_key_here
-   ENCRYPTION_KEY=your_32_character_encryption_key_here
-   NEXTAUTH_SECRET=your_nextauth_secret_here
-   
-   # Redis Configuration
-   REDIS_URL="redis://localhost:6379"
-   CACHE_ENABLED="true"
+  ```bash
+  # Create .env.local and add your keys
+  cat > .env.local <<'EOF'
+  GROQ_API_KEY=your_groq_api_key_here
+  ENCRYPTION_KEY=your_32_character_encryption_key_here
+  NEXTAUTH_SECRET=your_nextauth_secret_here
+  NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:3210
+  CONVEX_URL=http://127.0.0.1:3210
+  
+  # Redis Configuration
+  REDIS_URL="redis://localhost:6379"
+  CACHE_ENABLED="true"
    
    # Local-only opts
    BYPASS_AUTH=true
@@ -103,11 +104,11 @@ This will automatically:
    EOF
    ```
 
-3. **Initialize database and Redis**
-   ```bash
-   npm run db:setup
-   npm run redis:setup
-   ```
+3. **Initialize Redis and Convex**
+  ```bash
+  npm run redis:setup
+  npm run convex:dev   # in a separate terminal, leave running for local backend
+  ```
 
 4. **Start development**
    ```bash
@@ -131,7 +132,7 @@ This will automatically:
 - `npm run api:types` - Generate TypeScript types from OpenAPI spec (docs/api.yaml → src/types/api.generated.ts)
 
 ### Database Management
-- `npm run db:setup` - Initialize and setup database (runs automatically in dev/build)
+- `npm run convex:dev` - Start the Convex backend locally (used during development)
 - `npm run db:generate` - Generate Prisma client
 - `npm run db:push` - Push schema changes to database
 - `npm run db:migrate` - Create and apply migration
@@ -180,15 +181,15 @@ Common commands:
 - **Build / Start (prod)**: `make build && make start`
 - **Diagnostics**: `make doctor`
 - **Tests**: `make test` (Jest), `make e2e`, `make e2e-ui`, `make e2e-debug` (Playwright)
-- **Lint/Type/Prisma checks**: `make lint`, `make tsc-check`, `make prisma-validate`
-- **Database utilities**: `make db-studio`, `make migrate`, `make push`, `make generate`, `make db-reset`
+- **Lint/Type checks**: `make lint`, `make tsc-check`
+- **Convex helpers**: `make convex-dev`, `make convex-deploy`, `make convex-health`, `make convex-stop`
 - **Redis helpers**: `make redis-up`, `make redis-stop`
 - **Auth (TOTP)**: `make auth-setup`, `make auth-reset`, `make auth-status`, `make auth-health`
 - **Cleanup**: `make clean` (artifacts), `make clean-all` (also removes node_modules and local DB)
 
 Notes:
 
-- Targets are "intelligent" and will auto-install dependencies, create `.env.local`, initialize the DB, start Redis, set up/validate encryption, generate Prisma client and OpenAPI types where needed.
+- Targets are "intelligent" and will auto-install dependencies, create `.env.local`, start Redis, launch Convex, validate encryption, and generate OpenAPI types where needed.
 - Override the app port when useful: `APP_PORT=5000 make setup`
 
 ## 🧠 AI Model System
@@ -240,8 +241,9 @@ The app automatically selects the optimal model based on features:
 ### Environment Variables
 ```bash
 # Required
-DATABASE_URL="file:./prisma/dev.db"
 GROQ_API_KEY="your_groq_api_key"
+NEXT_PUBLIC_CONVEX_URL="http://127.0.0.1:3210"
+CONVEX_URL="http://127.0.0.1:3210"
 
 # Security
 NEXTAUTH_SECRET="your_secret"
@@ -370,7 +372,7 @@ __tests__/
 - Run `npm run totp health` to diagnose TOTP issues and time sync
 - Clear cookies to reset device trust
 - Verify `ENCRYPTION_KEY` is set
-- Database constraint errors: Remove `prisma/dev.db` and run `npm run db:setup`
+- Ensure your Convex URL matches the backend you're targeting (check `NEXT_PUBLIC_CONVEX_URL`)
 
 ### Authentication Recovery
 
@@ -476,7 +478,7 @@ Output:
 
 **Database Issues**
 - Run `npm run db:generate && npm run db:push`
-- Database auto-created at `prisma/dev.db`
+- Convex backend runs via `npm run convex:dev` during development
 
 **Storage Issues**
 - High localStorage usage: Check browser DevTools > Application > Storage

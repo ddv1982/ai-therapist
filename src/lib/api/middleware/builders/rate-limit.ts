@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import type { ApiResponse } from '@/lib/api/api-response';
 import type { RequestContext } from '@/lib/api/middleware/factory';
+import { env } from '@/config/env';
 
 export type WithApiMiddleware = <T = unknown>(
   handler: (
@@ -37,15 +38,18 @@ export function buildRateLimit(
     options: { bucket?: 'api' | 'chat' | 'default'; windowMs?: number } = {}
   ) {
     return deps.withApiMiddleware<T>(async (request, context, params) => {
-      const rateLimitDisabled = process.env.RATE_LIMIT_DISABLED === 'true' && process.env.NODE_ENV !== 'production';
+      const rateLimitDisabled = env.RATE_LIMIT_DISABLED && env.NODE_ENV !== 'production';
       if (!rateLimitDisabled) {
         const clientIP = deps.getClientIPFromRequest(request);
         const limiter = deps.getRateLimiter();
         const bucket = options.bucket || 'api';
-        const windowMs = Number(
-          (bucket === 'chat' ? process.env.CHAT_WINDOW_MS : bucket === 'api' ? process.env.API_WINDOW_MS : process.env.RATE_LIMIT_WINDOW_MS) ??
-          options.windowMs ?? 5 * 60 * 1000
-        );
+        const defaultWindow =
+          bucket === 'chat'
+            ? env.CHAT_WINDOW_MS
+            : bucket === 'api'
+              ? env.API_WINDOW_MS
+              : env.RATE_LIMIT_WINDOW_MS;
+        const windowMs = options.windowMs ?? defaultWindow ?? 5 * 60 * 1000;
         const result = await limiter.checkRateLimit(clientIP, bucket);
         if (!result.allowed) {
           const retryAfter = String(result.retryAfter || Math.ceil(windowMs / 1000));
@@ -64,5 +68,4 @@ export function buildRateLimit(
 
   return { withRateLimitUnauthenticated };
 }
-
 

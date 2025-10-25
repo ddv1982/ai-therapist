@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logger } from '@/lib/utils/logger';
+import { isDevelopment } from '@/config/env.public';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -192,7 +193,7 @@ export function createServerErrorResponse(
     500,
     {
       code: 'INTERNAL_SERVER_ERROR',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      details: isDevelopment ? error.message : undefined,
       suggestedAction: 'Please try again later or contact support if the issue persists',
       requestId,
     }

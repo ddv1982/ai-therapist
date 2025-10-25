@@ -5,6 +5,7 @@
 
 import React, { lazy, ComponentType, LazyExoticComponent } from 'react';
 import { logger } from '@/lib/utils/logger';
+import { isDevelopment } from '@/config/env.public';
 
 // ============================================================================
 // DYNAMIC COMPONENT LOADING
@@ -25,7 +26,7 @@ export function createLazyComponent<T = object>(
       const loadTime = performance.now() - startTime;
       
       // Log performance metrics in development
-      if (process.env.NODE_ENV === 'development') {
+      if (isDevelopment) {
         logger.debug('Component loaded', { 
           componentName, 
           loadTime: Math.round(loadTime),
@@ -63,7 +64,7 @@ export function preloadComponent<T = Record<string, unknown>>(
   // Use requestIdleCallback if available, otherwise setTimeout
   const preload = () => {
     importFn().then(() => {
-      if (process.env.NODE_ENV === 'development') {
+      if (isDevelopment) {
         logger.debug('Component preloaded', { 
           componentName,
           operation: 'preloading'
@@ -255,7 +256,7 @@ export class TherapeuticMessageCache {
     
     keysToDelete.forEach(key => this.cache.delete(key));
     
-    if (process.env.NODE_ENV === 'development') {
+    if (isDevelopment) {
       logger.debug('Message cache cleanup completed', {
         cleanedSessions: keysToDelete.length,
         operation: 'cacheCleanup'
@@ -372,7 +373,7 @@ export const preloadTherapeuticComponents = () => {
   // Settings panel removed - models are now automatically selected
 };
 
-if (process.env.NODE_ENV === 'development') {
+if (isDevelopment) {
   const g = globalThis as unknown as { __THERA_PERF_REPORTER_SET__?: boolean };
   if (!g.__THERA_PERF_REPORTER_SET__) {
     g.__THERA_PERF_REPORTER_SET__ = true;

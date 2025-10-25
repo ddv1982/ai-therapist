@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { setEnv, resetTestEnv } from '../../../test-utils/env';
 const {
   createAuthenticationErrorResponse: actualCreateAuthenticationErrorResponse,
   createSuccessResponse,
@@ -14,15 +15,6 @@ const { setResponseHeaders } = jest.requireMock('@/lib/api/middleware/request-ut
 
 type BuilderFactory = typeof import('@/lib/api/middleware/builders/auth-rate-limit').buildAuthAndRateLimit;
 type AuthBuilderDeps = Parameters<BuilderFactory>[0];
-
-const setNodeEnv = (value?: string) => {
-  const env = process.env as Record<string, string | undefined>;
-  if (value === undefined) {
-    delete env.NODE_ENV;
-  } else {
-    env.NODE_ENV = value;
-  }
-};
 
 function makeDeps(overrides: Partial<AuthBuilderDeps> = {}) {
   const baseLogger = { requestId: 'rid-base', method: 'GET', url: '/path', userAgent: 'jest' };
@@ -80,21 +72,14 @@ function makeRequest(url = 'http://localhost/api', method: string = 'GET') {
 }
 
 describe('auth rate limit builder', () => {
-  const originalEnv = { ...process.env };
-
   afterEach(() => {
-    for (const key of Object.keys(process.env)) {
-      if (!(key in originalEnv)) {
-        delete (process.env as unknown as Record<string, string | undefined>)[key];
-      }
-    }
-    Object.assign(process.env, originalEnv);
+    resetTestEnv();
     setResponseHeaders.mockClear();
   });
 
   it('records success when rate limiting is disabled', async () => {
-    process.env.RATE_LIMIT_DISABLED = 'true';
-    setNodeEnv('development');
+    setEnv('RATE_LIMIT_DISABLED', 'true');
+    setEnv('NODE_ENV', 'development');
 
     const buildAuth = loadBuilder();
     const deps = makeDeps();
@@ -114,8 +99,8 @@ describe('auth rate limit builder', () => {
   });
 
   it('returns 401 when authentication fails', async () => {
-    process.env.RATE_LIMIT_DISABLED = 'false';
-    setNodeEnv('test');
+    setEnv('RATE_LIMIT_DISABLED', 'false');
+    setEnv('NODE_ENV', 'test');
 
     const deps = makeDeps({
       validateApiAuth: jest.fn(async () => ({ isValid: false, error: 'bad-token' })),
@@ -133,8 +118,8 @@ describe('auth rate limit builder', () => {
   });
 
   it('falls back to window-based Retry-After and records error when limiter denies without retryAfter', async () => {
-    process.env.RATE_LIMIT_DISABLED = 'false';
-    setNodeEnv('test');
+    setEnv('RATE_LIMIT_DISABLED', 'false');
+    setEnv('NODE_ENV', 'test');
 
     const limitedDeps = makeDeps({
       getRateLimiter: jest.fn(() => ({
@@ -160,9 +145,9 @@ describe('auth rate limit builder', () => {
   });
 
   it('handles streaming failures by decrementing counters and recording errors', async () => {
-    process.env.RATE_LIMIT_DISABLED = 'false';
-    setNodeEnv('test');
-    process.env.CHAT_MAX_CONCURRENCY = '1';
+    setEnv('RATE_LIMIT_DISABLED', 'false');
+    setEnv('NODE_ENV', 'test');
+    setEnv('CHAT_MAX_CONCURRENCY', '1');
 
     const deps = makeDeps();
     const buildAuth = loadBuilder();
@@ -192,8 +177,8 @@ describe('auth rate limit builder', () => {
   });
 
   it('streaming limiter returns 429 when global rate limit disallows request', async () => {
-    process.env.RATE_LIMIT_DISABLED = 'false';
-    setNodeEnv('test');
+    setEnv('RATE_LIMIT_DISABLED', 'false');
+    setEnv('NODE_ENV', 'test');
 
     const deps = makeDeps({
       getRateLimiter: jest.fn(() => ({

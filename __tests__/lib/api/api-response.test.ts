@@ -17,6 +17,7 @@ import {
   createSessionResponse,
   createChatCompletionResponse,
 } from '@/lib/api/api-response';
+import { setEnv, restoreEnv } from '../../test-utils/env';
 
 // Ensure the global NextResponse mock returns a compatible object
 jest.mock('next/server', () => ({
@@ -74,12 +75,11 @@ describe('api-response helpers (with NextResponse mock from setup)', () => {
   });
 
   it('createServerErrorResponse masks details in production', async () => {
-    const prev = process.env.NODE_ENV;
-    Object.defineProperty(process.env, 'NODE_ENV', { value: 'production' });
+    setEnv('NODE_ENV', 'production');
     const res = createServerErrorResponse(new Error('hidden'), 'rid-x') as any;
     const json = await res.json();
     expect(json.error.details).toBeUndefined();
-    Object.defineProperty(process.env, 'NODE_ENV', { value: prev });
+    restoreEnv('NODE_ENV');
   });
 
   it('createPaginatedResponse computes pagination and includes request id', async () => {
@@ -125,5 +125,3 @@ describe('api-response helpers (with NextResponse mock from setup)', () => {
     expect(chat.headers.get('X-Request-Id')).toBe('rid-chat');
   });
 });
-
-

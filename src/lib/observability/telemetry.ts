@@ -1,4 +1,6 @@
 import type { TelemetrySettings } from 'ai';
+import { env } from '@/config/env';
+import { publicEnv } from '@/config/env.public';
 
 export interface TelemetryToggle {
   enabled?: boolean;
@@ -8,12 +10,12 @@ export interface TelemetryToggle {
   functionId?: string;
 }
 
-const env = {
-  enabled: readBoolean(process.env.AI_TELEMETRY_ENABLED, false),
-  recordInputs: readBoolean(process.env.AI_TELEMETRY_RECORD_INPUTS, true),
-  recordOutputs: readBoolean(process.env.AI_TELEMETRY_RECORD_OUTPUTS, true),
-  functionId: sanitizeString(process.env.AI_TELEMETRY_FUNCTION_ID),
-  application: sanitizeString(process.env.AI_TELEMETRY_APPLICATION),
+const telemetryEnv = {
+  enabled: env.AI_TELEMETRY_ENABLED,
+  recordInputs: env.AI_TELEMETRY_RECORD_INPUTS,
+  recordOutputs: env.AI_TELEMETRY_RECORD_OUTPUTS,
+  functionId: sanitizeString(env.AI_TELEMETRY_FUNCTION_ID),
+  application: sanitizeString(env.AI_TELEMETRY_APPLICATION),
 };
 
 export function getTelemetrySettings(toggle?: TelemetryToggle | boolean): TelemetrySettings | undefined {
@@ -22,14 +24,14 @@ export function getTelemetrySettings(toggle?: TelemetryToggle | boolean): Teleme
       ? { enabled: toggle }
       : toggle;
 
-  const enabled = resolvedToggle?.enabled ?? env.enabled;
+  const enabled = resolvedToggle?.enabled ?? telemetryEnv.enabled;
   if (!enabled) {
     return undefined;
   }
 
-  const recordInputs = resolvedToggle?.recordInputs ?? env.recordInputs;
-  const recordOutputs = resolvedToggle?.recordOutputs ?? env.recordOutputs;
-  const functionId = resolvedToggle?.functionId ?? env.functionId;
+  const recordInputs = resolvedToggle?.recordInputs ?? telemetryEnv.recordInputs;
+  const recordOutputs = resolvedToggle?.recordOutputs ?? telemetryEnv.recordOutputs;
+  const functionId = resolvedToggle?.functionId ?? telemetryEnv.functionId;
 
   const metadata = buildTelemetryMetadata(resolvedToggle?.metadata);
 
@@ -45,11 +47,11 @@ export function getTelemetrySettings(toggle?: TelemetryToggle | boolean): Teleme
 function buildTelemetryMetadata(metadata?: Record<string, unknown>): Record<string, string> | undefined {
   const base: Record<string, string> = {};
 
-  if (env.application) {
-    base.application = env.application;
+  if (telemetryEnv.application) {
+    base.application = telemetryEnv.application;
   }
 
-  const nodeEnv = sanitizeString(process.env.NODE_ENV);
+  const nodeEnv = sanitizeString(publicEnv.NODE_ENV);
   if (nodeEnv) {
     base.environment = nodeEnv;
   }
@@ -86,22 +88,9 @@ function coerceToString(value: unknown): string | undefined {
   }
 }
 
-function readBoolean(raw: string | undefined, fallback: boolean): boolean {
-  if (!raw) return fallback;
-  const normalised = raw.trim().toLowerCase();
-  if (normalised === 'true' || normalised === '1' || normalised === 'yes' || normalised === 'on') {
-    return true;
-  }
-  if (normalised === 'false' || normalised === '0' || normalised === 'no' || normalised === 'off') {
-    return false;
-  }
-  return fallback;
-}
-
 function sanitizeString(value: string | undefined): string | undefined {
   if (!value) return undefined;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }
-
 

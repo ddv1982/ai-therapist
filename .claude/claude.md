@@ -34,6 +34,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run setup:quick` - Quick setup (database and Redis only)
 - `npm run env:init` - Bootstrap .env.local file with default variables
 
+### Environment Configuration
+- Runtime configuration lives in `src/config/env.ts` (server) and `src/config/env.public.ts` (client-safe values)
+- Import `env` for server-only secrets and numbers (`import { env } from '@/config/env'`)
+- Import `publicEnv`/`isDevelopment` from `@/config/env.public` inside client components
+- Update `.env.local.example` when adding new variables; validation uses Zod so the app fails fast when values are missing
+- Test utilities: `reloadServerEnvForTesting` / `reloadPublicEnvForTesting` keep Jest suites in sync with temporary env overrides
+
 ### Testing Commands
 - `npm run test` - Run unit tests (40 test suites, 769 tests, 100% pass rate)
 - `npm run test:watch` - Run tests in watch mode for development

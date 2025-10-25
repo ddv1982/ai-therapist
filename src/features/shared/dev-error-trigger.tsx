@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { isDevelopment } from '@/config/env.public';
 
 declare global {
   interface Window {
@@ -14,7 +15,7 @@ declare global {
 // - URL flag: ?devThrow=1
 // - Console: window.__DEV_THROW__()
 export function DevErrorTrigger(): null {
-  const isDev = process.env.NODE_ENV === 'development';
+  const isDev = isDevelopment;
 
   const [shouldThrow, setShouldThrow] = useState(false);
 
@@ -58,5 +59,4 @@ export function DevErrorTrigger(): null {
   }
   return null;
 }
-
 

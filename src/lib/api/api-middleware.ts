@@ -4,6 +4,7 @@ import { createApiMiddleware as createFactory } from '@/lib/api/middleware/facto
 import type { RequestContext, AuthenticatedRequestContext, ApiMiddlewareDeps } from '@/lib/api/middleware/factory';
 import type { ApiResponse } from '@/lib/api/api-response';
 export type { RequestContext, AuthenticatedRequestContext };
+import { isTest } from '@/config/env.public';
 
 // Default instance used by app code
 let currentOverrides: Partial<ApiMiddlewareDeps> = {};
@@ -121,7 +122,7 @@ export function withAuthAndRateLimitStreaming(
 
 // Test-only setters: rebuild the default instance with overrides
 export function __setCreateRequestLoggerForTests(fn: ((req: unknown) => unknown) | null | undefined): void {
-  if (process.env.NODE_ENV !== 'test') return;
+  if (!isTest) return;
   const createRequestLogger = (fn as ((req: unknown) => unknown)) || undefined;
   const createRequestLoggerTyped = createRequestLogger as unknown as ApiMiddlewareDeps['createRequestLogger'] | undefined;
   currentOverrides = { ...currentOverrides, createRequestLogger: createRequestLoggerTyped };
@@ -133,7 +134,7 @@ export function __setApiMiddlewareDepsForTests(deps: {
   getRateLimiter?: () => { checkRateLimit: (clientIP: string, bucket?: string) => Promise<{ allowed: boolean; retryAfter?: number }> };
   getSingleUserInfo?: (req: unknown) => unknown;
 } = {}): void {
-  if (process.env.NODE_ENV !== 'test') return;
+  if (!isTest) return;
   currentOverrides = {
     ...currentOverrides,
     ...(deps.validateApiAuth ? { validateApiAuth: deps.validateApiAuth as unknown as ApiMiddlewareDeps['validateApiAuth'] } : {}),

@@ -7,6 +7,7 @@ import { withRateLimitUnauthenticated, withApiMiddleware } from '@/lib/api/api-m
 import { createSuccessResponse, createErrorResponse, createForbiddenErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import { z } from 'zod';
+import { env } from '@/config/env';
 
 // Type declaration for global cache
 declare global {
@@ -89,7 +90,15 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
     if (!parsed.success) {
       return createErrorResponse('Missing or invalid fields', 400);
     }
-    const { secret, backupCodes, verificationToken } = parsed.data;
+    const { verificationToken } = parsed.data;
+
+    // Prefer server-side cached setup data to avoid trusting/matching masked client values
+    const cache = (globalThis as any).totpSetupCache as (typeof globalThis.totpSetupCache);
+    const cacheExpiry = 5 * 60 * 1000; // 5 minutes (matches GET)
+    const cacheValid = !!(cache && cache.timestamp && (Date.now() - cache.timestamp) < cacheExpiry);
+
+    const secret = cacheValid ? cache!.data.secret : parsed.data.secret;
+    const backupCodes = cacheValid ? cache!.data.backupCodes : parsed.data.backupCodes;
 
     // Check if TOTP is already set up
     const isSetup = await isTOTPSetup();
@@ -110,12 +119,12 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
       return createErrorResponse('Invalid verification token', 400);
     }
 
-    // Save TOTP configuration
+    // Save TOTP configuration (use cache-backed values when present)
     await saveTOTPConfig(secret, backupCodes);
 
     // Clear the setup cache since setup is now complete
-    if (globalThis.totpSetupCache) {
-      delete globalThis.totpSetupCache;
+    if ((globalThis as any).totpSetupCache) {
+      try { delete (globalThis as any).totpSetupCache; } catch {}
     }
 
     // Create device and session for immediate authentication
@@ -129,7 +138,7 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
     const response = createSuccessResponse({ authenticated: true, redirectUrl: '/' });
     response.cookies.set('auth-session-token', session.sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 30 * 24 * 60 * 60,
       path: '/',
@@ -150,7 +159,7 @@ export const POST = withRateLimitUnauthenticated(async (request: NextRequest) =>
 export const DELETE = withApiMiddleware(async (request: NextRequest, context) => {
   try {
     // Only allow in development
-    if (process.env.NODE_ENV !== 'development') {
+    if (env.NODE_ENV !== 'development') {
       return createForbiddenErrorResponse('Reset allowed only in development environment', context.requestId);
     }
 

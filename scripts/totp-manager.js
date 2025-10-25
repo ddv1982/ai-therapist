@@ -7,7 +7,6 @@ import path from 'path';
 import fs from 'fs/promises';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-import { prisma } from '../src/lib/database/db.js';
 import { generateTOTPSetup, saveTOTPConfig, resetTOTPConfig, isTOTPSetup, getTOTPDiagnostics, performTOTPHealthCheck } from '../src/lib/auth/totp-service.js';
 import readline from 'readline';
 
@@ -257,7 +256,6 @@ async function main() {
     process.exit(1);
   } finally {
     rl.close();
-    await prisma.$disconnect();
   }
 }
 

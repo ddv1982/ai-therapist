@@ -116,8 +116,7 @@ export function setupGlobalMocks() {
 
   // Mock environment variables
   Object.defineProperty(process.env, 'NODE_ENV', { value: 'test', writable: true });
-  process.env.DATABASE_URL = 'file:./test.db';
-  process.env.NEXTAUTH_SECRET = 'test-secret';
+  process.env.NEXTAUTH_SECRET = 'test-nextauth-secret-32-characters-long!!!!';
 }
 
 // =============================================================================

@@ -1,4 +1,3 @@
-import { prisma } from '@/lib/database/db';
 import { createSessionSchema } from '@/lib/utils/validation';
 import { logger } from '@/lib/utils/logger';
 import { withValidation, withAuth } from '@/lib/api/api-middleware';
@@ -7,6 +6,7 @@ import { getUserSessions } from '@/lib/database/queries';
 import { createSuccessResponse } from '@/lib/api/api-response';
 import { deduplicateRequest } from '@/lib/utils/request-deduplication';
 import { SessionCache } from '@/lib/cache';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 
 export const POST = withValidation(
   createSessionSchema,
@@ -19,28 +19,13 @@ export const POST = withValidation(
         context.userInfo.userId,
         'create_session',
         async () => {
-          // Use transaction to ensure user creation + session creation are atomic
-          return await prisma.$transaction(async (tx) => {
-            // Ensure user exists in database within transaction
-            await tx.user.upsert({
-              where: { id: context.userInfo.userId },
-              update: {},
-              create: {
-                id: context.userInfo.userId,
-                email: context.userInfo.email,
-                name: context.userInfo.name,
-              },
-            });
-
-            // Create session within the same transaction
-            return await tx.session.create({
-              data: {
-                userId: context.userInfo.userId,
-                title,
-                status: 'active',
-              },
-            });
+          const client = getConvexHttpClient();
+          const user = await client.mutation(anyApi.users.getOrCreate, {
+            legacyId: context.userInfo.userId,
+            email: context.userInfo.email,
+            name: context.userInfo.name,
           });
+          return await client.mutation(anyApi.sessions.create, { userId: user._id, title });
         },
         title, // Use title as additional resource identifier
         10000 // 10 second TTL for session creation
@@ -53,12 +38,23 @@ export const POST = withValidation(
       });
 
       // Cache the new session data
-      await SessionCache.set(session.id, {
-        ...session,
-        status: session.status as 'active' | 'inactive' | 'archived'
+      await SessionCache.set((session as any)._id as string, {
+        ...(session as any),
+        status: (session as any).status as 'active' | 'inactive' | 'archived'
       });
 
-      return createSuccessResponse(session, { requestId: context.requestId });
+      const mapped = {
+        id: String((session as any)._id),
+        userId: context.userInfo.userId,
+        title: (session as any).title as string,
+        status: (session as any).status as string,
+        startedAt: new Date((session as any).startedAt),
+        updatedAt: new Date((session as any).updatedAt),
+        endedAt: (session as any).endedAt ? new Date((session as any).endedAt) : null,
+        _count: { messages: (session as any).messageCount ?? 0 },
+      };
+
+      return createSuccessResponse(mapped, { requestId: context.requestId });
     } catch (error) {
       return enhancedErrorHandlers.handleDatabaseError(
         error as Error,
@@ -70,18 +66,37 @@ export const POST = withValidation(
 );
 
 export const GET = withAuth(
-  async (_request, context) => {
+  async (request, context) => {
       try {
         logger.debug('Fetching sessions', context);
 
-        const sessions = await getUserSessions(context.userInfo.userId);
+        // Extract pagination parameters from query string
+        const url = new URL(request.url);
+        const limit = url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!, 10) : undefined;
+        const offset = url.searchParams.get('offset') ? parseInt(url.searchParams.get('offset')!, 10) : undefined;
+
+        const result = await getUserSessions(context.userInfo.userId, { limit, offset });
+        const mapped = (Array.isArray(result.items) ? result.items : []).map((s: any) => ({
+          id: String(s._id),
+          userId: context.userInfo.userId,
+          title: s.title as string,
+          status: s.status as string,
+          startedAt: new Date(s.startedAt),
+          updatedAt: new Date(s.updatedAt),
+          endedAt: s.endedAt ? new Date(s.endedAt) : null,
+          _count: { messages: s.messageCount ?? 0 },
+        }));
 
         logger.info('Sessions fetched successfully', {
           requestId: context.requestId,
-          sessionCount: sessions.length
+          sessionCount: result.items.length,
+          pagination: result.pagination,
         });
 
-        return createSuccessResponse(sessions, { requestId: context.requestId });
+        return createSuccessResponse({
+          items: mapped,
+          pagination: result.pagination,
+        }, { requestId: context.requestId });
       } catch (error) {
         return enhancedErrorHandlers.handleDatabaseError(
           error as Error,

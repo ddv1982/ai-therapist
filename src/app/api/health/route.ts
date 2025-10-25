@@ -1,9 +1,11 @@
-import { checkDatabaseHealth, prisma } from '@/lib/database/db';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { getCircuitBreakerStatus } from '@/lib/utils/graceful-degradation';
 import { getDeduplicationStats } from '@/lib/utils/request-deduplication';
 import { logger } from '@/lib/utils/logger';
+import { env } from '@/config/env';
+import packageJson from '../../../../package.json';
 
 interface HealthCheck {
   service: string;
@@ -40,16 +42,18 @@ interface HealthCheckResponse {
 async function checkDatabaseHealthExtended(): Promise<HealthCheck> {
   const start = Date.now();
   try {
-    const dbHealth = await checkDatabaseHealth();
+    const client = getConvexHttpClient();
+    // Ping by running a cheap query
+    await client.query(anyApi.users.getByLegacyId, { legacyId: 'health-check-probe' });
     const responseTime = Date.now() - start;
 
     return {
       service: 'database',
-      status: dbHealth.healthy ? 'healthy' : 'unhealthy',
+      status: 'healthy',
       responseTime,
       details: {
-        connection: dbHealth.healthy ? 'connected' : 'failed',
-        message: dbHealth.message
+        connection: 'connected',
+        message: 'Convex connectivity verified'
       }
     };
   } catch (error) {
@@ -68,9 +72,10 @@ async function checkDatabaseHealthExtended(): Promise<HealthCheck> {
 async function checkAuthentication(): Promise<HealthCheck> {
   const start = Date.now();
   try {
-    const [config, session] = await Promise.all([
-      prisma.authConfig.findFirst({ select: { id: true } }),
-      prisma.authSession.findFirst({ select: { id: true } }),
+    const client = getConvexHttpClient();
+    const [config, devices] = await Promise.all([
+      client.query(anyApi.auth.getAuthConfig, {}),
+      client.query(anyApi.auth.listTrustedDevices, {}),
     ]);
 
     return {
@@ -79,7 +84,7 @@ async function checkAuthentication(): Promise<HealthCheck> {
       responseTime: Date.now() - start,
       details: {
         totpConfigured: Boolean(config),
-        activeSessionPresent: Boolean(session),
+        activeSessionPresent: Array.isArray(devices) && devices.length > 0,
         setupRequired: !config
       }
     };
@@ -99,7 +104,7 @@ async function checkAuthentication(): Promise<HealthCheck> {
 async function checkEncryption(): Promise<HealthCheck> {
   const start = Date.now();
   try {
-    const hasEncryptionKey = !!process.env.ENCRYPTION_KEY;
+    const hasEncryptionKey = Boolean(env.ENCRYPTION_KEY);
     
     if (!hasEncryptionKey) {
       return {
@@ -110,7 +115,7 @@ async function checkEncryption(): Promise<HealthCheck> {
       };
     }
 
-    const keyLength = process.env.ENCRYPTION_KEY?.length || 0;
+    const keyLength = env.ENCRYPTION_KEY?.length ?? 0;
     const hasValidKeyLength = keyLength >= 32;
     
     return {
@@ -138,7 +143,7 @@ async function checkEncryption(): Promise<HealthCheck> {
 async function checkAIService(): Promise<HealthCheck> {
   const start = Date.now();
   try {
-    const hasGroqKey = !!process.env.GROQ_API_KEY;
+    const hasGroqKey = Boolean(env.GROQ_API_KEY);
     
     if (!hasGroqKey) {
       return {
@@ -231,7 +236,7 @@ export const GET = withRateLimitUnauthenticated(async (request, context) => {
     const healthResponse: HealthCheckResponse = {
       status: overallStatus,
       timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || '1.0.0',
+      version: packageJson.version || '1.0.0',
       uptime: process.uptime(),
       checks,
       summary: {

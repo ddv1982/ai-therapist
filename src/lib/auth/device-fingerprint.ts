@@ -1,6 +1,6 @@
 import { UAParser } from 'ua-parser-js';
 import { createHash } from 'crypto';
-import { prisma } from '@/lib/database/db';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { generateSecureRandomString } from '@/lib/utils/utils';
 
 export interface DeviceInfo {
@@ -122,29 +122,23 @@ export async function getOrCreateDevice(
   const deviceName = generateDeviceName(userAgent);
   const deviceId = generateSecureRandomString(32);
   
-  // Use upsert to atomically get or create device, preventing race conditions
-  const device = await prisma.trustedDevice.upsert({
-    where: { fingerprint },
-    create: {
-      deviceId,
-      name: deviceName,
-      fingerprint,
-      ipAddress,
-      userAgent,
-      lastSeen: new Date(),
-    },
-    update: {
-      lastSeen: new Date(),
-      ipAddress, // Update IP address as it might change
-    },
+  const client = getConvexHttpClient();
+  const now = Date.now();
+  const device = await client.mutation(anyApi.auth.upsertTrustedDevice, {
+    deviceId,
+    name: deviceName,
+    fingerprint,
+    ipAddress,
+    userAgent,
+    lastSeen: now,
   });
   
   return {
-    deviceId: device.deviceId,
-    fingerprint: device.fingerprint,
-    name: device.name,
-    userAgent: device.userAgent,
-    ipAddress: device.ipAddress,
+    deviceId: (device as any).deviceId,
+    fingerprint: (device as any).fingerprint,
+    name: (device as any).name,
+    userAgent: (device as any).userAgent,
+    ipAddress: (device as any).ipAddress,
   };
 }
 
@@ -154,74 +148,38 @@ export async function getOrCreateDevice(
 export async function createAuthSession(deviceId: string, ipAddress: string): Promise<AuthSessionData> {
   const sessionToken = generateSecureRandomString(64);
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-  
-  return await prisma.$transaction(async (tx) => {
-    // Find the device record
-    const device = await tx.trustedDevice.findUnique({
-      where: { deviceId },
-    });
-    
-    if (!device) {
-      throw new Error('Device not found');
-    }
-    
-    // Clean up old sessions for this device and create new session atomically
-    await tx.authSession.deleteMany({
-      where: {
-        deviceId: device.id,
-        expiresAt: { lt: new Date() },
-      },
-    });
-    
-    // Create new session
-    await tx.authSession.create({
-      data: {
-        sessionToken,
-        deviceId: device.id,
-        ipAddress,
-        expiresAt,
-      },
-    });
-    
-    return {
-      sessionToken,
-      expiresAt,
-      deviceId,
-    };
+  const client = getConvexHttpClient();
+  const device = await client.query(anyApi.auth.getTrustedDeviceByDeviceId, { deviceId });
+  if (!device) throw new Error('Device not found');
+  await client.mutation(anyApi.auth.deleteExpiredAuthSessions, { now: Date.now() });
+  await client.mutation(anyApi.auth.createAuthSession, {
+    sessionToken,
+    deviceId: (device as any)._id,
+    ipAddress,
+    expiresAt: expiresAt.getTime(),
   });
+  return { sessionToken, expiresAt, deviceId };
 }
 
 /**
  * Verify authentication session
  */
 export async function verifyAuthSession(sessionToken: string): Promise<DeviceInfo | null> {
-  const session = await prisma.authSession.findUnique({
-    where: { sessionToken },
-    include: { device: true },
-  });
-  
-  if (!session || session.expiresAt < new Date()) {
-    // Clean up expired session
-    if (session) {
-      await prisma.authSession.delete({
-        where: { id: session.id },
-      });
-    }
+  const client = getConvexHttpClient();
+  const session = await client.query(anyApi.auth.getAuthSessionByToken, { sessionToken });
+  if (!session || (session as any).expiresAt < Date.now()) {
+    await client.mutation(anyApi.auth.deleteExpiredAuthSessions, { now: Date.now() });
     return null;
   }
-  
-  // Update last activity
-  await prisma.authSession.update({
-    where: { id: session.id },
-    data: { lastActivity: new Date() },
-  });
-  
+  await client.mutation(anyApi.auth.touchAuthSession, { sessionToken });
+  const device = await client.query(anyApi.auth.getTrustedDevice, { id: (session as any).deviceId });
+  if (!device) return null;
   return {
-    deviceId: session.device.deviceId,
-    fingerprint: session.device.fingerprint,
-    name: session.device.name,
-    userAgent: session.device.userAgent,
-    ipAddress: session.device.ipAddress,
+    deviceId: (device as any).deviceId,
+    fingerprint: (device as any).fingerprint,
+    name: (device as any).name,
+    userAgent: (device as any).userAgent,
+    ipAddress: (device as any).ipAddress,
   };
 }
 
@@ -229,11 +187,11 @@ export async function verifyAuthSession(sessionToken: string): Promise<DeviceInf
  * Revoke authentication session
  */
 export async function revokeAuthSession(sessionToken: string): Promise<boolean> {
-  const result = await prisma.authSession.deleteMany({
-    where: { sessionToken },
-  });
-  
-  return result.count > 0;
+  const client = getConvexHttpClient();
+  const session = await client.query(anyApi.auth.getAuthSessionByToken, { sessionToken });
+  if (!session) return false;
+  await client.mutation(anyApi.auth.deleteAuthSessionByToken, { sessionToken });
+  return true;
 }
 
 /**
@@ -248,45 +206,30 @@ export async function getTrustedDevices(): Promise<Array<{
   ipAddress: string;
   hasActiveSessions: boolean;
 }>> {
-  const devices = await prisma.trustedDevice.findMany({
-    include: {
-      authSessions: {
-        where: {
-          expiresAt: { gt: new Date() },
-        },
-      },
-    },
-    orderBy: { lastSeen: 'desc' },
-  });
-  
-  return devices.map(device => ({
-    id: device.id,
-    deviceId: device.deviceId,
-    name: device.name,
-    lastSeen: device.lastSeen,
-    trustedAt: device.trustedAt,
-    ipAddress: device.ipAddress,
-    hasActiveSessions: device.authSessions.length > 0,
-  }));
+  const client = getConvexHttpClient();
+  const devices = await client.query(anyApi.auth.listTrustedDevices, {});
+  const now = Date.now();
+  return (Array.isArray(devices) ? devices : [])
+    .sort((a: any, b: any) => b.lastSeen - a.lastSeen)
+    .map((device: any) => ({
+      id: String(device._id),
+      deviceId: device.deviceId,
+      name: device.name,
+      lastSeen: new Date(device.lastSeen),
+      trustedAt: new Date(device.trustedAt),
+      ipAddress: device.ipAddress,
+      hasActiveSessions: (device as any).hasActiveSessions ?? (device.lastSeen > now - 30 * 24 * 60 * 60 * 1000),
+    }));
 }
 
 /**
  * Revoke device trust (removes device and all its sessions)
  */
 export async function revokeDeviceTrust(deviceId: string): Promise<boolean> {
-  const device = await prisma.trustedDevice.findUnique({
-    where: { deviceId },
-  });
-  
-  if (!device) {
-    return false;
-  }
-  
-  // Delete device (cascade will remove sessions)
-  await prisma.trustedDevice.delete({
-    where: { id: device.id },
-  });
-  
+  const client = getConvexHttpClient();
+  const device = await client.query(anyApi.auth.getTrustedDeviceByDeviceId, { deviceId });
+  if (!device) return false;
+  await client.mutation(anyApi.auth.deleteTrustedDevice, { fingerprint: (device as any).fingerprint });
   return true;
 }
 
@@ -294,11 +237,7 @@ export async function revokeDeviceTrust(deviceId: string): Promise<boolean> {
  * Clean up expired sessions
  */
 export async function cleanupExpiredSessions(): Promise<number> {
-  const result = await prisma.authSession.deleteMany({
-    where: {
-      expiresAt: { lt: new Date() },
-    },
-  });
-  
-  return result.count;
+  const client = getConvexHttpClient();
+  const res = await client.mutation(anyApi.auth.deleteExpiredAuthSessions, { now: Date.now() });
+  return (res as any)?.count ?? 0;
 }

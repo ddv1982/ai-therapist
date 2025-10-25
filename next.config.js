@@ -5,7 +5,7 @@ import path from 'path';
 import { ensureAllowedOrigins } from './scripts/cors-helpers.js';
 
 const nextConfig = {
-  serverExternalPackages: ['prisma'],
+  serverExternalPackages: [],
   // Hide development indicators (Turbopack icon, etc.)
   devIndicators: false,
   // Disable client source maps in development to avoid noisy 3rd-party warnings
@@ -22,7 +22,6 @@ const nextConfig = {
     // Remove server-only secrets from client bundle
     // GROQ_API_KEY should be server-only
     // NEXTAUTH_SECRET should be server-only  
-    // DATABASE_URL should be server-only
   },
   // Secure CORS configuration
   async headers() {

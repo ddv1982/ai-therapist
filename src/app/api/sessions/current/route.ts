@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/database/db';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { logger } from '@/lib/utils/logger';
 import { withAuth, withValidation } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
@@ -13,25 +13,14 @@ export const GET = withAuth(async (_request, context) => {
     const userId = context.userInfo.userId;
 
     // Find the most recent active session with messages
-    const currentSession = await prisma.session.findFirst({
-      where: { 
-        userId: userId,
-        status: 'active'
-      },
-      orderBy: [
-        { updatedAt: 'desc' }, // Most recently updated first
-        { createdAt: 'desc' }  // Then most recently created
-      ],
-      include: {
-        messages: {
-          orderBy: { timestamp: 'asc' },
-          take: 1 // Just check if messages exist
-        },
-        _count: {
-          select: { messages: true }
-        }
-      }
-    });
+    const client = getConvexHttpClient();
+    const user = await client.query(anyApi.users.getByLegacyId, { legacyId: userId });
+    const sessions = user ? await client.query(anyApi.sessions.listByUser, { userId: user._id }) : [];
+    const currentSession = Array.isArray(sessions)
+      ? (sessions as any[])
+          .filter(s => s.status === 'active')
+          .sort((a, b) => (b.updatedAt - a.updatedAt) || (b.createdAt - a.createdAt))[0]
+      : null;
 
     if (!currentSession) {
       logger.info('No active session found', context);
@@ -40,18 +29,18 @@ export const GET = withAuth(async (_request, context) => {
 
     // Return session info without all messages (for performance)
     const sessionInfo = {
-      id: currentSession.id,
-      title: currentSession.title,
-      startedAt: currentSession.startedAt,
-      updatedAt: currentSession.updatedAt,
-      status: currentSession.status,
-      messageCount: currentSession._count.messages
+      id: (currentSession as any)._id as string,
+      title: currentSession.title as string,
+      startedAt: new Date(currentSession.startedAt as number),
+      updatedAt: new Date(currentSession.updatedAt as number),
+      status: currentSession.status as string,
+      messageCount: currentSession.messageCount as number,
     };
 
     logger.info('Current session found', {
       ...context,
-      sessionId: currentSession.id,
-      messageCount: currentSession._count.messages
+      sessionId: (currentSession as any)._id,
+      messageCount: currentSession.messageCount
     });
 
     return createSuccessResponse({ currentSession: sessionInfo }, { requestId: context.requestId });
@@ -60,7 +49,7 @@ export const GET = withAuth(async (_request, context) => {
   }
 });
 
-const setCurrentSessionSchema = z.object({ sessionId: z.string().uuid('Invalid session ID format') });
+const setCurrentSessionSchema = z.object({ sessionId: z.string() });
 
 export const POST = withValidation(setCurrentSessionSchema, async (_request: NextRequest, context, validated) => {
   try {
@@ -68,20 +57,15 @@ export const POST = withValidation(setCurrentSessionSchema, async (_request: Nex
     const { sessionId } = validated;
 
     // Update the session's updatedAt to mark it as current
-    const session = await prisma.session.update({
-      where: { 
-        id: sessionId,
-        userId: context.userInfo.userId
-      },
-      data: {
-        updatedAt: new Date(),
-        status: 'active'
-      },
+    const client = getConvexHttpClient();
+    const session = await client.mutation(anyApi.sessions.update, {
+      sessionId: sessionId as any,
+      status: 'active',
     });
 
     logger.info('Current session updated', {
       ...context,
-      sessionId: session.id
+      sessionId: (session as any)._id
     });
 
     return createSuccessResponse({ success: true, session }, { requestId: context.requestId });

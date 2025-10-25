@@ -1,11 +1,9 @@
-import { prisma } from '@/lib/database/db';
 import { encryptMessage } from '@/lib/chat/message-encryption';
 import { logger } from '@/lib/utils/logger';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import type { SessionOwnershipResult } from '@/types/database';
 
-type SessionOwnership = {
-  valid: boolean;
-  session?: { messages?: Array<{ id: string }> };
-};
+type SessionOwnership = SessionOwnershipResult;
 
 export class AssistantResponseCollector {
   private buffer = '';
@@ -44,14 +42,13 @@ export class AssistantResponseCollector {
 
     const encrypted = encryptMessage({ role: 'assistant', content: trimmed, timestamp: new Date() });
     try {
-      await prisma.message.create({
-        data: {
-          sessionId: this.sessionId,
-          role: encrypted.role,
-          content: encrypted.content,
-          timestamp: encrypted.timestamp,
-          modelUsed: this.currentModelId,
-        },
+      const client = getConvexHttpClient();
+      await client.mutation(anyApi.messages.create, {
+        sessionId: this.sessionId as any,
+        role: encrypted.role,
+        content: encrypted.content,
+        timestamp: encrypted.timestamp.getTime(),
+        modelUsed: this.currentModelId,
       });
       try {
         const { MessageCache } = await import('@/lib/cache');
