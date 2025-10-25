@@ -110,11 +110,11 @@ describe('Validation Functions', () => {
       expect(result.success).toBe(false)
     })
 
-    it('should reject invalid session ID', () => {
+    it('should reject empty session ID', () => {
       const invalidMessage = {
         role: 'user' as const,
         content: 'Test message',
-        sessionId: 'not-a-uuid'
+        sessionId: ''
       }
 
       const result = validateRequest(messageSchema, invalidMessage)
@@ -139,16 +139,16 @@ describe('Validation Functions', () => {
       expect(result.success).toBe(true)
     })
 
-    it('should reject invalid session ID', () => {
+    it('should reject empty session ID', () => {
       const invalidRequest = {
-        sessionId: 'invalid-uuid',
+        sessionId: '',
         messages: [validMessage]
       }
 
       const result = validateRequest(reportGenerationSchema, invalidRequest)
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error).toContain('Invalid session ID format')
+        expect(result.error).toContain('Session ID cannot be empty')
       }
     })
 

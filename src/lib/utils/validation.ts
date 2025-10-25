@@ -45,13 +45,13 @@ export const createSessionSchema = z.object({
 
 export const sessionIdSchema = z.object({
   id: z.string()
-    .uuid('Invalid session ID format'),
+    .min(1, 'Session ID cannot be empty'),
 });
 
 // Query parameters schema for fetching messages
 export const messagesQuerySchema = z.object({
   sessionId: z.string()
-    .uuid('Invalid session ID format'),
+    .min(1, 'Session ID cannot be empty'),
   page: z.coerce.number().min(1).default(1).optional(),
   limit: z.coerce.number().min(1).max(100).default(50).optional(),
 });
@@ -83,7 +83,7 @@ export const messageSchema = z.object({
     .min(1, 'Message content cannot be empty')
     .max(50000, 'Message content too long'),
   sessionId: z.string()
-    .uuid('Invalid session ID format'),
+    .min(1, 'Session ID cannot be empty'),
   modelUsed: z.string()
     .min(1, 'Model name cannot be empty')
     .max(100, 'Model name too long')
@@ -142,7 +142,7 @@ export const reportMessageSchema = z.object({
 // Session report generation validation schema
 export const reportGenerationSchema = z.object({
   sessionId: z.string()
-    .uuid('Invalid session ID format'),
+    .min(1, 'Session ID cannot be empty'),
   messages: z.array(reportMessageSchema)
     .min(1, 'At least one message is required')
     .max(1000, 'Too many messages (max 1000)'),
