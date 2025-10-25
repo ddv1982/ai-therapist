@@ -259,17 +259,41 @@ it('withAuthAndRateLimitStreaming returns 429 on concurrency limit', async () =>
   const originalEnv = process.env.NODE_ENV;
   const originalConc = process.env.CHAT_MAX_CONCURRENCY;
   setNodeEnv('production');
-  process.env.CHAT_MAX_CONCURRENCY = '0';
+  process.env.CHAT_MAX_CONCURRENCY = '1';
   apiMwModule.__setApiMiddlewareDepsForTests?.({
     validateApiAuth: async () => ({ isValid: true }),
     getRateLimiter: () => ({ checkRateLimit: async () => ({ allowed: true }) })
   });
-  const handler = jest.fn(async () => new Response('ok', { status: 200 }));
+
+  // Create a handler that holds the response open to simulate concurrent request
+  let resolveHandler: ((value: Response) => void) | null = null;
+  const handler = jest.fn(async () => {
+    return new Promise<Response>((resolve) => {
+      resolveHandler = resolve;
+      // Don't resolve immediately - keep the request "in-flight"
+      setTimeout(() => resolve(new Response('ok', { status: 200 })), 100);
+    });
+  });
+
   const wrappedStream = apiMwModule.withAuthAndRateLimitStreaming(handler, { maxConcurrent: 1 });
   process.env.RATE_LIMIT_DISABLED = 'false';
-  const req = new NextRequest('http://localhost:4000/stream', { method: 'GET', headers: { 'user-agent': 'jest', host: 'localhost:4000', 'x-forwarded-for': '1.1.1.1' } });
-  const res = await wrappedStream(req as any, { params: Promise.resolve({}) } as any);
+
+  // First request: should succeed and be "in-flight"
+  const req1 = new NextRequest('http://localhost:4000/stream', { method: 'GET', headers: { 'user-agent': 'jest', host: 'localhost:4000', 'x-forwarded-for': '1.1.1.1' } });
+  const firstPromise = wrappedStream(req1 as any, { params: Promise.resolve({}) } as any);
+
+  // Give first request a moment to increment the counter
+  await new Promise(resolve => setTimeout(resolve, 10));
+
+  // Second request: should fail with 429 since we're at max concurrency
+  const req2 = new NextRequest('http://localhost:4000/stream', { method: 'GET', headers: { 'user-agent': 'jest', host: 'localhost:4000', 'x-forwarded-for': '1.1.1.1' } });
+  const res = await wrappedStream(req2 as any, { params: Promise.resolve({}) } as any);
   expect(res.status).toBe(429);
+
+  // Wait for first request to complete
+  const res1 = await firstPromise;
+  expect(res1.status).toBe(200);
+
   setNodeEnv(originalEnv);
   if (originalConc === undefined) {
     delete process.env.CHAT_MAX_CONCURRENCY;
@@ -354,5 +378,4 @@ it('rebuilds overrides with supplied dependencies in test env', () => {
   setNodeEnv(originalEnv);
 });
 });
-
 
