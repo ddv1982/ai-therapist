@@ -18,7 +18,7 @@ import {
 } from '@/lib/errors/chat-errors';
 
 import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
-import { verifySessionOwnership } from '@/lib/database/queries';
+import { verifySessionOwnership } from '@/lib/repositories/session-repository';
 import { recordModelUsage } from '@/lib/metrics/metrics';
 import { appendWithLimit as appendWithLimitUtil, teeAndPersistStream as teeAndPersistStreamUtil, persistFromClonedStream as persistFromClonedStreamUtil, attachResponseHeadersRaw as attachResponseHeadersRawUtil } from '@/lib/chat/stream-utils';
 import { AssistantResponseCollector } from '@/lib/chat/assistant-response-collector';

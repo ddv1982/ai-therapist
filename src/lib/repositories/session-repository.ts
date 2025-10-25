@@ -1,4 +1,10 @@
-import { getSingleUserInfo } from '@/lib/auth/user-session';
+/**
+ * Session Repository
+ *
+ * Data access layer for session-related Convex operations.
+ * Encapsulates all session queries and mutations from the frontend.
+ */
+
 import { getConvexHttpClient, api } from '@/lib/convex/httpClient';
 import { logger } from '@/lib/utils/logger';
 import type {
@@ -12,6 +18,24 @@ import type {
 
 type VerifySessionOptions = { includeMessages?: boolean };
 
+export interface PaginationOptions {
+  limit?: number;
+  offset?: number;
+}
+
+export interface PaginatedResult<T> {
+  items: T[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+    hasMore: boolean;
+  };
+}
+
+/**
+ * Verify that a session belongs to the authenticated user
+ */
 export async function verifySessionOwnership(
   sessionId: string,
   userLegacyId: string,
@@ -48,38 +72,9 @@ export async function verifySessionOwnership(
   }
 }
 
-export async function ensureUserExists(userInfo: ReturnType<typeof getSingleUserInfo>): Promise<boolean> {
-  try {
-    const client = getConvexHttpClient();
-    await client.mutation(api.users.getOrCreate, {
-      legacyId: userInfo.userId,
-      email: userInfo.email,
-      name: userInfo.name,
-    });
-    return true;
-  } catch (error) {
-    logger.databaseError('ensure user exists', toError(error), {
-      userId: userInfo.userId,
-    });
-    return false;
-  }
-}
-
-export interface PaginationOptions {
-  limit?: number;
-  offset?: number;
-}
-
-export interface PaginatedResult<T> {
-  items: T[];
-  pagination: {
-    limit: number;
-    offset: number;
-    total: number;
-    hasMore: boolean;
-  };
-}
-
+/**
+ * Get paginated list of sessions for a user
+ */
 export async function getUserSessions(
   userLegacyId: string,
   options: PaginationOptions = {}
@@ -119,6 +114,9 @@ export async function getUserSessions(
   };
 }
 
+/**
+ * Get a session with all its messages
+ */
 export async function getSessionWithMessages(
   sessionId: string,
   userLegacyId: string
@@ -138,6 +136,10 @@ export async function getSessionWithMessages(
 
   return withMessages(safeBundle);
 }
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
 
 function assertSessionId(value: string): SessionId {
   if (!value || typeof value !== 'string') {

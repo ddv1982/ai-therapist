@@ -194,8 +194,8 @@ describe('database queries type safety', () => {
     });
   });
 });
-let queries: typeof import('@/lib/database/queries');
+let queries: typeof import('@/lib/repositories/session-repository');
 
 beforeAll(async () => {
-  queries = await import('@/lib/database/queries');
+  queries = await import('@/lib/repositories/session-repository');
 });

@@ -1,6 +1,6 @@
 import { updateSessionSchema } from '@/lib/utils/validation';
 import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
-import { verifySessionOwnership, getSessionWithMessages } from '@/lib/database/queries';
+import { verifySessionOwnership, getSessionWithMessages } from '@/lib/repositories/session-repository';
 import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';

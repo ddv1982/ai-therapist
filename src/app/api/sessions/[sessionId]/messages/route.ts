@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
 import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
-import { verifySessionOwnership } from '@/lib/database/queries';
+import { verifySessionOwnership } from '@/lib/repositories/session-repository';
 import {
   createSuccessResponse,
   createNotFoundErrorResponse,
