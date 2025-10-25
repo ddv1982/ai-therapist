@@ -11,6 +11,11 @@ import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
 import { createErrorResponse } from '@/lib/api/api-response';
 import { env } from '@/config/env';
+import {
+  ChatError,
+  MessageValidationError,
+  getChatErrorResponse
+} from '@/lib/errors/chat-errors';
 
 import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { verifySessionOwnership } from '@/lib/database/queries';
@@ -56,7 +61,21 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       tools: undefined,
     });
     if (!normalized.success) {
-      return createErrorResponse('Invalid request data', 400, { requestId: context.requestId, details: normalized.error });
+      const validationError = new MessageValidationError(
+        normalized.error,
+        { endpoint: '/api/chat', requestId: context.requestId }
+      );
+      const errorResponse = getChatErrorResponse(validationError);
+      return createErrorResponse(
+        errorResponse.message,
+        errorResponse.statusCode,
+        {
+          code: errorResponse.code,
+          details: errorResponse.details,
+          suggestedAction: errorResponse.suggestedAction,
+          requestId: context.requestId,
+        }
+      );
     }
 
     const providedSessionId = normalized.data.sessionId;
@@ -176,8 +195,36 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     attachResponseHeaders(uiResponse as Response, context.requestId, modelId, toolChoiceHeader);
     return uiResponse as Response;
   } catch (error) {
-    logger.apiError('/api/chat', error as Error, { apiEndpoint: '/api/chat', requestId: context.requestId });
-    return createErrorResponse('Failed to process request', 500, { requestId: context.requestId });
+    // Use ChatError response system for consistent error handling
+    const chatErrorResponse = getChatErrorResponse(error);
+
+    // Log with full context
+    if (error instanceof ChatError) {
+      logger.error('Chat error occurred', {
+        apiEndpoint: '/api/chat',
+        requestId: context.requestId,
+        errorCode: error.code,
+        errorName: error.name,
+        userMessage: error.userMessage,
+        context: error.context,
+      });
+    } else {
+      logger.apiError('/api/chat', error as Error, {
+        apiEndpoint: '/api/chat',
+        requestId: context.requestId
+      });
+    }
+
+    return createErrorResponse(
+      chatErrorResponse.message,
+      chatErrorResponse.statusCode,
+      {
+        code: chatErrorResponse.code,
+        details: chatErrorResponse.details,
+        suggestedAction: chatErrorResponse.suggestedAction,
+        requestId: context.requestId,
+      }
+    );
   }
 });
 
@@ -251,19 +298,31 @@ function createStreamErrorHandler(params: {
 }) {
   const { context, systemPrompt, modelId, webSearchEnabled } = params;
   return (error: unknown) => {
+    const errorContext = {
+      apiEndpoint: '/api/chat',
+      requestId: context.requestId,
+      userId: context.userInfo.userId,
+      webSearchEnabled,
+      modelId,
+    };
+
+    // Handle rate limit errors
     if (error instanceof Error && error.message.includes('Rate limit')) {
-      return 'Rate limit exceeded. Please try again later.';
+      logger.warn('Rate limit exceeded in chat stream', {
+        ...errorContext,
+        errorType: 'rate_limit',
+      });
+      return 'I received too many requests. Please wait a moment and try again.';
     }
 
+    // Handle tool choice conflicts (web search configuration issues)
     if (error instanceof Error) {
       const lower = error.message.toLowerCase();
-      if (lower.includes('tool choice is none, but model called a tool') || lower.includes('tool choice is required, but model did not call a tool')) {
-        logger.error('Tool choice conflict detected', {
-          apiEndpoint: '/api/chat',
-          requestId: context.requestId,
-          userId: context.userInfo.userId,
-          webSearchEnabled,
-          modelId,
+
+      if (lower.includes('tool choice is none, but model called a tool') ||
+          lower.includes('tool choice is required, but model did not call a tool')) {
+        logger.error('Tool choice conflict in chat stream', {
+          ...errorContext,
           errorMessage: error.message,
           promptIncludes: systemPrompt.includes('WEB SEARCH CAPABILITIES ACTIVE'),
           errorType: 'tool_choice_conflict',
@@ -271,27 +330,36 @@ function createStreamErrorHandler(params: {
         return 'I encountered a configuration issue. Let me try again without additional tools.';
       }
 
+      // Handle web search/tool errors
       if (lower.includes('browser_search') || lower.includes('web search') || lower.includes('tool')) {
-        logger.error('Web search tool error detected', {
-          apiEndpoint: '/api/chat',
-          requestId: context.requestId,
-          userId: context.userInfo.userId,
-          webSearchEnabled,
-          modelId,
+        logger.error('Web search tool error in chat stream', {
+          ...errorContext,
           errorMessage: error.message,
           errorType: 'web_search_error',
         });
         return 'I encountered an issue with web search functionality. Let me help you with the information I have available.';
       }
+
+      // Handle AI service errors
+      if (lower.includes('unavailable') || lower.includes('timeout') || lower.includes('service')) {
+        logger.error('AI service error in chat stream', {
+          ...errorContext,
+          errorMessage: error.message,
+          errorType: 'ai_service_error',
+        });
+        return 'The AI service is temporarily unavailable. Please try again in a few moments.';
+      }
     }
 
+    // Fallback error handling
     try {
       const detail = typeof error === 'object' ? JSON.stringify(error as Record<string, unknown>) : String(error);
-      logger.error('Chat stream error', { apiEndpoint: '/api/chat', requestId: context.requestId, userId: context.userInfo.userId, detail });
+      logger.error('Unhandled chat stream error', { ...errorContext, detail });
     } catch {
-      logger.error('Chat stream error', { apiEndpoint: '/api/chat', requestId: context.requestId, userId: context.userInfo.userId }, error instanceof Error ? error : new Error(String(error)));
+      logger.error('Unhandled chat stream error', errorContext, error instanceof Error ? error : new Error(String(error)));
     }
-    return 'An error occurred.';
+
+    return 'An unexpected error occurred. Please try again or contact support if the issue persists.';
   };
 }
 

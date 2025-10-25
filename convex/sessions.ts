@@ -79,7 +79,7 @@ export const update = mutation({
   handler: async (ctx, { sessionId, title, status, endedAt }) => {
     const session = await ctx.db.get(sessionId);
     if (!session) throw new Error('Session not found');
-    const patch: any = { updatedAt: Date.now() };
+    const patch: Record<string, unknown> = { updatedAt: Date.now() };
     if (typeof title !== 'undefined') patch.title = title;
     if (typeof status !== 'undefined') patch.status = status;
     if (typeof endedAt !== 'undefined') patch.endedAt = endedAt;

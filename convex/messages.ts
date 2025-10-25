@@ -69,7 +69,7 @@ export const update = mutation({
   handler: async (ctx, { messageId, content, metadata, modelUsed }) => {
     const message = await ctx.db.get(messageId);
     if (!message) throw new Error('Message not found');
-    const patch: any = {};
+    const patch: Record<string, unknown> = {};
     if (typeof content !== 'undefined') patch.content = content;
     if (typeof metadata !== 'undefined') patch.metadata = metadata;
     if (typeof modelUsed !== 'undefined') patch.modelUsed = modelUsed;

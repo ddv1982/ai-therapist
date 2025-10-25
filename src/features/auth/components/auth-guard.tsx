@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { checkSessionStatus } from '@/store/slices/authSlice';
 import { therapeuticInteractive } from '@/lib/ui/design-tokens';
@@ -14,34 +14,37 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const dispatch = useAppDispatch();
   const { isAuthenticated, needsSetup, needsVerification, isLoading } = useAppSelector(s => s.auth);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Kick off a session check on mount
   useEffect(() => {
     dispatch(checkSessionStatus());
   }, [dispatch]);
 
-  // Add timeout for loading state to prevent endless hanging
+  // Combined effect: handle loading timeout and auth redirects
   useEffect(() => {
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Handle loading timeout
     if (isLoading) {
-      const timeout = setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         logger.warn('Auth loading timed out, redirecting to setup', {
           component: 'AuthGuard',
           operation: 'loadingTimeout',
-          timeout: 10000
+          timeout: 15000
         });
         setLoadingTimeout(true);
       }, 15000); // 15 second timeout for loading
-
-      return () => clearTimeout(timeout);
-    } else {
-      setLoadingTimeout(false);
-      return undefined;
+      return;
     }
-  }, [isLoading]);
 
-  useEffect(() => {
-    if (isLoading && !loadingTimeout) return;
+    // Reset timeout flag when loading completes
+    setLoadingTimeout(false);
 
+    // Handle auth redirects when loading is complete
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
 
     if ((needsSetup || loadingTimeout) && currentPath !== '/auth/setup') {
@@ -53,7 +56,13 @@ export function AuthGuard({ children }: AuthGuardProps) {
       window.location.href = '/auth/verify';
       return;
     }
-  }, [isAuthenticated, needsSetup, needsVerification, isLoading, loadingTimeout]);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isLoading, needsSetup, needsVerification, loadingTimeout]);
 
   if (isLoading && !loadingTimeout) {
     return (

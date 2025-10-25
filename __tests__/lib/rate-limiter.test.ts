@@ -461,24 +461,30 @@ describe('RateLimiter', () => {
     });
 
     it('should handle missing process.env gracefully', () => {
-      const originalProcess = global.process;
-      // Provide a stub that preserves existing process methods while clearing env
-      global.process = {
-        ...originalProcess,
-        env: {
+      const originalEnv = global.process.env;
+      // Mock only the env property to avoid open handles from spreading process
+      Object.defineProperty(global.process, 'env', {
+        value: {
           NEXTAUTH_SECRET: 'test-nextauth-secret-32-characters-long!!!!',
           ENCRYPTION_KEY: 'test-encryption-key-32-chars-long-for-testing',
         },
-      } as any;
-      
+        writable: true,
+        configurable: true,
+      });
+
       const rateLimiter = getRateLimiter();
-      
+
       // Should not throw
       expect(() => {
         rateLimiter.checkRateLimit('127.0.0.1');
       }).not.toThrow();
-      
-      global.process = originalProcess;
+
+      // Restore original env
+      Object.defineProperty(global.process, 'env', {
+        value: originalEnv,
+        writable: true,
+        configurable: true,
+      });
     });
   });
 });

@@ -266,10 +266,8 @@ it('withAuthAndRateLimitStreaming returns 429 on concurrency limit', async () =>
   });
 
   // Create a handler that holds the response open to simulate concurrent request
-  let resolveHandler: ((value: Response) => void) | null = null;
   const handler = jest.fn(async () => {
     return new Promise<Response>((resolve) => {
-      resolveHandler = resolve;
       // Don't resolve immediately - keep the request "in-flight"
       setTimeout(() => resolve(new Response('ok', { status: 200 })), 100);
     });
