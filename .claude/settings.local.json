@@ -13,7 +13,8 @@
       "WebFetch(domain:react-day-picker.js.org)",
       "WebSearch",
       "WebFetch(domain:console.groq.com)",
-      "WebFetch(domain:docs.convex.dev)"
+      "WebFetch(domain:docs.convex.dev)",
+      "mcp__graphite__run_gt_cmd"
     ],
     "deny": []
   }
