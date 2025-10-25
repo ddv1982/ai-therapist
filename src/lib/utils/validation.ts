@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
 // Chat API validation schemas
+// Note: sessionId accepts Convex document IDs (non-UUID strings), not just UUIDs
 export const chatRequestSchema = z.object({
   sessionId: z.string()
-    .uuid('Invalid session ID format')
+    .min(1, 'Session ID cannot be empty')
     .optional(),
   model: z.string()
     .min(1, 'Model name required')
