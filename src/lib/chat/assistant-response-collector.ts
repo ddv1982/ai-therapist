@@ -44,7 +44,7 @@ export class AssistantResponseCollector {
     try {
       const client = getConvexHttpClient();
       await client.mutation(anyApi.messages.create, {
-        sessionId: this.sessionId as any,
+        sessionId: this.sessionId,
         role: encrypted.role,
         content: encrypted.content,
         timestamp: encrypted.timestamp.getTime(),

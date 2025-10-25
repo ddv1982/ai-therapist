@@ -7,6 +7,7 @@ import { createSuccessResponse } from '@/lib/api/api-response';
 import { deduplicateRequest } from '@/lib/utils/request-deduplication';
 import { SessionCache } from '@/lib/cache';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import type { ConvexSession, ConvexUser } from '@/types/convex';
 
 export const POST = withValidation(
   createSessionSchema,
@@ -24,34 +25,38 @@ export const POST = withValidation(
             legacyId: context.userInfo.userId,
             email: context.userInfo.email,
             name: context.userInfo.name,
-          });
-          return await client.mutation(anyApi.sessions.create, { userId: user._id, title });
+          }) as ConvexUser;
+          return await client.mutation(anyApi.sessions.create, { userId: user._id, title }) as ConvexSession;
         },
         title, // Use title as additional resource identifier
         10000 // 10 second TTL for session creation
-      );
+      ) as ConvexSession;
 
       logger.info('Session created successfully', {
         requestId: context.requestId,
-        sessionId: session.id,
+        sessionId: session._id,
         userId: context.userInfo.userId
       });
 
       // Cache the new session data
-      await SessionCache.set((session as any)._id as string, {
-        ...(session as any),
-        status: (session as any).status as 'active' | 'inactive' | 'archived'
+      await SessionCache.set(session._id, {
+        id: session._id,
+        userId: context.userInfo.userId,
+        title: session.title,
+        status: session.status as 'active' | 'inactive' | 'archived',
+        createdAt: new Date(session.createdAt),
+        updatedAt: new Date(session.updatedAt),
       });
 
       const mapped = {
-        id: String((session as any)._id),
+        id: session._id,
         userId: context.userInfo.userId,
-        title: (session as any).title as string,
-        status: (session as any).status as string,
-        startedAt: new Date((session as any).startedAt),
-        updatedAt: new Date((session as any).updatedAt),
-        endedAt: (session as any).endedAt ? new Date((session as any).endedAt) : null,
-        _count: { messages: (session as any).messageCount ?? 0 },
+        title: session.title,
+        status: session.status,
+        startedAt: new Date(session.startedAt),
+        updatedAt: new Date(session.updatedAt),
+        endedAt: session.endedAt ? new Date(session.endedAt) : null,
+        _count: { messages: session.messageCount ?? 0 },
       };
 
       return createSuccessResponse(mapped, { requestId: context.requestId });
@@ -76,11 +81,11 @@ export const GET = withAuth(
         const offset = url.searchParams.get('offset') ? parseInt(url.searchParams.get('offset')!, 10) : undefined;
 
         const result = await getUserSessions(context.userInfo.userId, { limit, offset });
-        const mapped = (Array.isArray(result.items) ? result.items : []).map((s: any) => ({
-          id: String(s._id),
+        const mapped = (Array.isArray(result.items) ? result.items : []).map((s: ConvexSession) => ({
+          id: s._id,
           userId: context.userInfo.userId,
-          title: s.title as string,
-          status: s.status as string,
+          title: s.title,
+          status: s.status,
           startedAt: new Date(s.startedAt),
           updatedAt: new Date(s.updatedAt),
           endedAt: s.endedAt ? new Date(s.endedAt) : null,

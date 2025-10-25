@@ -4,6 +4,7 @@ import { logger } from '@/lib/utils/logger';
 import { withAuth, withValidation } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { z } from 'zod';
+import type { ConvexUser, ConvexSession } from '@/types/convex';
 
 export const GET = withAuth(async (_request, context) => {
   try {
@@ -14,10 +15,10 @@ export const GET = withAuth(async (_request, context) => {
 
     // Find the most recent active session with messages
     const client = getConvexHttpClient();
-    const user = await client.query(anyApi.users.getByLegacyId, { legacyId: userId });
-    const sessions = user ? await client.query(anyApi.sessions.listByUser, { userId: user._id }) : [];
+    const user = await client.query(anyApi.users.getByLegacyId, { legacyId: userId }) as ConvexUser | null;
+    const sessions = user ? await client.query(anyApi.sessions.listByUser, { userId: user._id }) as ConvexSession[] : [];
     const currentSession = Array.isArray(sessions)
-      ? (sessions as any[])
+      ? sessions
           .filter(s => s.status === 'active')
           .sort((a, b) => (b.updatedAt - a.updatedAt) || (b.createdAt - a.createdAt))[0]
       : null;
@@ -29,17 +30,17 @@ export const GET = withAuth(async (_request, context) => {
 
     // Return session info without all messages (for performance)
     const sessionInfo = {
-      id: (currentSession as any)._id as string,
-      title: currentSession.title as string,
-      startedAt: new Date(currentSession.startedAt as number),
-      updatedAt: new Date(currentSession.updatedAt as number),
-      status: currentSession.status as string,
-      messageCount: currentSession.messageCount as number,
+      id: currentSession._id,
+      title: currentSession.title,
+      startedAt: new Date(currentSession.startedAt),
+      updatedAt: new Date(currentSession.updatedAt),
+      status: currentSession.status,
+      messageCount: currentSession.messageCount,
     };
 
     logger.info('Current session found', {
       ...context,
-      sessionId: (currentSession as any)._id,
+      sessionId: currentSession._id,
       messageCount: currentSession.messageCount
     });
 
@@ -59,13 +60,13 @@ export const POST = withValidation(setCurrentSessionSchema, async (_request: Nex
     // Update the session's updatedAt to mark it as current
     const client = getConvexHttpClient();
     const session = await client.mutation(anyApi.sessions.update, {
-      sessionId: sessionId as any,
+      sessionId,
       status: 'active',
-    });
+    }) as ConvexSession;
 
     logger.info('Current session updated', {
       ...context,
-      sessionId: (session as any)._id
+      sessionId: session._id
     });
 
     return createSuccessResponse({ success: true, session }, { requestId: context.requestId });

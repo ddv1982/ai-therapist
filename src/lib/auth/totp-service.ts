@@ -4,6 +4,7 @@ import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { generateSecureRandomString } from '@/lib/utils/utils';
 import { encryptSensitiveData, decryptSensitiveData, encryptBackupCodes, decryptBackupCodes } from '@/lib/auth/crypto-utils';
 import { logger } from '@/lib/utils/logger';
+import type { ConvexAuthConfig } from '@/types/convex';
 
 export interface TOTPSetupData {
   secret: string;
@@ -198,10 +199,11 @@ export async function verifyTOTPToken(token: string): Promise<boolean> {
 export async function verifyBackupCode(code: string): Promise<boolean> {
   const client = getConvexHttpClient();
   const config = await client.query(anyApi.auth.getAuthConfig, {});
-  if (!config || !config.isSetup) return false;
+  const convexConfig = config as ConvexAuthConfig | null;
+  if (!convexConfig || !convexConfig.isSetup) return false;
   let backupCodes: BackupCode[];
   try {
-    backupCodes = decryptBackupCodes((config as any).backupCodes);
+    backupCodes = decryptBackupCodes(convexConfig.backupCodes);
   } catch {
     return false;
   }
@@ -211,7 +213,7 @@ export async function verifyBackupCode(code: string): Promise<boolean> {
   backupCodes[idx].usedAt = new Date();
   const encryptedBackupCodes = encryptBackupCodes(backupCodes);
   await client.mutation(anyApi.auth.upsertAuthConfig, {
-    secret: (config as any).secret,
+    secret: convexConfig.secret,
     backupCodes: encryptedBackupCodes,
     isSetup: true,
   });
@@ -224,7 +226,8 @@ export async function verifyBackupCode(code: string): Promise<boolean> {
 export async function isTOTPSetup(): Promise<boolean> {
   const client = getConvexHttpClient();
   const config = await client.query(anyApi.auth.getAuthConfig, {});
-  return (config as any)?.isSetup === true;
+  const convexConfig = config as ConvexAuthConfig | null;
+  return convexConfig?.isSetup === true;
 }
 
 /**
@@ -233,13 +236,14 @@ export async function isTOTPSetup(): Promise<boolean> {
 export async function getUnusedBackupCodesCount(): Promise<number> {
   const client = getConvexHttpClient();
   const config = await client.query(anyApi.auth.getAuthConfig, {});
-  if (!config || !config.isSetup) {
+  const convexConfig = config as ConvexAuthConfig | null;
+  if (!convexConfig || !convexConfig.isSetup) {
     return 0;
   }
 
   let backupCodes: BackupCode[];
   try {
-    backupCodes = decryptBackupCodes((config as any).backupCodes);
+    backupCodes = decryptBackupCodes(convexConfig.backupCodes);
   } catch {
     return 0;
   }
@@ -254,7 +258,8 @@ export async function getUnusedBackupCodesCount(): Promise<number> {
 export async function regenerateBackupCodes(): Promise<string[]> {
   const client = getConvexHttpClient();
   const config = await client.query(anyApi.auth.getAuthConfig, {});
-  if (!config || !config.isSetup) {
+  const convexConfig = config as ConvexAuthConfig | null;
+  if (!convexConfig || !convexConfig.isSetup) {
     throw new Error('TOTP not set up');
   }
 
@@ -263,7 +268,7 @@ export async function regenerateBackupCodes(): Promise<string[]> {
   const encryptedBackupCodes = encryptBackupCodes(backupCodesData);
 
   await client.mutation(anyApi.auth.upsertAuthConfig, {
-    secret: (config as any).secret,
+    secret: convexConfig.secret,
     backupCodes: encryptedBackupCodes,
     isSetup: true,
   });

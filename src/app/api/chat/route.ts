@@ -19,6 +19,7 @@ import { appendWithLimit as appendWithLimitUtil, teeAndPersistStream as teeAndPe
 import { AssistantResponseCollector } from '@/lib/chat/assistant-response-collector';
 import { readJsonBody } from '@/lib/api/request';
 import type { SessionOwnershipResult, SessionWithMessages } from '@/types/database';
+import type { ConvexMessage } from '@/types/convex';
 
 type ApiChatMessage = { role: 'user' | 'assistant'; content: string; id?: string };
 const MAX_ASSISTANT_RESPONSE_CHARS = env.CHAT_RESPONSE_MAX_CHARS;
@@ -197,22 +198,17 @@ async function loadSessionHistory(sessionId: string, ownership: SessionOwnership
     sessionWithMessages?.messages ??
     (await (async () => {
       const client = getConvexHttpClient();
-      const all = await client.query(anyApi.messages.listBySession, { sessionId: sessionId as any });
-      return (Array.isArray(all) ? all : []) as Array<{
-        _id: string;
-        role: 'user' | 'assistant';
-        content: string;
-        timestamp: number;
-      }>;
+      const all = await client.query(anyApi.messages.listBySession, { sessionId }) as ConvexMessage[];
+      return Array.isArray(all) ? all : [];
     })());
 
   const sessionMessages = sessionMessagesRaw
     .map((message) => ({
-      id: 'id' in message ? (message as any).id ?? message._id : message._id,
+      id: 'id' in message ? (message as { id?: string }).id ?? message._id : message._id,
       role: message.role,
       content: message.content,
       timestamp: new Date(
-        typeof message.timestamp === 'number' ? message.timestamp : new Date(message.timestamp as any).getTime()
+        typeof message.timestamp === 'number' ? message.timestamp : new Date(message.timestamp).getTime()
       ),
     }))
     .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
@@ -230,7 +226,7 @@ async function loadSessionHistory(sessionId: string, ownership: SessionOwnership
   return decrypted.map((message, index) => ({
     role: message.role as 'user' | 'assistant',
     content: message.content,
-    id: (sessionMessages[index] as any)?.id,
+    id: sessionMessages[index]?.id,
   }));
 }
 

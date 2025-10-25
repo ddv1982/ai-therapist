@@ -5,6 +5,7 @@ import { decryptSessionReportContent } from '@/lib/chat/message-encryption';
 import { validateApiAuth } from '@/lib/api/api-auth';
 import { withApiMiddleware, type RequestContext } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse, createAuthenticationErrorResponse, type ApiResponse } from '@/lib/api/api-response';
+import type { ConvexSessionReport, ConvexSession, ConvexUser } from '@/types/convex';
 
 /**
  * Create therapeutic summary from structured session report data
@@ -130,9 +131,9 @@ async function handleMemoryManagement(
   const client = getConvexHttpClient();
   const limited = await client.query(anyApi.reports.listRecent, {
     limit: Math.min(limit, 20),
-    excludeSessionId: excludeSessionId ? (excludeSessionId as any) : undefined,
+    excludeSessionId: excludeSessionId || undefined,
   });
-  const limitedReports = Array.isArray(limited) ? (limited as any[]) : [];
+  const limitedReports = Array.isArray(limited) ? (limited as ConvexSessionReport[]) : [];
   
   logger.info('Found session reports for memory management', {
     ...requestContext,
@@ -186,13 +187,14 @@ async function handleMemoryManagement(
         }
       }
       
-      const session = await client.query(anyApi.sessions.get, { sessionId: (report as any).sessionId });
+      const session = await client.query(anyApi.sessions.get, { sessionId: report.sessionId });
+      const convexSession = session as ConvexSession | null;
       const reportDetail: MemoryReportDetail = {
-        id: String((report as any)._id),
-        sessionId: String((report as any).sessionId),
-        sessionTitle: (session as any)?.title ?? 'Session',
-        sessionDate: session ? new Date((session as any).startedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        reportDate: new Date((report as any).createdAt).toISOString().split('T')[0],
+        id: String(report._id),
+        sessionId: String(report.sessionId),
+        sessionTitle: convexSession?.title ?? 'Session',
+        sessionDate: convexSession ? new Date(convexSession.startedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        reportDate: new Date(report.createdAt).toISOString().split('T')[0],
         contentPreview,
         keyInsights: keyInsights.slice(0, 5), // Limit to top 5 insights
         hasEncryptedContent,
@@ -219,7 +221,7 @@ async function handleMemoryManagement(
     } catch (error) {
       logger.warn('Failed to process session report for management', {
         ...requestContext,
-        reportId: report.id.substring(0, 8),
+        reportId: report._id.substring(0, 8),
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       continue;
@@ -271,69 +273,75 @@ export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (reque
     const client = getConvexHttpClient();
     const reports = await client.query(anyApi.reports.listRecent, {
       limit: Math.min(limit, 10),
-      excludeSessionId: excludeSessionId ? (excludeSessionId as any) : undefined,
+      excludeSessionId: excludeSessionId || undefined,
     });
-    
+
+    const convexReports = Array.isArray(reports) ? (reports as ConvexSessionReport[]) : [];
+
     logger.info('Found session reports for memory processing', {
       ...requestContext,
-      reportCount: (reports as any[]).length,
-      reportIds: (reports as any[]).map((r: any) => String(r._id).substring(0, 8))
+      reportCount: convexReports.length,
+      reportIds: convexReports.map((r) => String(r._id).substring(0, 8))
     });
-    
+
     // Process reports with graceful error handling
     const memoryContext: MemoryContextEntry[] = [];
     let successfulReports = 0;
     let failedDecryptions = 0;
-    
-    for (const report of (reports as any[])) {
+
+    for (const report of convexReports) {
       try {
         // Attempt to decrypt the report content
-        const decryptedContent = decryptSessionReportContent((report as any).reportContent);
-        
+        const decryptedContent = decryptSessionReportContent(report.reportContent);
+
         // Create intelligent therapeutic summary from structured data
         const summary = createTherapeuticSummary(
-          (report as any).keyPoints,
-          (report as any).therapeuticInsights,
-          (report as any).patternsIdentified,
+          report.keyPoints,
+          report.therapeuticInsights,
+          report.patternsIdentified,
           decryptedContent
         );
-        
+
+        // Fetch session to get title and dates
+        const session = await client.query(anyApi.sessions.get, { sessionId: report.sessionId });
+        const convexSession = session as ConvexSession | null;
+
         memoryContext.push({
-          sessionTitle: report.session.title,
-          sessionDate: report.session.startedAt.toISOString().split('T')[0],
-          reportDate: report.createdAt.toISOString().split('T')[0],
+          sessionTitle: convexSession?.title ?? 'Session',
+          sessionDate: convexSession ? new Date(convexSession.startedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          reportDate: new Date(report.createdAt).toISOString().split('T')[0],
           content: decryptedContent,
           summary: summary
         });
-        
+
         successfulReports++;
-        
+
         logger.info('Successfully processed session report for memory', {
           ...requestContext,
-          reportId: String((report as any)._id).substring(0, 8),
+          reportId: String(report._id).substring(0, 8),
           sessionTitle: 'Session',
           summaryLength: summary.length,
-          hasStructuredData: !!((report as any).keyPoints || (report as any).therapeuticInsights || (report as any).patternsIdentified)
+          hasStructuredData: !!(report.keyPoints || report.therapeuticInsights || report.patternsIdentified)
         });
-        
+
       } catch (decryptionError) {
         // Log the error but continue processing other reports
         failedDecryptions++;
         logger.warn('Failed to decrypt session report, skipping', {
           ...requestContext,
-          reportId: String((report as any)._id).substring(0, 8),
+          reportId: String(report._id).substring(0, 8),
           sessionTitle: 'Session',
           error: decryptionError instanceof Error ? decryptionError.message : 'Unknown decryption error'
         });
-        
+
         // Continue with next report instead of breaking entire memory context
         continue;
       }
     }
-    
+
     logger.info('Memory context processing completed', {
       ...requestContext,
-      totalReports: reports.length,
+      totalReports: convexReports.length,
       successfulReports,
       failedDecryptions,
       memoryContextSize: memoryContext.length,
@@ -345,7 +353,7 @@ export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (reque
       memoryContext,
       reportCount: memoryContext.length,
       stats: {
-        totalReportsFound: (reports as any[]).length,
+        totalReportsFound: convexReports.length,
         successfullyDecrypted: successfulReports,
         failedDecryptions: failedDecryptions,
       },
@@ -410,12 +418,15 @@ export const DELETE = withApiMiddleware<DeleteResponseData>(async (request: Next
     }
 
     const user = await client.query(anyApi.users.getByLegacyId, { legacyId: userId });
-    if (!user) return createAuthenticationErrorResponse('Unauthorized', context.requestId) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
-    const sessions = await client.query(anyApi.sessions.listByUser, { userId: (user as any)._id });
-    const allReports: any[] = [];
-    for (const s of (Array.isArray(sessions) ? sessions : [])) {
-      const rs = await client.query(anyApi.reports.listBySession, { sessionId: (s as any)._id });
-      for (const r of (rs as any[])) allReports.push(r);
+    const convexUser = user as ConvexUser | null;
+    if (!convexUser) return createAuthenticationErrorResponse('Unauthorized', context.requestId) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
+    const sessions = await client.query(anyApi.sessions.listByUser, { userId: convexUser._id });
+    const convexSessions = Array.isArray(sessions) ? (sessions as ConvexSession[]) : [];
+    const allReports: ConvexSessionReport[] = [];
+    for (const s of convexSessions) {
+      const rs = await client.query(anyApi.reports.listBySession, { sessionId: s._id });
+      const sessionReports = Array.isArray(rs) ? (rs as ConvexSessionReport[]) : [];
+      for (const r of sessionReports) allReports.push(r);
     }
     let toDelete: string[] = [];
     if (sessionIds && sessionIds.length > 0) {
@@ -443,8 +454,9 @@ export const DELETE = withApiMiddleware<DeleteResponseData>(async (request: Next
     // Execute the deletion
     let deletedCount = 0;
     if (toDelete.length > 0) {
-      const deletionResult = await client.mutation(anyApi.reports.removeMany, { ids: toDelete as any });
-      deletedCount = (deletionResult as { count?: number })?.count ?? toDelete.length;
+      const deletionResult = await client.mutation(anyApi.reports.removeMany, { ids: toDelete });
+      const result = deletionResult as { count?: number } | null;
+      deletedCount = result?.count ?? toDelete.length;
     }
 
     logger.info('Memory deletion completed successfully', {

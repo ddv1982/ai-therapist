@@ -6,6 +6,7 @@ import { decryptMessage } from '@/lib/chat/message-encryption';
 import { MessageCache } from '@/lib/cache';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import type { ConvexMessage } from '@/types/convex';
 
 const patchBodySchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
@@ -24,7 +25,7 @@ export const PATCH = withValidationAndParams(
       }
 
       const client = getConvexHttpClient();
-      const existing = await client.query(anyApi.messages.getById, { messageId: messageId as any });
+      const existing = await client.query(anyApi.messages.getById, { messageId }) as ConvexMessage | null;
 
       if (!existing || existing.sessionId !== sessionId) {
         return createNotFoundErrorResponse('Message', context.requestId);
@@ -48,29 +49,29 @@ export const PATCH = withValidationAndParams(
       })();
 
       const updated = await client.mutation(anyApi.messages.update, {
-        messageId: messageId as any,
-        metadata: nextMetadata as any,
-      });
+        messageId,
+        metadata: nextMetadata,
+      }) as ConvexMessage;
 
       try {
         await MessageCache.invalidate(sessionId);
       } catch {}
 
       const decrypted = decryptMessage({
-        role: (updated as any).role,
-        content: (updated as any).content,
-        timestamp: new Date((updated as any).timestamp),
+        role: updated.role,
+        content: updated.content,
+        timestamp: new Date(updated.timestamp),
       });
 
       return createSuccessResponse({
-        id: (updated as any)._id,
+        id: updated._id,
         sessionId,
         role: decrypted.role as 'user' | 'assistant',
         content: decrypted.content,
-        modelUsed: (updated as any).modelUsed ?? undefined,
+        modelUsed: updated.modelUsed ?? undefined,
         metadata: nextMetadata,
         timestamp: decrypted.timestamp,
-        createdAt: new Date((updated as any).createdAt),
+        createdAt: new Date(updated.createdAt),
       }, { requestId: context.requestId });
     } catch (error) {
       return enhancedErrorHandlers.handleDatabaseError(error as Error, 'update message metadata', context);

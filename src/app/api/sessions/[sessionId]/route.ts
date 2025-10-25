@@ -5,6 +5,7 @@ import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api/ap
 import { logger } from '@/lib/utils/logger';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import type { ConvexSession, ConvexSessionWithMessagesAndReports } from '@/types/convex';
 
 interface SessionUpdateData {
   updatedAt: Date;
@@ -36,7 +37,7 @@ export const PATCH = withValidationAndParams(
 
       const client = getConvexHttpClient();
       const updated = await client.mutation(anyApi.sessions.update, {
-        sessionId: sessionId as any,
+        sessionId,
         status: updateData.status,
         endedAt: updateData.endedAt ? updateData.endedAt.getTime() : null,
         title: updateData.title,
@@ -49,15 +50,16 @@ export const PATCH = withValidationAndParams(
         userId: context.userInfo.userId
       });
 
+      const convexSession = updated as ConvexSession;
       const mapped = {
-        id: String((updated as any)._id),
+        id: String(convexSession._id),
         userId: context.userInfo.userId,
-        title: (updated as any).title as string,
-        status: (updated as any).status as string,
-        startedAt: new Date((updated as any).startedAt),
-        updatedAt: new Date((updated as any).updatedAt),
-        endedAt: (updated as any).endedAt ? new Date((updated as any).endedAt) : null,
-        _count: { messages: (updated as any).messageCount ?? 0 },
+        title: convexSession.title,
+        status: convexSession.status,
+        startedAt: new Date(convexSession.startedAt),
+        updatedAt: new Date(convexSession.updatedAt),
+        endedAt: convexSession.endedAt ? new Date(convexSession.endedAt) : null,
+        _count: { messages: convexSession.messageCount ?? 0 },
       };
       return createSuccessResponse(mapped, { requestId: context.requestId });
     } catch (error) {
@@ -80,35 +82,35 @@ export const GET = withAuth(async (_request, context, params) => {
       return createNotFoundErrorResponse('Session', context.requestId);
     }
 
+    const sessionData = session as ConvexSessionWithMessagesAndReports;
     logger.info('Session fetched successfully', {
       requestId: context.requestId,
       sessionId,
-      messageCount: (session as any).messages?.length ?? 0,
+      messageCount: sessionData.messages?.length ?? 0,
       userId: context.userInfo.userId
     });
 
-    const s = session as any;
     const mapped = {
-      id: String(s._id),
+      id: String(sessionData._id),
       userId: context.userInfo.userId,
-      title: s.title as string,
-      status: s.status as string,
-      startedAt: new Date(s.startedAt),
-      updatedAt: new Date(s.updatedAt),
-      endedAt: s.endedAt ? new Date(s.endedAt) : null,
-      _count: { messages: s.messageCount ?? 0 },
-      messages: (Array.isArray(s.messages) ? s.messages : []).map((m: any) => ({
+      title: sessionData.title,
+      status: sessionData.status,
+      startedAt: new Date(sessionData.startedAt),
+      updatedAt: new Date(sessionData.updatedAt),
+      endedAt: sessionData.endedAt ? new Date(sessionData.endedAt) : null,
+      _count: { messages: sessionData.messageCount ?? 0 },
+      messages: (Array.isArray(sessionData.messages) ? sessionData.messages : []).map((m) => ({
         id: String(m._id),
-        sessionId: String(s._id),
+        sessionId: String(sessionData._id),
         role: m.role,
         content: m.content,
         modelUsed: m.modelUsed ?? undefined,
         timestamp: new Date(m.timestamp),
         createdAt: new Date(m.createdAt),
       })),
-      reports: (Array.isArray(s.reports) ? s.reports : []).map((r: any) => ({
+      reports: (Array.isArray(sessionData.reports) ? sessionData.reports : []).map((r) => ({
         id: String(r._id),
-        sessionId: String(s._id),
+        sessionId: String(sessionData._id),
         reportContent: r.reportContent,
         keyPoints: r.keyPoints,
         therapeuticInsights: r.therapeuticInsights,
@@ -140,7 +142,7 @@ export const DELETE = withAuth(async (_request, context, params) => {
     }
 
     const client = getConvexHttpClient();
-    await client.mutation(anyApi.sessions.remove, { sessionId: sessionId as any });
+    await client.mutation(anyApi.sessions.remove, { sessionId });
 
     logger.info('Session deleted successfully', {
       requestId: context.requestId,

@@ -4,17 +4,18 @@ import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
 import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership } from '@/lib/database/queries';
-import { 
-  createSuccessResponse, 
-  createNotFoundErrorResponse, 
-  createPaginatedResponse, 
-  addTherapeuticHeaders 
+import {
+  createSuccessResponse,
+  createNotFoundErrorResponse,
+  createPaginatedResponse,
+  addTherapeuticHeaders
 } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import { MessageCache } from '@/lib/cache';
 import { env } from '@/config/env';
 import type { MessageData as CacheMessageData } from '@/lib/cache/api-cache';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
+import type { ConvexMessage, ConvexSessionBundle } from '@/types/convex';
 
 const metadataSchema = z.record(z.string(), z.unknown());
 
@@ -52,22 +53,22 @@ export const POST = withValidationAndParams(
         : undefined;
       const client = getConvexHttpClient();
       const message = await client.mutation(anyApi.messages.create, {
-        sessionId: sessionId as any,
+        sessionId,
         role: encrypted.role,
         content: encrypted.content,
         modelUsed: validatedData.modelUsed,
         metadata: sanitizedMetadata,
         timestamp: encrypted.timestamp.getTime(),
-      });
+      }) as ConvexMessage;
       // Fetch updated session to get messageCount
-      const bundleAfter = await client.query(anyApi.sessions.getWithMessagesAndReports, { sessionId: sessionId as any });
+      const bundleAfter = await client.query(anyApi.sessions.getWithMessagesAndReports, { sessionId }) as ConvexSessionBundle;
       const messageCount = bundleAfter?.session?.messageCount ?? 0;
 
       // Title generation logic (based on user message count)
       if (validatedData.role === 'user') {
         // Count only user messages
-        const allForCount = await client.query(anyApi.messages.listBySession, { sessionId: sessionId as any });
-        const userMessageCount = Array.isArray(allForCount) ? (allForCount as any[]).filter(m => m.role === 'user').length : 0;
+        const allForCount = await client.query(anyApi.messages.listBySession, { sessionId }) as ConvexMessage[];
+        const userMessageCount = Array.isArray(allForCount) ? allForCount.filter(m => m.role === 'user').length : 0;
 
         if (userMessageCount === 1) {
           // First user message: keep placeholder title; count already updated
@@ -77,8 +78,8 @@ export const POST = withValidationAndParams(
           const { getApiRequestLocale } = await import('@/i18n/request');
 
           // Fetch first few user messages for context
-          const allMsgs = await client.query(anyApi.messages.listBySession, { sessionId: sessionId as any });
-          const firstMessages = (allMsgs as any[])
+          const allMsgs = await client.query(anyApi.messages.listBySession, { sessionId }) as ConvexMessage[];
+          const firstMessages = allMsgs
             .filter(m => m.role === 'user')
             .sort((a, b) => a.timestamp - b.timestamp)
             .slice(0, 5)
@@ -94,7 +95,7 @@ export const POST = withValidationAndParams(
           const locale = getApiRequestLocale(request);
           const title = await generateChatTitle(combinedContent, locale);
 
-          await client.mutation(anyApi.sessions.update, { sessionId: sessionId as any, title });
+          await client.mutation(anyApi.sessions.update, { sessionId, title });
         } else {
           // Just increment message count
           // already incremented in messages.create
@@ -113,14 +114,14 @@ export const POST = withValidationAndParams(
       }
 
       return createSuccessResponse({
-        id: (message as any)._id as string,
+        id: message._id,
         sessionId,
         role: validatedData.role,
         content: validatedData.content,
         modelUsed: validatedData.modelUsed,
         metadata: sanitizedMetadata,
-        timestamp: new Date((message as any).timestamp),
-        createdAt: new Date((message as any).createdAt),
+        timestamp: new Date(message.timestamp),
+        createdAt: new Date(message.createdAt),
         messageCount,
       }, { requestId: context.requestId });
     } catch (error) {
@@ -145,7 +146,7 @@ export const GET = withAuth(
         const limit = parsed.success ? (parsed.data.limit ?? 50) : 50;
 
         const client = getConvexHttpClient();
-        const all = await client.query(anyApi.messages.listBySession, { sessionId: sessionId as any });
+        const all = await client.query(anyApi.messages.listBySession, { sessionId }) as ConvexMessage[];
         const total = Array.isArray(all) ? all.length : 0;
 
         const useCache = env.MESSAGES_CACHE_ENABLED;
@@ -161,14 +162,14 @@ export const GET = withAuth(
         }
 
         if (!items) {
-          const ordered = (all as any[]).sort((a, b) => a.timestamp - b.timestamp);
+          const ordered = all.sort((a, b) => a.timestamp - b.timestamp);
           const pageItems = ordered.slice((page - 1) * limit, (page - 1) * limit + limit);
           const decrypted = safeDecryptMessages(
             pageItems.map(m => ({ role: m.role, content: m.content, timestamp: new Date(m.timestamp) }))
           );
           items = pageItems.map((m, i) => ({
-            id: m._id as string,
-            sessionId: m.sessionId as string,
+            id: m._id,
+            sessionId: m.sessionId,
             role: (decrypted[i]?.role ?? m.role) as 'user' | 'assistant',
             content: decrypted[i]?.content ?? '',
             modelUsed: m.modelUsed ?? undefined,
