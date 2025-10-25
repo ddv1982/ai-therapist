@@ -69,11 +69,9 @@ npm run setup:all
 
 This will automatically:
 - Install all dependencies
-- Set up the database
 - Install and configure Redis
 - Set up encryption
 - Create environment configuration
-- Generate Prisma client
 
 #### Option 2: Manual Setup
 
@@ -127,7 +125,7 @@ This will automatically:
 ### Core Development
 - `npm run dev` - Start development server with Turbopack on port 4000 (network accessible)
 - `npm run dev:local` - Start development server on localhost only
-- `npm run build` - Build for production (includes database setup)
+- `npm run build` - Build for production
 - `npm run start` - Start production server (network accessible)
 - `npm run lint` - Run ESLint for code quality
 - `npm run api:types` - Generate TypeScript types from OpenAPI spec (docs/api.yaml → src/types/api.generated.ts)

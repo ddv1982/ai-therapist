@@ -14,12 +14,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run lint` - Run ESLint
 - `npm run api:types` - Generate TypeScript types from OpenAPI spec at docs/api.yaml
 
-### Database Management
-- `npm run db:setup` - Initialize database and run setup script
-- `npm run db:generate` - Generate Prisma client after schema changes
-- `npm run db:push` - Push schema changes to database without migrations
-- `npm run db:migrate` - Create and apply database migrations
-- `npm run db:studio` - Open Prisma Studio database GUI
+### Database Management (Convex Backend)
+- `npm run convex:dev` - Start the Convex backend locally (used during development)
+- `npm run convex:deploy` - Deploy Convex backend to production
 
 ### Redis & Caching Commands
 - `npm run redis:setup` - Install and configure Redis for caching
@@ -52,9 +49,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test:e2e:headed` - Run E2E tests in headed mode
 
 ### Important Notes
-- Always run `npm run db:generate` after modifying `prisma/schema.prisma`
-- Use `db:push` for development, `db:migrate` for production deployments
-- The app requires SQLite database (auto-created) and Groq API key to function
+- The app uses Convex backend for data management (start with `npm run convex:dev`)
+- Database schema is defined in `/convex/schema.ts`
+- The app requires Groq API key to function
 - `npm run dev` uses Turbopack for 10x faster development bundling
 - Both `dev` and `dev:local` use the same localhost configuration with Turbopack
 - Run `npm run test` to verify all security implementations work correctly
@@ -219,9 +216,9 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 - Frontend checks `/api/env` route to detect if environment variable exists
 
 **Database Setup**
-- SQLite embedded database (no setup required)
-- Prisma handles all database operations
-- Schema supports cascading deletes for data integrity
+- Convex Backend-as-a-Service for data management
+- Schema is defined in `/convex/schema.ts` with tables for users, sessions, messages, reports, auth configs, and trusted devices
+- Data access uses repository pattern (`src/lib/repositories/`)
 - Field-level encryption for sensitive therapeutic data
 
 **Encryption Key Setup (CRITICAL for Production)**
