@@ -55,8 +55,8 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ### Prerequisites
 - Node.js 24+
-- SQLite (included)
 - Redis (for caching - auto-installed)
+- Convex (backend - runs locally during development)
 
 ### Installation
 
@@ -91,13 +91,13 @@ This will automatically:
   GROQ_API_KEY=your_groq_api_key_here
   ENCRYPTION_KEY=your_32_character_encryption_key_here
   NEXTAUTH_SECRET=your_nextauth_secret_here
-  NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:3210
-  CONVEX_URL=http://127.0.0.1:3210
-  
+  NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:6790/?d=anonymous-ai-therapist
+  CONVEX_URL=http://127.0.0.1:6790/?d=anonymous-ai-therapist
+
   # Redis Configuration
   REDIS_URL="redis://localhost:6379"
   CACHE_ENABLED="true"
-   
+
    # Local-only opts
    BYPASS_AUTH=true
    RATE_LIMIT_DISABLED=true
@@ -109,6 +109,7 @@ This will automatically:
   npm run redis:setup
   npm run convex:dev   # in a separate terminal, leave running for local backend
   ```
+   The Convex backend will automatically initialize the schema and be accessible at the URL configured above.
 
 4. **Start development**
    ```bash
@@ -131,12 +132,11 @@ This will automatically:
 - `npm run lint` - Run ESLint for code quality
 - `npm run api:types` - Generate TypeScript types from OpenAPI spec (docs/api.yaml → src/types/api.generated.ts)
 
-### Database Management
+### Database Management (Convex Backend)
 - `npm run convex:dev` - Start the Convex backend locally (used during development)
-- `npm run db:generate` - Generate Prisma client
-- `npm run db:push` - Push schema changes to database
-- `npm run db:migrate` - Create and apply migration
-- `npm run db:studio` - Open Prisma Studio for database inspection
+- `npm run convex:deploy` - Deploy Convex backend to production
+
+**Note:** Database schema is defined in `/convex/schema.ts`. When making schema changes, restart the Convex development server and it will automatically apply changes.
 
 ### Redis Caching
 - `npm run redis:setup` - Install and configure Redis
@@ -242,12 +242,16 @@ The app automatically selects the optimal model based on features:
 ```bash
 # Required
 GROQ_API_KEY="your_groq_api_key"
-NEXT_PUBLIC_CONVEX_URL="http://127.0.0.1:3210"
-CONVEX_URL="http://127.0.0.1:3210"
+NEXT_PUBLIC_CONVEX_URL="http://127.0.0.1:6790/?d=anonymous-ai-therapist"
+CONVEX_URL="http://127.0.0.1:6790/?d=anonymous-ai-therapist"
 
 # Security
 NEXTAUTH_SECRET="your_secret"
 ENCRYPTION_KEY="your_32_char_key"
+
+# Redis Caching
+REDIS_URL="redis://localhost:6379"
+CACHE_ENABLED="true"
 
 # Optional Configuration
 CHAT_INPUT_MAX_BYTES="131072"  # Request size limit (default: 128KB)
@@ -348,7 +352,7 @@ This creates `.env.local` with common variables so you can paste your keys.
 ## 📊 Testing & Quality
 
 ### Comprehensive Test Suite
-- **772+ Total Tests** with 100% pass rate
+- **922 Total Tests** across 115 test suites with 100% pass rate
 - **Security Testing** - Encryption and authentication validation
 - **Component Testing** - React Testing Library coverage
 - **API Testing** - Complete endpoint validation
@@ -501,8 +505,9 @@ Output:
 - **Next.js 15** with App Router and Turbopack
 - **TypeScript** in strict mode
 - **Tailwind CSS v4** with modularized global styles (`src/styles/`)
-- **Prisma** with SQLite database
+- **Convex** Backend-as-a-Service for data management
 - **AI SDK 5** with Groq integration
+- **Redux Toolkit** for global state management
 
 ### Domain-Driven Structure
 ```
@@ -524,11 +529,12 @@ src/
 ```
 
 ### Key Architectural Improvements
-- **Database Transactions** - All auth operations use ACID transactions
+- **Repository Pattern** - Clean data access layer for Convex operations (`src/lib/repositories/`)
 - **Circuit Breaker Pattern** - External service failure handling
 - **Request Deduplication** - Prevents race conditions from rapid user actions
 - **Storage Monitoring** - Proactive localStorage management
 - **Enhanced Error Handling** - Graceful degradation throughout the stack
+- **Redis Caching** - High-performance caching layer with TTL-based expiration
 
 ## 📄 License
 
