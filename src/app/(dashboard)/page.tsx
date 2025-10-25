@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { AuthGuard } from '@/features/auth/components/auth-guard';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,11 @@ import { ChatHeader } from '@/features/chat/components/chat-header';
 import { ChatComposer } from '@/features/chat/components/chat-composer';
 import { SystemBanner } from '@/features/chat/components/system-banner';
 import { MobileDebugInfo } from '@/components/layout/mobile-debug-info';
-import { MemoryManagementModal } from '@/features/therapy/memory/memory-management-modal';
+
+// Lazy-load MemoryManagementModal to reduce initial bundle size
+const MemoryManagementModal = dynamic(() =>
+  import('@/features/therapy/memory/memory-management-modal').then((mod) => ({ default: mod.MemoryManagementModal }))
+);
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { useInputFooterHeight } from '@/hooks/use-input-footer-height';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
