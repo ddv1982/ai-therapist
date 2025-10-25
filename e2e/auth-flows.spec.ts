@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 /**
  * Authentication E2E Tests
@@ -189,9 +189,8 @@ test.describe('Authentication Flows', () => {
         // Form might validate on blur/submit
         await page.waitForTimeout(100);
 
-        // Check if validation error appears
-        const errorMsg = await page.$('[role="alert"], .error');
-        // May or may not have visible error, depends on implementation
+        // Check if validation error appears (may or may not have visible error)
+        await page.$('[role="alert"], .error');
       }
     });
 
@@ -219,7 +218,7 @@ test.describe('Authentication Flows', () => {
       expect(localStorage).not.toContain('secret');
     });
 
-    test('5.5: API auth endpoints use HTTPS recommended', async ({ request }) => {
+    test('5.5: API auth endpoints use HTTPS recommended', async () => {
       // This test documents that HTTPS should be used in production
       // On localhost, HTTP is acceptable for testing
 
@@ -358,9 +357,8 @@ test.describe('Authentication Flows', () => {
         // Wait for potential error message
         await page.waitForTimeout(300);
 
-        // Check for aria-live or role=alert
-        const alerts = await page.$$('[role="alert"], [aria-live]');
-        // May or may not have alerts depending on validation timing
+        // Check for aria-live or role=alert (may or may not have alerts depending on validation timing)
+        await page.$$('[role="alert"], [aria-live]');
       }
     });
   });

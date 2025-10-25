@@ -17,9 +17,9 @@ const compat = new FlatCompat({
 /** @type {import('eslint').Linter.Config[]} */
 /** @type {import("eslint").Linter.Config[]} */
 export default [...compat.extends("next/core-web-vitals", "next/typescript"), {
-  ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "dist", "coverage" ]
+  ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "dist", "coverage", "convex/_generated/**", "graphite-demo/**", ".eslintignore" ]
 }, {
-  files: ["__tests__/**/*.{ts,tsx}", "e2e/**/*.{ts,tsx}", "scripts/**/*.js"],
+  files: ["__tests__/**/*.{ts,tsx}", "e2e/**/*.{ts,tsx}", "convex/**/*.ts", "scripts/**/*.js"],
   rules: {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-require-imports": "off",

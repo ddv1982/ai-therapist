@@ -8,11 +8,6 @@
 import { jest } from '@jest/globals';
 
 // Mock the Convex HTTP client before importing totp-service
-const mockClient = {
-  query: jest.fn(),
-  mutation: jest.fn(),
-} as any;
-
 jest.mock('@/lib/convex/httpClient', () => {
   const getAuthConfigRef = Symbol('auth.getAuthConfig');
   const upsertAuthConfigRef = Symbol('auth.upsertAuthConfig');
@@ -21,7 +16,7 @@ jest.mock('@/lib/convex/httpClient', () => {
   let authConfigState: any = null;
 
   const client = {
-    query: jest.fn(async (ref: symbol, args?: any) => {
+    query: jest.fn(async (ref: symbol, _args?: any) => {
       if (ref === getAuthConfigRef) {
         return authConfigState;
       }

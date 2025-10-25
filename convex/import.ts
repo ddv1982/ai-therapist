@@ -3,14 +3,95 @@ import { v } from 'convex/values';
 import { internal } from './_generated/api';
 import type { TableNames } from './_generated/dataModel';
 
+interface UserRecord {
+  id: string;
+  email: string;
+  name?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface SessionRecord {
+  id: string;
+  userId: string;
+  title: string;
+  messageCount?: number;
+  startedAt: string;
+  endedAt?: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface MessageRecord {
+  id: string;
+  sessionId: string;
+  role: string;
+  content: string;
+  modelUsed?: string;
+  metadata?: Record<string, unknown>;
+  timestamp: string;
+  createdAt: string;
+}
+
+interface SessionReportRecord {
+  id: string;
+  sessionId: string;
+  reportContent: string;
+  keyPoints?: string[];
+  therapeuticInsights?: Record<string, unknown>;
+  patternsIdentified?: string[];
+  actionItems?: string[];
+  moodAssessment?: string;
+  progressNotes?: string;
+  cognitiveDistortions?: Record<string, unknown>;
+  schemaAnalysis?: Record<string, unknown>;
+  therapeuticFrameworks?: Record<string, unknown>;
+  recommendations?: string[];
+  analysisConfidence?: number;
+  analysisVersion?: number;
+  createdAt: string;
+}
+
+interface AuthConfigRecord {
+  id: string;
+  secret: string;
+  backupCodes: string[];
+  isSetup: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface TrustedDeviceRecord {
+  id: string;
+  deviceId: string;
+  name: string;
+  fingerprint: string;
+  ipAddress: string;
+  userAgent: string;
+  lastSeen: string;
+  trustedAt: string;
+  createdAt: string;
+}
+
+interface AuthSessionRecord {
+  id: string;
+  sessionToken: string;
+  deviceId: string;
+  ipAddress: string;
+  expiresAt: string;
+  lastActivity: string;
+  createdAt: string;
+}
+
 type ExportShape = {
-  users: Array<any>;
-  sessions: Array<any>;
-  messages: Array<any>;
-  sessionReports: Array<any>;
-  authConfigs: Array<any>;
-  trustedDevices: Array<any>;
-  authSessions: Array<any>;
+  users: UserRecord[];
+  sessions: SessionRecord[];
+  messages: MessageRecord[];
+  sessionReports: SessionReportRecord[];
+  authConfigs: AuthConfigRecord[];
+  trustedDevices: TrustedDeviceRecord[];
+  authSessions: AuthSessionRecord[];
 };
 
 export const importAll = action({

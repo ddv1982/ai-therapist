@@ -56,7 +56,7 @@ test.describe('Critical Application Flows', () => {
     expect(passwordInput).toBeTruthy();
   });
 
-  test('2.3: Invalid credentials rejected', async ({ page, request }) => {
+  test('2.3: Invalid credentials rejected', async ({ request }) => {
     const response = await request.post(`${BASE_URL}/api/auth/verify`, {
       data: {
         code: '000000' // Invalid TOTP code
@@ -95,7 +95,7 @@ test.describe('Critical Application Flows', () => {
       // Try to find chat input (textarea or input)
       const chatInput = await page.$('[role="textbox"], textarea, input[type="text"]');
       expect(chatInput).toBeTruthy();
-    } catch (e) {
+    } catch {
       // If not found, we expect redirect to auth - that's ok
       const url = page.url();
       expect(url).toMatch(/auth|setup/i);
@@ -223,14 +223,13 @@ test.describe('Critical Application Flows', () => {
   test('6.1: Rate limiting header present', async ({ request }) => {
     const response = await request.get(`${BASE_URL}/api/health`);
 
-    // Check for rate limit headers
+    // Check for rate limit headers (may or may not have rate limit header)
     const headers = response.headers();
-    const hasRateLimitHeader =
-      'x-ratelimit-limit' in headers ||
+    void ('x-ratelimit-limit' in headers ||
       'ratelimit-limit' in headers ||
-      'x-rate-limit-limit' in headers;
+      'x-rate-limit-limit' in headers);
 
-    // May or may not have rate limit header, but shouldn't crash
+    // Shouldn't crash
     expect(response.ok()).toBeTruthy();
   });
 

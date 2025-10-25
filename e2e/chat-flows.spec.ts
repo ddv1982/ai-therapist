@@ -12,9 +12,7 @@ test.describe('Chat Functionality', () => {
     test('1.1: Chat page loads with correct layout', async ({ page }) => {
       await page.goto('/');
 
-      // May redirect to auth, which is fine
-      const url = page.url();
-
+      // May redirect to auth, which is fine (page.url() available but not needed)
       // Should load some page
       expect(page).toBeTruthy();
     });
@@ -168,7 +166,7 @@ test.describe('Chat Functionality', () => {
     test('3.3: Response doesn\'t timeout on valid request', async ({ request }) => {
       const startTime = Date.now();
 
-      const response = await request.post(`${BASE_URL}/api/chat`, {
+      await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: 'Test',
           sessionId: 'test-session-1'
@@ -424,10 +422,9 @@ test.describe('Chat Functionality', () => {
 
       await page.goto('/');
 
-      // Look for loading spinner
-      const spinner = await page.$('[role="status"], .loading, .spinner');
+      // Look for loading spinner (may or may not be visible initially)
+      await page.$('[role="status"], .loading, .spinner');
 
-      // May or may not be visible initially
       // Just verify page doesn't crash
       expect(page).toBeTruthy();
     });
