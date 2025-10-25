@@ -211,8 +211,8 @@ export class PerformanceTimer {
  */
 export function trackApiLatency(
   endpoint: string
-): (handler: Function) => (request: Request, ...args: unknown[]) => Promise<unknown> {
-  return (handler: Function) => {
+): (handler: (request: Request, ...args: unknown[]) => Promise<Response>) => (request: Request, ...args: unknown[]) => Promise<unknown> {
+  return (handler: (request: Request, ...args: unknown[]) => Promise<Response>) => {
     return async (request: Request, ...args: unknown[]) => {
       const timer = new PerformanceTimer(endpoint);
 
@@ -294,7 +294,7 @@ export interface PerformanceStats {
 export function getPerformanceStats(
   endpoint?: string,
   minutesWindow = 5
-): PerformanceStats | PerformanceStats[] {
+): PerformanceStats[] {
   const metrics = buffer.getMetricsSince(minutesWindow)
     .filter(m => m.type === MetricType.API_LATENCY && (!endpoint || m.endpoint === endpoint));
 
@@ -303,7 +303,7 @@ export function getPerformanceStats(
   }
 
   if (endpoint) {
-    return calculateEndpointStats(endpoint, metrics);
+    return [calculateEndpointStats(endpoint, metrics)];
   }
 
   // Group by endpoint
