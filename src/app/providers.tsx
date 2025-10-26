@@ -4,6 +4,7 @@ import React from 'react';
 import { ReduxProvider } from '@/providers/redux-provider';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { ToastProvider } from '@/components/ui/toast';
+import { Toaster } from '@/components/ui/sonner';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { publicEnv } from '@/config/env.public';
@@ -19,6 +20,7 @@ export function RootProviders({ children }: RootProvidersProps) {
     <ReduxProvider>
       <ThemeProvider>
         <ToastProvider>
+          <Toaster />
           <ErrorBoundary>
             {client ? (
               <ConvexProvider client={client}>{children}</ConvexProvider>
