@@ -24,7 +24,7 @@ import {
   type CBTFormData,
   type CBTDraft,
   cbtFormSchema,
-} from '@/store/slices/cbtSlice';
+} from '@/store/slices/cbt-slice';
 import { type CBTStepPayloadMap, type CBTFlowState, TOTAL_CBT_STEPS } from '@/features/therapy/cbt/flow';
 
 import type {

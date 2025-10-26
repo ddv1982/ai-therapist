@@ -3,10 +3,10 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 import { persistStore, persistReducer } from 'redux-persist';
 import createWebStorage from 'redux-persist/lib/storage/createWebStorage';
 
-import chatSlice from './slices/chatSlice';
-import sessionsSlice from './slices/sessionsSlice';
-import cbtSlice from './slices/cbtSlice';
-import { sessionsApi } from './slices/sessionsApi';
+import chatSlice from './slices/chat-slice';
+import sessionsSlice from './slices/sessions-slice';
+import cbtSlice from './slices/cbt-slice';
+import { sessionsApi } from './slices/sessions-api';
 import { sessionHeartbeatMiddleware } from './middleware/session-heartbeat-middleware';
 
 const rootReducer = combineReducers({

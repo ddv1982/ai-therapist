@@ -21,7 +21,7 @@ import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { useInputFooterHeight } from '@/hooks/use-input-footer-height';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { selectChatSettings } from '@/store/selectors';
-import { updateSettings } from '@/store/slices/chatSlice';
+import { updateSettings } from '@/store/slices/chat-slice';
 import { useChatController } from '@/hooks';
 import { ObsessionsCompulsionsData } from '@/types/therapy';
 import { LOCAL_MODEL_ID, DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';

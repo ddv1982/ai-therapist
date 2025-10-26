@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readdir, stat } from 'node:fs/promises';
-import { join, basename } from 'node:path';
+import { join } from 'node:path';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const SRC = join(ROOT, 'src');

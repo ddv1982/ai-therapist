@@ -2,8 +2,8 @@
 
 import { useCallback } from 'react';
 import { useAppDispatch } from '@/store/hooks';
-import { setCurrentSession as setCurrentSessionAction } from '@/store/slices/sessionsSlice';
-import { useSetCurrentSessionMutation } from '@/store/slices/sessionsApi';
+import { setCurrentSession as setCurrentSessionAction } from '@/store/slices/sessions-slice';
+import { useSetCurrentSessionMutation } from '@/store/slices/sessions-api';
 
 /**
  * Unified session selection logic used across sidebar, command palette, etc.

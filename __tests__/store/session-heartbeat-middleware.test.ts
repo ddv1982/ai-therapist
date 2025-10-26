@@ -3,7 +3,7 @@ let sessionHeartbeatMiddleware: (api: MiddlewareAPI) => (next: (action: AnyActio
 let cleanupHeartbeat: () => void;
 
 // Mock sessionsApi with minimal surface used by middleware
-jest.mock('@/store/slices/sessionsApi', () => {
+jest.mock('@/store/slices/sessions-api', () => {
   const initiate = jest.fn((_arg?: unknown, _opts?: unknown) => ({ type: 'sessionsApi/executeQuery/pending' }));
   return {
     sessionsApi: {
@@ -14,7 +14,7 @@ jest.mock('@/store/slices/sessionsApi', () => {
   };
 });
 
-const { sessionsApi } = require('@/store/slices/sessionsApi');
+const { sessionsApi } = require('@/store/slices/sessions-api');
 
 describe('sessionHeartbeatMiddleware', () => {
   beforeEach(() => {

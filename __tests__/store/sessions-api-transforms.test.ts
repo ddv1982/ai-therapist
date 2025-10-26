@@ -4,7 +4,7 @@ import {
   transformDeleteSessionResponse,
   transformGetCurrentSessionResponse,
   transformSetCurrentSessionResponse,
-} from '@/store/slices/sessionsApi';
+} from '@/store/slices/sessions-api';
 
 describe('sessionsApi transforms', () => {
   it('fetchSessions accepts wrapped and plain arrays', () => {

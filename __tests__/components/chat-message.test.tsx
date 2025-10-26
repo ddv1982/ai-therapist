@@ -3,9 +3,9 @@ import { render, screen } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
 import { Message } from '@/features/chat/messages'
-import chatSlice from '@/store/slices/chatSlice'
-import sessionsSlice from '@/store/slices/sessionsSlice'
-import cbtSlice from '@/store/slices/cbtSlice'
+import chatSlice from '@/store/slices/chat-slice'
+import sessionsSlice from '@/store/slices/sessions-slice'
+import cbtSlice from '@/store/slices/cbt-slice'
 
 // Mock fetch in beforeEach to ensure it's properly set up
 beforeEach(() => {

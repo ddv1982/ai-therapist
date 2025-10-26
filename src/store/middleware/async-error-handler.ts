@@ -1,6 +1,6 @@
 import { AnyAction, ThunkDispatch } from '@reduxjs/toolkit';
-import { setError as setSessionError } from '../slices/sessionsSlice';
-import { setError as setChatError } from '../slices/chatSlice';
+import { setError as setSessionError } from '../slices/sessions-slice';
+import { setError as setChatError } from '../slices/chat-slice';
 import { logger } from '@/lib/utils/logger';
 import { isProduction } from '@/config/env.public';
 

@@ -3,8 +3,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Loader2, Save } from 'lucide-react';
 import type { BuilderState, ObsessionFormState, CompulsionFormState } from './types';
-import { ObsessionForm } from './ObsessionForm';
-import { CompulsionForm } from './CompulsionForm';
+import { ObsessionForm } from './obsession-form';
+import { CompulsionForm } from './compulsion-form';
 
 interface ObsessionBuilderProps {
   builderState: BuilderState;

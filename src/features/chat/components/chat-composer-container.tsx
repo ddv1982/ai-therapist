@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { ChatComposer } from './chat-composer';
-import { useSendMessageMutation } from '@/store/slices/chatApi';
+import { useSendMessageMutation } from '@/store/slices/chat-api';
 import { useToast } from '@/components/ui/toast';
 import { logger } from '@/lib/utils/logger';
 import { useTranslations } from 'next-intl';

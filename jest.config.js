@@ -44,7 +44,7 @@ const customJestConfig = {
     '!src/lib/auth/device-fingerprint.ts',
     '!src/lib/therapy/index.ts',
     '!src/store/index.ts',
-    '!src/store/slices/chatApi.ts',
+    '!src/store/slices/chat-api.ts',
     '!src/lib/utils/cbt-draft-utils.ts',
     '!src/lib/cbt/export-utils.ts',
     '!**/*.d.ts',

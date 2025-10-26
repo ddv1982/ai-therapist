@@ -15,10 +15,10 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setCurrentSession } from '@/store/slices/sessionsSlice';
-import { useFetchSessionsQuery, SessionData } from '@/store/slices/sessionsApi';
-import { clearMessages } from '@/store/slices/chatSlice';
-import { createDraft } from '@/store/slices/cbtSlice';
+import { setCurrentSession } from '@/store/slices/sessions-slice';
+import { useFetchSessionsQuery, SessionData } from '@/store/slices/sessions-api';
+import { clearMessages } from '@/store/slices/chat-slice';
+import { createDraft } from '@/store/slices/cbt-slice';
 import { MessageSquare, Brain, Plus, Settings, Moon, Search, Clock } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import {useTranslations} from 'next-intl';

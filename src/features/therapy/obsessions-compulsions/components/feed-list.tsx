@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import type { ObsessionsCompulsionsData } from '@/types/therapy';
-import { MetricTile } from './MetricTile';
+import { MetricTile } from './metric-tile';
 
 interface FeedListProps {
   data: ObsessionsCompulsionsData;

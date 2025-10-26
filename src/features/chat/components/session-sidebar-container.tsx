@@ -7,9 +7,9 @@ import {
   useDeleteSessionMutation,
   useGetCurrentSessionQuery,
   SessionData
-} from '@/store/slices/sessionsApi';
+} from '@/store/slices/sessions-api';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setCurrentSession as setCurrentSessionAction } from '@/store/slices/sessionsSlice';
+import { setCurrentSession as setCurrentSessionAction } from '@/store/slices/sessions-slice';
 import { useToast } from '@/components/ui/toast';
 import { logger } from '@/lib/utils/logger';
 import { useSelectSession } from '@/hooks';
