@@ -98,7 +98,7 @@ dev: ## Start dev (Convex + Next; Ctrl+C cleanly stops both)
 	  npm run dev; \
 	'
 
-start: redis-up encryption-ok ## Start prod server (db setup runs via npm script)
+start: redis-up encryption-ok ## Start prod server (ensure convex:dev is running)
 	@npm run start
 
 build: install ## Build for production

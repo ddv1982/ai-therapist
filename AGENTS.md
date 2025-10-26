@@ -4,7 +4,7 @@
 Routes and layouts live in `src/app`; feature logic sits in `src/features`, `src/components`, `src/lib`, and `src/ai`. State, middleware, and selectors are in `src/store` with mirrored coverage in `__tests__/store`. Persisted assets stay in `public/`, Convex functions/schema live in `convex/`, automation in `scripts/`, and API specs or docs in `docs/` (`docs/api.yaml` drives generated types).
 
 ## Build, Test, and Development Commands
-- `npm run setup:all` — bootstrap database, Redis, encryption (or `make setup`).
+- `npm run setup:all` — bootstrap Redis, encryption (or `make setup`).
 - `npm run dev` / `npm run dev:local` — dev server on port 4000 (network vs localhost).
 - `npm run build` + `npm run start` — production build and launch.
 - `npm run lint` & `npx tsc --noEmit` — linting and TypeScript contracts.
