@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, getAuth } from '@clerk/nextjs/server';
 import type { NextRequest } from 'next/server';
 
 export interface AuthValidationResult {
@@ -13,11 +13,11 @@ export interface AuthValidationResult {
  * Can be called with or without a request parameter (request param is ignored for Clerk)
  * Clerk's auth() function works in route handlers
  */
-export async function validateApiAuth(_request?: NextRequest): Promise<AuthValidationResult> {
+export async function validateApiAuth(request?: NextRequest): Promise<AuthValidationResult> {
   try {
-    // Get the current user from Clerk
-    // This works in route handlers via the clerkMiddleware
-    const { userId } = await auth();
+    // Prefer request-bound auth (more reliable in route handlers),
+    // fall back to global auth() when request is unavailable
+    const userId = request ? getAuth(request).userId : (await auth()).userId;
 
     if (!userId) {
       return {
@@ -29,7 +29,7 @@ export async function validateApiAuth(_request?: NextRequest): Promise<AuthValid
     return {
       isValid: true,
       clerkId: userId,
-      userId: userId, // For backward compatibility
+      userId: userId, // Backwards-compat field name
     };
   } catch (error) {
     return {
