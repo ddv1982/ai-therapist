@@ -54,7 +54,7 @@
     "postcss.config.js",
     "global.d.ts",
     "next-env.d.ts",
-    "middleware.ts",
+    "src/middleware.ts",
     "next.config.js",
     "tailwind.config.js",
     "eslint.config.js",

@@ -1,11 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { getClientIPFromRequest } from '@/lib/api/middleware/request-utils';
 import createMiddleware from 'next-intl/middleware';
 import { locales, defaultLocale } from '@/i18n/config';
-
-// Use shared helper for consistent IP extraction across the app
-const getClientIP = getClientIPFromRequest;
 
 const handleI18n = createMiddleware({
   locales,
@@ -50,9 +46,6 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
       console.warn('Auth protection error, allowing request through:', error);
     }
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _clientIP = getClientIP(request);
 
   // Skip API routes - CSRF protection handled at individual route level
   // Webhooks are handled separately
