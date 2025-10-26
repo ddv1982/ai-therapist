@@ -167,28 +167,84 @@ This will automatically:
 - `curl http://localhost:4000/api/health` - Get comprehensive system health status
 - Monitor circuit breaker status, storage usage, and database performance
 
-### Makefile workflow (optional)
+### Makefile Workflow
 
-The repository includes a `Makefile` that wraps common npm scripts and setup tasks. Running `make` with no arguments shows a full, self-documented help screen.
+The repository includes a comprehensive `Makefile` that wraps common npm scripts and setup tasks with intelligent dependency management. Running `make` with no arguments shows the help screen.
 
-Common commands:
+#### Quick Start Commands
 
-- **Help**: `make` or `make help`
-- **Intelligent setup + dev**: `make setup`
-- **Dev (after setup)**: `make dev`
-- **Build / Start (prod)**: `make build && make start`
-- **Diagnostics**: `make doctor`
-- **Tests**: `make test` (Jest), `make e2e`, `make e2e-ui`, `make e2e-debug` (Playwright)
-- **Lint/Type checks**: `make lint`, `make tsc-check`
-- **Convex helpers**: `make convex-dev`, `make convex-deploy`, `make convex-health`, `make convex-stop`
-- **Redis helpers**: `make redis-up`, `make redis-stop`
-- **Auth (TOTP)**: `make auth-setup`, `make auth-reset`, `make auth-status`, `make auth-health`
-- **Cleanup**: `make clean` (artifacts), `make clean-all` (also removes node_modules and local DB)
+| Command | Purpose |
+|---------|---------|
+| `make setup` | Complete setup + start dev (installs deps, Redis, encryption, Convex, Next.js) |
+| `make dev` | Start development server (Convex + Next.js) |
+| `make build` | Build for production |
+| `make start` | Start production server |
 
-Notes:
+#### Development & Testing
 
-- Targets are "intelligent" and will auto-install dependencies, create `.env.local`, start Redis, launch Convex, validate encryption, and generate OpenAPI types where needed.
-- Override the app port when useful: `APP_PORT=5000 make setup`
+| Command | Purpose |
+|---------|---------|
+| `make lint` | Run ESLint + TypeScript type checking |
+| `make fix` | Auto-fix linting issues |
+| `make tsc-check` | TypeScript type-check only |
+| `make test` | Run Jest unit/integration tests |
+| `make test-watch` | Run tests in watch mode |
+| `make coverage` | Generate test coverage report |
+| `make e2e` | Run Playwright E2E tests |
+| `make e2e-ui` | Run E2E tests with Playwright UI |
+| `make e2e-debug` | Debug E2E tests |
+| `make qa-smoke` | Quick QA (lint + typecheck + jest) |
+| `make qa-full` | Full QA (smoke + coverage + e2e) |
+
+#### Database & Backend
+
+| Command | Purpose |
+|---------|---------|
+| `make convex-dev` | Start Convex backend locally |
+| `make convex-deploy` | Deploy Convex to production |
+| `make convex-stop` | Stop local Convex server |
+| `make convex-health` | Check Convex health endpoint |
+
+#### Infrastructure & Configuration
+
+| Command | Purpose |
+|---------|---------|
+| `make redis-up` | Install/start Redis server |
+| `make redis-stop` | Stop Redis server |
+| `make env` | Initialize `.env.local` with defaults |
+| `make encryption` | Set up encryption key |
+| `make api-types` | Generate TypeScript types from OpenAPI spec |
+| `make playwright` | Install Playwright browsers for E2E |
+
+#### Authentication (TOTP)
+
+| Command | Purpose |
+|---------|---------|
+| `make auth-setup` | Set up TOTP (interactive with QR code) |
+| `make auth-reset` | Reset TOTP configuration |
+| `make auth-status` | Check TOTP status |
+| `make auth-health` | Run TOTP health diagnostics |
+
+#### Diagnostics & Cleanup
+
+| Command | Purpose |
+|---------|---------|
+| `make doctor` | Quick health check (Node, NPM, Redis, env, encryption, API types, health endpoint) |
+| `make clean` | Clean build artifacts |
+| `make clean-all` | Clean everything (including node_modules) |
+| `make next-stop` | Stop running Next.js dev server |
+
+#### Advanced Options
+
+- **Override app port**: `APP_PORT=5000 make setup` (run on port 5000 instead of 4000)
+- **Show all available targets**: `make help`
+
+#### Key Features
+
+- **Intelligent targets** automatically install dependencies, create `.env.local`, start Redis, launch Convex, validate encryption, and generate OpenAPI types
+- **Clean shutdown**: `Ctrl+C` properly stops both Convex and Next.js when using `make setup` or `make dev`
+- **Reusable building blocks**: Compose complex workflows by depending on simpler targets
+- **Verification checks**: Health diagnostics at each step
 
 ## 🧠 AI Model System
 
