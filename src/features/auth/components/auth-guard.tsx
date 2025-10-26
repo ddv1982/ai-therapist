@@ -1,85 +1,34 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { checkSessionStatus } from '@/store/slices/authSlice';
+import { useAuth } from '@clerk/nextjs';
 import { therapeuticInteractive } from '@/lib/ui/design-tokens';
-import { logger } from '@/lib/utils/logger';
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
+/**
+ * Auth Guard component using Clerk
+ * Middleware handles authentication, this provides a UI fallback
+ */
 export function AuthGuard({ children }: AuthGuardProps) {
-  const dispatch = useAppDispatch();
-  const { isAuthenticated, needsSetup, needsVerification, isLoading } = useAppSelector(s => s.auth);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { isLoaded, userId } = useAuth();
 
-  // Kick off a session check on mount
-  useEffect(() => {
-    dispatch(checkSessionStatus());
-  }, [dispatch]);
-
-  // Combined effect: handle loading timeout and auth redirects
-  useEffect(() => {
-    // Clear any existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    // Handle loading timeout
-    if (isLoading) {
-      timeoutRef.current = setTimeout(() => {
-        logger.warn('Auth loading timed out, redirecting to setup', {
-          component: 'AuthGuard',
-          operation: 'loadingTimeout',
-          timeout: 15000
-        });
-        setLoadingTimeout(true);
-      }, 15000); // 15 second timeout for loading
-      return;
-    }
-
-    // Reset timeout flag when loading completes
-    setLoadingTimeout(false);
-
-    // Handle auth redirects when loading is complete
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-
-    if ((needsSetup || loadingTimeout) && currentPath !== '/auth/setup') {
-      window.location.href = '/auth/setup';
-      return;
-    }
-
-    if (needsVerification && currentPath !== '/auth/verify') {
-      window.location.href = '/auth/verify';
-      return;
-    }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading, needsSetup, needsVerification, loadingTimeout]);
-
-  if (isLoading && !loadingTimeout) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Checking authentication...</p>
-          {/* Show timeout warning after 10 seconds */}
           <p className="text-muted-foreground text-sm mt-2 opacity-60">
-            If this takes too long, you&apos;ll be redirected automatically
+            If this takes too long, please refresh the page
           </p>
         </div>
       </div>
     );
   }
 
-  if (!isAuthenticated) {
+  if (!userId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -89,7 +38,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
             </svg>
           </div>
           <h1 className="text-xl font-semibold mb-2">Authentication Required</h1>
-          <p className="text-muted-foreground">Redirecting to authentication...</p>
+          <p className="text-muted-foreground">Please sign in to continue</p>
         </div>
       </div>
     );

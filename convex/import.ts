@@ -246,9 +246,6 @@ const allowedTables = [
   'sessions',
   'messages',
   'sessionReports',
-  'authConfigs',
-  'trustedDevices',
-  'authSessions',
 ] as const satisfies readonly TableNames[];
 
 type AllowedTable = (typeof allowedTables)[number];

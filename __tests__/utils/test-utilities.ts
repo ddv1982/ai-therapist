@@ -905,7 +905,7 @@ export class TestSetupUtils {
       
       if (mocks.auth) {
         const authMocks = MockFactory.createAuthMocks();
-        jest.mock('@/lib/auth/totp-service', () => authMocks.totpService);
+        // Note: TOTP service removed, using Clerk for authentication instead
         jest.mock('@/lib/auth/device-fingerprint', () => authMocks.deviceFingerprint);
         jest.mock('@/lib/api/api-auth', () => authMocks.apiAuth);
       }

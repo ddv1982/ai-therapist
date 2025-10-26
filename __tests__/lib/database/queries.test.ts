@@ -51,9 +51,10 @@ function buildUserDoc(): Doc<'users'> {
   return {
     _id: 'user_1' as Id<'users'>,
     _creationTime: Date.now(),
-    legacyId: 'legacy-user',
+    clerkId: 'clerk_test_user',
     email: 'user@example.com',
     name: 'User',
+    legacyId: 'legacy-user',
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };

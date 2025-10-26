@@ -43,7 +43,6 @@ const customJestConfig = {
     '!src/lib/chat/title-generator.ts',
     '!src/lib/auth/device-fingerprint.ts',
     '!src/lib/therapy/index.ts',
-    '!src/store/slices/authSlice.ts',
     '!src/store/index.ts',
     '!src/store/slices/chatApi.ts',
     '!src/lib/utils/cbt-draft-utils.ts',
@@ -76,7 +75,7 @@ const customJestConfig = {
     '^next-intl$': '<rootDir>/__tests__/__mocks__/next-intl.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(jspdf|canvas|@ai-sdk|ai|streamdown|react-markdown|remark-gfm|vfile|unist-util-.*|bail|is-plain-obj|uuid))'
+    'node_modules/(?!(jspdf|canvas|@ai-sdk|ai|streamdown|react-markdown|remark-gfm|vfile|unist-util-.*|bail|is-plain-obj|uuid|@clerk))'
   ],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   globals: {

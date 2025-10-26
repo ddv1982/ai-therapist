@@ -6,7 +6,6 @@ import createWebStorage from 'redux-persist/lib/storage/createWebStorage';
 import chatSlice from './slices/chatSlice';
 import sessionsSlice from './slices/sessionsSlice';
 import cbtSlice from './slices/cbtSlice';
-import authSlice from './slices/authSlice';
 import { sessionsApi } from './slices/sessionsApi';
 import { sessionHeartbeatMiddleware } from './middleware/session-heartbeat-middleware';
 
@@ -14,7 +13,6 @@ const rootReducer = combineReducers({
   chat: chatSlice,
   sessions: sessionsSlice,
   cbt: cbtSlice,
-  auth: authSlice,
   [sessionsApi.reducerPath]: sessionsApi.reducer,
 });
 

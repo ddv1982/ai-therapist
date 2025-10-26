@@ -21,7 +21,6 @@
     "encryption:setup": "node scripts/setup-encryption.js setup",
     "encryption:validate": "node scripts/setup-encryption.js validate",
     "env:init": "node scripts/setup-env-local.js",
-    "totp": "npx tsx scripts/totp-manager.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -35,6 +34,8 @@
   "dependencies": {
     "@ai-sdk/groq": "^2.0.24",
     "@ai-sdk/react": "^2.0.79",
+    "@clerk/nextjs": "^6.34.0",
+    "@clerk/themes": "^2.4.29",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.2",
@@ -61,6 +62,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cmdk": "^1.1.1",
+    "convex": "^1.15.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "framer-motion": "^12.23.24",
@@ -83,12 +85,12 @@
     "sonner": "^2.0.7",
     "speakeasy": "^2.0.0",
     "streamdown": "^1.4.0",
+    "svix": "^1.80.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "ua-parser-js": "^2.0.4",
     "uuid": "^12.0.0",
-    "zod": "^4.0.17",
-    "convex": "^1.15.0"
+    "zod": "^4.0.17"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -116,6 +118,5 @@
     "tsx": "^4.20.5",
     "typescript": "^5.6.0",
     "web-streams-polyfill": "^4.2.0"
-  },
-  "optionalDependencies": {}
+  }
 }

@@ -41,6 +41,15 @@ jest.mock('uuid', () => ({
   v4: jest.fn(() => 'mock-uuid-1234'),
 }));
 
+// Mock Clerk modules for api-auth.ts
+jest.mock('@clerk/nextjs/server', () => ({
+  getAuth: jest.fn(() => Promise.resolve({
+    userId: 'test-user-id',
+    sessionId: 'test-session-id',
+    getToken: jest.fn(),
+  })),
+}));
+
 // Ensure X-Request-Id exists in tests for API middleware
 if (typeof global.Headers !== 'undefined') {
   const OriginalHeaders = global.Headers;

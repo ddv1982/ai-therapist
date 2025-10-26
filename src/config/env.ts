@@ -74,10 +74,15 @@ const serverEnvSchema = z.object({
   NODE_ENV: nodeEnvSchema.default(envDefaults.NODE_ENV),
   PORT: coerceNumber(envDefaults.PORT, { min: 1 }),
 
-  NEXTAUTH_SECRET: z
+  // Clerk Authentication (will throw at runtime if not configured)
+  CLERK_SECRET_KEY: z
     .string()
-    .min(32, 'NEXTAUTH_SECRET must be at least 32 characters'),
-  NEXTAUTH_URL: optionalUrl,
+    .optional(),
+  CLERK_WEBHOOK_SECRET: z
+    .string()
+    .optional(),
+
+  // Encryption for therapeutic data
   ENCRYPTION_KEY: z
     .string()
     .min(32, 'ENCRYPTION_KEY must be at least 32 characters'),
@@ -148,8 +153,11 @@ function buildRawServerEnv(): Record<keyof ServerEnv, unknown> {
     NODE_ENV: process.env.NODE_ENV ?? envDefaults.NODE_ENV,
     PORT: process.env.PORT,
 
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    // Clerk Authentication
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
+
+    // Encryption for therapeutic data
     ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
 
     GROQ_API_KEY: process.env.GROQ_API_KEY,

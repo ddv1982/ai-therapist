@@ -39,7 +39,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Test utilities: `reloadServerEnvForTesting` / `reloadPublicEnvForTesting` keep Jest suites in sync with temporary env overrides
 
 ### Testing Commands
-- `npm run test` - Run unit tests (40 test suites, 769 tests, 100% pass rate)
+- `npm run test` - Run unit tests (108 test suites, 862 tests, 100% pass rate)
 - `npm run test:watch` - Run tests in watch mode for development
 - `npm run test:coverage` - Generate test coverage report
 - `npm run test:all` - Run all available tests (comprehensive test suite)
@@ -51,11 +51,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Important Notes
 - The app uses Convex backend for data management (start with `npm run convex:dev`)
 - Database schema is defined in `/convex/schema.ts`
-- The app requires Groq API key to function
+- The app requires Groq API key and Clerk API keys to function
 - `npm run dev` uses Turbopack for 10x faster development bundling
 - Both `dev` and `dev:local` use the same localhost configuration with Turbopack
 - Run `npm run test` to verify all security implementations work correctly
-- Target: 769 tests passing (100% pass rate) before deploying changes
+- Target: 862 tests passing (100% pass rate) before deploying changes
+- Authentication uses Clerk managed authentication service with webhook synchronization
 
 ## Architecture Overview
 
@@ -146,10 +147,10 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 - Session management with auto-generated titles and delete functionality
 
 **Security & Encryption**
-- AES-256-GCM encryption for TOTP secrets and backup codes
-- Field-level encryption for therapeutic message content
-- CSRF protection with cryptographically signed tokens
-- Enhanced device fingerprinting with multiple entropy sources
+- Clerk managed authentication (replacing custom TOTP implementation)
+- Field-level AES-256-GCM encryption for therapeutic message content
+- Webhook synchronization with Clerk for user lifecycle events
+- JWT token validation for API authentication
 - Secure token generation using crypto.getRandomValues only
 
 ### Streaming Message Diffusion System
@@ -201,10 +202,19 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 ### Environment Requirements
 
 **Required Environment Variables**
-- `DATABASE_URL` - SQLite database file path (e.g., `file:./prisma/dev.db`)
+
+*Clerk Authentication*
+- `CLERK_SECRET_KEY` - Clerk API secret key (get from Clerk dashboard)
+- `CLERK_WEBHOOK_SECRET` - Webhook signing secret from Clerk dashboard
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk publishable key for frontend (NEXT_PUBLIC prefix)
+
+*Convex Backend*
+- `CONVEX_URL` - Convex deployment URL
+- `NEXT_PUBLIC_CONVEX_URL` - Public Convex URL for frontend (NEXT_PUBLIC prefix)
+
+*AI & Encryption*
 - `GROQ_API_KEY` - Groq API key (auto-detected by frontend, hides manual input when present)
-- `NEXTAUTH_SECRET` - For authentication features
-- `ENCRYPTION_KEY` - 256-bit encryption key for therapeutic data (see setup below)
+- `ENCRYPTION_KEY` - 256-bit encryption key for therapeutic message encryption (see setup below)
 
 **Optional Environment Variables (for Email Reports)**
 - Configure your preferred email service in `/app/api/reports/send/route.ts`
@@ -215,9 +225,17 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 - If not set, users can manually enter API key in settings panel
 - Frontend checks `/api/env` route to detect if environment variable exists
 
+**Clerk Setup & Authentication**
+- User management: Sign-in/sign-up via `/sign-in` and `/sign-up` routes
+- User profile management: `/profile` route for user settings
+- Webhook synchronization: Convex receives user lifecycle events from Clerk via `POST /api/webhooks/clerk`
+- Users table in Convex includes `clerkId` field for user synchronization
+- API authentication: Uses `getAuth()` from `@clerk/nextjs/server` for route protection
+
 **Database Setup**
 - Convex Backend-as-a-Service for data management
-- Schema is defined in `/convex/schema.ts` with tables for users, sessions, messages, reports, auth configs, and trusted devices
+- Schema is defined in `/convex/schema.ts` with tables for users, sessions, messages, and reports
+- Users table has `clerkId` field linking to Clerk user IDs
 - Data access uses repository pattern (`src/lib/repositories/`)
 - Field-level encryption for sensitive therapeutic data
 
@@ -246,7 +264,6 @@ export ENCRYPTION_KEY="your-generated-key-here"
 - `npm run encryption:generate` - Generate a new secure key
 - `npm run encryption:setup` - Auto-setup for development (.env file)
 - `npm run encryption:validate <key>` - Validate a key's security
-- `npm run totp` - Complete TOTP management CLI (setup, reset, health checks)
 
 **Security Requirements:**
 - Use different keys for development, staging, and production
@@ -254,6 +271,8 @@ export ENCRYPTION_KEY="your-generated-key-here"
 - Store production keys in secure environment variables
 - Rotate keys periodically for enhanced security
 - Keep secure backups of production keys
+- Clerk credentials (secret key and webhook secret) must be kept private
+- Store Clerk credentials in environment variables, never commit to version control
 
 ## API Interface Standards & Documentation
 
@@ -328,14 +347,13 @@ export ENCRYPTION_KEY="your-generated-key-here"
 - **GET** `/api/reports/memory` - Get memory details
 - **POST** `/api/reports/memory/manage` - Manage memory
 
-**Authentication**
-- **GET** `/api/auth/setup` - Get setup status
-- **POST** `/api/auth/setup` - Complete TOTP setup
-- **POST** `/api/auth/verify` - Verify TOTP token
-- **POST** `/api/auth/session` - Create auth session
-- **DELETE** `/api/auth/session` - Logout
-- **GET** `/api/auth/devices` - List trusted devices
-- **DELETE** `/api/auth/devices/[deviceId]` - Remove device
+**Authentication (Clerk Managed)**
+- Sign-in/Sign-up flows handled via `/sign-in` and `/sign-up` routes (Clerk UI)
+- User profile management at `/profile` route (Clerk UserProfile component)
+- **POST** `/api/webhooks/clerk` - Webhook endpoint for Clerk user lifecycle events
+  - Handles: user.created, user.updated, user.deleted
+  - Synchronizes Clerk users with Convex database
+  - Requires Clerk webhook secret for verification
 
 ### Implementation Guidelines
 
