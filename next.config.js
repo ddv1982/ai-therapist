@@ -40,8 +40,8 @@ const nextConfig = {
       {
         key: 'Content-Security-Policy',
         value: isDevelopment
-          ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.groq.com ws:;"
-          : "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://api.groq.com;",
+          ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.clerk.accounts.dev https://*.clerk.com; style-src 'self' 'unsafe-inline' https://*.clerk.accounts.dev https://*.clerk.com; font-src 'self' data: https://*.clerk.accounts.dev https://*.clerk.com; img-src 'self' data: blob: https://*.clerk.accounts.dev https://*.clerk.com; connect-src 'self' https://api.groq.com https://*.clerk.accounts.dev https://*.clerk.com https://convex.cloud ws:;"
+          : "default-src 'self'; script-src 'self' https://*.clerk.accounts.dev https://*.clerk.com; style-src 'self' 'unsafe-inline' https://*.clerk.accounts.dev https://*.clerk.com; font-src 'self' data: https://*.clerk.accounts.dev https://*.clerk.com; img-src 'self' data: blob: https://*.clerk.accounts.dev https://*.clerk.com; connect-src 'self' https://api.groq.com https://*.clerk.accounts.dev https://*.clerk.com https://convex.cloud;",
       },
     ];
 

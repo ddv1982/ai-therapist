@@ -1,6 +1,8 @@
 'use client';
 
 import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { therapeuticInteractive } from '@/lib/ui/design-tokens';
 
 interface AuthGuardProps {
@@ -13,15 +15,29 @@ interface AuthGuardProps {
  */
 export function AuthGuard({ children }: AuthGuardProps) {
   const { isLoaded, userId } = useAuth();
+  const router = useRouter();
+  const [loadTimeout, setLoadTimeout] = useState(false);
 
-  if (!isLoaded) {
+  // If Clerk takes too long to load, redirect to sign-in
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isLoaded) {
+        setLoadTimeout(true);
+        router.push('/sign-in');
+      }
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [isLoaded, router]);
+
+  if (!isLoaded || loadTimeout) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Checking authentication...</p>
           <p className="text-muted-foreground text-sm mt-2 opacity-60">
-            If this takes too long, please refresh the page
+            Redirecting to sign in...
           </p>
         </div>
       </div>

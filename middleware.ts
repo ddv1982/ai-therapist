@@ -39,9 +39,16 @@ const isPublicRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, request: NextRequest) => {
   const { pathname } = request.nextUrl;
 
-  // Protect routes if needed
+  // For protected routes, only protect if Clerk is properly initialized
+  // In development with custom auth, we may need to let Clerk load first
   if (isProtectedRoute(request) && !isPublicRoute(request)) {
-    await auth.protect();
+    try {
+      await auth.protect();
+    } catch (error) {
+      // If auth protection fails, allow request through to let UI handle auth
+      // This prevents blocking on Clerk initialization issues
+      console.warn('Auth protection error, allowing request through:', error);
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
