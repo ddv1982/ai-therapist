@@ -1,5 +1,5 @@
-import { getAuth } from '@clerk/nextjs/server';
-import { NextRequest } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+import type { NextRequest } from 'next/server';
 
 export interface AuthValidationResult {
   isValid: boolean;
@@ -10,15 +10,16 @@ export interface AuthValidationResult {
 
 /**
  * Validate authentication for API routes using Clerk
- * Clerk middleware already protects the routes, this is a fallback check
+ * Can be called with or without a request parameter (request param is ignored for Clerk)
+ * Clerk's auth() function works in route handlers
  */
-export async function validateApiAuth(request: NextRequest): Promise<AuthValidationResult> {
+export async function validateApiAuth(_request?: NextRequest): Promise<AuthValidationResult> {
   try {
-    // Clerk injects auth context via middleware
-    // This function is a fallback for explicit auth validation in API routes
-    const auth = await getAuth(request);
+    // Get the current user from Clerk
+    // This works in route handlers via the clerkMiddleware
+    const { userId } = await auth();
 
-    if (!auth.userId) {
+    if (!userId) {
       return {
         isValid: false,
         error: 'Unauthorized: No valid authentication token',
@@ -27,8 +28,8 @@ export async function validateApiAuth(request: NextRequest): Promise<AuthValidat
 
     return {
       isValid: true,
-      clerkId: auth.userId,
-      userId: auth.userId, // For backward compatibility
+      clerkId: userId,
+      userId: userId, // For backward compatibility
     };
   } catch (error) {
     return {
