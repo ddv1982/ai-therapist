@@ -1,6 +1,6 @@
 import { UAParser } from 'ua-parser-js';
 import { createHash } from 'crypto';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import { generateSecureRandomString } from '@/lib/utils/utils';
 import type { ConvexTrustedDevice, ConvexAuthSession } from '@/types/convex';
 

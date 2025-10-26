@@ -6,7 +6,7 @@
  */
 
 import { getSingleUserInfo } from '@/lib/auth/user-session';
-import { getConvexHttpClient, api } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, api } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 
 /**

@@ -1,6 +1,6 @@
 import { encryptMessage } from '@/lib/chat/message-encryption';
 import { logger } from '@/lib/utils/logger';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import type { SessionOwnershipResult } from '@/types/database';
 
 type SessionOwnership = SessionOwnershipResult;

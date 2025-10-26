@@ -5,7 +5,7 @@ import { createNotFoundErrorResponse, createSuccessResponse } from '@/lib/api/ap
 import { decryptMessage } from '@/lib/chat/message-encryption';
 import { MessageCache } from '@/lib/cache';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexMessage } from '@/types/convex';
 
 const patchBodySchema = z.object({

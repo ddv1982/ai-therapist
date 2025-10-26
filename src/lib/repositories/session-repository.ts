@@ -5,7 +5,7 @@
  * Encapsulates all session queries and mutations from the frontend.
  */
 
-import { getConvexHttpClient, api } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, api } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 import type {
   SessionBundle,

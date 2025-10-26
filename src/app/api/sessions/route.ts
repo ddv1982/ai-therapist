@@ -6,7 +6,7 @@ import { getUserSessions } from '@/lib/repositories/session-repository';
 import { createSuccessResponse } from '@/lib/api/api-response';
 import { deduplicateRequest } from '@/lib/utils/request-deduplication';
 import { SessionCache } from '@/lib/cache';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexSession, ConvexUser } from '@/types/convex';
 
 export const POST = withValidation(

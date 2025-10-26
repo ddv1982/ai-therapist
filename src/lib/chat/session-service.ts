@@ -1,5 +1,5 @@
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexMessage, ConvexUser, ConvexSession } from '@/types/convex';
 
 export interface StoredMessage {

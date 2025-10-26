@@ -1,4 +1,4 @@
-import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 import { decryptSessionReportContent } from '@/lib/chat/message-encryption';
 import type { ConvexSessionReport, ConvexSession, ConvexUser } from '@/types/convex';

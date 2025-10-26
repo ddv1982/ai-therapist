@@ -1,7 +1,7 @@
 import type { SessionDoc, SessionBundle } from '@/types/database';
 import type { Doc, Id } from '../../../convex/_generated/dataModel';
 
-jest.mock('@/lib/convex/httpClient', () => ({
+jest.mock('@/lib/convex/http-client', () => ({
   getConvexHttpClient: jest.fn(),
   api: {
     sessions: {
@@ -109,7 +109,7 @@ describe('database queries type safety', () => {
     mockQuery.mockReset();
     mockMutation.mockReset();
     mockDatabaseError.mockReset();
-    const { getConvexHttpClient } = require('@/lib/convex/httpClient');
+    const { getConvexHttpClient } = require('@/lib/convex/http-client');
     if (!jest.isMockFunction(getConvexHttpClient)) {
       throw new Error('getConvexHttpClient is not mocked');
     }
