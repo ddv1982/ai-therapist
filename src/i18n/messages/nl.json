@@ -90,6 +90,8 @@
   "ui.settings.modelAnalytical": "Beste voor complexe therapeutische analyses en diepe inzichten",
   "ui.notFound.title": "Pagina niet gevonden",
   "ui.notFound.desc": "De pagina die je zoekt bestaat niet.",
+  "ui.notFound.returnHome": "Ga naar start",
+  "ui.notFound.goBack": "Ga terug",
   "ui.datePick": "Kies een datum",
   "reports.title": "Sessie-rapporten",
   "reports.subtitle": "Bekijk inzichten en voortgang uit je therapeutische sessies",

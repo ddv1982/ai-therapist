@@ -90,6 +90,8 @@
   "ui.settings.modelAnalytical": "Best for complex therapeutic analysis and deep insights",
   "ui.notFound.title": "Page not found",
   "ui.notFound.desc": "The page you are looking for does not exist.",
+  "ui.notFound.returnHome": "Go home",
+  "ui.notFound.goBack": "Go back",
   "ui.datePick": "Pick a date",
   "reports.title": "Session Reports",
   "reports.subtitle": "Review insights and progress from your therapeutic sessions",

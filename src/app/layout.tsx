@@ -46,6 +46,27 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // If essential public env is missing, render a lightweight fallback layout
+  const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const convexUrlEnv = process.env.NEXT_PUBLIC_CONVEX_URL;
+  if (!pk || !convexUrlEnv) {
+    return (
+      <html lang={defaultLocale} className={inter.variable} data-scroll-behavior="smooth" suppressHydrationWarning>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+          <link rel="manifest" href="/manifest.webmanifest" />
+        </head>
+        <body className="bg-background font-sans antialiased">
+          <div className="min-h-screen flex items-center justify-center p-8">
+            <div className="max-w-md text-center space-y-4">
+              <h1 className="text-2xl font-semibold">Local environment not configured</h1>
+              <p className="text-muted-foreground">Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and NEXT_PUBLIC_CONVEX_URL in .env.local to enable the full app. The server is running.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    );
+  }
   // Prefer the cookie locale when present; fall back to next-intl detection
   const cookieLocale = (await cookies()).get('NEXT_LOCALE')?.value;
   const detected = await getLocale();

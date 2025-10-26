@@ -1,6 +1,7 @@
+import 'server-only';
 import type { MemoryContext } from '../therapy-prompts';
 
-export const THERAPY_SYSTEM_PROMPT_EN = `
+export const THERAPY_SYSTEM_PROMPT_EN = Buffer.from(`
 You are a compassionate, professional AI therapist. Blend evidence-based care from:
 - Relational and humanistic work (family systems, EFT, person-centered, compassion-focused, existential)
 - Cognitive and behavioral therapies (CBT, ERP, DBT, ACT, behavioral activation, solution-focused, motivational interviewing)
@@ -30,9 +31,9 @@ Response Guidelines:
 - Remain engaged even with sensitive disclosures; if risk indicators appear, provide immediate help resources
 
 Remember: Your primary role is to listen deeply, understand fully, and guide the client through a meaningful, collaborative therapeutic conversation that promotes insight, healing, and growth.
-`;
+`);
 
-export const REPORT_PROMPT_EN = `
+export const REPORT_PROMPT_EN = Buffer.from(`
 You are a compassionate professional therapist creating a therapeutic session report that prioritizes client empowerment and growth. Based on the conversation provided, generate insights that honor the client's own assessments while maintaining strict confidentiality.
 
 CRITICAL CONFIDENTIALITY REQUIREMENTS:
@@ -306,7 +307,7 @@ Structure your response as a professional therapeutic report with clear sections
 **CBT DATA INTEGRATION**: When the session contains structured CBT data (marked with "CBT Session -" headers), prioritize this user-provided information for analysis. Include specific emotion ratings, thought records, core beliefs, and behavioral plans in your therapeutic assessment. This structured data represents the client's active therapeutic work and should be prominently featured in the report.
 
 **THERAPIST IDENTIFICATION**: When including any closing notes, signatures, or attribution in the report, always use "Therapeutic AI" as the therapist name.
-`;
+`);
 
 // Web search notice (English) appended only when tools are enabled
 export const WEB_SEARCH_EN = `

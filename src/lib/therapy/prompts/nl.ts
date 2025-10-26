@@ -1,3 +1,4 @@
+import 'server-only';
 import type { MemoryContext } from '../therapy-prompts';
 
 export const THERAPY_SYSTEM_PROMPT_NL = `

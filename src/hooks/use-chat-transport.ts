@@ -13,6 +13,7 @@ export function useChatTransport(params: UseChatTransportParams) {
 
   const transport = useMemo(() => new DefaultChatTransport<UIMessage>({
     api: '/api/chat',
+    credentials: 'include',
     body: {
       sessionId: sessionId ?? undefined,
     },

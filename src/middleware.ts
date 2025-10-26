@@ -1,28 +1,33 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
-import createMiddleware from 'next-intl/middleware';
-import { locales, defaultLocale } from '@/i18n/config';
+// i18n middleware plugin available but unused to prevent rewrites in dev
+// import createMiddleware from 'next-intl/middleware';
+// import { locales, defaultLocale } from '@/i18n/config';
 
-const handleI18n = createMiddleware({
-  locales,
-  defaultLocale,
-  // Do not prefix locale in the URL; rely on cookie/headers only
-  localePrefix: 'never',
-  localeDetection: true
-});
+// Note: i18n middleware disabled in Clerk-less fallback and in main flow to avoid rewrites
+// const _handleI18n = createMiddleware({
+//   locales,
+//   defaultLocale,
+//   localePrefix: 'never',
+//   localeDetection: true
+// });
 
 /**
  * Define which routes are protected (require Clerk authentication)
- * Most application routes require authentication
+ * Excludes public routes, API, and root page (which handles its own redirects)
  */
 const isProtectedRoute = createRouteMatcher([
-  '/(.*)',
+  '/cbt-diary(.*)',
+  '/profile(.*)',
+  '/reports(.*)',
+  '/test(.*)',
 ]);
 
 /**
  * Define public routes that don't require authentication
  */
 const isPublicRoute = createRouteMatcher([
+  '/',
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks/clerk(.*)',
@@ -32,30 +37,27 @@ const isPublicRoute = createRouteMatcher([
  * Clerk middleware for Next.js App Router
  * Handles authentication and injects auth context into requests
  */
-export default clerkMiddleware(async (auth, request: NextRequest) => {
-  const { pathname } = request.nextUrl;
+// Fallback-only i18n handler (used when Clerk keys are missing)
+async function handleI18nOnly(_request: NextRequest) {
+  return NextResponse.next();
+}
 
-  // For protected routes, only protect if Clerk is properly initialized
-  // In development with custom auth, we may need to let Clerk load first
-  if (isProtectedRoute(request) && !isPublicRoute(request)) {
-    try {
-      await auth.protect();
-    } catch (error) {
-      // If auth protection fails, allow request through to let UI handle auth
-      // This prevents blocking on Clerk initialization issues
-      console.warn('Auth protection error, allowing request through:', error);
-    }
+export default function middleware(request: NextRequest, event: unknown) {
+  const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const sk = process.env.CLERK_SECRET_KEY;
+  // If Clerk env is not configured, skip Clerk and run i18n only to avoid 404s
+  if (!pk || !sk) {
+    return handleI18nOnly(request);
   }
 
-  // Skip API routes - CSRF protection handled at individual route level
-  // Webhooks are handled separately
+  const handler = async (auth: unknown, request: NextRequest) => {
+  const { pathname } = request.nextUrl;
+    const userId = (auth as { userId?: string | null }).userId;
+
+  // Skip API routes - API auth is handled at individual route level via middleware
   if (pathname.startsWith('/api')) {
     return NextResponse.next();
   }
-
-  // Let next-intl handle locale-prefixing for non-API/static paths
-  const i18nResponse = handleI18n(request);
-  if (i18nResponse) return i18nResponse;
 
   // Skip middleware for static files and Next.js internals
   if (
@@ -66,9 +68,32 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
     return NextResponse.next();
   }
 
-  // Continue to main application pages
-  return NextResponse.next();
-});
+    // If already signed in, avoid rendering auth pages; send to profile
+    if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
+      if (userId) {
+        return NextResponse.redirect(new URL('/', request.url));
+      }
+      return NextResponse.next();
+    }
+
+  // For protected routes, check authentication
+  // If not authenticated, auth.protect() will throw and should be caught by Clerk
+  // to redirect to sign-in. Note: this relies on Clerk's default behavior.
+    if (isProtectedRoute(request) && !isPublicRoute(request)) {
+    // auth.protect() will redirect or throw if user is not authenticated
+    // It's async and will handle the redirect internally
+      await (auth as { protect: () => Promise<void> }).protect();
+  }
+
+    // Skip i18n middleware to avoid potential rewrites causing 404s
+
+    // Continue to main application pages
+    return NextResponse.next();
+  };
+  const mw = clerkMiddleware(handler);
+  // @ts-expect-error: Next middleware signature includes event
+  return mw(request, event);
+}
 
 export const config = {
   matcher: [

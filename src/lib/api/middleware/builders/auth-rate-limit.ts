@@ -242,13 +242,13 @@ export function buildAuthAndRateLimit(
           didIncrement = true;
         }
 
-        const userInfo = deps.getSingleUserInfo(request);
+        const mergedUserInfo = deps.getSingleUserInfo(request);
         const authenticatedContext: AuthenticatedRequestContext = {
           requestId: baseContext.requestId || 'unknown',
           method: baseContext.method,
           url: baseContext.url,
           userAgent: baseContext.userAgent,
-          userInfo,
+          userInfo: mergedUserInfo,
         } as const;
         const response = await handler(request, authenticatedContext, routeParams?.params);
         const durationMs = Math.round(performance.now() - startHighRes);

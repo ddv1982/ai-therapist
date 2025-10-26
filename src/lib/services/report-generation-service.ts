@@ -1,5 +1,5 @@
 import { generateSessionReport, extractStructuredAnalysis, type ReportMessage } from '@/lib/api/groq-client';
-import { ANALYSIS_EXTRACTION_PROMPT } from '@/lib/therapy/therapy-prompts';
+import { ANALYSIS_EXTRACTION_PROMPT_TEXT } from '@/lib/therapy/therapy-prompts';
 import { getReportPrompt } from '@/lib/therapy/prompts';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
 import { logger, devLog } from '@/lib/utils/logger';
@@ -221,7 +221,7 @@ export class ReportGenerationService {
    */
   private async processStructuredAnalysis(completion: string, messages: ReportMessage[], _hasCBTContent: boolean): Promise<ParsedAnalysis> {
     devLog('Extracting structured analysis data...');
-    const analysisData = await extractStructuredAnalysis(completion, ANALYSIS_EXTRACTION_PROMPT, this.reportModel);
+    const analysisData = await extractStructuredAnalysis(completion, ANALYSIS_EXTRACTION_PROMPT_TEXT, this.reportModel);
 
     let parsedAnalysis: ParsedAnalysis = {};
 
