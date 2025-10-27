@@ -63,12 +63,12 @@ export function buildWithAuth(
         return unauthorized as NextResponse<ApiResponse<T>>;
       }
 
-      let userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo>;
-      try { userInfo = deps.getSingleUserInfo(request); } catch { userInfo = createFallbackUserInfo(request); }
+      let userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string };
+      try { userInfo = deps.getSingleUserInfo(request) as ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string }; } catch { userInfo = createFallbackUserInfo(request) as ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string }; }
       const authWithId = authResult as unknown as { userId?: string };
-      const mergedUserInfo = authWithId?.userId ? { ...userInfo, userId: authWithId.userId } : userInfo;
+      const mergedUserInfo = authWithId?.userId ? { ...userInfo, clerkId: authWithId.userId } : userInfo;
       const authenticatedContext: AuthenticatedRequestContext = { ...(baseContext as RequestContext), userInfo: mergedUserInfo } as AuthenticatedRequestContext;
-      logger.info('Authenticated request', { ...baseContext, userId: (mergedUserInfo as { userId?: string } | undefined)?.userId });
+      logger.info('Authenticated request', { ...baseContext, userId: (mergedUserInfo as { userId?: string } | undefined)?.userId, clerkId: (mergedUserInfo as { clerkId?: string } | undefined)?.clerkId });
 
       const res = await handler(request, authenticatedContext, params);
       setResponseHeaders(res, authenticatedContext.requestId);
@@ -110,14 +110,14 @@ export function buildWithAuthStreaming(
           setResponseHeaders(unauthorized, baseContext.requestId || 'unknown', durationMs);
           return unauthorized;
         }
-        let userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo>;
+        let userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string };
         try {
-          userInfo = deps.getSingleUserInfo(request);
+          userInfo = deps.getSingleUserInfo(request) as ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string };
         } catch {
-          userInfo = createFallbackUserInfo(request);
+          userInfo = createFallbackUserInfo(request) as ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string };
         }
         const authWithId = authResult as unknown as { userId?: string };
-        const mergedUserInfo = authWithId?.userId ? { ...userInfo, userId: authWithId.userId } : userInfo;
+        const mergedUserInfo = authWithId?.userId ? { ...userInfo, clerkId: authWithId.userId } : userInfo;
         const authenticatedContext: AuthenticatedRequestContext = {
           requestId: baseContext.requestId || 'unknown',
           method: baseContext.method,
