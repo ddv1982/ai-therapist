@@ -19,7 +19,7 @@ export const PATCH = withValidationAndParams(
     try {
       const { sessionId, messageId } = params as { sessionId: string; messageId: string };
 
-      const { valid } = await verifySessionOwnership(sessionId, context.userInfo.userId);
+      const { valid } = await verifySessionOwnership(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
       if (!valid) {
         return createNotFoundErrorResponse('Session', context.requestId);
       }

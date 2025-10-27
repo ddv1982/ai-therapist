@@ -79,7 +79,10 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     }
 
     const providedSessionId = normalized.data.sessionId;
-    const ownership = await resolveSessionOwnership(providedSessionId, context.userInfo.userId);
+    const ownership = await resolveSessionOwnership(
+      providedSessionId,
+      (context.userInfo as unknown as { clerkId?: string }).clerkId ?? context.userInfo.userId
+    );
     const history = providedSessionId && ownership.valid ? await loadSessionHistory(providedSessionId, ownership) : [];
     // Prefer forwarding original payload messages (with ids) when available; otherwise build from normalized
     const payloadMessages = Array.isArray(raw?.messages) ? raw.messages : null;
@@ -301,7 +304,7 @@ function createStreamErrorHandler(params: {
     const errorContext = {
       apiEndpoint: '/api/chat',
       requestId: context.requestId,
-      userId: context.userInfo.userId,
+      userId: (context.userInfo as unknown as { clerkId?: string }).clerkId ?? context.userInfo.userId,
       webSearchEnabled,
       modelId,
     };
