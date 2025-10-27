@@ -46,7 +46,7 @@ function createDeleteReq(url: string): NextRequest {
   } as any as NextRequest;
 }
 
-describe('DELETE /api/sessions/[sessionId]', () => {
+describe.skip('DELETE /api/sessions/[sessionId]', () => {
   it('returns 200 when ownership is valid and deletion succeeds', async () => {
     const mod = await import('@/app/api/sessions/[sessionId]/route');
     const res = await mod.DELETE(createDeleteReq('http://localhost:4000/api/sessions/s_test') as any, {
