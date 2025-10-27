@@ -65,8 +65,10 @@ export function buildWithAuth(
 
       let userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo>;
       try { userInfo = deps.getSingleUserInfo(request); } catch { userInfo = createFallbackUserInfo(request); }
-      const authenticatedContext: AuthenticatedRequestContext = { ...(baseContext as RequestContext), userInfo } as AuthenticatedRequestContext;
-      logger.info('Authenticated request', { ...baseContext, userId: (userInfo as { userId?: string } | undefined)?.userId });
+      const authWithId = authResult as unknown as { userId?: string };
+      const mergedUserInfo = authWithId?.userId ? { ...userInfo, userId: authWithId.userId } : userInfo;
+      const authenticatedContext: AuthenticatedRequestContext = { ...(baseContext as RequestContext), userInfo: mergedUserInfo } as AuthenticatedRequestContext;
+      logger.info('Authenticated request', { ...baseContext, userId: (mergedUserInfo as { userId?: string } | undefined)?.userId });
 
       const res = await handler(request, authenticatedContext, params);
       setResponseHeaders(res, authenticatedContext.requestId);
@@ -114,12 +116,14 @@ export function buildWithAuthStreaming(
         } catch {
           userInfo = createFallbackUserInfo(request);
         }
+        const authWithId = authResult as unknown as { userId?: string };
+        const mergedUserInfo = authWithId?.userId ? { ...userInfo, userId: authWithId.userId } : userInfo;
         const authenticatedContext: AuthenticatedRequestContext = {
           requestId: baseContext.requestId || 'unknown',
           method: baseContext.method,
           url: baseContext.url,
           userAgent: baseContext.userAgent,
-          userInfo,
+          userInfo: mergedUserInfo,
         } as const;
         const res = await handler(request, authenticatedContext, routeParams.params);
         const durationMs = Math.round(performance.now() - startHighRes);

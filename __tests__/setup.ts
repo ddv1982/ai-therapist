@@ -50,6 +50,17 @@ jest.mock('@clerk/nextjs/server', () => ({
   })),
 }));
 
+// Mock Clerk client hooks/components used in client code
+jest.mock('@clerk/nextjs', () => ({
+  useAuth: () => ({ isLoaded: true, userId: 'test-user-id' }),
+  ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
+  // Minimal stubs for components that might be imported in tests
+  SignIn: () => null,
+  SignUp: () => null,
+  UserButton: () => null,
+  UserProfile: () => null,
+}));
+
 // Ensure X-Request-Id exists in tests for API middleware
 if (typeof global.Headers !== 'undefined') {
   const OriginalHeaders = global.Headers;
