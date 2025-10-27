@@ -126,22 +126,3 @@ export const get = query({
     return await ctx.db.get(sessionId);
   },
 });
-
-// Migration: reassign all sessions from one user to another
-export const reassignAllFromUser = mutation({
-  args: { fromUserId: v.id('users'), toUserId: v.id('users') },
-  handler: async (ctx, { fromUserId, toUserId }) => {
-    if (fromUserId === toUserId) return { moved: [] as string[] };
-    const sessions = await ctx.db
-      .query('sessions')
-      .withIndex('by_user_created', q => q.eq('userId', fromUserId))
-      .collect();
-    const moved: string[] = [];
-    const now = Date.now();
-    for (const s of sessions) {
-      await ctx.db.patch(s._id, { userId: toUserId, updatedAt: now });
-      moved.push(s._id as unknown as string);
-    }
-    return { moved };
-  },
-});
