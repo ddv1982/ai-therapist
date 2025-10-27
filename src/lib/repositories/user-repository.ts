@@ -15,15 +15,15 @@ import { logger } from '@/lib/utils/logger';
 export async function ensureUserExists(userInfo: ReturnType<typeof getSingleUserInfo>): Promise<boolean> {
   try {
     const client = getConvexHttpClient();
-    await client.mutation(api.users.getOrCreate, {
-      legacyId: userInfo.userId,
+    await client.mutation(api.users.ensureByClerkId, {
+      clerkId: (userInfo as unknown as { clerkId?: string }).clerkId ?? '',
       email: userInfo.email,
       name: userInfo.name,
     });
     return true;
   } catch (error) {
     logger.databaseError('ensure user exists', toError(error), {
-      userId: userInfo.userId,
+      userId: (userInfo as unknown as { clerkId?: string }).clerkId ?? userInfo.userId,
     });
     return false;
   }
