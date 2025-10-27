@@ -83,7 +83,7 @@ export const GET = withAuth(
         const result = await getUserSessions((context.userInfo as { clerkId?: string }).clerkId ?? '', { limit, offset });
         const mapped = (Array.isArray(result.items) ? result.items : []).map((s: ConvexSession) => ({
           id: s._id,
-          userId: context.userInfo.userId,
+          userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
           title: s.title,
           status: s.status,
           startedAt: new Date(s.startedAt),

@@ -19,10 +19,17 @@ http.route({
     try {
       const svix = new Webhook(webhookSecret);
       const payload = await request.json();
-      const headers = Object.fromEntries(request.headers);
+      const svixHeaders = {
+        'svix-id': request.headers.get('svix-id') || '',
+        'svix-timestamp': request.headers.get('svix-timestamp') || '',
+        'svix-signature': request.headers.get('svix-signature') || '',
+      } as const;
+      if (!svixHeaders['svix-id'] || !svixHeaders['svix-timestamp'] || !svixHeaders['svix-signature']) {
+        return new Response('Missing Svix headers', { status: 400 });
+      }
 
       // Verify the signature
-      const verified = svix.verify(JSON.stringify(payload), headers);
+      const verified = svix.verify(JSON.stringify(payload), svixHeaders as unknown as Record<string, string>);
 
       // Handle different Clerk user events
       type EmailAddress = { email_address?: string };
@@ -38,6 +45,10 @@ http.route({
       const verifiedObj = verified as ClerkWebhook;
       const type = verifiedObj?.type as string | undefined;
       const data = verifiedObj?.data;
+
+      if (!data?.id) {
+        return new Response('Invalid Clerk webhook payload', { status: 400 });
+      }
 
       if (type === 'user.created') {
         // Create user in Convex when Clerk user is created
