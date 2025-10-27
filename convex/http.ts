@@ -1,6 +1,5 @@
-import { httpRouter } from 'convex/server';
-import { httpAction } from 'convex/server';
-import { api } from './_generated/api';
+import { httpRouter, anyApi } from 'convex/server';
+import { httpAction } from './_generated/server';
 import { Webhook } from 'svix';
 
 const http = httpRouter();
@@ -26,31 +25,43 @@ http.route({
       const verified = svix.verify(JSON.stringify(payload), headers);
 
       // Handle different Clerk user events
-      const { type, data } = verified as Record<string, unknown>;
+      type EmailAddress = { email_address?: string };
+      type ClerkWebhook = {
+        type?: string;
+        data?: {
+          id?: string;
+          email_addresses?: EmailAddress[];
+          first_name?: string;
+          last_name?: string;
+        };
+      };
+      const verifiedObj = verified as ClerkWebhook;
+      const type = verifiedObj?.type as string | undefined;
+      const data = verifiedObj?.data;
 
       if (type === 'user.created') {
         // Create user in Convex when Clerk user is created
-        await ctx.runMutation(api.users.internal.createFromClerk, {
-          clerkId: data.id,
-          email: data.email_addresses[0]?.email_address || '',
-          name: data.first_name || data.last_name
+        await ctx.runMutation(anyApi.users.internal.createFromClerk, {
+          clerkId: data?.id ?? '',
+          email: data?.email_addresses?.[0]?.email_address || '',
+          name: (data?.first_name || data?.last_name)
             ? `${data.first_name || ''} ${data.last_name || ''}`.trim()
             : undefined,
         });
       } else if (type === 'user.updated') {
         // Update user in Convex when Clerk user is updated
-        await ctx.runMutation(api.users.internal.updateFromClerk, {
-          clerkId: data.id,
-          email: data.email_addresses[0]?.email_address || '',
-          name: data.first_name || data.last_name
+        await ctx.runMutation(anyApi.users.internal.updateFromClerk, {
+          clerkId: data?.id ?? '',
+          email: data?.email_addresses?.[0]?.email_address || '',
+          name: (data?.first_name || data?.last_name)
             ? `${data.first_name || ''} ${data.last_name || ''}`.trim()
             : undefined,
         });
       } else if (type === 'user.deleted') {
         // Soft delete user in Convex when Clerk user is deleted
         // We keep therapeutic data but mark user as deleted
-        await ctx.runMutation(api.users.internal.deleteFromClerk, {
-          clerkId: data.id,
+        await ctx.runMutation(anyApi.users.internal.deleteFromClerk, {
+          clerkId: data?.id ?? '',
         });
       }
 

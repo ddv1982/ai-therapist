@@ -30,8 +30,7 @@
     "test:e2e:headed": "playwright test --headed",
     "qa:smoke": "npm run api:types && npm run lint && tsc --noEmit && npm test",
     "qa:full": "npm run qa:smoke && npm run test:coverage && npm run test:e2e",
-    "audit:names": "node scripts/naming-audit.mjs",
-    "convex:wipe": "node scripts/wipe-convex.mjs --token=${WIPE_TOKEN:-CONFIRM_WIPE}"
+    "audit:names": "node scripts/naming-audit.mjs"
   },
   "dependencies": {
     "@ai-sdk/groq": "^2.0.24",
