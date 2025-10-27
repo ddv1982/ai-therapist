@@ -17,12 +17,12 @@ export const POST = withValidation(
 
       // Deduplicate session creation to prevent double-clicks creating multiple sessions
       const session = await deduplicateRequest(
-        context.userInfo.userId,
+        (context.userInfo as { clerkId?: string }).clerkId ?? '',
         'create_session',
         async () => {
           const client = getConvexHttpClient();
-          const user = await client.mutation(anyApi.users.getOrCreate, {
-            legacyId: context.userInfo.userId,
+          const user = await client.mutation(anyApi.users.ensureByClerkId, {
+            clerkId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
             email: context.userInfo.email,
             name: context.userInfo.name,
           }) as ConvexUser;
@@ -41,7 +41,7 @@ export const POST = withValidation(
       // Cache the new session data
       await SessionCache.set(session._id, {
         id: session._id,
-        userId: context.userInfo.userId,
+        userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
         title: session.title,
         status: session.status as 'active' | 'inactive' | 'archived',
         createdAt: new Date(session.createdAt),
@@ -50,7 +50,7 @@ export const POST = withValidation(
 
       const mapped = {
         id: session._id,
-        userId: context.userInfo.userId,
+        userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
         title: session.title,
         status: session.status,
         startedAt: new Date(session.startedAt),
@@ -80,7 +80,7 @@ export const GET = withAuth(
         const limit = url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!, 10) : undefined;
         const offset = url.searchParams.get('offset') ? parseInt(url.searchParams.get('offset')!, 10) : undefined;
 
-        const result = await getUserSessions(context.userInfo.userId, { limit, offset });
+        const result = await getUserSessions((context.userInfo as { clerkId?: string }).clerkId ?? '', { limit, offset });
         const mapped = (Array.isArray(result.items) ? result.items : []).map((s: ConvexSession) => ({
           id: s._id,
           userId: context.userInfo.userId,

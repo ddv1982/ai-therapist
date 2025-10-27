@@ -44,7 +44,7 @@ async function checkDatabaseHealthExtended(): Promise<HealthCheck> {
   try {
     const client = getConvexHttpClient();
     // Ping by running a cheap query
-    await client.query(anyApi.users.getByLegacyId, { legacyId: 'health-check-probe' });
+    await client.query(anyApi.users.getByClerkId, { clerkId: 'health-check-probe' });
     const responseTime = Date.now() - start;
 
     return {

@@ -126,8 +126,8 @@ export const DELETE = withApiMiddleware<DeleteResponseData>(async (request: Next
       return createAuthenticationErrorResponse(authResult.error || 'Authentication required', context.requestId) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
     }
 
-    const userId = context.userInfo?.userId;
-    if (!userId) {
+    const clerkId = (context.userInfo as { clerkId?: string } | undefined)?.clerkId;
+    if (!clerkId) {
       return createAuthenticationErrorResponse('Unauthorized', context.requestId) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
     }
 
@@ -138,7 +138,7 @@ export const DELETE = withApiMiddleware<DeleteResponseData>(async (request: Next
     const sessionIds = sessionIdsParam ? sessionIdsParam.split(',') : undefined;
 
     const service = new MemoryManagementService();
-    const result = await service.deleteMemory(userId, sessionIds, limit, excludeSessionId);
+    const result = await service.deleteMemory(clerkId, sessionIds, limit, excludeSessionId);
 
     return createSuccessResponse<DeleteResponseData>(result, { requestId: context.requestId });
 

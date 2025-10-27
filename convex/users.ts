@@ -31,6 +31,31 @@ export const getByClerkId = query({
 });
 
 /**
+ * Ensure user exists by Clerk ID (public)
+ * Creates the user if not found, otherwise returns existing.
+ */
+export const ensureByClerkId = mutation({
+  args: { clerkId: v.string(), email: v.string(), name: v.optional(v.string()) },
+  handler: async (ctx, { clerkId, email, name }) => {
+    const existing = await ctx.db
+      .query('users')
+      .withIndex('by_clerkId', q => q.eq('clerkId', clerkId))
+      .unique();
+    if (existing) return existing;
+
+    const now = Date.now();
+    const id = await ctx.db.insert('users', {
+      clerkId,
+      email,
+      name,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return await ctx.db.get(id);
+  },
+});
+
+/**
  * Internal mutation: Create user from Clerk webhook
  * Only callable from server-side actions/webhooks
  */

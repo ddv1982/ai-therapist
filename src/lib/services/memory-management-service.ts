@@ -323,7 +323,7 @@ export class MemoryManagementService {
    * Deletes session reports from memory
    */
   async deleteMemory(
-    userId: string,
+    clerkId: string,
     sessionIds?: string[],
     limit?: number,
     excludeSessionId?: string | null
@@ -331,7 +331,7 @@ export class MemoryManagementService {
     logger.info('Memory deletion request received');
 
     const client = getConvexHttpClient();
-    const user = await client.query(anyApi.users.getByLegacyId, { legacyId: userId });
+    const user = await client.query(anyApi.users.getByClerkId, { clerkId });
     const convexUser = user as ConvexUser | null;
 
     if (!convexUser) {

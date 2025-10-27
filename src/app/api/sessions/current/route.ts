@@ -10,12 +10,12 @@ export const GET = withAuth(async (_request, context) => {
   try {
     logger.debug('Fetching current active session', context);
     
-    // Get unified user ID for cross-device session access
-    const userId = context.userInfo.userId;
+    // Use Clerk ID as the primary user identity
+    const clerkId = (context.userInfo as { clerkId?: string }).clerkId ?? '';
 
     // Find the most recent active session with messages
     const client = getConvexHttpClient();
-    const user = await client.query(anyApi.users.getByLegacyId, { legacyId: userId }) as ConvexUser | null;
+    const user = await client.query(anyApi.users.getByClerkId, { clerkId }) as ConvexUser | null;
     const sessions = user ? await client.query(anyApi.sessions.listByUser, { userId: user._id }) as ConvexSession[] : [];
     const currentSession = Array.isArray(sessions)
       ? sessions
