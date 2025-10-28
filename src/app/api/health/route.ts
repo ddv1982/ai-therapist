@@ -67,25 +67,30 @@ async function checkDatabaseHealthExtended(): Promise<HealthCheck> {
 }
 
 /**
- * Check authentication system health
+ * Check authentication system health (Clerk integration)
  */
 async function checkAuthentication(): Promise<HealthCheck> {
   const start = Date.now();
   try {
-    const client = getConvexHttpClient();
-    const [config, devices] = await Promise.all([
-      client.query(anyApi.auth.getAuthConfig, {}),
-      client.query(anyApi.auth.listTrustedDevices, {}),
-    ]);
-
+    // Check Clerk configuration
+    const hasClerkPublishableKey = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+    const hasClerkSecretKey = Boolean(env.CLERK_SECRET_KEY);
+    const hasClerkWebhookSecret = Boolean(env.CLERK_WEBHOOK_SECRET);
+    const hasJwtIssuerDomain = Boolean(process.env.CLERK_JWT_ISSUER_DOMAIN);
+    
+    const allConfigured = hasClerkPublishableKey && hasClerkSecretKey && hasClerkWebhookSecret && hasJwtIssuerDomain;
+    const partiallyConfigured = hasClerkPublishableKey || hasClerkSecretKey;
+    
     return {
       service: 'authentication',
-      status: config ? 'healthy' : 'degraded',
+      status: allConfigured ? 'healthy' : (partiallyConfigured ? 'degraded' : 'unhealthy'),
       responseTime: Date.now() - start,
       details: {
-        totpConfigured: Boolean(config),
-        activeSessionPresent: Array.isArray(devices) && devices.length > 0,
-        setupRequired: !config
+        provider: 'clerk',
+        publishableKeyConfigured: hasClerkPublishableKey,
+        secretKeyConfigured: hasClerkSecretKey,
+        webhookSecretConfigured: hasClerkWebhookSecret,
+        jwtIssuerDomainConfigured: hasJwtIssuerDomain,
       }
     };
   } catch (error) {
