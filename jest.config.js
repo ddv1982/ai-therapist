@@ -86,7 +86,7 @@ const customJestConfig = {
   // Performance optimizations
   maxWorkers: '50%', // Use 50% of CPU cores for parallel testing
   testTimeout: 10000, // 10 second timeout for individual tests
-  detectOpenHandles: true, // Detect memory leaks and open handles
+  detectOpenHandles: false, // Disabled by default for CI/QA; enable locally for memory leak debugging
   
   // Test organization and filtering
   testMatch: [
