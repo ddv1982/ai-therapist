@@ -35,4 +35,15 @@ describe('lib/api/api-auth.validateApiAuth', () => {
     expect(res.isValid).toBe(true);
     expect(res.clerkId).toBe('request_user');
   });
+
+  it('handles non-Error exceptions', async () => {
+    jest.doMock('@clerk/nextjs/server', () => ({
+      auth: jest.fn().mockRejectedValue('string error'),
+      getAuth: jest.fn(),
+    }));
+    const { validateApiAuth } = await import('@/lib/api/api-auth');
+    const res = await validateApiAuth();
+    expect(res.isValid).toBe(false);
+    expect(res.error).toContain('Unknown error');
+  });
 });

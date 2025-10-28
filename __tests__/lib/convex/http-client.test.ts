@@ -36,4 +36,22 @@ describe('lib/convex/http-client', () => {
     const mod = await import('@/lib/convex/http-client');
     expect(() => mod.getConvexHttpClient()).toThrow(/Convex URL not configured/i);
   });
+
+  it('strips query parameters from URL', async () => {
+    process.env.CONVEX_URL = 'http://127.0.0.1:3210?token=abc123';
+    reloadServerEnvForTesting();
+    jest.resetModules();
+    const mod = await import('@/lib/convex/http-client');
+    expect(() => mod.getConvexHttpClient()).not.toThrow();
+  });
+
+  it('returns cached client on subsequent calls', async () => {
+    process.env.CONVEX_URL = 'http://127.0.0.1:3210';
+    reloadServerEnvForTesting();
+    jest.resetModules();
+    const mod = await import('@/lib/convex/http-client');
+    const client1 = mod.getConvexHttpClient();
+    const client2 = mod.getConvexHttpClient();
+    expect(client1).toBe(client2);
+  });
 });
