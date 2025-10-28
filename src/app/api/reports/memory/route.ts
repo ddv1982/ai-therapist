@@ -61,6 +61,7 @@ type DeleteResponseData = {
  *
  * Retrieves recent session reports for therapeutic memory context.
  * Used by the chat system to provide continuity across sessions.
+ * Requires authentication.
  *
  * Query Parameters:
  * - limit: Number of reports to retrieve (default: 5, max: 10)
@@ -69,7 +70,21 @@ type DeleteResponseData = {
  * - includeFullContent: Set to 'true' to include full decrypted content
  */
 export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (request: NextRequest, context: RequestContext) => {
+  const requestContext = createRequestLogger(request);
+
   try {
+    // Validate authentication - memory access requires valid user session
+    const authResult = await validateApiAuth(request);
+    if (!authResult.isValid) {
+      logger.warn('Unauthorized memory retrieval request', { ...requestContext, error: authResult.error });
+      return createAuthenticationErrorResponse(authResult.error || 'Authentication required', context.requestId) as import('next/server').NextResponse<ApiResponse<MemoryData | MemoryManageData>>;
+    }
+
+    const clerkId = (context.userInfo as { clerkId?: string } | undefined)?.clerkId;
+    if (!clerkId) {
+      return createAuthenticationErrorResponse('Unauthorized', context.requestId) as import('next/server').NextResponse<ApiResponse<MemoryData | MemoryManageData>>;
+    }
+
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '5', 10);
     const excludeSessionId = searchParams.get('excludeSessionId');
@@ -90,7 +105,7 @@ export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (reque
 
   } catch (error) {
     logger.error('Error retrieving session reports for memory', {
-      ...createRequestLogger(request),
+      ...requestContext,
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined
     });

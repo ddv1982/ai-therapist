@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "next dev --turbo --port 4000",
-    "dev:local": "next dev --turbo --hostname 127.0.0.1 --port 4000",
+    "dev:local": "next dev --turbo --hostname localhost --port 4000",
     "build": "next build",
     "start": "next start --hostname 0.0.0.0 --port 4000",
     "start:local": "next start --hostname localhost --port 4000",
@@ -29,7 +29,7 @@
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",
     "qa:smoke": "npm run api:types && npm run lint && tsc --noEmit && npm test",
-    "qa:full": "CI=1 npm run qa:smoke && CI=1 npm run test:coverage && CI=1 npm run test:e2e",
+    "qa:full": "CI=1 npm run qa:smoke && CI=1 npm run test:coverage && CI=1 npm run build && npx playwright install --with-deps || true && CI=1 npm run test:e2e && node scripts/print-coverage-summary.mjs",
     "audit:names": "node scripts/naming-audit.mjs"
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-import { extractChunk, appendWithLimit, persistFromClonedStream, attachResponseHeadersRaw } from '@/lib/chat/stream-utils';
+import { extractChunk, appendWithLimit, persistFromClonedStream, attachResponseHeadersRaw, teeAndPersistStream } from '@/lib/chat/stream-utils';
 
 describe('stream-utils', () => {
   it('extractChunk parses text, parts and delta', () => {
@@ -41,5 +41,80 @@ describe('stream-utils', () => {
       wasTruncated: () => false,
     });
     expect(appended.join('')).toBe('Hello!');
+  });
+
+  it('teeAndPersistStream tees body and returns client stream with headers', async () => {
+    const enc = new TextEncoder();
+    const chunks: Uint8Array[] = [
+      enc.encode('data: {"text":"A"}'),
+      enc.encode('\n'),
+      enc.encode('data: {"parts":[{"type":"text","text":"B"}]}\n'),
+      enc.encode('data: {"delta":{"text":"C"}}\n'),
+    ];
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        for (const c of chunks) controller.enqueue(c);
+        controller.close();
+      },
+    });
+    const response = new Response(body, { status: 200 });
+
+    const appended: string[] = [];
+    const collector = {
+      append: (chunk: string) => {
+        appended.push(chunk);
+        return appended.length >= 3;
+      },
+      wasTruncated: () => false,
+      persist: async () => {},
+    };
+
+    const res = await teeAndPersistStream(response, collector, 'rid', 'mid', 'tool');
+    expect(res).not.toBeNull();
+    expect(appended.join('')).toBe('ABC');
+  });
+
+  it('persistFromClonedStream reads from clone().body when available and respects truncation', async () => {
+    const enc = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(enc.encode('data: {"text":"X"}\n'));
+        controller.enqueue(enc.encode('data: {"delta":{"text":"Y"}}\n'));
+        controller.close();
+      },
+    });
+    const base = new Response('ignored');
+    const clone = new Response(body);
+    (base as any).clone = () => clone;
+
+    const out: string[] = [];
+    await persistFromClonedStream(base, {
+      append: (c: string) => { out.push(c); return out.length >= 2; },
+      wasTruncated: () => false,
+      persist: async () => {},
+    });
+    expect(out).toEqual(['X', 'Y']);
+  });
+
+  it('persistFromClonedStream honors wasTruncated early stop within processBuffer', async () => {
+    const enc = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(enc.encode('data: {"text":"A"}\n'));
+        controller.enqueue(enc.encode('data: {"text":"B"}\n'));
+        controller.close();
+      },
+    });
+    const base = new Response('ignored');
+    const clone = new Response(body);
+    (base as any).clone = () => clone;
+
+    const captured: string[] = [];
+    await persistFromClonedStream(base, {
+      append: (c: string) => { captured.push(c); return false; },
+      wasTruncated: () => true,
+      persist: async () => undefined,
+    });
+    expect(captured).toEqual(['A']);
   });
 });

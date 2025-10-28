@@ -68,6 +68,8 @@ const customJestConfig = {
       statements: 70,
     },
   },
+  // Emit JSON summary so QA can print a concise final line after E2E
+  coverageReporters: ['text', 'lcov', 'json-summary'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     // Mock static assets
