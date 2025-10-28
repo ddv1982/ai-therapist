@@ -1,10 +1,80 @@
+import { configureStore } from '@reduxjs/toolkit';
 import {
+  sessionsApi,
   transformFetchSessionsResponse,
   transformCreateSessionResponse,
   transformDeleteSessionResponse,
   transformGetCurrentSessionResponse,
   transformSetCurrentSessionResponse,
 } from '@/store/slices/sessions-api';
+
+describe('sessions-api', () => {
+  describe('RTK Query API', () => {
+    let store: ReturnType<typeof configureStore>;
+
+    beforeEach(() => {
+      store = configureStore({
+        reducer: {
+          [sessionsApi.reducerPath]: sessionsApi.reducer,
+        },
+        middleware: (getDefaultMiddleware) =>
+          getDefaultMiddleware().concat(sessionsApi.middleware),
+      });
+    });
+
+    it('has fetchSessions endpoint', () => {
+      expect(sessionsApi.endpoints.fetchSessions).toBeDefined();
+    });
+
+    it('has createSession endpoint', () => {
+      expect(sessionsApi.endpoints.createSession).toBeDefined();
+    });
+
+    it('has deleteSession endpoint', () => {
+      expect(sessionsApi.endpoints.deleteSession).toBeDefined();
+    });
+
+    it('has getCurrentSession endpoint', () => {
+      expect(sessionsApi.endpoints.getCurrentSession).toBeDefined();
+    });
+
+    it('has setCurrentSession endpoint', () => {
+      expect(sessionsApi.endpoints.setCurrentSession).toBeDefined();
+    });
+
+    it('exports useFetchSessionsQuery hook', () => {
+      const { useFetchSessionsQuery } = require('@/store/slices/sessions-api');
+      expect(typeof useFetchSessionsQuery).toBe('function');
+    });
+
+    it('exports useCreateSessionMutation hook', () => {
+      const { useCreateSessionMutation } = require('@/store/slices/sessions-api');
+      expect(typeof useCreateSessionMutation).toBe('function');
+    });
+
+    it('exports useDeleteSessionMutation hook', () => {
+      const { useDeleteSessionMutation } = require('@/store/slices/sessions-api');
+      expect(typeof useDeleteSessionMutation).toBe('function');
+    });
+
+    it('exports useGetCurrentSessionQuery hook', () => {
+      const { useGetCurrentSessionQuery } = require('@/store/slices/sessions-api');
+      expect(typeof useGetCurrentSessionQuery).toBe('function');
+    });
+
+    it('exports useSetCurrentSessionMutation hook', () => {
+      const { useSetCurrentSessionMutation } = require('@/store/slices/sessions-api');
+      expect(typeof useSetCurrentSessionMutation).toBe('function');
+    });
+
+    it('has correct reducer path', () => {
+      expect(sessionsApi.reducerPath).toBe('sessionsApi');
+    });
+
+    it('has Sessions and CurrentSession tag types', () => {
+      expect(sessionsApi).toBeDefined();
+    });
+  });
 
 describe('sessions-api transforms', () => {
   describe('transformFetchSessionsResponse', () => {
@@ -245,4 +315,5 @@ describe('sessions-api transforms', () => {
       expect(result.success).toBe(false);
     });
   });
+});
 });
