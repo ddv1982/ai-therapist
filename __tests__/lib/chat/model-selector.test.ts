@@ -114,5 +114,24 @@ describe('model-selector', () => {
       expect(result.model).toBe(ANALYTICAL_MODEL_ID);
       expect(result.tools).toContain('web-search');
     });
+
+    it('falls back to default when unknown preferred model requested', () => {
+      const warnSpy = jest.spyOn(require('@/lib/utils/logger').logger, 'warn').mockImplementation();
+
+      const result = selectModelAndTools({
+        message: 'Hello',
+        preferredModel: 'totally-unknown-model',
+      });
+
+      expect(result.model).toBe(DEFAULT_MODEL_ID);
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Unknown preferred chat model requested, falling back to default',
+        expect.objectContaining({
+          preferredModel: 'totally-unknown-model',
+        })
+      );
+
+      warnSpy.mockRestore();
+    });
   });
 });

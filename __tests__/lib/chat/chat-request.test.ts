@@ -31,4 +31,45 @@ describe('chat-request', () => {
     const msgs = buildForwardedMessages(null, 'fallback');
     expect(msgs).toEqual([{ role: 'user', content: 'fallback' }]);
   });
+
+  it('handles parts with non-text types', () => {
+    const result = buildForwardedMessages(
+      [{ role: 'user', parts: [{ type: 'image', text: 'ignored' }, { type: 'text', text: 'visible' }] }] as any,
+      'fallback'
+    );
+    expect(result[0].content).toBe('visible');
+  });
+
+  it('handles parts with null entries', () => {
+    const result = buildForwardedMessages(
+      [{ role: 'user', parts: [null, { type: 'text', text: 'kept' }, undefined] }] as any,
+      'fallback'
+    );
+    expect(result[0].content).toBe('kept');
+  });
+
+  it('coerces non-string content to empty', () => {
+    const result = buildForwardedMessages(
+      [{ role: 'user', content: 123 }] as any,
+      'fallback'
+    );
+    expect(result[0].content).toBe('');
+  });
+
+  it('handles messages with both content and parts', () => {
+    const result = buildForwardedMessages(
+      [{ role: 'user', content: 'direct', parts: [{ type: 'text', text: 'parts' }] }] as any,
+      'fallback'
+    );
+    // Content string takes precedence
+    expect(result[0].content).toBe('direct');
+  });
+
+  it('handles non-string id values', () => {
+    const result = buildForwardedMessages(
+      [{ role: 'user', content: 'test', id: 123 }] as any,
+      'fallback'
+    );
+    expect(result[0].id).toBeUndefined();
+  });
 });
