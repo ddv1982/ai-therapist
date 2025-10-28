@@ -72,4 +72,35 @@ describe('chat-request', () => {
     );
     expect(result[0].id).toBeUndefined();
   });
+
+  it('handles messages with string id', () => {
+    const result = buildForwardedMessages(
+      [{ role: 'user', content: 'test', id: 'msg-123' }] as any,
+      'fallback'
+    );
+    expect(result[0].id).toBe('msg-123');
+  });
+
+  it('handles empty parts array', () => {
+    const result = buildForwardedMessages(
+      [{ role: 'user', parts: [] }] as any,
+      'fallback'
+    );
+    expect(result[0].content).toBe('');
+  });
+
+  it('filters out non-user and non-assistant roles', () => {
+    const result = buildForwardedMessages(
+      [
+        { role: 'user', content: 'user message' },
+        { role: 'system', content: 'system message' },
+        { role: 'assistant', content: 'assistant message' },
+        { role: 'function', content: 'function message' },
+      ] as any,
+      'fallback'
+    );
+    expect(result).toHaveLength(2);
+    expect(result[0].role).toBe('user');
+    expect(result[1].role).toBe('assistant');
+  });
 });
