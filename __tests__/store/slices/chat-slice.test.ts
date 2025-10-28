@@ -12,21 +12,26 @@ import chatReducer, {
 } from '@/store/slices/chat-slice';
 
 describe('chat-slice', () => {
-  let store: ReturnType<typeof configureStore>;
+  const createTestStore = () => configureStore({
+    reducer: {
+      chat: chatReducer,
+    },
+  });
+
+  type TestStore = ReturnType<typeof createTestStore>;
+  type TestState = ReturnType<TestStore['getState']>;
+
+  let store: TestStore;
 
   beforeEach(() => {
-    store = configureStore({
-      reducer: {
-        chat: chatReducer,
-      },
-    });
+    store = createTestStore();
   });
 
   describe('setStreaming', () => {
     it('starts streaming with message ID', () => {
       store.dispatch(setStreaming({ isStreaming: true, messageId: 'msg-123' }));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.isStreaming).toBe(true);
       expect(state.streamingMessageId).toBe('msg-123');
     });
@@ -35,7 +40,7 @@ describe('chat-slice', () => {
       store.dispatch(setStreaming({ isStreaming: true, messageId: 'msg-123' }));
       store.dispatch(setStreaming({ isStreaming: false }));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.isStreaming).toBe(false);
       expect(state.streamingMessageId).toBeNull();
     });
@@ -43,7 +48,7 @@ describe('chat-slice', () => {
     it('handles streaming without message ID', () => {
       store.dispatch(setStreaming({ isStreaming: true }));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.isStreaming).toBe(true);
       expect(state.streamingMessageId).toBeNull();
     });
@@ -53,7 +58,7 @@ describe('chat-slice', () => {
     it('updates current input', () => {
       store.dispatch(setCurrentInput('Hello, how are you?'));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.currentInput).toBe('Hello, how are you?');
     });
 
@@ -61,7 +66,7 @@ describe('chat-slice', () => {
       store.dispatch(setCurrentInput('Test'));
       store.dispatch(setCurrentInput(''));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.currentInput).toBe('');
     });
   });
@@ -72,7 +77,7 @@ describe('chat-slice', () => {
       store.dispatch(setError('Test error'));
       store.dispatch(clearMessages());
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.isStreaming).toBe(false);
       expect(state.streamingMessageId).toBeNull();
       expect(state.error).toBeNull();
@@ -83,7 +88,7 @@ describe('chat-slice', () => {
     it('sets error message', () => {
       store.dispatch(setError('Network error'));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.error).toBe('Network error');
     });
 
@@ -91,7 +96,7 @@ describe('chat-slice', () => {
       store.dispatch(setStreaming({ isStreaming: true, messageId: 'msg-123' }));
       store.dispatch(setError('Error occurred'));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.isStreaming).toBe(false);
       expect(state.streamingMessageId).toBeNull();
     });
@@ -100,7 +105,7 @@ describe('chat-slice', () => {
       store.dispatch(setError('Error'));
       store.dispatch(setError(null));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.error).toBeNull();
     });
   });
@@ -109,14 +114,14 @@ describe('chat-slice', () => {
     it('updates model setting', () => {
       store.dispatch(updateSettings({ model: 'gpt-4' }));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.settings.model).toBe('gpt-4');
     });
 
     it('updates webSearchEnabled', () => {
       store.dispatch(updateSettings({ webSearchEnabled: true }));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.settings.webSearchEnabled).toBe(true);
     });
 
@@ -126,7 +131,7 @@ describe('chat-slice', () => {
         webSearchEnabled: true,
       }));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.settings.model).toBe('gpt-4-turbo');
       expect(state.settings.webSearchEnabled).toBe(true);
     });
@@ -134,7 +139,7 @@ describe('chat-slice', () => {
     it('preserves unmodified settings', () => {
       store.dispatch(updateSettings({ model: 'gpt-4' }));
       
-      const state = store.getState().chat;
+      const state: TestState['chat'] = store.getState().chat;
       expect(state.settings.webSearchEnabled).toBe(false);
     });
   });

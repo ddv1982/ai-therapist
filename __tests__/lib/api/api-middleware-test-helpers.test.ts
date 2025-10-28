@@ -1,9 +1,23 @@
 import { __setCreateRequestLoggerForTests, __setApiMiddlewareDepsForTests } from '@/lib/api/api-middleware';
 
-// Enable test mode
-process.env.NODE_ENV = 'test';
+const originalNodeEnv = process.env.NODE_ENV;
+const setNodeEnv = (value: string | undefined) => {
+  if (value === undefined) {
+    Reflect.deleteProperty(process.env, 'NODE_ENV');
+    return;
+  }
+  Reflect.set(process.env, 'NODE_ENV', value);
+};
 
 describe('api-middleware test helpers', () => {
+  beforeAll(() => {
+    setNodeEnv('test');
+  });
+
+  afterAll(() => {
+    setNodeEnv(originalNodeEnv);
+  });
+
   afterEach(() => {
     // Reset to defaults
     __setCreateRequestLoggerForTests(null);
@@ -83,14 +97,12 @@ describe('api-middleware test helpers', () => {
 });
 
 describe('api-middleware test helpers - non-test environment', () => {
-  const originalEnv = process.env.NODE_ENV;
-
   afterEach(() => {
-    process.env.NODE_ENV = originalEnv;
+    setNodeEnv(originalNodeEnv);
   });
 
   it('does nothing when NODE_ENV is not test', () => {
-    process.env.NODE_ENV = 'production';
+    setNodeEnv('production');
 
     // These should be no-ops in production
     __setCreateRequestLoggerForTests(() => ({ requestId: 'prod' }));
@@ -98,5 +110,9 @@ describe('api-middleware test helpers - non-test environment', () => {
     
     // Should not throw, just silently do nothing
     expect(true).toBe(true);
+  });
+
+  afterAll(() => {
+    setNodeEnv(originalNodeEnv);
   });
 });

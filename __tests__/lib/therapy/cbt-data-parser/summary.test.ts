@@ -8,7 +8,6 @@ describe('cbt-data-parser summary', () => {
         situation: {
           description: 'Meeting with boss',
           date: '2024-01-15',
-          triggers: [],
         },
         emotions: {
           initial: {
@@ -22,21 +21,19 @@ describe('cbt-data-parser summary', () => {
             'I will fail',
             'Everyone will judge me',
           ],
-          cognitiveDistortions: [],
         },
         coreBeliefs: {
           belief: 'I am not good enough',
           credibility: 7,
-          evidence: { supporting: [], challenging: [] },
         },
         schemaModes: [
-          { mode: 'Vulnerable Child', intensity: 8 },
-          { mode: 'Punitive Parent', intensity: 6 },
+          { name: 'Vulnerable Child', intensity: 8, description: 'Feels overwhelmed' },
+          { name: 'Punitive Parent', intensity: 6, description: 'Critical inner voice' },
         ],
         emotionComparison: {
           changes: [
-            { emotion: 'anxiety', before: 8, after: 4, change: -4 },
-            { emotion: 'confidence', before: 2, after: 6, change: 4 },
+            { emotion: 'anxiety', initial: 8, final: 4, direction: 'decreased', change: -4 },
+            { emotion: 'confidence', initial: 2, final: 6, direction: 'increased', change: 4 },
           ],
         },
       };
@@ -68,7 +65,6 @@ describe('cbt-data-parser summary', () => {
         situation: {
           description: 'Test situation',
           date: '2024-01-15',
-          triggers: [],
         },
       };
 
@@ -102,7 +98,6 @@ describe('cbt-data-parser summary', () => {
         situation: {
           description: 'Test',
           date: '2024-01-15',
-          triggers: [],
         },
       };
 
@@ -115,7 +110,6 @@ describe('cbt-data-parser summary', () => {
       const cbtData: CBTStructuredAssessment = {
         thoughts: {
           automaticThoughts: [],
-          cognitiveDistortions: [],
         },
       };
 
@@ -128,7 +122,6 @@ describe('cbt-data-parser summary', () => {
       const cbtData: CBTStructuredAssessment = {
         thoughts: {
           automaticThoughts: ['Test thought'],
-          cognitiveDistortions: [],
         },
       };
 
@@ -142,7 +135,6 @@ describe('cbt-data-parser summary', () => {
         situation: {
           description: 'Test',
           date: '2024-01-15',
-          triggers: [],
         },
       };
 
@@ -198,7 +190,6 @@ describe('cbt-data-parser summary', () => {
         situation: {
           description: 'Test',
           date: '2024-01-15',
-          triggers: [],
         },
         emotions: {
           initial: { anxiety: 5 },
@@ -226,7 +217,6 @@ describe('cbt-data-parser summary', () => {
       const cbtData: CBTStructuredAssessment = {
         thoughts: {
           automaticThoughts: ['I will fail'],
-          cognitiveDistortions: [],
         },
       };
 
@@ -237,7 +227,7 @@ describe('cbt-data-parser summary', () => {
 
     it('handles single schema mode', () => {
       const cbtData: CBTStructuredAssessment = {
-        schemaModes: [{ mode: 'Vulnerable Child', intensity: 8 }],
+        schemaModes: [{ name: 'Vulnerable Child', intensity: 8, description: 'Inner child' }],
       };
 
       const result = generateCBTSummary(cbtData);
@@ -248,7 +238,7 @@ describe('cbt-data-parser summary', () => {
     it('handles single emotion change', () => {
       const cbtData: CBTStructuredAssessment = {
         emotionComparison: {
-          changes: [{ emotion: 'anxiety', before: 8, after: 4, change: -4 }],
+          changes: [{ emotion: 'anxiety', initial: 8, final: 4, direction: 'decreased', change: -4 }],
         },
       };
 

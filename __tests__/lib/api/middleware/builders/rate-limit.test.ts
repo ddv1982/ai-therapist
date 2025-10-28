@@ -4,6 +4,15 @@ import type { RequestContext } from '@/lib/api/middleware/factory';
 
 const { createSuccessResponse } = jest.requireActual<typeof import('@/lib/api/api-response')>('@/lib/api/api-response');
 
+const originalNodeEnv = process.env.NODE_ENV;
+const setNodeEnv = (value: string | undefined) => {
+  if (value === undefined) {
+    Reflect.deleteProperty(process.env, 'NODE_ENV');
+    return;
+  }
+  Reflect.set(process.env, 'NODE_ENV', value);
+};
+
 describe('rate-limit builder', () => {
   const mockContext: RequestContext = {
     requestId: 'rid-123',
@@ -31,12 +40,13 @@ describe('rate-limit builder', () => {
     });
 
     // Set test environment to avoid rate limiting issues
-    process.env.NODE_ENV = 'test';
+    setNodeEnv('test');
     process.env.RATE_LIMIT_DISABLED = 'false';
   });
 
   afterEach(() => {
     delete process.env.RATE_LIMIT_DISABLED;
+    setNodeEnv(originalNodeEnv);
   });
 
   describe('withRateLimitUnauthenticated', () => {
@@ -181,7 +191,7 @@ describe('rate-limit builder', () => {
 
     it('skips rate limiting when disabled in non-production', async () => {
       process.env.RATE_LIMIT_DISABLED = 'true';
-      process.env.NODE_ENV = 'development';
+      setNodeEnv('development');
 
       const deps = {
         withApiMiddleware: mockWithApiMiddleware,
@@ -206,7 +216,7 @@ describe('rate-limit builder', () => {
 
     it('enforces rate limiting in production even when disabled flag set', async () => {
       process.env.RATE_LIMIT_DISABLED = 'true';
-      process.env.NODE_ENV = 'production';
+      setNodeEnv('production');
       mockCheckRateLimit.mockResolvedValueOnce({ allowed: true });
 
       const deps = {
@@ -229,4 +239,8 @@ describe('rate-limit builder', () => {
       expect(mockCheckRateLimit).toHaveBeenCalled();
     });
   });
+});
+
+afterAll(() => {
+  setNodeEnv(originalNodeEnv);
 });

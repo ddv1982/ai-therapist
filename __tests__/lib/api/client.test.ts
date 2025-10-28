@@ -327,7 +327,7 @@ describe('ApiClient', () => {
       });
 
       it('postMessage calls POST /api/sessions/:id/messages', async () => {
-        await client.postMessage('sess-123', { message: 'Hello', role: 'user' });
+        await client.postMessage('sess-123', { content: 'Hello', role: 'user' });
         const calls = (global.fetch as jest.Mock).mock.calls;
         expect(calls[0][0]).toBe('/api/api/sessions/sess-123/messages');
         expect(calls[0][1].method).toBe('POST');

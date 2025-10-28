@@ -3,16 +3,21 @@ import { handleThunkError } from '@/store/middleware/async-error-handler';
 import sessionsReducer from '@/store/slices/sessions-slice';
 import chatReducer from '@/store/slices/chat-slice';
 
+const createTestStore = () => configureStore({
+  reducer: {
+    sessions: sessionsReducer,
+    chat: chatReducer,
+  },
+});
+
+type TestStore = ReturnType<typeof createTestStore>;
+type TestState = ReturnType<TestStore['getState']>;
+
 describe('async-error-handler', () => {
-  let store: ReturnType<typeof configureStore>;
+  let store: TestStore;
 
   beforeEach(() => {
-    store = configureStore({
-      reducer: {
-        sessions: sessionsReducer,
-        chat: chatReducer,
-      },
-    });
+    store = createTestStore();
   });
 
   describe('handleThunkError', () => {
@@ -21,7 +26,7 @@ describe('async-error-handler', () => {
       
       handleThunkError(store.dispatch, error, 'sessions');
       
-      const state = store.getState();
+      const state: TestState = store.getState();
       expect(state.sessions.error).toBe('Session fetch failed');
     });
 
@@ -30,35 +35,35 @@ describe('async-error-handler', () => {
       
       handleThunkError(store.dispatch, error, 'chat');
       
-      const state = store.getState();
+      const state: TestState = store.getState();
       expect(state.chat.error).toBe('Chat request failed');
     });
 
     it('handles string errors', () => {
       handleThunkError(store.dispatch, 'String error message', 'sessions');
       
-      const state = store.getState();
+      const state: TestState = store.getState();
       expect(state.sessions.error).toBe('String error message');
     });
 
     it('handles unknown error types', () => {
       handleThunkError(store.dispatch, { unknown: true }, 'chat');
       
-      const state = store.getState();
+      const state: TestState = store.getState();
       expect(state.chat.error).toBe('Unknown error');
     });
 
     it('handles null error', () => {
       handleThunkError(store.dispatch, null, 'sessions');
       
-      const state = store.getState();
+      const state: TestState = store.getState();
       expect(state.sessions.error).toBe('Unknown error');
     });
 
     it('handles undefined error', () => {
       handleThunkError(store.dispatch, undefined, 'chat');
       
-      const state = store.getState();
+      const state: TestState = store.getState();
       expect(state.chat.error).toBe('Unknown error');
     });
 
@@ -67,7 +72,7 @@ describe('async-error-handler', () => {
       
       handleThunkError(store.dispatch, error, 'sessions');
       
-      const state = store.getState();
+      const state: TestState = store.getState();
       expect(state.sessions.error).toBe('');
     });
 
@@ -76,7 +81,7 @@ describe('async-error-handler', () => {
       
       handleThunkError(store.dispatch, detailedError, 'chat');
       
-      const state = store.getState();
+      const state: TestState = store.getState();
       expect(state.chat.error).toBe('Network timeout after 30 seconds');
     });
 
@@ -87,7 +92,7 @@ describe('async-error-handler', () => {
       handleThunkError(store.dispatch, sessionError, 'sessions');
       handleThunkError(store.dispatch, chatError, 'chat');
       
-      const state = store.getState();
+      const state: TestState = store.getState();
       expect(state.sessions.error).toBe('Session error');
       expect(state.chat.error).toBe('Chat error');
     });
