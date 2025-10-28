@@ -29,10 +29,10 @@ jest.mock('@/lib/convex/http-client', () => {
   };
 });
 
-const mockVerify = jest.fn().mockResolvedValue({ valid: true });
+const mockVerify = jest.fn();
 jest.mock('@/lib/repositories/session-repository', () => ({
   __esModule: true,
-  verifySessionOwnership: (...args: any[]) => (mockVerify as any)(...args),
+  verifySessionOwnership: jest.fn(),
   getSessionWithMessages: jest.fn(),
 }));
 
@@ -46,23 +46,34 @@ function createDeleteReq(url: string): NextRequest {
   } as any as NextRequest;
 }
 
-describe.skip('DELETE /api/sessions/[sessionId]', () => {
+describe('DELETE /api/sessions/[sessionId]', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('returns 200 when ownership is valid and deletion succeeds', async () => {
+    const { verifySessionOwnership } = await import('@/lib/repositories/session-repository');
+    (verifySessionOwnership as jest.Mock).mockResolvedValueOnce({ valid: true });
+    
     const mod = await import('@/app/api/sessions/[sessionId]/route');
     const res = await mod.DELETE(createDeleteReq('http://localhost:4000/api/sessions/s_test') as any, {
       params: Promise.resolve({ sessionId: 's_test' }),
     } as any);
+    
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body?.success).toBe(true);
   });
 
   it('returns 404 when ownership is invalid', async () => {
-    mockVerify.mockResolvedValueOnce({ valid: false });
+    const { verifySessionOwnership } = await import('@/lib/repositories/session-repository');
+    (verifySessionOwnership as jest.Mock).mockResolvedValueOnce({ valid: false });
+    
     const mod = await import('@/app/api/sessions/[sessionId]/route');
     const res = await mod.DELETE(createDeleteReq('http://localhost:4000/api/sessions/s_no') as any, {
       params: Promise.resolve({ sessionId: 's_no' }),
     } as any);
+    
     expect(res.status).toBe(404);
   });
 });
