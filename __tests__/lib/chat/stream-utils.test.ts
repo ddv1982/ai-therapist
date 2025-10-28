@@ -117,4 +117,114 @@ describe('stream-utils', () => {
     });
     expect(captured).toEqual(['A']);
   });
+
+  it('appendWithLimit handles edge cases', () => {
+    // Empty addition
+    const r1 = appendWithLimit('test', '', 10);
+    expect(r1.value).toBe('test');
+    expect(r1.truncated).toBe(false);
+
+    // Already at max
+    const r2 = appendWithLimit('12345', 'more', 5);
+    expect(r2.value).toBe('12345');
+    expect(r2.truncated).toBe(true);
+
+    // Exact fit
+    const r3 = appendWithLimit('123', '45', 5);
+    expect(r3.value).toBe('12345');
+    expect(r3.truncated).toBe(false);
+  });
+
+  it('extractChunk handles various payload types', () => {
+    // Non-object payload
+    expect(extractChunk(null as any)).toBe('');
+    expect(extractChunk('string' as any)).toBe('');
+
+    // Non-string text
+    expect(extractChunk({ text: 123 } as any)).toBe('');
+
+    // Parts with non-text types
+    expect(extractChunk({ parts: [{ type: 'other', text: 'ignored' }] } as any)).toBe('');
+
+    // Parts with null entries
+    expect(extractChunk({ parts: [null, { type: 'text', text: 'kept' }, undefined] } as any)).toBe('kept');
+
+    // Non-string delta text
+    expect(extractChunk({ delta: { text: 123 } } as any)).toBe('');
+  });
+
+  it('teeAndPersistStream handles null body', async () => {
+    const response = new Response(null);
+    const collector = {
+      append: jest.fn(() => false),
+      persist: jest.fn(),
+      wasTruncated: jest.fn(() => false),
+    };
+
+    const res = await teeAndPersistStream(response, collector, 'rid', 'mid', 'tool');
+    expect(res).toBeNull();
+    expect(collector.append).not.toHaveBeenCalled();
+  });
+
+  it('teeAndPersistStream handles reader errors gracefully', async () => {
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.error(new Error('Stream error'));
+      },
+    });
+    const response = new Response(body);
+
+    const collector = {
+      append: jest.fn(() => false),
+      persist: jest.fn(),
+      wasTruncated: jest.fn(() => false),
+    };
+
+    const res = await teeAndPersistStream(response, collector, 'rid', 'mid', 'tool');
+    // Stream errors cause tee() to fail, returning null
+    expect(res).toBeNull();
+  });
+
+  it('persistFromClonedStream handles invalid JSON gracefully', async () => {
+    const lines = [
+      'data: {invalid json}',
+      'data: {"text":"valid"}',
+    ].join('\n');
+    const fakeResponse = {
+      clone: () => ({ text: async () => lines }),
+      text: async () => lines,
+    } as unknown as Response;
+
+    const appended: string[] = [];
+    await persistFromClonedStream(fakeResponse, {
+      append: (chunk: string) => { appended.push(chunk); return false; },
+      persist: async () => {},
+      wasTruncated: () => false,
+    });
+
+    // Should only capture valid JSON
+    expect(appended.join('')).toBe('valid');
+  });
+
+  it('persistFromClonedStream ignores non-data lines', async () => {
+    const lines = [
+      'event: ping',
+      'data: {"text":"A"}',
+      ': comment',
+      'data: {"text":"B"}',
+    ].join('\n');
+    const fakeResponse = {
+      clone: () => ({ text: async () => lines }),
+      text: async () => lines,
+    } as unknown as Response;
+
+    const appended: string[] = [];
+    await persistFromClonedStream(fakeResponse, {
+      append: (chunk: string) => { appended.push(chunk); return false; },
+      persist: async () => {},
+      wasTruncated: () => false,
+    });
+
+    expect(appended.join('')).toBe('AB');
+  });
 });

@@ -71,6 +71,47 @@ describe('therapy prompts index', () => {
       
       expect(typeof prompt).toBe('string');
     });
+
+    it('works with Dutch locale and memory', () => {
+      const memory = [
+        {
+          sessionTitle: 'Sessie 1',
+          sessionDate: '2024-01-01',
+          reportDate: '2024-01-02',
+          summary: 'Samenvatting',
+          content: 'Inhoud',
+        },
+      ];
+
+      const prompt = getTherapySystemPrompt('nl', { memory });
+      
+      expect(typeof prompt).toBe('string');
+      expect(prompt.length).toBeGreaterThan(0);
+    });
+
+    it('works with both memory and webSearch', () => {
+      const memory = [
+        {
+          sessionTitle: 'Test',
+          sessionDate: '2024-01-01',
+          reportDate: '2024-01-02',
+          summary: 'Summary',
+          content: 'Content',
+        },
+      ];
+
+      const prompt = getTherapySystemPrompt('en', { memory, webSearch: true });
+      
+      expect(typeof prompt).toBe('string');
+      expect(prompt.length).toBeGreaterThan(0);
+    });
+
+    it('handles empty memory array', () => {
+      const prompt = getTherapySystemPrompt('en', { memory: [] });
+      
+      expect(typeof prompt).toBe('string');
+      expect(prompt.length).toBeGreaterThan(0);
+    });
   });
 
   describe('getReportPrompt', () => {
