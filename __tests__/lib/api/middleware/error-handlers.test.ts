@@ -5,8 +5,13 @@ const mockLogger = {
 };
 
 jest.mock('@/lib/utils/logger', () => ({
-  logger: mockLogger,
+  logger: {
+    databaseError: jest.fn(),
+    apiError: jest.fn(),
+  },
 }));
+
+const { logger } = jest.requireMock('@/lib/utils/logger');
 
 describe('error-handlers', () => {
   const mockContext = {
@@ -28,8 +33,9 @@ describe('error-handlers', () => {
       expect(result.status).toBe(400);
       const body = await result.json();
       expect(body.success).toBe(false);
-      expect(body.error?.message).toContain('already exists');
-      expect(mockLogger.databaseError).toHaveBeenCalledWith('create user', error, mockContext);
+      expect(body.error?.message).toBe('Validation failed');
+      expect(body.error?.details).toBe('Resource already exists with this identifier');
+      expect(logger.databaseError).toHaveBeenCalledWith('create user', error, mockContext);
     });
 
     it('returns validation error for FOREIGN KEY constraint violation', async () => {
@@ -40,8 +46,9 @@ describe('error-handlers', () => {
       expect(result.status).toBe(400);
       const body = await result.json();
       expect(body.success).toBe(false);
-      expect(body.error?.message).toContain('does not exist');
-      expect(mockLogger.databaseError).toHaveBeenCalledWith('create session', error, mockContext);
+      expect(body.error?.message).toBe('Validation failed');
+      expect(body.error?.details).toBe('Referenced resource does not exist');
+      expect(logger.databaseError).toHaveBeenCalledWith('create session', error, mockContext);
     });
 
     it('returns server error for generic database error', async () => {
@@ -53,7 +60,7 @@ describe('error-handlers', () => {
       const body = await result.json();
       expect(body.success).toBe(false);
       expect(body.error?.message).toBeDefined();
-      expect(mockLogger.databaseError).toHaveBeenCalledWith('fetch data', error, mockContext);
+      expect(logger.databaseError).toHaveBeenCalledWith('fetch data', error, mockContext);
     });
 
     it('logs error with correct context', async () => {
@@ -62,8 +69,8 @@ describe('error-handlers', () => {
       
       errorHandlers.handleDatabaseError(error, operation, mockContext);
       
-      expect(mockLogger.databaseError).toHaveBeenCalledTimes(1);
-      expect(mockLogger.databaseError).toHaveBeenCalledWith(operation, error, mockContext);
+      expect(logger.databaseError).toHaveBeenCalledTimes(1);
+      expect(logger.databaseError).toHaveBeenCalledWith(operation, error, mockContext);
     });
 
     it('includes request ID in all error responses', async () => {
