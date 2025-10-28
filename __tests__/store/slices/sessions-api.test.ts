@@ -10,10 +10,9 @@ import {
 
 describe('sessions-api', () => {
   describe('RTK Query API', () => {
-    let store: ReturnType<typeof configureStore>;
-
     beforeEach(() => {
-      store = configureStore({
+      // Store configuration for RTK Query setup
+      configureStore({
         reducer: {
           [sessionsApi.reducerPath]: sessionsApi.reducer,
         },

@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { buildRateLimit } from '@/lib/api/middleware/builders/rate-limit';
-import type { ApiResponse } from '@/lib/api/api-response';
 import type { RequestContext } from '@/lib/api/middleware/factory';
 
 const { createSuccessResponse } = jest.requireActual<typeof import('@/lib/api/api-response')>('@/lib/api/api-response');
@@ -56,7 +55,7 @@ describe('rate-limit builder', () => {
         createSuccessResponse({ data: 'ok' }, { requestId: 'rid-123' })
       );
 
-      const wrapped = withRateLimitUnauthenticated(handler);
+      withRateLimitUnauthenticated(handler);
       const req = { method: 'GET', url: '/api/test' } as NextRequest;
 
       const response = await capturedHandler(req, mockContext, {});
@@ -79,7 +78,7 @@ describe('rate-limit builder', () => {
       const { withRateLimitUnauthenticated } = buildRateLimit(deps);
 
       const handler = jest.fn();
-      const wrapped = withRateLimitUnauthenticated(handler);
+      withRateLimitUnauthenticated(handler);
       const req = { method: 'POST', url: '/api/chat' } as NextRequest;
 
       const response = await capturedHandler(req, mockContext, {});
@@ -107,7 +106,7 @@ describe('rate-limit builder', () => {
         createSuccessResponse({ data: 'ok' }, { requestId: 'rid-123' })
       );
 
-      const wrapped = withRateLimitUnauthenticated(handler, { bucket: 'chat' });
+      withRateLimitUnauthenticated(handler, { bucket: 'chat' });
       const req = { method: 'POST', url: '/api/chat' } as NextRequest;
 
       await capturedHandler(req, mockContext, {});
@@ -130,7 +129,7 @@ describe('rate-limit builder', () => {
         createSuccessResponse({ data: 'ok' }, { requestId: 'rid-123' })
       );
 
-      const wrapped = withRateLimitUnauthenticated(handler, { bucket: 'default' });
+      withRateLimitUnauthenticated(handler, { bucket: 'default' });
       const req = { method: 'GET', url: '/api/test' } as NextRequest;
 
       await capturedHandler(req, mockContext, {});
@@ -150,7 +149,7 @@ describe('rate-limit builder', () => {
       const { withRateLimitUnauthenticated } = buildRateLimit(deps);
 
       const handler = jest.fn();
-      const wrapped = withRateLimitUnauthenticated(handler, { windowMs: 120000 });
+      withRateLimitUnauthenticated(handler, { windowMs: 120000 });
       const req = { method: 'POST', url: '/api/test' } as NextRequest;
 
       const response = await capturedHandler(req, mockContext, {});
@@ -172,7 +171,7 @@ describe('rate-limit builder', () => {
       const { withRateLimitUnauthenticated } = buildRateLimit(deps);
 
       const handler = jest.fn();
-      const wrapped = withRateLimitUnauthenticated(handler);
+      withRateLimitUnauthenticated(handler);
       const req = { method: 'GET', url: '/api/test' } as NextRequest;
 
       const response = await capturedHandler(req, mockContext, {});
@@ -196,7 +195,7 @@ describe('rate-limit builder', () => {
         createSuccessResponse({ data: 'ok' }, { requestId: 'rid-123' })
       );
 
-      const wrapped = withRateLimitUnauthenticated(handler);
+      withRateLimitUnauthenticated(handler);
       const req = { method: 'GET', url: '/api/test' } as NextRequest;
 
       await capturedHandler(req, mockContext, {});
@@ -222,7 +221,7 @@ describe('rate-limit builder', () => {
         createSuccessResponse({ data: 'ok' }, { requestId: 'rid-123' })
       );
 
-      const wrapped = withRateLimitUnauthenticated(handler);
+      withRateLimitUnauthenticated(handler);
       const req = { method: 'GET', url: '/api/test' } as NextRequest;
 
       await capturedHandler(req, mockContext, {});

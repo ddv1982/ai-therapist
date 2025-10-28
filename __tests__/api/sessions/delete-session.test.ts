@@ -29,7 +29,6 @@ jest.mock('@/lib/convex/http-client', () => {
   };
 });
 
-const mockVerify = jest.fn();
 jest.mock('@/lib/repositories/session-repository', () => ({
   __esModule: true,
   verifySessionOwnership: jest.fn(),

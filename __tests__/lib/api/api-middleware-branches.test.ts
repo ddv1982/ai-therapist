@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createApiMiddleware } from '@/lib/api/middleware/factory';
 
 describe('api-middleware factory - branch coverage', () => {
-  const createMockContext = () => ({
-    requestId: 'req-test',
-    method: 'GET',
-    url: 'http://localhost/test',
-    userAgent: 'jest',
-  });
 
   it('handles missing routeParams gracefully', async () => {
     const factory = createApiMiddleware();

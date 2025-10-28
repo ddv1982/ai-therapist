@@ -11,7 +11,7 @@ describe('api-middleware test helpers', () => {
   });
 
   it('allows setting custom request logger for tests', () => {
-    const customLogger = (req: unknown) => ({
+    const customLogger = (_req: unknown) => ({
       requestId: 'custom-id',
       method: 'GET',
       url: 'http://test.com',
@@ -31,7 +31,7 @@ describe('api-middleware test helpers', () => {
   });
 
   it('allows setting custom validateApiAuth for tests', () => {
-    const customAuth = async (req: unknown) => ({
+    const customAuth = async (_req: unknown) => ({
       isValid: true,
       userId: 'test-user',
     });
@@ -43,7 +43,7 @@ describe('api-middleware test helpers', () => {
 
   it('allows setting custom rate limiter for tests', () => {
     const customLimiter = () => ({
-      checkRateLimit: async (ip: string) => ({ allowed: true }),
+      checkRateLimit: async (_ip: string) => ({ allowed: true }),
     });
 
     __setApiMiddlewareDepsForTests({ getRateLimiter: customLimiter });
@@ -52,7 +52,7 @@ describe('api-middleware test helpers', () => {
   });
 
   it('allows setting custom user info getter for tests', () => {
-    const customGetter = (req: unknown) => ({
+    const customGetter = (_req: unknown) => ({
       userId: 'custom-user',
       email: 'test@example.com',
     });

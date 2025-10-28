@@ -5,7 +5,6 @@ import cbtReducer, {
   setCurrentStep,
   setValidationErrors,
   clearValidationErrors,
-  transitionFlow,
 } from '@/store/slices/cbt-slice';
 
 describe('cbt-slice', () => {

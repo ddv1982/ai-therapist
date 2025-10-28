@@ -1,9 +1,5 @@
 import { errorHandlers } from '@/lib/api/middleware/error-handlers';
 
-const mockLogger = {
-  databaseError: jest.fn(),
-};
-
 jest.mock('@/lib/utils/logger', () => ({
   logger: {
     databaseError: jest.fn(),
