@@ -5,7 +5,7 @@
  * Encapsulates all session queries and mutations from the frontend.
  */
 
-import { getConvexHttpClient, api } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, api } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 import type {
   SessionBundle,
@@ -38,7 +38,7 @@ export interface PaginatedResult<T> {
  */
 export async function verifySessionOwnership(
   sessionId: string,
-  userLegacyId: string,
+  clerkId: string,
   options: VerifySessionOptions = {}
 ): Promise<SessionOwnershipResult> {
   try {
@@ -48,7 +48,7 @@ export async function verifySessionOwnership(
     });
     if (!bundle) return { valid: false };
 
-    const user = await client.query(api.users.getByLegacyId, { legacyId: userLegacyId });
+    const user = await client.query(api.users.getByClerkId, { clerkId });
     const userDoc = user ? assertUserDoc(user) : null;
     if (!userDoc || bundle.session.userId !== userDoc._id) {
       return { valid: false };
@@ -66,7 +66,7 @@ export async function verifySessionOwnership(
   } catch (error) {
     logger.databaseError('verify session ownership', toError(error), {
       sessionId,
-      userId: userLegacyId,
+      userId: clerkId,
     });
     return { valid: false };
   }
@@ -76,11 +76,11 @@ export async function verifySessionOwnership(
  * Get paginated list of sessions for a user
  */
 export async function getUserSessions(
-  userLegacyId: string,
+  clerkId: string,
   options: PaginationOptions = {}
 ): Promise<PaginatedResult<SessionDoc>> {
   const client = getConvexHttpClient();
-  const user = await client.query(api.users.getByLegacyId, { legacyId: userLegacyId });
+  const user = await client.query(api.users.getByClerkId, { clerkId });
   const userDoc = user ? assertUserDoc(user) : null;
   if (!userDoc) return {
     items: [],
@@ -119,10 +119,10 @@ export async function getUserSessions(
  */
 export async function getSessionWithMessages(
   sessionId: string,
-  userLegacyId: string
+  clerkId: string
 ): Promise<SessionWithMessages | null> {
   const client = getConvexHttpClient();
-  const user = await client.query(api.users.getByLegacyId, { legacyId: userLegacyId });
+  const user = await client.query(api.users.getByClerkId, { clerkId });
   const userDoc = user ? assertUserDoc(user) : null;
   if (!userDoc) return null;
 

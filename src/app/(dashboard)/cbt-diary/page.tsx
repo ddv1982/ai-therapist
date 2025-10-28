@@ -15,7 +15,7 @@ import { logger } from '@/lib/utils/logger';
 import type { MessageData } from '@/features/chat/messages/message';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { startCBTSession as startReduxCBTSession } from '@/store/slices/cbtSlice';
+import { startCBTSession as startReduxCBTSession } from '@/store/slices/cbt-slice';
 import { useChatMessages } from '@/hooks/use-chat-messages';
 import { useSelectSession } from '@/hooks';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';

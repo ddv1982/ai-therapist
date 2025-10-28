@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { store } from '@/store';
-import { clearCBTSession } from '@/store/slices/cbtSlice';
+import { clearCBTSession } from '@/store/slices/cbt-slice';
 import { CBTForm } from '@/features/therapy/cbt/cbt-form';
 
 describe('CBTForm', () => {

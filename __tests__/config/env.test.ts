@@ -26,9 +26,10 @@ describe('environment configuration', () => {
     expect(serverEnv.RATE_LIMIT_DISABLED).toBe(true);
   });
 
-  it('throws when required secrets are missing', () => {
-    setEnv('NEXTAUTH_SECRET', undefined);
-    expect(() => getServerEnv()).toThrow(/NEXTAUTH_SECRET/);
+  it('validates encryption key is present', () => {
+    // Note: Clerk secrets are now optional at build time and validated at runtime
+    setEnv('ENCRYPTION_KEY', undefined);
+    expect(() => getServerEnv()).toThrow(/ENCRYPTION_KEY/);
   });
 
   it('exposes public env toggles with defaults', () => {

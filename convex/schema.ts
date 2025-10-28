@@ -3,14 +3,23 @@ import { v } from 'convex/values';
 // Dates are stored as epoch milliseconds (number)
 export default defineSchema({
   users: defineTable({
-    legacyId: v.optional(v.string()),
+    // Clerk authentication
+    clerkId: v.string(), // Clerk user ID for authentication
+
+    // User profile
     email: v.string(),
     name: v.optional(v.string()),
+
+    // Legacy migration support
+    legacyId: v.optional(v.string()),
+
+    // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index('email', ['email'])
-    .index('by_legacyId', ['legacyId']),
+    .index('by_clerkId', ['clerkId']) // Primary lookup by Clerk ID
+    .index('by_legacyId', ['legacyId']), // Legacy migration support
 
   sessions: defineTable({
     legacyId: v.optional(v.string()),
@@ -53,40 +62,4 @@ export default defineSchema({
     analysisVersion: v.optional(v.string()),
     createdAt: v.number(),
   }).index('by_session', ['sessionId']),
-
-  authConfigs: defineTable({
-    legacyId: v.optional(v.string()),
-    secret: v.string(),
-    backupCodes: v.string(),
-    isSetup: v.boolean(),
-    createdAt: v.number(),
-    updatedAt: v.number(),
-  }),
-
-  trustedDevices: defineTable({
-    legacyId: v.optional(v.string()),
-    deviceId: v.string(),
-    name: v.string(),
-    fingerprint: v.string(),
-    ipAddress: v.string(),
-    userAgent: v.string(),
-    lastSeen: v.number(),
-    trustedAt: v.number(),
-    createdAt: v.number(),
-  })
-    .index('by_deviceId', ['deviceId'])
-    .index('by_fingerprint', ['fingerprint']),
-
-  authSessions: defineTable({
-    legacyId: v.optional(v.string()),
-    sessionToken: v.string(),
-    deviceId: v.id('trustedDevices'),
-    ipAddress: v.string(),
-    expiresAt: v.number(),
-    lastActivity: v.number(),
-    createdAt: v.number(),
-  })
-    .index('by_device_expires', ['deviceId', 'expiresAt'])
-    .index('by_expires', ['expiresAt'])
-    .index('by_sessionToken', ['sessionToken']),
 });

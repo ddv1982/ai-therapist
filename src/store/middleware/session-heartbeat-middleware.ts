@@ -11,7 +11,7 @@
  */
 
 import { Middleware, MiddlewareAPI, UnknownAction, ThunkDispatch } from '@reduxjs/toolkit';
-import { sessionsApi } from '../slices/sessionsApi';
+import { sessionsApi } from '../slices/sessions-api';
 
 const HEARTBEAT_INTERVAL = 10 * 60 * 1000; // 10 minutes
 

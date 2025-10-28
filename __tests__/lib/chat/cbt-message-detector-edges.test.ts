@@ -28,6 +28,18 @@ describe('cbt-message-detector edges', () => {
     const reason = getCBTIdentificationReason(sig);
     expect(reason.toLowerCase()).toContain('schema reflection');
   });
+
+  it('detects schema analysis patterns', () => {
+    const msg = '## 🎯 Core Schema Analysis\n\nCore Belief: I am not good enough\nBehavioral Patterns: Avoidance\n*Credibility: 7/10*';
+    const sig = analyzeCBTMessage(msg);
+    expect(sig.hasSchemaAnalysis).toBe(true);
+  });
+
+  it('handles messages with multiple user ratings patterns', () => {
+    const msg = 'I feel anxiety at 8/10\n- Stress: 9/10\n*(7/10)*';
+    const sig = analyzeCBTMessage(msg);
+    expect(sig.hasQuantifiedSelfAssessment).toBe(true);
+  });
 });
 
 

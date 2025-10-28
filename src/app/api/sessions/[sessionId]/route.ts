@@ -4,7 +4,7 @@ import { verifySessionOwnership, getSessionWithMessages } from '@/lib/repositori
 import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexSession, ConvexSessionWithMessagesAndReports } from '@/types/convex';
 
 interface SessionUpdateData {
@@ -22,7 +22,7 @@ export const PATCH = withValidationAndParams(
       const { status, endedAt, title } = validatedData;
 
       // Verify session belongs to this user
-      const { valid } = await verifySessionOwnership(sessionId, context.userInfo.userId);
+      const { valid } = await verifySessionOwnership(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
       if (!valid) {
         return createNotFoundErrorResponse('Session', context.requestId);
       }
@@ -53,7 +53,7 @@ export const PATCH = withValidationAndParams(
       const convexSession = updated as ConvexSession;
       const mapped = {
         id: String(convexSession._id),
-        userId: context.userInfo.userId,
+        userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
         title: convexSession.title,
         status: convexSession.status,
         startedAt: new Date(convexSession.startedAt),
@@ -76,7 +76,7 @@ export const GET = withAuth(async (_request, context, params) => {
   try {
     const { sessionId } = await params as { sessionId: string };
 
-    const session = await getSessionWithMessages(sessionId, context.userInfo.userId);
+    const session = await getSessionWithMessages(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
 
     if (!session) {
       return createNotFoundErrorResponse('Session', context.requestId);
@@ -87,12 +87,12 @@ export const GET = withAuth(async (_request, context, params) => {
       requestId: context.requestId,
       sessionId,
       messageCount: sessionData.messages?.length ?? 0,
-      userId: context.userInfo.userId
+      userId: (context.userInfo as { clerkId?: string }).clerkId ?? ''
     });
 
     const mapped = {
       id: String(sessionData._id),
-      userId: context.userInfo.userId,
+        userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
       title: sessionData.title,
       status: sessionData.status,
       startedAt: new Date(sessionData.startedAt),
@@ -136,7 +136,7 @@ export const DELETE = withAuth(async (_request, context, params) => {
     const { sessionId } = await params as { sessionId: string };
 
     // Verify session belongs to this user before deleting
-    const { valid } = await verifySessionOwnership(sessionId, context.userInfo.userId);
+    const { valid } = await verifySessionOwnership(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
     if (!valid) {
       return createNotFoundErrorResponse('Session', context.requestId);
     }
@@ -147,7 +147,7 @@ export const DELETE = withAuth(async (_request, context, params) => {
     logger.info('Session deleted successfully', {
       requestId: context.requestId,
       sessionId,
-      userId: context.userInfo.userId
+      userId: (context.userInfo as { clerkId?: string }).clerkId ?? ''
     });
 
     return createSuccessResponse({ success: true }, { requestId: context.requestId });

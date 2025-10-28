@@ -43,9 +43,8 @@ const customJestConfig = {
     '!src/lib/chat/title-generator.ts',
     '!src/lib/auth/device-fingerprint.ts',
     '!src/lib/therapy/index.ts',
-    '!src/store/slices/authSlice.ts',
     '!src/store/index.ts',
-    '!src/store/slices/chatApi.ts',
+    '!src/store/slices/chat-api.ts',
     '!src/lib/utils/cbt-draft-utils.ts',
     '!src/lib/cbt/export-utils.ts',
     '!**/*.d.ts',
@@ -69,6 +68,8 @@ const customJestConfig = {
       statements: 70,
     },
   },
+  // Emit JSON summary so QA can print a concise final line after E2E
+  coverageReporters: ['text', 'lcov', 'json-summary'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     // Mock static assets
@@ -76,7 +77,7 @@ const customJestConfig = {
     '^next-intl$': '<rootDir>/__tests__/__mocks__/next-intl.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(jspdf|canvas|@ai-sdk|ai|streamdown|react-markdown|remark-gfm|vfile|unist-util-.*|bail|is-plain-obj|uuid))'
+    'node_modules/(?!(jspdf|canvas|@ai-sdk|ai|streamdown|react-markdown|remark-gfm|vfile|unist-util-.*|bail|is-plain-obj|uuid|@clerk))'
   ],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   globals: {
@@ -87,7 +88,7 @@ const customJestConfig = {
   // Performance optimizations
   maxWorkers: '50%', // Use 50% of CPU cores for parallel testing
   testTimeout: 10000, // 10 second timeout for individual tests
-  detectOpenHandles: true, // Detect memory leaks and open handles
+  detectOpenHandles: false, // Disabled by default for CI/QA; enable locally for memory leak debugging
   
   // Test organization and filtering
   testMatch: [

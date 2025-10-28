@@ -31,33 +31,3 @@ export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
 }
-
-// TOTP and 2FA types
-export interface TOTPSetupData {
-  secret: string;
-  qrCode: string;
-  backupCodes: string[];
-}
-
-export interface TOTPVerificationRequest {
-  token: string;
-  backupCode?: string;
-}
-
-// Device trust and fingerprinting
-export interface DeviceFingerprint {
-  id: string;
-  userAgent: string;
-  screenResolution: string;
-  timezone: string;
-  language: string;
-  canvas?: string;
-}
-
-export interface TrustedDevice {
-  id: string;
-  name: string;
-  fingerprint: DeviceFingerprint;
-  lastUsed: Date;
-  trusted: boolean;
-}

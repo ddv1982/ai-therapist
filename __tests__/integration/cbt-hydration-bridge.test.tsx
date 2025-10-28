@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { store } from '@/store';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import { applyCBTEvent, clearCBTSession, startCBTSession } from '@/store/slices/cbtSlice';
+import { applyCBTEvent, clearCBTSession, startCBTSession } from '@/store/slices/cbt-slice';
 
 describe('CBT Redux-only persistence', () => {
   beforeEach(() => {

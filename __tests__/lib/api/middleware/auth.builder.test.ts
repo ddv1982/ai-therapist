@@ -90,6 +90,54 @@ describe('auth builder', () => {
     expect(setResponseHeaders).toHaveBeenCalledTimes(1);
   });
 
+  it('injects clerkId into userInfo when validateApiAuth returns userId', async () => {
+    const deps = createDeps({
+      validateApiAuth: jest.fn(async () => ({ isValid: true, userId: 'clerk_123' } as any)),
+    });
+
+    const withAuth = buildWithAuth(deps);
+    const handler = jest.fn(async (_req, ctx) => {
+      return createSuccessResponse({ userInfo: ctx.userInfo });
+    });
+    const wrapped = withAuth(handler);
+    const req = new Request('http://localhost/api');
+
+    const res = await wrapped(req as any, { params: Promise.resolve({}) });
+    const body = await res.json();
+    expect(body.data.userInfo.clerkId).toBe('clerk_123');
+    expect(setResponseHeaders).toHaveBeenCalled();
+  });
+
+  it('fallback user info infers Computer device from user-agent', async () => {
+    const deps = createDeps({
+      getSingleUserInfo: jest.fn(() => { throw new Error('no session'); }),
+    });
+    const withAuth = buildWithAuth(deps);
+    const handler = jest.fn(async (_req, ctx) => createSuccessResponse({ device: ctx.userInfo.currentDevice }));
+    const wrapped = withAuth(handler);
+    const req = new Request('http://localhost/api', {
+      headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
+    });
+    const res = await wrapped(req as any, { params: Promise.resolve({}) });
+    const body = await res.json();
+    expect(body.data.device).toBe('Computer');
+  });
+
+  it('fallback user info infers Tablet device from user-agent', async () => {
+    const deps = createDeps({
+      getSingleUserInfo: jest.fn(() => { throw new Error('no session'); }),
+    });
+    const withAuth = buildWithAuth(deps);
+    const handler = jest.fn(async (_req, ctx) => createSuccessResponse({ device: ctx.userInfo.currentDevice }));
+    const wrapped = withAuth(handler);
+    const req = new Request('http://localhost/api', {
+      headers: { 'user-agent': 'Mozilla/5.0 (iPad; CPU OS 15_0 like Mac OS X)' },
+    });
+    const res = await wrapped(req as any, { params: Promise.resolve({}) });
+    const body = await res.json();
+    expect(body.data.device).toBe('Tablet');
+  });
+
   describe('withAuthStreaming', () => {
     function createStreamingDeps(overrides: Partial<Parameters<typeof buildWithAuthStreaming>[0]> = {}) {
       return {
@@ -144,6 +192,20 @@ describe('auth builder', () => {
       expect(res.status).toBe(200);
       expect(JSON.parse((res as any).body)).toEqual({ ok: true, id: 'rid-stream' });
       expect(setResponseHeaders).toHaveBeenCalled();
+    });
+
+    it('uses fallback request context when createRequestLogger is not provided', async () => {
+      const deps = createStreamingDeps({ createRequestLogger: undefined });
+      const wrapped = buildWithAuthStreaming(deps)(async (_req, ctx) => {
+        return new Response(JSON.stringify({ id: ctx.requestId, ua: ctx.userAgent }), { status: 200 });
+      });
+      const req: any = new Request('http://localhost/api/stream');
+      req.requestId = 'rfallback';
+      req.userAgent = 'jest-agent';
+
+      const res = await wrapped(req as any, { params: Promise.resolve({}) });
+      const body = JSON.parse((res as any).body);
+      expect(body).toEqual({ id: 'rfallback', ua: 'jest-agent' });
     });
   });
 });

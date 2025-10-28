@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 import { withAuth } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
@@ -12,7 +12,7 @@ export const GET = withAuth(async (_request: NextRequest, context) => {
     const client = getConvexHttpClient();
     // Fetch all sessions for mapping
     // Note: We don't have a direct list-all; fetch reports then fetch sessions by id
-    const user = await client.query(anyApi.users.getByLegacyId, { legacyId: context.userInfo.userId }) as ConvexUser | null;
+    const user = await client.query(anyApi.users.getByClerkId, { clerkId: (context.userInfo as { clerkId?: string }).clerkId ?? '' }) as ConvexUser | null;
     const sessions = user ? await client.query(anyApi.sessions.listByUser, { userId: user._id }) as ConvexSession[] : [];
     const sessionMap = new Map<string, ConvexSession>((Array.isArray(sessions) ? sessions : []).map(s => [s._id, s]));
     // Collect all reports for user's sessions

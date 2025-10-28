@@ -14,7 +14,7 @@ import reducer, {
   applyCBTEvent,
   hydrateCBTSession,
   clearCBTSession,
-} from '@/store/slices/cbtSlice';
+} from '@/store/slices/cbt-slice';
 
 describe('cbtSlice reducer', () => {
   it('should return initial state', () => {

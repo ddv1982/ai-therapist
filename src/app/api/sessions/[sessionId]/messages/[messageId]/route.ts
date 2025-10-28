@@ -5,7 +5,7 @@ import { createNotFoundErrorResponse, createSuccessResponse } from '@/lib/api/ap
 import { decryptMessage } from '@/lib/chat/message-encryption';
 import { MessageCache } from '@/lib/cache';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexMessage } from '@/types/convex';
 
 const patchBodySchema = z.object({
@@ -19,7 +19,7 @@ export const PATCH = withValidationAndParams(
     try {
       const { sessionId, messageId } = params as { sessionId: string; messageId: string };
 
-      const { valid } = await verifySessionOwnership(sessionId, context.userInfo.userId);
+      const { valid } = await verifySessionOwnership(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
       if (!valid) {
         return createNotFoundErrorResponse('Session', context.requestId);
       }

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/httpClient';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
 import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership } from '@/lib/repositories/session-repository';
@@ -37,7 +37,7 @@ export const POST = withValidationAndParams(
     try {
       const { sessionId } = params as { sessionId: string };
 
-      const { valid } = await verifySessionOwnership(sessionId, context.userInfo.userId);
+      const { valid } = await verifySessionOwnership(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
       if (!valid) {
         return createNotFoundErrorResponse('Session', context.requestId);
       }
@@ -135,7 +135,7 @@ export const GET = withAuth(
       try {
         const { sessionId } = await params as { sessionId: string };
 
-        const { valid } = await verifySessionOwnership(sessionId, context.userInfo.userId);
+        const { valid } = await verifySessionOwnership(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
         if (!valid) {
           return createNotFoundErrorResponse('Session', context.requestId);
         }

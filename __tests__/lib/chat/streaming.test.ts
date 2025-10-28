@@ -62,6 +62,42 @@ describe('chat streaming utils', () => {
     expect(streamText).toHaveBeenCalled();
   });
 
+  it('omits optional args when not provided (no telemetry)', async () => {
+    (streamText as jest.Mock).mockClear();
+    await streamChatCompletion({
+      model: {} as unknown as LanguageModel,
+      messages: [],
+    });
+    expect(streamText).toHaveBeenCalledTimes(1);
+    const args = (streamText as jest.Mock).mock.calls[0][0];
+    expect(args).toEqual({ model: expect.any(Object), messages: [] });
+    expect('system' in args).toBe(false);
+    expect('maxOutputTokens' in args).toBe(false);
+    expect('tools' in args).toBe(false);
+    expect('toolChoice' in args).toBe(false);
+    expect('experimental_telemetry' in args).toBe(false);
+  });
+
+  it('includes telemetry and optional args when provided', async () => {
+    (streamText as jest.Mock).mockClear();
+    const tools: ToolSet = {} as any;
+    await streamChatCompletion({
+      model: {} as unknown as LanguageModel,
+      system: 'sys',
+      messages: [],
+      maxOutputTokens: 42,
+      tools,
+      toolChoice: 'none' as any,
+      telemetry: { enabled: true, metadata: { t: true } },
+    });
+    const args = (streamText as jest.Mock).mock.calls[0][0];
+    expect(args.system).toBe('sys');
+    expect(args.maxOutputTokens).toBe(42);
+    expect(args.tools).toBe(tools);
+    expect(args.toolChoice).toBe('none');
+    expect(args.experimental_telemetry).toBeDefined();
+  });
+
   it('tees a readable stream into two branches', async () => {
     const input = makeReadableStreamFromStrings(['a', 'b']);
     const { primary, secondary } = await teeReadableStream(input);

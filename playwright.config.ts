@@ -31,49 +31,54 @@ export default defineConfig({
   },
 
   /* Configure projects for major browsers */
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
-  ],
+  projects: process.env.CI
+    ? [
+        {
+          name: 'chromium',
+          use: { ...devices['Desktop Chrome'] },
+        },
+      ]
+    : [
+        {
+          name: 'chromium',
+          use: { ...devices['Desktop Chrome'] },
+        },
+        {
+          name: 'firefox',
+          use: { ...devices['Desktop Firefox'] },
+        },
+        {
+          name: 'webkit',
+          use: { ...devices['Desktop Safari'] },
+        },
+      ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run dev:local',
-    url: 'http://localhost:4000',
-    reuseExistingServer: !process.env.CI,
-    stdout: 'ignore',
-    stderr: 'pipe',
-  },
+  webServer: [
+    {
+      // Start Convex backend first - required for API routes that use ConvexHttpClient
+      command: 'npx convex dev',
+      url: 'http://127.0.0.1:3210',
+      reuseExistingServer: !process.env.CI,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      timeout: 30_000,
+    },
+    {
+      // Then start Next.js dev server
+      command: 'npm run dev:local',
+      // Wait for health endpoint to be ready instead of the home page
+      url: 'http://localhost:4000/api/health',
+      reuseExistingServer: !process.env.CI,
+      stdout: 'pipe',
+      // Pipe stderr for diagnostics if server fails to start
+      stderr: 'pipe',
+      // Allow a bit more time for Next dev server cold start under CI
+      timeout: 180_000,
+      // Suppress noisy Node deprecation warnings in QA E2E by default; allow opt-in tracing
+      env: {
+        NODE_OPTIONS: `${process.env.NODE_OPTIONS ? process.env.NODE_OPTIONS + ' ' : ''}${process.env.DEPRECATIONS === 'trace' ? '--trace-deprecation' : '--no-deprecation'}`,
+      },
+    },
+  ],
 });

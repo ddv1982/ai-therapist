@@ -1,96 +1,40 @@
-import { NextRequest } from 'next/server';
-import { verifyAuthSession } from '@/lib/auth/device-fingerprint';
-import { isTOTPSetup } from '@/lib/auth/totp-service';
-import { isLocalhost, isPrivateNetworkAccess } from '@/lib/utils';
-import { env } from '@/config/env';
+import { auth, getAuth } from '@clerk/nextjs/server';
+import type { NextRequest } from 'next/server';
 
 export interface AuthValidationResult {
   isValid: boolean;
   userId?: string;
-  sessionData?: {
-    sessionToken: string;
-    expiresAt: Date;
-    deviceId: string;
-  };
-  deviceInfo?: {
-    deviceId: string;
-    name: string;
-    fingerprint: string;
-  };
+  clerkId?: string;
   error?: string;
 }
 
 /**
- * Validate authentication for API routes
- * Returns true for localhost during development, otherwise checks TOTP and session
+ * Validate authentication for API routes using Clerk
+ * Can be called with or without a request parameter (request param is ignored for Clerk)
+ * Clerk's auth() function works in route handlers
  */
-export async function validateApiAuth(request: NextRequest): Promise<AuthValidationResult> {
-  const forwardedHostHeader = request.headers.get('x-forwarded-host') || '';
-  const forwardedHost = forwardedHostHeader.split(',')[0]?.trim();
-  const hostname = request.nextUrl?.hostname || request.headers.get('host') || '';
-  const ipAttribute = (request as unknown as { ip?: string | null }).ip || '';
-  const remoteAddress = (request as unknown as { socket?: { remoteAddress?: string | null } }).socket?.remoteAddress || '';
-  const normalizedIp = normalizeLoopback(ipAttribute) || normalizeLoopback(remoteAddress);
+export async function validateApiAuth(request?: NextRequest): Promise<AuthValidationResult> {
+  try {
+    // Prefer request-bound auth (more reliable in route handlers),
+    // fall back to global auth() when request is unavailable
+    const userId = request ? getAuth(request).userId : (await auth()).userId;
 
-  const isDevEnvironment = env.NODE_ENV !== 'production';
-  // Unified dev bypass flag (matches auth-middleware semantics)
-  const localBypassEnabled = isDevEnvironment && env.BYPASS_AUTH;
-  const hostnameIsLocalOrPrivate = isLocalhost(hostname || '') || isPrivateNetworkAccess(hostname || '');
-  const forwardedHostIsLocalOrPrivate = !forwardedHost || isLocalhost(forwardedHost) || isPrivateNetworkAccess(forwardedHost);
-  const clientIpIsLocalOrPrivate = normalizedIp ? (isLocalhost(normalizedIp) || isPrivateNetworkAccess(normalizedIp)) : false;
+    if (!userId) {
+      return {
+        isValid: false,
+        error: 'Unauthorized: No valid authentication token',
+      };
+    }
 
-  if (localBypassEnabled && hostnameIsLocalOrPrivate && forwardedHostIsLocalOrPrivate && clientIpIsLocalOrPrivate) {
-    return { isValid: true };
-  }
-
-  // Check if TOTP is set up
-  const isSetup = await isTOTPSetup();
-  if (!isSetup) {
-    return { 
-      isValid: false, 
-      error: 'Authentication not configured' 
+    return {
+      isValid: true,
+      clerkId: userId,
+      userId: userId, // Backwards-compat field name
+    };
+  } catch (error) {
+    return {
+      isValid: false,
+      error: `Authentication error: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
-  
-  // Check for valid session token
-  const sessionToken = request.cookies.get('auth-session-token')?.value;
-  if (!sessionToken) {
-    return { 
-      isValid: false, 
-      error: 'No authentication token' 
-    };
-  }
-  
-  // Verify the session
-  const deviceInfo = await verifyAuthSession(sessionToken);
-  if (!deviceInfo) {
-    return { 
-      isValid: false, 
-      error: 'Invalid or expired authentication token' 
-    };
-  }
-  
-  return {
-    isValid: true,
-    deviceInfo: {
-      deviceId: deviceInfo.deviceId,
-      name: deviceInfo.name,
-      fingerprint: deviceInfo.fingerprint,
-    },
-  };
-}
-
-/**
- * Create a standardized error response for authentication failures
- */
-// Deprecated: createAuthErrorResponse has been replaced by standardized helpers in api-response.ts
-
-function normalizeLoopback(value: string | null | undefined): string {
-  if (!value) return '';
-  const trimmed = value.trim();
-  if (!trimmed) return '';
-  if (trimmed.startsWith('::ffff:')) {
-    return trimmed.slice('::ffff:'.length);
-  }
-  return trimmed;
 }

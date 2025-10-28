@@ -4,7 +4,6 @@ import React from 'react';
 import { Streamdown } from 'streamdown';
 import { CBTSessionSummaryCard, type CBTSessionSummaryData } from '@/components/ui/cbt-session-summary-card';
 import { safeParseFromMatch } from '@/lib/utils/safe-json';
-import { publicEnv } from '@/config/env.public';
 
 function extractCBTSummaryData(text: string): { summaryData: CBTSessionSummaryData | null; cleanText: string } {
   const cbtPattern = /<!-- CBT_SUMMARY_CARD:(.*?) -->[\s\S]*?<!-- END_CBT_SUMMARY_CARD -->/;
@@ -23,28 +22,7 @@ export type MarkdownProps = {
   children: string;
   isUser?: boolean; // reserved for future role-based tweaks (unused for now)
   className?: string;
-  defaultOrigin?: string;
-  allowedLinkPrefixes?: string[]; // optional override
 };
-
-function extractLinkOrigins(markdown: string): string[] {
-  if (!markdown) return [];
-  const origins = new Set<string>();
-  const urlPattern = /(https?:\/\/[^\s<>"')]+)/gi;
-
-  let match: RegExpExecArray | null;
-  while ((match = urlPattern.exec(markdown)) !== null) {
-    const candidate = match[1];
-    try {
-      const url = new URL(candidate);
-      origins.add(url.origin);
-    } catch {
-      // Ignore invalid URLs
-    }
-  }
-
-  return Array.from(origins);
-}
 
 /**
  * Convert markdown tables with more than 3 columns into definition-like lists.
@@ -173,44 +151,12 @@ const streamdownComponents = {
   table: ResponsiveMarkdownTable,
 };
 
-export function Markdown({ children, className, defaultOrigin, isUser, allowedLinkPrefixes }: MarkdownProps) {
+export function Markdown({ children, className, isUser }: MarkdownProps) {
   const rawContent = children ?? '';
   const hasContent = rawContent.length > 0;
 
   const { summaryData, cleanText } = extractCBTSummaryData(rawContent);
   const finalText = isUser ? cleanText : convertWideTablesToLists(cleanText);
-  const resolvedOrigin = defaultOrigin ?? (
-    typeof window !== 'undefined' && typeof window.location?.origin === 'string'
-      ? window.location.origin
-      : 'http://localhost'
-  );
-
-  const allowHttp = publicEnv.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP;
-  const allowMailto = publicEnv.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO;
-  const normalizedOrigin = (() => {
-    try {
-      const parsed = new URL(resolvedOrigin);
-      return parsed.origin;
-    } catch {
-      return resolvedOrigin;
-    }
-  })();
-
-  const dynamicPrefixes = new Set<string>([normalizedOrigin]);
-  if (allowHttp) {
-    dynamicPrefixes.add(normalizedOrigin.replace(/^https:/, 'http:'));
-  }
-  extractLinkOrigins(finalText).forEach((origin) => {
-    dynamicPrefixes.add(origin);
-    if (allowHttp && origin.startsWith('https://')) {
-      dynamicPrefixes.add(origin.replace('https://', 'http://'));
-    }
-  });
-
-  const computedPrefixes = allowedLinkPrefixes ?? [
-    ...dynamicPrefixes,
-    ...(allowMailto ? ['mailto:'] : []),
-  ];
 
   if (!hasContent) return null;
   if (summaryData) return <CBTSessionSummaryCard data={summaryData} />;
@@ -219,9 +165,6 @@ export function Markdown({ children, className, defaultOrigin, isUser, allowedLi
     <Streamdown
       parseIncompleteMarkdown
       className={['markdown-content', className].filter(Boolean).join(' ')}
-      allowedImagePrefixes={[]}
-      allowedLinkPrefixes={computedPrefixes}
-      defaultOrigin={resolvedOrigin}
       components={streamdownComponents}
     >
       {finalText}

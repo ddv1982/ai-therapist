@@ -10,7 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setCurrentStep, updateDraft, completeCBTEntry } from '@/store/slices/cbtSlice';
+import { setCurrentStep, updateDraft, completeCBTEntry } from '@/store/slices/cbt-slice';
 const SituationPrompt = dynamic(() =>
   import('@/features/therapy/cbt/chat-components/situation-prompt').then((mod) => ({ default: mod.SituationPrompt }))
 );
@@ -55,12 +55,12 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
   const progressPercentage = (currentStep / CBT_STEPS.length) * 100;
   const currentStepData = CBT_STEPS.find(step => step.id === currentStep);
 
-  const handleSituationComplete = (data: import('@/store/slices/cbtSlice').SituationData) => {
+  const handleSituationComplete = (data: import('@/store/slices/cbt-slice').SituationData) => {
     dispatch(updateDraft({ situation: data.situation }));
     dispatch(setCurrentStep(2));
   };
 
-  const handleEmotionComplete = (data: import('@/store/slices/cbtSlice').EmotionData) => {
+  const handleEmotionComplete = (data: import('@/store/slices/cbt-slice').EmotionData) => {
     // Convert EmotionData to CBT schema format
     const emotions = [
       { emotion: 'fear', intensity: data.fear },
@@ -77,7 +77,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
     dispatch(setCurrentStep(3));
   };
 
-  const handleThoughtComplete = (data: import('@/store/slices/cbtSlice').ThoughtData[]) => {
+  const handleThoughtComplete = (data: import('@/store/slices/cbt-slice').ThoughtData[]) => {
     // Convert ThoughtData array to string array for CBT schema
     const thoughts = data.map(thought => thought.thought);
     dispatch(updateDraft({ thoughts }));
@@ -90,7 +90,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
     dispatch(setCurrentStep(5));
   };
 
-  const handleActionComplete = (data: import('@/store/slices/cbtSlice').ActionPlanData) => {
+  const handleActionComplete = (data: import('@/store/slices/cbt-slice').ActionPlanData) => {
     if (currentDraft) {
       // Convert ActionPlanData to CBT schema structure
       const actionPlan = {
@@ -113,7 +113,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
         Array.isArray(completeEntry.thoughts)
       ) {
         // Type assertion is safe here because we've validated all required fields
-        dispatch(completeCBTEntry(completeEntry as import('@/store/slices/cbtSlice').CBTFormData));
+        dispatch(completeCBTEntry(completeEntry as import('@/store/slices/cbt-slice').CBTFormData));
         onOpenChange(false);
       }
     }

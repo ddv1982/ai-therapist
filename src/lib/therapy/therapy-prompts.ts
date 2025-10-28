@@ -1,3 +1,4 @@
+import 'server-only';
 import type { AppLocale } from '@/i18n/config';
 export type MemoryContext = {
   sessionTitle: string;
@@ -15,8 +16,12 @@ import {
 } from './prompts/en';
 import { THERAPY_SYSTEM_PROMPT_NL, WEB_SEARCH_NL, MEMORY_SECTION_NL } from './prompts/nl';
 
-export const THERAPY_SYSTEM_PROMPT = THERAPY_SYSTEM_PROMPT_EN;
-export const REPORT_GENERATION_PROMPT = REPORT_PROMPT_EN;
+function asText(value: string | Buffer): string {
+  return typeof value === 'string' ? value : value.toString('utf-8');
+}
+
+export const THERAPY_SYSTEM_PROMPT = asText(THERAPY_SYSTEM_PROMPT_EN);
+export const REPORT_GENERATION_PROMPT = asText(REPORT_PROMPT_EN);
 
 
 
@@ -35,7 +40,7 @@ export function buildTherapySystemPrompt(locale: AppLocale = 'en', opts?: Prompt
     return parts.join('\n\n');
   }
 
-  let prompt = THERAPY_SYSTEM_PROMPT_EN;
+  let prompt = asText(THERAPY_SYSTEM_PROMPT_EN);
 
   if (memory.length > 0) {
     const memorySection = MEMORY_SECTION_EN(memory);
@@ -58,7 +63,7 @@ export function buildMemoryEnhancedPrompt(
   return buildTherapySystemPrompt(locale, { memory: memoryContext });
 }
 
-export const ANALYSIS_EXTRACTION_PROMPT = `
+const ANALYSIS_EXTRACTION_PROMPT_BUFFER = Buffer.from(`
 You are a therapeutic data analyst extracting structured insights that prioritize client empowerment and user-provided assessments. Based on the provided therapeutic report, extract key data points while honoring the client's own insights and maintaining confidentiality.
 
 **CBT DATA PRIORITY**: When extracting data, give highest priority to structured CBT information that appears in the session with "CBT Session -" headers. This includes:
@@ -247,4 +252,6 @@ Return ONLY a valid JSON object with the following structure:
 - Extract data points conservatively - only include insights clearly supported by therapeutic context
 - Use empty arrays for sections where no clear therapeutic patterns are identified
 - Prioritize accuracy over quantity - better to miss ambiguous cases than create false positives
-`;
+`);
+
+export const ANALYSIS_EXTRACTION_PROMPT_TEXT = asText(ANALYSIS_EXTRACTION_PROMPT_BUFFER);

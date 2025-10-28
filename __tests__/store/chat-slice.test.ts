@@ -1,4 +1,4 @@
-import reducer, { setStreaming, setCurrentInput, clearMessages, setError, updateSettings } from '@/store/slices/chatSlice';
+import reducer, { setStreaming, setCurrentInput, clearMessages, setError, updateSettings } from '@/store/slices/chat-slice';
 
 describe('chatSlice reducer', () => {
   it('should return the initial state', () => {

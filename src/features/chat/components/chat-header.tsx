@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { FileText, Menu, X, Brain, List } from 'lucide-react';
 import { getIconButtonSize } from '@/lib/ui/design-tokens';
@@ -36,6 +37,13 @@ export function ChatHeader({
   modelLabel,
 }: ChatHeaderProps) {
   const t = useTranslations('chat');
+  const UserMenu = React.useMemo(
+    () => dynamic(() => import('./user-menu'), {
+      ssr: false,
+      loading: () => <a href="/profile" className="text-sm underline">Profile</a>,
+    }),
+    []
+  );
 
   return (
     <div className={`${isMobile ? 'p-3' : 'p-6'} border-b border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`}>
@@ -115,6 +123,9 @@ export function ChatHeader({
           >
             <List className="w-4 h-4 relative z-10" />
           </Button>
+          <div className="ml-1">
+            <UserMenu />
+          </div>
         </div>
       </div>
       {/* Accessible heading for screen readers and tests (next-intl mock returns key text) */}

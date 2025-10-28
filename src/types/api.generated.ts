@@ -17,7 +17,6 @@ export interface paths {
          * Send chat message and receive streaming AI response
          * @description Sends a user message to the AI therapist and receives a streaming response.
          *     The response is delivered as Server-Sent Events (SSE) for real-time interaction.
-         *
          */
         post: {
             parameters: {
@@ -404,7 +403,6 @@ export interface paths {
          * Generate session report
          * @description Generates a therapeutic analysis report for a completed session using AI.
          *     The report includes key insights, patterns, and recommendations.
-         *
          */
         post: {
             parameters: {
@@ -461,7 +459,6 @@ export interface paths {
          * Generate and email session report
          * @description Generates a therapeutic session report and sends it via email in HTML format.
          *     Supports multiple email service configurations including SMTP and console logging.
-         *
          */
         post: {
             parameters: {
@@ -581,7 +578,6 @@ export interface paths {
          * Get available AI models
          * @description Retrieves a list of available AI models configured in the application (Groq defaults
          *     and optional local Ollama). Includes token limits and categorization (featured, production).
-         *
          */
         get: {
             parameters: {
@@ -627,7 +623,6 @@ export interface paths {
          * Check environment configuration
          * @description Checks if required environment variables are configured, particularly
          *     the Groq API key. Used by the frontend to determine UI behavior.
-         *
          */
         get: {
             parameters: {

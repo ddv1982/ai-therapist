@@ -1,95 +1,35 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { checkSessionStatus } from '@/store/slices/authSlice';
-import { therapeuticInteractive } from '@/lib/ui/design-tokens';
-import { logger } from '@/lib/utils/logger';
+import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 interface AuthGuardProps {
   children: React.ReactNode;
 }
 
+/**
+ * Auth Guard component using Clerk
+ * Automatically redirects to sign-in if not authenticated
+ */
 export function AuthGuard({ children }: AuthGuardProps) {
-  const dispatch = useAppDispatch();
-  const { isAuthenticated, needsSetup, needsVerification, isLoading } = useAppSelector(s => s.auth);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const { isLoaded, userId } = useAuth();
+  const router = useRouter();
 
-  // Kick off a session check on mount
+  // Redirect to sign-in if not authenticated
   useEffect(() => {
-    dispatch(checkSessionStatus());
-  }, [dispatch]);
-
-  // Combined effect: handle loading timeout and auth redirects
-  useEffect(() => {
-    // Clear any existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+    if (isLoaded && !userId) {
+      router.push('/sign-in');
     }
+  }, [isLoaded, userId, router]);
 
-    // Handle loading timeout
-    if (isLoading) {
-      timeoutRef.current = setTimeout(() => {
-        logger.warn('Auth loading timed out, redirecting to setup', {
-          component: 'AuthGuard',
-          operation: 'loadingTimeout',
-          timeout: 15000
-        });
-        setLoadingTimeout(true);
-      }, 15000); // 15 second timeout for loading
-      return;
-    }
-
-    // Reset timeout flag when loading completes
-    setLoadingTimeout(false);
-
-    // Handle auth redirects when loading is complete
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-
-    if ((needsSetup || loadingTimeout) && currentPath !== '/auth/setup') {
-      window.location.href = '/auth/setup';
-      return;
-    }
-
-    if (needsVerification && currentPath !== '/auth/verify') {
-      window.location.href = '/auth/verify';
-      return;
-    }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isLoading, needsSetup, needsVerification, loadingTimeout]);
-
-  if (isLoading && !loadingTimeout) {
+  // Show loading state while Clerk is initializing or redirecting
+  if (!isLoaded || !userId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Checking authentication...</p>
-          {/* Show timeout warning after 10 seconds */}
-          <p className="text-muted-foreground text-sm mt-2 opacity-60">
-            If this takes too long, you&apos;ll be redirected automatically
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className={therapeuticInteractive.statusIcon}>
-            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-            </svg>
-          </div>
-          <h1 className="text-xl font-semibold mb-2">Authentication Required</h1>
-          <p className="text-muted-foreground">Redirecting to authentication...</p>
         </div>
       </div>
     );

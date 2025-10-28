@@ -29,9 +29,9 @@ declare global {
 import { jest } from '@jest/globals';
 import { Provider } from 'react-redux';
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import chatSlice from '@/store/slices/chatSlice';
-import sessionsSlice from '@/store/slices/sessionsSlice';
-import cbtSlice from '@/store/slices/cbtSlice';
+import chatSlice from '@/store/slices/chat-slice';
+import sessionsSlice from '@/store/slices/sessions-slice';
+import cbtSlice from '@/store/slices/cbt-slice';
 import type { AuthValidationResult } from '@/lib/api/api-auth';
 import type { RootState } from '@/store';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
@@ -905,7 +905,7 @@ export class TestSetupUtils {
       
       if (mocks.auth) {
         const authMocks = MockFactory.createAuthMocks();
-        jest.mock('@/lib/auth/totp-service', () => authMocks.totpService);
+        // Note: TOTP service removed, using Clerk for authentication instead
         jest.mock('@/lib/auth/device-fingerprint', () => authMocks.deviceFingerprint);
         jest.mock('@/lib/api/api-auth', () => authMocks.apiAuth);
       }

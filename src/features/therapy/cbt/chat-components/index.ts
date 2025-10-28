@@ -20,4 +20,4 @@ export type {
   CoreBeliefData,
   ChallengeQuestionData,
   RationalThoughtData
-} from '@/store/slices/cbtSlice';
+} from '@/store/slices/cbt-slice';

@@ -1,7 +1,7 @@
 import type { SessionDoc, SessionBundle } from '@/types/database';
 import type { Doc, Id } from '../../../convex/_generated/dataModel';
 
-jest.mock('@/lib/convex/httpClient', () => ({
+jest.mock('@/lib/convex/http-client', () => ({
   getConvexHttpClient: jest.fn(),
   api: {
     sessions: {
@@ -9,8 +9,8 @@ jest.mock('@/lib/convex/httpClient', () => ({
       listByUser: 'sessions.listByUser',
     },
     users: {
-      getByLegacyId: 'users.getByLegacyId',
-      getOrCreate: 'users.getOrCreate',
+      getByClerkId: 'users.getByClerkId',
+      ensureByClerkId: 'users.ensureByClerkId',
     },
   },
 }));
@@ -51,9 +51,10 @@ function buildUserDoc(): Doc<'users'> {
   return {
     _id: 'user_1' as Id<'users'>,
     _creationTime: Date.now(),
-    legacyId: 'legacy-user',
+    clerkId: 'clerk_test_user',
     email: 'user@example.com',
     name: 'User',
+    legacyId: 'legacy-user',
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -108,7 +109,7 @@ describe('database queries type safety', () => {
     mockQuery.mockReset();
     mockMutation.mockReset();
     mockDatabaseError.mockReset();
-    const { getConvexHttpClient } = require('@/lib/convex/httpClient');
+    const { getConvexHttpClient } = require('@/lib/convex/http-client');
     if (!jest.isMockFunction(getConvexHttpClient)) {
       throw new Error('getConvexHttpClient is not mocked');
     }
@@ -124,13 +125,13 @@ describe('database queries type safety', () => {
       .mockResolvedValueOnce(bundle)
       .mockResolvedValueOnce(buildUserDoc());
 
-    const result = await queries.verifySessionOwnership(bundle.session._id as string, 'legacy-user', {
+    const result = await queries.verifySessionOwnership(bundle.session._id as string, 'clerk_test_user', {
       includeMessages: true,
     });
 
     expect(mockQuery).toHaveBeenCalledTimes(2);
     expect(mockQuery.mock.calls[0][1]).toEqual({ sessionId: bundle.session._id as unknown as string });
-    expect(mockQuery.mock.calls[1][1]).toEqual({ legacyId: 'legacy-user' });
+    expect(mockQuery.mock.calls[1][1]).toEqual({ clerkId: 'clerk_test_user' });
     expect(result.valid).toBe(true);
     expect(result.session).toBeDefined();
     if (!result.session || !('messages' in result.session)) {
@@ -146,7 +147,7 @@ describe('database queries type safety', () => {
       .mockResolvedValueOnce(invalidBundle)
       .mockResolvedValueOnce(buildUserDoc());
 
-    const result = await queries.verifySessionOwnership('session_1', 'legacy-user', { includeMessages: true });
+    const result = await queries.verifySessionOwnership('session_1', 'clerk_test_user', { includeMessages: true });
 
     expect(result.valid).toBe(false);
     expect(mockDatabaseError).toHaveBeenCalledWith(
@@ -154,7 +155,7 @@ describe('database queries type safety', () => {
       expect.any(Error),
       expect.objectContaining({
         sessionId: 'session_1',
-        userId: 'legacy-user',
+        userId: 'clerk_test_user',
       })
     );
   });
@@ -169,7 +170,7 @@ describe('database queries type safety', () => {
         session: buildSessionDoc({ userId: 'user_2' as Id<'users'> }),
       });
 
-    const result = await queries.getSessionWithMessages(bundle.session._id as string, otherUser.legacyId ?? '');
+    const result = await queries.getSessionWithMessages(bundle.session._id as string, otherUser.clerkId ?? '');
 
     expect(result).toBeNull();
   });
@@ -182,7 +183,7 @@ describe('database queries type safety', () => {
       .mockResolvedValueOnce([session]) // listByUser result
       .mockResolvedValueOnce(1); // countByUser result
 
-    const result = await queries.getUserSessions(user.legacyId ?? '');
+    const result = await queries.getUserSessions(user.clerkId ?? '');
 
     expect(result.items).toHaveLength(1);
     expect(result.items[0]._id).toBe(session._id);

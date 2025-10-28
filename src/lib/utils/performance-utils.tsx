@@ -93,14 +93,6 @@ export function preloadComponent<T = Record<string, unknown>>(
  * Settings panel removed - models are now automatically selected based on content
  */
 
-/**
- * Lazy loaded security settings for administrative features
- */
-export const LazySecuritySettings = createLazyComponent(
-  () => import('@/features/auth/components/security-settings'),
-  'SecuritySettings'
-);
-
 // ============================================================================
 // BUNDLE ANALYSIS UTILITIES
 // ============================================================================

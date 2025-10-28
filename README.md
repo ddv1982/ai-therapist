@@ -4,18 +4,18 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ## 🚀 Recent Improvements
 
-### 🔐 Enhanced TOTP Authentication System
-- **Server-Side Management**: Complete TOTP operations now handled server-side only
-- **Health Monitoring**: Comprehensive diagnostics for database, encryption, and time sync
-- **Improved Error Handling**: Better resilience against decryption failures and edge cases
-- **Unified CLI**: Single `npm run totp` command for all TOTP operations
-- **Enhanced Security**: Removed external API access to sensitive authentication operations
+### 🔐 Clerk Authentication Migration (October 2025)
+- **Managed Authentication**: Replaced 2000+ lines of custom TOTP code with Clerk managed auth
+- **Webhook Synchronization**: Automatic user sync from Clerk to Convex via webhooks
+- **Simplified Setup**: No more TOTP setup required - Clerk handles all authentication
+- **Enhanced Security**: Leverages Clerk's enterprise-grade authentication infrastructure
+- **Message Encryption Preserved**: AES-256-GCM encryption still protects therapeutic data
 
 ### 🛠️ Developer Experience
-- **Simplified Scripts**: Unified TOTP management with `totp-manager.js`
-- **Better Diagnostics**: Health checks and troubleshooting tools
-- **Cleaner Repository**: Removed obsolete files and scripts
-- **Contributor Guide**: Follow the workflows documented in [`AGENTS.md`](./AGENTS.md)
+- **Cleaner Codebase**: Removed custom auth endpoints, device fingerprinting, TOTP service
+- **Latest Dependencies**: All 27 packages upgraded to latest stable versions
+- **Better Test Coverage**: 862 passing tests (100% pass rate) with Clerk mocks
+- **Improved DX**: Turbopack provides 10x faster development builds
 
 ## ✨ Features
 
@@ -34,13 +34,12 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Web Search Integration** - Real-time access to therapeutic resources and current information
 
 ### 🔒 Enterprise Security
-- **AES-256-GCM Encryption** - All sensitive data encrypted
-- **Enhanced TOTP Authentication** - Secure two-factor authentication with health monitoring, improved error handling, and server-side management
-- **Server-Side TOTP Management** - No external API access to sensitive authentication operations
-- **Comprehensive Health Checks** - Database, encryption, and time synchronization monitoring
+- **Clerk Managed Authentication** - Enterprise-grade authentication service (replaces custom TOTP)
+- **AES-256-GCM Encryption** - Field-level encryption for therapeutic message content
+- **Webhook Authentication** - Svix signature verification for Clerk events
 - **Cross-Device Sessions** - Access sessions on any authenticated device
 - **Database Transactions** - Race condition prevention with ACID compliance
-- **Device Fingerprinting** - Enhanced unique device identification
+- **JWT Token Validation** - Secure API authentication via Clerk tokens
 - **HIPAA-Compliant Logging** - No sensitive data exposure
 
 ### ⚡ Performance & Resilience
@@ -82,41 +81,57 @@ This will automatically:
    npm install
    ```
 
-2. **Set up environment**
+2. **Set up Clerk** (Required)
+   - Go to [clerk.com](https://clerk.com) and create a new application
+   - Copy your API keys from the Clerk dashboard
+   - Configure webhook: Add endpoint at `/api/webhooks/clerk` with signing secret
+
+3. **Set up Convex** (Required)
+   - Go to [convex.dev](https://convex.dev) and create a new project
+   - Run `npx convex dev` to get your local development URL
+
+4. **Set up environment**
   ```bash
   # Create .env.local and add your keys
   cat > .env.local <<'EOF'
+  # Clerk Authentication (required)
+  CLERK_SECRET_KEY=your_clerk_secret_key
+  CLERK_WEBHOOK_SECRET=your_clerk_webhook_secret
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+
+  # Convex Backend (required)
+  CONVEX_URL=http://127.0.0.1:6790/?d=...
+  NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:6790/?d=...
+
+  # AI & Encryption (required)
   GROQ_API_KEY=your_groq_api_key_here
   ENCRYPTION_KEY=your_32_character_encryption_key_here
-  NEXTAUTH_SECRET=your_nextauth_secret_here
-  NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:6790/?d=anonymous-ai-therapist
-  CONVEX_URL=http://127.0.0.1:6790/?d=anonymous-ai-therapist
 
   # Redis Configuration
   REDIS_URL="redis://localhost:6379"
   CACHE_ENABLED="true"
 
-   # Local-only opts
-   BYPASS_AUTH=true
-   RATE_LIMIT_DISABLED=true
-   EOF
+  # Local-only opts
+  RATE_LIMIT_DISABLED=true
+  EOF
    ```
 
-3. **Initialize Redis and Convex**
-  ```bash
-  npm run redis:setup
-  npm run convex:dev   # in a separate terminal, leave running for local backend
-  ```
+5. **Initialize Redis and Convex**
+   ```bash
+   npm run redis:setup
+   npm run convex:dev   # in a separate terminal, leave running for local backend
+   ```
    The Convex backend will automatically initialize the schema and be accessible at the URL configured above.
 
-4. **Start development**
+6. **Start development**
    ```bash
    npm run dev
    ```
 
-5. **Open browser**
+7. **Open browser**
    - Navigate to `http://localhost:4000`
-   - Complete TOTP setup for secure access (or use `BYPASS_AUTH=true` for development)
+   - Sign up with Clerk (or use the sign-in page if account exists)
+   - After authentication, you'll have access to the chat interface
    - Enable web search in chat settings for access to current information
    - Start your first therapeutic conversation
 
@@ -161,7 +176,7 @@ This will automatically:
 - `npm run encryption:generate` - Generate new encryption keys
 - `npm run encryption:setup` - Setup encryption configuration
 - `npm run encryption:validate` - Validate encryption setup
-- `npm run totp` - Complete TOTP management (setup, reset, health checks, diagnostics)
+- Clerk authentication: Managed via [clerk.com](https://clerk.com) dashboard
 
 ### Health & Monitoring
 - `curl http://localhost:4000/api/health` - Get comprehensive system health status

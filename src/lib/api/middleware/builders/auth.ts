@@ -63,10 +63,12 @@ export function buildWithAuth(
         return unauthorized as NextResponse<ApiResponse<T>>;
       }
 
-      let userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo>;
-      try { userInfo = deps.getSingleUserInfo(request); } catch { userInfo = createFallbackUserInfo(request); }
-      const authenticatedContext: AuthenticatedRequestContext = { ...(baseContext as RequestContext), userInfo } as AuthenticatedRequestContext;
-      logger.info('Authenticated request', { ...baseContext, userId: (userInfo as { userId?: string } | undefined)?.userId });
+      let userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string };
+      try { userInfo = deps.getSingleUserInfo(request) as ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string }; } catch { userInfo = createFallbackUserInfo(request) as ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string }; }
+      const authWithId = authResult as unknown as { userId?: string };
+      const mergedUserInfo = authWithId?.userId ? { ...userInfo, clerkId: authWithId.userId } : userInfo;
+      const authenticatedContext: AuthenticatedRequestContext = { ...(baseContext as RequestContext), userInfo: mergedUserInfo } as AuthenticatedRequestContext;
+      logger.info('Authenticated request', { ...baseContext, userId: (mergedUserInfo as { userId?: string } | undefined)?.userId, clerkId: (mergedUserInfo as { clerkId?: string } | undefined)?.clerkId });
 
       const res = await handler(request, authenticatedContext, params);
       setResponseHeaders(res, authenticatedContext.requestId);
@@ -108,18 +110,20 @@ export function buildWithAuthStreaming(
           setResponseHeaders(unauthorized, baseContext.requestId || 'unknown', durationMs);
           return unauthorized;
         }
-        let userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo>;
+        let userInfo: ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string };
         try {
-          userInfo = deps.getSingleUserInfo(request);
+          userInfo = deps.getSingleUserInfo(request) as ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string };
         } catch {
-          userInfo = createFallbackUserInfo(request);
+          userInfo = createFallbackUserInfo(request) as ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo> & { clerkId?: string };
         }
+        const authWithId = authResult as unknown as { userId?: string };
+        const mergedUserInfo = authWithId?.userId ? { ...userInfo, clerkId: authWithId.userId } : userInfo;
         const authenticatedContext: AuthenticatedRequestContext = {
           requestId: baseContext.requestId || 'unknown',
           method: baseContext.method,
           url: baseContext.url,
           userAgent: baseContext.userAgent,
-          userInfo,
+          userInfo: mergedUserInfo,
         } as const;
         const res = await handler(request, authenticatedContext, routeParams.params);
         const durationMs = Math.round(performance.now() - startHighRes);
