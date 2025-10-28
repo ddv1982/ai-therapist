@@ -260,4 +260,136 @@ describe('ApiClient', () => {
       }
     });
   });
+
+  describe('API methods', () => {
+    beforeEach(() => {
+      (global.fetch as jest.Mock).mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ success: true, data: {} }),
+      });
+    });
+
+    describe('Sessions', () => {
+      it('listSessions calls GET /api/sessions', async () => {
+        await client.listSessions();
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/sessions');
+      });
+
+      it('createSession calls POST /api/sessions', async () => {
+        await client.createSession({ title: 'New Session' });
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/sessions');
+        expect(calls[0][1].method).toBe('POST');
+      });
+
+      it('deleteSession calls DELETE /api/sessions/:id', async () => {
+        await client.deleteSession('sess-123');
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/sessions/sess-123');
+        expect(calls[0][1].method).toBe('DELETE');
+      });
+
+      it('getSessionById calls GET /api/sessions/:id', async () => {
+        await client.getSessionById('sess-456');
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/sessions/sess-456');
+      });
+
+      it('getCurrentSession calls GET /api/sessions/current', async () => {
+        await client.getCurrentSession();
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/sessions/current');
+      });
+
+      it('setCurrentSession calls POST /api/sessions/current', async () => {
+        await client.setCurrentSession('sess-789');
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/sessions/current');
+        expect(calls[0][1].method).toBe('POST');
+      });
+    });
+
+    describe('Messages', () => {
+      it('listMessages calls GET /api/sessions/:id/messages', async () => {
+        await client.listMessages('sess-123');
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/sessions/sess-123/messages');
+      });
+
+      it('listMessages includes query params', async () => {
+        await client.listMessages('sess-123', { page: 2, limit: 50 });
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toContain('page=2');
+        expect(calls[0][0]).toContain('limit=50');
+      });
+
+      it('postMessage calls POST /api/sessions/:id/messages', async () => {
+        await client.postMessage('sess-123', { message: 'Hello', role: 'user' });
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/sessions/sess-123/messages');
+        expect(calls[0][1].method).toBe('POST');
+      });
+
+      it('patchMessageMetadata calls PATCH', async () => {
+        await client.patchMessageMetadata('sess-123', 'msg-456', {
+          metadata: { key: 'value' },
+        });
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/sessions/sess-123/messages/msg-456');
+        expect(calls[0][1].method).toBe('PATCH');
+      });
+    });
+
+    describe('Reports', () => {
+      it('generateReportDetailed calls POST /api/reports/generate', async () => {
+        await client.generateReportDetailed({
+          sessionId: 'sess-123',
+          messages: [],
+        });
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/reports/generate');
+        expect(calls[0][1].method).toBe('POST');
+      });
+    });
+
+    describe('Auth', () => {
+      it('getSessionStatus calls GET /api/auth/session', async () => {
+        await client.getSessionStatus();
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/auth/session');
+      });
+
+      it('revokeCurrentSession calls DELETE /api/auth/session', async () => {
+        await client.revokeCurrentSession();
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/auth/session');
+        expect(calls[0][1].method).toBe('DELETE');
+      });
+
+      it('logout calls POST /api/auth/logout', async () => {
+        await client.logout();
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/auth/logout');
+        expect(calls[0][1].method).toBe('POST');
+      });
+    });
+
+    describe('Devices', () => {
+      it('listDevices calls GET /api/auth/devices', async () => {
+        await client.listDevices();
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/auth/devices');
+      });
+
+      it('revokeDevice calls DELETE /api/auth/devices', async () => {
+        await client.revokeDevice('device-123');
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/auth/devices');
+        expect(calls[0][1].method).toBe('DELETE');
+      });
+    });
+  });
 });
