@@ -1,6 +1,17 @@
 /** @type {import('next').NextConfig} */
 import createNextIntlPlugin from 'next-intl/plugin';
-const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
+const withNextIntl = createNextIntlPlugin({
+  requestConfig: './i18n/request.ts',
+  locales: ['en', 'nl'],
+  defaultLocale: 'en',
+  localePrefix: 'never',
+  localeCookie: {
+    name: 'NEXT_LOCALE',
+    maxAge: 60 * 60 * 24 * 365,
+    sameSite: 'lax',
+    httpOnly: false,
+  },
+});
 import path from 'path';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
