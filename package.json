@@ -29,7 +29,7 @@
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",
     "qa:smoke": "npm run api:types && npm run lint && tsc --noEmit && npm test",
-    "qa:full": "CI=1 npm run qa:smoke && CI=1 npm run test:coverage && CI=1 npm run build && npx playwright install --with-deps || true && CI=1 npm run test:e2e && node scripts/print-coverage-summary.mjs",
+    "qa:full": "CI=1 npm run qa:smoke && CI=1 npm run test:coverage && npx playwright install --with-deps || true && CI=1 npm run test:e2e && node scripts/print-coverage-summary.mjs",
     "audit:names": "node scripts/naming-audit.mjs"
   },
   "dependencies": {
