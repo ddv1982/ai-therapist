@@ -42,9 +42,10 @@ describe('MemoryManagementService', () => {
 
   describe('getMemoryContext', () => {
     it('returns empty context when no reports found', async () => {
-      mockQuery.mockResolvedValue([]);
+      mockQuery.mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' });
+      mockQuery.mockResolvedValueOnce([]);
       
-      const result = await service.getMemoryContext(5, null);
+      const result = await service.getMemoryContext('test-clerk-id', 5, null);
       
       expect(result.memoryContext).toEqual([]);
       expect(result.reportCount).toBe(0);
@@ -55,6 +56,7 @@ describe('MemoryManagementService', () => {
 
     it('processes reports with structured data', async () => {
       mockQuery
+        .mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' })
         .mockResolvedValueOnce([
           {
             _id: 'report1',
@@ -72,7 +74,7 @@ describe('MemoryManagementService', () => {
           startedAt: 500000,
         });
       
-      const result = await service.getMemoryContext(5, null);
+      const result = await service.getMemoryContext('test-clerk-id', 5, null);
       
       expect(result.memoryContext).toHaveLength(1);
       expect(result.memoryContext[0].sessionTitle).toBe('Test Session');
@@ -82,6 +84,7 @@ describe('MemoryManagementService', () => {
 
     it('handles decryption failures gracefully', async () => {
       mockQuery
+        .mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' })
         .mockResolvedValueOnce([
           {
             _id: 'report1',
@@ -91,40 +94,46 @@ describe('MemoryManagementService', () => {
           },
         ]);
       
-      const result = await service.getMemoryContext(5, null);
+      const result = await service.getMemoryContext('test-clerk-id', 5, null);
       
       expect(result.memoryContext).toHaveLength(0);
       expect(result.stats.failedDecryptions).toBe(1);
     });
 
     it('limits results to specified limit', async () => {
-      mockQuery.mockResolvedValue([]);
+      mockQuery.mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' });
+      mockQuery.mockResolvedValueOnce([]);
       
-      await service.getMemoryContext(3, null);
+      await service.getMemoryContext('test-clerk-id', 3, null);
       
       expect(mockQuery).toHaveBeenCalledWith('reports.listRecent', {
+        userId: 'user1',
         limit: 3,
         excludeSessionId: undefined,
       });
     });
 
     it('caps limit at 10', async () => {
-      mockQuery.mockResolvedValue([]);
+      mockQuery.mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' });
+      mockQuery.mockResolvedValueOnce([]);
       
-      await service.getMemoryContext(50, null);
+      await service.getMemoryContext('test-clerk-id', 50, null);
       
       expect(mockQuery).toHaveBeenCalledWith('reports.listRecent', {
+        userId: 'user1',
         limit: 10,
         excludeSessionId: undefined,
       });
     });
 
     it('excludes session when provided', async () => {
-      mockQuery.mockResolvedValue([]);
+      mockQuery.mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' });
+      mockQuery.mockResolvedValueOnce([]);
       
-      await service.getMemoryContext(5, 'exclude123');
+      await service.getMemoryContext('test-clerk-id', 5, 'exclude123');
       
       expect(mockQuery).toHaveBeenCalledWith('reports.listRecent', {
+        userId: 'user1',
         limit: 5,
         excludeSessionId: 'exclude123',
       });
@@ -134,6 +143,7 @@ describe('MemoryManagementService', () => {
   describe('getMemoryManagement', () => {
     it('returns detailed report information', async () => {
       mockQuery
+        .mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' })
         .mockResolvedValueOnce([
           {
             _id: 'report1',
@@ -149,7 +159,7 @@ describe('MemoryManagementService', () => {
           startedAt: 500000,
         });
       
-      const result = await service.getMemoryManagement(5, null, false);
+      const result = await service.getMemoryManagement('test-clerk-id', 5, null, false);
       
       expect(result.memoryDetails).toHaveLength(1);
       expect(result.memoryDetails[0].contentPreview).toContain('Decrypted');
@@ -158,6 +168,7 @@ describe('MemoryManagementService', () => {
 
     it('includes full content when requested', async () => {
       mockQuery
+        .mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' })
         .mockResolvedValueOnce([
           {
             _id: 'report1',
@@ -168,13 +179,14 @@ describe('MemoryManagementService', () => {
         ])
         .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
       
-      const result = await service.getMemoryManagement(5, null, true);
+      const result = await service.getMemoryManagement('test-clerk-id', 5, null, true);
       
       expect(result.memoryDetails[0].fullContent).toBeDefined();
     });
 
     it('handles decryption failures in management mode', async () => {
       mockQuery
+        .mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' })
         .mockResolvedValueOnce([
           {
             _id: 'report1',
@@ -185,7 +197,7 @@ describe('MemoryManagementService', () => {
         ])
         .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
       
-      const result = await service.getMemoryManagement(5, null, false);
+      const result = await service.getMemoryManagement('test-clerk-id', 5, null, false);
       
       expect(result.memoryDetails[0].hasEncryptedContent).toBe(false);
       expect(result.stats.failedDecryptions).toBe(1);
@@ -286,6 +298,7 @@ describe('MemoryManagementService', () => {
   describe('createTherapeuticSummary', () => {
     it('creates summary from structured data', async () => {
       mockQuery
+        .mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' })
         .mockResolvedValueOnce([
           {
             _id: 'report1',
@@ -302,7 +315,7 @@ describe('MemoryManagementService', () => {
         ])
         .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
       
-      const result = await service.getMemoryContext(5, null);
+      const result = await service.getMemoryContext('test-clerk-id', 5, null);
       
       expect(result.memoryContext[0].summary).toContain('Key insights');
       expect(result.memoryContext[0].summary).toContain('Therapeutic focus');
@@ -313,6 +326,7 @@ describe('MemoryManagementService', () => {
     it('falls back to content truncation when no structured data', async () => {
       const longContent = 'x'.repeat(1000);
       mockQuery
+        .mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' })
         .mockResolvedValueOnce([
           {
             _id: 'report1',
@@ -323,7 +337,7 @@ describe('MemoryManagementService', () => {
         ])
         .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
       
-      const result = await service.getMemoryContext(5, null);
+      const result = await service.getMemoryContext('test-clerk-id', 5, null);
       
       expect(result.memoryContext[0].summary.length).toBeLessThanOrEqual(510); // 500 + '...'
     });

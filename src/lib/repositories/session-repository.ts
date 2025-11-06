@@ -42,6 +42,11 @@ export async function verifySessionOwnership(
   options: VerifySessionOptions = {}
 ): Promise<SessionOwnershipResult> {
   try {
+    // Validate session ID format before querying
+    if (!sessionId || sessionId.length === 0) {
+      return { valid: false };
+    }
+
     const client = getConvexHttpClient();
     const bundle = await client.query(api.sessions.getWithMessagesAndReports, {
       sessionId: assertSessionId(sessionId),
@@ -64,6 +69,12 @@ export async function verifySessionOwnership(
       session: withMessages(safeBundle),
     };
   } catch (error) {
+    // Catch Convex ID validation errors
+    if (error instanceof Error && (error.message.includes('Invalid') || error.message.includes('invalid'))) {
+      logger.warn('Invalid session ID format in ownership check', { sessionId, error: error.message });
+      return { valid: false };
+    }
+    
     logger.databaseError('verify session ownership', toError(error), {
       sessionId,
       userId: clerkId,
@@ -121,20 +132,34 @@ export async function getSessionWithMessages(
   sessionId: string,
   clerkId: string
 ): Promise<SessionWithMessages | null> {
-  const client = getConvexHttpClient();
-  const user = await client.query(api.users.getByClerkId, { clerkId });
-  const userDoc = user ? assertUserDoc(user) : null;
-  if (!userDoc) return null;
+  try {
+    // Validate session ID format before querying
+    if (!sessionId || sessionId.length === 0) {
+      return null;
+    }
 
-  const bundle = await client.query(api.sessions.getWithMessagesAndReports, {
-    sessionId: assertSessionId(sessionId),
-  });
-  if (!bundle) return null;
+    const client = getConvexHttpClient();
+    const user = await client.query(api.users.getByClerkId, { clerkId });
+    const userDoc = user ? assertUserDoc(user) : null;
+    if (!userDoc) return null;
 
-  const safeBundle = assertSessionBundle(bundle);
-  if (safeBundle.session.userId !== userDoc._id) return null;
+    const bundle = await client.query(api.sessions.getWithMessagesAndReports, {
+      sessionId: assertSessionId(sessionId),
+    });
+    if (!bundle) return null;
 
-  return withMessages(safeBundle);
+    const safeBundle = assertSessionBundle(bundle);
+    if (safeBundle.session.userId !== userDoc._id) return null;
+
+    return withMessages(safeBundle);
+  } catch (error) {
+    // Catch Convex ID validation errors and return null (will result in 404)
+    if (error instanceof Error && (error.message.includes('Invalid') || error.message.includes('invalid'))) {
+      logger.warn('Invalid session ID format', { sessionId, error: error.message });
+      return null;
+    }
+    throw error;
+  }
 }
 
 // ============================================================================

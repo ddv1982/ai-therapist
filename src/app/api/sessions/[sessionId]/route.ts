@@ -1,7 +1,7 @@
 import { updateSessionSchema } from '@/lib/utils/validation';
 import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership, getSessionWithMessages } from '@/lib/repositories/session-repository';
-import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api/api-response';
+import { createSuccessResponse, createErrorResponse, createNotFoundErrorResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
@@ -76,6 +76,11 @@ export const GET = withAuth(async (_request, context, params) => {
   try {
     const { sessionId } = await params as { sessionId: string };
 
+    // Validate session ID format
+    if (!sessionId || sessionId.length === 0) {
+      return createErrorResponse('Invalid session ID', 400, { requestId: context.requestId });
+    }
+
     const session = await getSessionWithMessages(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
 
     if (!session) {
@@ -123,6 +128,11 @@ export const GET = withAuth(async (_request, context, params) => {
     };
     return createSuccessResponse(mapped, { requestId: context.requestId });
   } catch (error) {
+    // Handle Convex ID validation errors
+    if (error instanceof Error && (error.message.includes('Invalid ID') || error.message.includes('invalid id'))) {
+      return createErrorResponse('Invalid session ID format', 404, { requestId: context.requestId });
+    }
+    
     return enhancedErrorHandlers.handleDatabaseError(
       error as Error,
       'fetch session',
@@ -134,6 +144,11 @@ export const GET = withAuth(async (_request, context, params) => {
 export const DELETE = withAuth(async (_request, context, params) => {
   try {
     const { sessionId } = await params as { sessionId: string };
+
+    // Validate session ID format
+    if (!sessionId || sessionId.length === 0) {
+      return createErrorResponse('Invalid session ID', 400, { requestId: context.requestId });
+    }
 
     // Verify session belongs to this user before deleting
     const { valid } = await verifySessionOwnership(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
@@ -152,6 +167,11 @@ export const DELETE = withAuth(async (_request, context, params) => {
 
     return createSuccessResponse({ success: true }, { requestId: context.requestId });
   } catch (error) {
+    // Handle Convex ID validation errors
+    if (error instanceof Error && (error.message.includes('Invalid ID') || error.message.includes('invalid id'))) {
+      return createErrorResponse('Invalid session ID format', 404, { requestId: context.requestId });
+    }
+    
     return enhancedErrorHandlers.handleDatabaseError(
       error as Error,
       'delete session',

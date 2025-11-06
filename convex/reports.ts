@@ -48,13 +48,29 @@ export const removeMany = mutation({
 });
 
 export const listRecent = query({
-  args: { limit: v.number(), excludeSessionId: v.optional(v.id('sessions')) },
-  handler: async (ctx, { limit, excludeSessionId }) => {
-    let q = ctx.db.query('sessionReports');
-    if (excludeSessionId) {
-      q = q.filter((q2) => q2.neq(q2.field('sessionId'), excludeSessionId));
-    }
-    const all = await q.collect();
-    return all.sort((a, b) => b.createdAt - a.createdAt).slice(0, Math.max(0, Math.min(limit, 50)));
+  args: { 
+    userId: v.id('users'),
+    limit: v.number(), 
+    excludeSessionId: v.optional(v.id('sessions')) 
+  },
+  handler: async (ctx, { userId, limit, excludeSessionId }) => {
+    // Get all sessions for this user first
+    const userSessions = await ctx.db
+      .query('sessions')
+      .withIndex('by_user_created', q => q.eq('userId', userId))
+      .collect();
+    
+    const sessionIds = new Set(userSessions.map(s => s._id));
+    
+    // Filter reports to only those belonging to user's sessions
+    const allReports = await ctx.db.query('sessionReports').collect();
+    const userReports = allReports.filter(r => 
+      sessionIds.has(r.sessionId) && 
+      (!excludeSessionId || r.sessionId !== excludeSessionId)
+    );
+    
+    return userReports
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, Math.max(0, Math.min(limit, 50)));
   },
 });

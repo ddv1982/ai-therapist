@@ -118,14 +118,33 @@ export class MemoryManagementService {
   /**
    * Retrieves recent session reports for memory context
    */
-  async getMemoryContext(limit: number, excludeSessionId: string | null): Promise<MemoryData> {
+  async getMemoryContext(clerkId: string, limit: number, excludeSessionId: string | null): Promise<MemoryData> {
     logger.info('Retrieving session reports for memory context', {
       limit,
       excludeSessionId
     });
 
     const client = getConvexHttpClient();
+    
+    // Get user from Clerk ID
+    const user = await client.query(anyApi.users.getByClerkId, { clerkId });
+    const convexUser = user as ConvexUser | null;
+
+    if (!convexUser) {
+      logger.warn('User not found for memory context', { clerkId: '[FILTERED]' });
+      return {
+        memoryContext: [],
+        reportCount: 0,
+        stats: {
+          totalReportsFound: 0,
+          successfullyDecrypted: 0,
+          failedDecryptions: 0,
+        },
+      };
+    }
+
     const reports = await client.query(anyApi.reports.listRecent, {
+      userId: convexUser._id,
       limit: Math.min(limit, 10),
       excludeSessionId: excludeSessionId || undefined,
     });
@@ -204,11 +223,31 @@ export class MemoryManagementService {
   /**
    * Retrieves detailed memory management information
    */
-  async getMemoryManagement(limit: number, excludeSessionId: string | null, includeFullContent: boolean): Promise<MemoryManageData> {
+  async getMemoryManagement(clerkId: string, limit: number, excludeSessionId: string | null, includeFullContent: boolean): Promise<MemoryManageData> {
     logger.info('Memory management request received');
 
     const client = getConvexHttpClient();
+    
+    // Get user from Clerk ID
+    const user = await client.query(anyApi.users.getByClerkId, { clerkId });
+    const convexUser = user as ConvexUser | null;
+
+    if (!convexUser) {
+      logger.warn('User not found for memory management', { clerkId: '[FILTERED]' });
+      return {
+        memoryDetails: [],
+        reportCount: 0,
+        stats: {
+          totalReportsFound: 0,
+          successfullyProcessed: 0,
+          failedDecryptions: 0,
+          hasMemory: false,
+        },
+      };
+    }
+
     const limited = await client.query(anyApi.reports.listRecent, {
+      userId: convexUser._id,
       limit: Math.min(limit, 20),
       excludeSessionId: excludeSessionId || undefined,
     });

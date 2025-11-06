@@ -1,5 +1,6 @@
 import { auth, getAuth } from '@clerk/nextjs/server';
 import type { NextRequest } from 'next/server';
+import { env } from '@/config/env';
 
 export interface AuthValidationResult {
   isValid: boolean;
@@ -12,8 +13,20 @@ export interface AuthValidationResult {
  * Validate authentication for API routes using Clerk
  * Can be called with or without a request parameter (request param is ignored for Clerk)
  * Clerk's auth() function works in route handlers
+ * 
+ * In development mode with BYPASS_AUTH=true, returns a dev user without Clerk validation
  */
 export async function validateApiAuth(request?: NextRequest): Promise<AuthValidationResult> {
+  // Development bypass: skip Clerk auth when BYPASS_AUTH=true
+  if (env.BYPASS_AUTH) {
+    return {
+      isValid: true,
+      clerkId: 'dev-user',
+      userId: 'dev-user',
+    };
+  }
+
+  // Production: use Clerk authentication
   try {
     // Prefer request-bound auth (more reliable in route handlers),
     // fall back to global auth() when request is unavailable

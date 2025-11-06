@@ -68,34 +68,34 @@ help: ## Show help
 
 setup: $(STAMP_NODE) env redis-up encryption-ok $(API_TYPES) playwright ## Intelligent setup + start dev (Convex + Next, stops on Ctrl+C)
 	@/bin/sh -c '\
-	  set -e; \
-	  echo "🔧 Ensuring Next.js is not already running..."; $(MAKE) -s next-stop >/dev/null 2>&1 || true; \
-	  echo "🔧 Ensuring Convex is not already running..."; $(MAKE) -s convex-stop >/dev/null 2>&1 || true; \
-	  echo "🚀 Starting Convex in background..."; \
-	  npm run convex:dev >/tmp/convex-dev.log 2>&1 & CONVEX_PID=$$!; \
-	  sleep 2; \
-	  trap "echo \"🛑 Stopping Next.js and Convex...\"; $(MAKE) -s next-stop >/dev/null 2>&1 || true; kill $$CONVEX_PID 2>/dev/null || true; $(MAKE) -s convex-stop >/dev/null 2>&1 || true" INT TERM EXIT; \
-	  echo "🌐 Starting Next dev..."; \
-	  CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} \
-	  CONVEX_URL=http://127.0.0.1:3210 \
-	  NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:3210 \
-	  npm run dev; \
+		set -e; \
+		echo "🔧 Ensuring Next.js is not already running..."; $(MAKE) -s next-stop >/dev/null 2>&1 || true; \
+		echo "🔧 Ensuring Convex is not already running..."; $(MAKE) -s convex-stop >/dev/null 2>&1 || true; \
+		echo "🔄 Preparing Convex (one-time sync/upgrade if needed)..."; \
+		npm run convex:dev -- --once --tail-logs disable || true; \
+		echo "🚀 Starting Convex in background..."; \
+		npm run convex:dev >/tmp/convex-dev.log 2>&1 & CONVEX_PID=$$!; \
+		sleep 2; \
+		trap "echo \"🛑 Stopping Next.js and Convex...\"; $(MAKE) -s next-stop >/dev/null 2>&1 || true; kill $$CONVEX_PID 2>/dev/null || true; $(MAKE) -s convex-stop >/dev/null 2>&1 || true" INT TERM EXIT; \
+		echo "🌐 Starting Next dev..."; \
+		CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} \
+		npm run dev; \
 	'
 
 dev: ## Start dev (Convex + Next; Ctrl+C cleanly stops both)
 	@/bin/sh -c '\
-	  set -e; \
-	  echo "🔧 Ensuring Next.js is not already running..."; $(MAKE) -s next-stop >/dev/null 2>&1 || true; \
-	  echo "🔧 Ensuring Convex is not already running..."; $(MAKE) -s convex-stop >/dev/null 2>&1 || true; \
-	  echo "🚀 Starting Convex in background..."; \
-	  npm run convex:dev >/tmp/convex-dev.log 2>&1 & CONVEX_PID=$$!; \
-	  sleep 2; \
-	  trap "echo \"🛑 Stopping Next.js and Convex...\"; $(MAKE) -s next-stop >/dev/null 2>&1 || true; kill $$CONVEX_PID 2>/dev/null || true; $(MAKE) -s convex-stop >/dev/null 2>&1 || true" INT TERM EXIT; \
-	  echo "🌐 Starting Next dev..."; \
-	  CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} \
-	  CONVEX_URL=http://127.0.0.1:3210 \
-	  NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:3210 \
-	  npm run dev; \
+		set -e; \
+		echo "🔧 Ensuring Next.js is not already running..."; $(MAKE) -s next-stop >/dev/null 2>&1 || true; \
+		echo "🔧 Ensuring Convex is not already running..."; $(MAKE) -s convex-stop >/dev/null 2>&1 || true; \
+		echo "🔄 Preparing Convex (one-time sync/upgrade if needed)..."; \
+		npm run convex:dev -- --once --tail-logs disable || true; \
+		echo "🚀 Starting Convex in background..."; \
+		npm run convex:dev >/tmp/convex-dev.log 2>&1 & CONVEX_PID=$$!; \
+		sleep 2; \
+		trap "echo \"🛑 Stopping Next.js and Convex...\"; $(MAKE) -s next-stop >/dev/null 2>&1 || true; kill $$CONVEX_PID 2>/dev/null || true; $(MAKE) -s convex-stop >/dev/null 2>&1 || true" INT TERM EXIT; \
+		echo "🌐 Starting Next dev..."; \
+		CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} \
+		npm run dev; \
 	'
 
 start: redis-up encryption-ok ## Start prod server (ensure convex:dev is running)

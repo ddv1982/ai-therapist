@@ -107,14 +107,14 @@ export function useChatSessions(options: UseChatSessionsOptions) {
       await removeSession(sessionId);
       if (currentSession === sessionId) {
         await clearCurrentSession();
-        await hydrateCurrentSession();
+        await loadSessions();
       } else {
         await loadSessions();
       }
     } catch {
       // ignore errors for deletion to keep UI responsive
     }
-  }, [removeSession, currentSession, clearCurrentSession, hydrateCurrentSession, loadSessions]);
+  }, [removeSession, currentSession, clearCurrentSession, loadSessions]);
 
   useEffect(() => {
     if (!authReady) return;

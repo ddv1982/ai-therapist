@@ -11,7 +11,9 @@ export const chatMessageSchema = z.object({
 export const chatRequestSchema = z.object({
   // Accept Convex document IDs (non-UUID). Keep loose string validation.
   sessionId: z.string().min(1).optional(),
-  message: z.string().min(1),
+  message: z.string().min(1).transform(val => val.trim()).refine(val => val.length > 0, {
+    message: 'Message cannot be empty or contain only whitespace'
+  }),
   model: z.string().default(DEFAULT_MODEL_ID),
   tools: z.array(z.string()).optional(),
   context: z.object({}).passthrough().optional(),

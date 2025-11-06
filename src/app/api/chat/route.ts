@@ -40,6 +40,18 @@ type SessionOwnership = SessionOwnershipResult;
 
 export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, context) => {
   try {
+    // Validate Content-Type header
+    const contentType = req.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      return new Response(
+        JSON.stringify({ error: 'Content-Type must be application/json', requestId: context.requestId }), 
+        { 
+          status: 415, 
+          headers: { 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     const parsedBody = await readJsonBody(req);
     const maxSize = env.CHAT_INPUT_MAX_BYTES;
     if (parsedBody.size > maxSize) return createErrorResponse('Request too large', 413, { requestId: context.requestId });

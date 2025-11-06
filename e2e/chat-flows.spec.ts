@@ -61,9 +61,8 @@ test.describe('Chat Functionality', () => {
         }
       });
 
-      // Should return valid response (may be 401 if not authenticated)
-      const data = await response.json() as Record<string, unknown>;
-      expect(data).toBeTruthy();
+      // Should return 401 (auth required) or valid response
+      expect([200, 401]).toContain(response.status());
     });
 
     test('2.2: Empty message rejected', async ({ request }) => {
@@ -86,7 +85,7 @@ test.describe('Chat Functionality', () => {
         }
       });
 
-      // Should reject whitespace-only message
+      // Should reject whitespace OR require auth
       expect([400, 401]).toContain(response.status());
     });
 
