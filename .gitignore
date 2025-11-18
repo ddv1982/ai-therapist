@@ -62,7 +62,8 @@ new-auth-qr.png
 # Droidz configuration - NEVER commit this!
 config.yml
 
-# .droidz/ - Local state and specs
-.droidz/*
-!.droidz/.gitignore
-!.droidz/specs/000-*.md
+# .droidz/ - Local state and specs (completely ignored)
+.droidz/
+
+# .factory/ - Factory.AI framework files (auto-generated, not project-specific)
+.factory/
