@@ -22,7 +22,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [hasHydrated, setHasHydrated] = useState(false);
 
   const { data: currentServerSession } = useCurrentSessionQuery();
-  const setCurrentOnServer = useSetCurrentSessionMutation();
+  const { mutateAsync: setCurrentOnServer } = useSetCurrentSessionMutation();
 
   // Sync with server on mount only once
   useEffect(() => {
@@ -37,7 +37,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setCurrentSessionId(sessionId);
       if (sessionId) {
         try {
-          await setCurrentOnServer.mutateAsync(sessionId);
+          await setCurrentOnServer(sessionId);
         } catch {
           // Silently ignore server sync errors
         }
