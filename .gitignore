@@ -67,3 +67,8 @@ config.yml
 
 # .factory/ - Factory.AI framework files (auto-generated, not project-specific)
 .factory/
+
+# Factory.AI templates (generic documentation, not project-specific)
+AGENTS.md.template
+SKILLS.md
+SKILLS_SUMMARY.md
