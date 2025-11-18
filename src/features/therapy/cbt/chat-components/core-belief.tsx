@@ -3,8 +3,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { TherapySlider } from '@/components/ui/therapy-slider';
-import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
+import { TherapySlider } from '@/features/therapy/components/ui/therapy-slider';
+import { CBTStepWrapper } from '@/features/therapy/components/cbt-step-wrapper';
 import { Target } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { CBTStepType, CoreBeliefData } from '@/types';

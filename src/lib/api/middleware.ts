@@ -9,6 +9,7 @@ import {
   createAuthenticationErrorResponse,
   createValidationErrorResponse,
   createServerErrorResponse,
+  createErrorResponse,
   type ApiResponse,
 } from '@/lib/api/api-response';
 import { getRateLimiter } from '@/lib/api/rate-limiter';
@@ -128,7 +129,7 @@ export function withAuth<T = unknown>(
       userInfo = getSingleUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
         clerkId?: string;
       };
-    } catch {
+    } catch (e) {
       userInfo = createFallbackUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
         clerkId?: string;
       };
@@ -137,6 +138,7 @@ export function withAuth<T = unknown>(
     const mergedUserInfo = authWithId?.userId
       ? { ...userInfo, clerkId: authWithId.userId }
       : userInfo;
+
     const authenticatedContext: AuthenticatedRequestContext = {
       ...(baseContext as RequestContext),
       userInfo: mergedUserInfo,
@@ -183,14 +185,19 @@ export function withAuthStreaming(
           clerkId?: string;
         };
       } catch {
-        userInfo = createFallbackUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
-          clerkId?: string;
-        };
+        try {
+           userInfo = createFallbackUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
+            clerkId?: string;
+           };
+        } catch (err) {
+           throw err;
+        }
       }
       const authWithId = authResult as unknown as { userId?: string };
       const mergedUserInfo = authWithId?.userId
         ? { ...userInfo, clerkId: authWithId.userId }
         : userInfo;
+      
       const authenticatedContext: AuthenticatedRequestContext = {
         requestId: baseContext.requestId || 'unknown',
         method: baseContext.method,
@@ -236,9 +243,14 @@ export function withValidation<TSchema extends z.ZodSchema, TResponse = unknown>
             'Invalid JSON in request body',
             context
           );
-          return createValidationErrorResponse(
+          return createErrorResponse(
             'Invalid JSON format in request body',
-            context.requestId
+            400,
+            {
+              code: 'VALIDATION_ERROR',
+              details: 'JSON parsing failed',
+              requestId: context.requestId,
+            }
           ) as NextResponse<ApiResponse<TResponse>>;
         }
       } else {
@@ -260,9 +272,16 @@ export function withValidation<TSchema extends z.ZodSchema, TResponse = unknown>
         validation.error || 'Validation failed',
         context
       );
-      return createValidationErrorResponse(
+      // Use createErrorResponse directly to put the specific error in the message field
+      return createErrorResponse(
         validation.error || 'Validation failed',
-        context.requestId
+        400,
+        {
+          code: 'VALIDATION_ERROR',
+          details: validation.error,
+          suggestedAction: 'Please check your input data and try again',
+          requestId: context.requestId,
+        }
       ) as NextResponse<ApiResponse<TResponse>>;
     }
 

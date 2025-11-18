@@ -103,9 +103,7 @@ describe('utils', () => {
     });
 
     it('handles ::1 (IPv6 localhost)', () => {
-      // The function checks for ::1 but split(':')[0] on '::1' returns ''
-      // so this actually returns false
-      expect(isLocalhost('::1')).toBe(false);
+      expect(isLocalhost('::1')).toBe(true);
     });
 
     it('returns true for 0.0.0.0', () => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useReducer } from 'react';
-import type { CBTSessionSummaryData } from '@/components/ui/cbt-session-summary-card';
+import type { CBTSessionSummaryData } from '@/features/therapy/components/cbt-session-summary-card';
 import { generateUUID } from '@/lib/utils/helpers';
 import {
   createInitialState,

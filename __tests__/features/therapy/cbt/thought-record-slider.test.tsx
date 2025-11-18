@@ -35,7 +35,7 @@ jest.mock('next-intl', () => ({
   useTranslations: () => translator,
 }));
 
-jest.mock('@/components/ui/cbt-step-wrapper', () => ({
+jest.mock('@/features/therapy/components/cbt-step-wrapper', () => ({
   __esModule: true,
   CBTStepWrapper: ({ children, onNext }: { children: React.ReactNode; onNext?: () => void }) => (
     <div>
@@ -67,7 +67,7 @@ jest.mock('@/components/ui/textarea', () => ({
   }) => <textarea value={value} onChange={onChange} />,
 }));
 
-jest.mock('@/components/ui/therapy-slider', () => ({
+jest.mock('@/features/therapy/components/ui/therapy-slider', () => ({
   __esModule: true,
   TherapySlider: ({
     label,
