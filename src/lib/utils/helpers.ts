@@ -58,6 +58,8 @@ export {
 export function isLocalhost(host: string): boolean {
   if (!host) return false;
 
+  if (host === '::1') return true;
+
   const cleanHost = host.toLowerCase().split(':')[0];
 
   return (
