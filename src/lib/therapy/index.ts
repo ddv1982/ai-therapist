@@ -8,3 +8,9 @@ export * from './therapy-prompts';
 
 // CBT templates and tools
 export * from './cbt-template';
+
+// Consolidated therapy modules
+export * from './parsers';
+export * from './prompts';
+export * from './validators';
+export * from './analysis';

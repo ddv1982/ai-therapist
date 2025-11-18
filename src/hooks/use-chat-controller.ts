@@ -12,7 +12,7 @@ import { useMemoryContext } from '@/hooks/use-memory-context';
 import { useChatSessions } from '@/hooks/chat/use-chat-sessions';
 import { useChatViewport } from '@/hooks/chat/use-chat-viewport';
 // import { REPORT_MODEL_ID } from '@/features/chat/config';
-import type { ObsessionsCompulsionsData } from '@/types/therapy';
+import type { ObsessionsCompulsionsData } from '@/types';
 import type { UiSession } from '@/lib/chat/session-mapper';
 import type { MemoryContextInfo } from '@/lib/chat/memory-utils';
 import { useChatUiState } from '@/hooks/chat/use-chat-ui-state';

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useReducer } from 'react';
 import type { CBTSessionSummaryData } from '@/components/ui/cbt-session-summary-card';
-import { generateUUID } from '@/lib/utils/utils';
+import { generateUUID } from '@/lib/utils/helpers';
 import {
   createInitialState,
   selectCurrentStep,
@@ -25,7 +25,7 @@ import type {
   RationalThoughtsData,
   SchemaModesData,
   ActionPlanData,
-} from '@/types/therapy';
+} from '@/types';
 
 export type CBTChatMessage = CBTFlowMessageDescriptor;
 

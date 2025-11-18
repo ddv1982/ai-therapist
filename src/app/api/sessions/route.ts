@@ -1,10 +1,10 @@
 import { createSessionSchema } from '@/lib/utils/validation';
 import { logger } from '@/lib/utils/logger';
 import { withValidation, withAuth } from '@/lib/api/api-middleware';
-import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
+import { enhancedErrorHandlers } from '@/lib/utils/errors';
 import { getUserSessions } from '@/lib/repositories/session-repository';
 import { createSuccessResponse } from '@/lib/api/api-response';
-import { deduplicateRequest } from '@/lib/utils/request-deduplication';
+import { deduplicateRequest } from '@/lib/utils/helpers';
 import { SessionCache } from '@/lib/cache';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexSession, ConvexUser } from '@/types/convex';

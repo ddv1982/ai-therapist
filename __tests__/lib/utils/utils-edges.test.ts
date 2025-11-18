@@ -1,4 +1,4 @@
-import { cn, formatDuration, isLocalhost, isPrivateNetworkAccess } from '@/lib/utils/utils';
+import { cn, formatDuration, isLocalhost, isPrivateNetworkAccess } from '@/lib/utils/helpers';
 
 describe('utils edges', () => {
   it('cn merges classes with tailwind-merge', () => {

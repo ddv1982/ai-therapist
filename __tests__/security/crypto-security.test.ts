@@ -171,7 +171,7 @@ describe('Cryptographic Security Tests', () => {
     });
 
     it('should maintain quality under load', () => {
-      const tokens = [];
+      const tokens: string[] = [];
 
       // Generate tokens rapidly
       for (let i = 0; i < 100; i++) {

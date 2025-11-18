@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
-import type { ObsessionsCompulsionsData } from '@/types/therapy';
+import type { ObsessionsCompulsionsData } from '@/types';
 import { MetricTile } from './metric-tile';
 
 interface FeedListProps {

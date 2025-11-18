@@ -6,7 +6,7 @@
 import {
   validateTherapeuticContext,
   calculateContextualConfidence,
-} from '@/lib/therapy/context-validator';
+} from '@/lib/therapy/validators';
 import type { ReportMessage } from '@/lib/api/groq-client';
 
 describe('Contextual Validation Integration', () => {

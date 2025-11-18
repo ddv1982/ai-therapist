@@ -5,7 +5,7 @@ import {
   generateFileName,
   formatEmotionsForExport,
 } from '@/lib/cbt/export-utils';
-import { createInitialCBTFormData } from '@/types/therapy';
+import { createInitialCBTFormData } from '@/types/domains/therapy';
 
 // Ensure URL APIs exist for spying
 if (!(URL as any).createObjectURL) {

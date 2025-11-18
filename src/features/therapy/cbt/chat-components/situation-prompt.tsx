@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { CBTStepType, SituationData } from '@/types/therapy';
+import type { CBTStepType, SituationData } from '@/types';
 import { useTranslations } from 'next-intl';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 

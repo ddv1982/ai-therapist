@@ -1,6 +1,5 @@
-import type { paths as SessionPaths, components as SessionComponents } from '@/types/api/sessions';
-import type { paths as MessagePaths, components as MessageComponents } from '@/types/api/messages';
-import type { paths as ReportPaths } from '@/types/api/reports';
+import type { Session } from '@/types';
+import type { ChatMessage } from '@/types';
 import type { ApiResponse, PaginatedResponse } from '@/lib/api/api-response';
 
 async function parseJsonSafe(response: Response) {
@@ -135,17 +134,17 @@ export class ApiClient {
 
   // Sessions
   async listSessions(): Promise<
-    ApiResponse<PaginatedResponse<SessionComponents['schemas']['Session']>>
+    ApiResponse<PaginatedResponse<Session>>
   > {
-    return this.request<ApiResponse<PaginatedResponse<SessionComponents['schemas']['Session']>>>(
+    return this.request<ApiResponse<PaginatedResponse<Session>>>(
       '/api/sessions'
     );
   }
 
   async createSession(
-    body: SessionPaths['/sessions']['post']['requestBody']['content']['application/json']
-  ): Promise<ApiResponse<SessionComponents['schemas']['Session']>> {
-    return this.request<ApiResponse<SessionComponents['schemas']['Session']>>('/api/sessions', {
+    body: { title: string }
+  ): Promise<ApiResponse<Session>> {
+    return this.request<ApiResponse<Session>>('/api/sessions', {
       method: 'POST',
       body: JSON.stringify(body),
     });
@@ -161,23 +160,26 @@ export class ApiClient {
   async listMessages(
     sessionId: string,
     params?: { page?: number; limit?: number }
-  ): Promise<ApiResponse<PaginatedResponse<MessageComponents['schemas']['Message']>>> {
+  ): Promise<ApiResponse<PaginatedResponse<ChatMessage>>> {
     const qs = new URLSearchParams();
     if (params?.page) qs.set('page', String(params.page));
     if (params?.limit) qs.set('limit', String(params.limit));
     const path = `/api/sessions/${sessionId}/messages${qs.toString() ? `?${qs.toString()}` : ''}`;
-    return this.request<ApiResponse<PaginatedResponse<MessageComponents['schemas']['Message']>>>(
+    return this.request<ApiResponse<PaginatedResponse<ChatMessage>>>(
       path
     );
   }
 
   async postMessage(
     sessionId: string,
-    body: MessagePaths['/sessions/{sessionId}/messages']['post']['requestBody']['content']['application/json'] & {
+    body: {
+      role: string;
+      content: string;
+      modelUsed?: string;
       metadata?: Record<string, unknown>;
     }
-  ): Promise<ApiResponse<MessageComponents['schemas']['Message']>> {
-    return this.request<ApiResponse<MessageComponents['schemas']['Message']>>(
+  ): Promise<ApiResponse<ChatMessage>> {
+    return this.request<ApiResponse<ChatMessage>>(
       `/api/sessions/${sessionId}/messages`,
       {
         method: 'POST',
@@ -193,8 +195,8 @@ export class ApiClient {
       metadata: Record<string, unknown>;
       mergeStrategy?: 'merge' | 'replace';
     }
-  ): Promise<ApiResponse<MessageComponents['schemas']['Message']>> {
-    return this.request<ApiResponse<MessageComponents['schemas']['Message']>>(
+  ): Promise<ApiResponse<ChatMessage>> {
+    return this.request<ApiResponse<ChatMessage>>(
       `/api/sessions/${sessionId}/messages/${messageId}`,
       {
         method: 'PATCH',
@@ -207,7 +209,7 @@ export class ApiClient {
 
   // Reports (detailed generate endpoint)
   async generateReportDetailed(
-    body: ReportPaths['/reports/generate']['post']['requestBody']['content']['application/json']
+    body: { sessionId: string; messages: ChatMessage[]; model?: string }
   ): Promise<
     ApiResponse<{
       reportContent: string;
@@ -260,9 +262,9 @@ export class ApiClient {
 
   async setCurrentSession(
     sessionId: string
-  ): Promise<ApiResponse<{ success: boolean; session: SessionComponents['schemas']['Session'] }>> {
+  ): Promise<ApiResponse<{ success: boolean; session: Session }>> {
     return this.request<
-      ApiResponse<{ success: boolean; session: SessionComponents['schemas']['Session'] }>
+      ApiResponse<{ success: boolean; session: Session }>
     >('/api/sessions/current', {
       method: 'POST',
       body: JSON.stringify({ sessionId }),
@@ -272,8 +274,8 @@ export class ApiClient {
   // Single session
   async getSessionById(
     sessionId: string
-  ): Promise<ApiResponse<SessionComponents['schemas']['Session']>> {
-    return this.request<ApiResponse<SessionComponents['schemas']['Session']>>(
+  ): Promise<ApiResponse<Session>> {
+    return this.request<ApiResponse<Session>>(
       `/api/sessions/${sessionId}`
     );
   }

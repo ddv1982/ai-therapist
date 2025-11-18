@@ -122,7 +122,7 @@ export function generateRequestId(): string {
  * Generate secure backup codes for authentication
  */
 export function generateBackupCodes(count: number = 10): string[] {
-  const codes = [];
+  const codes: string[] = [];
   for (let i = 0; i < count; i++) {
     // Generate 8-character alphanumeric codes
     codes.push(generateSecureRandomString(8, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'));

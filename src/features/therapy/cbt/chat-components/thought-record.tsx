@@ -9,7 +9,7 @@ import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { Brain, Plus, Minus, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { CBTStepType, ThoughtData } from '@/types/therapy';
+import type { CBTStepType, ThoughtData } from '@/types';
 // Removed CBTFormValidationError import - validation errors not displayed
 // Removed chat bridge imports - individual data no longer sent during session
 import { useTranslations } from 'next-intl';
@@ -69,7 +69,7 @@ export function ThoughtRecord({
 
     // Always recompute highlight from store values to persist selection when navigating
     const prompts = (t.raw('thoughts.prompts') as string[]) || [];
-    const rehydratedSelections = thoughtsData.map((item) =>
+    const rehydratedSelections = thoughtsData.map((item: any) =>
       prompts.includes(item.thought) ? item.thought : ''
     );
     setSelectedPrompts(rehydratedSelections);
@@ -84,7 +84,7 @@ export function ThoughtRecord({
       const equalLength = prevThoughts.length === thoughtsData.length;
       const isSame =
         equalLength &&
-        thoughtsData.every((nextThought, index) => {
+        thoughtsData.every((nextThought: any, index: number) => {
           const current = prevThoughts[index];
           return (
             current &&
@@ -98,7 +98,7 @@ export function ThoughtRecord({
       }
 
       setErrors(new Array(thoughtsData.length).fill(''));
-      return thoughtsData.map((thought, index) => ({
+      return thoughtsData.map((thought: any, index: number) => ({
         thought: thought.thought,
         credibility:
           typeof thought.credibility === 'number'

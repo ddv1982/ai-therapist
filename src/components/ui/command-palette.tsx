@@ -11,13 +11,11 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setCurrentSession } from '@/store/slices/sessions-slice';
-import { useFetchSessionsQuery, SessionData } from '@/store/slices/sessions-api';
-import { clearMessages } from '@/store/slices/chat-slice';
-import { createDraft } from '@/store/slices/cbt-slice';
+import { useSession } from '@/contexts/session-context';
+import { useChatSettings } from '@/contexts/chat-settings-context';
+import { useSessionsQuery, SessionData } from '@/lib/queries/sessions';
 import { MessageSquare, Brain, Plus, Settings, Moon, Search, Clock } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid'; // Unused
 import { useTranslations } from 'next-intl';
 import { useSelectSession } from '@/hooks';
 
@@ -31,10 +29,10 @@ export function CommandPalette({ onCBTOpen, onSettingsOpen, onThemeToggle }: Com
   const t = useTranslations('ui');
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const dispatch = useAppDispatch();
+  const { currentSessionId, setCurrentSession } = useSession();
+  const { clearMessages } = useChatSettings();
 
-  const { data: sessions = [] } = useFetchSessionsQuery();
-  const currentSessionId = useAppSelector((state) => state.sessions.currentSessionId);
+  const { data: sessions = [] } = useSessionsQuery();
   const { selectSession } = useSelectSession();
 
   // Keyboard shortcut to open command palette
@@ -60,8 +58,8 @@ export function CommandPalette({ onCBTOpen, onSettingsOpen, onThemeToggle }: Com
 
   const createNewSession = () => {
     // Do not create a DB session yet; just clear state
-    dispatch(setCurrentSession(null));
-    dispatch(clearMessages());
+    setCurrentSession(null);
+    clearMessages();
   };
 
   const switchToSession = async (sessionId: string) => {
@@ -69,8 +67,7 @@ export function CommandPalette({ onCBTOpen, onSettingsOpen, onThemeToggle }: Com
   };
 
   const openCBTDiary = () => {
-    const newDraftId = uuidv4();
-    dispatch(createDraft({ id: newDraftId }));
+    // CBT diary now manages its own state
     onCBTOpen?.();
   };
 

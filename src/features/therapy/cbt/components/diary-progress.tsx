@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
-import type { CBTStepType } from '@/types/therapy';
+import type { CBTStepType } from '@/types';
 
 interface DiaryProgressProps {
   isMobile: boolean;

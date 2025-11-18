@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { StreamingStage } from '@/types/streaming';
+import type { StreamingStage } from '@/types';
 
 interface UseScrollToBottomOptions {
   isStreaming: boolean;

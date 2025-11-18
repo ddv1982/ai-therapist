@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { type ReportMessage } from '@/lib/api/groq-client';
 import { logger } from '@/lib/utils/logger';
 import { reportGenerationSchema, validateRequest } from '@/lib/utils/validation';
-import { deduplicateRequest } from '@/lib/utils/request-deduplication';
+import { deduplicateRequest } from '@/lib/utils/helpers';
 import { withAuth, type AuthenticatedRequestContext } from '@/lib/api/api-middleware';
 import { createErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
 import { ReportGenerationService } from '@/lib/services/report-generation-service';

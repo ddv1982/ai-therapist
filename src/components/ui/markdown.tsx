@@ -6,7 +6,7 @@ import {
   CBTSessionSummaryCard,
   type CBTSessionSummaryData,
 } from '@/components/ui/cbt-session-summary-card';
-import { safeParseFromMatch } from '@/lib/utils/safe-json';
+import { safeParseFromMatch } from '@/lib/utils/helpers';
 
 function extractCBTSummaryData(text: string): {
   summaryData: CBTSessionSummaryData | null;

@@ -13,22 +13,23 @@ import type { MessageData } from '@/features/chat/messages/message';
 import { logger } from '@/lib/utils/logger';
 import { apiClient } from '@/lib/api/client';
 import { getApiData } from '@/lib/api/api-response';
-import type { components } from '@/types/api/messages';
+import type { ObsessionsCompulsionsData } from '@/types';
 import { parseObsessionsCompulsionsFromMarkdown } from '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions';
 import { isObsessionsCompulsionsMessage } from '@/features/therapy/obsessions-compulsions/utils/obsessions-message-detector';
-import type { ObsessionsCompulsionsData } from '@/types/therapy';
+import type { ChatMessage as DomainChatMessage } from '@/types/domains/chat';
+
+// Extended type to include fields that might be missing from the base API type but present in response
+type ApiChatMessage = DomainChatMessage & {
+  modelUsed?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
 
 type ListMessagesResponse = import('@/lib/api/api-response').ApiResponse<
-  import('@/lib/api/api-response').PaginatedResponse<components['schemas']['Message']>
+  import('@/lib/api/api-response').PaginatedResponse<DomainChatMessage>
 >;
 
 // Using MessageData from the message system
 export type Message = MessageData;
-
-type ApiMessage = components['schemas']['Message'] & {
-  metadata?: Record<string, unknown> | null;
-  modelUsed?: string | null;
-};
 
 export interface ChatMessage {
   id: string;
@@ -102,10 +103,10 @@ export function useChatMessages() {
           throw new Error('Failed to persist queued metadata update');
         }
 
-        const data = (getApiData(response) ?? response.data) as ApiMessage | undefined;
+        const data = (getApiData(response) ?? response.data) as ApiChatMessage | undefined;
         if (data) {
           const normalizedTimestamp = data.timestamp
-            ? new Date(data.timestamp as string)
+            ? new Date(data.timestamp)
             : new Date();
           const messageMetadata = (data.metadata as Record<string, unknown> | null) ?? undefined;
 
@@ -214,22 +215,16 @@ export function useChatMessages() {
         }
 
         const page = getApiData(resp);
-        const items = page.items as Array<{
-          id: string;
-          role: 'user' | 'assistant';
-          content: string;
-          timestamp: string;
-          modelUsed?: string | null;
-          metadata?: Record<string, unknown> | null;
-        }>;
+        // Assert items to have the extended structure we expect
+        const items = page.items as unknown as Array<ApiChatMessage>;
 
         // Convert timestamp strings to Date objects
         const formattedMessages = items.map((msg) => {
           const baseMessage: Message = {
-            id: msg.id,
+            id: msg.id || `temp-${Date.now()}`,
             content: msg.content,
             role: msg.role as 'user' | 'assistant',
-            timestamp: new Date(msg.timestamp),
+            timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
             modelUsed:
               typeof msg.modelUsed === 'string' && msg.modelUsed.length > 0
                 ? msg.modelUsed
@@ -299,7 +294,7 @@ export function useChatMessages() {
           throw new Error('Failed to save message');
         }
 
-        const savedMessage = saved.data as ApiMessage;
+        const savedMessage = saved.data as ApiChatMessage;
         setMessages((prev) =>
           prev.map((msg) => {
             if (msg.id !== tempId) return msg;
@@ -310,7 +305,7 @@ export function useChatMessages() {
             const updated: Message = {
               ...msg,
               id: savedMessage.id as string,
-              timestamp: new Date(savedMessage.timestamp as string),
+              timestamp: savedMessage.timestamp ? new Date(savedMessage.timestamp) : new Date(),
               modelUsed:
                 typeof savedMessage.modelUsed === 'string' ? savedMessage.modelUsed : msg.modelUsed,
               metadata: updatedMetadata,
@@ -497,13 +492,13 @@ export function useChatMessages() {
           throw new Error('Failed to update message metadata');
         }
 
-        const data = (getApiData(response) ?? response.data) as ApiMessage | undefined;
+        const data = (getApiData(response) ?? response.data) as ApiChatMessage | undefined;
         if (!data) {
           throw new Error('Empty response when updating metadata');
         }
 
         const normalizedTimestamp = data.timestamp
-          ? new Date(data.timestamp as string)
+          ? new Date(data.timestamp)
           : new Date();
         const messageMetadata = (data.metadata as Record<string, unknown> | null) ?? undefined;
 

@@ -5,7 +5,7 @@
 
 import { createHash } from 'crypto';
 import { logger } from '@/lib/utils/logger';
-import { redisManager } from '@/lib/cache/redis-client';
+import { getRedisClient } from '@/lib/cache/redis';
 import { env } from '@/config/env';
 import { getPublicEnv } from '@/config/env.public';
 
@@ -45,33 +45,41 @@ class RedisRateLimiter {
     const config = this.getConfigForBucket(bucketName);
     const key = this.getKey(ip, bucketName);
 
-    const result = await redisManager.executeCommand<{ allowed: boolean; retryAfter?: number }>(
-      async (client) => {
-        const tx = client.multi();
-        tx.incr(key);
-        tx.pTTL(key);
-        const execResult = await tx.exec();
-        const count = Number(execResult?.[0] ?? 0);
-        let ttl = Number(execResult?.[1]);
-        if (!Number.isFinite(ttl) || ttl <= 0) {
-          ttl = config.windowMs;
-        }
-
-        if (count === 1) {
-          await client.pExpire(key, config.windowMs);
-        }
-
-        if (count > config.maxAttempts) {
-          return { allowed: false, retryAfter: Math.max(1, Math.ceil(ttl / 1000)) };
-        }
-
+    try {
+      const client = getRedisClient();
+      if (!client) {
         return { allowed: true };
-      },
-      { allowed: true }
-    );
+      }
 
-    // Ensure non-null return
-    return result || { allowed: true };
+      const tx = client.multi();
+      tx.incr(key);
+      tx.pttl(key);
+      const execResult = await tx.exec();
+      
+      const count = Number(execResult?.[0]?.[1] ?? 0);
+      let ttl = Number(execResult?.[1]?.[1]);
+      
+      if (!Number.isFinite(ttl) || ttl <= 0) {
+        ttl = config.windowMs;
+      }
+
+      if (count === 1) {
+        await client.pexpire(key, config.windowMs);
+      }
+
+      if (count > config.maxAttempts) {
+        return { allowed: false, retryAfter: Math.max(1, Math.ceil(ttl / 1000)) };
+      }
+
+      return { allowed: true };
+    } catch (error) {
+      logger.error('Redis rate limit check failed', {
+        operation: 'rate_limit_check',
+        bucket: bucketName,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return { allowed: true };
+    }
   }
 
   private getConfigForBucket(name: string): RateLimitConfig {

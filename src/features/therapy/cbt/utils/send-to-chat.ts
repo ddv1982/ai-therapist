@@ -2,8 +2,7 @@ import { apiClient } from '@/lib/api/client';
 import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { getApiData, type ApiResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
-import type { components as SessionComponents } from '@/types/api/sessions';
-import type { components as MessageComponents } from '@/types/api/messages';
+import type { SessionData } from '@/lib/queries/sessions';
 import { buildSessionSummaryCard, type CBTFlowState } from '@/features/therapy/cbt/flow';
 
 export interface SendToChatParams {
@@ -57,14 +56,14 @@ export async function sendToChat({
     ...contextualMessages,
   ];
 
-  const createdSession = mapApiResponse<SessionComponents['schemas']['Session']>(
+  const createdSession = mapApiResponse<any>(
     await apiClient.createSession({ title })
-  );
+  ) as SessionData;
   const sessionId = createdSession.id;
 
   const reportResponse = await apiClient.generateReportDetailed({
     sessionId,
-    messages: reportMessages as MessageComponents['schemas']['Message'][],
+    messages: reportMessages as any[], // TODO: Fix type
     model,
   });
 

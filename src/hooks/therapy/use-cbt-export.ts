@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { CBTFormData } from '@/types/therapy';
+import { CBTFormData } from '@/types';
 import { exportCBTDiary, CBTExportFormat, generateFileName } from '@/lib/cbt/export-utils';
 
 interface UseCBTExportOptions {

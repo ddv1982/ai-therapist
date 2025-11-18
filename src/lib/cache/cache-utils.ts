@@ -13,7 +13,7 @@
  * - Performance monitoring
  */
 
-import { redisManager } from './redis-client';
+import * as redis from './redis';
 import { logger } from '@/lib/utils/logger';
 
 export interface CacheOptions {
@@ -166,10 +166,7 @@ class CacheManager {
     const cacheKey = this.generateKey(key, options, cacheOptions.prefix);
 
     try {
-      const result = await redisManager.executeCommand(
-        async (client) => await client.get(cacheKey),
-        null
-      );
+      const result = await redis.get(cacheKey);
 
       if (result === null) {
         this.updateStats(key, false);
@@ -223,10 +220,7 @@ class CacheManager {
         value = String(data);
       }
 
-      const result = await redisManager.executeCommand(
-        async (client) => await client.setEx(cacheKey, ttl, value),
-        null
-      );
+      const result = await redis.setEx(cacheKey, ttl, value);
 
       if (result === 'OK') {
         logger.debug('Cache set successful', {
@@ -266,18 +260,15 @@ class CacheManager {
     const cacheKey = this.generateKey(key, options, cacheOptions.prefix);
 
     try {
-      const result = await redisManager.executeCommand(
-        async (client) => await client.del(cacheKey),
-        0
-      );
+      const result = await redis.del(cacheKey);
 
       logger.debug('Cache delete successful', {
         operation: 'cache_delete',
         key: cacheKey,
-        deleted: (result ?? 0) > 0,
+        deleted: result > 0,
       });
 
-      return (result ?? 0) > 0;
+      return result > 0;
     } catch (error) {
       logger.error('Cache delete failed', {
         operation: 'cache_delete',
@@ -299,10 +290,7 @@ class CacheManager {
     const cacheKey = this.generateKey(key, options, cacheOptions.prefix);
 
     try {
-      const result = await redisManager.executeCommand(
-        async (client) => await client.exists(cacheKey),
-        0
-      );
+      const result = await redis.exists(cacheKey);
 
       return result === 1;
     } catch (error) {
@@ -350,30 +338,30 @@ class CacheManager {
     const searchPattern = this.generateKey(pattern, options, cacheOptions.prefix);
 
     try {
-      const result = await redisManager.executeCommand(async (client) => {
-        let cursor = 0;
-        let totalDeleted = 0;
-        do {
-          const scanResult = await client.scan(String(cursor), {
-            MATCH: searchPattern,
-            COUNT: 100,
-          });
-          cursor = Number(scanResult.cursor);
-          const keys: string[] = scanResult.keys;
-          if (keys.length > 0) {
-            totalDeleted += await client.del(keys as unknown as [string, ...string[]]);
-          }
-        } while (cursor !== 0);
-        return totalDeleted;
-      }, 0);
+      let cursor = '0';
+      let totalDeleted = 0;
+      
+      do {
+        const scanResult = await redis.scan(cursor, {
+          MATCH: searchPattern,
+          COUNT: 100,
+        });
+        cursor = scanResult.cursor;
+        const keys = scanResult.keys;
+        
+        if (keys.length > 0) {
+          const deleted = await redis.del(...keys);
+          totalDeleted += deleted;
+        }
+      } while (cursor !== '0');
 
       logger.info('Cache pattern invalidation successful', {
         operation: 'cache_invalidate_pattern',
         pattern: searchPattern,
-        deletedCount: result,
+        deletedCount: totalDeleted,
       });
 
-      return result ?? 0;
+      return totalDeleted;
     } catch (error) {
       logger.error('Cache pattern invalidation failed', {
         operation: 'cache_invalidate_pattern',
@@ -395,22 +383,19 @@ class CacheManager {
     const searchPattern = this.generateKey(pattern, options, cacheOptions.prefix);
 
     try {
-      const result = await redisManager.executeCommand(async (client) => {
-        let cursor = 0;
-        let totalCount = 0;
-        do {
-          const scanResult = await client.scan(String(cursor), {
-            MATCH: searchPattern,
-            COUNT: 100,
-          });
-          cursor = Number(scanResult.cursor);
-          const keys: string[] = scanResult.keys;
-          totalCount += keys.length;
-        } while (cursor !== 0);
-        return totalCount;
-      }, 0);
+      let cursor = '0';
+      let totalCount = 0;
+      
+      do {
+        const scanResult = await redis.scan(cursor, {
+          MATCH: searchPattern,
+          COUNT: 100,
+        });
+        cursor = scanResult.cursor;
+        totalCount += scanResult.keys.length;
+      } while (cursor !== '0');
 
-      return result ?? 0;
+      return totalCount;
     } catch (error) {
       logger.error('Cache pattern count failed', {
         operation: 'cache_count_pattern',
@@ -465,12 +450,11 @@ class CacheManager {
     stats: Map<string, CacheStats>;
     totalKeys: number;
   }> {
-    const redisHealth = await redisManager.healthCheck();
+    const redisHealth = await redis.healthCheck();
 
     let totalKeys = 0;
     try {
-      const result = await redisManager.executeCommand(async (client) => await client.dbSize(), 0);
-      totalKeys = result || 0;
+      totalKeys = await redis.dbSize();
     } catch (error) {
       logger.warn('Failed to get Redis key count', {
         operation: 'cache_health',

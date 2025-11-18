@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { isCBTDiaryMessage, analyzeCBTMessage } from '@/lib/chat/cbt-message-detector';
 import { logger } from '@/lib/utils/logger';
-import { parseCBTFromMarkdown } from '@/lib/therapy/cbt-data-parser';
+import { parseCBTFromMarkdown } from '@/lib/therapy/parsers';
 import { useCBTExportActions } from '@/hooks/therapy/use-cbt-export';
 import { CBTExportFormat } from '@/lib/cbt/export-utils';
 import { isObsessionsCompulsionsMessage } from '@/features/therapy/obsessions-compulsions/utils/obsessions-message-detector';
@@ -23,7 +23,7 @@ import {
   useObsessionsExportActions,
   ObsessionsExportFormat,
 } from '@/features/therapy/obsessions-compulsions/utils/obsessions-export-utils';
-import { createInitialCBTFormData } from '@/types/therapy';
+import { createInitialCBTFormData } from '@/types';
 
 interface MessageActionsProps {
   messageId: string;

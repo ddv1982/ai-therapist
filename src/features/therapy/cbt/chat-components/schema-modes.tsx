@@ -10,7 +10,7 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import { useTranslations } from 'next-intl';
 import { TherapySlider } from '@/components/ui/therapy-slider';
 
-import type { CBTStepType, SchemaMode, SchemaModesData } from '@/types/therapy';
+import type { CBTStepType, SchemaMode, SchemaModesData } from '@/types';
 
 interface SchemaModesProps {
   onComplete: (data: SchemaModesData) => void;
@@ -92,9 +92,9 @@ export function SchemaModes({
         ...mode,
         // Compare using stable id, not display name
         selected: schemaModesData.some(
-          (reduxMode) => reduxMode.mode === mode.id && reduxMode.isActive
+          (reduxMode: any) => reduxMode.mode === mode.id && reduxMode.isActive
         ),
-        intensity: schemaModesData.find((reduxMode) => reduxMode.mode === mode.id)?.intensity || 5,
+        intensity: schemaModesData.find((reduxMode: any) => reduxMode.mode === mode.id)?.intensity || 5,
       }));
       return { selectedModes };
     }

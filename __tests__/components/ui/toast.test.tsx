@@ -8,8 +8,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ToastProvider, useToast } from '@/components/ui/toast';
 
 // Mock the secure random string generation
-jest.mock('@/lib/utils/utils', () => ({
-  ...jest.requireActual('@/lib/utils/utils'),
+jest.mock('@/lib/utils/helpers', () => ({
+  ...jest.requireActual('@/lib/utils/helpers'),
   generateSecureRandomString: jest.fn((length) => 'mock-random-string-' + 'x'.repeat(length)),
   cn: jest.fn((...classes) => classes.filter(Boolean).join(' ')),
 }));
@@ -219,7 +219,7 @@ describe('Toast System', () => {
     });
 
     it('should generate unique IDs for each toast', async () => {
-      const { generateSecureRandomString } = require('@/lib/utils/utils');
+      const { generateSecureRandomString } = require('@/lib/utils/helpers');
       generateSecureRandomString.mockReturnValueOnce('id-1').mockReturnValueOnce('id-2');
 
       render(

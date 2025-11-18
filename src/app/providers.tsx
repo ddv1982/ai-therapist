@@ -4,7 +4,10 @@ import { useState, ReactNode } from 'react';
 import { ClerkProvider, useAuth } from '@clerk/nextjs';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ConvexReactClient } from 'convex/react';
-import { ReduxProvider } from '@/providers/redux-provider';
+import { QueryProvider } from '@/providers/query-provider';
+import { SessionProvider } from '@/contexts/session-context';
+import { ChatSettingsProvider } from '@/contexts/chat-settings-context';
+import { CBTProvider } from '@/contexts/cbt-context';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { ToastProvider } from '@/components/ui/toast';
 import { Toaster } from '@/components/ui/sonner';
@@ -33,12 +36,18 @@ export function RootProviders({ children }: RootProvidersProps) {
     <ClerkProvider publishableKey={clerkPublishableKey}>
       <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
         <ThemeProvider>
-          <ReduxProvider>
-            <ToastProvider>
-              <Toaster />
-              <ErrorBoundary>{children}</ErrorBoundary>
-            </ToastProvider>
-          </ReduxProvider>
+          <QueryProvider>
+            <SessionProvider>
+              <ChatSettingsProvider>
+                <CBTProvider>
+                  <ToastProvider>
+                    <Toaster />
+                    <ErrorBoundary>{children}</ErrorBoundary>
+                  </ToastProvider>
+                </CBTProvider>
+              </ChatSettingsProvider>
+            </SessionProvider>
+          </QueryProvider>
         </ThemeProvider>
       </ConvexProviderWithClerk>
     </ClerkProvider>

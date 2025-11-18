@@ -17,7 +17,7 @@ import type {
   ObsessionsCompulsionsData,
   CBTStepType,
   SchemaModeData,
-} from '@/types/therapy';
+} from '@/types';
 import type { CBTChatFlowSessionData } from '@/features/therapy/cbt/hooks/use-cbt-chat-experience';
 import { CBT_STEP_CONFIG } from '@/features/therapy/cbt/flow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

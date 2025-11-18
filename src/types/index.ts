@@ -1,62 +1,156 @@
 /**
- * Types - Essential Re-exports
- * Core types without circular dependencies
+ * Types - Central Re-exports
+ * Exports from domain-organized type definitions
  */
+
+// ============================================================================
+// DOMAIN TYPE EXPORTS
+// ============================================================================
+
+// Chat Domain - Messages, streaming, and chat interactions
+export type {
+  ChatInterfaceProps,
+  TypingIndicatorProps,
+  StreamingStage,
+  StreamingState,
+  StreamingConfig,
+  ChatMessage,
+  NewMessage,
+  ChatRequest,
+  ModelConfig,
+  ApiError,
+  MessageListResponse,
+} from './domains/chat';
+
+// Sessions Domain - Session management and operations
+export type {
+  Session,
+  CreateSessionRequest,
+  CurrentSessionResponse,
+  SessionSuccessResponse,
+} from './domains/sessions';
+
+// Therapy Domain - CBT and therapeutic tools (types)
+export type {
+  EmotionData,
+  ThoughtData,
+  CoreBeliefData,
+  ChallengeQuestionData,
+  RationalThoughtData,
+  SchemaMode,
+  SchemaModeData,
+  SituationData,
+  ActionPlanData,
+  ChallengeQuestionsData,
+  RationalThoughtsData,
+  SchemaModesData,
+  CBTFormData,
+  CBTSessionState,
+  CBTFormValidationError,
+  NumericEmotionKeys,
+  CBTStepType,
+  CBTStepData,
+  CBTExtractionResult,
+  ObsessionData,
+  CompulsionData,
+  ObsessionsCompulsionsData,
+  ParsedCBTData,
+  CBTExportData,
+  SchemaReflectionCategory,
+  SchemaReflectionQuestion,
+  SchemaReflectionData,
+  EmotionComparisonData,
+  CBTStructuredAssessment,
+} from './domains/therapy';
+
+// Therapy Domain - CBT constants and utility functions (values)
+export {
+  DEFAULT_SCHEMA_MODES,
+  DEFAULT_CHALLENGE_QUESTIONS,
+  DEFAULT_SCHEMA_REFLECTION_QUESTIONS,
+  createEmptyEmotionData,
+  createInitialCBTFormData,
+  getInitialCBTFormData,
+} from './domains/therapy';
+
+// Reports Domain - Session reports and therapeutic analysis
+export type {
+  SessionReport,
+  SessionReportProps,
+  ReportSummaryProps,
+  GenerateReportRequest,
+  ReportContent,
+  CognitiveDistortion,
+  SchemaAnalysis,
+  TherapeuticFramework,
+  TherapeuticRecommendation,
+  EnhancedCognitiveAnalysis,
+  ValidationResult,
+  SessionContextSummary,
+  ContentTier,
+  AnalysisScope,
+  ReportStyle,
+  UserDataMetadata,
+  ClientFriendlySessionReport,
+  UserProvidedAssessment,
+  GrowthInsight,
+  ActionStep,
+  Resource,
+  Pattern,
+  EnhancedCognitiveDistortion,
+  ReportGenerationContext,
+  ReportUserPreferences,
+  ReportGenerationResult,
+  ReportAnalytics,
+  SessionReportMetrics,
+  EmailReportRequest,
+  ReportSuccessResponse,
+  DetailedReportGenerationRequest,
+  DetailedReportGenerationResponse,
+  COGNITIVE_DISTORTIONS,
+  SCHEMA_MODES,
+  EARLY_MALADAPTIVE_SCHEMAS,
+} from './domains/reports';
+
+// ============================================================================
+// EXISTING TYPE EXPORTS (Kept in place)
+// ============================================================================
+
+// UI types
+export type * from './ui';
+
+// Auth types
+export type * from './auth';
+
+// Database types
+export type * from './database';
+
+// Convex types
+export type * from './convex';
+
+// ============================================================================
+// FEATURE-SPECIFIC EXPORTS
+// ============================================================================
 
 // Message types from their actual location
 export type { MessageData as Message } from '@/features/chat/messages/message';
 export type { MessageRole } from '@/lib/ui/design-system/message';
 export type { ApiResponse } from '@/lib/api/api-response';
 
-// Session types
-import type { Session as SessionType } from '@/lib/chat/session-reducer';
-export type Session = SessionType;
+// Session reducer types
+import type { Session as SessionReducerType } from '@/lib/chat/session-reducer';
+export type SessionReducer = SessionReducerType;
 
-// Basic types that don't create circular deps
-export interface ApiError {
-  message: string;
-  code?: string;
-  statusCode?: number;
-}
-
-// Chat and API request/response types
-export interface ChatRequest {
-  message: string;
-  sessionId?: string;
-}
-
-export interface ChatResponse {
-  message: string;
-  sessionId: string;
-}
-
-export interface CreateSessionRequest {
-  title?: string;
-}
-
-export interface UpdateSessionRequest {
-  title?: string;
-}
-
-export interface SessionsResponse {
-  sessions: Session[];
-}
-
-// UI Configuration types
-export interface ModelConfig {
-  id: string;
-  name: string;
-  provider: string;
-  maxTokens: number;
-}
+// ============================================================================
+// UTILITY TYPES
+// ============================================================================
 
 export interface ChatSettings {
   model: string; // Model ID
   systemPrompt?: string;
-  webSearchEnabled: boolean; // Add websearch toggle
+  webSearchEnabled: boolean;
 }
 
-// Component prop types
 export interface SessionControlsProps {
   sessionId?: string;
   onStartSession: () => void | Promise<void>;

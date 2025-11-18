@@ -14,8 +14,7 @@ import { DiaryProgress } from '@/features/therapy/cbt/components/diary-progress'
 import { logger } from '@/lib/utils/logger';
 import type { MessageData } from '@/features/chat/messages/message';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { startCBTSession as startReduxCBTSession } from '@/store/slices/cbt-slice';
+import { useCBT } from '@/contexts/cbt-context';
 import { useChatMessages } from '@/hooks/use-chat-messages';
 import { useSelectSession } from '@/hooks';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
@@ -29,14 +28,14 @@ import { sendToChat } from '@/features/therapy/cbt/utils/send-to-chat';
 
 function CBTDiaryPageContent() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
+  const cbt = useCBT();
   const { showToast } = useToast();
   const t = useTranslations('cbt');
   const toastT = useTranslations('toast');
   const { selectSession } = useSelectSession();
 
-  // Get session ID from Redux
-  const reduxSessionId = useAppSelector((state) => state.cbt?.flow?.sessionId ?? null);
+  // Get session ID from CBT context
+  const reduxSessionId = cbt.flow?.sessionId ?? null;
   // Streaming and view state
   const [isLoading, setIsLoading] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
@@ -199,7 +198,7 @@ function CBTDiaryPageContent() {
       });
 
       await selectSession(sessionId);
-      dispatch(startReduxCBTSession({ sessionId }));
+      cbt.startCBTSession({ sessionId });
 
       // Clear CBT session since it's complete - use unified CBT action
       draftActions.reset();
@@ -248,10 +247,10 @@ function CBTDiaryPageContent() {
     showToast,
     draftActions,
     reduxSessionId,
-    dispatch,
     t,
     selectSession,
     toastT,
+    cbt,
   ]);
 
   return (

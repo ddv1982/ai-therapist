@@ -9,7 +9,7 @@ import {
   SchemaReflectionData,
   DEFAULT_SCHEMA_REFLECTION_QUESTIONS,
   getInitialCBTFormData,
-} from '@/types/therapy';
+} from '@/types/domains/therapy';
 
 describe('Schema Reflection Types', () => {
   describe('SchemaReflectionCategory', () => {

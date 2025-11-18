@@ -4,7 +4,7 @@
  */
 
 // Essential utilities
-export { cn } from './utils/utils';
+export { cn } from './utils/helpers';
 export { logger } from './utils/logger';
 
 // Therapy utilities

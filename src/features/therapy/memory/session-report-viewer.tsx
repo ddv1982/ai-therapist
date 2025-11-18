@@ -6,7 +6,7 @@ import { MessageAvatar } from '@/features/chat/messages/message-avatar';
 import { MessageTimestamp } from '@/features/chat/messages/message-timestamp';
 import { buildMessageClasses } from '@/lib/ui/design-system/message';
 import { type SessionReportDetail } from '@/lib/chat/memory-utils';
-import { type CBTStructuredAssessment } from '@/lib/therapy/cbt-data-parser';
+import { type CBTStructuredAssessment } from '@/lib/therapy/parsers';
 import {
   Calendar,
   FileText,

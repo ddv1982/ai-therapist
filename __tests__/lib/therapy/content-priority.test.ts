@@ -8,7 +8,7 @@ import {
   getContentTierExplanation,
   meetsAnalysisThreshold,
   type ContentTierAnalysis,
-} from '@/lib/therapy/content-priority';
+} from '@/lib/therapy/analysis';
 
 describe('Content Priority System', () => {
   // ========================================

@@ -1,0 +1,121 @@
+'use client';
+
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import { DEFAULT_MODEL_ID } from '@/features/chat/config';
+
+interface ChatSettings {
+  model: string;
+  webSearchEnabled: boolean;
+}
+
+interface ChatState {
+  isStreaming: boolean;
+  currentInput: string;
+  streamingMessageId: string | null;
+  error: string | null;
+  settings: ChatSettings;
+}
+
+interface ChatContextValue extends ChatState {
+  updateSettings: (updates: Partial<ChatSettings>) => void;
+  setStreaming: (streaming: { isStreaming: boolean; messageId?: string }) => void;
+  setCurrentInput: (input: string) => void;
+  clearMessages: () => void;
+  setError: (error: string | null) => void;
+}
+
+const ChatContext = createContext<ChatContextValue | undefined>(undefined);
+
+const STORAGE_KEY = 'chat-settings';
+
+export function ChatSettingsProvider({ children }: { children: ReactNode }) {
+  const [settings, setSettings] = useState<ChatSettings>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          return JSON.parse(stored) as ChatSettings;
+        }
+      } catch {
+        // Ignore localStorage errors
+      }
+    }
+    return {
+      model: DEFAULT_MODEL_ID,
+      webSearchEnabled: false,
+    };
+  });
+
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [currentInput, setCurrentInputState] = useState('');
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [error, setErrorState] = useState<string | null>(null);
+
+  // Persist settings to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      } catch {
+        // Ignore localStorage errors
+      }
+    }
+  }, [settings]);
+
+  const updateSettings = useCallback((updates: Partial<ChatSettings>) => {
+    setSettings((prev) => ({ ...prev, ...updates }));
+  }, []);
+
+  const setStreaming = useCallback(
+    ({ isStreaming, messageId }: { isStreaming: boolean; messageId?: string }) => {
+      setIsStreaming(isStreaming);
+      setStreamingMessageId(messageId || null);
+    },
+    []
+  );
+
+  const setCurrentInput = useCallback((input: string) => {
+    setCurrentInputState(input);
+  }, []);
+
+  const clearMessages = useCallback(() => {
+    setIsStreaming(false);
+    setStreamingMessageId(null);
+    setErrorState(null);
+  }, []);
+
+  const setError = useCallback((error: string | null) => {
+    setErrorState(error);
+    setIsStreaming(false);
+    setStreamingMessageId(null);
+  }, []);
+
+  const value: ChatContextValue = {
+    settings,
+    isStreaming,
+    currentInput,
+    streamingMessageId,
+    error,
+    updateSettings,
+    setStreaming,
+    setCurrentInput,
+    clearMessages,
+    setError,
+  };
+
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
+}
+
+export function useChatSettings() {
+  const context = useContext(ChatContext);
+  if (!context) {
+    throw new Error('useChatSettings must be used within a ChatSettingsProvider');
+  }
+  return context;
+}
+
+// Selector hooks for compatibility
+export const selectChatSettings = (context: ChatContextValue) => context.settings;
+export const selectIsStreaming = (context: ChatContextValue) => context.isStreaming;
+export const selectCurrentInput = (context: ChatContextValue) => context.currentInput;
+export const selectError = (context: ChatContextValue) => context.error;

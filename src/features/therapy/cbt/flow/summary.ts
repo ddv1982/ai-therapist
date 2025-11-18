@@ -1,5 +1,5 @@
 import type { CBTSessionSummaryData } from '@/components/ui/cbt-session-summary-card';
-import type { ActionPlanData, EmotionData, ThoughtData } from '@/types/therapy';
+import type { ActionPlanData, EmotionData, ThoughtData } from '@/types';
 import { CBT_STEP_CONFIG } from './config';
 import { CBT_STEP_ORDER, type CBTFlowContext, type CBTFlowState, type CBTStepId } from './types';
 

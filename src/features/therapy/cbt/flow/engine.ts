@@ -1,5 +1,5 @@
 import { TOTAL_CBT_STEPS, CBT_STEP_CONFIG } from './config';
-import type { ActionPlanData } from '@/types/therapy';
+import type { ActionPlanData } from '@/types';
 import {
   CBT_STEP_ORDER,
   type CBTFlowContext,

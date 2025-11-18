@@ -1,8 +1,8 @@
 import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
-import { getCircuitBreakerStatus } from '@/lib/utils/graceful-degradation';
-import { getDeduplicationStats } from '@/lib/utils/request-deduplication';
+import { getCircuitBreakerStatus } from '@/lib/utils/errors';
+import { getDeduplicationStats } from '@/lib/utils/helpers';
 import { logger } from '@/lib/utils/logger';
 import { env } from '@/config/env';
 import packageJson from '../../../../package.json';

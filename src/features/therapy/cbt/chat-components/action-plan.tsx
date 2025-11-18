@@ -8,7 +8,7 @@ import { TherapySlider } from '@/components/ui/therapy-slider';
 import { CheckSquare, Target } from 'lucide-react';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { ActionPlanData, CBTStepType, EmotionData } from '@/types/therapy';
+import type { ActionPlanData, CBTStepType, EmotionData } from '@/types';
 import { useTranslations } from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
 

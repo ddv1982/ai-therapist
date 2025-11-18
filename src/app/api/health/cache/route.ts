@@ -9,7 +9,7 @@ import { NextRequest } from 'next/server';
 import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { CacheHealthMonitor, cache } from '@/lib/cache';
-import { redisManager } from '@/lib/cache/redis-client';
+import * as redis from '@/lib/cache/redis';
 import { logger } from '@/lib/utils/logger';
 import { env } from '@/config/env';
 
@@ -17,7 +17,7 @@ export const GET = withRateLimitUnauthenticated(
   async (_request: NextRequest, context) => {
     try {
       // Get Redis health
-      const redisHealth = await redisManager.healthCheck();
+      const redisHealth = await redis.healthCheck();
 
       // Get cache health information
       const cacheHealth = await CacheHealthMonitor.getHealthInfo();

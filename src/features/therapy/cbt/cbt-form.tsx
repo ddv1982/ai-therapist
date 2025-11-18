@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { EmotionData } from '@/types/therapy';
+import type { EmotionData } from '@/types';
 
 interface CBTFormProps {
   onSubmit: (data: CBTFormInput) => void;

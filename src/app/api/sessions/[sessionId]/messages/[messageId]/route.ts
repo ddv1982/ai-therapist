@@ -4,7 +4,7 @@ import { verifySessionOwnership } from '@/lib/repositories/session-repository';
 import { createNotFoundErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
 import { decryptMessage } from '@/lib/chat/message-encryption';
 import { MessageCache } from '@/lib/cache';
-import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
+import { enhancedErrorHandlers } from '@/lib/utils/errors';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexMessage } from '@/types/convex';
 

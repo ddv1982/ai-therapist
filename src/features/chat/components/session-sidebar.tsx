@@ -128,7 +128,7 @@ export const SessionSidebar = memo(function SessionSidebar({
                       </p>
                       <div className="bg-muted-foreground/30 h-1 w-1 rounded-full"></div>
                       <p className="text-muted-foreground text-sm">
-                        {new Date(session.startedAt).toLocaleDateString()}
+                        {session.startedAt ? new Date(session.startedAt).toLocaleDateString() : 'Unknown date'}
                       </p>
                     </div>
                   </div>

@@ -4,7 +4,7 @@ import {
   performanceMonitor,
   messageCache,
   optimizeMessageRendering,
-} from '@/lib/utils/performance-utils';
+} from '@/lib/utils/helpers';
 
 describe('performance-utils', () => {
   jest.useFakeTimers();

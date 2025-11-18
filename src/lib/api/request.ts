@@ -1,5 +1,5 @@
 import type { NextRequest } from 'next/server';
-import { safeParse } from '@/lib/utils/safe-json';
+import { safeParse } from '@/lib/utils/helpers';
 
 export async function readJsonBody(
   req: NextRequest | Request

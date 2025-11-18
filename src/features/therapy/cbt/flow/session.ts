@@ -9,7 +9,7 @@ import type {
   RationalThoughtsData,
   SchemaModesData,
   ActionPlanData,
-} from '@/types/therapy';
+} from '@/types';
 
 export interface CBTSessionSnapshot {
   id: string;

@@ -17,7 +17,7 @@ import {
   type ActionPlanData,
   type CoreBeliefData,
 } from './index';
-import type { ChallengeQuestionsData, RationalThoughtsData, CBTStepType } from '@/types/therapy';
+import type { ChallengeQuestionsData, RationalThoughtsData, CBTStepType } from '@/types';
 
 interface CBTMessageProps {
   step: CBTStepType;
