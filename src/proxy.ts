@@ -42,7 +42,7 @@ async function handleI18nOnly(_request: NextRequest) {
   return NextResponse.next();
 }
 
-export default function middleware(request: NextRequest, event: unknown) {
+export default function proxy(request: NextRequest, event: unknown) {
   const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   const sk = process.env.CLERK_SECRET_KEY;
   // If Clerk env is not configured, skip Clerk and run i18n only to avoid 404s
