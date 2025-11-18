@@ -18,8 +18,6 @@ import * as metrics from '@/lib/metrics/metrics';
 import { env } from '@/config/env';
 
 // Robust local mocks for Next.js server objects
-const mockJsonFn = jest.fn();
-
 jest.mock('next/server', () => {
   const MockNextResponse = {
     json: (body: any, init?: ResponseInit) => {
@@ -38,17 +36,20 @@ jest.mock('next/server', () => {
 
   return {
     __esModule: true,
-    NextRequest: jest.fn((url, init) => {
-      const headers = new Headers(init?.headers || {});
-      const method = init?.method || 'GET';
-      return {
-        url,
-        method,
-        headers,
-        nextUrl: new URL(url),
-        json: async () => mockJsonFn(),
-      };
-    }),
+    NextRequest: class MockNextRequest {
+        url: string;
+        method: string;
+        headers: Headers;
+        nextUrl: URL;
+        json: jest.Mock;
+        constructor(url: string, init: any) {
+            this.url = url;
+            this.method = init?.method || 'GET';
+            this.headers = new Headers(init?.headers || {});
+            this.nextUrl = new URL(url);
+            this.json = jest.fn().mockResolvedValue({});
+        }
+    },
     NextResponse: MockNextResponse,
   };
 });
@@ -85,29 +86,36 @@ jest.mock('@/config/env', () => ({
   },
 }));
 
+// Helper to create a mock request object
+function createMockRequest(url: string, options: { method?: string; headers?: Record<string, string> } = {}) {
+  const headers = new Headers(options.headers || {});
+  return {
+    url,
+    method: options.method || 'GET',
+    headers,
+    nextUrl: new URL(url),
+    json: jest.fn().mockResolvedValue({}),
+    clone: jest.fn(),
+  } as unknown as NextRequest;
+}
+
 describe('Middleware Tests', () => {
   let req: NextRequest;
   let mockHandler: jest.Mock;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockJsonFn.mockResolvedValue({});
     
-    req = new NextRequest('http://localhost:3000/api/test', {
+    req = createMockRequest('http://localhost:3000/api/test', {
       method: 'GET',
       headers: {
         'x-request-id': 'req-123',
         'user-agent': 'TestAgent',
       },
     });
-    // Force properties if mock fails
-    Object.assign(req, {
-       url: 'http://localhost:3000/api/test',
-       method: 'GET',
-       nextUrl: new URL('http://localhost:3000/api/test'),
-    });
     
     mockHandler = jest.fn().mockResolvedValue(NextResponse.json({ success: true }));
+
 
     // Default mock implementations
     (validateApiAuth as jest.Mock).mockResolvedValue({ isValid: true });
@@ -171,16 +179,15 @@ describe('Middleware Tests', () => {
         throw new Error('Session error');
       });
 
-      let capturedContext: AuthenticatedRequestContext | undefined;
-      const capturingHandler = jest.fn(async (r, ctx) => {
-        capturedContext = ctx;
-        return NextResponse.json({ ok: true });
-      });
+      const capturingHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
 
       const wrapped = withAuth(capturingHandler);
       await wrapped(req, { params: Promise.resolve({}) });
 
-      expect(capturedContext?.userInfo.userId).toBe('therapeutic-ai-user');
+      expect(capturingHandler).toHaveBeenCalled();
+      const contextArgs = capturingHandler.mock.calls[0][1];
+      expect(contextArgs.userInfo).toBeDefined();
+      expect(contextArgs.userInfo.userId).toBe('therapeutic-ai-user');
     });
     
     it('should merge clerkId if present in authResult', async () => {
@@ -189,16 +196,14 @@ describe('Middleware Tests', () => {
         userId: 'clerk_123'
       });
       
-      let capturedContext: AuthenticatedRequestContext | undefined;
-      const capturingHandler = jest.fn(async (r, ctx) => {
-        capturedContext = ctx;
-        return NextResponse.json({ ok: true });
-      });
+      const capturingHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
 
       const wrapped = withAuth(capturingHandler);
       await wrapped(req, { params: Promise.resolve({}) });
 
-      expect((capturedContext?.userInfo as any).clerkId).toBe('clerk_123');
+      expect(capturingHandler).toHaveBeenCalled();
+      const contextArgs = capturingHandler.mock.calls[0][1];
+      expect(contextArgs.userInfo.clerkId).toBe('clerk_123');
     });
   });
 
@@ -208,16 +213,12 @@ describe('Middleware Tests', () => {
     });
 
     it('should validate body for POST requests', async () => {
-      const postReq = new NextRequest('http://localhost:3000/api/test', {
+      const postReq = createMockRequest('http://localhost:3000/api/test', {
         method: 'POST',
       });
-      Object.assign(postReq, {
-         url: 'http://localhost:3000/api/test',
-         method: 'POST',
-         nextUrl: new URL('http://localhost:3000/api/test'),
-      });
       
-      mockJsonFn.mockResolvedValueOnce({ name: 'Test' });
+      // Mock json response for this specific request
+      (postReq.json as jest.Mock).mockResolvedValue({ name: 'Test' });
       
       const wrapped = withValidation(schema, mockHandler);
       await wrapped(postReq, { params: Promise.resolve({}) });
@@ -226,51 +227,38 @@ describe('Middleware Tests', () => {
     });
 
     it('should return 400 for invalid JSON (parse error)', async () => {
-      const postReq = new NextRequest('http://localhost:3000/api/test', {
+      const postReq = createMockRequest('http://localhost:3000/api/test', {
         method: 'POST',
       });
-      Object.assign(postReq, {
-         url: 'http://localhost:3000/api/test',
-         method: 'POST',
-         nextUrl: new URL('http://localhost:3000/api/test'),
-      });
-      mockJsonFn.mockRejectedValueOnce(new Error('Invalid JSON'));
+      (postReq.json as jest.Mock).mockRejectedValue(new Error('Invalid JSON'));
 
       const wrapped = withValidation(schema, mockHandler);
       const res = await wrapped(postReq, { params: Promise.resolve({}) });
 
       expect(res.status).toBe(400);
       const body = await res.json();
+      // Check detailed error message
       expect(body.error.message).toContain('Invalid JSON');
     });
 
     it('should return 400 for schema validation failure', async () => {
-      const postReq = new NextRequest('http://localhost:3000/api/test', {
+      const postReq = createMockRequest('http://localhost:3000/api/test', {
         method: 'POST',
       });
-      Object.assign(postReq, {
-         url: 'http://localhost:3000/api/test',
-         method: 'POST',
-         nextUrl: new URL('http://localhost:3000/api/test'),
-      });
-      mockJsonFn.mockResolvedValueOnce({ name: 123 });
+      (postReq.json as jest.Mock).mockResolvedValue({ name: 123 });
 
       const wrapped = withValidation(schema, mockHandler);
       const res = await wrapped(postReq, { params: Promise.resolve({}) });
 
       expect(res.status).toBe(400);
       const body = await res.json();
-      expect(body.error.message).toContain('Expected string, received number');
+      // Expect detailed error in message
+      expect(body.error.message).toContain('expected string, received number');
     });
 
     it('should validate search params for GET requests', async () => {
-      const getReq = new NextRequest('http://localhost:3000/api/test?name=Test', {
+      const getReq = createMockRequest('http://localhost:3000/api/test?name=Test', {
         method: 'GET',
-      });
-      Object.assign(getReq, {
-         url: 'http://localhost:3000/api/test?name=Test',
-         method: 'GET',
-         nextUrl: new URL('http://localhost:3000/api/test?name=Test'),
       });
 
       const wrapped = withValidation(schema, mockHandler);
@@ -400,3 +388,4 @@ describe('Middleware Tests', () => {
     });
   });
 });
+

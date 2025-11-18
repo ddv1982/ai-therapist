@@ -9,6 +9,7 @@ import {
   createAuthenticationErrorResponse,
   createValidationErrorResponse,
   createServerErrorResponse,
+  createErrorResponse,
   type ApiResponse,
 } from '@/lib/api/api-response';
 import { getRateLimiter } from '@/lib/api/rate-limiter';
@@ -125,24 +126,18 @@ export function withAuth<T = unknown>(
 
     let userInfo: ReturnType<typeof getSingleUserInfo> & { clerkId?: string };
     try {
-      console.log('Calling getSingleUserInfo');
       userInfo = getSingleUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
         clerkId?: string;
       };
-      console.log('getSingleUserInfo result:', userInfo);
     } catch (e) {
-      console.log('getSingleUserInfo failed, creating fallback', e);
       userInfo = createFallbackUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
         clerkId?: string;
       };
-      console.log('Fallback userInfo:', userInfo);
     }
     const authWithId = authResult as unknown as { userId?: string };
     const mergedUserInfo = authWithId?.userId
       ? { ...userInfo, clerkId: authWithId.userId }
       : userInfo;
-    
-    console.log('Merged userInfo:', mergedUserInfo);
 
     const authenticatedContext: AuthenticatedRequestContext = {
       ...(baseContext as RequestContext),
@@ -154,9 +149,7 @@ export function withAuth<T = unknown>(
       clerkId: (mergedUserInfo as { clerkId?: string } | undefined)?.clerkId,
     });
 
-    console.log('Calling handler with context');
     const res = await handler(request, authenticatedContext, params);
-    console.log('Handler returned');
     setResponseHeaders(res, authenticatedContext.requestId);
     return res;
   });
@@ -192,14 +185,19 @@ export function withAuthStreaming(
           clerkId?: string;
         };
       } catch {
-        userInfo = createFallbackUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
-          clerkId?: string;
-        };
+        try {
+           userInfo = createFallbackUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
+            clerkId?: string;
+           };
+        } catch (err) {
+           throw err;
+        }
       }
       const authWithId = authResult as unknown as { userId?: string };
       const mergedUserInfo = authWithId?.userId
         ? { ...userInfo, clerkId: authWithId.userId }
         : userInfo;
+      
       const authenticatedContext: AuthenticatedRequestContext = {
         requestId: baseContext.requestId || 'unknown',
         method: baseContext.method,
@@ -245,9 +243,14 @@ export function withValidation<TSchema extends z.ZodSchema, TResponse = unknown>
             'Invalid JSON in request body',
             context
           );
-          return createValidationErrorResponse(
+          return createErrorResponse(
             'Invalid JSON format in request body',
-            context.requestId
+            400,
+            {
+              code: 'VALIDATION_ERROR',
+              details: 'JSON parsing failed',
+              requestId: context.requestId,
+            }
           ) as NextResponse<ApiResponse<TResponse>>;
         }
       } else {
@@ -269,9 +272,16 @@ export function withValidation<TSchema extends z.ZodSchema, TResponse = unknown>
         validation.error || 'Validation failed',
         context
       );
-      return createValidationErrorResponse(
+      // Use createErrorResponse directly to put the specific error in the message field
+      return createErrorResponse(
         validation.error || 'Validation failed',
-        context.requestId
+        400,
+        {
+          code: 'VALIDATION_ERROR',
+          details: validation.error,
+          suggestedAction: 'Please check your input data and try again',
+          requestId: context.requestId,
+        }
       ) as NextResponse<ApiResponse<TResponse>>;
     }
 
