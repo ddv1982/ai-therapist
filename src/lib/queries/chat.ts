@@ -64,6 +64,7 @@ export function useChatMessagesQuery(sessionId: string | null | undefined) {
       throw new Error(response.error?.message || 'Failed to fetch messages');
     },
     enabled: !!sessionId,
+    staleTime: 30 * 1000, // Messages are fresh for 30 seconds
   });
 }
 

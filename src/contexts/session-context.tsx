@@ -19,16 +19,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isCreatingSession, setCreatingSession] = useState(false);
   const [isDeletingSession, setDeletingSession] = useState<string | null>(null);
+  const [hasHydrated, setHasHydrated] = useState(false);
 
   const { data: currentServerSession } = useCurrentSessionQuery();
   const setCurrentOnServer = useSetCurrentSessionMutation();
 
-  // Sync with server on mount
+  // Sync with server on mount only once
   useEffect(() => {
-    if (currentServerSession?.id && currentServerSession.id !== currentSessionId) {
+    if (!hasHydrated && currentServerSession?.id) {
       setCurrentSessionId(currentServerSession.id);
+      setHasHydrated(true);
     }
-  }, [currentServerSession?.id, currentSessionId]);
+  }, [currentServerSession?.id, hasHydrated]);
 
   const selectSession = useCallback(
     async (sessionId: string | null) => {

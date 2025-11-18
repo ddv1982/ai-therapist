@@ -1,12 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import { SessionSidebar } from './session-sidebar';
-import {
-  useSessionsQuery,
-  useDeleteSessionMutation,
-  useCurrentSessionQuery,
-} from '@/lib/queries/sessions';
+import { useSessionsQuery, useDeleteSessionMutation } from '@/lib/queries/sessions';
 import { useSession } from '@/contexts/session-context';
 import { useToast } from '@/components/ui/toast';
 import { logger } from '@/lib/utils/logger';
@@ -43,17 +38,11 @@ export function SessionSidebarContainer({
     },
   }));
   const deleteSessionMutation = useDeleteSessionMutation();
-  const { data: currentServerSession, refetch: refetchCurrent } = useCurrentSessionQuery();
   const { selectSession } = useSelectSession();
   const { showToast } = useToast();
   const t = useTranslations('toast');
 
-  // Hydrate from server on mount
-  useEffect(() => {
-    if (currentServerSession?.id && currentServerSession.id !== currentSessionId) {
-      setCurrentSession(currentServerSession.id);
-    }
-  }, [currentServerSession?.id, currentSessionId, setCurrentSession]);
+  // Session hydration is now handled in SessionProvider only
 
   // Title resolution not needed here since we defer session creation until send
 
@@ -67,13 +56,6 @@ export function SessionSidebarContainer({
       await deleteSessionMutation.mutateAsync(sessionId);
       if (currentSessionId === sessionId) {
         setCurrentSession(null);
-        try {
-          const refreshed = await refetchCurrent();
-          const nextId = (refreshed?.data as { id?: string } | undefined)?.id ?? null;
-          if (nextId) {
-            setCurrentSession(nextId);
-          }
-        } catch {}
       }
     } catch (err) {
       showToast({
