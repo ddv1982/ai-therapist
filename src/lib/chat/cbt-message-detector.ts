@@ -346,10 +346,10 @@ export function extractUserRatings(
   }
 
   // Extract credibility ratings (*(7/10)*)
-  const credibilityMatches = content.match(/\*(\d+)\/10\*/g);
+  const credibilityMatches = content.match(/\*\(\d+\/10\)\*/g);
   if (credibilityMatches) {
     credibilityMatches.forEach((match) => {
-      const rating = match.match(/\*(\d+)\/10\*/)?.[1];
+      const rating = match.match(/\*\((\d+)\/10\)\*/)?.[1];
       if (rating) {
         ratings.push({
           rating: parseInt(rating),
