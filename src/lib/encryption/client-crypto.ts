@@ -1,16 +1,16 @@
 /**
  * Client-Side Encryption Utilities
- * 
+ *
  * Provides secure encryption/decryption for client-side data storage using Web Crypto API.
  * Designed for therapeutic draft data with same security standards as server-side crypto.
- * 
+ *
  * Features:
  * - AES-256-GCM encryption (same as server)
  * - PBKDF2 key derivation with same parameters
  * - Browser-native crypto.getRandomValues()
  * - IndexedDB for secure key storage
  * - Session-based key management
- * 
+ *
  * Security:
  * - Cryptographically secure random number generation
  * - Industry-standard encryption algorithms
@@ -31,7 +31,10 @@ const ITERATIONS = 100000; // Same as server PBKDF2 iterations
  * Client-side encryption error class
  */
 export class ClientCryptoError extends Error {
-  constructor(message: string, public cause?: Error) {
+  constructor(
+    message: string,
+    public cause?: Error
+  ) {
     super(message);
     this.name = 'ClientCryptoError';
   }
@@ -91,25 +94,21 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
  * Derive encryption key from master key using PBKDF2
  */
 async function deriveKey(masterKey: ArrayBuffer, salt: Uint8Array): Promise<CryptoKey> {
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    masterKey,
-    'PBKDF2',
-    false,
-    ['deriveKey']
-  );
+  const keyMaterial = await crypto.subtle.importKey('raw', masterKey, 'PBKDF2', false, [
+    'deriveKey',
+  ]);
 
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
       salt: salt as BufferSource,
       iterations: ITERATIONS,
-      hash: 'SHA-256'
+      hash: 'SHA-256',
     },
     keyMaterial,
     {
       name: ALGORITHM,
-      length: KEY_LENGTH
+      length: KEY_LENGTH,
     },
     false,
     ['encrypt', 'decrypt']
@@ -123,20 +122,23 @@ async function getMasterKey(): Promise<ArrayBuffer> {
   // For now, generate a session-based key
   // In the future, this could be derived from user authentication
   const sessionKey = sessionStorage.getItem('therapeutic-session-key');
-  
+
   if (sessionKey) {
     try {
       return base64ToArrayBuffer(sessionKey);
     } catch {
       logger.warn('Failed to load session key, generating new one', {
-        operation: 'getOrCreateSessionKey'
+        operation: 'getOrCreateSessionKey',
       });
     }
   }
 
   // Generate new session key
   const newKey = getRandomBytes(32); // 256 bits
-  sessionStorage.setItem('therapeutic-session-key', arrayBufferToBase64(newKey.buffer as ArrayBuffer));
+  sessionStorage.setItem(
+    'therapeutic-session-key',
+    arrayBufferToBase64(newKey.buffer as ArrayBuffer)
+  );
   return newKey.buffer as ArrayBuffer;
 }
 
@@ -162,16 +164,14 @@ export async function encryptClientData(plaintext: string): Promise<string> {
     const encryptedData = await crypto.subtle.encrypt(
       {
         name: ALGORITHM,
-        iv: iv as BufferSource
+        iv: iv as BufferSource,
       },
       key,
       encodedData as BufferSource
     );
 
     // Combine salt + iv + encrypted data for storage
-    const combined = new Uint8Array(
-      SALT_LENGTH + IV_LENGTH + encryptedData.byteLength
-    );
+    const combined = new Uint8Array(SALT_LENGTH + IV_LENGTH + encryptedData.byteLength);
     combined.set(salt, 0);
     combined.set(iv, SALT_LENGTH);
     combined.set(new Uint8Array(encryptedData), SALT_LENGTH + IV_LENGTH);
@@ -211,7 +211,7 @@ export async function decryptClientData(encryptedData: string): Promise<string> 
     const decryptedData = await crypto.subtle.decrypt(
       {
         name: ALGORITHM,
-        iv: iv as BufferSource
+        iv: iv as BufferSource,
       },
       key,
       encrypted as BufferSource
@@ -247,7 +247,7 @@ export function clearClientCryptoSession(): void {
   } catch (error) {
     logger.warn('Failed to clear crypto session', {
       operation: 'clearCryptoSession',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }
@@ -265,6 +265,6 @@ export function getClientCryptoStatus(): {
     available: isClientCryptoAvailable(),
     hasSessionKey: sessionStorage.getItem('therapeutic-session-key') !== null,
     algorithm: ALGORITHM,
-    keyLength: KEY_LENGTH
+    keyLength: KEY_LENGTH,
   };
 }

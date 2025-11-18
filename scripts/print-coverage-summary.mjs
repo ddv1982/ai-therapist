@@ -21,14 +21,15 @@ const res = {
   lines: total.lines.pct,
 };
 
-const pass = res.statements >= thr.statements &&
-             res.branches >= thr.branches &&
-             res.functions >= thr.functions &&
-             res.lines >= thr.lines;
+const pass =
+  res.statements >= thr.statements &&
+  res.branches >= thr.branches &&
+  res.functions >= thr.functions &&
+  res.lines >= thr.lines;
 
 console.log(
   `QA Summary: Statements ${fmt(res.statements)}, Branches ${fmt(res.branches)}, ` +
-  `Functions ${fmt(res.functions)}, Lines ${fmt(res.lines)} — thresholds 70% — ${pass ? 'PASSED' : 'FAILED'}`
+    `Functions ${fmt(res.functions)}, Lines ${fmt(res.lines)} — thresholds 70% — ${pass ? 'PASSED' : 'FAILED'}`
 );
 
 process.exit(pass ? 0 : 1);

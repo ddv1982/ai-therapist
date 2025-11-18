@@ -69,7 +69,7 @@ export class MemoryManagementService {
     // Extract key points if available
     if (Array.isArray(keyPoints) && keyPoints.length > 0) {
       const pointsText = keyPoints
-        .filter(point => typeof point === 'string')
+        .filter((point) => typeof point === 'string')
         .slice(0, 3)
         .join('; ');
       if (pointsText) summaryParts.push(`Key insights: ${pointsText}`);
@@ -80,7 +80,7 @@ export class MemoryManagementService {
       const insights = therapeuticInsights as Record<string, unknown>;
       if (insights.primaryInsights && Array.isArray(insights.primaryInsights)) {
         const insightsText = insights.primaryInsights
-          .filter(insight => typeof insight === 'string')
+          .filter((insight) => typeof insight === 'string')
           .slice(0, 2)
           .join('; ');
         if (insightsText) summaryParts.push(`Therapeutic focus: ${insightsText}`);
@@ -88,7 +88,7 @@ export class MemoryManagementService {
 
       if (insights.growthAreas && Array.isArray(insights.growthAreas)) {
         const growthText = insights.growthAreas
-          .filter(area => typeof area === 'string')
+          .filter((area) => typeof area === 'string')
           .slice(0, 2)
           .join('; ');
         if (growthText) summaryParts.push(`Growth areas: ${growthText}`);
@@ -98,7 +98,7 @@ export class MemoryManagementService {
     // Extract patterns if available
     if (Array.isArray(patternsIdentified) && patternsIdentified.length > 0) {
       const patternsText = patternsIdentified
-        .filter(pattern => typeof pattern === 'string')
+        .filter((pattern) => typeof pattern === 'string')
         .slice(0, 2)
         .join('; ');
       if (patternsText) summaryParts.push(`Patterns identified: ${patternsText}`);
@@ -118,14 +118,18 @@ export class MemoryManagementService {
   /**
    * Retrieves recent session reports for memory context
    */
-  async getMemoryContext(clerkId: string, limit: number, excludeSessionId: string | null): Promise<MemoryData> {
+  async getMemoryContext(
+    clerkId: string,
+    limit: number,
+    excludeSessionId: string | null
+  ): Promise<MemoryData> {
     logger.info('Retrieving session reports for memory context', {
       limit,
-      excludeSessionId
+      excludeSessionId,
     });
 
     const client = getConvexHttpClient();
-    
+
     // Get user from Clerk ID
     const user = await client.query(anyApi.users.getByClerkId, { clerkId });
     const convexUser = user as ConvexUser | null;
@@ -153,7 +157,7 @@ export class MemoryManagementService {
 
     logger.info('Found session reports for memory processing', {
       reportCount: convexReports.length,
-      reportIds: convexReports.map((r) => String(r._id).substring(0, 8))
+      reportIds: convexReports.map((r) => String(r._id).substring(0, 8)),
     });
 
     const memoryContext: MemoryContextEntry[] = [];
@@ -176,10 +180,12 @@ export class MemoryManagementService {
 
         memoryContext.push({
           sessionTitle: convexSession?.title ?? 'Session',
-          sessionDate: convexSession ? new Date(convexSession.startedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          sessionDate: convexSession
+            ? new Date(convexSession.startedAt).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0],
           reportDate: new Date(report.createdAt).toISOString().split('T')[0],
           content: decryptedContent,
-          summary: summary
+          summary: summary,
         });
 
         successfulReports++;
@@ -187,14 +193,18 @@ export class MemoryManagementService {
         logger.info('Successfully processed session report for memory', {
           reportId: String(report._id).substring(0, 8),
           summaryLength: summary.length,
-          hasStructuredData: !!(report.keyPoints || report.therapeuticInsights || report.patternsIdentified)
+          hasStructuredData: !!(
+            report.keyPoints ||
+            report.therapeuticInsights ||
+            report.patternsIdentified
+          ),
         });
-
       } catch (decryptionError) {
         failedDecryptions++;
         logger.warn('Failed to decrypt session report, skipping', {
           reportId: String(report._id).substring(0, 8),
-          error: decryptionError instanceof Error ? decryptionError.message : 'Unknown decryption error'
+          error:
+            decryptionError instanceof Error ? decryptionError.message : 'Unknown decryption error',
         });
         continue;
       }
@@ -206,7 +216,7 @@ export class MemoryManagementService {
       failedDecryptions,
       memoryContextSize: memoryContext.length,
       totalMemoryLength: memoryContext.reduce((acc, r) => acc + r.content.length, 0),
-      totalSummaryLength: memoryContext.reduce((acc, r) => acc + r.summary.length, 0)
+      totalSummaryLength: memoryContext.reduce((acc, r) => acc + r.summary.length, 0),
     });
 
     return {
@@ -223,11 +233,16 @@ export class MemoryManagementService {
   /**
    * Retrieves detailed memory management information
    */
-  async getMemoryManagement(clerkId: string, limit: number, excludeSessionId: string | null, includeFullContent: boolean): Promise<MemoryManageData> {
+  async getMemoryManagement(
+    clerkId: string,
+    limit: number,
+    excludeSessionId: string | null,
+    includeFullContent: boolean
+  ): Promise<MemoryManageData> {
     logger.info('Memory management request received');
 
     const client = getConvexHttpClient();
-    
+
     // Get user from Clerk ID
     const user = await client.query(anyApi.users.getByClerkId, { clerkId });
     const convexUser = user as ConvexUser | null;
@@ -255,7 +270,7 @@ export class MemoryManagementService {
     const limitedReports = Array.isArray(limited) ? (limited as ConvexSessionReport[]) : [];
 
     logger.info('Found session reports for memory management', {
-      reportCount: limitedReports.length
+      reportCount: limitedReports.length,
     });
 
     const memoryDetails: MemoryReportDetail[] = [];
@@ -270,9 +285,10 @@ export class MemoryManagementService {
 
         try {
           const decryptedContent = decryptSessionReportContent(report.reportContent);
-          contentPreview = decryptedContent.length > 200
-            ? decryptedContent.substring(0, 200) + '...'
-            : decryptedContent;
+          contentPreview =
+            decryptedContent.length > 200
+              ? decryptedContent.substring(0, 200) + '...'
+              : decryptedContent;
 
           if (includeFullContent) {
             fullContent = decryptedContent;
@@ -289,14 +305,18 @@ export class MemoryManagementService {
         const keyInsights: string[] = [];
 
         if (Array.isArray(report.keyPoints)) {
-          const points = (report.keyPoints as unknown[]).filter((point): point is string => typeof point === 'string');
+          const points = (report.keyPoints as unknown[]).filter(
+            (point): point is string => typeof point === 'string'
+          );
           keyInsights.push(...points.slice(0, 3));
         }
 
         if (report.therapeuticInsights && typeof report.therapeuticInsights === 'object') {
           const insights = report.therapeuticInsights as Record<string, unknown>;
           if (Array.isArray(insights.primaryInsights)) {
-            keyInsights.push(...insights.primaryInsights.filter(i => typeof i === 'string').slice(0, 2));
+            keyInsights.push(
+              ...insights.primaryInsights.filter((i) => typeof i === 'string').slice(0, 2)
+            );
           }
         }
 
@@ -307,12 +327,14 @@ export class MemoryManagementService {
           id: String(report._id),
           sessionId: String(report.sessionId),
           sessionTitle: convexSession?.title ?? 'Session',
-          sessionDate: convexSession ? new Date(convexSession.startedAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          sessionDate: convexSession
+            ? new Date(convexSession.startedAt).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0],
           reportDate: new Date(report.createdAt).toISOString().split('T')[0],
           contentPreview,
           keyInsights: keyInsights.slice(0, 5),
           hasEncryptedContent,
-          reportSize: report.reportContent.length
+          reportSize: report.reportContent.length,
         };
 
         if (includeFullContent) {
@@ -329,11 +351,10 @@ export class MemoryManagementService {
         }
 
         memoryDetails.push(reportDetail);
-
       } catch (error) {
         logger.warn('Failed to process session report for management', {
           reportId: report._id.substring(0, 8),
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
         continue;
       }
@@ -343,7 +364,7 @@ export class MemoryManagementService {
       totalReports: limitedReports.length,
       successfulReports,
       failedDecryptions,
-      memoryDetailsCount: memoryDetails.length
+      memoryDetailsCount: memoryDetails.length,
     });
 
     return {
@@ -354,7 +375,7 @@ export class MemoryManagementService {
         successfullyProcessed: successfulReports,
         failedDecryptions: failedDecryptions,
         hasMemory: memoryDetails.length > 0,
-      }
+      },
     };
   }
 
@@ -391,18 +412,24 @@ export class MemoryManagementService {
     let deletionDescription = '';
 
     if (sessionIds && sessionIds.length > 0) {
-      toDelete = allReports.filter(r => sessionIds.includes(String(r.sessionId))).map(r => String(r._id));
+      toDelete = allReports
+        .filter((r) => sessionIds.includes(String(r.sessionId)))
+        .map((r) => String(r._id));
       deletionDescription = `specific sessions: ${sessionIds.join(', ')}`;
     } else if (limit) {
-      const filtered = excludeSessionId ? allReports.filter(r => String(r.sessionId) !== excludeSessionId) : allReports;
+      const filtered = excludeSessionId
+        ? allReports.filter((r) => String(r.sessionId) !== excludeSessionId)
+        : allReports;
       const sorted = filtered.sort((a, b) => b.createdAt - a.createdAt);
-      toDelete = sorted.slice(0, limit).map(r => String(r._id));
+      toDelete = sorted.slice(0, limit).map((r) => String(r._id));
       deletionDescription = `${toDelete.length} recent reports${excludeSessionId ? ` (excluding current session)` : ''}`;
     } else if (excludeSessionId) {
-      toDelete = allReports.filter(r => String(r.sessionId) !== excludeSessionId).map(r => String(r._id));
+      toDelete = allReports
+        .filter((r) => String(r.sessionId) !== excludeSessionId)
+        .map((r) => String(r._id));
       deletionDescription = 'all memory (excluding current session)';
     } else {
-      toDelete = allReports.map(r => String(r._id));
+      toDelete = allReports.map((r) => String(r._id));
       deletionDescription = 'all memory';
     }
 
@@ -426,7 +453,13 @@ export class MemoryManagementService {
     return {
       deletedCount,
       message: `Successfully deleted ${deletedCount} session reports (${deletionDescription})`,
-      deletionType: sessionIds ? 'specific' : limit ? 'recent' : excludeSessionId ? 'all-except-current' : 'all',
+      deletionType: sessionIds
+        ? 'specific'
+        : limit
+          ? 'recent'
+          : excludeSessionId
+            ? 'all-except-current'
+            : 'all',
     };
   }
 }

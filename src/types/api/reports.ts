@@ -4,471 +4,471 @@
  */
 
 export interface paths {
-    "/reports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Generate session report
-         * @description Generates a therapeutic analysis report for a completed session using AI.
-         *     The report includes key insights, patterns, and recommendations.
-         *
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /**
-                         * Format: uuid
-                         * @description UUID of the session
-                         */
-                        sessionId: string;
-                        /** @description Array of messages from the session */
-                        messages: components["schemas"]["Message"][];
-                    };
-                };
-            };
-            responses: {
-                /** @description Generated report */
-                200: {
-                    headers: {
-                        /** @description Correlation ID for tracing this request */
-                        "X-Request-Id"?: string;
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SessionReport"];
-                    };
-                };
-                400: components["responses"]["BadRequest"];
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/reports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/reports/send": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Generate session report
+     * @description Generates a therapeutic analysis report for a completed session using AI.
+     *     The report includes key insights, patterns, and recommendations.
+     *
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /**
+             * Format: uuid
+             * @description UUID of the session
+             */
+            sessionId: string;
+            /** @description Array of messages from the session */
+            messages: components['schemas']['Message'][];
+          };
         };
-        get?: never;
-        put?: never;
-        /**
-         * Generate and email session report
-         * @description Generates a therapeutic session report and sends it via email in HTML format.
-         *     Supports multiple email service configurations including SMTP and console logging.
-         *
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["EmailReportRequest"];
-                };
-            };
-            responses: {
-                /** @description Report sent successfully */
-                200: {
-                    headers: {
-                        /** @description Correlation ID for tracing this request */
-                        "X-Request-Id"?: string;
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            /** @example Report generated and sent successfully */
-                            message?: string;
-                        };
-                    };
-                };
-                400: components["responses"]["BadRequest"];
-                500: components["responses"]["InternalServerError"];
-            };
+      };
+      responses: {
+        /** @description Generated report */
+        200: {
+          headers: {
+            /** @description Correlation ID for tracing this request */
+            'X-Request-Id'?: string;
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': components['schemas']['SessionReport'];
+          };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+        400: components['responses']['BadRequest'];
+        500: components['responses']['InternalServerError'];
+      };
     };
-    "/reports/generate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Generate session report (detailed)
-         * @description Generates a therapeutic report from session messages and returns the raw report content.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** Format: uuid */
-                        sessionId: string;
-                        messages: {
-                            /** @enum {string} */
-                            role?: "user" | "assistant";
-                            content?: string;
-                            /** Format: date-time */
-                            timestamp?: string;
-                        }[];
-                        /** @description Optional model override */
-                        model?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Generated report content */
-                200: {
-                    headers: {
-                        "X-Request-Id": components["headers"]["X-Request-Id"];
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            message?: string;
-                            reportContent?: string;
-                            modelUsed?: string;
-                        };
-                    };
-                };
-                400: components["responses"]["BadRequest"];
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/reports/send': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    get?: never;
+    put?: never;
+    /**
+     * Generate and email session report
+     * @description Generates a therapeutic session report and sends it via email in HTML format.
+     *     Supports multiple email service configurations including SMTP and console logging.
+     *
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': components['schemas']['EmailReportRequest'];
+        };
+      };
+      responses: {
+        /** @description Report sent successfully */
+        200: {
+          headers: {
+            /** @description Correlation ID for tracing this request */
+            'X-Request-Id'?: string;
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @example true */
+              success?: boolean;
+              /** @example Report generated and sent successfully */
+              message?: string;
+            };
+          };
+        };
+        400: components['responses']['BadRequest'];
+        500: components['responses']['InternalServerError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/reports/generate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Generate session report (detailed)
+     * @description Generates a therapeutic report from session messages and returns the raw report content.
+     */
+    post: {
+      parameters: {
+        query?: never;
+        header?: never;
+        path?: never;
+        cookie?: never;
+      };
+      requestBody: {
+        content: {
+          'application/json': {
+            /** Format: uuid */
+            sessionId: string;
+            messages: {
+              /** @enum {string} */
+              role?: 'user' | 'assistant';
+              content?: string;
+              /** Format: date-time */
+              timestamp?: string;
+            }[];
+            /** @description Optional model override */
+            model?: string;
+          };
+        };
+      };
+      responses: {
+        /** @description Generated report content */
+        200: {
+          headers: {
+            'X-Request-Id': components['headers']['X-Request-Id'];
+            [name: string]: unknown;
+          };
+          content: {
+            'application/json': {
+              /** @example true */
+              success?: boolean;
+              message?: string;
+              reportContent?: string;
+              modelUsed?: string;
+            };
+          };
+        };
+        400: components['responses']['BadRequest'];
+        500: components['responses']['InternalServerError'];
+      };
+    };
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        Message: {
-            /**
-             * Format: uuid
-             * @description Unique identifier for the message
-             * @example msg-123e4567-e89b-12d3-a456-426614174000
-             */
-            id?: string;
-            /**
-             * @description The role of the message sender
-             * @enum {string}
-             */
-            role: "user" | "assistant";
-            /**
-             * @description The message content
-             * @example I'm struggling with anxiety and need some guidance
-             */
-            content: string;
-            /**
-             * Format: date-time
-             * @description When the message was created
-             */
-            timestamp?: string;
-            /**
-             * Format: date-time
-             * @description Database creation timestamp
-             */
-            createdAt?: string;
-        };
-        NewMessage: {
-            /**
-             * @description The role of the message sender
-             * @enum {string}
-             */
-            role: "user" | "assistant";
-            /** @description The message content */
-            content: string;
-            /** @description Optional model identifier used for assistant messages */
-            modelUsed?: string;
-        };
-        Session: {
-            /**
-             * Format: uuid
-             * @description Unique session identifier
-             * @example 123e4567-e89b-12d3-a456-426614174000
-             */
-            id: string;
-            /**
-             * @description User identifier (currently uses default user)
-             * @example default-user-id
-             */
-            userId: string;
-            /**
-             * @description Human-readable session title
-             * @example Managing Work Stress
-             */
-            title: string;
-            /**
-             * @description Current session status
-             * @enum {string}
-             */
-            status: "active" | "completed";
-            /**
-             * Format: date-time
-             * @description When the session was started
-             */
-            startedAt?: string;
-            /**
-             * Format: date-time
-             * @description When the session was completed
-             */
-            endedAt?: string | null;
-            /**
-             * Format: date-time
-             * @description Database creation timestamp
-             */
-            createdAt?: string;
-            /**
-             * Format: date-time
-             * @description Database update timestamp
-             */
-            updatedAt?: string;
-            _count?: {
-                /**
-                 * @description Number of messages in this session
-                 * @example 12
-                 */
-                messages?: number;
-            };
-        };
-        SessionReport: {
-            /**
-             * Format: uuid
-             * @description Unique report identifier
-             */
-            id: string;
-            /**
-             * Format: uuid
-             * @description Associated session ID
-             */
-            sessionId: string;
-            /** @description JSON string of key discussion points */
-            keyPoints?: string;
-            /** @description AI-generated therapeutic analysis */
-            therapeuticInsights: string;
-            /** @description JSON string of identified behavioral patterns */
-            patternsIdentified?: string;
-            /** @description JSON string of recommended actions */
-            actionItems?: string;
-            /** @description Overall mood assessment */
-            moodAssessment?: string | null;
-            /** @description Progress tracking notes */
-            progressNotes?: string | null;
-            /**
-             * Format: date-time
-             * @description Report generation timestamp
-             */
-            createdAt?: string;
-        };
-        ModelConfig: {
-            /**
-             * @description Model identifier used in API calls
-             * @example openai/gpt-oss-120b
-             */
-            id: string;
-            /**
-             * @description Human-readable model name
-             * @example GPT OSS 120B
-             */
-            name: string;
-            /**
-             * @description Model provider/company
-             * @example OpenAI
-             */
-            provider: string;
-            /**
-             * @description Maximum tokens supported by the model
-             * @example 32000
-             */
-            maxTokens: number;
-            /**
-             * @description Model category/stability level
-             * @example featured
-             * @enum {string}
-             */
-            category: "featured" | "production" | "preview";
-        };
-        ChatRequest: {
-            /** @description Array of conversation messages */
-            messages: {
-                /** @enum {string} */
-                role?: "user" | "assistant";
-                content?: string;
-            }[];
-            /**
-             * Format: uuid
-             * @description Optional session ID for context
-             */
-            sessionId?: string;
-            /**
-             * @description AI model to use
-             * @example openai/gpt-oss-120b
-             */
-            model?: string;
-            /** @description Groq API key (if not set in environment) */
-            apiKey?: string;
-            /**
-             * @description Response creativity (0=focused, 2=creative)
-             * @example 0.7
-             */
-            temperature?: number;
-            /**
-             * @description Maximum response length
-             * @example 2000
-             */
-            maxTokens?: number;
-            /**
-             * @description Nucleus sampling parameter
-             * @example 0.9
-             */
-            topP?: number;
-        };
-        CreateSessionRequest: {
-            /**
-             * @description Session title
-             * @example Managing Anxiety and Stress
-             */
-            title: string;
-        };
-        EmailReportRequest: {
-            /**
-             * Format: uuid
-             * @description Session to generate report for
-             */
-            sessionId: string;
-            /** @description Session messages */
-            messages: components["schemas"]["Message"][];
-            /**
-             * Format: email
-             * @description Recipient email address
-             * @example user@example.com
-             */
-            emailAddress: string;
-            /**
-             * @description AI model for report generation
-             * @example openai/gpt-oss-120b
-             */
-            model?: string;
-            emailConfig?: {
-                /**
-                 * @description Email service type
-                 * @enum {string}
-                 */
-                service?: "console" | "smtp";
-                /**
-                 * @description SMTP server hostname
-                 * @example smtp.gmail.com
-                 */
-                smtpHost?: string;
-                /**
-                 * Format: email
-                 * @description SMTP username
-                 */
-                smtpUser?: string;
-                /** @description SMTP password or app password */
-                smtpPass?: string;
-                /**
-                 * Format: email
-                 * @description Sender email address
-                 */
-                fromEmail?: string;
-            };
-        };
-        Error: {
-            /**
-             * @description Error message
-             * @example Validation failed
-             */
-            error: string;
-            /**
-             * @description Detailed error information
-             * @example Invalid email address format
-             */
-            details?: string;
-            /**
-             * @description Error code for programmatic handling
-             * @example VALIDATION_ERROR
-             */
-            code?: string;
-            /**
-             * @description Suggested action to resolve the error
-             * @example Please check your input and try again
-             */
-            suggestedAction?: string;
-        };
+  schemas: {
+    Message: {
+      /**
+       * Format: uuid
+       * @description Unique identifier for the message
+       * @example msg-123e4567-e89b-12d3-a456-426614174000
+       */
+      id?: string;
+      /**
+       * @description The role of the message sender
+       * @enum {string}
+       */
+      role: 'user' | 'assistant';
+      /**
+       * @description The message content
+       * @example I'm struggling with anxiety and need some guidance
+       */
+      content: string;
+      /**
+       * Format: date-time
+       * @description When the message was created
+       */
+      timestamp?: string;
+      /**
+       * Format: date-time
+       * @description Database creation timestamp
+       */
+      createdAt?: string;
     };
-    responses: {
-        /** @description Bad request - invalid input */
-        BadRequest: {
-            headers: {
-                /** @description Correlation ID for tracing this request */
-                "X-Request-Id"?: string;
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["Error"];
-            };
-        };
-        /** @description Internal server error */
-        InternalServerError: {
-            headers: {
-                /** @description Correlation ID for tracing this request */
-                "X-Request-Id"?: string;
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["Error"];
-            };
-        };
+    NewMessage: {
+      /**
+       * @description The role of the message sender
+       * @enum {string}
+       */
+      role: 'user' | 'assistant';
+      /** @description The message content */
+      content: string;
+      /** @description Optional model identifier used for assistant messages */
+      modelUsed?: string;
     };
-    parameters: never;
-    requestBodies: never;
-    headers: {
+    Session: {
+      /**
+       * Format: uuid
+       * @description Unique session identifier
+       * @example 123e4567-e89b-12d3-a456-426614174000
+       */
+      id: string;
+      /**
+       * @description User identifier (currently uses default user)
+       * @example default-user-id
+       */
+      userId: string;
+      /**
+       * @description Human-readable session title
+       * @example Managing Work Stress
+       */
+      title: string;
+      /**
+       * @description Current session status
+       * @enum {string}
+       */
+      status: 'active' | 'completed';
+      /**
+       * Format: date-time
+       * @description When the session was started
+       */
+      startedAt?: string;
+      /**
+       * Format: date-time
+       * @description When the session was completed
+       */
+      endedAt?: string | null;
+      /**
+       * Format: date-time
+       * @description Database creation timestamp
+       */
+      createdAt?: string;
+      /**
+       * Format: date-time
+       * @description Database update timestamp
+       */
+      updatedAt?: string;
+      _count?: {
+        /**
+         * @description Number of messages in this session
+         * @example 12
+         */
+        messages?: number;
+      };
+    };
+    SessionReport: {
+      /**
+       * Format: uuid
+       * @description Unique report identifier
+       */
+      id: string;
+      /**
+       * Format: uuid
+       * @description Associated session ID
+       */
+      sessionId: string;
+      /** @description JSON string of key discussion points */
+      keyPoints?: string;
+      /** @description AI-generated therapeutic analysis */
+      therapeuticInsights: string;
+      /** @description JSON string of identified behavioral patterns */
+      patternsIdentified?: string;
+      /** @description JSON string of recommended actions */
+      actionItems?: string;
+      /** @description Overall mood assessment */
+      moodAssessment?: string | null;
+      /** @description Progress tracking notes */
+      progressNotes?: string | null;
+      /**
+       * Format: date-time
+       * @description Report generation timestamp
+       */
+      createdAt?: string;
+    };
+    ModelConfig: {
+      /**
+       * @description Model identifier used in API calls
+       * @example openai/gpt-oss-120b
+       */
+      id: string;
+      /**
+       * @description Human-readable model name
+       * @example GPT OSS 120B
+       */
+      name: string;
+      /**
+       * @description Model provider/company
+       * @example OpenAI
+       */
+      provider: string;
+      /**
+       * @description Maximum tokens supported by the model
+       * @example 32000
+       */
+      maxTokens: number;
+      /**
+       * @description Model category/stability level
+       * @example featured
+       * @enum {string}
+       */
+      category: 'featured' | 'production' | 'preview';
+    };
+    ChatRequest: {
+      /** @description Array of conversation messages */
+      messages: {
+        /** @enum {string} */
+        role?: 'user' | 'assistant';
+        content?: string;
+      }[];
+      /**
+       * Format: uuid
+       * @description Optional session ID for context
+       */
+      sessionId?: string;
+      /**
+       * @description AI model to use
+       * @example openai/gpt-oss-120b
+       */
+      model?: string;
+      /** @description Groq API key (if not set in environment) */
+      apiKey?: string;
+      /**
+       * @description Response creativity (0=focused, 2=creative)
+       * @example 0.7
+       */
+      temperature?: number;
+      /**
+       * @description Maximum response length
+       * @example 2000
+       */
+      maxTokens?: number;
+      /**
+       * @description Nucleus sampling parameter
+       * @example 0.9
+       */
+      topP?: number;
+    };
+    CreateSessionRequest: {
+      /**
+       * @description Session title
+       * @example Managing Anxiety and Stress
+       */
+      title: string;
+    };
+    EmailReportRequest: {
+      /**
+       * Format: uuid
+       * @description Session to generate report for
+       */
+      sessionId: string;
+      /** @description Session messages */
+      messages: components['schemas']['Message'][];
+      /**
+       * Format: email
+       * @description Recipient email address
+       * @example user@example.com
+       */
+      emailAddress: string;
+      /**
+       * @description AI model for report generation
+       * @example openai/gpt-oss-120b
+       */
+      model?: string;
+      emailConfig?: {
+        /**
+         * @description Email service type
+         * @enum {string}
+         */
+        service?: 'console' | 'smtp';
+        /**
+         * @description SMTP server hostname
+         * @example smtp.gmail.com
+         */
+        smtpHost?: string;
+        /**
+         * Format: email
+         * @description SMTP username
+         */
+        smtpUser?: string;
+        /** @description SMTP password or app password */
+        smtpPass?: string;
+        /**
+         * Format: email
+         * @description Sender email address
+         */
+        fromEmail?: string;
+      };
+    };
+    Error: {
+      /**
+       * @description Error message
+       * @example Validation failed
+       */
+      error: string;
+      /**
+       * @description Detailed error information
+       * @example Invalid email address format
+       */
+      details?: string;
+      /**
+       * @description Error code for programmatic handling
+       * @example VALIDATION_ERROR
+       */
+      code?: string;
+      /**
+       * @description Suggested action to resolve the error
+       * @example Please check your input and try again
+       */
+      suggestedAction?: string;
+    };
+  };
+  responses: {
+    /** @description Bad request - invalid input */
+    BadRequest: {
+      headers: {
         /** @description Correlation ID for tracing this request */
-        "X-Request-Id": string;
+        'X-Request-Id'?: string;
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['Error'];
+      };
     };
-    pathItems: never;
+    /** @description Internal server error */
+    InternalServerError: {
+      headers: {
+        /** @description Correlation ID for tracing this request */
+        'X-Request-Id'?: string;
+        [name: string]: unknown;
+      };
+      content: {
+        'application/json': components['schemas']['Error'];
+      };
+    };
+  };
+  parameters: never;
+  requestBodies: never;
+  headers: {
+    /** @description Correlation ID for tracing this request */
+    'X-Request-Id': string;
+  };
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export type operations = Record<string, never>;

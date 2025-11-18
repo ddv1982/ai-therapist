@@ -1,9 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { cn, generateSecureRandomString } from '@/lib/utils';
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
 
 export interface Toast {
   id: string;
@@ -33,26 +33,29 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const removeToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const showToast = useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = generateSecureRandomString(8, 'abcdefghijklmnopqrstuvwxyz0123456789');
-    const newToast: Toast = {
-      ...toast,
-      id,
-      duration: toast.duration || 5000,
-    };
+  const showToast = useCallback(
+    (toast: Omit<Toast, 'id'>) => {
+      const id = generateSecureRandomString(8, 'abcdefghijklmnopqrstuvwxyz0123456789');
+      const newToast: Toast = {
+        ...toast,
+        id,
+        duration: toast.duration || 5000,
+      };
 
-    setToasts(prev => [...prev, newToast]);
+      setToasts((prev) => [...prev, newToast]);
 
-    // Auto-remove toast after duration
-    if (newToast.duration && newToast.duration > 0) {
-      setTimeout(() => {
-        removeToast(id);
-      }, newToast.duration);
-    }
-  }, [removeToast]);
+      // Auto-remove toast after duration
+      if (newToast.duration && newToast.duration > 0) {
+        setTimeout(() => {
+          removeToast(id);
+        }, newToast.duration);
+      }
+    },
+    [removeToast]
+  );
 
   return (
     <ToastContext.Provider value={{ toasts, showToast, removeToast }}>
@@ -62,9 +65,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ToastContainer({ toasts, removeToast }: { toasts: Toast[]; removeToast: (id: string) => void }) {
+function ToastContainer({
+  toasts,
+  removeToast,
+}: {
+  toasts: Toast[];
+  removeToast: (id: string) => void;
+}) {
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full">
+    <div className="fixed top-4 right-4 z-50 flex w-full max-w-sm flex-col gap-2">
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onClose={() => removeToast(toast.id)} />
       ))}
@@ -77,7 +86,9 @@ function useSafeUiTranslations() {
   try {
     return useTranslations('ui');
   } catch {
-    return ((key: string) => (key === 'close' ? 'Close notification' : key)) as unknown as (key: string) => string;
+    return ((key: string) => (key === 'close' ? 'Close notification' : key)) as unknown as (
+      key: string
+    ) => string;
   }
 }
 
@@ -129,7 +140,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
       aria-live={ariaLive}
       aria-atomic="true"
       className={cn(
-        'transform transition-all duration-300 ease-in-out p-4 rounded-lg border shadow-lg',
+        'transform rounded-lg border p-4 shadow-lg transition-all duration-300 ease-in-out',
         getBackgroundColor(),
         'motion-reduce:transition-none',
         isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
@@ -137,22 +148,18 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
     >
       <div className="flex items-start gap-3">
         {getIcon()}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           {toast.title && (
-            <h4 className="text-sm font-semibold text-foreground mb-1">
-              {toast.title}
-            </h4>
+            <h4 className="text-foreground mb-1 text-sm font-semibold">{toast.title}</h4>
           )}
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {toast.message}
-          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed">{toast.message}</p>
         </div>
         <button
           onClick={onClose}
-          className="flex-shrink-0 ml-2 p-1 rounded-full hover:bg-muted transition-colors"
+          className="hover:bg-muted ml-2 flex-shrink-0 rounded-full p-1 transition-colors"
           aria-label={t('close')}
         >
-          <X className="h-4 w-4 text-muted-foreground" />
+          <X className="text-muted-foreground h-4 w-4" />
         </button>
       </div>
     </div>

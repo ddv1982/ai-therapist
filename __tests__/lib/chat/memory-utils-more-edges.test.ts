@@ -12,7 +12,10 @@ describe('memory-utils more edges', () => {
   it('checkMemoryContext supports wrapped ApiResponse shape', async () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ success: true, data: { memoryContext: [{ reportDate: '2024-02-02' }, { reportDate: '2024-02-01' }] } }),
+      json: async () => ({
+        success: true,
+        data: { memoryContext: [{ reportDate: '2024-02-02' }, { reportDate: '2024-02-01' }] },
+      }),
     } as Response);
     const res = await checkMemoryContext();
     expect(res).toEqual({ hasMemory: true, reportCount: 2, lastReportDate: '2024-02-02' });
@@ -22,7 +25,9 @@ describe('memory-utils more edges', () => {
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: false,
       status: 500,
-      json: async () => { throw new Error('bad json'); },
+      json: async () => {
+        throw new Error('bad json');
+      },
     } as any);
     const res = await deleteMemory({ type: 'all' });
     expect(res.success).toBe(false);
@@ -45,5 +50,3 @@ describe('memory-utils more edges', () => {
     expect(res).toEqual({ hasMemory: false, reportCount: 0 });
   });
 });
-
-

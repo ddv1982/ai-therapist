@@ -12,7 +12,7 @@
   }
 
   button,
-  [role="button"] {
+  [role='button'] {
     min-height: 44px; /* iOS touch target minimum */
   }
 
@@ -99,7 +99,7 @@
 /* Hover effects for desktop only */
 @media (hover: hover) {
   button:hover,
-  [role="button"]:hover {
+  [role='button']:hover {
     opacity: 0.9;
     transform: none;
   }
@@ -120,7 +120,7 @@ textarea,
 }
 
 button,
-[role="button"],
+[role='button'],
 nav,
 .sidebar {
   user-select: none;

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { FileText, Menu, X, Brain, List } from 'lucide-react';
@@ -37,16 +37,23 @@ export function ChatHeader({
   modelLabel,
 }: ChatHeaderProps) {
   const t = useTranslations('chat');
-  const UserMenu = React.useMemo(
-    () => dynamic(() => import('./user-menu'), {
-      ssr: false,
-      loading: () => <a href="/profile" className="text-sm underline">Profile</a>,
-    }),
+  const UserMenu = useMemo(
+    () =>
+      dynamic(() => import('./user-menu'), {
+        ssr: false,
+        loading: () => (
+          <a href="/profile" className="text-sm underline">
+            Profile
+          </a>
+        ),
+      }),
     []
   );
 
   return (
-    <div className={`${isMobile ? 'p-3' : 'p-6'} border-b border-border/30 bg-card/50 backdrop-blur-md relative flex-shrink-0`}>
+    <div
+      className={`${isMobile ? 'p-3' : 'p-6'} border-border/30 bg-card/50 relative flex-shrink-0 border-b backdrop-blur-md`}
+    >
       <div className="flex items-center justify-between">
         <div className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'}`}>
           <Button
@@ -60,14 +67,16 @@ export function ChatHeader({
             aria-expanded={showSidebar}
             aria-controls="chat-sidebar"
           >
-            <Menu className="w-4 h-4 relative z-10" />
-          </Button> 
+            <Menu className="relative z-10 h-4 w-4" />
+          </Button>
           <div
-            className="hidden sm:flex items-center gap-2 ml-2"
+            className="ml-2 hidden items-center gap-2 sm:flex"
             aria-label={t('main.modelChipAria', { model: modelLabel })}
           >
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">{t('main.modelChipLabel')}</span>
-            <span className="px-2 py-1 rounded-full bg-muted/80 dark:bg-muted/40 text-sm font-medium text-foreground">
+            <span className="text-muted-foreground text-xs tracking-wide uppercase">
+              {t('main.modelChipLabel')}
+            </span>
+            <span className="bg-muted/80 dark:bg-muted/40 text-foreground rounded-full px-2 py-1 text-sm font-medium">
               {modelLabel}
             </span>
           </div>
@@ -85,9 +94,9 @@ export function ChatHeader({
               title={t('main.generateReport')}
             >
               {isGeneratingReport ? (
-                <div className="w-4 h-4 border-2 border-black dark:border-white border-t-transparent rounded-full animate-spin relative z-10 opacity-100" />
+                <div className="relative z-10 h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent opacity-100 dark:border-white" />
               ) : (
-                <FileText className="w-4 h-4 relative z-10 text-foreground" />
+                <FileText className="text-foreground relative z-10 h-4 w-4" />
               )}
             </Button>
           )}
@@ -100,7 +109,7 @@ export function ChatHeader({
               style={{ WebkitTapHighlightColor: 'transparent' }}
               title={t('main.stopGenerating')}
             >
-                <X className="w-4 h-4 relative z-10" />
+              <X className="relative z-10 h-4 w-4" />
             </Button>
           )}
           <Button
@@ -111,7 +120,7 @@ export function ChatHeader({
             style={{ WebkitTapHighlightColor: 'transparent' }}
             title={isMobile ? t('main.cbtMobile') : t('main.cbtOpen')}
           >
-            <Brain className="w-4 h-4 relative z-10" />
+            <Brain className="relative z-10 h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
@@ -121,7 +130,7 @@ export function ChatHeader({
             style={{ WebkitTapHighlightColor: 'transparent' }}
             title={t('main.obsessionsTooltip')}
           >
-            <List className="w-4 h-4 relative z-10" />
+            <List className="relative z-10 h-4 w-4" />
           </Button>
           <div className="ml-1">
             <UserMenu />
@@ -130,9 +139,11 @@ export function ChatHeader({
       </div>
       {/* Accessible heading for screen readers and tests (next-intl mock returns key text) */}
       {!hasActiveSession && !hasMessages && (
-        <h1 className="sr-only" aria-live="polite">{t('main.newConversation')}</h1>
+        <h1 className="sr-only" aria-live="polite">
+          {t('main.newConversation')}
+        </h1>
       )}
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+      <div className="via-primary/50 absolute right-0 bottom-0 left-0 h-0.5 bg-gradient-to-r from-transparent to-transparent"></div>
     </div>
   );
 }

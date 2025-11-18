@@ -1,6 +1,6 @@
 /**
  * Chat UI Context
- * 
+ *
  * Provides a bridge between CBT components and the main chat UI,
  * allowing CBT messages to appear in the chat interface immediately
  * when they are sent.
@@ -8,7 +8,7 @@
 
 'use client';
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { logger } from '@/lib/utils/logger';
 
 // Chat UI Bridge interface
@@ -29,7 +29,7 @@ export interface ChatUIBridge {
    * Current active session ID
    */
   currentSessionId: string | null;
-  
+
   /**
    * Whether the chat is currently in a loading state
    */
@@ -49,11 +49,7 @@ interface ChatUIProviderProps {
  * Provider component that makes the chat UI bridge available to child components
  */
 export function ChatUIProvider({ children, bridge }: ChatUIProviderProps) {
-  return (
-    <ChatUIContext.Provider value={bridge}>
-      {children}
-    </ChatUIContext.Provider>
-  );
+  return <ChatUIContext.Provider value={bridge}>{children}</ChatUIContext.Provider>;
 }
 
 /**
@@ -61,13 +57,13 @@ export function ChatUIProvider({ children, bridge }: ChatUIProviderProps) {
  */
 export function useChatUI(): ChatUIBridge {
   const context = useContext(ChatUIContext);
-  
+
   if (!context) {
     // Provide a fallback that logs warnings but doesn't crash
-    logger.warn('useChatUI called outside of ChatUIProvider', { 
+    logger.warn('useChatUI called outside of ChatUIProvider', {
       component: 'ChatUIContext',
       operation: 'useChatUI',
-      message: 'CBT messages will not appear in chat UI'
+      message: 'CBT messages will not appear in chat UI',
     });
     return {
       addMessageToChat: async (message) => {
@@ -75,15 +71,15 @@ export function useChatUI(): ChatUIBridge {
           component: 'ChatUIContext',
           operation: 'addMessageToChat',
           reason: 'No ChatUIProvider found',
-          messagePreview: message.content.substring(0, 50) + '...'
+          messagePreview: message.content.substring(0, 50) + '...',
         });
         return { success: false, error: 'No ChatUIProvider found' };
       },
       currentSessionId: null,
-      isLoading: false
+      isLoading: false,
     };
   }
-  
+
   return context;
 }
 

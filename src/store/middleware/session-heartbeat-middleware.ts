@@ -30,43 +30,43 @@ function isSetCurrentSessionAction(action: unknown): action is SetCurrentSession
 /**
  * Redux middleware for session heartbeat management
  */
-export const sessionHeartbeatMiddleware: Middleware<object, unknown, ThunkDispatch<unknown, unknown, UnknownAction>> = 
-  (api: MiddlewareAPI<ThunkDispatch<unknown, unknown, UnknownAction>>) => 
-  (next) => 
-  (action) => {
-    
-    const result = next(action);
+export const sessionHeartbeatMiddleware: Middleware<
+  object,
+  unknown,
+  ThunkDispatch<unknown, unknown, UnknownAction>
+> = (api: MiddlewareAPI<ThunkDispatch<unknown, unknown, UnknownAction>>) => (next) => (action) => {
+  const result = next(action);
 
-    // Start heartbeat when a session becomes active
-    if (isSetCurrentSessionAction(action) && action.payload) {
-      if (!heartbeatInterval) {
-        const triggerHeartbeat = () => {
-          api.dispatch(
-            sessionsApi.endpoints.getCurrentSession.initiate(undefined, {
-              subscribe: false,
-              forceRefetch: true,
-            })
-          );
-        };
+  // Start heartbeat when a session becomes active
+  if (isSetCurrentSessionAction(action) && action.payload) {
+    if (!heartbeatInterval) {
+      const triggerHeartbeat = () => {
+        api.dispatch(
+          sessionsApi.endpoints.getCurrentSession.initiate(undefined, {
+            subscribe: false,
+            forceRefetch: true,
+          })
+        );
+      };
 
-        // Initial heartbeat using getCurrentSession endpoint
-        triggerHeartbeat();
+      // Initial heartbeat using getCurrentSession endpoint
+      triggerHeartbeat();
 
-        // Set up periodic heartbeat
-        heartbeatInterval = setInterval(triggerHeartbeat, HEARTBEAT_INTERVAL);
-      }
+      // Set up periodic heartbeat
+      heartbeatInterval = setInterval(triggerHeartbeat, HEARTBEAT_INTERVAL);
     }
+  }
 
-    // Stop heartbeat when session is cleared
-    if (isSetCurrentSessionAction(action) && !action.payload) {
-      if (heartbeatInterval) {
-        clearInterval(heartbeatInterval);
-        heartbeatInterval = null;
-      }
+  // Stop heartbeat when session is cleared
+  if (isSetCurrentSessionAction(action) && !action.payload) {
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
     }
+  }
 
-    return result;
-  };
+  return result;
+};
 
 /**
  * Cleanup function to be called when the app unmounts

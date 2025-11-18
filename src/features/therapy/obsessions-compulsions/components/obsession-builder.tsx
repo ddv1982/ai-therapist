@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Loader2, Save } from 'lucide-react';
@@ -57,20 +56,20 @@ export function ObsessionBuilder({
   const isEdit = builderState.mode === 'edit';
 
   return (
-    <Card className="p-5 border-primary/20 bg-card">
-      <div className="flex items-start justify-between gap-4 mb-4">
+    <Card className="border-primary/20 bg-card p-5">
+      <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
               {isObsessionStep ? text.obsessionStepTitle : text.compulsionStepTitle}
             </span>
             {isEdit && (
-              <span className="rounded border px-2 py-0.5 text-xs text-muted-foreground">
+              <span className="text-muted-foreground rounded border px-2 py-0.5 text-xs">
                 {text.updatePair}
               </span>
             )}
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {isObsessionStep ? text.obsessionStepSubtitle : text.compulsionStepSubtitle}
           </p>
         </div>
@@ -101,12 +100,7 @@ export function ObsessionBuilder({
 
         <div className="flex items-center justify-between">
           {isObsessionStep ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onCancel}
-              disabled={isSaving}
-            >
+            <Button variant="ghost" size="sm" onClick={onCancel} disabled={isSaving}>
               {text.cancelLabel}
             </Button>
           ) : (
@@ -116,7 +110,7 @@ export function ObsessionBuilder({
               onClick={() => onSetStep('obsession')}
               disabled={isSaving}
             >
-              <ArrowLeft className="w-4 h-4 mr-1" />
+              <ArrowLeft className="mr-1 h-4 w-4" />
               {text.backLabel}
             </Button>
           )}
@@ -130,12 +124,16 @@ export function ObsessionBuilder({
             {isObsessionStep ? (
               <>
                 <span>{text.continueLabel}</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="h-4 w-4" />
               </>
             ) : (
               <>
                 <span>{isEdit ? text.updatePair : text.savePair}</span>
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
               </>
             )}
           </Button>

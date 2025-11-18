@@ -2,7 +2,6 @@
  * Tests for SessionReportViewer component
  */
 
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { SessionReportViewer } from '@/features/therapy/memory/session-report-viewer';
 import type { SessionReportDetail } from '@/lib/chat/memory-utils';
@@ -36,7 +35,7 @@ jest.mock('@/lib/ui/design-system/message', () => ({
   buildMessageClasses: jest.fn((role: string, type: string) => `mock-${role}-${type}-class`),
 }));
 
-// Mock lucide-react icons 
+// Mock lucide-react icons
 jest.mock('lucide-react', () => ({
   Calendar: () => <div data-testid="calendar-icon">📅</div>,
   FileText: () => <div data-testid="file-icon">📄</div>,
@@ -54,12 +53,13 @@ const mockReportDetail: SessionReportDetail = {
   sessionTitle: 'Anxiety Management Session',
   sessionDate: '2024-01-15',
   reportDate: '2024-01-15',
-  fullContent: '# Therapeutic Session Summary\n\nThis session focused on **cognitive behavioral techniques** for managing anxiety. The client showed significant progress in:\n\n- Understanding thought patterns\n- Implementing breathing exercises\n- Developing coping strategies\n\n## Key Takeaways\n\n1. Practice daily mindfulness\n2. Challenge negative thoughts\n3. Use grounding techniques\n\nThe client expressed feeling more confident about managing anxiety symptoms.',
+  fullContent:
+    '# Therapeutic Session Summary\n\nThis session focused on **cognitive behavioral techniques** for managing anxiety. The client showed significant progress in:\n\n- Understanding thought patterns\n- Implementing breathing exercises\n- Developing coping strategies\n\n## Key Takeaways\n\n1. Practice daily mindfulness\n2. Challenge negative thoughts\n3. Use grounding techniques\n\nThe client expressed feeling more confident about managing anxiety symptoms.',
   keyInsights: [
     'Significant progress in CBT techniques',
     'Improved understanding of thought patterns',
     'Increased confidence in anxiety management',
-    'Successfully implementing breathing exercises'
+    'Successfully implementing breathing exercises',
   ],
   reportSize: 2048,
 };
@@ -71,14 +71,14 @@ describe('SessionReportViewer', () => {
 
       // Session title
       expect(screen.getByText('Anxiety Management Session')).toBeInTheDocument();
-      
+
       // Session dates
       expect(screen.getByText('Session: 2024-01-15')).toBeInTheDocument();
       expect(screen.getByText('Report: 2024-01-15')).toBeInTheDocument();
-      
+
       // File size
       expect(screen.getByText('2.0 KB')).toBeInTheDocument();
-      
+
       // Encryption status
       expect(screen.getByText('Encrypted Content')).toBeInTheDocument();
     });
@@ -89,12 +89,18 @@ describe('SessionReportViewer', () => {
       expect(screen.getByText('Key Therapeutic Insights')).toBeInTheDocument();
       // Check if insights are rendered as badge elements (they may be truncated at 40 chars)
       const cbtInsights = screen.getAllByText((content: string, element: Element | null) => {
-        return content.length > 0 && element?.textContent?.includes('Significant progress in CBT') === true;
+        return (
+          content.length > 0 &&
+          element?.textContent?.includes('Significant progress in CBT') === true
+        );
       });
       expect(cbtInsights.length).toBeGreaterThan(0);
-      
+
       const thoughtInsights = screen.getAllByText((content: string, element: Element | null) => {
-        return content.length > 0 && element?.textContent?.includes('Improved understanding of thought') === true;
+        return (
+          content.length > 0 &&
+          element?.textContent?.includes('Improved understanding of thought') === true
+        );
       });
       expect(thoughtInsights.length).toBeGreaterThan(0);
     });
@@ -136,7 +142,10 @@ describe('SessionReportViewer', () => {
       // Long insight should be truncated - check for truncated text with ellipsis
       const truncatedInsights = screen.getAllByText((content: string, element: Element | null) => {
         const textContent = element?.textContent ?? content;
-        return textContent.includes('This is a very long therapeutic insight') && textContent.includes('...');
+        return (
+          textContent.includes('This is a very long therapeutic insight') &&
+          textContent.includes('...')
+        );
       });
       expect(truncatedInsights.length).toBeGreaterThan(0);
       // Short insight should not be truncated
@@ -162,21 +171,21 @@ describe('SessionReportViewer', () => {
     it('should format bytes correctly', () => {
       const smallReport = { ...mockReportDetail, reportSize: 512 };
       render(<SessionReportViewer reportDetail={smallReport} />);
-      
+
       expect(screen.getByText('512 B')).toBeInTheDocument();
     });
 
     it('should format kilobytes correctly', () => {
       const kbReport = { ...mockReportDetail, reportSize: 1536 }; // 1.5 KB
       render(<SessionReportViewer reportDetail={kbReport} />);
-      
+
       expect(screen.getByText('1.5 KB')).toBeInTheDocument();
     });
 
     it('should format megabytes correctly', () => {
       const mbReport = { ...mockReportDetail, reportSize: 1572864 }; // 1.5 MB
       render(<SessionReportViewer reportDetail={mbReport} />);
-      
+
       expect(screen.getByText('1.5 MB')).toBeInTheDocument();
     });
   });
@@ -188,7 +197,7 @@ describe('SessionReportViewer', () => {
       // Should have therapeutic typography classes (updated for new design system)
       expect(container.querySelector('.text-xl')).toBeInTheDocument();
       expect(container.querySelector('.text-sm')).toBeInTheDocument();
-      
+
       // Should have proper spacing classes
       expect(container.querySelector('.spacing-md')).toBeInTheDocument();
       expect(container.querySelector('.spacing-sm')).toBeInTheDocument();
@@ -199,7 +208,7 @@ describe('SessionReportViewer', () => {
 
       const cards = container.querySelectorAll('.bg-card');
       expect(cards.length).toBeGreaterThan(0);
-      
+
       // Should have border styling
       const borderedElements = container.querySelectorAll('.border-border');
       expect(borderedElements.length).toBeGreaterThan(0);
@@ -237,7 +246,7 @@ describe('SessionReportViewer', () => {
       // Session info should be in a grid layout
       const sessionDate = screen.getByText('Session: 2024-01-15');
       const reportDate = screen.getByText('Report: 2024-01-15');
-      
+
       expect(sessionDate.closest('.grid')).toBeInTheDocument();
       expect(reportDate.closest('.grid')).toBeInTheDocument();
     });

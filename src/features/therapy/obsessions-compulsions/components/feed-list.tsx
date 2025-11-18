@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,36 +33,43 @@ export function FeedList({ data, onEdit, onDelete, texts }: FeedListProps) {
         return (
           <Card
             key={obsession.id}
-            className="rounded-xl border border-muted/30 bg-card/70 px-6 py-6 shadow-sm md:px-8 md:py-7"
+            className="border-muted/30 bg-card/70 rounded-xl border px-6 py-6 shadow-sm md:px-8 md:py-7"
           >
             <div className="flex flex-col gap-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-3">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <div className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
                     {texts.pairLabel} {index + 1}
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                    <div className="text-foreground flex items-center gap-2 text-lg font-semibold">
                       <span aria-hidden>🧠</span>
                       <span>{texts.obsessionLabel}</span>
                     </div>
-                    <p className="text-sm leading-relaxed text-foreground/90">
+                    <p className="text-foreground/90 text-sm leading-relaxed">
                       {obsession.obsession}
                     </p>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      <MetricTile label={texts.intensityLabel} value={`${obsession.intensity}/10`} />
+                      <MetricTile
+                        label={texts.intensityLabel}
+                        value={`${obsession.intensity}/10`}
+                      />
                       <MetricTile
                         label={texts.recordedLabel}
                         value={new Date(obsession.createdAt).toLocaleDateString()}
                       />
                       {obsession.triggers.length > 0 && (
-                        <div className="rounded-lg border border-muted/30 bg-background/40 px-3 py-2">
-                          <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <div className="border-muted/30 bg-background/40 rounded-lg border px-3 py-2">
+                          <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
                             {texts.triggersLabel}
                           </span>
                           <div className="mt-1 flex flex-wrap gap-1.5">
                             {obsession.triggers.map((trigger) => (
-                              <Badge key={trigger} variant="secondary" className="text-xs font-medium">
+                              <Badge
+                                key={trigger}
+                                variant="secondary"
+                                className="text-xs font-medium"
+                              >
                                 {trigger}
                               </Badge>
                             ))}
@@ -82,7 +88,7 @@ export function FeedList({ data, onEdit, onDelete, texts }: FeedListProps) {
                     className="flex items-center gap-1"
                     onClick={() => onEdit(index)}
                   >
-                    <Pencil className="w-4 h-4" />
+                    <Pencil className="h-4 w-4" />
                     {texts.editAction}
                   </Button>
                   <Button
@@ -92,7 +98,7 @@ export function FeedList({ data, onEdit, onDelete, texts }: FeedListProps) {
                     className="flex items-center gap-1"
                     onClick={() => onDelete(index)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                     {texts.deleteAction}
                   </Button>
                 </div>
@@ -100,11 +106,11 @@ export function FeedList({ data, onEdit, onDelete, texts }: FeedListProps) {
 
               {compulsion && (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                  <div className="text-foreground flex items-center gap-2 text-lg font-semibold">
                     <span aria-hidden>🔁</span>
                     <span>{texts.compulsionLabel}</span>
                   </div>
-                  <p className="text-sm leading-relaxed text-foreground/90">
+                  <p className="text-foreground/90 text-sm leading-relaxed">
                     {compulsion.compulsion}
                   </p>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

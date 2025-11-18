@@ -3,19 +3,24 @@ import { isTest } from '@/config/env.public';
 
 export type StreamPart = { type?: string; text?: unknown } | null | undefined;
 
-export type StreamPayload = {
-  text?: unknown;
-  parts?: StreamPart[];
-  delta?: { text?: unknown };
-} | undefined;
+export type StreamPayload =
+  | {
+      text?: unknown;
+      parts?: StreamPart[];
+      delta?: { text?: unknown };
+    }
+  | undefined;
 
 export function extractChunk(payload: StreamPayload): string {
   if (!payload || typeof payload !== 'object') return '';
-  if (typeof (payload as { text?: unknown }).text === 'string') return (payload as { text: string }).text;
+  if (typeof (payload as { text?: unknown }).text === 'string')
+    return (payload as { text: string }).text;
   const parts = (payload as { parts?: StreamPart[] }).parts;
   if (Array.isArray(parts)) {
     return parts
-      .map((part: StreamPart) => (part && part.type === 'text' && typeof part.text === 'string' ? part.text : ''))
+      .map((part: StreamPart) =>
+        part && part.type === 'text' && typeof part.text === 'string' ? part.text : ''
+      )
       .join('');
   }
   const delta = (payload as { delta?: { text?: unknown } }).delta;
@@ -23,7 +28,11 @@ export function extractChunk(payload: StreamPayload): string {
   return '';
 }
 
-export function appendWithLimit(current: string, addition: string, maxChars: number): { value: string; truncated: boolean } {
+export function appendWithLimit(
+  current: string,
+  addition: string,
+  maxChars: number
+): { value: string; truncated: boolean } {
   if (!addition) return { value: current, truncated: false };
   if (current.length >= maxChars) {
     return { value: current, truncated: true };
@@ -35,7 +44,12 @@ export function appendWithLimit(current: string, addition: string, maxChars: num
   return { value: current + addition.slice(0, remaining), truncated: true };
 }
 
-export function attachResponseHeadersRaw(headers: Headers, requestId: string, modelId: string, toolChoice: string): void {
+export function attachResponseHeadersRaw(
+  headers: Headers,
+  requestId: string,
+  modelId: string,
+  toolChoice: string
+): void {
   headers.set('X-Request-Id', requestId);
   headers.set('X-Model-Id', modelId);
   headers.set('X-Tool-Choice', toolChoice);
@@ -43,15 +57,21 @@ export function attachResponseHeadersRaw(headers: Headers, requestId: string, mo
 
 export async function teeAndPersistStream(
   response: Response,
-  collector: { append: (chunk: string) => boolean; persist: () => Promise<void>; wasTruncated: () => boolean },
+  collector: {
+    append: (chunk: string) => boolean;
+    persist: () => Promise<void>;
+    wasTruncated: () => boolean;
+  },
   requestId: string,
   modelId: string,
-  toolChoice: string,
+  toolChoice: string
 ): Promise<Response | null> {
   try {
     const body = (response as { body?: ReadableStream<Uint8Array> }).body;
     if (!body || typeof (body as { tee?: unknown }).tee !== 'function') return null;
-    const [clientStream, serverStream] = (body as unknown as { tee: () => [ReadableStream<Uint8Array>, ReadableStream<Uint8Array>] }).tee();
+    const [clientStream, serverStream] = (
+      body as unknown as { tee: () => [ReadableStream<Uint8Array>, ReadableStream<Uint8Array>] }
+    ).tee();
 
     const consume = async () => {
       const reader = serverStream.getReader();
@@ -113,7 +133,11 @@ export async function teeAndPersistStream(
 
 export async function persistFromClonedStream(
   response: Response,
-  collector: { append: (chunk: string) => boolean; persist: () => Promise<void>; wasTruncated: () => boolean }
+  collector: {
+    append: (chunk: string) => boolean;
+    persist: () => Promise<void>;
+    wasTruncated: () => boolean;
+  }
 ): Promise<void> {
   try {
     const maybeClone = (response as { clone?: () => Response }).clone?.();

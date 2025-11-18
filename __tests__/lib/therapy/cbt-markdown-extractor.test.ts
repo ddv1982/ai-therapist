@@ -69,8 +69,18 @@ Practice delegating tasks and celebrating small wins.
     expect(parsed.formData.date).toMatch(/^2024-03-0[45]$/);
     expect(parsed.formData.situation).toContain('Feeling pressure');
 
-    expect(parsed.formData.initialEmotions).toMatchObject({ fear: 4, joy: 2, other: 'Pride', otherIntensity: 5 });
-    expect(parsed.formData.finalEmotions).toMatchObject({ fear: 2, joy: 6, other: 'Mystery', otherIntensity: 7 });
+    expect(parsed.formData.initialEmotions).toMatchObject({
+      fear: 4,
+      joy: 2,
+      other: 'Pride',
+      otherIntensity: 5,
+    });
+    expect(parsed.formData.finalEmotions).toMatchObject({
+      fear: 2,
+      joy: 6,
+      other: 'Mystery',
+      otherIntensity: 7,
+    });
 
     expect(parsed.formData.automaticThoughts).toEqual([
       { thought: 'I will fail', credibility: 8 },
@@ -86,21 +96,37 @@ Practice delegating tasks and celebrating small wins.
     expect((parsed.formData as any).avoidantBehaviors).toBe('Procrastination');
     expect((parsed.formData as any).overridingBehaviors).toBe('Asking for help');
 
-    const selectedModes = parsed.formData.schemaModes.filter((mode) => mode.selected).map((mode) => mode.name);
+    const selectedModes = parsed.formData.schemaModes
+      .filter((mode) => mode.selected)
+      .map((mode) => mode.name);
     expect(selectedModes).toEqual(['Vulnerable Child', 'Detached Protector']);
 
     const reflection = (parsed.formData as any).schemaReflection;
     expect(reflection.enabled).toBe(true);
     expect(reflection.selfAssessment).toBe('Learning to accept support.');
     expect(reflection.questions).toEqual([
-      { question: 'When do you feel this?', answer: 'During deadlines.', category: 'custom', isRequired: false },
-      { question: 'How do you react?', answer: 'I withdraw.', category: 'custom', isRequired: false },
+      {
+        question: 'When do you feel this?',
+        answer: 'During deadlines.',
+        category: 'custom',
+        isRequired: false,
+      },
+      {
+        question: 'How do you react?',
+        answer: 'I withdraw.',
+        category: 'custom',
+        isRequired: false,
+      },
     ]);
 
     expect(parsed.formData.challengeQuestions).toEqual([{ question: 'Q1?', answer: 'A1' }]);
-    expect((parsed.formData as any).additionalQuestions).toEqual([{ question: 'Additional', answer: 'Response' }]);
+    expect((parsed.formData as any).additionalQuestions).toEqual([
+      { question: 'Additional', answer: 'Response' },
+    ]);
 
-    expect(parsed.formData.newBehaviors).toContain('Practice delegating tasks and celebrating small wins.');
+    expect(parsed.formData.newBehaviors).toContain(
+      'Practice delegating tasks and celebrating small wins.'
+    );
     expect(parsed.formData.originalThoughtCredibility).toBe(4);
     expect(parsed.isComplete).toBeDefined();
   });

@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import { checkMemoryContext, type MemoryContextInfo } from '@/lib/chat/memory-utils';
 
 export function useMemoryContext(sessionId: string | null) {
-  const [memoryContext, setMemoryContext] = useState<MemoryContextInfo>({ hasMemory: false, reportCount: 0 });
+  const [memoryContext, setMemoryContext] = useState<MemoryContextInfo>({
+    hasMemory: false,
+    reportCount: 0,
+  });
 
   useEffect(() => {
     let active = true;
@@ -16,10 +19,10 @@ export function useMemoryContext(sessionId: string | null) {
         // ignore
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [sessionId]);
 
   return { memoryContext, setMemoryContext } as const;
 }
-
-

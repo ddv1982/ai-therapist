@@ -7,13 +7,18 @@ import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { languageModels, MODELS as REGISTERED_MODELS, type ModelID } from '@/ai/providers';
 import { logger } from '@/lib/utils/logger';
 
-const discoveredModels = Array.isArray(REGISTERED_MODELS) && REGISTERED_MODELS.length > 0
-  ? REGISTERED_MODELS
-  : (Object.keys(languageModels) as ModelID[]);
+const discoveredModels =
+  Array.isArray(REGISTERED_MODELS) && REGISTERED_MODELS.length > 0
+    ? REGISTERED_MODELS
+    : (Object.keys(languageModels) as ModelID[]);
 
 const AVAILABLE_MODELS = new Set<ModelID>(discoveredModels);
 
-export function selectModelAndTools(input: { message: string; preferredModel?: string; webSearchEnabled?: boolean }): ModelDecision {
+export function selectModelAndTools(input: {
+  message: string;
+  preferredModel?: string;
+  webSearchEnabled?: boolean;
+}): ModelDecision {
   const tools: string[] = [];
   let model: ModelID = DEFAULT_MODEL_ID;
 

@@ -1,6 +1,7 @@
 # AI Therapist Application - Data Model & Entity Relationship Diagram
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [Database Layer (Convex)](#database-layer-convex)
 3. [Service/Domain Layer](#servicedomain-layer)
@@ -35,7 +36,7 @@ erDiagram
     Users ||--o{ Sessions : "owns"
     Sessions ||--o{ Messages : "contains"
     Sessions ||--o{ SessionReports : "generates"
-    
+
     Users {
         id _id PK "Convex ID"
         string clerkId UK "Clerk Auth ID"
@@ -45,7 +46,7 @@ erDiagram
         number createdAt "Epoch milliseconds"
         number updatedAt "Epoch milliseconds"
     }
-    
+
     Sessions {
         id _id PK "Convex ID"
         id userId FK "References Users._id"
@@ -58,7 +59,7 @@ erDiagram
         number createdAt "Epoch milliseconds"
         number updatedAt "Epoch milliseconds"
     }
-    
+
     Messages {
         id _id PK "Convex ID"
         id sessionId FK "References Sessions._id"
@@ -70,7 +71,7 @@ erDiagram
         string legacyId "Migration support"
         number createdAt "Epoch milliseconds"
     }
-    
+
     SessionReports {
         id _id PK "Convex ID"
         id sessionId FK "References Sessions._id"
@@ -95,53 +96,60 @@ erDiagram
 ### Database Schema Details
 
 #### Users Table
+
 **Purpose**: Stores user authentication and profile information
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| _id | Id<'users'> | PRIMARY KEY | Convex-generated unique identifier |
-| clerkId | string | REQUIRED, INDEXED | Clerk authentication ID |
-| email | string | REQUIRED, INDEXED | User email address |
-| name | string? | OPTIONAL | Display name |
-| legacyId | string? | OPTIONAL, INDEXED | Legacy system migration support |
-| createdAt | number | REQUIRED | Creation timestamp (epoch ms) |
-| updatedAt | number | REQUIRED | Last update timestamp (epoch ms) |
+| Column    | Type        | Constraints       | Description                        |
+| --------- | ----------- | ----------------- | ---------------------------------- |
+| \_id      | Id<'users'> | PRIMARY KEY       | Convex-generated unique identifier |
+| clerkId   | string      | REQUIRED, INDEXED | Clerk authentication ID            |
+| email     | string      | REQUIRED, INDEXED | User email address                 |
+| name      | string?     | OPTIONAL          | Display name                       |
+| legacyId  | string?     | OPTIONAL, INDEXED | Legacy system migration support    |
+| createdAt | number      | REQUIRED          | Creation timestamp (epoch ms)      |
+| updatedAt | number      | REQUIRED          | Last update timestamp (epoch ms)   |
 
 **Indexes**:
+
 - `email`: For email lookups
 - `by_clerkId`: Primary authentication lookup
 - `by_legacyId`: Legacy migration support
 
 **Relationships**:
+
 - 1:N with Sessions (one user owns many sessions)
 
 ---
 
 #### Sessions Table
+
 **Purpose**: Represents therapy conversation sessions
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| _id | Id<'sessions'> | PRIMARY KEY | Convex-generated unique identifier |
-| userId | Id<'users'> | FOREIGN KEY | Owner of the session |
-| title | string | REQUIRED | Human-readable session title |
-| messageCount | number | REQUIRED | Cached message count for performance |
-| startedAt | number | REQUIRED | Session start time (epoch ms) |
-| endedAt | number \| null | NULLABLE | Session end time or null if active |
-| status | string | REQUIRED | 'active' or 'completed' |
-| legacyId | string? | OPTIONAL | Legacy migration support |
-| createdAt | number | REQUIRED | Creation timestamp (epoch ms) |
-| updatedAt | number | REQUIRED | Last update timestamp (epoch ms) |
+| Column       | Type           | Constraints | Description                          |
+| ------------ | -------------- | ----------- | ------------------------------------ |
+| \_id         | Id<'sessions'> | PRIMARY KEY | Convex-generated unique identifier   |
+| userId       | Id<'users'>    | FOREIGN KEY | Owner of the session                 |
+| title        | string         | REQUIRED    | Human-readable session title         |
+| messageCount | number         | REQUIRED    | Cached message count for performance |
+| startedAt    | number         | REQUIRED    | Session start time (epoch ms)        |
+| endedAt      | number \| null | NULLABLE    | Session end time or null if active   |
+| status       | string         | REQUIRED    | 'active' or 'completed'              |
+| legacyId     | string?        | OPTIONAL    | Legacy migration support             |
+| createdAt    | number         | REQUIRED    | Creation timestamp (epoch ms)        |
+| updatedAt    | number         | REQUIRED    | Last update timestamp (epoch ms)     |
 
 **Indexes**:
+
 - `by_user_created`: Composite index on [userId, createdAt] for user session lists
 
 **Relationships**:
+
 - N:1 with Users (many sessions belong to one user)
 - 1:N with Messages (one session contains many messages)
 - 1:N with SessionReports (one session generates many reports)
 
 **Business Rules**:
+
 - messageCount is automatically incremented/decremented on message create/delete
 - updatedAt is updated on any session activity
 - status transitions: active → completed (one-way)
@@ -149,27 +157,31 @@ erDiagram
 ---
 
 #### Messages Table
+
 **Purpose**: Stores individual chat messages within sessions
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| _id | Id<'messages'> | PRIMARY KEY | Convex-generated unique identifier |
-| sessionId | Id<'sessions'> | FOREIGN KEY | Parent session |
-| role | string | REQUIRED | 'user' or 'assistant' |
-| content | string | REQUIRED | Message text content |
-| modelUsed | string? | OPTIONAL | AI model identifier (for assistant messages) |
-| metadata | any? | OPTIONAL | Additional structured data |
-| timestamp | number | REQUIRED | Message creation time (epoch ms) |
-| legacyId | string? | OPTIONAL | Legacy migration support |
-| createdAt | number | REQUIRED | Database creation timestamp (epoch ms) |
+| Column    | Type           | Constraints | Description                                  |
+| --------- | -------------- | ----------- | -------------------------------------------- |
+| \_id      | Id<'messages'> | PRIMARY KEY | Convex-generated unique identifier           |
+| sessionId | Id<'sessions'> | FOREIGN KEY | Parent session                               |
+| role      | string         | REQUIRED    | 'user' or 'assistant'                        |
+| content   | string         | REQUIRED    | Message text content                         |
+| modelUsed | string?        | OPTIONAL    | AI model identifier (for assistant messages) |
+| metadata  | any?           | OPTIONAL    | Additional structured data                   |
+| timestamp | number         | REQUIRED    | Message creation time (epoch ms)             |
+| legacyId  | string?        | OPTIONAL    | Legacy migration support                     |
+| createdAt | number         | REQUIRED    | Database creation timestamp (epoch ms)       |
 
 **Indexes**:
+
 - `by_session_time`: Composite index on [sessionId, timestamp] for ordered message retrieval
 
 **Relationships**:
+
 - N:1 with Sessions (many messages belong to one session)
 
 **Business Rules**:
+
 - Messages are immutable after creation (except via explicit update mutation)
 - Deleting a message decrements parent session's messageCount
 - Messages are deleted when parent session is deleted (cascade)
@@ -177,35 +189,39 @@ erDiagram
 ---
 
 #### SessionReports Table
+
 **Purpose**: Stores AI-generated therapeutic analysis and insights
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| _id | Id<'sessionReports'> | PRIMARY KEY | Convex-generated unique identifier |
-| sessionId | Id<'sessions'> | FOREIGN KEY | Associated session |
-| reportContent | string | REQUIRED | Full formatted report text |
-| keyPoints | any | REQUIRED | JSON array of key discussion points |
-| therapeuticInsights | any | REQUIRED | JSON object with therapeutic analysis |
-| patternsIdentified | any | REQUIRED | JSON array of behavioral patterns |
-| actionItems | any | REQUIRED | JSON array of recommended actions |
-| moodAssessment | string? | OPTIONAL | Overall mood evaluation |
-| progressNotes | string? | OPTIONAL | Progress tracking notes |
-| cognitiveDistortions | any? | OPTIONAL | CBT cognitive distortions analysis |
-| schemaAnalysis | any? | OPTIONAL | Schema therapy analysis |
-| therapeuticFrameworks | any? | OPTIONAL | Applied therapeutic frameworks |
-| recommendations | any? | OPTIONAL | Structured recommendations |
-| analysisConfidence | number? | OPTIONAL | Confidence score (0-100) |
-| analysisVersion | string? | OPTIONAL | Parser/analyzer version |
-| legacyId | string? | OPTIONAL | Legacy migration support |
-| createdAt | number | REQUIRED | Report generation timestamp (epoch ms) |
+| Column                | Type                 | Constraints | Description                            |
+| --------------------- | -------------------- | ----------- | -------------------------------------- |
+| \_id                  | Id<'sessionReports'> | PRIMARY KEY | Convex-generated unique identifier     |
+| sessionId             | Id<'sessions'>       | FOREIGN KEY | Associated session                     |
+| reportContent         | string               | REQUIRED    | Full formatted report text             |
+| keyPoints             | any                  | REQUIRED    | JSON array of key discussion points    |
+| therapeuticInsights   | any                  | REQUIRED    | JSON object with therapeutic analysis  |
+| patternsIdentified    | any                  | REQUIRED    | JSON array of behavioral patterns      |
+| actionItems           | any                  | REQUIRED    | JSON array of recommended actions      |
+| moodAssessment        | string?              | OPTIONAL    | Overall mood evaluation                |
+| progressNotes         | string?              | OPTIONAL    | Progress tracking notes                |
+| cognitiveDistortions  | any?                 | OPTIONAL    | CBT cognitive distortions analysis     |
+| schemaAnalysis        | any?                 | OPTIONAL    | Schema therapy analysis                |
+| therapeuticFrameworks | any?                 | OPTIONAL    | Applied therapeutic frameworks         |
+| recommendations       | any?                 | OPTIONAL    | Structured recommendations             |
+| analysisConfidence    | number?              | OPTIONAL    | Confidence score (0-100)               |
+| analysisVersion       | string?              | OPTIONAL    | Parser/analyzer version                |
+| legacyId              | string?              | OPTIONAL    | Legacy migration support               |
+| createdAt             | number               | REQUIRED    | Report generation timestamp (epoch ms) |
 
 **Indexes**:
+
 - `by_session`: Index on [sessionId] for session report lookups
 
 **Relationships**:
+
 - N:1 with Sessions (many reports can be generated for one session)
 
 **Business Rules**:
+
 - Reports are immutable after generation
 - Reports are deleted when parent session is deleted (cascade)
 - Multiple reports per session support versioning/historical analysis
@@ -231,27 +247,27 @@ classDiagram
         +string? other
         +number? otherIntensity
     }
-    
+
     class ThoughtData {
         +string thought
         +number credibility (0-10)
     }
-    
+
     class CoreBeliefData {
         +string coreBeliefText
         +number coreBeliefCredibility (0-10)
     }
-    
+
     class ChallengeQuestionData {
         +string question
         +string answer
     }
-    
+
     class RationalThoughtData {
         +string thought
         +number confidence (1-10)
     }
-    
+
     class SchemaMode {
         +string id
         +string name
@@ -259,18 +275,18 @@ classDiagram
         +boolean selected
         +number? intensity
     }
-    
+
     class SituationData {
         +string situation
         +string date
     }
-    
+
     class ActionPlanData {
         +EmotionData finalEmotions
         +number originalThoughtCredibility
         +string newBehaviors
     }
-    
+
     class CBTFormData {
         +string date
         +string situation
@@ -285,7 +301,7 @@ classDiagram
         +string newBehaviors
         +number originalThoughtCredibility
     }
-    
+
     class CBTSessionState {
         +string? sessionId
         +string currentStep
@@ -301,7 +317,7 @@ classDiagram
         +SchemaModeData[] schemaModes
         +ActionPlanData? actionPlan
     }
-    
+
     CBTFormData --> EmotionData : contains
     CBTFormData --> ThoughtData : contains
     CBTFormData --> ChallengeQuestionData : contains
@@ -318,18 +334,19 @@ classDiagram
 ### CBT Data Types
 
 #### 1. EmotionData
+
 **Purpose**: Tracks emotional states on 0-10 intensity scale
 
 ```typescript
 interface EmotionData {
-  fear: number;        // 0-10
-  anger: number;       // 0-10
-  sadness: number;     // 0-10
-  joy: number;         // 0-10
-  anxiety: number;     // 0-10
-  shame: number;       // 0-10
-  guilt: number;       // 0-10
-  other?: string;      // Custom emotion name
+  fear: number; // 0-10
+  anger: number; // 0-10
+  sadness: number; // 0-10
+  joy: number; // 0-10
+  anxiety: number; // 0-10
+  shame: number; // 0-10
+  guilt: number; // 0-10
+  other?: string; // Custom emotion name
   otherIntensity?: number; // 0-10
 }
 ```
@@ -339,12 +356,13 @@ interface EmotionData {
 ---
 
 #### 2. ThoughtData
+
 **Purpose**: Captures automatic thoughts with credibility ratings
 
 ```typescript
 interface ThoughtData {
-  thought: string;       // The automatic thought
-  credibility: number;   // 0-10 credibility rating
+  thought: string; // The automatic thought
+  credibility: number; // 0-10 credibility rating
 }
 ```
 
@@ -353,11 +371,12 @@ interface ThoughtData {
 ---
 
 #### 3. CoreBeliefData
+
 **Purpose**: Represents underlying core beliefs
 
 ```typescript
 interface CoreBeliefData {
-  coreBeliefText: string;        // The core belief statement
+  coreBeliefText: string; // The core belief statement
   coreBeliefCredibility: number; // 0-10 credibility rating
 }
 ```
@@ -367,16 +386,18 @@ interface CoreBeliefData {
 ---
 
 #### 4. ChallengeQuestionData
+
 **Purpose**: Cognitive restructuring challenge questions
 
 ```typescript
 interface ChallengeQuestionData {
-  question: string;  // The challenge question
-  answer: string;    // User's answer
+  question: string; // The challenge question
+  answer: string; // User's answer
 }
 ```
 
 **Default Questions**:
+
 1. What evidence supports this thought?
 2. What evidence contradicts this thought?
 3. What would I tell a friend in this situation?
@@ -387,31 +408,34 @@ interface ChallengeQuestionData {
 ---
 
 #### 5. RationalThoughtData
+
 **Purpose**: Alternative rational thoughts with confidence ratings
 
 ```typescript
 interface RationalThoughtData {
-  thought: string;       // The rational alternative
-  confidence: number;    // 1-10 confidence rating
+  thought: string; // The rational alternative
+  confidence: number; // 1-10 confidence rating
 }
 ```
 
 ---
 
 #### 6. SchemaMode
+
 **Purpose**: Schema therapy mode identification
 
 ```typescript
 interface SchemaMode {
-  id: string;            // Unique mode identifier
-  name: string;          // Mode name
-  description: string;   // Mode description
-  selected: boolean;     // Is this mode active?
-  intensity?: number;    // 0-10 intensity if selected
+  id: string; // Unique mode identifier
+  name: string; // Mode name
+  description: string; // Mode description
+  selected: boolean; // Is this mode active?
+  intensity?: number; // 0-10 intensity if selected
 }
 ```
 
 **Default Schema Modes** (based on Schema Therapy):
+
 - Vulnerable Child: scared, helpless, needy
 - Angry Child: frustrated, defiant, rebellious
 - Punishing Parent: critical, harsh, demanding
@@ -422,25 +446,27 @@ interface SchemaMode {
 ---
 
 #### 7. SituationData
+
 **Purpose**: Context for the therapeutic session
 
 ```typescript
 interface SituationData {
-  situation: string;  // Description of the situation
-  date: string;       // Date of the situation
+  situation: string; // Description of the situation
+  date: string; // Date of the situation
 }
 ```
 
 ---
 
 #### 8. ActionPlanData
+
 **Purpose**: Final outcomes and behavioral changes
 
 ```typescript
 interface ActionPlanData {
-  finalEmotions: EmotionData;          // Post-therapy emotions
-  originalThoughtCredibility: number;   // Updated credibility
-  newBehaviors: string;                 // Planned behavioral changes
+  finalEmotions: EmotionData; // Post-therapy emotions
+  originalThoughtCredibility: number; // Updated credibility
+  newBehaviors: string; // Planned behavioral changes
 }
 ```
 
@@ -452,7 +478,7 @@ interface ActionPlanData {
 stateDiagram-v2
     [*] --> idle: Initialize
     idle --> situation: SESSION_START
-    
+
     situation --> emotions: STEP_COMPLETE(situation)
     emotions --> thoughts: STEP_COMPLETE(emotions)
     thoughts --> core_belief: STEP_COMPLETE(thoughts)
@@ -462,7 +488,7 @@ stateDiagram-v2
     schema_modes --> final_emotions: STEP_COMPLETE(schema_modes)
     final_emotions --> actions: STEP_COMPLETE(final_emotions)
     actions --> complete: STEP_COMPLETE(actions)
-    
+
     situation --> idle: SESSION_RESET
     emotions --> idle: SESSION_RESET
     thoughts --> idle: SESSION_RESET
@@ -473,11 +499,12 @@ stateDiagram-v2
     final_emotions --> idle: SESSION_RESET
     actions --> idle: SESSION_RESET
     complete --> idle: SESSION_RESET
-    
+
     complete --> [*]: COMPLETE
 ```
 
 **CBT Flow Events**:
+
 - `SESSION_START`: Begin new CBT session
 - `STEP_COMPLETE`: Advance to next step with data
 - `STEP_UPDATE`: Update current step data
@@ -497,7 +524,7 @@ classDiagram
         +string[] triggers
         +string createdAt
     }
-    
+
     class CompulsionData {
         +string id
         +string compulsion
@@ -506,13 +533,13 @@ classDiagram
         +number reliefLevel (1-10)
         +string createdAt
     }
-    
+
     class ObsessionsCompulsionsData {
         +ObsessionData[] obsessions
         +CompulsionData[] compulsions
         +string lastModified
     }
-    
+
     ObsessionsCompulsionsData --> ObsessionData : contains
     ObsessionsCompulsionsData --> CompulsionData : contains
 ```
@@ -528,44 +555,44 @@ The API layer uses auto-generated TypeScript types from `docs/api.yaml`.
 ```typescript
 // Auto-generated from OpenAPI spec
 interface Message {
-  id?: string;           // UUID
+  id?: string; // UUID
   role: 'user' | 'assistant';
   content: string;
-  timestamp?: string;    // ISO 8601
-  createdAt?: string;    // ISO 8601
+  timestamp?: string; // ISO 8601
+  createdAt?: string; // ISO 8601
 }
 
 interface Session {
-  id: string;            // UUID
+  id: string; // UUID
   userId: string;
   title: string;
   status: 'active' | 'completed';
-  startedAt?: string;    // ISO 8601
+  startedAt?: string; // ISO 8601
   endedAt?: string | null;
-  createdAt?: string;    // ISO 8601
-  updatedAt?: string;    // ISO 8601
+  createdAt?: string; // ISO 8601
+  updatedAt?: string; // ISO 8601
   _count?: {
     messages?: number;
   };
 }
 
 interface SessionReport {
-  id: string;            // UUID
-  sessionId: string;     // UUID
-  keyPoints?: string;    // JSON string
+  id: string; // UUID
+  sessionId: string; // UUID
+  keyPoints?: string; // JSON string
   therapeuticInsights: string;
-  patternsIdentified?: string;  // JSON string
-  actionItems?: string;  // JSON string
+  patternsIdentified?: string; // JSON string
+  actionItems?: string; // JSON string
   moodAssessment?: string | null;
   progressNotes?: string | null;
-  createdAt?: string;    // ISO 8601
+  createdAt?: string; // ISO 8601
 }
 
 interface ModelConfig {
-  id: string;            // e.g., "openai/gpt-oss-120b"
-  name: string;          // Human-readable name
-  provider: string;      // Provider name
-  maxTokens: number;     // Token limit
+  id: string; // e.g., "openai/gpt-oss-120b"
+  name: string; // Human-readable name
+  provider: string; // Provider name
+  maxTokens: number; // Token limit
   category: 'featured' | 'production' | 'preview';
 }
 
@@ -574,9 +601,9 @@ interface ChatRequest {
   sessionId?: string;
   model?: string;
   apiKey?: string;
-  temperature?: number;  // 0-2
-  maxTokens?: number;    // 256-131072
-  topP?: number;         // 0.1-1.0
+  temperature?: number; // 0-2
+  maxTokens?: number; // 256-131072
+  topP?: number; // 0.1-1.0
 }
 ```
 
@@ -593,11 +620,11 @@ graph LR
     Store --> CBT[cbt-slice]
     Store --> SessionsAPI[sessions-api]
     Store --> ChatAPI[chat-api]
-    
+
     Sessions --> State1[Session State]
     Chat --> State2[Chat State]
     CBT --> State3[CBT State]
-    
+
     SessionsAPI --> RTK1[RTK Query Cache]
     ChatAPI --> RTK2[RTK Query Cache]
 ```
@@ -606,14 +633,15 @@ graph LR
 
 ```typescript
 interface SessionsState {
-  currentSessionId: string | null;    // Active session ID
-  isCreatingSession: boolean;         // Loading state
-  isDeletingSession: string | null;   // Session being deleted
-  error: string | null;               // Error message
+  currentSessionId: string | null; // Active session ID
+  isCreatingSession: boolean; // Loading state
+  isDeletingSession: string | null; // Session being deleted
+  error: string | null; // Error message
 }
 ```
 
 **Actions**:
+
 - `deleteSession(sessionId)`: Mark session for deletion
 - `setCurrentSession(sessionId)`: Set active session
 - `setCreatingSession(isCreating)`: Update creation state
@@ -626,18 +654,19 @@ interface SessionsState {
 
 ```typescript
 interface ChatState {
-  isStreaming: boolean;               // Is response streaming?
-  currentInput: string;               // Current user input
-  streamingMessageId: string | null;  // ID of streaming message
-  error: string | null;               // Error message
+  isStreaming: boolean; // Is response streaming?
+  currentInput: string; // Current user input
+  streamingMessageId: string | null; // ID of streaming message
+  error: string | null; // Error message
   settings: {
-    model: string;                    // Selected AI model
-    webSearchEnabled: boolean;        // Web search toggle
+    model: string; // Selected AI model
+    webSearchEnabled: boolean; // Web search toggle
   };
 }
 ```
 
 **Actions**:
+
 - `setStreaming({ isStreaming, messageId })`: Update streaming state
 - `setCurrentInput(input)`: Update input field
 - `clearMessages()`: Reset chat state
@@ -650,14 +679,14 @@ interface ChatState {
 
 ```typescript
 interface CBTState {
-  currentDraft: CBTDraft | null;      // Active CBT draft
-  savedDrafts: CBTDraft[];            // Saved drafts
-  completedEntries: CBTFormData[];    // Completed entries
-  currentStep: number;                // Current step (1-10)
-  isSubmitting: boolean;              // Submission state
+  currentDraft: CBTDraft | null; // Active CBT draft
+  savedDrafts: CBTDraft[]; // Saved drafts
+  completedEntries: CBTFormData[]; // Completed entries
+  currentStep: number; // Current step (1-10)
+  isSubmitting: boolean; // Submission state
   validationErrors: Record<string, string>; // Field errors
-  lastAutoSave: string | null;        // Last auto-save time
-  flow: CBTFlowState;                 // Flow state machine
+  lastAutoSave: string | null; // Last auto-save time
+  flow: CBTFlowState; // Flow state machine
 }
 
 interface CBTDraft {
@@ -670,6 +699,7 @@ interface CBTDraft {
 ```
 
 **Actions**:
+
 - `createDraft({ id })`: Create new draft
 - `updateDraft(data)`: Update draft data
 - `setCurrentStep(step)`: Navigate to step
@@ -694,10 +724,10 @@ The service layer implements business logic and orchestrates data operations bet
 graph LR
     API[API Routes] --> Memory[MemoryManagementService]
     API --> Report[ReportGenerationService]
-    
+
     Memory --> Convex[Convex Queries]
     Memory --> Decrypt[Encryption Service]
-    
+
     Report --> Convex
     Report --> AI[Groq AI API]
     Report --> Parser[CBT Parser]
@@ -712,13 +742,14 @@ graph LR
 
 **Methods**:
 
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `getMemoryContext` | `clerkId, limit, excludeSessionId` | `MemoryData` | Retrieve recent session reports for chat context |
-| `getMemoryManagement` | `clerkId, limit, excludeSessionId, includeFullContent` | `MemoryManageData` | Get detailed management view with full reports |
-| `deleteMemory` | `clerkId, sessionIds?, limit?, excludeSessionId?` | `DeleteMemoryData` | Delete memory records (specific, recent, or all) |
+| Method                | Parameters                                             | Returns            | Description                                      |
+| --------------------- | ------------------------------------------------------ | ------------------ | ------------------------------------------------ |
+| `getMemoryContext`    | `clerkId, limit, excludeSessionId`                     | `MemoryData`       | Retrieve recent session reports for chat context |
+| `getMemoryManagement` | `clerkId, limit, excludeSessionId, includeFullContent` | `MemoryManageData` | Get detailed management view with full reports   |
+| `deleteMemory`        | `clerkId, sessionIds?, limit?, excludeSessionId?`      | `DeleteMemoryData` | Delete memory records (specific, recent, or all) |
 
 **Key Features**:
+
 - **User Filtering**: Automatically resolves clerkId → Convex userId
 - **Report Decryption**: Decrypts encrypted session reports
 - **Therapeutic Summaries**: Creates concise summaries from structured CBT data
@@ -726,13 +757,14 @@ graph LR
 - **Statistics Tracking**: Returns success/failure counts
 
 **Memory Data Types**:
+
 ```typescript
 interface MemoryContextEntry {
   sessionTitle: string;
   sessionDate: string;
   reportDate: string;
-  content: string;      // Full decrypted content
-  summary: string;      // Therapeutic summary
+  content: string; // Full decrypted content
+  summary: string; // Therapeutic summary
 }
 
 interface MemoryData {
@@ -747,6 +779,7 @@ interface MemoryData {
 ```
 
 **Usage Pattern**:
+
 ```typescript
 const service = new MemoryManagementService();
 const memory = await service.getMemoryContext('clerk_user_123', 5, 'current-session-id');
@@ -763,11 +796,12 @@ const memory = await service.getMemoryContext('clerk_user_123', 5, 'current-sess
 
 **Methods**:
 
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
+| Method           | Parameters           | Returns         | Description                             |
+| ---------------- | -------------------- | --------------- | --------------------------------------- |
 | `generateReport` | `sessionId, clerkId` | `SessionReport` | Generate comprehensive session analysis |
 
 **Generation Process**:
+
 1. **Fetch Session Data**: Retrieve all messages from Convex
 2. **Parse CBT Data**: Extract structured CBT information from conversation
 3. **AI Analysis**: Generate therapeutic insights via Groq with analytical model
@@ -776,22 +810,24 @@ const memory = await service.getMemoryContext('clerk_user_123', 5, 'current-sess
 6. **Persistence**: Save to Convex sessionReports table
 
 **Report Components**:
+
 ```typescript
 interface SessionReport {
-  reportContent: string;              // Full formatted report
-  keyPoints: string[];                // Main discussion topics
-  therapeuticInsights: {              // AI analysis
+  reportContent: string; // Full formatted report
+  keyPoints: string[]; // Main discussion topics
+  therapeuticInsights: {
+    // AI analysis
     primaryInsights: string[];
     growthAreas: string[];
   };
-  patternsIdentified: string[];       // Behavioral patterns
-  actionItems: string[];              // Recommendations
-  moodAssessment?: string;            // Overall mood
-  progressNotes?: string;             // Progress tracking
-  cognitiveDistortions?: unknown;     // CBT analysis
-  schemaAnalysis?: unknown;           // Schema therapy
-  analysisConfidence?: number;        // 0-100 confidence score
-  analysisVersion?: string;           // Parser version
+  patternsIdentified: string[]; // Behavioral patterns
+  actionItems: string[]; // Recommendations
+  moodAssessment?: string; // Overall mood
+  progressNotes?: string; // Progress tracking
+  cognitiveDistortions?: unknown; // CBT analysis
+  schemaAnalysis?: unknown; // Schema therapy
+  analysisConfidence?: number; // 0-100 confidence score
+  analysisVersion?: string; // Parser version
 }
 ```
 
@@ -803,27 +839,28 @@ interface SessionReport {
 
 ### Authentication & Sessions
 
-| Endpoint | Method | Auth | Description | Middleware |
-|----------|--------|------|-------------|------------|
-| `/api/sessions` | GET | Required | List user sessions with pagination | `withAuth` |
-| `/api/sessions` | POST | Required | Create new therapy session | `withAuth` |
-| `/api/sessions/current` | GET | Required | Get currently active session | `withAuth` |
-| `/api/sessions/:id` | GET | Required | Get session with messages & reports | `withAuth` |
-| `/api/sessions/:id` | PATCH | Required | Update session title/status | `withValidationAndParams` |
-| `/api/sessions/:id` | DELETE | Required | Delete session and all messages | `withAuth` |
-| `/api/sessions/:id/messages` | GET | Required | List messages in session | `withAuth` |
-| `/api/sessions/:id/messages/:messageId` | DELETE | Required | Delete specific message | `withAuth` |
+| Endpoint                                | Method | Auth     | Description                         | Middleware                |
+| --------------------------------------- | ------ | -------- | ----------------------------------- | ------------------------- |
+| `/api/sessions`                         | GET    | Required | List user sessions with pagination  | `withAuth`                |
+| `/api/sessions`                         | POST   | Required | Create new therapy session          | `withAuth`                |
+| `/api/sessions/current`                 | GET    | Required | Get currently active session        | `withAuth`                |
+| `/api/sessions/:id`                     | GET    | Required | Get session with messages & reports | `withAuth`                |
+| `/api/sessions/:id`                     | PATCH  | Required | Update session title/status         | `withValidationAndParams` |
+| `/api/sessions/:id`                     | DELETE | Required | Delete session and all messages     | `withAuth`                |
+| `/api/sessions/:id/messages`            | GET    | Required | List messages in session            | `withAuth`                |
+| `/api/sessions/:id/messages/:messageId` | DELETE | Required | Delete specific message             | `withAuth`                |
 
 ### Chat & AI
 
-| Endpoint | Method | Auth | Description | Middleware |
-|----------|--------|------|-------------|------------|
-| `/api/chat` | POST | Required | Send message, receive streaming AI response | `withAuthAndRateLimitStreaming` |
-| `/api/models` | GET | None | List available AI models | `withApiMiddleware` |
+| Endpoint      | Method | Auth     | Description                                 | Middleware                      |
+| ------------- | ------ | -------- | ------------------------------------------- | ------------------------------- |
+| `/api/chat`   | POST   | Required | Send message, receive streaming AI response | `withAuthAndRateLimitStreaming` |
+| `/api/models` | GET    | None     | List available AI models                    | `withApiMiddleware`             |
 
 **Chat Rate Limiting**: 15 requests per minute, max 3 concurrent streams
 
 **Request Format**:
+
 ```typescript
 {
   message: string;           // User message (trimmed, non-empty)
@@ -834,20 +871,22 @@ interface SessionReport {
 ```
 
 **Validation**:
+
 - Content-Type must be `application/json` (returns 415 if not)
 - Message trimmed and validated (whitespace-only rejected with 400)
 - Max body size: 50MB (returns 413 if exceeded)
 
 ### Reports & Memory
 
-| Endpoint | Method | Auth | Description | Middleware |
-|----------|--------|------|-------------|------------|
-| `/api/reports` | GET | Required | List session reports for user | `withAuth` |
-| `/api/reports/generate` | POST | Required | Generate AI-powered session report | `withAuth` |
-| `/api/reports/memory` | GET | Required | Get memory context for continuity | `withAuth` |
-| `/api/reports/memory` | DELETE | Required | Clear memory (specific/recent/all) | `withAuth` |
+| Endpoint                | Method | Auth     | Description                        | Middleware |
+| ----------------------- | ------ | -------- | ---------------------------------- | ---------- |
+| `/api/reports`          | GET    | Required | List session reports for user      | `withAuth` |
+| `/api/reports/generate` | POST   | Required | Generate AI-powered session report | `withAuth` |
+| `/api/reports/memory`   | GET    | Required | Get memory context for continuity  | `withAuth` |
+| `/api/reports/memory`   | DELETE | Required | Clear memory (specific/recent/all) | `withAuth` |
 
 **Memory Query Parameters**:
+
 - `limit` - Number of reports (default: 5, max: 10)
 - `excludeSessionId` - Exclude specific session
 - `manage=true` - Get detailed management view
@@ -855,25 +894,25 @@ interface SessionReport {
 
 ### System & Diagnostics
 
-| Endpoint | Method | Auth | Description | Middleware |
-|----------|--------|------|-------------|------------|
-| `/api/health` | GET | None | Application health check | `withApiMiddleware` |
-| `/api/health/cache` | GET | None | Cache system health | `withApiMiddleware` |
-| `/api/metrics` | GET | None | System metrics (if enabled) | `withApiMiddleware` |
-| `/api/env` | GET | None | Environment configuration | `withApiMiddleware` |
-| `/api/errors` | POST | None | Client-side error reporting | `withApiMiddleware` |
+| Endpoint            | Method | Auth | Description                 | Middleware          |
+| ------------------- | ------ | ---- | --------------------------- | ------------------- |
+| `/api/health`       | GET    | None | Application health check    | `withApiMiddleware` |
+| `/api/health/cache` | GET    | None | Cache system health         | `withApiMiddleware` |
+| `/api/metrics`      | GET    | None | System metrics (if enabled) | `withApiMiddleware` |
+| `/api/env`          | GET    | None | Environment configuration   | `withApiMiddleware` |
+| `/api/errors`       | POST   | None | Client-side error reporting | `withApiMiddleware` |
 
 ### Middleware Types Reference
 
-| Middleware | Auth | Rate Limit | Use Case |
-|------------|------|------------|----------|
-| `withApiMiddleware` | No | No | Public endpoints |
-| `withAuth` | Yes | No | Authenticated endpoints |
-| `withAuthAndRateLimit` | Yes | Yes | Protected endpoints with limits |
-| `withAuthStreaming` | Yes | No | Streaming responses |
-| `withAuthAndRateLimitStreaming` | Yes | Yes | Chat endpoint (streaming + limits) |
-| `withValidation` | Yes | No | Zod schema validation |
-| `withValidationAndParams` | Yes | No | Validation + route params |
+| Middleware                      | Auth | Rate Limit | Use Case                           |
+| ------------------------------- | ---- | ---------- | ---------------------------------- |
+| `withApiMiddleware`             | No   | No         | Public endpoints                   |
+| `withAuth`                      | Yes  | No         | Authenticated endpoints            |
+| `withAuthAndRateLimit`          | Yes  | Yes        | Protected endpoints with limits    |
+| `withAuthStreaming`             | Yes  | No         | Streaming responses                |
+| `withAuthAndRateLimitStreaming` | Yes  | Yes        | Chat endpoint (streaming + limits) |
+| `withValidation`                | Yes  | No         | Zod schema validation              |
+| `withValidationAndParams`       | Yes  | No         | Validation + route params          |
 
 ---
 
@@ -886,7 +925,7 @@ graph TB
         Store[Redux Store]
         Hooks[Custom Hooks]
     end
-    
+
     subgraph "API Layer"
         ChatAPI[/api/chat]
         SessionsAPI[/api/sessions]
@@ -895,7 +934,7 @@ graph TB
         ModelsAPI[/api/models]
         AuthAPI[/api/auth/*]
     end
-    
+
     subgraph "Service Layer"
         ChatService[Chat Service]
         SessionService[Session Service]
@@ -904,17 +943,17 @@ graph TB
         TherapyPrompts[Therapy Prompts]
         Encryption[Message Encryption]
     end
-    
+
     subgraph "Data Layer"
         Convex[(Convex Database)]
         Cache[Redis Cache]
     end
-    
+
     subgraph "External Services"
         Clerk[Clerk Auth]
         Groq[Groq AI API]
     end
-    
+
     UI --> Store
     UI --> Hooks
     Hooks --> Store
@@ -923,26 +962,26 @@ graph TB
     Store --> MessagesAPI
     Store --> ReportsAPI
     Store --> ModelsAPI
-    
+
     ChatAPI --> ChatService
     SessionsAPI --> SessionService
     MessagesAPI --> SessionService
     ReportsAPI --> ReportService
-    
+
     ChatService --> Groq
     ChatService --> CBTParser
     ChatService --> TherapyPrompts
     ChatService --> Encryption
-    
+
     SessionService --> Convex
     ReportService --> Convex
-    
+
     ChatAPI --> Cache
     SessionsAPI --> Cache
-    
+
     AuthAPI --> Clerk
     SessionService --> Cache
-    
+
     Convex --> Users[users table]
     Convex --> Sessions[sessions table]
     Convex --> Messages[messages table]
@@ -963,20 +1002,20 @@ sequenceDiagram
     participant API
     participant Groq
     participant Convex
-    
+
     User->>UI: Types message
     UI->>Store: dispatch(setCurrentInput)
     User->>UI: Clicks send
     UI->>Store: dispatch(setStreaming)
     UI->>API: POST /api/chat (streaming)
     API->>Groq: Stream chat completion
-    
+
     loop Streaming Response
         Groq-->>API: Chunk
         API-->>UI: Server-Sent Event
         UI->>UI: Update streaming message
     end
-    
+
     Groq-->>API: [DONE]
     API->>Convex: Save user message
     API->>Convex: Save assistant message
@@ -987,6 +1026,7 @@ sequenceDiagram
 ```
 
 **Key Steps**:
+
 1. User input captured in Redux (`chat-slice`)
 2. Streaming request initiated to `/api/chat`
 3. Groq AI streams response chunks
@@ -1006,11 +1046,11 @@ sequenceDiagram
     participant Flow
     participant Parser
     participant Convex
-    
+
     User->>UI: Starts CBT session
     UI->>Store: dispatch(startCBTSession)
     Store->>Flow: Initialize flow state
-    
+
     loop For each CBT step
         UI->>User: Show step form
         User->>UI: Completes step data
@@ -1019,7 +1059,7 @@ sequenceDiagram
         Flow-->>Store: Updated state
         Store->>Store: Auto-save draft
     end
-    
+
     User->>UI: Completes final step
     UI->>Store: dispatch(completeCBTEntry)
     Store->>Parser: Parse CBT data
@@ -1030,6 +1070,7 @@ sequenceDiagram
 ```
 
 **CBT Flow Steps** (10 total):
+
 1. **Situation**: Context and date
 2. **Initial Emotions**: Emotional baseline
 3. **Automatic Thoughts**: Negative thoughts
@@ -1055,7 +1096,7 @@ sequenceDiagram
     participant API
     participant Convex
     participant Cache
-    
+
     User->>UI: Creates new session
     UI->>Store: dispatch(setCreatingSession)
     UI->>API: POST /api/sessions
@@ -1073,6 +1114,7 @@ sequenceDiagram
 ```
 
 **Caching Strategy**:
+
 - Sessions cached in Redis (5 min TTL)
 - Messages cached per session (3 min TTL)
 - Cache invalidated on mutations
@@ -1089,7 +1131,7 @@ sequenceDiagram
     participant Groq
     participant Parser
     participant Convex
-    
+
     User->>UI: Requests report
     UI->>API: POST /api/reports/generate
     API->>Convex: Fetch session messages
@@ -1107,6 +1149,7 @@ sequenceDiagram
 ```
 
 **Report Components**:
+
 - Key Points: Main discussion topics
 - Therapeutic Insights: AI analysis
 - Patterns Identified: Behavioral patterns
@@ -1125,10 +1168,10 @@ sequenceDiagram
     participant Clerk
     participant API
     participant Convex
-    
+
     User->>UI: Visits app
     UI->>Clerk: Check auth status
-    
+
     alt Not Authenticated
         Clerk-->>UI: Not authenticated
         UI->>User: Show sign-in
@@ -1144,11 +1187,12 @@ sequenceDiagram
         Convex->>Convex: Verify token
         Convex-->>UI: User data
     end
-    
+
     UI->>User: Show authenticated app
 ```
 
 **Security Features**:
+
 - Clerk handles authentication
 - Convex validates JWT tokens
 - Session cookies secured (HttpOnly, Secure, SameSite)
@@ -1160,22 +1204,25 @@ sequenceDiagram
 All data queries implement user-level isolation to ensure users only access their own therapeutic data:
 
 **Convex Queries** (Database Layer):
+
 ```typescript
 // All queries now filter by userId
-reports.listRecent({ userId, limit, excludeSessionId })  // User's reports only
-sessions.listByUser({ userId, limit, offset })           // User's sessions only
-messages.listBySession({ sessionId })                    // Verified session ownership
+reports.listRecent({ userId, limit, excludeSessionId }); // User's reports only
+sessions.listByUser({ userId, limit, offset }); // User's sessions only
+messages.listBySession({ sessionId }); // Verified session ownership
 ```
 
 **Service Layer**:
+
 ```typescript
 // Services accept clerkId and resolve to Convex userId
-MemoryManagementService.getMemoryContext(clerkId, limit, excludeSessionId)
-MemoryManagementService.getMemoryManagement(clerkId, limit, excludeSessionId, includeFullContent)
-MemoryManagementService.deleteMemory(clerkId, sessionIds, limit, excludeSessionId)
+MemoryManagementService.getMemoryContext(clerkId, limit, excludeSessionId);
+MemoryManagementService.getMemoryManagement(clerkId, limit, excludeSessionId, includeFullContent);
+MemoryManagementService.deleteMemory(clerkId, sessionIds, limit, excludeSessionId);
 ```
 
 **Implementation Pattern**:
+
 1. API route receives authenticated request via `withAuth` middleware
 2. Extract `clerkId` from `context.userInfo` (guaranteed by `withAuth`)
 3. Pass `clerkId` to service layer
@@ -1183,11 +1230,13 @@ MemoryManagementService.deleteMemory(clerkId, sessionIds, limit, excludeSessionI
 5. Query Convex with resolved `userId` for data isolation
 
 **Middleware**:
+
 - `withAuth` - Automatically validates auth and populates `context.userInfo` with clerkId
 - `withApiMiddleware` - No auth validation (use for public endpoints only)
 - `BYPASS_AUTH` env var - Development mode that returns mock user (dev-user) when true
 
 **Example Flow**:
+
 ```typescript
 // API Route
 export const GET = withAuth(async (request, context) => {
@@ -1200,13 +1249,14 @@ export const GET = withAuth(async (request, context) => {
 async getData(clerkId: string) {
   const user = await convex.query(anyApi.users.getByClerkId, { clerkId });
   if (!user) throw new Error('User not found');
-  
+
   const data = await convex.query(anyApi.data.listByUser, { userId: user._id });
   return data;
 }
 ```
 
 This multi-layer approach ensures:
+
 - ✅ Complete data isolation between users
 - ✅ No unauthorized access to other users' therapeutic data
 - ✅ Consistent security model across all endpoints
@@ -1245,13 +1295,13 @@ graph TD
     Index --> Therapy[therapy.ts]
     Index --> Chat[chat.ts]
     Index --> Auth[auth.ts]
-    
+
     Database --> Convex[convex.ts]
     Therapy --> Database
     Chat --> Database
-    
+
     API[api.generated.ts] --> Index
-    
+
     Store[Redux Store] --> Index
     Components[React Components] --> Index
     Services[Domain Services] --> Index
@@ -1260,6 +1310,7 @@ graph TD
 ### Key Type Exports
 
 **Database Types** (`database.ts`):
+
 ```typescript
 export type UserDoc = Doc<'users'>;
 export type SessionDoc = Doc<'sessions'>;
@@ -1270,6 +1321,7 @@ export type UserId = Id<'users'>;
 ```
 
 **Therapy Types** (`therapy.ts`):
+
 ```typescript
 export interface EmotionData { ... }
 export interface ThoughtData { ... }
@@ -1284,6 +1336,7 @@ export interface CBTSessionState { ... }
 ```
 
 **API Types** (`api.generated.ts`):
+
 - Auto-generated from `docs/api.yaml` via `openapi-typescript`
 - Run `npm run api:types` to regenerate
 - Provides type-safe API contracts
@@ -1338,6 +1391,7 @@ export const update = mutation({
 ### Input Validation Rules
 
 **Chat Messages** (`src/lib/chat/chat-request.ts`):
+
 - Message content **trimmed** before validation via `.transform(val => val.trim())`
 - Empty or whitespace-only messages **rejected** with clear error
 - Minimum 1 character after trimming
@@ -1345,18 +1399,21 @@ export const update = mutation({
 - Schema: `z.string().min(1).transform(val => val.trim()).refine(val => val.length > 0)`
 
 **Session IDs** (`src/lib/repositories/session-repository.ts`):
+
 - Validated before Convex queries to prevent crashes
 - Invalid format caught and returns `null` → API returns 404
 - Prevents 500 errors from Convex ID validation failures
 - Applied in: `getSessionWithMessages()`, `verifySessionOwnership()`
 
 **Content-Type Headers** (`src/app/api/chat/route.ts`):
+
 - Chat endpoint **requires** `application/json` Content-Type
 - Returns **415 Unsupported Media Type** for other types
 - Validates before parsing request body
 - Protects against malformed requests
 
 **Request Body Size**:
+
 - Chat messages: Max 50MB (returns 413 if exceeded)
 - Configurable via `CHAT_INPUT_MAX_BYTES` environment variable
 
@@ -1366,14 +1423,14 @@ export const update = mutation({
 
 ### Caching Strategy
 
-| Data Type | Cache Location | TTL | Invalidation |
-|-----------|----------------|-----|--------------|
-| Sessions | Redis | 5 min | On session mutation |
-| Messages | Redis | 3 min | On message create/delete |
-| Session Reports | Redis | 10 min | On report generation |
-| User Profile | Redux Store | Session | On auth change |
-| CBT Drafts | localStorage | Persistent | On completion/deletion |
-| AI Models | Memory | App lifetime | None |
+| Data Type       | Cache Location | TTL          | Invalidation             |
+| --------------- | -------------- | ------------ | ------------------------ |
+| Sessions        | Redis          | 5 min        | On session mutation      |
+| Messages        | Redis          | 3 min        | On message create/delete |
+| Session Reports | Redis          | 10 min       | On report generation     |
+| User Profile    | Redux Store    | Session      | On auth change           |
+| CBT Drafts      | localStorage   | Persistent   | On completion/deletion   |
+| AI Models       | Memory         | App lifetime | None                     |
 
 ### Query Optimization
 
@@ -1407,11 +1464,12 @@ All tables include optional `legacyId` fields for migration from previous system
 
 ```typescript
 interface WithLegacyId {
-  legacyId?: string;  // Previous system's ID
+  legacyId?: string; // Previous system's ID
 }
 ```
 
 **Migration Pattern**:
+
 1. Import data with legacy IDs
 2. Create new Convex records
 3. Map legacy IDs to new IDs
@@ -1421,14 +1479,16 @@ interface WithLegacyId {
 ### Version Tracking
 
 **SessionReports** include version tracking:
+
 ```typescript
 interface SessionReportDoc {
-  analysisVersion?: string;  // e.g., "v2.3.0"
+  analysisVersion?: string; // e.g., "v2.3.0"
   analysisConfidence?: number; // 0-100
 }
 ```
 
 This enables:
+
 - A/B testing of analysis algorithms
 - Rollback to previous versions
 - Comparison of analysis quality over time
@@ -1441,17 +1501,17 @@ This enables:
 
 The application follows REST conventions with specific status codes for each error type:
 
-| Status | Use Case | Example |
-|--------|----------|---------|
-| 200 | Success | Data retrieved, operation completed |
-| 400 | Bad Request | Invalid input, validation failure, empty message |
-| 401 | Unauthorized | Missing or invalid authentication token |
-| 403 | Forbidden | Authenticated but not authorized for resource |
-| 404 | Not Found | Resource doesn't exist or not owned by user |
-| 413 | Payload Too Large | Request body exceeds size limit |
-| 415 | Unsupported Media Type | Wrong Content-Type header |
-| 429 | Too Many Requests | Rate limit exceeded |
-| 500 | Internal Server Error | Unexpected server errors |
+| Status | Use Case               | Example                                          |
+| ------ | ---------------------- | ------------------------------------------------ |
+| 200    | Success                | Data retrieved, operation completed              |
+| 400    | Bad Request            | Invalid input, validation failure, empty message |
+| 401    | Unauthorized           | Missing or invalid authentication token          |
+| 403    | Forbidden              | Authenticated but not authorized for resource    |
+| 404    | Not Found              | Resource doesn't exist or not owned by user      |
+| 413    | Payload Too Large      | Request body exceeds size limit                  |
+| 415    | Unsupported Media Type | Wrong Content-Type header                        |
+| 429    | Too Many Requests      | Rate limit exceeded                              |
+| 500    | Internal Server Error  | Unexpected server errors                         |
 
 ### Error Response Format
 
@@ -1468,6 +1528,7 @@ All API endpoints return standardized error responses:
 ```
 
 **Example Error Response**:
+
 ```json
 {
   "success": false,
@@ -1484,35 +1545,42 @@ All API endpoints return standardized error responses:
 ### Error Handling Strategy
 
 **1. Validation Errors → 400**
+
 - Empty or whitespace-only messages
 - Invalid field formats
 - Missing required fields
 - Returns specific field errors in details
 
 **2. Authentication Errors → 401**
+
 - Missing Clerk authentication token
 - Invalid or expired token
 - BYPASS_AUTH=false and no valid session
 
 **3. Authorization Errors → 403**
+
 - Authenticated but accessing another user's data
 - Resource ownership violation
 
 **4. Not Found → 404**
+
 - Resource doesn't exist in database
 - Invalid session/message/report ID format
 - Session not owned by authenticated user
 - **Important**: Invalid IDs return 404, not 500
 
 **5. Content Type Errors → 415**
+
 - Wrong Content-Type header on /api/chat
 - Must be `application/json`
 
 **6. Rate Limit → 429**
+
 - Too many requests in time window
 - Includes `Retry-After` header
 
 **7. Server Errors → 500**
+
 - Unexpected exceptions
 - Database connection failures
 - Always includes requestId for debugging
@@ -1521,6 +1589,7 @@ All API endpoints return standardized error responses:
 ### Error Handling Implementation
 
 **Invalid ID Pattern** (prevents 500 errors):
+
 ```typescript
 try {
   const session = await getSession(sessionId);
@@ -1537,6 +1606,7 @@ try {
 ```
 
 **Graceful Degradation**:
+
 - Failed report decryption → Skip report, continue with others
 - Missing user → Return empty data, not 500
 - Cache unavailable → Fall back to database
@@ -1556,6 +1626,7 @@ This data model provides:
 ✅ **Developer Experience**: Auto-generated types, clear contracts, comprehensive documentation
 
 For implementation details, refer to:
+
 - Database: `convex/schema.ts` and `convex/*.ts`
 - Types: `src/types/*.ts`
 - API: `docs/api.yaml` and `src/app/api/*/route.ts`

@@ -1,26 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  AlertTriangle, 
-  Phone, 
-  ExternalLink, 
+import {
+  AlertTriangle,
+  Phone,
+  ExternalLink,
   Heart,
   Shield,
   Clock,
   X,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { 
-  CrisisDetectionResult, 
+import {
+  CrisisDetectionResult,
   requiresImmediateIntervention,
-  generateCrisisAlert 
+  generateCrisisAlert,
 } from '@/lib/therapy/crisis-detection';
 
 interface CrisisAlertProps {
@@ -34,7 +34,7 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
   crisisResult,
   onDismiss,
   onAcknowledge,
-  className
+  className,
 }) => {
   const [isExpanded, setIsExpanded] = useState(requiresImmediateIntervention(crisisResult));
   const [isAcknowledged, setIsAcknowledged] = useState(false);
@@ -84,43 +84,50 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
   };
 
   return (
-    <Card className={cn(
-      "border-2 shadow-lg transition-all duration-300",
-      getRiskLevelColor(crisisResult.riskLevel),
-      isImmediate && "animate-pulse",
-      className
-    )}>
+    <Card
+      className={cn(
+        'border-2 shadow-lg transition-all duration-300',
+        getRiskLevelColor(crisisResult.riskLevel),
+        isImmediate && 'animate-pulse',
+        className
+      )}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className={cn(
-              "p-2 rounded-full",
-              crisisResult.riskLevel === 'crisis' ? "bg-red-500" :
-              crisisResult.riskLevel === 'high' ? "bg-orange-500" : "bg-yellow-500"
-            )}>
-              <AlertTriangle className="w-5 h-5 text-white" />
+            <div
+              className={cn(
+                'rounded-full p-2',
+                crisisResult.riskLevel === 'crisis'
+                  ? 'bg-red-500'
+                  : crisisResult.riskLevel === 'high'
+                    ? 'bg-orange-500'
+                    : 'bg-yellow-500'
+              )}
+            >
+              <AlertTriangle className="h-5 w-5 text-white" />
             </div>
             <div>
-              <CardTitle className="text-xl font-semibold flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-xl font-semibold">
                 Crisis Support Resources
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className={cn(
-                    "text-sm font-semibold",
-                    crisisResult.riskLevel === 'crisis' ? "border-red-300 text-red-700" :
-                    crisisResult.riskLevel === 'high' ? "border-orange-300 text-orange-700" :
-                    "border-yellow-300 text-yellow-700"
+                    'text-sm font-semibold',
+                    crisisResult.riskLevel === 'crisis'
+                      ? 'border-red-300 text-red-700'
+                      : crisisResult.riskLevel === 'high'
+                        ? 'border-orange-300 text-orange-700'
+                        : 'border-yellow-300 text-yellow-700'
                   )}
                 >
                   {crisisResult.riskLevel.toUpperCase()}
                 </Badge>
               </CardTitle>
-              <p className="text-sm opacity-90 mt-1">
-                {alertMessage}
-              </p>
+              <p className="mt-1 text-sm opacity-90">{alertMessage}</p>
             </div>
           </div>
-          
+
           {onDismiss && !isImmediate && (
             <Button
               variant="ghost"
@@ -128,7 +135,7 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
               onClick={onDismiss}
               className="h-8 w-8 p-0 opacity-70 hover:opacity-100"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </Button>
           )}
         </div>
@@ -137,14 +144,16 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
       <CardContent className="space-y-4">
         {/* Immediate Actions - Always visible for crisis level */}
         {isImmediate && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <h4 className="font-semibold text-red-800 flex items-center gap-2 mb-3">
-              <Shield className="w-4 h-4" />
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+            <h4 className="mb-3 flex items-center gap-2 font-semibold text-red-800">
+              <Shield className="h-4 w-4" />
               Immediate Safety Actions
             </h4>
             <div className="space-y-2 text-sm text-red-700">
               <p>• Contact emergency services (911) if in immediate danger</p>
-              <p>• Call the National Suicide Prevention Lifeline: <strong>988</strong></p>
+              <p>
+                • Call the National Suicide Prevention Lifeline: <strong>988</strong>
+              </p>
               <p>• Reach out to a trusted person immediately</p>
               <p>• Remove any means of harm from your environment</p>
             </div>
@@ -153,50 +162,50 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
 
         {/* Emergency Resources */}
         <div>
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
-            <Phone className="w-4 h-4" />
+          <h4 className="mb-3 flex items-center gap-2 font-semibold">
+            <Phone className="h-4 w-4" />
             Emergency Resources
           </h4>
           <div className="grid gap-3 sm:grid-cols-2">
-            {crisisResult.emergencyResources.slice(0, isExpanded ? undefined : 2).map((resource, index) => (
-              <div key={index} className="p-3 bg-white border rounded-lg">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h5 className="font-semibold text-sm">{resource.name}</h5>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {resource.description}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-sm"
-                        onClick={() => window.open(`tel:${resource.phone}`, '_self')}
-                      >
-                        <Phone className="w-3 h-3 mr-1" />
-                        {resource.phone}
-                      </Button>
-                      {resource.website && (
+            {crisisResult.emergencyResources
+              .slice(0, isExpanded ? undefined : 2)
+              .map((resource, index) => (
+                <div key={index} className="rounded-lg border bg-white p-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h5 className="text-sm font-semibold">{resource.name}</h5>
+                      <p className="text-muted-foreground mt-1 text-sm">{resource.description}</p>
+                      <div className="mt-2 flex items-center gap-2">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           className="h-7 text-sm"
-                          onClick={() => window.open(resource.website, '_blank')}
+                          onClick={() => window.open(`tel:${resource.phone}`, '_self')}
                         >
-                          <ExternalLink className="w-3 h-3" />
+                          <Phone className="mr-1 h-3 w-3" />
+                          {resource.phone}
                         </Button>
-                      )}
+                        {resource.website && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-sm"
+                            onClick={() => window.open(resource.website, '_blank')}
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
+                    {resource.available24x7 && (
+                      <Badge variant="outline" className="text-sm">
+                        <Clock className="mr-1 h-3 w-3" />
+                        24/7
+                      </Badge>
+                    )}
                   </div>
-                  {resource.available24x7 && (
-                    <Badge variant="outline" className="text-sm">
-                      <Clock className="w-3 h-3 mr-1" />
-                      24/7
-                    </Badge>
-                  )}
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 
@@ -210,12 +219,12 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
           >
             {isExpanded ? (
               <>
-                <ChevronUp className="w-4 h-4 mr-2" />
+                <ChevronUp className="mr-2 h-4 w-4" />
                 Show Less
               </>
             ) : (
               <>
-                <ChevronDown className="w-4 h-4 mr-2" />
+                <ChevronDown className="mr-2 h-4 w-4" />
                 Show More Resources & Actions
               </>
             )}
@@ -226,17 +235,17 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
         {isExpanded && (
           <>
             <Separator />
-            
+
             {/* Detected Categories */}
             {crisisResult.detectedCategories.length > 0 && (
               <div>
-                <h4 className="font-semibold mb-3">Areas of Concern</h4>
+                <h4 className="mb-3 font-semibold">Areas of Concern</h4>
                 <div className="flex flex-wrap gap-2">
                   {crisisResult.detectedCategories.map((category, index) => (
                     <Badge
                       key={index}
                       variant="outline"
-                      className={cn("text-sm", getCategoryColor(category.category))}
+                      className={cn('text-sm', getCategoryColor(category.category))}
                     >
                       {category.category.replace('_', ' ')} ({category.severity})
                     </Badge>
@@ -248,14 +257,14 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
             {/* Recommended Actions */}
             {crisisResult.recommendedActions.length > 0 && (
               <div>
-                <h4 className="font-semibold mb-3 flex items-center gap-2">
-                  <Heart className="w-4 h-4" />
+                <h4 className="mb-3 flex items-center gap-2 font-semibold">
+                  <Heart className="h-4 w-4" />
                   Recommended Actions
                 </h4>
                 <ul className="space-y-2 text-sm">
                   {crisisResult.recommendedActions.map((action, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <span className="text-primary font-semibold mt-0.5">•</span>
+                      <span className="text-primary mt-0.5 font-semibold">•</span>
                       <span>{action}</span>
                     </li>
                   ))}
@@ -266,24 +275,24 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
             {/* Additional Resources */}
             {crisisResult.emergencyResources.length > 2 && (
               <div>
-                <h4 className="font-semibold mb-3">Additional Resources</h4>
+                <h4 className="mb-3 font-semibold">Additional Resources</h4>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {crisisResult.emergencyResources.slice(2).map((resource, index) => (
-                    <div key={index} className="p-3 bg-white border rounded-lg">
+                    <div key={index} className="rounded-lg border bg-white p-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h5 className="font-semibold text-sm">{resource.name}</h5>
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <h5 className="text-sm font-semibold">{resource.name}</h5>
+                          <p className="text-muted-foreground mt-1 text-sm">
                             {resource.description}
                           </p>
-                          <div className="flex items-center gap-2 mt-2">
+                          <div className="mt-2 flex items-center gap-2">
                             <Button
                               variant="outline"
                               size="sm"
                               className="h-7 text-sm"
                               onClick={() => window.open(`tel:${resource.phone}`, '_self')}
                             >
-                              <Phone className="w-3 h-3 mr-1" />
+                              <Phone className="mr-1 h-3 w-3" />
                               {resource.phone}
                             </Button>
                             {resource.website && (
@@ -293,14 +302,14 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
                                 className="h-7 text-sm"
                                 onClick={() => window.open(resource.website, '_blank')}
                               >
-                                <ExternalLink className="w-3 h-3" />
+                                <ExternalLink className="h-3 w-3" />
                               </Button>
                             )}
                           </div>
                         </div>
                         {resource.available24x7 && (
                           <Badge variant="outline" className="text-sm">
-                            <Clock className="w-3 h-3 mr-1" />
+                            <Clock className="mr-1 h-3 w-3" />
                             24/7
                           </Badge>
                         )}
@@ -315,13 +324,14 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
 
         {/* Acknowledgment */}
         {isImmediate && !isAcknowledged && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800 mb-3">
-              Please acknowledge that you have seen these crisis resources and understand the importance of seeking help.
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <p className="mb-3 text-sm text-blue-800">
+              Please acknowledge that you have seen these crisis resources and understand the
+              importance of seeking help.
             </p>
             <Button
               onClick={handleAcknowledge}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full bg-blue-600 text-white hover:bg-blue-700"
             >
               I Acknowledge These Resources
             </Button>
@@ -329,8 +339,8 @@ export const CrisisAlert: React.FC<CrisisAlertProps> = ({
         )}
 
         {/* Support Message */}
-        <div className="text-center text-sm text-muted-foreground p-3 bg-muted/30 rounded-lg">
-          <p className="font-semibold mb-1">🤝 You are not alone</p>
+        <div className="text-muted-foreground bg-muted/30 rounded-lg p-3 text-center text-sm">
+          <p className="mb-1 font-semibold">🤝 You are not alone</p>
           <p>
             Reaching out for help is a sign of strength. These resources are here to support you
             through difficult times.

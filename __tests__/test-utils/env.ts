@@ -29,9 +29,17 @@ export function restoreEnv(name: string): void {
   originalValues.delete(name);
 }
 
-export async function withEnv<T>(name: string, value: string | undefined, fn: () => Promise<T>): Promise<T>;
+export async function withEnv<T>(
+  name: string,
+  value: string | undefined,
+  fn: () => Promise<T>
+): Promise<T>;
 export async function withEnv<T>(name: string, value: string | undefined, fn: () => T): Promise<T>;
-export async function withEnv<T>(name: string, value: string | undefined, fn: () => T | Promise<T>): Promise<T> {
+export async function withEnv<T>(
+  name: string,
+  value: string | undefined,
+  fn: () => T | Promise<T>
+): Promise<T> {
   setEnv(name, value);
   try {
     return await fn();

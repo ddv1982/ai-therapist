@@ -5,7 +5,7 @@ describe('model-selector', () => {
   describe('selectModelAndTools', () => {
     it('returns default model for simple message', () => {
       const result = selectModelAndTools({ message: 'Hello, how are you?' });
-      
+
       expect(result.model).toBe(DEFAULT_MODEL_ID);
       expect(result.tools).toEqual([]);
     });
@@ -15,7 +15,7 @@ describe('model-selector', () => {
         message: 'Hello',
         preferredModel: DEFAULT_MODEL_ID,
       });
-      
+
       expect(result.model).toBe(DEFAULT_MODEL_ID);
     });
 
@@ -24,7 +24,7 @@ describe('model-selector', () => {
         message: 'Hello',
         preferredModel: 'non-existent-model-xyz',
       });
-      
+
       expect(result.model).toBe(DEFAULT_MODEL_ID);
     });
 
@@ -33,7 +33,7 @@ describe('model-selector', () => {
         message: 'What is the weather?',
         webSearchEnabled: true,
       });
-      
+
       expect(result.model).toBe(ANALYTICAL_MODEL_ID);
       expect(result.tools).toContain('web-search');
     });
@@ -55,7 +55,7 @@ describe('model-selector', () => {
 
     it('handles British spelling of analyze', () => {
       const result = selectModelAndTools({ message: 'Please analyse this' });
-      
+
       expect(result.model).toBe(ANALYTICAL_MODEL_ID);
     });
 
@@ -76,7 +76,7 @@ describe('model-selector', () => {
 
     it('returns empty tools array when no special features', () => {
       const result = selectModelAndTools({ message: 'Just a regular message' });
-      
+
       expect(result.tools).toEqual([]);
     });
 
@@ -85,21 +85,21 @@ describe('model-selector', () => {
         message: 'Analyze this with web search',
         webSearchEnabled: true,
       });
-      
+
       expect(result.model).toBe(ANALYTICAL_MODEL_ID);
       expect(result.tools).toContain('web-search');
     });
 
     it('handles empty message', () => {
       const result = selectModelAndTools({ message: '' });
-      
+
       expect(result.model).toBe(DEFAULT_MODEL_ID);
       expect(result.tools).toEqual([]);
     });
 
     it('handles message with only whitespace', () => {
       const result = selectModelAndTools({ message: '   ' });
-      
+
       expect(result.model).toBe(DEFAULT_MODEL_ID);
     });
 
@@ -109,7 +109,7 @@ describe('model-selector', () => {
         preferredModel: DEFAULT_MODEL_ID,
         webSearchEnabled: true,
       });
-      
+
       // Web search forces ANALYTICAL_MODEL_ID
       expect(result.model).toBe(ANALYTICAL_MODEL_ID);
       expect(result.tools).toContain('web-search');

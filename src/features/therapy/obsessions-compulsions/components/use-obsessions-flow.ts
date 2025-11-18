@@ -1,20 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import type {
-  ObsessionData,
-  CompulsionData,
-  ObsessionsCompulsionsData,
-} from '@/types/therapy';
-import {
-  DEFAULT_COMPULSION_FORM,
-  DEFAULT_OBSESSION_FORM,
-} from './defaults';
-import type {
-  BuilderState,
-  ObsessionFormState,
-  CompulsionFormState,
-  BuilderStep,
-} from './types';
+import type { ObsessionData, CompulsionData, ObsessionsCompulsionsData } from '@/types/therapy';
+import { DEFAULT_COMPULSION_FORM, DEFAULT_OBSESSION_FORM } from './defaults';
+import type { BuilderState, ObsessionFormState, CompulsionFormState, BuilderStep } from './types';
 
 interface UseObsessionsFlowOptions {
   initialData?: ObsessionsCompulsionsData;
@@ -33,16 +21,16 @@ const createInitialBuilderState = (hasEntries: boolean): BuilderState => ({
   editingIndex: null,
 });
 
-export function useObsessionsFlow({
-  initialData,
-  onChange,
-}: UseObsessionsFlowOptions) {
+export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOptions) {
   const [data, setData] = useState<ObsessionsCompulsionsData>(initialData ?? EMPTY_DATA);
   const [builderState, setBuilderState] = useState<BuilderState>(() =>
-    createInitialBuilderState(Boolean(initialData?.obsessions.length || initialData?.compulsions.length)),
+    createInitialBuilderState(
+      Boolean(initialData?.obsessions.length || initialData?.compulsions.length)
+    )
   );
   const [obsessionForm, setObsessionForm] = useState<ObsessionFormState>(DEFAULT_OBSESSION_FORM);
-  const [compulsionForm, setCompulsionForm] = useState<CompulsionFormState>(DEFAULT_COMPULSION_FORM);
+  const [compulsionForm, setCompulsionForm] =
+    useState<CompulsionFormState>(DEFAULT_COMPULSION_FORM);
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -50,7 +38,9 @@ export function useObsessionsFlow({
     if (!initialData) return;
     setData(initialData);
     setBuilderState(
-      createInitialBuilderState(Boolean(initialData.obsessions.length || initialData.compulsions.length)),
+      createInitialBuilderState(
+        Boolean(initialData.obsessions.length || initialData.compulsions.length)
+      )
     );
     setObsessionForm(DEFAULT_OBSESSION_FORM);
     setCompulsionForm(DEFAULT_COMPULSION_FORM);
@@ -77,23 +67,26 @@ export function useObsessionsFlow({
         setIsSaving(false);
       }
     },
-    [onChange],
+    [onChange]
   );
 
   const validateObsession = useCallback((form: ObsessionFormState) => {
     const issues: Record<string, string> = {};
     if (!form.obsession.trim()) issues.obsession = 'validation.obsessionRequired';
-    if (form.intensity < 1 || form.intensity > 10) issues.intensity = 'validation.intensityRequired';
+    if (form.intensity < 1 || form.intensity > 10)
+      issues.intensity = 'validation.intensityRequired';
     return issues;
   }, []);
 
   const validateCompulsion = useCallback((form: CompulsionFormState) => {
     const issues: Record<string, string> = {};
     if (!form.compulsion.trim()) issues.compulsion = 'validation.compulsionRequired';
-    if (form.frequency < 1 || form.frequency > 10) issues.frequency = 'validation.frequencyRequired';
+    if (form.frequency < 1 || form.frequency > 10)
+      issues.frequency = 'validation.frequencyRequired';
     if (form.duration < 1) issues.duration = 'validation.durationMin';
     if (form.duration > 999) issues.duration = 'validation.durationMax';
-    if (form.reliefLevel < 1 || form.reliefLevel > 10) issues.reliefLevel = 'validation.reliefRequired';
+    if (form.reliefLevel < 1 || form.reliefLevel > 10)
+      issues.reliefLevel = 'validation.reliefRequired';
     return issues;
   }, []);
 
@@ -133,7 +126,7 @@ export function useObsessionsFlow({
       setFieldErrors({});
       updateBuilderState({ mode: 'edit', step: 'obsession', editingIndex: index });
     },
-    [data, updateBuilderState, setFieldErrors],
+    [data, updateBuilderState, setFieldErrors]
   );
 
   const deletePair = useCallback(
@@ -157,13 +150,21 @@ export function useObsessionsFlow({
       } else if (isEditingTarget) {
         resetForms();
         updateBuilderState({ mode: 'closed', step: 'obsession', editingIndex: null });
-      } else if (builderState.mode === 'edit' && builderState.editingIndex !== null && builderState.editingIndex > index) {
-        updateBuilderState({ mode: 'edit', step: builderState.step, editingIndex: builderState.editingIndex - 1 });
+      } else if (
+        builderState.mode === 'edit' &&
+        builderState.editingIndex !== null &&
+        builderState.editingIndex > index
+      ) {
+        updateBuilderState({
+          mode: 'edit',
+          step: builderState.step,
+          editingIndex: builderState.editingIndex - 1,
+        });
       }
 
       await handleChange(updated);
     },
-    [builderState, data, handleChange, resetForms, updateBuilderState],
+    [builderState, data, handleChange, resetForms, updateBuilderState]
   );
 
   const savePair = useCallback(async () => {
@@ -174,7 +175,8 @@ export function useObsessionsFlow({
     }
 
     const now = new Date().toISOString();
-    const index = builderState.mode === 'edit' ? builderState.editingIndex ?? 0 : data.obsessions.length;
+    const index =
+      builderState.mode === 'edit' ? (builderState.editingIndex ?? 0) : data.obsessions.length;
     const existingObsession = data.obsessions[index];
     const existingCompulsion = data.compulsions[index];
 
@@ -218,7 +220,17 @@ export function useObsessionsFlow({
     resetForms();
     updateBuilderState({ mode: 'closed', step: 'obsession', editingIndex: null });
     await handleChange(updated);
-  }, [builderState, compulsionForm, data, handleChange, obsessionForm, resetForms, updateBuilderState, validateCompulsion, setFieldErrors]);
+  }, [
+    builderState,
+    compulsionForm,
+    data,
+    handleChange,
+    obsessionForm,
+    resetForms,
+    updateBuilderState,
+    validateCompulsion,
+    setFieldErrors,
+  ]);
 
   const goToCompulsionStep = useCallback(() => setStep('compulsion'), [setStep]);
 
@@ -243,7 +255,7 @@ export function useObsessionsFlow({
       emptyStateVisible: !data.obsessions.length && builderState.mode === 'closed',
       isSaving,
     }),
-    [builderState.mode, data.obsessions.length, isSaving],
+    [builderState.mode, data.obsessions.length, isSaving]
   );
 
   return {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,7 @@ export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: ''
+      errorId: '',
     };
   }
 
@@ -61,21 +61,25 @@ export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
     return {
       hasError: true,
       error,
-      errorId: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      errorId: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error with structured logging
-    logger.error('Error Boundary caught an error', {
-      component: 'ErrorBoundary',
-      errorId: this.state.errorId,
-      componentStack: errorInfo.componentStack
-    }, error);
+    logger.error(
+      'Error Boundary caught an error',
+      {
+        component: 'ErrorBoundary',
+        errorId: this.state.errorId,
+        componentStack: errorInfo.componentStack,
+      },
+      error
+    );
 
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // Call optional error handler
@@ -114,7 +118,7 @@ export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
         hasError: false,
         error: null,
         errorInfo: null,
-        errorId: ''
+        errorId: '',
       });
     }, 100);
   };
@@ -133,7 +137,7 @@ export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
       operation: 'handleReportError',
       errorId,
       url: window.location.href,
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     });
 
     const jsonPayload = JSON.stringify({
@@ -167,11 +171,15 @@ export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
           sent = true;
         }
       } catch (err) {
-        logger.error('Failed to report error via ErrorBoundary', {
-          component: 'ErrorBoundary',
-          operation: 'handleReportError',
-          errorId,
-        }, err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          'Failed to report error via ErrorBoundary',
+          {
+            component: 'ErrorBoundary',
+            operation: 'handleReportError',
+            errorId,
+          },
+          err instanceof Error ? err : new Error(String(err))
+        );
       }
 
       if (toastContext) {
@@ -200,29 +208,27 @@ export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
 
       // Default error UI
       return (
-        <Card className="mx-auto max-w-2xl mt-8 border-destructive/20 bg-destructive/5">
+        <Card className="border-destructive/20 bg-destructive/5 mx-auto mt-8 max-w-2xl">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-              <AlertTriangle className="h-6 w-6 text-destructive" />
+            <div className="bg-destructive/10 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+              <AlertTriangle className="text-destructive h-6 w-6" />
             </div>
-            <CardTitle className="text-xl font-semibold text-destructive">
+            <CardTitle className="text-destructive text-xl font-semibold">
               Something went wrong
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">
-              We encountered an error while displaying this content. Don&apos;t worry - your data is safe.
+            <p className="text-muted-foreground mt-2 text-sm">
+              We encountered an error while displaying this content. Don&apos;t worry - your data is
+              safe.
             </p>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-2 justify-center">
-              <Button
-                onClick={this.handleRetry}
-                className="flex items-center gap-2"
-              >
+            <div className="flex flex-col justify-center gap-2 sm:flex-row">
+              <Button onClick={this.handleRetry} className="flex items-center gap-2">
                 <RefreshCw className="h-4 w-4" />
                 Try Again
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={() => window.location.reload()}
@@ -234,36 +240,36 @@ export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
             </div>
 
             {showErrorDetails && error && (
-              <details className="mt-4 p-4 bg-muted rounded-lg">
-                <summary className="cursor-pointer text-sm font-semibold text-foreground hover:text-primary">
+              <details className="bg-muted mt-4 rounded-lg p-4">
+                <summary className="text-foreground hover:text-primary cursor-pointer text-sm font-semibold">
                   Technical Details (click to expand)
                 </summary>
                 <div className="mt-3 space-y-2">
                   <div>
-                    <h4 className="text-sm font-semibold text-foreground">Error Message:</h4>
-                    <code className="text-sm bg-background p-2 rounded border block mt-1 text-destructive">
+                    <h4 className="text-foreground text-sm font-semibold">Error Message:</h4>
+                    <code className="bg-background text-destructive mt-1 block rounded border p-2 text-sm">
                       {error.message}
                     </code>
                   </div>
-                  
+
                   {error.stack && (
                     <div>
-                      <h4 className="text-sm font-semibold text-foreground">Stack Trace:</h4>
-                      <pre className="text-sm bg-background p-2 rounded border mt-1 overflow-auto max-h-40 text-muted-foreground">
+                      <h4 className="text-foreground text-sm font-semibold">Stack Trace:</h4>
+                      <pre className="bg-background text-muted-foreground mt-1 max-h-40 overflow-auto rounded border p-2 text-sm">
                         {error.stack}
                       </pre>
                     </div>
                   )}
-                  
+
                   {errorInfo?.componentStack && (
                     <div>
-                      <h4 className="text-sm font-semibold text-foreground">Component Stack:</h4>
-                      <pre className="text-sm bg-background p-2 rounded border mt-1 overflow-auto max-h-40 text-muted-foreground">
+                      <h4 className="text-foreground text-sm font-semibold">Component Stack:</h4>
+                      <pre className="bg-background text-muted-foreground mt-1 max-h-40 overflow-auto rounded border p-2 text-sm">
                         {errorInfo.componentStack}
                       </pre>
                     </div>
                   )}
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -275,8 +281,8 @@ export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
                 </div>
               </details>
             )}
-            
-            <p className="text-sm text-muted-foreground text-center">
+
+            <p className="text-muted-foreground text-center text-sm">
               If this error continues, please refresh the page or contact support.
             </p>
           </CardContent>
@@ -315,7 +321,7 @@ export function withErrorBoundary<P extends object>(
   );
 
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
-  
+
   return WrappedComponent;
 }
 
@@ -323,11 +329,15 @@ export function withErrorBoundary<P extends object>(
 export function useErrorHandler() {
   return (error: Error, errorInfo?: ErrorInfo) => {
     // Log error with structured logging
-    logger.error('Error caught by useErrorHandler hook', {
-      component: 'useErrorHandler',
-      componentStack: errorInfo?.componentStack
-    }, error);
-    
+    logger.error(
+      'Error caught by useErrorHandler hook',
+      {
+        component: 'useErrorHandler',
+        componentStack: errorInfo?.componentStack,
+      },
+      error
+    );
+
     // Throw the error to trigger the nearest error boundary
     throw error;
   };

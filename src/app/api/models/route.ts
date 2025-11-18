@@ -23,7 +23,7 @@ interface ModelsResponse {
 
 /**
  * GET /api/models - Returns available AI models
- * 
+ *
  * @returns {ModelsResponse} List of available models with metadata
  */
 export const GET = withApiMiddleware(async (_request, context, _params) => {
@@ -35,21 +35,29 @@ export const GET = withApiMiddleware(async (_request, context, _params) => {
 
     const availableModels: ModelInfo[] = [DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID].map((id) => ({
       id,
-      name: id === ANALYTICAL_MODEL_ID ? `${getModelDisplayName(id)} (Deep Analysis)` : getModelDisplayName(id),
+      name:
+        id === ANALYTICAL_MODEL_ID
+          ? `${getModelDisplayName(id)} (Deep Analysis)`
+          : getModelDisplayName(id),
       provider: providerForId(id),
       maxTokens: 32000,
       category: id === ANALYTICAL_MODEL_ID ? 'featured' : 'production',
-      description: id === ANALYTICAL_MODEL_ID ? 'Advanced model for CBT analysis and session reports' : 'Fast model for regular conversations'
+      description:
+        id === ANALYTICAL_MODEL_ID
+          ? 'Advanced model for CBT analysis and session reports'
+          : 'Fast model for regular conversations',
     }));
 
     const response: ModelsResponse = {
       models: availableModels,
       total: availableModels.length,
-      note: 'Models are selected based on content type and availability'
+      note: 'Models are selected based on content type and availability',
     };
 
     return createSuccessResponse(response, { requestId: context.requestId });
   } catch (error) {
-    return createServerErrorResponse(error as Error, context.requestId, { endpoint: '/api/models' });
+    return createServerErrorResponse(error as Error, context.requestId, {
+      endpoint: '/api/models',
+    });
   }
 });

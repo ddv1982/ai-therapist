@@ -1,10 +1,14 @@
 import { AnyAction, MiddlewareAPI } from '@reduxjs/toolkit';
-let sessionHeartbeatMiddleware: (api: MiddlewareAPI) => (next: (action: AnyAction) => AnyAction) => (action: AnyAction) => AnyAction;
+let sessionHeartbeatMiddleware: (
+  api: MiddlewareAPI
+) => (next: (action: AnyAction) => AnyAction) => (action: AnyAction) => AnyAction;
 let cleanupHeartbeat: () => void;
 
 // Mock sessionsApi with minimal surface used by middleware
 jest.mock('@/store/slices/sessions-api', () => {
-  const initiate = jest.fn((_arg?: unknown, _opts?: unknown) => ({ type: 'sessionsApi/executeQuery/pending' }));
+  const initiate = jest.fn((_arg?: unknown, _opts?: unknown) => ({
+    type: 'sessionsApi/executeQuery/pending',
+  }));
   return {
     sessionsApi: {
       endpoints: {
@@ -31,15 +35,22 @@ describe('sessionHeartbeatMiddleware', () => {
     jest.useRealTimers();
   });
 
-  const setCurrent = (payload: unknown): AnyAction => ({ type: 'sessions/setCurrentSession', payload });
+  const setCurrent = (payload: unknown): AnyAction => ({
+    type: 'sessions/setCurrentSession',
+    payload,
+  });
   const next = jest.fn((a: AnyAction) => a);
-  const makeApi = () => ({ dispatch: jest.fn(), getState: jest.fn(() => ({})) }) as unknown as MiddlewareAPI;
+  const makeApi = () =>
+    ({ dispatch: jest.fn(), getState: jest.fn(() => ({})) }) as unknown as MiddlewareAPI;
 
   it('triggers initial heartbeat and schedules interval when session set', () => {
     const api = makeApi();
     const run = sessionHeartbeatMiddleware(api)(next);
     run(setCurrent('s1'));
-    expect(sessionsApi.endpoints.getCurrentSession.initiate).toHaveBeenCalledWith(undefined, { subscribe: false, forceRefetch: true });
+    expect(sessionsApi.endpoints.getCurrentSession.initiate).toHaveBeenCalledWith(undefined, {
+      subscribe: false,
+      forceRefetch: true,
+    });
     expect(api.dispatch).toHaveBeenCalled();
     const callsBefore = (api.dispatch as jest.Mock).mock.calls.length;
     jest.advanceTimersByTime(10 * 60 * 1000);
@@ -80,5 +91,3 @@ describe('sessionHeartbeatMiddleware', () => {
     expect(callsAfter).toBe(callsBefore);
   });
 });
-
-

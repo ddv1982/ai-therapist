@@ -9,18 +9,20 @@ import type { ConvexUser, ConvexSession } from '@/types/convex';
 export const GET = withAuth(async (_request, context) => {
   try {
     logger.debug('Fetching current active session', context);
-    
+
     // Use Clerk ID as the primary user identity
     const clerkId = (context.userInfo as { clerkId?: string }).clerkId ?? '';
 
     // Find the most recent active session with messages
     const client = getConvexHttpClient();
-    const user = await client.query(anyApi.users.getByClerkId, { clerkId }) as ConvexUser | null;
-    const sessions = user ? await client.query(anyApi.sessions.listByUser, { userId: user._id }) as ConvexSession[] : [];
+    const user = (await client.query(anyApi.users.getByClerkId, { clerkId })) as ConvexUser | null;
+    const sessions = user
+      ? ((await client.query(anyApi.sessions.listByUser, { userId: user._id })) as ConvexSession[])
+      : [];
     const currentSession = Array.isArray(sessions)
       ? sessions
-          .filter(s => s.status === 'active')
-          .sort((a, b) => (b.updatedAt - a.updatedAt) || (b.createdAt - a.createdAt))[0]
+          .filter((s) => s.status === 'active')
+          .sort((a, b) => b.updatedAt - a.updatedAt || b.createdAt - a.createdAt)[0]
       : null;
 
     if (!currentSession) {
@@ -41,40 +43,49 @@ export const GET = withAuth(async (_request, context) => {
     logger.info('Current session found', {
       ...context,
       sessionId: currentSession._id,
-      messageCount: currentSession.messageCount
+      messageCount: currentSession.messageCount,
     });
 
     return createSuccessResponse({ currentSession: sessionInfo }, { requestId: context.requestId });
   } catch {
-    return createErrorResponse('Failed to fetch current session', 500, { requestId: context.requestId });
+    return createErrorResponse('Failed to fetch current session', 500, {
+      requestId: context.requestId,
+    });
   }
 });
 
 const setCurrentSessionSchema = z.object({ sessionId: z.string() });
 
-export const POST = withValidation(setCurrentSessionSchema, async (_request: NextRequest, context, validated) => {
-  try {
-    logger.debug('Setting current active session', context);
-    const { sessionId } = validated;
+export const POST = withValidation(
+  setCurrentSessionSchema,
+  async (_request: NextRequest, context, validated) => {
+    try {
+      logger.debug('Setting current active session', context);
+      const { sessionId } = validated;
 
-    // Update the session's updatedAt to mark it as current
-    const client = getConvexHttpClient();
-    const session = await client.mutation(anyApi.sessions.update, {
-      sessionId,
-      status: 'active',
-    }) as ConvexSession;
+      // Update the session's updatedAt to mark it as current
+      const client = getConvexHttpClient();
+      const session = (await client.mutation(anyApi.sessions.update, {
+        sessionId,
+        status: 'active',
+      })) as ConvexSession;
 
-    logger.info('Current session updated', {
-      ...context,
-      sessionId: session._id
-    });
+      logger.info('Current session updated', {
+        ...context,
+        sessionId: session._id,
+      });
 
-    return createSuccessResponse({ success: true, session }, { requestId: context.requestId });
-  } catch (error) {
-    const err = error as Error;
-    if (typeof err.message === 'string' && err.message.includes('Record to update not found')) {
-      return createErrorResponse('Session not found or access denied', 404, { requestId: context.requestId });
+      return createSuccessResponse({ success: true, session }, { requestId: context.requestId });
+    } catch (error) {
+      const err = error as Error;
+      if (typeof err.message === 'string' && err.message.includes('Record to update not found')) {
+        return createErrorResponse('Session not found or access denied', 404, {
+          requestId: context.requestId,
+        });
+      }
+      return createErrorResponse('Failed to set current session', 500, {
+        requestId: context.requestId,
+      });
     }
-    return createErrorResponse('Failed to set current session', 500, { requestId: context.requestId });
   }
-});
+);

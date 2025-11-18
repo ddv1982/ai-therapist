@@ -1,4 +1,8 @@
-import { extractTableDataFromTokens, convertToColumnConfig, convertToRowData } from '@/lib/ui/table-data-extractor';
+import {
+  extractTableDataFromTokens,
+  convertToColumnConfig,
+  convertToRowData,
+} from '@/lib/ui/table-data-extractor';
 
 type Token = { type: string; tag: string; content: string; children?: Token[] };
 
@@ -75,5 +79,3 @@ describe('table-data-extractor', () => {
     expect(rows).toEqual([{ col_0: 'Row 1 Col 1', col_1: 'High' }]);
   });
 });
-
-

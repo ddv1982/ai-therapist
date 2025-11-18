@@ -9,16 +9,20 @@ import { generateText } from 'ai';
 import { defaultModel, languageModels } from '@/ai/providers';
 import type { AppLocale } from '@/i18n/config';
 
-export async function generateChatTitle(firstMessage: string, locale: AppLocale = 'en'): Promise<string> {
+export async function generateChatTitle(
+  firstMessage: string,
+  locale: AppLocale = 'en'
+): Promise<string> {
   try {
-    const prompt = locale === 'nl'
-      ? `Vat het volgende bericht samen tot een korte chattitel in het Nederlands.
+    const prompt =
+      locale === 'nl'
+        ? `Vat het volgende bericht samen tot een korte chattitel in het Nederlands.
 - Maximaal 80 tekens.
 - Geen aanhalingstekens of dubbele punten.
 - Alleen de titel als output.
 
 Bericht: ${firstMessage}`
-      : `Summarize the following user message into a short chat title in English.
+        : `Summarize the following user message into a short chat title in English.
 - Do not exceed 80 characters.
 - Do not use quotes or colons.
 - Output only the title.

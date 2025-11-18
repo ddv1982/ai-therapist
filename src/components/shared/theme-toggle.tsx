@@ -26,10 +26,12 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className={therapeuticInteractive.iconButtonMedium + ' relative group items-center justify-center'}
+      className={
+        therapeuticInteractive.iconButtonMedium + ' group relative items-center justify-center'
+      }
       title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
-      <div className="relative h-6 w-6 z-10 flex items-center justify-center">
+      <div className="relative z-10 flex h-6 w-6 items-center justify-center">
         <AnimatePresence mode="wait">
           {theme === 'light' ? (
             <motion.div
@@ -41,7 +43,7 @@ export function ThemeToggle() {
               transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="absolute inset-0 m-auto flex items-center justify-center"
             >
-              <Sun className="h-6 w-6 text-primary" />
+              <Sun className="text-primary h-6 w-6" />
             </motion.div>
           ) : (
             <motion.div
@@ -53,7 +55,7 @@ export function ThemeToggle() {
               transition={{ duration: 0.3, ease: 'easeInOut' }}
               className="absolute inset-0 m-auto flex items-center justify-center"
             >
-              <Moon className="h-6 w-6 text-primary" />
+              <Moon className="text-primary h-6 w-6" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -62,7 +64,7 @@ export function ThemeToggle() {
 
       {/* Animated background glow */}
       <motion.div
-        className="absolute inset-0 rounded-full bg-muted pointer-events-none"
+        className="bg-muted pointer-events-none absolute inset-0 rounded-full"
         initial={{ opacity: 0 }}
         whileHover={{ opacity: 0.8 }}
         transition={{ duration: 0.2 }}

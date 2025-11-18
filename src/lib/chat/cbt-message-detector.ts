@@ -7,13 +7,13 @@ export interface CBTMessageSignature {
   hasAutomaticThoughts: boolean;
   hasSchemaAnalysis: boolean;
   hasReflection: boolean;
-  
+
   // Enhanced detection for quantified self-assessments
   hasQuantifiedSelfAssessment: boolean;
   hasUserProvidedRatings: boolean;
   hasSchemaReflectionContent: boolean;
   schemaReflectionDepth: 'none' | 'minimal' | 'moderate' | 'comprehensive';
-  
+
   confidence: number; // 0-1 score indicating confidence this is a CBT message
 }
 
@@ -21,7 +21,7 @@ export interface CBTMessageSignature {
 const CBT_HEADER_PATTERNS = [
   /🌟\s*CBT\s+Diary\s+Entry/i,
   /CBT\s+Diary\s+Entry\s+with/i,
-  /#\s*🌟\s*CBT\s+Diary/i
+  /#\s*🌟\s*CBT\s+Diary/i,
 ];
 
 // Section headers that are characteristic of CBT diary entries
@@ -33,20 +33,14 @@ const CBT_SECTION_PATTERNS = [
   /##?\s*Challenge\s+Questions/i,
   /##?\s*Final\s+Reflection/i,
   /##?\s*🔄\s*Rational\s+Thoughts/i,
-  /##?\s*✨\s*Final\s+Reflection/i
+  /##?\s*✨\s*Final\s+Reflection/i,
 ];
 
 // Patterns for emotion ratings (e.g., "- Fear: 7/10", "- Anxiety: 5/10")
-const EMOTION_RATING_PATTERNS = [
-  /-\s*\w+:\s*\d+\/10/g,
-  /-\s*[A-Z][a-z]+:\s*\d+\/10/g
-];
+const EMOTION_RATING_PATTERNS = [/-\s*\w+:\s*\d+\/10/g, /-\s*[A-Z][a-z]+:\s*\d+\/10/g];
 
 // Patterns for automatic thoughts with credibility ratings
-const AUTOMATIC_THOUGHT_PATTERNS = [
-  /-\s*"[^"]+"\s*\*\(\d+\/10\)\*/g,
-  /\*\(\d+\/10\)\*/g
-];
+const AUTOMATIC_THOUGHT_PATTERNS = [/-\s*"[^"]+"\s*\*\(\d+\/10\)\*/g, /\*\(\d+\/10\)\*/g];
 
 // Patterns for schema analysis elements
 const SCHEMA_ANALYSIS_PATTERNS = [
@@ -55,28 +49,28 @@ const SCHEMA_ANALYSIS_PATTERNS = [
   /Behavioral\s+Patterns/i,
   /Confirming\s+behaviors:/i,
   /Avoidant\s+behaviors:/i,
-  /Schema\s+Modes/i
+  /Schema\s+Modes/i,
 ];
 
 // Enhanced patterns for quantified self-assessments
 const QUANTIFIED_SELF_PATTERNS = [
-  /I feel.*\d+\/10/i,  // "I feel anxiety at 7/10"
-  /my.*level.*is.*\d+/i,  // "My stress level is 8"
-  /I would rate.*\d+/i,  // "I would rate this feeling as 6"
-  /on a scale.*\d+/i,  // "On a scale of 1-10, I'm at 7"
-  /I assess.*\d+/i,  // "I assess my confidence as 4"
-  /personally.*\d+.*out of/i,  // "Personally I'd say 6 out of 10"
-  /\d+\/10.*intensity/i,  // "7/10 intensity"
-  /feeling.*\d+.*percent/i  // "feeling about 80 percent confident"
+  /I feel.*\d+\/10/i, // "I feel anxiety at 7/10"
+  /my.*level.*is.*\d+/i, // "My stress level is 8"
+  /I would rate.*\d+/i, // "I would rate this feeling as 6"
+  /on a scale.*\d+/i, // "On a scale of 1-10, I'm at 7"
+  /I assess.*\d+/i, // "I assess my confidence as 4"
+  /personally.*\d+.*out of/i, // "Personally I'd say 6 out of 10"
+  /\d+\/10.*intensity/i, // "7/10 intensity"
+  /feeling.*\d+.*percent/i, // "feeling about 80 percent confident"
 ];
 
 // Enhanced patterns for user-provided ratings (take precedence over AI inference)
 const USER_RATING_PATTERNS = [
-  /-\s*\w+:\s*\d+\/10/g,  // Structured ratings like "- Anxiety: 7/10"
-  /\*\(\d+\/10\)\*/g,  // Credibility ratings like "*(7/10)*"
-  /I rate this as \d+/i,  // "I rate this as 6"
-  /self-assessment:\s*\d+/i,  // "self-assessment: 8"
-  /my rating:\s*\d+/i  // "my rating: 5"
+  /-\s*\w+:\s*\d+\/10/g, // Structured ratings like "- Anxiety: 7/10"
+  /\*\(\d+\/10\)\*/g, // Credibility ratings like "*(7/10)*"
+  /I rate this as \d+/i, // "I rate this as 6"
+  /self-assessment:\s*\d+/i, // "self-assessment: 8"
+  /my rating:\s*\d+/i, // "my rating: 5"
 ];
 
 // Comprehensive schema reflection patterns
@@ -92,7 +86,7 @@ const ENHANCED_SCHEMA_REFLECTION_PATTERNS = [
   /protective.*mechanisms.*learned/i,
   /inner.*critic.*voice/i,
   /vulnerable.*child.*part/i,
-  /healing.*journey.*insights/i
+  /healing.*journey.*insights/i,
 ];
 
 // Patterns for reflection elements
@@ -102,7 +96,7 @@ const REFLECTION_PATTERNS = [
   /Personal\s+Self-Assessment/i,
   /Guided\s+Reflection\s+Insights/i,
   /Updated\s+Feelings/i,
-  /Alternative\s+Responses/i
+  /Alternative\s+Responses/i,
 ];
 
 /**
@@ -118,18 +112,18 @@ export function analyzeCBTMessage(content: string): CBTMessageSignature {
     hasAutomaticThoughts: false,
     hasSchemaAnalysis: false,
     hasReflection: false,
-    
+
     // Enhanced detection fields
     hasQuantifiedSelfAssessment: false,
     hasUserProvidedRatings: false,
     hasSchemaReflectionContent: false,
     schemaReflectionDepth: 'none',
-    
-    confidence: 0
+
+    confidence: 0,
   };
 
   // Check for CBT header patterns
-  signature.hasCBTHeader = CBT_HEADER_PATTERNS.some(pattern => pattern.test(content));
+  signature.hasCBTHeader = CBT_HEADER_PATTERNS.some((pattern) => pattern.test(content));
 
   // Check for CBT section patterns (need at least 3 for high confidence)
   const sectionMatches = CBT_SECTION_PATTERNS.reduce((count, pattern) => {
@@ -138,13 +132,15 @@ export function analyzeCBTMessage(content: string): CBTMessageSignature {
   signature.hasCBTSections = sectionMatches >= 3;
 
   // Check for emotion ratings
-  signature.hasEmotionRatings = EMOTION_RATING_PATTERNS.some(pattern => {
+  signature.hasEmotionRatings = EMOTION_RATING_PATTERNS.some((pattern) => {
     const matches = content.match(pattern);
     return matches && matches.length >= 2; // Need at least 2 emotion ratings
   });
 
   // Check for automatic thoughts with credibility ratings
-  signature.hasAutomaticThoughts = AUTOMATIC_THOUGHT_PATTERNS.some(pattern => pattern.test(content));
+  signature.hasAutomaticThoughts = AUTOMATIC_THOUGHT_PATTERNS.some((pattern) =>
+    pattern.test(content)
+  );
 
   // Check for schema analysis elements
   const schemaMatches = SCHEMA_ANALYSIS_PATTERNS.reduce((count, pattern) => {
@@ -157,20 +153,22 @@ export function analyzeCBTMessage(content: string): CBTMessageSignature {
     return count + (pattern.test(content) ? 1 : 0);
   }, 0);
   signature.hasReflection = reflectionMatches >= 2;
-  
+
   // Enhanced detection: Quantified self-assessments
-  signature.hasQuantifiedSelfAssessment = QUANTIFIED_SELF_PATTERNS.some(pattern => pattern.test(content));
-  
+  signature.hasQuantifiedSelfAssessment = QUANTIFIED_SELF_PATTERNS.some((pattern) =>
+    pattern.test(content)
+  );
+
   // Enhanced detection: User-provided ratings (prioritized over AI inference)
-  signature.hasUserProvidedRatings = USER_RATING_PATTERNS.some(pattern => pattern.test(content));
-  
+  signature.hasUserProvidedRatings = USER_RATING_PATTERNS.some((pattern) => pattern.test(content));
+
   // Enhanced detection: Schema reflection content
   const schemaReflectionMatches = ENHANCED_SCHEMA_REFLECTION_PATTERNS.reduce((count, pattern) => {
     return count + (pattern.test(content) ? 1 : 0);
   }, 0);
-  
+
   signature.hasSchemaReflectionContent = schemaReflectionMatches > 0;
-  
+
   // Assess schema reflection depth
   if (schemaReflectionMatches >= 8) {
     signature.schemaReflectionDepth = 'comprehensive';
@@ -184,39 +182,45 @@ export function analyzeCBTMessage(content: string): CBTMessageSignature {
 
   // Calculate confidence score (0-1) with enhanced detection
   let confidenceScore = 0;
-  
+
   // Strong indicators (high weight) - User assessments are premium data
   if (signature.hasCBTHeader) confidenceScore += 0.25;
   if (signature.hasCBTSections) confidenceScore += 0.2;
   if (signature.hasEmotionRatings) confidenceScore += 0.15;
   if (signature.hasUserProvidedRatings) confidenceScore += 0.2; // User ratings are premium
   if (signature.hasQuantifiedSelfAssessment) confidenceScore += 0.15; // Self-quantification is valuable
-  
+
   // Medium indicators
   if (signature.hasAutomaticThoughts) confidenceScore += 0.1;
   if (signature.hasSchemaAnalysis) confidenceScore += 0.08;
-  
+
   // Schema reflection bonuses (high therapeutic value)
   if (signature.hasSchemaReflectionContent) {
     switch (signature.schemaReflectionDepth) {
-      case 'comprehensive': confidenceScore += 0.25; break;
-      case 'moderate': confidenceScore += 0.15; break;
-      case 'minimal': confidenceScore += 0.08; break;
+      case 'comprehensive':
+        confidenceScore += 0.25;
+        break;
+      case 'moderate':
+        confidenceScore += 0.15;
+        break;
+      case 'minimal':
+        confidenceScore += 0.08;
+        break;
     }
   }
-  
+
   // Supporting indicators
   if (signature.hasReflection) confidenceScore += 0.04;
-  
+
   // Bonus for having multiple premium indicators (user assessments + structure)
   const premiumIndicators = [
     signature.hasCBTHeader,
     signature.hasCBTSections,
     signature.hasUserProvidedRatings,
     signature.hasQuantifiedSelfAssessment,
-    signature.hasSchemaReflectionContent
+    signature.hasSchemaReflectionContent,
   ].filter(Boolean).length;
-  
+
   if (premiumIndicators >= 3) {
     confidenceScore += 0.1; // Strong multi-indicator bonus
   } else if (premiumIndicators >= 2) {
@@ -246,16 +250,16 @@ export function isCBTDiaryMessage(content: string, threshold: number = 0.7): boo
  */
 export function getCBTIdentificationReason(signature: CBTMessageSignature): string {
   const reasons: string[] = [];
-  
+
   // Prioritize user-provided assessments (premium indicators)
   if (signature.hasUserProvidedRatings) reasons.push('user-provided ratings (premium data)');
   if (signature.hasQuantifiedSelfAssessment) reasons.push('quantified self-assessments');
-  
+
   // Schema reflection content
   if (signature.hasSchemaReflectionContent) {
     reasons.push(`schema reflection (${signature.schemaReflectionDepth} depth)`);
   }
-  
+
   // Traditional CBT indicators
   if (signature.hasCBTHeader) reasons.push('CBT diary header');
   if (signature.hasCBTSections) reasons.push('structured CBT sections');
@@ -263,10 +267,10 @@ export function getCBTIdentificationReason(signature: CBTMessageSignature): stri
   if (signature.hasAutomaticThoughts) reasons.push('automatic thoughts with credibility');
   if (signature.hasSchemaAnalysis) reasons.push('schema analysis elements');
   if (signature.hasReflection) reasons.push('therapeutic reflection content');
-  
+
   if (reasons.length === 0) return 'No CBT indicators found';
   if (reasons.length === 1) return `Contains ${reasons[0]}`;
-  
+
   const lastReason = reasons.pop();
   return `Contains ${reasons.join(', ')} and ${lastReason}`;
 }
@@ -278,18 +282,15 @@ export function getCBTIdentificationReason(signature: CBTMessageSignature): stri
  */
 export function extractCBTDate(content: string): string | null {
   // Look for patterns like "**Date:** 2024-01-15" or "Date: January 15, 2024"
-  const datePatterns = [
-    /\*\*Date:\*\*\s*([^\n\r]+)/i,
-    /Date:\s*([^\n\r]+)/i
-  ];
-  
+  const datePatterns = [/\*\*Date:\*\*\s*([^\n\r]+)/i, /Date:\s*([^\n\r]+)/i];
+
   for (const pattern of datePatterns) {
     const match = content.match(pattern);
     if (match && match[1]) {
       return match[1].trim();
     }
   }
-  
+
   return null;
 }
 
@@ -299,7 +300,7 @@ export function extractCBTDate(content: string): string | null {
  * @returns boolean indicating if schema reflection is present
  */
 export function hasSchemaReflection(content: string): boolean {
-  return ENHANCED_SCHEMA_REFLECTION_PATTERNS.some(pattern => pattern.test(content));
+  return ENHANCED_SCHEMA_REFLECTION_PATTERNS.some((pattern) => pattern.test(content));
 }
 
 /**
@@ -309,8 +310,10 @@ export function hasSchemaReflection(content: string): boolean {
  * @returns boolean indicating presence of user self-assessments
  */
 export function hasUserQuantifiedAssessments(content: string): boolean {
-  return QUANTIFIED_SELF_PATTERNS.some(pattern => pattern.test(content)) ||
-         USER_RATING_PATTERNS.some(pattern => pattern.test(content));
+  return (
+    QUANTIFIED_SELF_PATTERNS.some((pattern) => pattern.test(content)) ||
+    USER_RATING_PATTERNS.some((pattern) => pattern.test(content))
+  );
 }
 
 /**
@@ -318,47 +321,53 @@ export function hasUserQuantifiedAssessments(content: string): boolean {
  * @param content - The message content
  * @returns array of extracted ratings with context
  */
-export function extractUserRatings(content: string): Array<{rating: number; context: string; type: 'emotion' | 'credibility' | 'general'}> {
-  const ratings: Array<{rating: number; context: string; type: 'emotion' | 'credibility' | 'general'}> = [];
-  
+export function extractUserRatings(
+  content: string
+): Array<{ rating: number; context: string; type: 'emotion' | 'credibility' | 'general' }> {
+  const ratings: Array<{
+    rating: number;
+    context: string;
+    type: 'emotion' | 'credibility' | 'general';
+  }> = [];
+
   // Extract structured emotion ratings (- Emotion: 7/10)
   const emotionMatches = content.match(/-\s*(\w+):\s*(\d+)\/10/g);
   if (emotionMatches) {
-    emotionMatches.forEach(match => {
+    emotionMatches.forEach((match) => {
       const [, emotion, rating] = match.match(/-\s*(\w+):\s*(\d+)\/10/) || [];
       if (emotion && rating) {
         ratings.push({
           rating: parseInt(rating),
           context: emotion,
-          type: 'emotion'
+          type: 'emotion',
         });
       }
     });
   }
-  
+
   // Extract credibility ratings (*(7/10)*)
   const credibilityMatches = content.match(/\*(\d+)\/10\*/g);
   if (credibilityMatches) {
-    credibilityMatches.forEach(match => {
+    credibilityMatches.forEach((match) => {
       const rating = match.match(/\*(\d+)\/10\*/)?.[1];
       if (rating) {
         ratings.push({
           rating: parseInt(rating),
           context: 'thought credibility',
-          type: 'credibility'
+          type: 'credibility',
         });
       }
     });
   }
-  
+
   // Extract general self-assessments
   const generalPatterns = [
-    {pattern: /I feel.*?(\d+)\/10/i, type: 'emotion' as const},
-    {pattern: /my.*level.*is.*(\d+)/i, type: 'general' as const},
-    {pattern: /I would rate.*?(\d+)/i, type: 'general' as const}
+    { pattern: /I feel.*?(\d+)\/10/i, type: 'emotion' as const },
+    { pattern: /my.*level.*is.*(\d+)/i, type: 'general' as const },
+    { pattern: /I would rate.*?(\d+)/i, type: 'general' as const },
   ];
-  
-  generalPatterns.forEach(({pattern, type}) => {
+
+  generalPatterns.forEach(({ pattern, type }) => {
     const match = content.match(pattern);
     if (match && match[1]) {
       const rating = parseInt(match[1]);
@@ -366,11 +375,11 @@ export function extractUserRatings(content: string): Array<{rating: number; cont
         ratings.push({
           rating,
           context: 'self-assessment',
-          type
+          type,
         });
       }
     }
   });
-  
+
   return ratings;
 }

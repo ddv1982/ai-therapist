@@ -1,16 +1,7 @@
 import type { CBTSessionSummaryData } from '@/components/ui/cbt-session-summary-card';
-import type {
-  ActionPlanData,
-  EmotionData,
-  ThoughtData,
-} from '@/types/therapy';
+import type { ActionPlanData, EmotionData, ThoughtData } from '@/types/therapy';
 import { CBT_STEP_CONFIG } from './config';
-import {
-  CBT_STEP_ORDER,
-  type CBTFlowContext,
-  type CBTFlowState,
-  type CBTStepId,
-} from './types';
+import { CBT_STEP_ORDER, type CBTFlowContext, type CBTFlowState, type CBTStepId } from './types';
 
 function toIsoDateLabel(timestamp?: string | null): string {
   if (!timestamp) return new Date().toLocaleDateString();
@@ -23,7 +14,15 @@ function toIsoDateLabel(timestamp?: string | null): string {
 
 function emotionList(emotions?: EmotionData | null): Array<{ emotion: string; rating: number }> {
   if (!emotions) return [];
-  const coreKeys: Array<keyof EmotionData> = ['fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt'];
+  const coreKeys: Array<keyof EmotionData> = [
+    'fear',
+    'anger',
+    'sadness',
+    'joy',
+    'anxiety',
+    'shame',
+    'guilt',
+  ];
   const result: Array<{ emotion: string; rating: number }> = [];
   for (const key of coreKeys) {
     const value = emotions[key];
@@ -32,7 +31,11 @@ function emotionList(emotions?: EmotionData | null): Array<{ emotion: string; ra
       result.push({ emotion: label.charAt(0).toUpperCase() + label.slice(1), rating: value });
     }
   }
-  if (emotions.other && typeof emotions.otherIntensity === 'number' && emotions.otherIntensity > 0) {
+  if (
+    emotions.other &&
+    typeof emotions.otherIntensity === 'number' &&
+    emotions.otherIntensity > 0
+  ) {
     result.push({ emotion: emotions.other, rating: emotions.otherIntensity });
   }
   return result;
@@ -40,10 +43,15 @@ function emotionList(emotions?: EmotionData | null): Array<{ emotion: string; ra
 
 function mapThoughts(thoughts?: ThoughtData[]): Array<{ thought: string; credibility: number }> {
   if (!thoughts || thoughts.length === 0) return [];
-  return thoughts.map((thought) => ({ thought: thought.thought, credibility: thought.credibility }));
+  return thoughts.map((thought) => ({
+    thought: thought.thought,
+    credibility: thought.credibility,
+  }));
 }
 
-function mapRationalThoughts(context: CBTFlowContext): Array<{ thought: string; confidence: number }> {
+function mapRationalThoughts(
+  context: CBTFlowContext
+): Array<{ thought: string; confidence: number }> {
   const rational = context.rationalThoughts?.rationalThoughts;
   if (!rational || rational.length === 0) return [];
   return rational.map((thought) => ({ thought: thought.thought, confidence: thought.confidence }));
@@ -83,7 +91,9 @@ export function buildSummaryCardFromState(state: CBTFlowState): CBTSessionSummar
       : undefined,
     rationalThoughts: mapRationalThoughts(context),
     schemaModes: mapSchemaModes(context),
-    finalEmotions: emotionList(context.finalEmotions ?? context.actionPlan?.finalEmotions ?? undefined),
+    finalEmotions: emotionList(
+      context.finalEmotions ?? context.actionPlan?.finalEmotions ?? undefined
+    ),
     newBehaviors: extractNewBehaviours(context.actionPlan),
     completedSteps: mapCompletedSteps(state.completedSteps),
   };
@@ -100,7 +110,9 @@ export function buildMarkdownSummary(state: CBTFlowState): string {
 
   const initialEmotions = emotionList(context.emotions);
   if (initialEmotions.length > 0) {
-    const formatted = initialEmotions.map((emotion) => `${emotion.emotion}: ${emotion.rating}/10`).join(', ');
+    const formatted = initialEmotions
+      .map((emotion) => `${emotion.emotion}: ${emotion.rating}/10`)
+      .join(', ');
     summary += `**Initial Emotions:** ${formatted}\n\n`;
   }
 
@@ -134,9 +146,13 @@ export function buildMarkdownSummary(state: CBTFlowState): string {
     summary += '\n';
   }
 
-  const finalEmotionList = emotionList(context.finalEmotions ?? context.actionPlan?.finalEmotions ?? undefined);
+  const finalEmotionList = emotionList(
+    context.finalEmotions ?? context.actionPlan?.finalEmotions ?? undefined
+  );
   if (finalEmotionList.length > 0) {
-    const formatted = finalEmotionList.map((emotion) => `${emotion.emotion}: ${emotion.rating}/10`).join(', ');
+    const formatted = finalEmotionList
+      .map((emotion) => `${emotion.emotion}: ${emotion.rating}/10`)
+      .join(', ');
     summary += `**Final Emotions:** ${formatted}\n\n`;
   }
 
@@ -144,7 +160,8 @@ export function buildMarkdownSummary(state: CBTFlowState): string {
     summary += `**New Behaviors/Strategies:** ${context.actionPlan.newBehaviors}\n\n`;
   }
 
-  summary += '*This CBT session included structured reflection across situation analysis, emotion tracking, thought examination, core belief exploration, rational thought development, schema mode awareness, and action planning.*';
+  summary +=
+    '*This CBT session included structured reflection across situation analysis, emotion tracking, thought examination, core belief exploration, rational thought development, schema mode awareness, and action planning.*';
 
   return summary;
 }

@@ -395,7 +395,7 @@
   "chat.sidebar.localModelDisabled": "Lokaal model uitgeschakeld",
   "chat.sidebar.localModelTooltipActive": "Lokaal Ollama-model actief",
   "chat.sidebar.localModelTooltipInactive": "Schakel het lokale Ollama-model in",
-  
+
   "chat.sidebar.startNew": "Nieuwe sessie starten",
   "chat.sidebar.noSessions": "Nog geen sessies",
   "chat.sidebar.startPrompt": "Begin een gesprek om te starten",
@@ -449,8 +449,7 @@
   "chat.empty.compassionTitle": "Compassievolle ondersteuning",
   "chat.empty.compassionDesc": "Ontvang empathische, niet-oordelende begeleiding op maat",
   "chat.empty.privateTitle": "Privé & veilig",
-  "chat.empty.privateDesc": "Je gesprekken zijn vertrouwelijk en worden veilig opgeslagen"
-  ,
+  "chat.empty.privateDesc": "Je gesprekken zijn vertrouwelijk en worden veilig opgeslagen",
   "cbt.ai.situationNext": "Dank je wel voor het delen van die situatie. Het begrijpen van de context is heel belangrijk voor CBT-werk.\n\nLaten we nu onderzoeken hoe deze situatie je emotioneel liet voelen.",
   "cbt.ai.emotionsNext": "Deze gevoelens zijn begrijpelijk. Laten we nu bekijken welke gedachten er door je heen gingen.",
   "cbt.ai.thoughtsNext": "Mooi werk met het verkennen van je gedachten. Laten we kijken naar de onderliggende kernopvattingen.",
@@ -467,7 +466,7 @@
   "obsessions.buttonTooltip": "Open obsessies en compulsies tracker",
   "obsessions.tableTitle": "Obsessies en Compulsies Tracker",
   "obsessions.tableSubtitle": "Registreer je obsessies en de compulsies die ze veroorzaken",
-  
+
   "obsessions.obsessions": "Obsessies",
   "obsessions.compulsions": "Compulsies",
   "obsessions.start": "Start",
@@ -489,7 +488,7 @@
   "obsessions.pair": "Paar",
   "obsessions.recorded": "Opgenomen",
   "obsessions.minutes": "minuten",
-  
+
   "obsessions.obsessionLabel": "Obsessie",
   "obsessions.obsessionPlaceholder": "Beschrijf de obsessieve gedachte...",
   "obsessions.intensityLabel": "Intensiteit (1-10)",
@@ -497,7 +496,7 @@
   "obsessions.triggersLabel": "Triggers",
   "obsessions.triggersPlaceholder": "Wat triggert deze obsessie?",
   "obsessions.triggersHelp": "Scheid meerdere triggers met komma's",
-  
+
   "obsessions.compulsionLabel": "Compulsie",
   "obsessions.compulsionPlaceholder": "Beschrijf het compulsieve gedrag...",
   "obsessions.frequencyLabel": "Frequentie (1-10)",
@@ -506,7 +505,7 @@
   "obsessions.durationHelp": "Hoe lang duurt deze compulsie meestal?",
   "obsessions.reliefLabel": "Verlichtingsniveau (1-10)",
   "obsessions.reliefHelp": "Hoeveel verlichting geeft deze compulsie?",
-  
+
   "obsessions.intensityScale.1": "Zeer mild",
   "obsessions.intensityScale.2": "Mild",
   "obsessions.intensityScale.3": "Licht",
@@ -517,7 +516,7 @@
   "obsessions.intensityScale.8": "Zeer sterk",
   "obsessions.intensityScale.9": "Intens",
   "obsessions.intensityScale.10": "Overweldigend",
-  
+
   "obsessions.frequencyScale.1": "Zelden",
   "obsessions.frequencyScale.2": "Af en toe",
   "obsessions.frequencyScale.3": "Soms",
@@ -528,7 +527,7 @@
   "obsessions.frequencyScale.8": "Bijna altijd",
   "obsessions.frequencyScale.9": "Constant",
   "obsessions.frequencyScale.10": "Continu",
-  
+
   "obsessions.reliefScale.1": "Geen verlichting",
   "obsessions.reliefScale.2": "Minimale verlichting",
   "obsessions.reliefScale.3": "Lichte verlichting",
@@ -539,7 +538,7 @@
   "obsessions.reliefScale.8": "Zeer sterke verlichting",
   "obsessions.reliefScale.9": "Volledige verlichting",
   "obsessions.reliefScale.10": "Totale verlichting",
-  
+
   "obsessions.actions.save": "Opslaan",
   "obsessions.actions.cancel": "Annuleren",
   "obsessions.actions.delete": "Verwijderen",
@@ -548,7 +547,7 @@
   "obsessions.actions.saving": "Opslaan...",
   "obsessions.actions.saved": "Opgeslagen",
   "obsessions.actions.error": "Fout bij opslaan van gegevens",
-  
+
   "obsessions.validation.obsessionRequired": "Obsessie beschrijving is verplicht",
   "obsessions.validation.compulsionRequired": "Compulsie beschrijving is verplicht",
   "obsessions.validation.intensityRequired": "Intensiteit beoordeling is verplicht",
@@ -558,17 +557,17 @@
   "obsessions.validation.durationMin": "Duur moet minimaal 1 minuut zijn",
   "obsessions.validation.durationMax": "Duur kan niet meer dan 999 minuten zijn",
   "obsessions.addPairButton": "Paar toevoegen",
-"obsessions.removeBlock": "Blok verwijderen",
+  "obsessions.removeBlock": "Blok verwijderen",
   "obsessions.complete": "Voltooien en naar chat sturen",
   "obsessions.editLabel": "Bewerken",
   "obsessions.editPair": "Paar bewerken",
   "obsessions.cancelAction": "Annuleren",
   "obsessions.deletePair": "Paar verwijderen",
-  
+
   "obsessions.emptyState.title": "Nog geen obsessies of compulsies geregistreerd",
   "obsessions.emptyState.subtitle": "Begin door je eerste obsessie of compulsie toe te voegen om patronen te volgen",
   "obsessions.emptyState.addFirst": "Voeg je eerste invoer toe",
-  
+
   "obsessions.export.title": "Obsessies & Compulsies Gegevens Exporteren",
   "obsessions.export.format": "Exporteren als {format}",
   "obsessions.export.success": "Gegevens succesvol geëxporteerd",

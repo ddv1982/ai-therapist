@@ -40,7 +40,10 @@ const optionalUrl = z
 const publicEnvSchema = z.object({
   NODE_ENV: nodeEnvSchema.default(envDefaults.NODE_ENV),
   NEXT_PUBLIC_CONVEX_URL: optionalUrl,
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1, 'Clerk publishable key is required').optional(),
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z
+    .string()
+    .min(1, 'Clerk publishable key is required')
+    .optional(),
   NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP: coerceBoolean(envDefaults.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP),
   NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO: coerceBoolean(envDefaults.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO),
   LOG_LEVEL: z
@@ -54,7 +57,8 @@ export type PublicEnv = z.infer<typeof publicEnvSchema>;
 function parsePublicEnv(): PublicEnv {
   const rawPublicEnv: Record<keyof PublicEnv, unknown> = {
     NODE_ENV: process.env.NODE_ENV ?? envDefaults.NODE_ENV,
-    NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL ?? envDefaults.NEXT_PUBLIC_CONVEX_URL,
+    NEXT_PUBLIC_CONVEX_URL:
+      process.env.NEXT_PUBLIC_CONVEX_URL ?? envDefaults.NEXT_PUBLIC_CONVEX_URL,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP: process.env.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP,
     NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO: process.env.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO,
@@ -85,7 +89,8 @@ export let isProduction = publicEnv.NODE_ENV === 'production';
 export let isTest = publicEnv.NODE_ENV === 'test';
 
 export function reloadPublicEnvForTesting(): void {
-  const isTestRuntime = process.env.NODE_ENV === 'test' || typeof process.env.JEST_WORKER_ID !== 'undefined';
+  const isTestRuntime =
+    process.env.NODE_ENV === 'test' || typeof process.env.JEST_WORKER_ID !== 'undefined';
   if (!isTestRuntime) {
     throw new Error('reloadPublicEnvForTesting is only supported in test environment');
   }

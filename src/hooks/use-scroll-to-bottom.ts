@@ -21,7 +21,7 @@ export function useScrollToBottom({
   container,
   behavior = 'smooth',
   offset = 0,
-  respectUserScroll = true
+  respectUserScroll = true,
 }: UseScrollToBottomOptions) {
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastMessageCountRef = useRef(messages.length);
@@ -31,75 +31,81 @@ export function useScrollToBottom({
   const computeIsNearBottom = useCallback(() => {
     if (!container) return true;
     const { scrollTop, scrollHeight, clientHeight } = container;
-    return (scrollHeight - scrollTop - clientHeight) < 100;
+    return scrollHeight - scrollTop - clientHeight < 100;
   }, [container]);
 
   // Enhanced scroll function that works with streaming animations
-  const scrollToBottom = useCallback((force = false, delay = 0) => {
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
+  const scrollToBottom = useCallback(
+    (force = false, delay = 0) => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
 
-    const performScroll = () => {
-      if (!container) return;
+      const performScroll = () => {
+        if (!container) return;
 
-      // Use requestAnimationFrame for smooth scrolling during animations
-      requestAnimationFrame(() => {
-        const scrollHeight = container.scrollHeight;
-        const clientHeight = container.clientHeight;
-        const maxScroll = scrollHeight - clientHeight;
-        
-        if (maxScroll > 0 || force) {
-          container.scrollTo({
-            top: scrollHeight + offset,
-            behavior: behavior
-          });
-        }
-      });
-    };
+        // Use requestAnimationFrame for smooth scrolling during animations
+        requestAnimationFrame(() => {
+          const scrollHeight = container.scrollHeight;
+          const clientHeight = container.clientHeight;
+          const maxScroll = scrollHeight - clientHeight;
 
-    if (delay > 0) {
-      scrollTimeoutRef.current = setTimeout(performScroll, delay);
-    } else {
-      performScroll();
-    }
-  }, [container, behavior, offset]);
+          if (maxScroll > 0 || force) {
+            container.scrollTo({
+              top: scrollHeight + offset,
+              behavior: behavior,
+            });
+          }
+        });
+      };
+
+      if (delay > 0) {
+        scrollTimeoutRef.current = setTimeout(performScroll, delay);
+      } else {
+        performScroll();
+      }
+    },
+    [container, behavior, offset]
+  );
 
   // Streaming-aware scroll that waits for animation stages
-  const scrollToBottomWithStreaming = useCallback((stage?: StreamingStage) => {
-    if (!isStreaming) {
-      // Normal scroll when not streaming
-      scrollToBottom();
-      return;
-    }
+  const scrollToBottomWithStreaming = useCallback(
+    (stage?: StreamingStage) => {
+      if (!isStreaming) {
+        // Normal scroll when not streaming
+        scrollToBottom();
+        return;
+      }
 
-    // Handle different streaming stages with appropriate delays
-    switch (stage) {
-      case 'blur':
-        // Don't scroll immediately during blur stage
-        break;
-      case 'stabilizing':
-        // Scroll with delay during stabilizing stage
-        scrollToBottom(false, 200);
-        break;
-      case 'revealed':
-        // Final scroll when content is fully revealed
-        scrollToBottom(true, 100);
-        break;
-      default:
-        // Default streaming scroll with moderate delay
-        scrollToBottom(false, 300);
-    }
-  }, [isStreaming, scrollToBottom]);
+      // Handle different streaming stages with appropriate delays
+      switch (stage) {
+        case 'blur':
+          // Don't scroll immediately during blur stage
+          break;
+        case 'stabilizing':
+          // Scroll with delay during stabilizing stage
+          scrollToBottom(false, 200);
+          break;
+        case 'revealed':
+          // Final scroll when content is fully revealed
+          scrollToBottom(true, 100);
+          break;
+        default:
+          // Default streaming scroll with moderate delay
+          scrollToBottom(false, 300);
+      }
+    },
+    [isStreaming, scrollToBottom]
+  );
 
   // Auto-scroll on message changes
   useEffect(() => {
     const messageCountChanged = messages.length !== lastMessageCountRef.current;
     const hasNewMessage = messages.length > lastMessageCountRef.current;
-    
+
     if (messageCountChanged) {
       lastMessageCountRef.current = messages.length;
-      
+
       if (hasNewMessage) {
         // Respect user scroll position similar to ChatGPT behavior
         const nearBottom = computeIsNearBottom();
@@ -116,13 +122,23 @@ export function useScrollToBottom({
         }
       }
     }
-  }, [messages.length, isStreaming, scrollToBottom, scrollToBottomWithStreaming, computeIsNearBottom, respectUserScroll]);
+  }, [
+    messages.length,
+    isStreaming,
+    scrollToBottom,
+    scrollToBottomWithStreaming,
+    computeIsNearBottom,
+    respectUserScroll,
+  ]);
 
   // Handle streaming stage changes
-  const onStreamingStageChange = useCallback((stage: StreamingStage) => {
-    streamingStageRef.current = stage;
-    scrollToBottomWithStreaming(stage);
-  }, [scrollToBottomWithStreaming]);
+  const onStreamingStageChange = useCallback(
+    (stage: StreamingStage) => {
+      streamingStageRef.current = stage;
+      scrollToBottomWithStreaming(stage);
+    },
+    [scrollToBottomWithStreaming]
+  );
 
   // Enhanced scroll with intersection observer for better performance
   const smartScrollToBottom = useCallback(() => {
@@ -131,7 +147,7 @@ export function useScrollToBottom({
     // Check if user is near bottom before auto-scrolling
     const { scrollTop, scrollHeight, clientHeight } = container;
     const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
-    
+
     if (isNearBottom || isStreaming) {
       scrollToBottomWithStreaming(streamingStageRef.current);
     }
@@ -166,6 +182,6 @@ export function useScrollToBottom({
     scrollToBottomWithStreaming,
     onStreamingStageChange,
     smartScrollToBottom,
-    isNearBottom: isNearBottomState
+    isNearBottom: isNearBottomState,
   };
 }

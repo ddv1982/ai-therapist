@@ -5,7 +5,7 @@ describe('logger.createRequestLogger header branches', () => {
     const ctx = createRequestLogger({
       headers: { 'x-request-id': 'rid-1', 'user-agent': 'jest', 'x-forwarded-for': '1.2.3.4' },
       method: 'GET',
-      url: 'http://localhost/test'
+      url: 'http://localhost/test',
     } as any);
     expect(ctx.requestId).toBe('rid-1');
     expect(ctx.userAgent).toBe('jest');
@@ -17,11 +17,9 @@ describe('logger.createRequestLogger header branches', () => {
       headers: {},
       method: 'POST',
       url: 'http://localhost/x',
-      connection: { remoteAddress: '5.6.7.8' }
+      connection: { remoteAddress: '5.6.7.8' },
     } as any);
     expect(ctx.requestId).toBeTruthy();
     expect(ctx.ip).toBe('5.6.7.8');
   });
 });
-
-

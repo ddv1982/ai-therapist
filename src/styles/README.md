@@ -36,6 +36,7 @@ It has now been modularized for clarity and maintainability.
 - **Component-specific styles** → co-located `ComponentName.module.css`.
 
 This separation ensures:
+
 - Easier navigation and maintenance.
 - Reduced risk of unintended global overrides.
 - Better alignment with Tailwind’s utility-first approach.

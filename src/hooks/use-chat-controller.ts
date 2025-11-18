@@ -61,14 +61,29 @@ export interface ChatController {
   setMemoryContext: (info: MemoryContextInfo) => void;
 
   // bridge helper
-  addMessageToChat: (message: { content: string; role: 'user' | 'assistant'; sessionId: string; modelUsed?: string; source?: string; metadata?: Record<string, unknown> }) => Promise<{ success: boolean; error?: string }>;
-  updateMessageMetadata: (sessionId: string, messageId: string, metadata: Record<string, unknown>, options?: { mergeStrategy?: 'merge' | 'replace' }) => Promise<{ success: boolean; error?: string }>;
-  
+  addMessageToChat: (message: {
+    content: string;
+    role: 'user' | 'assistant';
+    sessionId: string;
+    modelUsed?: string;
+    source?: string;
+    metadata?: Record<string, unknown>;
+  }) => Promise<{ success: boolean; error?: string }>;
+  updateMessageMetadata: (
+    sessionId: string,
+    messageId: string,
+    metadata: Record<string, unknown>,
+    options?: { mergeStrategy?: 'merge' | 'replace' }
+  ) => Promise<{ success: boolean; error?: string }>;
+
   // obsessions and compulsions
   createObsessionsCompulsionsTable: () => Promise<{ success: boolean; error?: string }>;
 }
 
-export function useChatController(options?: { model: string; webSearchEnabled: boolean }): ChatController {
+export function useChatController(options?: {
+  model: string;
+  webSearchEnabled: boolean;
+}): ChatController {
   const {
     messages,
     loadMessages,
@@ -139,9 +154,12 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     textareaRef,
   });
 
-  const setCurrentSessionAndSync = useCallback(async (sessionId: string) => {
-    await setCurrentSessionAndLoad(sessionId);
-  }, [setCurrentSessionAndLoad]);
+  const setCurrentSessionAndSync = useCallback(
+    async (sessionId: string) => {
+      await setCurrentSessionAndLoad(sessionId);
+    },
+    [setCurrentSessionAndLoad]
+  );
 
   const startNewSession = useCallback(() => {
     void (async () => {
@@ -156,7 +174,11 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     try {
       await sendMessage(messageText);
     } catch (error) {
-      logger.error('Error sending message to AI', { component: 'useChatController' }, error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Error sending message to AI',
+        { component: 'useChatController' },
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }, [input, isLoading, sendMessage]);
 
@@ -173,12 +195,19 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
     setIsGeneratingReport,
   });
 
-  const createObsessionsCompulsionsTable = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
+  const createObsessionsCompulsionsTable = useCallback(async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
     let sessionId: string;
     try {
       sessionId = await ensureActiveSession();
     } catch (error) {
-      logger.error('Failed to ensure session for obsessions table', { component: 'useChatController' }, error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to ensure session for obsessions table',
+        { component: 'useChatController' },
+        error instanceof Error ? error : new Error(String(error))
+      );
       return { success: false, error: 'Could not prepare a session for the tracker.' };
     }
 
@@ -188,7 +217,9 @@ export function useChatController(options?: { model: string; webSearchEnabled: b
       lastModified: new Date().toISOString(),
     };
 
-    const { formatObsessionsCompulsionsForChat } = await import('@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions');
+    const { formatObsessionsCompulsionsForChat } = await import(
+      '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions'
+    );
     const tableContent = formatObsessionsCompulsionsForChat(baseData);
 
     // Create obsessions and compulsions table message

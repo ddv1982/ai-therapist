@@ -22,13 +22,16 @@ export type WithApiMiddleware = <T = unknown>(
   routeParams: { params: Promise<Record<string, string>> }
 ) => Promise<NextResponse<ApiResponse<T>>>;
 
-export function buildRateLimit(
-  deps: {
-    withApiMiddleware: WithApiMiddleware;
-    getClientIPFromRequest: (req: NextRequest) => string;
-    getRateLimiter: () => { checkRateLimit: (ip: string, bucket?: string) => Promise<{ allowed: boolean; retryAfter?: number }> };
-  }
-) {
+export function buildRateLimit(deps: {
+  withApiMiddleware: WithApiMiddleware;
+  getClientIPFromRequest: (req: NextRequest) => string;
+  getRateLimiter: () => {
+    checkRateLimit: (
+      ip: string,
+      bucket?: string
+    ) => Promise<{ allowed: boolean; retryAfter?: number }>;
+  };
+}) {
   function withRateLimitUnauthenticated<T = unknown>(
     handler: (
       request: NextRequest,
@@ -55,8 +58,13 @@ export function buildRateLimit(
           const retryAfter = String(result.retryAfter || Math.ceil(windowMs / 1000));
           const body = {
             success: false,
-            error: { message: 'Rate limit exceeded', code: 'RATE_LIMIT_EXCEEDED', details: 'Too many requests made in a short period', suggestedAction: 'Please wait a moment before making another request' },
-            meta: { timestamp: new Date().toISOString(), requestId: context.requestId }
+            error: {
+              message: 'Rate limit exceeded',
+              code: 'RATE_LIMIT_EXCEEDED',
+              details: 'Too many requests made in a short period',
+              suggestedAction: 'Please wait a moment before making another request',
+            },
+            meta: { timestamp: new Date().toISOString(), requestId: context.requestId },
           } as const;
           const headers = { 'Retry-After': retryAfter } as Record<string, string>;
           return NextResponse.json(body, { status: 429, headers }) as NextResponse<ApiResponse<T>>;
@@ -68,4 +76,3 @@ export function buildRateLimit(
 
   return { withRateLimitUnauthenticated };
 }
-

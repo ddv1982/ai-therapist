@@ -7,9 +7,14 @@ describe('design-tokens utility functions', () => {
   });
 
   it('combineClasses removes duplicates and skips falsy', () => {
-    const combined = combineClasses('text-base', undefined, 'text-base', 'font-semibold', '', 'font-semibold');
+    const combined = combineClasses(
+      'text-base',
+      undefined,
+      'text-base',
+      'font-semibold',
+      '',
+      'font-semibold'
+    );
     expect(combined.split(' ').sort()).toEqual(['font-semibold', 'text-base'].sort());
   });
 });
-
-

@@ -41,8 +41,16 @@ export function createSuccessResponse<T>(
   });
   // Fallback: set X-Request-Id only if not already present (middleware is authoritative)
   try {
-    const headersObj = (response as unknown as { headers?: { set?: (k: string, v: string) => void; get?: (k: string) => string | null } }).headers;
-    if (meta?.requestId && headersObj?.set && (!headersObj.get || !headersObj.get('X-Request-Id'))) {
+    const headersObj = (
+      response as unknown as {
+        headers?: { set?: (k: string, v: string) => void; get?: (k: string) => string | null };
+      }
+    ).headers;
+    if (
+      meta?.requestId &&
+      headersObj?.set &&
+      (!headersObj.get || !headersObj.get('X-Request-Id'))
+    ) {
       headersObj.set('X-Request-Id', String(meta.requestId));
     }
   } catch {}
@@ -77,8 +85,16 @@ export function createErrorResponse(
   );
   // Fallback: set X-Request-Id only if not already present (middleware is authoritative)
   try {
-    const headersObj = (response as unknown as { headers?: { set?: (k: string, v: string) => void; get?: (k: string) => string | null } }).headers;
-    if (options.requestId && headersObj?.set && (!headersObj.get || !headersObj.get('X-Request-Id'))) {
+    const headersObj = (
+      response as unknown as {
+        headers?: { set?: (k: string, v: string) => void; get?: (k: string) => string | null };
+      }
+    ).headers;
+    if (
+      options.requestId &&
+      headersObj?.set &&
+      (!headersObj.get || !headersObj.get('X-Request-Id'))
+    ) {
       headersObj.set('X-Request-Id', String(options.requestId));
     }
   } catch {}
@@ -89,95 +105,69 @@ export function createValidationErrorResponse(
   validationError: string,
   requestId?: string
 ): NextResponse<ApiResponse> {
-  return createErrorResponse(
-    'Validation failed',
-    400,
-    {
-      code: 'VALIDATION_ERROR',
-      details: validationError,
-      suggestedAction: 'Please check your input data and try again',
-      requestId,
-    }
-  );
+  return createErrorResponse('Validation failed', 400, {
+    code: 'VALIDATION_ERROR',
+    details: validationError,
+    suggestedAction: 'Please check your input data and try again',
+    requestId,
+  });
 }
 
 export function createDatabaseErrorResponse(
   operation: string,
   requestId?: string
 ): NextResponse<ApiResponse> {
-  return createErrorResponse(
-    'Database operation failed',
-    500,
-    {
-      code: 'DATABASE_ERROR',
-      details: `Failed to ${operation}`,
-      suggestedAction: 'Please try again later or contact support if the issue persists',
-      requestId,
-    }
-  );
+  return createErrorResponse('Database operation failed', 500, {
+    code: 'DATABASE_ERROR',
+    details: `Failed to ${operation}`,
+    suggestedAction: 'Please try again later or contact support if the issue persists',
+    requestId,
+  });
 }
 
 export function createAuthenticationErrorResponse(
   authError: string,
   requestId?: string
 ): NextResponse<ApiResponse> {
-  return createErrorResponse(
-    'Authentication required',
-    401,
-    {
-      code: 'AUTHENTICATION_ERROR',
-      details: authError,
-      suggestedAction: 'Please verify your authentication and try again',
-      requestId,
-    }
-  );
+  return createErrorResponse('Authentication required', 401, {
+    code: 'AUTHENTICATION_ERROR',
+    details: authError,
+    suggestedAction: 'Please verify your authentication and try again',
+    requestId,
+  });
 }
 
 export function createNotFoundErrorResponse(
   resource: string,
   requestId?: string
 ): NextResponse<ApiResponse> {
-  return createErrorResponse(
-    `${resource} not found`,
-    404,
-    {
-      code: 'NOT_FOUND',
-      details: `The requested ${resource.toLowerCase()} does not exist or you don't have access to it`,
-      suggestedAction: 'Please check the resource identifier and try again',
-      requestId,
-    }
-  );
+  return createErrorResponse(`${resource} not found`, 404, {
+    code: 'NOT_FOUND',
+    details: `The requested ${resource.toLowerCase()} does not exist or you don't have access to it`,
+    suggestedAction: 'Please check the resource identifier and try again',
+    requestId,
+  });
 }
 
 export function createForbiddenErrorResponse(
   reason: string,
   requestId?: string
 ): NextResponse<ApiResponse> {
-  return createErrorResponse(
-    'Access denied',
-    403,
-    {
-      code: 'FORBIDDEN',
-      details: reason,
-      suggestedAction: 'Please verify your permissions and try again',
-      requestId,
-    }
-  );
+  return createErrorResponse('Access denied', 403, {
+    code: 'FORBIDDEN',
+    details: reason,
+    suggestedAction: 'Please verify your permissions and try again',
+    requestId,
+  });
 }
 
-export function createRateLimitErrorResponse(
-  requestId?: string
-): NextResponse<ApiResponse> {
-  return createErrorResponse(
-    'Rate limit exceeded',
-    429,
-    {
-      code: 'RATE_LIMIT_EXCEEDED',
-      details: 'Too many requests made in a short period',
-      suggestedAction: 'Please wait a moment before making another request',
-      requestId,
-    }
-  );
+export function createRateLimitErrorResponse(requestId?: string): NextResponse<ApiResponse> {
+  return createErrorResponse('Rate limit exceeded', 429, {
+    code: 'RATE_LIMIT_EXCEEDED',
+    details: 'Too many requests made in a short period',
+    suggestedAction: 'Please wait a moment before making another request',
+    requestId,
+  });
 }
 
 export function createServerErrorResponse(
@@ -185,19 +175,14 @@ export function createServerErrorResponse(
   requestId?: string,
   context?: Record<string, unknown>
 ): NextResponse<ApiResponse> {
-
   logger.apiError('Server error', error, { requestId, ...context });
-  
-  return createErrorResponse(
-    'Internal server error',
-    500,
-    {
-      code: 'INTERNAL_SERVER_ERROR',
-      details: isDevelopment ? error.message : undefined,
-      suggestedAction: 'Please try again later or contact support if the issue persists',
-      requestId,
-    }
-  );
+
+  return createErrorResponse('Internal server error', 500, {
+    code: 'INTERNAL_SERVER_ERROR',
+    details: isDevelopment ? error.message : undefined,
+    suggestedAction: 'Please try again later or contact support if the issue persists',
+    requestId,
+  });
 }
 
 export function isSuccessResponse<T>(response: unknown): response is ApiResponse<T> {
@@ -223,16 +208,20 @@ export function isErrorResponse(response: unknown): response is ApiResponse {
 export const apiResponseSchema = z.object({
   success: z.boolean(),
   data: z.any().optional(),
-  error: z.object({
-    message: z.string(),
-    code: z.string().optional(),
-    details: z.string().optional(),
-    suggestedAction: z.string().optional(),
-  }).optional(),
-  meta: z.object({
-    timestamp: z.string(),
-    requestId: z.string().optional(),
-  }).optional(),
+  error: z
+    .object({
+      message: z.string(),
+      code: z.string().optional(),
+      details: z.string().optional(),
+      suggestedAction: z.string().optional(),
+    })
+    .optional(),
+  meta: z
+    .object({
+      timestamp: z.string(),
+      requestId: z.string().optional(),
+    })
+    .optional(),
 });
 
 export function validateApiResponse(response: unknown): {
@@ -246,7 +235,7 @@ export function validateApiResponse(response: unknown): {
     if (error instanceof z.ZodError) {
       return {
         valid: false,
-        error: error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', '),
+        error: error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join(', '),
       };
     }
     return { valid: false, error: 'Unknown validation error' };
@@ -273,18 +262,21 @@ export function createPaginatedResponse<T>(
   requestId?: string
 ): NextResponse<ApiResponse<PaginatedResponse<T>>> {
   const totalPages = Math.ceil(total / limit);
-  
-  return createSuccessResponse({
-    items,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages,
-      hasNext: page < totalPages,
-      hasPrev: page > 1,
+
+  return createSuccessResponse(
+    {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
     },
-  }, { requestId });
+    { requestId }
+  );
 }
 
 export function getApiData<T>(resp: ApiResponse<T>): T {
@@ -310,7 +302,7 @@ export function createSessionResponse(
 ): NextResponse<ApiResponse<TherapeuticSessionResponse>> {
   return createSuccessResponse(sessionData, {
     requestId,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 }
 
@@ -337,7 +329,7 @@ export function createChatCompletionResponse(
 ): NextResponse<ApiResponse<ChatCompletionResponse>> {
   return createSuccessResponse(completionData, {
     requestId,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 }
 
@@ -348,6 +340,6 @@ export function addTherapeuticHeaders<T>(
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Therapeutic-Context', 'enabled');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
+
   return response;
 }

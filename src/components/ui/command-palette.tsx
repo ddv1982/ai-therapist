@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Command,
@@ -9,11 +9,8 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+} from '@/components/ui/command';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { setCurrentSession } from '@/store/slices/sessions-slice';
 import { useFetchSessionsQuery, SessionData } from '@/store/slices/sessions-api';
@@ -21,7 +18,7 @@ import { clearMessages } from '@/store/slices/chat-slice';
 import { createDraft } from '@/store/slices/cbt-slice';
 import { MessageSquare, Brain, Plus, Settings, Moon, Search, Clock } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useSelectSession } from '@/hooks';
 
 interface CommandPaletteProps {
@@ -30,34 +27,30 @@ interface CommandPaletteProps {
   onThemeToggle?: () => void;
 }
 
-export function CommandPalette({ 
-  onCBTOpen, 
-  onSettingsOpen, 
-  onThemeToggle 
-}: CommandPaletteProps) {
+export function CommandPalette({ onCBTOpen, onSettingsOpen, onThemeToggle }: CommandPaletteProps) {
   const t = useTranslations('ui');
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const dispatch = useAppDispatch();
 
   const { data: sessions = [] } = useFetchSessionsQuery();
-  const currentSessionId = useAppSelector(state => state.sessions.currentSessionId);
+  const currentSessionId = useAppSelector((state) => state.sessions.currentSessionId);
   const { selectSession } = useSelectSession();
-  
+
   // Keyboard shortcut to open command palette
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((open) => !open);
       }
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         setOpen(false);
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleSelect = (callback: () => void) => {
@@ -84,25 +77,22 @@ export function CommandPalette({
   return (
     <>
       {/* Global keyboard shortcut trigger */}
-      <div className="fixed bottom-4 right-4 z-50 lg:hidden">
+      <div className="fixed right-4 bottom-4 z-50 lg:hidden">
         <button
           onClick={() => setOpen(true)}
-          className="h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
+          className="bg-primary text-primary-foreground flex h-12 w-12 items-center justify-center rounded-full shadow-lg"
         >
           <Search className="h-5 w-5" />
         </button>
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="overflow-hidden p-0 shadow-2xl max-w-2xl">
-          <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-muted-foreground">
-            <CommandInput 
-              placeholder={t('command.placeholder')}
-              className="h-12"
-            />
+        <DialogContent className="max-w-2xl overflow-hidden p-0 shadow-2xl">
+          <Command className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-semibold">
+            <CommandInput placeholder={t('command.placeholder')} className="h-12" />
             <CommandList className="max-h-[400px] overflow-y-auto">
               <CommandEmpty>{t('command.noResults')}</CommandEmpty>
-              
+
               {/* Quick Actions */}
               <CommandGroup heading={t('command.quick')}>
                 <CommandItem onSelect={() => handleSelect(createNewSession)}>
@@ -132,16 +122,18 @@ export function CommandPalette({
                       onSelect={() => handleSelect(() => switchToSession(session.id))}
                     >
                       <MessageSquare className="mr-2 h-4 w-4" />
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate">
-                          {session.title}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {(session as unknown as { _count?: { messages?: number } })._count?.messages ?? (session as unknown as { messageCount?: number }).messageCount ?? 0} {t('command.messages')}
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate">{session.title}</div>
+                        <div className="text-muted-foreground text-sm">
+                          {(session as unknown as { _count?: { messages?: number } })._count
+                            ?.messages ??
+                            (session as unknown as { messageCount?: number }).messageCount ??
+                            0}{' '}
+                          {t('command.messages')}
                         </div>
                       </div>
                       {currentSessionId === session.id && (
-                        <div className="ml-auto h-2 w-2 rounded-full bg-primary" />
+                        <div className="bg-primary ml-auto h-2 w-2 rounded-full" />
                       )}
                     </CommandItem>
                   ))}
@@ -173,7 +165,7 @@ export function useCommandPalette() {
 
   const open = () => setIsOpen(true);
   const close = () => setIsOpen(false);
-  const toggle = () => setIsOpen(prev => !prev);
+  const toggle = () => setIsOpen((prev) => !prev);
 
   return {
     isOpen,

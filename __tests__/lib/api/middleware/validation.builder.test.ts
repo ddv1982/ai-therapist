@@ -7,7 +7,11 @@ const {
   createSuccessResponse,
 } = jest.requireActual<typeof import('@/lib/api/api-response')>('@/lib/api/api-response');
 
-function buildRequest(method: string, url: string, headers: Record<string, string> = {}): NextRequest {
+function buildRequest(
+  method: string,
+  url: string,
+  headers: Record<string, string> = {}
+): NextRequest {
   return {
     method,
     url,
@@ -23,12 +27,16 @@ describe('validation builder', () => {
   const context = { requestId: 'rid-val', url: '/test', userInfo: { userId: 'u1' } } as any;
   const baseParams = Promise.resolve({} as Record<string, string>);
 
-  const validateRequest = jest.fn((_schema, data) => ({ success: true, data } as any));
+  const validateRequest = jest.fn((_schema, data) => ({ success: true, data }) as any);
   const createValidationErrorResponse = jest.fn(actualCreateValidationErrorResponse);
   const logger = { validationError: jest.fn() };
 
   let capturedWithAuth:
-    | ((request: NextRequest, ctx: typeof context, params: Promise<Record<string, string>>) => Promise<NextResponseType<ApiResponse>>)
+    | ((
+        request: NextRequest,
+        ctx: typeof context,
+        params: Promise<Record<string, string>>
+      ) => Promise<NextResponseType<ApiResponse>>)
     | undefined;
 
   type ValidationDeps = Parameters<typeof buildValidation>[0];
@@ -36,7 +44,10 @@ describe('validation builder', () => {
   function makeDeps(overrides: Partial<ValidationDeps> = {}): ValidationDeps {
     const withAuth = jest.fn((handler) => {
       capturedWithAuth = handler;
-      return async (request: NextRequest, routeParams: { params: Promise<Record<string, string>> }) => {
+      return async (
+        request: NextRequest,
+        routeParams: { params: Promise<Record<string, string>> }
+      ) => {
         return handler(request, context, routeParams?.params ?? baseParams);
       };
     });
@@ -44,7 +55,8 @@ describe('validation builder', () => {
     return {
       withAuth: withAuth as ValidationDeps['withAuth'],
       validateRequest: validateRequest as ValidationDeps['validateRequest'],
-      createValidationErrorResponse: createValidationErrorResponse as ValidationDeps['createValidationErrorResponse'],
+      createValidationErrorResponse:
+        createValidationErrorResponse as ValidationDeps['createValidationErrorResponse'],
       logger,
       ...overrides,
     } satisfies ValidationDeps;
@@ -68,13 +80,22 @@ describe('validation builder', () => {
     expect(capturedWithAuth).toBeDefined();
 
     const req = buildRequest('POST', 'http://localhost/api');
-    (req as any).json = jest.fn(async () => { throw new Error('bad json'); });
+    (req as any).json = jest.fn(async () => {
+      throw new Error('bad json');
+    });
 
     const res = await capturedWithAuth!(req, context, baseParams);
 
     expect(res.status).toBe(400);
-    expect(createValidationErrorResponse).toHaveBeenCalledWith('Invalid JSON format in request body', 'rid-val');
-    expect(logger.validationError).toHaveBeenCalledWith('/test', 'Invalid JSON in request body', context);
+    expect(createValidationErrorResponse).toHaveBeenCalledWith(
+      'Invalid JSON format in request body',
+      'rid-val'
+    );
+    expect(logger.validationError).toHaveBeenCalledWith(
+      '/test',
+      'Invalid JSON in request body',
+      context
+    );
     expect(handler).not.toHaveBeenCalled();
     expect(validateRequest).not.toHaveBeenCalled();
   });
@@ -121,7 +142,9 @@ describe('validation builder', () => {
       baseParams
     );
     expect(validateRequest).toHaveBeenCalled();
-    const lastCall = validateRequest.mock.calls[validateRequest.mock.calls.length - 1] as unknown as [unknown, unknown];
+    const lastCall = validateRequest.mock.calls[
+      validateRequest.mock.calls.length - 1
+    ] as unknown as [unknown, unknown];
     expect(lastCall[0]).toBe(schema);
     expect(lastCall[1]).toEqual({ foo: 'bar' });
   });

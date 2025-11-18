@@ -34,7 +34,10 @@ describe('store selectors', () => {
     const empty: any = {};
     expect(selectIsStreaming(empty)).toBe(false);
     expect(selectCurrentInput(empty)).toBe('');
-    expect(selectChatSettings(empty)).toEqual({ model: expect.any(String), webSearchEnabled: false });
+    expect(selectChatSettings(empty)).toEqual({
+      model: expect.any(String),
+      webSearchEnabled: false,
+    });
     expect(selectChatError(empty)).toBeNull();
   });
 
@@ -51,5 +54,3 @@ describe('store selectors', () => {
     expect(selectSessionsError(empty)).toBeNull();
   });
 });
-
-

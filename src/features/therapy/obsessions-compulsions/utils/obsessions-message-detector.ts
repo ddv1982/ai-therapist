@@ -3,7 +3,7 @@
  */
 export function isObsessionsCompulsionsMessage(content: string): boolean {
   if (!content || typeof content !== 'string') return false;
-  
+
   // Check for obsessions and compulsions markers
   const obsessionsMarkers = [
     '# Obsessions & Compulsions Tracker',
@@ -13,10 +13,10 @@ export function isObsessionsCompulsionsMessage(content: string): boolean {
     '**Intensity:**',
     '**Frequency:**',
     '**Duration:**',
-    '**Relief Level:**'
+    '**Relief Level:**',
   ];
-  
-  return obsessionsMarkers.some(marker => content.includes(marker));
+
+  return obsessionsMarkers.some((marker) => content.includes(marker));
 }
 
 /**
@@ -35,15 +35,19 @@ export function analyzeObsessionsMessage(content: string): {
       hasCompulsions: false,
       obsessionsCount: 0,
       compulsionsCount: 0,
-      confidence: 0
+      confidence: 0,
     };
   }
 
   const obsessionsSection = content.match(/## Obsessions([\s\S]*?)(?=## Compulsions|$)/);
   const compulsionsSection = content.match(/## Compulsions([\s\S]*?)(?=## |$)/);
 
-  const obsessionsCount = obsessionsSection ? (obsessionsSection[1].match(/### Obsession \d+/g) || []).length : 0;
-  const compulsionsCount = compulsionsSection ? (compulsionsSection[1].match(/### Compulsion \d+/g) || []).length : 0;
+  const obsessionsCount = obsessionsSection
+    ? (obsessionsSection[1].match(/### Obsession \d+/g) || []).length
+    : 0;
+  const compulsionsCount = compulsionsSection
+    ? (compulsionsSection[1].match(/### Compulsion \d+/g) || []).length
+    : 0;
 
   const hasObsessions = obsessionsCount > 0;
   const hasCompulsions = compulsionsCount > 0;
@@ -60,6 +64,6 @@ export function analyzeObsessionsMessage(content: string): {
     hasCompulsions,
     obsessionsCount,
     compulsionsCount,
-    confidence: Math.min(confidence, 1.0)
+    confidence: Math.min(confidence, 1.0),
   };
 }

@@ -1,5 +1,5 @@
-import {getRequestConfig} from 'next-intl/server';
-import type {AbstractIntlMessages} from 'next-intl';
+import { getRequestConfig } from 'next-intl/server';
+import type { AbstractIntlMessages } from 'next-intl';
 import type { NextRequest } from 'next/server';
 import { locales, defaultLocale, type AppLocale } from '@/i18n/config';
 
@@ -13,7 +13,11 @@ function expandDotNotation(flatMessages: Record<string, unknown>): Record<string
       if (i === parts.length - 1) {
         current[part] = value;
       } else {
-        if (typeof current[part] !== 'object' || current[part] === null || Array.isArray(current[part])) {
+        if (
+          typeof current[part] !== 'object' ||
+          current[part] === null ||
+          Array.isArray(current[part])
+        ) {
           current[part] = {};
         }
         current = current[part] as Record<string, unknown>;
@@ -23,7 +27,7 @@ function expandDotNotation(flatMessages: Record<string, unknown>): Record<string
   return nested;
 }
 
-export default getRequestConfig(async ({requestLocale}) => {
+export default getRequestConfig(async ({ requestLocale }) => {
   const locale = await requestLocale;
   const resolved = locale ?? 'en';
   const flat = (await import(`./messages/${resolved}.json`)).default as Record<string, unknown>;
@@ -32,7 +36,7 @@ export default getRequestConfig(async ({requestLocale}) => {
   const messages: AbstractIntlMessages = nested;
   return {
     locale: resolved,
-    messages
+    messages,
   };
 });
 

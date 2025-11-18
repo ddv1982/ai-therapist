@@ -23,10 +23,13 @@ describe('CBT flow engine', () => {
 
   it('starts a session and records id/timestamps', () => {
     const initial = createInitialState();
-    const started = transition(initial, baseEvent({
-      type: 'SESSION_START',
-      sessionId: 'session-123',
-    }));
+    const started = transition(
+      initial,
+      baseEvent({
+        type: 'SESSION_START',
+        sessionId: 'session-123',
+      })
+    );
 
     expect(started.status).toBe('active');
     expect(started.sessionId).toBe('session-123');
@@ -35,23 +38,42 @@ describe('CBT flow engine', () => {
   });
 
   it('completes steps sequentially and updates context', () => {
-    let state = transition(createInitialState(), baseEvent({ type: 'SESSION_START', sessionId: 'session-abc' }));
+    let state = transition(
+      createInitialState(),
+      baseEvent({ type: 'SESSION_START', sessionId: 'session-abc' })
+    );
 
-    state = transition(state, baseEvent({
-      type: 'COMPLETE_STEP',
-      stepId: 'situation',
-      payload: { situation: 'Test', date: '2025-01-01' },
-    }));
+    state = transition(
+      state,
+      baseEvent({
+        type: 'COMPLETE_STEP',
+        stepId: 'situation',
+        payload: { situation: 'Test', date: '2025-01-01' },
+      })
+    );
 
     expect(selectContext(state).situation?.situation).toBe('Test');
     expect(selectCompletedSteps(state)).toEqual(['situation']);
     expect(selectCurrentStep(state)).toBe('emotions');
 
-    state = transition(state, baseEvent({
-      type: 'COMPLETE_STEP',
-      stepId: 'emotions',
-      payload: { fear: 4, anger: 0, sadness: 1, joy: 2, anxiety: 1, shame: 0, guilt: 0, other: '', otherIntensity: 0 },
-    }));
+    state = transition(
+      state,
+      baseEvent({
+        type: 'COMPLETE_STEP',
+        stepId: 'emotions',
+        payload: {
+          fear: 4,
+          anger: 0,
+          sadness: 1,
+          joy: 2,
+          anxiety: 1,
+          shame: 0,
+          guilt: 0,
+          other: '',
+          otherIntensity: 0,
+        },
+      })
+    );
 
     expect(selectCompletedSteps(state)).toEqual(['situation', 'emotions']);
     expect(selectCurrentStep(state)).toBe('thoughts');
@@ -63,11 +85,14 @@ describe('CBT flow engine', () => {
     expect(initialTimeline[0].type).toBe('cbt-component');
     expect(initialTimeline[0].stepId).toBe('situation');
 
-    state = transition(state, baseEvent({
-      type: 'COMPLETE_STEP',
-      stepId: 'situation',
-      payload: { situation: 'context', date: '2025-01-01' },
-    }));
+    state = transition(
+      state,
+      baseEvent({
+        type: 'COMPLETE_STEP',
+        stepId: 'situation',
+        payload: { situation: 'context', date: '2025-01-01' },
+      })
+    );
 
     const timeline = selectTimelineMessages(state);
     expect(timeline.find((msg) => msg.type === 'ai-response')?.stepId).toBe('situation');
@@ -86,7 +111,17 @@ describe('CBT cards', () => {
     state = transition(state, {
       type: 'COMPLETE_STEP',
       stepId: 'emotions',
-      payload: { fear: 3, anger: 0, sadness: 2, joy: 4, anxiety: 1, shame: 0, guilt: 0, other: '', otherIntensity: 0 },
+      payload: {
+        fear: 3,
+        anger: 0,
+        sadness: 2,
+        joy: 4,
+        anxiety: 1,
+        shame: 0,
+        guilt: 0,
+        other: '',
+        otherIntensity: 0,
+      },
     });
     return state;
   };

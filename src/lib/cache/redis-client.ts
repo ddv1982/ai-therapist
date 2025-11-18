@@ -1,9 +1,9 @@
 /**
  * Redis Client Configuration and Connection Management
- * 
+ *
  * Provides a robust Redis client with connection pooling, error handling,
  * and automatic reconnection for the AI Therapist application.
- * 
+ *
  * Features:
  * - Connection pooling for high performance
  * - Automatic reconnection on connection loss
@@ -31,7 +31,11 @@ export interface RedisConfig {
 }
 
 class RedisManager {
-  private client: RedisClientType<Record<string, never>, Record<string, never>, Record<string, never>> | null = null;
+  private client: RedisClientType<
+    Record<string, never>,
+    Record<string, never>,
+    Record<string, never>
+  > | null = null;
   private isConnected = false;
   private isConnecting = false;
   private reconnectAttempts = 0;
@@ -47,7 +51,9 @@ class RedisManager {
    */
   async connect(config?: RedisConfig): Promise<void> {
     if (!isNodeRuntime) {
-      logger.debug('Redis connect skipped outside Node runtime', { operation: 'redis_connect_skip' });
+      logger.debug('Redis connect skipped outside Node runtime', {
+        operation: 'redis_connect_skip',
+      });
       return;
     }
 
@@ -68,7 +74,7 @@ class RedisManager {
             if (retries > this.maxReconnectAttempts) {
               logger.error('Redis max reconnection attempts reached', {
                 operation: 'redis_connect',
-                maxAttempts: this.maxReconnectAttempts
+                maxAttempts: this.maxReconnectAttempts,
               });
               return new Error('Max reconnection attempts reached');
             }
@@ -79,28 +85,32 @@ class RedisManager {
             logger.warn('Redis reconnecting', {
               operation: 'redis_reconnect',
               attempt: retries + 1,
-              delayMs: delay
+              delayMs: delay,
             });
-            
+
             return delay;
-          }
+          },
         },
         password: config?.password || env.REDIS_PASSWORD,
-        database: config?.db || env.REDIS_DB
+        database: config?.db || env.REDIS_DB,
       };
 
       // Remove undefined values to avoid Redis connection issues
-      Object.keys(redisConfig).forEach(key => {
+      Object.keys(redisConfig).forEach((key) => {
         if (redisConfig[key as keyof RedisClientOptions] === undefined) {
           delete redisConfig[key as keyof RedisClientOptions];
         }
       });
 
-      this.client = createClient(redisConfig) as unknown as RedisClientType<Record<string, never>, Record<string, never>, Record<string, never>>;
+      this.client = createClient(redisConfig) as unknown as RedisClientType<
+        Record<string, never>,
+        Record<string, never>,
+        Record<string, never>
+      >;
       this.setupClientEventHandlers();
 
       await this.client.connect();
-      
+
       this.isConnected = true;
       this.isConnecting = false;
       this.reconnectAttempts = 0;
@@ -110,17 +120,20 @@ class RedisManager {
         operation: 'redis_connect',
         host: (redisConfig.socket as { host?: string })?.host,
         port: (redisConfig.socket as { port?: number })?.port,
-        database: redisConfig.database
+        database: redisConfig.database,
       });
-
     } catch (error) {
       this.isConnecting = false;
       this.isConnected = false;
-      
-      logger.error('Redis connection failed', {
-        operation: 'redis_connect',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }, error instanceof Error ? error : new Error('Redis connection failed'));
+
+      logger.error(
+        'Redis connection failed',
+        {
+          operation: 'redis_connect',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        error instanceof Error ? error : new Error('Redis connection failed')
+      );
 
       // Don't throw in development - allow graceful degradation
       if (env.NODE_ENV === 'production') {
@@ -148,17 +161,21 @@ class RedisManager {
     if (!this.client) return;
 
     this.client.on('error', (error: Error) => {
-      logger.error('Redis client error', {
-        operation: 'redis_error',
-        error: error.message
-      }, error);
-      
+      logger.error(
+        'Redis client error',
+        {
+          operation: 'redis_error',
+          error: error.message,
+        },
+        error
+      );
+
       this.isConnected = false;
     });
 
     this.client.on('connect', () => {
       logger.info('Redis client connected', {
-        operation: 'redis_connect'
+        operation: 'redis_connect',
       });
       this.isConnected = true;
       this.reconnectAttempts = 0;
@@ -166,14 +183,14 @@ class RedisManager {
 
     this.client.on('ready', () => {
       logger.info('Redis client ready', {
-        operation: 'redis_ready'
+        operation: 'redis_ready',
       });
       this.isConnected = true;
     });
 
     this.client.on('end', () => {
       logger.warn('Redis client connection ended', {
-        operation: 'redis_end'
+        operation: 'redis_end',
       });
       this.isConnected = false;
     });
@@ -182,7 +199,7 @@ class RedisManager {
       this.reconnectAttempts++;
       logger.warn('Redis client reconnecting', {
         operation: 'redis_reconnecting',
-        attempt: this.reconnectAttempts
+        attempt: this.reconnectAttempts,
       });
     });
   }
@@ -190,7 +207,11 @@ class RedisManager {
   /**
    * Get Redis client instance
    */
-  getClient(): RedisClientType<Record<string, never>, Record<string, never>, Record<string, never>> | null {
+  getClient(): RedisClientType<
+    Record<string, never>,
+    Record<string, never>,
+    Record<string, never>
+  > | null {
     return this.client;
   }
 
@@ -205,7 +226,9 @@ class RedisManager {
    * Execute Redis command with error handling
    */
   async executeCommand<T>(
-    command: (client: RedisClientType<Record<string, never>, Record<string, never>, Record<string, never>>) => Promise<T>,
+    command: (
+      client: RedisClientType<Record<string, never>, Record<string, never>, Record<string, never>>
+    ) => Promise<T>,
     fallback?: T
   ): Promise<T | null> {
     if (!isNodeRuntime) {
@@ -219,7 +242,7 @@ class RedisManager {
       } catch (error) {
         logger.debug('Redis connection failed, using fallback', {
           operation: 'redis_lazy_connect',
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
         if (fallback !== undefined) {
           return fallback;
@@ -231,7 +254,7 @@ class RedisManager {
     if (!this.isReady() || !this.client) {
       if (fallback !== undefined) {
         logger.debug('Redis not available, using fallback', {
-          operation: 'redis_fallback'
+          operation: 'redis_fallback',
         });
         return fallback;
       }
@@ -241,10 +264,14 @@ class RedisManager {
     try {
       return await command(this.client);
     } catch (error) {
-      logger.error('Redis command failed', {
-        operation: 'redis_command',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }, error instanceof Error ? error : new Error('Redis command failed'));
+      logger.error(
+        'Redis command failed',
+        {
+          operation: 'redis_command',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        error instanceof Error ? error : new Error('Redis command failed')
+      );
 
       if (fallback !== undefined) {
         return fallback;
@@ -265,16 +292,16 @@ class RedisManager {
       try {
         await this.client.quit();
         logger.info('Redis disconnected gracefully', {
-          operation: 'redis_disconnect'
+          operation: 'redis_disconnect',
         });
       } catch (error) {
         logger.warn('Error during Redis disconnect', {
           operation: 'redis_disconnect',
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
-    
+
     this.isConnected = false;
     this.client = null;
   }
@@ -294,7 +321,7 @@ class RedisManager {
           healthy: false,
           connected: false,
           ready: false,
-          error: 'Redis not available in this runtime'
+          error: 'Redis not available in this runtime',
         };
       }
 
@@ -303,7 +330,7 @@ class RedisManager {
           healthy: false,
           connected: false,
           ready: false,
-          error: 'Client not initialized'
+          error: 'Client not initialized',
         };
       }
 
@@ -316,26 +343,26 @@ class RedisManager {
             healthy: false,
             connected: false,
             ready: false,
-            error: `Connection failed: ${connectError instanceof Error ? connectError.message : 'Unknown error'}`
+            error: `Connection failed: ${connectError instanceof Error ? connectError.message : 'Unknown error'}`,
           };
         }
       }
 
       // Test with a simple ping
       const pong = await this.client!.ping();
-      
+
       return {
         healthy: pong === 'PONG',
         connected: this.isConnected,
         ready: this.client.isReady,
-        error: pong !== 'PONG' ? 'Ping failed' : undefined
+        error: pong !== 'PONG' ? 'Ping failed' : undefined,
       };
     } catch (error) {
       return {
         healthy: false,
         connected: this.isConnected,
         ready: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }

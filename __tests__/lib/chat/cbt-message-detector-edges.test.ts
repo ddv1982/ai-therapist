@@ -1,4 +1,10 @@
-import { analyzeCBTMessage, isCBTDiaryMessage, hasUserQuantifiedAssessments, extractUserRatings, getCBTIdentificationReason } from '@/lib/chat/cbt-message-detector';
+import {
+  analyzeCBTMessage,
+  isCBTDiaryMessage,
+  hasUserQuantifiedAssessments,
+  extractUserRatings,
+  getCBTIdentificationReason,
+} from '@/lib/chat/cbt-message-detector';
 
 describe('cbt-message-detector edges', () => {
   it('returns low confidence for non-CBT content', () => {
@@ -30,7 +36,8 @@ describe('cbt-message-detector edges', () => {
   });
 
   it('detects schema analysis patterns', () => {
-    const msg = '## 🎯 Core Schema Analysis\n\nCore Belief: I am not good enough\nBehavioral Patterns: Avoidance\n*Credibility: 7/10*';
+    const msg =
+      '## 🎯 Core Schema Analysis\n\nCore Belief: I am not good enough\nBehavioral Patterns: Avoidance\n*Credibility: 7/10*';
     const sig = analyzeCBTMessage(msg);
     expect(sig.hasSchemaAnalysis).toBe(true);
   });
@@ -41,5 +48,3 @@ describe('cbt-message-detector edges', () => {
     expect(sig.hasQuantifiedSelfAssessment).toBe(true);
   });
 });
-
-

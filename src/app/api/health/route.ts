@@ -53,15 +53,15 @@ async function checkDatabaseHealthExtended(): Promise<HealthCheck> {
       responseTime,
       details: {
         connection: 'connected',
-        message: 'Convex connectivity verified'
-      }
+        message: 'Convex connectivity verified',
+      },
     };
   } catch (error) {
     return {
       service: 'database',
       status: 'unhealthy',
       responseTime: Date.now() - start,
-      error: error instanceof Error ? error.message : 'Unknown database error'
+      error: error instanceof Error ? error.message : 'Unknown database error',
     };
   }
 }
@@ -77,13 +77,14 @@ async function checkAuthentication(): Promise<HealthCheck> {
     const hasClerkSecretKey = Boolean(env.CLERK_SECRET_KEY);
     const hasClerkWebhookSecret = Boolean(env.CLERK_WEBHOOK_SECRET);
     const hasJwtIssuerDomain = Boolean(process.env.CLERK_JWT_ISSUER_DOMAIN);
-    
-    const allConfigured = hasClerkPublishableKey && hasClerkSecretKey && hasClerkWebhookSecret && hasJwtIssuerDomain;
+
+    const allConfigured =
+      hasClerkPublishableKey && hasClerkSecretKey && hasClerkWebhookSecret && hasJwtIssuerDomain;
     const partiallyConfigured = hasClerkPublishableKey || hasClerkSecretKey;
-    
+
     return {
       service: 'authentication',
-      status: allConfigured ? 'healthy' : (partiallyConfigured ? 'degraded' : 'unhealthy'),
+      status: allConfigured ? 'healthy' : partiallyConfigured ? 'degraded' : 'unhealthy',
       responseTime: Date.now() - start,
       details: {
         provider: 'clerk',
@@ -91,14 +92,14 @@ async function checkAuthentication(): Promise<HealthCheck> {
         secretKeyConfigured: hasClerkSecretKey,
         webhookSecretConfigured: hasClerkWebhookSecret,
         jwtIssuerDomainConfigured: hasJwtIssuerDomain,
-      }
+      },
     };
   } catch (error) {
     return {
       service: 'authentication',
       status: 'unhealthy',
       responseTime: Date.now() - start,
-      error: error instanceof Error ? error.message : 'Auth system check failed'
+      error: error instanceof Error ? error.message : 'Auth system check failed',
     };
   }
 }
@@ -110,34 +111,34 @@ async function checkEncryption(): Promise<HealthCheck> {
   const start = Date.now();
   try {
     const hasEncryptionKey = Boolean(env.ENCRYPTION_KEY);
-    
+
     if (!hasEncryptionKey) {
       return {
         service: 'encryption',
         status: 'unhealthy',
         responseTime: Date.now() - start,
-        error: 'Encryption key not configured'
+        error: 'Encryption key not configured',
       };
     }
 
     const keyLength = env.ENCRYPTION_KEY?.length ?? 0;
     const hasValidKeyLength = keyLength >= 32;
-    
+
     return {
       service: 'encryption',
       status: hasValidKeyLength ? 'healthy' : 'degraded',
       responseTime: Date.now() - start,
       details: {
         keyConfigured: true,
-        recommendation: !hasValidKeyLength ? 'Use a 32+ character encryption key' : undefined
-      }
+        recommendation: !hasValidKeyLength ? 'Use a 32+ character encryption key' : undefined,
+      },
     };
   } catch (error) {
     return {
       service: 'encryption',
       status: 'unhealthy',
       responseTime: Date.now() - start,
-      error: error instanceof Error ? error.message : 'Encryption check failed'
+      error: error instanceof Error ? error.message : 'Encryption check failed',
     };
   }
 }
@@ -149,13 +150,13 @@ async function checkAIService(): Promise<HealthCheck> {
   const start = Date.now();
   try {
     const hasGroqKey = Boolean(env.GROQ_API_KEY);
-    
+
     if (!hasGroqKey) {
       return {
         service: 'ai-service',
         status: 'unhealthy',
         responseTime: Date.now() - start,
-        error: 'Primary AI provider not configured'
+        error: 'Primary AI provider not configured',
       };
     }
 
@@ -164,15 +165,15 @@ async function checkAIService(): Promise<HealthCheck> {
       status: 'healthy',
       responseTime: Date.now() - start,
       details: {
-        providerConfigured: true
-      }
+        providerConfigured: true,
+      },
     };
   } catch (error) {
     return {
       service: 'ai-service',
       status: 'unhealthy',
       responseTime: Date.now() - start,
-      error: error instanceof Error ? error.message : 'AI service check failed'
+      error: error instanceof Error ? error.message : 'AI service check failed',
     };
   }
 }
@@ -184,9 +185,8 @@ function checkSystemMetrics(): HealthCheck {
   const start = Date.now();
   try {
     const memoryUsage = process.memoryUsage();
-    const heapUtilization = memoryUsage.heapTotal > 0
-      ? (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100
-      : 0;
+    const heapUtilization =
+      memoryUsage.heapTotal > 0 ? (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100 : 0;
 
     const status = heapUtilization > 80 ? 'degraded' : 'healthy';
 
@@ -196,110 +196,110 @@ function checkSystemMetrics(): HealthCheck {
       responseTime: Date.now() - start,
       details: {
         uptimeSeconds: Math.floor(process.uptime()),
-        heapUtilization: Math.round(heapUtilization)
-      }
+        heapUtilization: Math.round(heapUtilization),
+      },
     };
   } catch (error) {
     return {
       service: 'system-metrics',
       status: 'unhealthy',
       responseTime: Date.now() - start,
-      error: error instanceof Error ? error.message : 'System metrics check failed'
+      error: error instanceof Error ? error.message : 'System metrics check failed',
     };
   }
 }
 
-export const GET = withRateLimitUnauthenticated(async (request, context) => {
-  try {
-    logger.debug('Comprehensive health check requested', { requestId: context.requestId });
-    
-    // Run all health checks in parallel for faster response
-    const checks = await Promise.all([
-      checkDatabaseHealthExtended(),
-      checkAuthentication(),
-      checkEncryption(),
-      checkAIService(),
-      Promise.resolve(checkSystemMetrics())
-    ]);
-    
-    // Calculate overall health status
-    const healthyCounts = checks.filter(c => c.status === 'healthy').length;
-    const degradedCounts = checks.filter(c => c.status === 'degraded').length;
-    const unhealthyCounts = checks.filter(c => c.status === 'unhealthy').length;
-    
-    let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    if (unhealthyCounts > 0) {
-      overallStatus = 'unhealthy';
-    } else if (degradedCounts > 0) {
-      overallStatus = 'degraded';
-    }
-    
-    // Get performance metrics
-    const deduplicationStats = getDeduplicationStats();
-    const circuitBreakerStatus = getCircuitBreakerStatus();
-    
-    const healthResponse: HealthCheckResponse = {
-      status: overallStatus,
-      timestamp: new Date().toISOString(),
-      version: packageJson.version || '1.0.0',
-      uptime: process.uptime(),
-      checks,
-      summary: {
-        total: checks.length,
+export const GET = withRateLimitUnauthenticated(
+  async (request, context) => {
+    try {
+      logger.debug('Comprehensive health check requested', { requestId: context.requestId });
+
+      // Run all health checks in parallel for faster response
+      const checks = await Promise.all([
+        checkDatabaseHealthExtended(),
+        checkAuthentication(),
+        checkEncryption(),
+        checkAIService(),
+        Promise.resolve(checkSystemMetrics()),
+      ]);
+
+      // Calculate overall health status
+      const healthyCounts = checks.filter((c) => c.status === 'healthy').length;
+      const degradedCounts = checks.filter((c) => c.status === 'degraded').length;
+      const unhealthyCounts = checks.filter((c) => c.status === 'unhealthy').length;
+
+      let overallStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+      if (unhealthyCounts > 0) {
+        overallStatus = 'unhealthy';
+      } else if (degradedCounts > 0) {
+        overallStatus = 'degraded';
+      }
+
+      // Get performance metrics
+      const deduplicationStats = getDeduplicationStats();
+      const circuitBreakerStatus = getCircuitBreakerStatus();
+
+      const healthResponse: HealthCheckResponse = {
+        status: overallStatus,
+        timestamp: new Date().toISOString(),
+        version: packageJson.version || '1.0.0',
+        uptime: process.uptime(),
+        checks,
+        summary: {
+          total: checks.length,
+          healthy: healthyCounts,
+          degraded: degradedCounts,
+          unhealthy: unhealthyCounts,
+        },
+        details: {
+          deduplication: {
+            activeRequests: deduplicationStats.activeRequests,
+            totalKeys: deduplicationStats.totalKeys,
+          },
+          circuitBreaker: circuitBreakerStatus.summary,
+        },
+      };
+
+      logger.info('Health check completed', {
+        requestId: context.requestId,
+        overallStatus,
         healthy: healthyCounts,
         degraded: degradedCounts,
-        unhealthy: unhealthyCounts
-      },
-      details: {
-        deduplication: {
-          activeRequests: deduplicationStats.activeRequests,
-          totalKeys: deduplicationStats.totalKeys,
-        },
-        circuitBreaker: circuitBreakerStatus.summary,
+        unhealthy: unhealthyCounts,
+      });
+
+      // Always return 200 with JSON body indicating health; avoid failing CI/E2E when deps are not configured
+      // Support compact vs verbose modes
+      let url: URL | null = null;
+      try {
+        url = new URL(request.url);
+      } catch {}
+      const verbose = url?.searchParams.get('verbose') === '1';
+
+      if (verbose) {
+        return createSuccessResponse(healthResponse, { requestId: context.requestId });
       }
-    };
-    
-    logger.info('Health check completed', {
-      requestId: context.requestId,
-      overallStatus,
-      healthy: healthyCounts,
-      degraded: degradedCounts,
-      unhealthy: unhealthyCounts
-    });
-    
-    // Always return 200 with JSON body indicating health; avoid failing CI/E2E when deps are not configured
-    // Support compact vs verbose modes
-    let url: URL | null = null;
-    try { url = new URL(request.url); } catch {}
-    const verbose = url?.searchParams.get('verbose') === '1';
 
-    if (verbose) {
-      return createSuccessResponse(healthResponse, { requestId: context.requestId });
+      const minimal = {
+        status: healthResponse.status,
+        timestamp: healthResponse.timestamp,
+        version: healthResponse.version,
+        uptime: healthResponse.uptime,
+        summary: healthResponse.summary,
+        details: healthResponse.details,
+      };
+      return createSuccessResponse(minimal, { requestId: context.requestId });
+    } catch (error) {
+      logger.error('Health check failed', {
+        requestId: context.requestId,
+        error: error instanceof Error ? error.message : 'Unknown health check error',
+      });
+
+      return createErrorResponse('Health check failed', 500, { requestId: context.requestId });
     }
-
-    const minimal = {
-      status: healthResponse.status,
-      timestamp: healthResponse.timestamp,
-      version: healthResponse.version,
-      uptime: healthResponse.uptime,
-      summary: healthResponse.summary,
-      details: healthResponse.details,
-    };
-    return createSuccessResponse(minimal, { requestId: context.requestId });
-    
-  } catch (error) {
-    logger.error('Health check failed', {
-      requestId: context.requestId,
-      error: error instanceof Error ? error.message : 'Unknown health check error'
-    });
-    
-    return createErrorResponse(
-      'Health check failed',
-      500,
-      { requestId: context.requestId }
-    );
-  }
-}, { bucket: 'api' });
+  },
+  { bucket: 'api' }
+);
 
 /**
  * Liveness probe - simple endpoint to check if the API is responsive

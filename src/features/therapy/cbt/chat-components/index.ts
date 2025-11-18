@@ -11,13 +11,13 @@ export { FinalEmotionReflection } from './final-emotion-reflection';
 export { ActionPlan } from './action-plan';
 
 // Component props types for convenience - now from Redux store
-export type { 
-  SituationData, 
-  EmotionData, 
-  ThoughtData, 
+export type {
+  SituationData,
+  EmotionData,
+  ThoughtData,
   SchemaModeData,
   ActionPlanData,
   CoreBeliefData,
   ChallengeQuestionData,
-  RationalThoughtData
+  RationalThoughtData,
 } from '@/store/slices/cbt-slice';

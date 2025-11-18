@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -70,14 +70,14 @@ export function SchemaModes({
   const { sessionData, schemaActions, navigation } = useCBTDataManager();
   const t = useTranslations('cbt');
   const modeTranslations = useTranslations();
-  
+
   // Get schema modes data from unified CBT hook
   const schemaModesData = sessionData?.schemaModes;
   const lastModified = sessionData?.lastModified;
-  
+
   // Default schema modes data
   const defaultModesData: SchemaModesData = {
-    selectedModes: DEFAULT_SCHEMA_MODES
+    selectedModes: DEFAULT_SCHEMA_MODES,
   };
 
   const [modesData, setModesData] = useState<SchemaModesData>(() => {
@@ -85,18 +85,20 @@ export function SchemaModes({
     if (initialData?.selectedModes) {
       return initialData;
     }
-    
+
     // Convert Redux schema modes to component format
     if (schemaModesData && schemaModesData.length > 0) {
       const selectedModes = DEFAULT_SCHEMA_MODES.map((mode) => ({
         ...mode,
         // Compare using stable id, not display name
-        selected: schemaModesData.some((reduxMode) => reduxMode.mode === mode.id && reduxMode.isActive),
+        selected: schemaModesData.some(
+          (reduxMode) => reduxMode.mode === mode.id && reduxMode.isActive
+        ),
         intensity: schemaModesData.find((reduxMode) => reduxMode.mode === mode.id)?.intensity || 5,
       }));
       return { selectedModes };
     }
-    
+
     return defaultModesData;
   });
 
@@ -110,7 +112,7 @@ export function SchemaModes({
           mode: mode.id,
           description: SCHEMA_MODE_TRANSLATIONS[mode.id]?.description ?? mode.description,
           intensity: mode.intensity || 5,
-          isActive: mode.selected
+          isActive: mode.selected,
         }));
       schemaActions.updateSchemaModes(reduxModes);
     }, 500); // Debounce updates by 500ms
@@ -120,7 +122,7 @@ export function SchemaModes({
 
   // Visual indicator for auto-save (based on Redux lastModified)
   const isDraftSaved = !!lastModified;
-  
+
   // CBT chat bridge for sending data to session
   // Note: Chat bridge no longer used - data sent only in final comprehensive summary
 
@@ -145,9 +147,7 @@ export function SchemaModes({
     setModesData((prev) => ({
       ...prev,
       selectedModes: prev.selectedModes.map((mode) =>
-        mode.id === modeId
-          ? { ...mode, selected: !mode.selected }
-          : mode
+        mode.id === modeId ? { ...mode, selected: !mode.selected } : mode
       ),
     }));
   }, []);
@@ -176,10 +176,10 @@ export function SchemaModes({
         mode: mode.id,
         description: SCHEMA_MODE_TRANSLATIONS[mode.id]?.description ?? mode.description,
         intensity: mode.intensity || 5,
-        isActive: mode.selected
+        isActive: mode.selected,
       }));
       schemaActions.updateSchemaModes(reduxModes);
-      
+
       // Complete the step and proceed to actions
       onComplete({ selectedModes });
     }
@@ -188,13 +188,20 @@ export function SchemaModes({
   // Schema mode colors for visual differentiation - compatible with light/dark mode
   const getModeColor = (modeId: string) => {
     switch (modeId) {
-      case 'vulnerable-child': return 'bg-blue-600';
-      case 'angry-child': return 'bg-red-600';
-      case 'punishing-parent': return 'bg-purple-600';
-      case 'demanding-parent': return 'bg-orange-500';
-      case 'detached-self-soother': return 'bg-slate-600';
-      case 'healthy-adult': return 'bg-green-600';
-      default: return 'bg-primary';
+      case 'vulnerable-child':
+        return 'bg-blue-600';
+      case 'angry-child':
+        return 'bg-red-600';
+      case 'punishing-parent':
+        return 'bg-purple-600';
+      case 'demanding-parent':
+        return 'bg-orange-500';
+      case 'detached-self-soother':
+        return 'bg-slate-600';
+      case 'healthy-adult':
+        return 'bg-green-600';
+      default:
+        return 'bg-primary';
     }
   };
 
@@ -212,42 +219,46 @@ export function SchemaModes({
       className={className}
       onNavigateStep={onNavigateStep}
     >
-      <div className="flex items-center justify-center gap-4 mb-4">
+      <div className="mb-4 flex items-center justify-center gap-4">
         {selectedModes.length > 0 && (
-          <p className="text-sm text-primary/70 font-semibold">{selectedModes.length} {t('schema.selected')}</p>
+          <p className="text-primary/70 text-sm font-semibold">
+            {selectedModes.length} {t('schema.selected')}
+          </p>
         )}
-        <div className={`flex items-center gap-2 text-xs px-2 py-1 rounded-md transition-all duration-200 ${
-          isDraftSaved
-            ? 'bg-green-50 text-green-700 ring-1 ring-green-600/10 dark:bg-green-900/20 dark:text-green-400 dark:ring-green-500/20 opacity-100 scale-100'
-            : 'opacity-0 scale-95'
-        }`}>
-          <span className="w-2 h-2 rounded-full bg-green-500"></span>
+        <div
+          className={`flex items-center gap-2 rounded-md px-2 py-1 text-xs transition-all duration-200 ${
+            isDraftSaved
+              ? 'scale-100 bg-green-50 text-green-700 opacity-100 ring-1 ring-green-600/10 dark:bg-green-900/20 dark:text-green-400 dark:ring-green-500/20'
+              : 'scale-95 opacity-0'
+          }`}
+        >
+          <span className="h-2 w-2 rounded-full bg-green-500"></span>
           {t('status.saved')}
         </div>
       </div>
 
-      <Card className="p-4 border-border bg-card">
+      <Card className="border-border bg-card p-4">
         <div className="space-y-4">
           {/* Information */}
-          <div className="p-3 bg-muted/30 rounded-lg border border-border/30">
-            <p className="text-sm text-muted-foreground">
+          <div className="bg-muted/30 border-border/30 rounded-lg border p-3">
+            <p className="text-muted-foreground text-sm">
               <strong>{t('schema.modes')}</strong> {t('schema.desc')}
             </p>
           </div>
 
           {/* Schema Modes Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {translatedModes.map((mode) => {
               const isSelected = mode.selected;
-              
+
               return (
-                <Card 
-                  key={mode.id} 
+                <Card
+                  key={mode.id}
                   className={cn(
-                    "p-3 cursor-pointer transition-colors duration-200",
-                    isSelected 
-                      ? "ring-2 ring-primary bg-primary/5 border-primary/30" 
-                      : "hover:border-primary/20 bg-muted/30"
+                    'cursor-pointer p-3 transition-colors duration-200',
+                    isSelected
+                      ? 'ring-primary bg-primary/5 border-primary/30 ring-2'
+                      : 'hover:border-primary/20 bg-muted/30'
                   )}
                   onClick={() => handleModeToggle(mode.id)}
                 >
@@ -255,10 +266,12 @@ export function SchemaModes({
                     {/* Mode Header */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm",
-                          getModeColor(mode.id)
-                        )}>
+                        <div
+                          className={cn(
+                            'flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold text-white',
+                            getModeColor(mode.id)
+                          )}
+                        >
                           {mode.id === 'vulnerable-child' && '👶'}
                           {mode.id === 'angry-child' && '😠'}
                           {mode.id === 'punishing-parent' && '🔨'}
@@ -267,14 +280,16 @@ export function SchemaModes({
                           {mode.id === 'healthy-adult' && '🌟'}
                         </div>
                         <div>
-                          <h4 className="font-semibold text-sm text-foreground">{mode.name}</h4>
-                          <p className="text-sm text-muted-foreground italic">{mode.description}</p>
+                          <h4 className="text-foreground text-sm font-semibold">{mode.name}</h4>
+                          <p className="text-muted-foreground text-sm italic">{mode.description}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {isSelected ? (
                           <>
-                            <span className="text-sm font-semibold text-primary">{mode.intensity || 5}/10</span>
+                            <span className="text-primary text-sm font-semibold">
+                              {mode.intensity || 5}/10
+                            </span>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -282,17 +297,17 @@ export function SchemaModes({
                                 e.stopPropagation();
                                 handleModeToggle(mode.id);
                               }}
-                              className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                              className="hover:bg-destructive/10 hover:text-destructive h-6 w-6 p-0"
                             >
                               ✕
                             </Button>
                           </>
                         ) : (
-                          <div className="w-6 h-6 rounded-full border border-muted-foreground/10" />
+                          <div className="border-muted-foreground/10 h-6 w-6 rounded-full border" />
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Intensity Slider (only shown when selected) */}
                     {isSelected && (
                       <div className="space-y-1" onClick={(e) => e.stopPropagation()}>
@@ -316,19 +331,20 @@ export function SchemaModes({
 
           {/* Selected Modes Summary */}
           {selectedModes.length > 0 && (
-            <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-              <h4 className="text-sm font-semibold text-primary mb-2">{t('schema.active')}</h4>
+            <div className="bg-primary/5 border-primary/20 rounded-lg border p-3">
+              <h4 className="text-primary mb-2 text-sm font-semibold">{t('schema.active')}</h4>
               <div className="space-y-1">
                 {selectedModes.map((mode) => (
-                  <div key={mode.id} className="flex justify-between items-center text-sm">
+                  <div key={mode.id} className="flex items-center justify-between text-sm">
                     <span className="text-foreground">{mode.name}</span>
-                    <span className="text-muted-foreground">{t('schema.intensity')}: {mode.intensity}/10</span>
+                    <span className="text-muted-foreground">
+                      {t('schema.intensity')}: {mode.intensity}/10
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
           )}
-
         </div>
       </Card>
     </CBTStepWrapper>

@@ -28,7 +28,7 @@ export interface DeepThinkingDetection {
  * STATELESS: Each message evaluated independently to prevent sticky behavior
  */
 export function shouldUseWebSearch(
-  content: string, 
+  content: string,
   browserSearchEnabled: boolean
 ): WebSearchDetection {
   // If browser search is disabled by user, no web search
@@ -36,7 +36,7 @@ export function shouldUseWebSearch(
     return {
       shouldUseWebSearch: false,
       reason: 'Browser search disabled by user',
-      confidence: 'high'
+      confidence: 'high',
     };
   }
 
@@ -49,7 +49,7 @@ export function shouldUseWebSearch(
     /what\s+(is|are|was|were)\s+the\s+(latest|current|recent)/i,
     /current\s+(research|information|data|studies|trends)/i,
     /latest\s+(news|updates|information|research)/i,
-    /recent\s+(studies|research|developments|findings)/i
+    /recent\s+(studies|research|developments|findings)/i,
   ];
 
   for (const pattern of highConfidencePatterns) {
@@ -57,7 +57,7 @@ export function shouldUseWebSearch(
       return {
         shouldUseWebSearch: true,
         reason: 'High confidence web search pattern detected',
-        confidence: 'high'
+        confidence: 'high',
       };
     }
   }
@@ -73,7 +73,7 @@ export function shouldUseWebSearch(
     /\b(best|top|popular|recommended)\b.*\b(20\d{2}|current|now|today|latest)\b/i,
     // Information requests that clearly need web data
     /tell\s+me\s+about.*\b(current|latest|recent)\b/i,
-    /information\s+(about|on).*\b(current|latest|recent)\b/i
+    /information\s+(about|on).*\b(current|latest|recent)\b/i,
   ];
 
   for (const pattern of mediumConfidencePatterns) {
@@ -81,7 +81,7 @@ export function shouldUseWebSearch(
       return {
         shouldUseWebSearch: true,
         reason: 'Medium confidence - query likely needs current information',
-        confidence: 'medium'
+        confidence: 'medium',
       };
     }
   }
@@ -93,7 +93,7 @@ export function shouldUseWebSearch(
   return {
     shouldUseWebSearch: false,
     reason: 'General conversation - no web search indicators',
-    confidence: 'high'
+    confidence: 'high',
   };
 }
 
@@ -113,7 +113,7 @@ export function shouldUseDeepThinking(content: string): DeepThinkingDetection {
     /\b(detailed\s+(analysis|examination))\b/i,
     /ultrathink/i,
     /think\s+really\s+hard/i,
-    /give\s+(this|it)\s+(deep|serious)\s+thought/i
+    /give\s+(this|it)\s+(deep|serious)\s+thought/i,
   ];
 
   for (const pattern of deepThinkingPatterns) {
@@ -121,7 +121,7 @@ export function shouldUseDeepThinking(content: string): DeepThinkingDetection {
       return {
         shouldUseDeepThinking: true,
         reason: 'Explicit deep thinking request detected',
-        confidence: 'high'
+        confidence: 'high',
       };
     }
   }
@@ -130,7 +130,7 @@ export function shouldUseDeepThinking(content: string): DeepThinkingDetection {
   return {
     shouldUseDeepThinking: false,
     reason: 'No deep thinking patterns detected',
-    confidence: 'high'
+    confidence: 'high',
   };
 }
 
@@ -147,17 +147,19 @@ export function selectModelForRequirements(
     return {
       modelId: ANALYTICAL_MODEL_ID,
       displayName: 'GPT OSS 120B (Deep Analysis + Web Search)',
-      reason: `Web search required: ${webSearchDetection.reason}`
+      reason: `Web search required: ${webSearchDetection.reason}`,
     };
   }
 
   // CBT diary patterns require analytical model
-  if (/\*\*(Situation|Thoughts|Emotions|Physical Sensations|Behaviors):\*\*/i.test(content) ||
-      /CBT Thought Record/i.test(content)) {
+  if (
+    /\*\*(Situation|Thoughts|Emotions|Physical Sensations|Behaviors):\*\*/i.test(content) ||
+    /CBT Thought Record/i.test(content)
+  ) {
     return {
       modelId: ANALYTICAL_MODEL_ID,
       displayName: 'GPT OSS 120B (Deep Analysis)',
-      reason: 'CBT content requires analytical processing'
+      reason: 'CBT content requires analytical processing',
     };
   }
 
@@ -166,7 +168,7 @@ export function selectModelForRequirements(
     return {
       modelId: ANALYTICAL_MODEL_ID,
       displayName: 'GPT OSS 120B (Deep Analysis)',
-      reason: 'Complex analysis request detected'
+      reason: 'Complex analysis request detected',
     };
   }
 
@@ -177,7 +179,7 @@ export function selectModelForRequirements(
   return {
     modelId: DEFAULT_MODEL_ID,
     displayName: 'GPT OSS 20B',
-    reason: 'General conversation - optimized for speed'
+    reason: 'General conversation - optimized for speed',
   };
 }
 
@@ -186,26 +188,30 @@ export function selectModelForRequirements(
  */
 export function selectModel(content: string): ModelSelection {
   // CBT diary patterns (highest priority for specificity)
-  if (/\*\*(Situation|Thoughts|Emotions|Physical Sensations|Behaviors):\*\*/i.test(content) ||
-      /CBT Thought Record/i.test(content)) {
+  if (
+    /\*\*(Situation|Thoughts|Emotions|Physical Sensations|Behaviors):\*\*/i.test(content) ||
+    /CBT Thought Record/i.test(content)
+  ) {
     return {
       modelId: ANALYTICAL_MODEL_ID,
       displayName: 'GPT OSS 120B (Deep Analysis)',
-      reason: 'CBT content detected'
+      reason: 'CBT content detected',
     };
   }
 
   // Web search patterns
-  if (/\b(search|find|look up|research|google)\b/i.test(content) ||
-      /please research/i.test(content) ||
-      /what (is|are|was|were|do|does|did|can|could|will|would).*\?/i.test(content) ||
-      /tell me about/i.test(content) ||
-      /information (on|about)/i.test(content) ||
-      /current research|latest.*research|recent studies/i.test(content)) {
+  if (
+    /\b(search|find|look up|research|google)\b/i.test(content) ||
+    /please research/i.test(content) ||
+    /what (is|are|was|were|do|does|did|can|could|will|would).*\?/i.test(content) ||
+    /tell me about/i.test(content) ||
+    /information (on|about)/i.test(content) ||
+    /current research|latest.*research|recent studies/i.test(content)
+  ) {
     return {
       modelId: ANALYTICAL_MODEL_ID,
-      displayName: 'GPT OSS 120B (Deep Analysis)', 
-      reason: 'Research/search request detected'
+      displayName: 'GPT OSS 120B (Deep Analysis)',
+      reason: 'Research/search request detected',
     };
   }
 
@@ -214,7 +220,7 @@ export function selectModel(content: string): ModelSelection {
     return {
       modelId: ANALYTICAL_MODEL_ID,
       displayName: 'GPT OSS 120B (Deep Analysis)',
-      reason: 'Analysis request detected'
+      reason: 'Analysis request detected',
     };
   }
 
@@ -222,7 +228,7 @@ export function selectModel(content: string): ModelSelection {
   return {
     modelId: DEFAULT_MODEL_ID,
     displayName: 'GPT OSS 20B',
-    reason: 'General conversation'
+    reason: 'General conversation',
   };
 }
 
@@ -239,7 +245,7 @@ export function supportsWebSearch(modelId: string): boolean {
 export function formatModelName(modelId: string): string {
   const modelMap: Record<string, string> = {
     [DEFAULT_MODEL_ID]: 'GPT OSS 20B',
-    [ANALYTICAL_MODEL_ID]: 'GPT OSS 120B (Deep Analysis)'
+    [ANALYTICAL_MODEL_ID]: 'GPT OSS 120B (Deep Analysis)',
   };
   return modelMap[modelId] || modelId;
 }

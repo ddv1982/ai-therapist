@@ -6,7 +6,7 @@ export const CBT_STEP_CONFIG: CBTStepConfigMap = {
     messages: {
       component: {
         translationKey: 'steps.situation.prompt',
-        defaultText: "What happened?",
+        defaultText: 'What happened?',
       },
       aiResponse: {
         translationKey: 'ai.situationNext',

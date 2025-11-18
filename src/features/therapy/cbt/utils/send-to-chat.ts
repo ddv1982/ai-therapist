@@ -30,7 +30,11 @@ function extractReportContentFlexible(resp: unknown): string {
     throw new Error('Failed to generate session report');
   }
   const r = resp as { success?: boolean; data?: unknown; reportContent?: unknown };
-  if (r.success && r.data && typeof (r.data as { reportContent?: unknown }).reportContent === 'string') {
+  if (
+    r.success &&
+    r.data &&
+    typeof (r.data as { reportContent?: unknown }).reportContent === 'string'
+  ) {
     return (r.data as { reportContent: string }).reportContent;
   }
   if (typeof r.reportContent === 'string') {
@@ -54,7 +58,7 @@ export async function sendToChat({
   ];
 
   const createdSession = mapApiResponse<SessionComponents['schemas']['Session']>(
-    await apiClient.createSession({ title }),
+    await apiClient.createSession({ title })
   );
   const sessionId = createdSession.id;
 

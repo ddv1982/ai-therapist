@@ -24,12 +24,19 @@ http.route({
         'svix-timestamp': request.headers.get('svix-timestamp') || '',
         'svix-signature': request.headers.get('svix-signature') || '',
       } as const;
-      if (!svixHeaders['svix-id'] || !svixHeaders['svix-timestamp'] || !svixHeaders['svix-signature']) {
+      if (
+        !svixHeaders['svix-id'] ||
+        !svixHeaders['svix-timestamp'] ||
+        !svixHeaders['svix-signature']
+      ) {
         return new Response('Missing Svix headers', { status: 400 });
       }
 
       // Verify the signature
-      const verified = svix.verify(JSON.stringify(payload), svixHeaders as unknown as Record<string, string>);
+      const verified = svix.verify(
+        JSON.stringify(payload),
+        svixHeaders as unknown as Record<string, string>
+      );
 
       // Handle different Clerk user events
       type EmailAddress = { email_address?: string };
@@ -55,18 +62,20 @@ http.route({
         await ctx.runMutation(anyApi.users.internal.createFromClerk, {
           clerkId: data?.id ?? '',
           email: data?.email_addresses?.[0]?.email_address || '',
-          name: (data?.first_name || data?.last_name)
-            ? `${data.first_name || ''} ${data.last_name || ''}`.trim()
-            : undefined,
+          name:
+            data?.first_name || data?.last_name
+              ? `${data.first_name || ''} ${data.last_name || ''}`.trim()
+              : undefined,
         });
       } else if (type === 'user.updated') {
         // Update user in Convex when Clerk user is updated
         await ctx.runMutation(anyApi.users.internal.updateFromClerk, {
           clerkId: data?.id ?? '',
           email: data?.email_addresses?.[0]?.email_address || '',
-          name: (data?.first_name || data?.last_name)
-            ? `${data.first_name || ''} ${data.last_name || ''}`.trim()
-            : undefined,
+          name:
+            data?.first_name || data?.last_name
+              ? `${data.first_name || ''} ${data.last_name || ''}`.trim()
+              : undefined,
         });
       } else if (type === 'user.deleted') {
         // Soft delete user in Convex when Clerk user is deleted

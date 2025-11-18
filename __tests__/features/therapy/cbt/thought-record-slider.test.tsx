@@ -1,4 +1,3 @@
-import React from 'react';
 import '@testing-library/jest-dom';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderWithCBT } from '../../../utils/test-utilities';
@@ -41,7 +40,9 @@ jest.mock('@/components/ui/cbt-step-wrapper', () => ({
   CBTStepWrapper: ({ children, onNext }: { children: React.ReactNode; onNext?: () => void }) => (
     <div>
       <div data-testid="mock-cbt-step-wrapper">{children}</div>
-      <button type="button" onClick={onNext}>Next</button>
+      <button type="button" onClick={onNext}>
+        Next
+      </button>
     </div>
   ),
 }));
@@ -49,20 +50,34 @@ jest.mock('@/components/ui/cbt-step-wrapper', () => ({
 jest.mock('@/components/ui/button', () => ({
   __esModule: true,
   Button: ({ children, ...props }: { children: React.ReactNode }) => (
-    <button type="button" {...props}>{children}</button>
+    <button type="button" {...props}>
+      {children}
+    </button>
   ),
 }));
 
 jest.mock('@/components/ui/textarea', () => ({
   __esModule: true,
-  Textarea: ({ value, onChange }: { value: string; onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void }) => (
-    <textarea value={value} onChange={onChange} />
-  ),
+  Textarea: ({
+    value,
+    onChange,
+  }: {
+    value: string;
+    onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  }) => <textarea value={value} onChange={onChange} />,
 }));
 
 jest.mock('@/components/ui/therapy-slider', () => ({
   __esModule: true,
-  TherapySlider: ({ label, value, onChange }: { label: string; value: number; onChange: (next: number) => void }) => (
+  TherapySlider: ({
+    label,
+    value,
+    onChange,
+  }: {
+    label: string;
+    value: number;
+    onChange: (next: number) => void;
+  }) => (
     <input
       type="range"
       aria-label={label}

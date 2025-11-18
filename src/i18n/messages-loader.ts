@@ -15,7 +15,11 @@ function expandDotNotation(flatMessages: FlatMessages): Record<string, unknown> 
       if (i === parts.length - 1) {
         current[part] = value;
       } else {
-        if (typeof current[part] !== 'object' || current[part] === null || Array.isArray(current[part])) {
+        if (
+          typeof current[part] !== 'object' ||
+          current[part] === null ||
+          Array.isArray(current[part])
+        ) {
           current[part] = {};
         }
         current = current[part] as Record<string, unknown>;

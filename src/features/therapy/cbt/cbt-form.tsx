@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useEffect } from 'react';
 import { useForm, Controller, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cbtRHFSchema, type CBTFormInput } from './cbt-form-schema';
@@ -57,16 +57,16 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
   // Redux auto-save integration
   const { sessionActions } = useCBTDataManager({
     autoSaveDelay: 600, // Match the original debounce timing
-    enableValidation: false // Disable validation to avoid conflicts with RHF
+    enableValidation: false, // Disable validation to avoid conflicts with RHF
   });
 
   // Auto-save to Redux on form changes
-  React.useEffect(() => {
+  useEffect(() => {
     // Convert RHF form data to Redux-compatible format and update session
     if (current?.situation) {
       sessionActions.updateSituation({
         situation: current.situation,
-        date: current.date || new Date().toISOString().split('T')[0]
+        date: current.date || new Date().toISOString().split('T')[0],
       });
     }
 
@@ -79,10 +79,10 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
     }
   }, [current, sessionActions, onDraftChange]);
 
-  const isSituationValid = (String(current?.situation || '').trim().length) >= 5;
+  const isSituationValid = String(current?.situation || '').trim().length >= 5;
 
   return (
-    <Card className="p-4 space-y-6">
+    <Card className="space-y-6 p-4">
       <form onSubmit={handleSubmit((data) => onSubmit(data))} className="space-y-6">
         <div>
           <label className="text-sm font-semibold" htmlFor="situation-input">
@@ -106,7 +106,7 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
             )}
           />
           {formState.errors.situation?.message && (
-            <p id="situation-error" className="text-sm text-red-600 mt-1" role="alert">
+            <p id="situation-error" className="mt-1 text-sm text-red-600" role="alert">
               {String(formState.errors.situation.message)}
             </p>
           )}
@@ -114,28 +114,37 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
 
         <div>
           <label className="text-sm font-semibold">Initial emotions</label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
-            {(['fear','anger','sadness','joy','anxiety','shame','guilt'] as const).map((emotion) => (
-              <Controller
-                key={emotion}
-                control={control}
-                name={`initialEmotions.${emotion}` as const}
-                render={({ field }) => (
-                  <div>
-                    <div className="flex items-center justify-between text-sm mb-2">
-                      <span className="capitalize">{emotion}</span>
-                      <span>{field.value}</span>
+          <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {(['fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt'] as const).map(
+              (emotion) => (
+                <Controller
+                  key={emotion}
+                  control={control}
+                  name={`initialEmotions.${emotion}` as const}
+                  render={({ field }) => (
+                    <div>
+                      <div className="mb-2 flex items-center justify-between text-sm">
+                        <span className="capitalize">{emotion}</span>
+                        <span>{field.value}</span>
+                      </div>
+                      <Slider
+                        value={[Number(field.value ?? 0)]}
+                        max={10}
+                        step={1}
+                        onValueChange={(v) => field.onChange(v[0])}
+                      />
                     </div>
-                    <Slider value={[Number(field.value ?? 0)]} max={10} step={1} onValueChange={(v) => field.onChange(v[0])} />
-                  </div>
-                )}
-              />
-            ))}
+                  )}
+                />
+              )
+            )}
           </div>
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button type="submit" disabled={!isSituationValid}>Save Draft</Button>
+          <Button type="submit" disabled={!isSituationValid}>
+            Save Draft
+          </Button>
         </div>
       </form>
     </Card>

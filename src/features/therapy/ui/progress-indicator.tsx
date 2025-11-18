@@ -16,8 +16,8 @@ interface ProgressStep {
 
 interface ProgressIndicatorProps {
   steps: ProgressStep[];
-  orientation?: "horizontal" | "vertical";
-  size?: "sm" | "md" | "lg";
+  orientation?: 'horizontal' | 'vertical';
+  size?: 'sm' | 'md' | 'lg';
   showLabels?: boolean;
   showDescription?: boolean;
   className?: string;
@@ -25,42 +25,39 @@ interface ProgressIndicatorProps {
 }
 
 const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProps>(
-  ({
-    steps,
-    orientation = "horizontal",
-    size = "md",
-    showLabels = true,
-    showDescription = false,
-    className,
-    onStepClick,
-    ...props
-  }, ref) => {
-    const isVertical = orientation === "vertical";
+  (
+    {
+      steps,
+      orientation = 'horizontal',
+      size = 'md',
+      showLabels = true,
+      showDescription = false,
+      className,
+      onStepClick,
+      ...props
+    },
+    ref
+  ) => {
+    const isVertical = orientation === 'vertical';
     const sizeClasses = {
-      sm: { step: "w-6 h-6", text: "text-sm", spacing: "gap-2" },
-      md: { step: "w-8 h-8", text: "text-sm", spacing: "gap-3" },
-      lg: { step: "w-10 h-10", text: "text-base", spacing: "gap-4" },
+      sm: { step: 'w-6 h-6', text: 'text-sm', spacing: 'gap-2' },
+      md: { step: 'w-8 h-8', text: 'text-sm', spacing: 'gap-3' },
+      lg: { step: 'w-10 h-10', text: 'text-base', spacing: 'gap-4' },
     }[size];
 
-    const completedSteps = steps.filter(step => step.completed).length;
+    const completedSteps = steps.filter((step) => step.completed).length;
     const totalSteps = steps.length;
     const progressPercentage = (completedSteps / totalSteps) * 100;
     const t = useTranslations('cbt');
 
     return (
-      <div
-        ref={ref}
-        className={cn("therapy-progress-indicator", className)}
-        {...props}
-      >
+      <div ref={ref} className={cn('therapy-progress-indicator', className)} {...props}>
         {/* Overall Progress Bar */}
         <div className="mb-therapy-md">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-foreground">
-              {t('progress.overall')}
-            </span>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-foreground text-sm font-semibold">{t('progress.overall')}</span>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-primary">
+              <span className="text-primary text-sm font-semibold">
                 {t('progress.complete', { percent: Math.round(progressPercentage) })}
               </span>
               <Badge variant="outline" size="sm">
@@ -68,9 +65,9 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
               </Badge>
             </div>
           </div>
-          <div className="h-2 bg-muted rounded overflow-hidden">
+          <div className="bg-muted h-2 overflow-hidden rounded">
             <div
-              className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+              className="from-primary to-accent h-full bg-gradient-to-r transition-all duration-500"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
@@ -79,8 +76,8 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
         {/* Steps */}
         <div
           className={cn(
-            "flex",
-            isVertical ? "flex-col" : "flex-row items-center",
+            'flex',
+            isVertical ? 'flex-col' : 'flex-row items-center',
             sizeClasses.spacing
           )}
         >
@@ -92,51 +89,47 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
               <div
                 key={step.id}
                 className={cn(
-                  "flex items-center",
-                  isVertical ? "w-full" : "flex-1",
+                  'flex items-center',
+                  isVertical ? 'w-full' : 'flex-1',
                   sizeClasses.spacing
                 )}
               >
                 {/* Step Circle */}
                 <div
-                  className={cn(
-                    "flex items-center",
-                    isVertical ? "flex-row w-full" : "flex-col"
-                  )}
+                  className={cn('flex items-center', isVertical ? 'w-full flex-row' : 'flex-col')}
                 >
                   <div className="relative">
                     <button
                       onClick={isClickable ? () => onStepClick!(step.id) : undefined}
                       disabled={!isClickable}
                       className={cn(
-                        "flex items-center justify-center rounded-full border-2 transition-all duration-200",
+                        'flex items-center justify-center rounded-full border-2 transition-all duration-200',
                         sizeClasses.step,
                         {
                           // Completed step
-                          "bg-primary border-primary text-primary-foreground shadow-sm":
+                          'bg-primary border-primary text-primary-foreground shadow-sm':
                             step.completed,
                           // Current step
-                          "bg-background border-primary text-primary ring-2 ring-primary/20":
+                          'bg-background border-primary text-primary ring-primary/20 ring-2':
                             step.current && !step.completed,
                           // Error step
-                          "bg-destructive/10 border-destructive text-destructive":
-                            step.error,
+                          'bg-destructive/10 border-destructive text-destructive': step.error,
                           // Default/future step
-                          "bg-background border-muted-foreground/30 text-muted-foreground":
+                          'bg-background border-muted-foreground/30 text-muted-foreground':
                             !step.completed && !step.current && !step.error,
                           // Clickable
-                          "cursor-pointer": isClickable,
+                          'cursor-pointer': isClickable,
                           // Disabled
-                          "cursor-not-allowed opacity-60": !isClickable && !step.current,
+                          'cursor-not-allowed opacity-60': !isClickable && !step.current,
                         }
                       )}
                     >
                       {step.error ? (
-                        <AlertCircle className="w-4 h-4" />
+                        <AlertCircle className="h-4 w-4" />
                       ) : step.completed ? (
-                        <CheckCircle className="w-4 h-4" />
+                        <CheckCircle className="h-4 w-4" />
                       ) : (
-                        <Circle className="w-3 h-3" />
+                        <Circle className="h-3 w-3" />
                       )}
                     </button>
 
@@ -145,7 +138,7 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
                       <Badge
                         variant="outline"
                         size="sm"
-                        className="absolute -top-2 -right-2 text-[10px] px-1 py-0.5 h-4"
+                        className="absolute -top-2 -right-2 h-4 px-1 py-0.5 text-[10px]"
                       >
                         {t('progress.optional')}
                       </Badge>
@@ -156,25 +149,22 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
                   {showLabels && (
                     <div
                       className={cn(
-                        "flex flex-col",
-                        isVertical ? "ml-3 flex-1" : "mt-2 text-center",
+                        'flex flex-col',
+                        isVertical ? 'ml-3 flex-1' : 'mt-2 text-center',
                         sizeClasses.text
                       )}
                     >
                       <span
-                        className={cn(
-                          "font-semibold transition-colors duration-200",
-                          {
-                            "text-primary": step.current || step.completed,
-                            "text-destructive": step.error,
-                            "text-foreground": !step.current && !step.completed && !step.error,
-                          }
-                        )}
+                        className={cn('font-semibold transition-colors duration-200', {
+                          'text-primary': step.current || step.completed,
+                          'text-destructive': step.error,
+                          'text-foreground': !step.current && !step.completed && !step.error,
+                        })}
                       >
                         {step.label}
                       </span>
                       {showDescription && step.description && (
-                        <span className="text-muted-foreground text-sm mt-1">
+                        <span className="text-muted-foreground mt-1 text-sm">
                           {step.description}
                         </span>
                       )}
@@ -186,13 +176,11 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
                 {!isLast && (
                   <div
                     className={cn(
-                      "flex-1",
+                      'flex-1',
                       isVertical
-                        ? "h-8 w-0.5 ml-4 bg-gradient-to-b"
-                        : "h-0.5 mx-2 bg-gradient-to-r",
-                      step.completed
-                        ? "from-primary to-accent"
-                        : "from-muted to-muted"
+                        ? 'ml-4 h-8 w-0.5 bg-gradient-to-b'
+                        : 'mx-2 h-0.5 bg-gradient-to-r',
+                      step.completed ? 'from-primary to-accent' : 'from-muted to-muted'
                     )}
                   />
                 )}
@@ -205,6 +193,6 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
   }
 );
 
-ProgressIndicator.displayName = "ProgressIndicator";
+ProgressIndicator.displayName = 'ProgressIndicator';
 
 export { ProgressIndicator, type ProgressStep, type ProgressIndicatorProps };

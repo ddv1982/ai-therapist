@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -23,7 +22,7 @@ export function CardFieldDisplay({
   render,
   variant = 'secondary',
   className,
-  row
+  row,
 }: CardFieldDisplayProps) {
   // Handle empty or null values
   if (value === null || value === undefined || value === '') {
@@ -38,25 +37,21 @@ export function CardFieldDisplay({
     primary: 'text-base font-semibold text-foreground',
     secondary: 'text-sm text-muted-foreground',
     badge: 'text-sm',
-    status: 'text-sm font-semibold'
+    status: 'text-sm font-semibold',
   };
 
   const labelStyles = {
     primary: 'text-sm font-semibold text-muted-foreground mb-1',
     secondary: 'text-sm text-muted-foreground/80',
     badge: 'text-sm text-muted-foreground/80',
-    status: 'text-sm text-muted-foreground/80 mb-1'
+    status: 'text-sm text-muted-foreground/80 mb-1',
   };
 
   // Special handling for badge variant
   if (variant === 'badge') {
     return (
       <div className={cn('flex flex-col gap-1', className)}>
-        {label && (
-          <span className={labelStyles[variant]}>
-            {label}
-          </span>
-        )}
+        {label && <span className={labelStyles[variant]}>{label}</span>}
         <Badge variant="therapy" size="sm">
           {renderedValue}
         </Badge>
@@ -68,14 +63,8 @@ export function CardFieldDisplay({
   if (variant === 'status') {
     return (
       <div className={cn('flex flex-col', className)}>
-        {label && (
-          <span className={labelStyles[variant]}>
-            {label}
-          </span>
-        )}
-        <div className={cn(variantStyles[variant])}>
-          {renderedValue}
-        </div>
+        {label && <span className={labelStyles[variant]}>{label}</span>}
+        <div className={cn(variantStyles[variant])}>{renderedValue}</div>
       </div>
     );
   }
@@ -84,12 +73,8 @@ export function CardFieldDisplay({
   if (variant === 'primary') {
     return (
       <div className={cn('flex flex-col space-y-1', className)}>
-        <span className={labelStyles[variant]}>
-          {label}
-        </span>
-        <div className={cn(variantStyles[variant])}>
-          {renderedValue}
-        </div>
+        <span className={labelStyles[variant]}>{label}</span>
+        <div className={cn(variantStyles[variant])}>{renderedValue}</div>
       </div>
     );
   }
@@ -97,12 +82,8 @@ export function CardFieldDisplay({
   // Default secondary variant - compact inline display
   return (
     <div className={cn('flex items-center justify-between gap-2', className)}>
-      <span className={labelStyles[variant]}>
-        {label}:
-      </span>
-      <div className={cn(variantStyles[variant])}>
-        {renderedValue}
-      </div>
+      <span className={labelStyles[variant]}>{label}:</span>
+      <div className={cn(variantStyles[variant])}>{renderedValue}</div>
     </div>
   );
 }
@@ -110,13 +91,17 @@ export function CardFieldDisplay({
 // Utility function to determine appropriate variant based on column configuration
 export function getFieldVariant(
   _columnKey: string,
-  columnConfig?: { key: string; priority?: 'high' | 'medium' | 'low'; type?: 'badge' | 'status' | 'text' }
+  columnConfig?: {
+    key: string;
+    priority?: 'high' | 'medium' | 'low';
+    type?: 'badge' | 'status' | 'text';
+  }
 ): 'primary' | 'secondary' | 'badge' | 'status' {
   if (!columnConfig) return 'secondary';
-  
+
   if (columnConfig.type === 'badge') return 'badge';
   if (columnConfig.type === 'status') return 'status';
-  
+
   switch (columnConfig.priority) {
     case 'high':
       return 'primary';

@@ -41,39 +41,45 @@ function normalizeErrorPayload(payload: unknown) {
   };
 }
 
-export const POST = withAuthAndRateLimit(async (request, context) => {
-  try {
-    let parsedPayload: unknown;
+export const POST = withAuthAndRateLimit(
+  async (request, context) => {
     try {
-      parsedPayload = await request.json();
-    } catch {
-      parsedPayload = undefined;
+      let parsedPayload: unknown;
+      try {
+        parsedPayload = await request.json();
+      } catch {
+        parsedPayload = undefined;
+      }
+
+      const errorData = normalizeErrorPayload(parsedPayload);
+
+      logger.error('Client error report', {
+        ...context,
+        clientErrorData: errorData,
+        apiEndpoint: '/api/errors',
+      });
+
+      return createSuccessResponse(
+        { message: 'Error logged successfully' },
+        { requestId: context.requestId }
+      );
+    } catch (error) {
+      logger.apiError('/api/errors', error as Error, context);
+      return createErrorResponse('Failed to log error', 500, { requestId: context.requestId });
     }
+  },
+  { maxRequests: 120, windowMs: 5 * 60 * 1000 }
+);
 
-    const errorData = normalizeErrorPayload(parsedPayload);
-
-    logger.error('Client error report', {
-      ...context,
-      clientErrorData: errorData,
-      apiEndpoint: '/api/errors'
-    });
-
+export const GET = withAuthAndRateLimit(
+  async (_request, context) => {
     return createSuccessResponse(
-      { message: 'Error logged successfully' },
+      {
+        timestamp: new Date().toISOString(),
+        status: 'ok',
+      },
       { requestId: context.requestId }
     );
-  } catch (error) {
-    logger.apiError('/api/errors', error as Error, context);
-    return createErrorResponse('Failed to log error', 500, { requestId: context.requestId });
-  }
-}, { maxRequests: 120, windowMs: 5 * 60 * 1000 });
-
-export const GET = withAuthAndRateLimit(async (_request, context) => {
-  return createSuccessResponse(
-    {
-      timestamp: new Date().toISOString(),
-      status: 'ok'
-    },
-    { requestId: context.requestId }
-  );
-}, { maxRequests: 60, windowMs: 5 * 60 * 1000 });
+  },
+  { maxRequests: 60, windowMs: 5 * 60 * 1000 }
+);

@@ -16,5 +16,3 @@ describe('utils edges', () => {
     expect(isPrivateNetworkAccess('8.8.8.8')).toBe(false);
   });
 });
-
-

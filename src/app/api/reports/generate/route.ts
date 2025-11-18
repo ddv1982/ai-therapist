@@ -17,7 +17,7 @@ export const POST = withAuth(async (request: NextRequest, context: Authenticated
       ...context,
       modelUsed: REPORT_MODEL_ID,
       selectionReason: 'Report generation requires analytical model',
-      reportGenerationFlow: true
+      reportGenerationFlow: true,
     });
 
     const body = await request.json();
@@ -44,13 +44,11 @@ export const POST = withAuth(async (request: NextRequest, context: Authenticated
       logger.warn('Unauthorized report generation attempt', {
         ...context,
         sessionId,
-        clerkId
+        clerkId,
       });
-      return createErrorResponse(
-        'Session not found or access denied',
-        404,
-        { requestId: context.requestId }
-      );
+      return createErrorResponse('Session not found or access denied', 404, {
+        requestId: context.requestId,
+      });
     }
 
     // Deduplicate report generation to prevent multiple concurrent generations
@@ -71,7 +69,6 @@ export const POST = withAuth(async (request: NextRequest, context: Authenticated
       undefined,
       30000 // 30 second TTL for report generation deduplication
     );
-
   } catch (error) {
     logger.apiError('/api/reports/generate', error as Error, context);
     return createErrorResponse('Failed to generate report', 500, { requestId: context.requestId });

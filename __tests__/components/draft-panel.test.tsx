@@ -1,4 +1,3 @@
-import React from 'react';
 import { render } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { DraftPanel } from '@/features/therapy/cbt/components/draft-panel';
@@ -28,9 +27,13 @@ describe('DraftPanel', () => {
 
   it('renders without draft (begin button)', () => {
     const { container } = renderWithIntl(
-      <DraftPanel hasDraft={false} onDeleteDraft={() => {}} onResume={() => {}} onStartFresh={() => {}} />
+      <DraftPanel
+        hasDraft={false}
+        onDeleteDraft={() => {}}
+        onResume={() => {}}
+        onStartFresh={() => {}}
+      />
     );
     expect(container).toMatchSnapshot();
   });
 });
-

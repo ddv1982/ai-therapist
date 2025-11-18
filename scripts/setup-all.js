@@ -8,10 +8,10 @@ const path = require('path');
 function runCommand(command, args = [], options = {}) {
   return new Promise((resolve, reject) => {
     console.log(`🔧 Running: ${command} ${args.join(' ')}`);
-    
+
     const process = spawn(command, args, {
       stdio: 'inherit',
-      ...options
+      ...options,
     });
 
     process.on('close', (code) => {
@@ -65,7 +65,7 @@ async function setupAll() {
 
     // Final verification
     console.log('🔍 Step 7: Verifying setup...');
-    
+
     // Check Redis status
     try {
       await runCommand('npm', ['run', 'redis:status']);
@@ -85,7 +85,6 @@ async function setupAll() {
     console.log('   • Cache health check: npm run cache:health');
     console.log('   • Convex dev: make convex-dev');
     console.log('   • Run tests: npm test');
-
   } catch (error) {
     console.error('\n❌ Setup failed:', error.message);
     console.log('\n🔧 Manual setup steps:');

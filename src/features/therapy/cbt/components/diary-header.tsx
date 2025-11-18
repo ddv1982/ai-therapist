@@ -1,8 +1,7 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
 import type { CBTStepType } from '@/types/therapy';
 
@@ -18,29 +17,32 @@ export function DiaryHeader({ isMobile, isCBTActive, cbtCurrentStep, onBack }: D
 
   if (isMobile) {
     return (
-      <div className="border-b bg-card/70 backdrop-blur-md sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-3 py-2">
+      <div className="bg-card/70 sticky top-0 z-10 border-b backdrop-blur-md">
+        <div className="mx-auto max-w-4xl px-3 py-2">
           <div className="flex items-center justify-between gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={onBack}
-              className={cn("flex items-center gap-1 h-8 px-2")}
+              className={cn('flex h-8 items-center gap-1 px-2')}
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="h-4 w-4" />
               <span className="text-sm">{t('nav.back')}</span>
             </Button>
             {isCBTActive && cbtCurrentStep !== 'complete' && (
-              <span className="text-xs text-primary">
-                Step {getStepInfo(cbtCurrentStep).stepNumber}/{getStepInfo(cbtCurrentStep).totalSteps}
+              <span className="text-primary text-xs">
+                Step {getStepInfo(cbtCurrentStep).stepNumber}/
+                {getStepInfo(cbtCurrentStep).totalSteps}
               </span>
             )}
           </div>
           {isCBTActive && cbtCurrentStep !== 'complete' && (
-            <div className="w-full bg-muted rounded-full h-1 mt-2">
-              <div 
+            <div className="bg-muted mt-2 h-1 w-full rounded-full">
+              <div
                 className="bg-primary h-1 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${(getStepInfo(cbtCurrentStep).stepNumber / getStepInfo(cbtCurrentStep).totalSteps) * 100}%` }}
+                style={{
+                  width: `${(getStepInfo(cbtCurrentStep).stepNumber / getStepInfo(cbtCurrentStep).totalSteps) * 100}%`,
+                }}
               ></div>
             </div>
           )}
@@ -50,26 +52,24 @@ export function DiaryHeader({ isMobile, isCBTActive, cbtCurrentStep, onBack }: D
   }
 
   return (
-    <div className="border-b bg-card/50 backdrop-blur-md sticky top-0 z-10">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
+    <div className="bg-card/50 sticky top-0 z-10 border-b backdrop-blur-md">
+      <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={onBack}
-              className="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground"
+              className="hover:bg-accent hover:text-accent-foreground flex items-center gap-2"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="h-4 w-4" />
               <span className="hidden sm:inline">{t('nav.backToChat')}</span>
             </Button>
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
-                <Brain className="w-6 h-6 text-primary-foreground" />
+              <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-xl shadow-lg">
+                <Brain className="text-primary-foreground h-6 w-6" />
               </div>
-              <h1 className="text-3xl font-semibold">
-                Interactive CBT Session
-              </h1>
+              <h1 className="text-3xl font-semibold">Interactive CBT Session</h1>
             </div>
           </div>
         </div>

@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import {
   LineChart,
   Line,
@@ -53,12 +52,9 @@ export function SessionAnalytics({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="w-full h-80">
+          <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={data}
-                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-              >
+              <LineChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                 <defs>
                   <linearGradient id="colorSessions" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="oklch(var(--primary))" stopOpacity={0.8} />
@@ -121,12 +117,9 @@ export function MessageDistribution({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="w-full h-80">
+          <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={data}
-                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-              >
+              <BarChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--border))" />
                 <XAxis dataKey="role" stroke="oklch(var(--muted-foreground))" />
                 <YAxis stroke="oklch(var(--muted-foreground))" />
@@ -167,12 +160,9 @@ export function ProgressTrend({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="w-full h-80">
+          <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={data}
-                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-              >
+              <AreaChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                 <defs>
                   <linearGradient id="colorInsights" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="oklch(var(--accent))" stopOpacity={0.8} />

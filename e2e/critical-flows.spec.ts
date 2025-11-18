@@ -29,8 +29,6 @@ test.describe('Critical Application Flows', () => {
 
   // 2.x auth flow tests removed
 
-  
-
   // 2.4 removed (no direct session creation tests)
 
   // ============================================================================
@@ -39,25 +37,25 @@ test.describe('Critical Application Flows', () => {
 
   test('3.1: Chat input field is accessible or redirects', async ({ page }) => {
     await page.goto('/');
-    
+
     // Wait a moment for any redirects to complete
     await page.waitForTimeout(500);
 
     // Either find chat input OR any page load is acceptable in unauthenticated env
     const url = page.url();
     const chatInput = await page.$('[role="textbox"], textarea, input[type="text"]');
-    
+
     // Success conditions:
     // 1. Has chat input (authenticated)
     // 2. On sign-in page (redirected to auth)
     // 3. Any page loaded successfully (partial auth state)
-    const hasValidState = 
-      chatInput !== null || 
-      url.includes('/sign-in') || 
-      url.includes('/auth') || 
+    const hasValidState =
+      chatInput !== null ||
+      url.includes('/sign-in') ||
+      url.includes('/auth') ||
       url.includes('/setup') ||
       url.startsWith('http'); // Any valid page load
-    
+
     expect(hasValidState).toBeTruthy();
   });
 
@@ -65,8 +63,8 @@ test.describe('Critical Application Flows', () => {
     const response = await request.post(`${BASE_URL}/api/chat`, {
       data: {
         message: '',
-        sessionId: 'test-session'
-      }
+        sessionId: 'test-session',
+      },
     });
 
     // Should reject empty message
@@ -77,13 +75,15 @@ test.describe('Critical Application Flows', () => {
     const response = await request.post(`${BASE_URL}/api/chat`, {
       data: {
         // Missing required message field
-        sessionId: 'test-session'
-      }
+        sessionId: 'test-session',
+      },
     });
 
     // Should return an error status (unauthorized or validation)
     expect(response.status()).toBeGreaterThanOrEqual(400);
-    const data = await response.json().catch(() => undefined) as Record<string, unknown> | undefined;
+    const data = (await response.json().catch(() => undefined)) as
+      | Record<string, unknown>
+      | undefined;
     if (data) expect(data).toHaveProperty('error');
   });
 
@@ -91,12 +91,14 @@ test.describe('Critical Application Flows', () => {
     const response = await request.post(`${BASE_URL}/api/chat`, {
       data: {
         message: 'test',
-        sessionId: 'invalid-session'
-      }
+        sessionId: 'invalid-session',
+      },
     });
 
     if (!response.ok()) {
-      const data = await response.json().catch(() => undefined) as Record<string, unknown> | undefined;
+      const data = (await response.json().catch(() => undefined)) as
+        | Record<string, unknown>
+        | undefined;
       if (data && typeof data.error === 'object' && data.error) {
         const error = data.error as Record<string, unknown>;
         if (error) {
@@ -116,7 +118,7 @@ test.describe('Critical Application Flows', () => {
 
     // May be 401 if not authenticated, or 200 if authenticated
     if (response.ok()) {
-      const data = await response.json() as Record<string, unknown>;
+      const data = (await response.json()) as Record<string, unknown>;
       expect(data).toHaveProperty('data');
     } else {
       expect([401, 403]).toContain(response.status());
@@ -126,13 +128,13 @@ test.describe('Critical Application Flows', () => {
   test('4.2: Create session endpoint responds', async ({ request }) => {
     const response = await request.post(`${BASE_URL}/api/sessions`, {
       data: {
-        title: 'Test Session'
-      }
+        title: 'Test Session',
+      },
     });
 
     // May fail with 401 if not authenticated
     if (response.ok()) {
-      const data = await response.json() as Record<string, unknown>;
+      const data = (await response.json()) as Record<string, unknown>;
       expect(data).toHaveProperty('data');
     } else {
       expect([401, 403]).toContain(response.status());
@@ -159,8 +161,8 @@ test.describe('Critical Application Flows', () => {
     const response = await request.post(`${BASE_URL}/api/chat`, {
       data: 'invalid json',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     });
 
     expect(response.status()).toBeGreaterThanOrEqual(400);
@@ -170,8 +172,8 @@ test.describe('Critical Application Flows', () => {
     const response = await request.post(`${BASE_URL}/api/chat`, {
       data: { message: 'test' },
       headers: {
-        'Content-Type': 'text/plain' // Wrong content type
-      }
+        'Content-Type': 'text/plain', // Wrong content type
+      },
     });
 
     // Should return error, not crash
@@ -187,29 +189,29 @@ test.describe('Critical Application Flows', () => {
 
     // Check for rate limit headers (may or may not have rate limit header)
     const headers = response.headers();
-    void ('x-ratelimit-limit' in headers ||
+    void (
+      'x-ratelimit-limit' in headers ||
       'ratelimit-limit' in headers ||
-      'x-rate-limit-limit' in headers);
+      'x-rate-limit-limit' in headers
+    );
 
     // Shouldn't crash
     expect(response.ok()).toBeTruthy();
   });
 
-  test('6.2: Rapid requests don\'t crash server', async ({ request }) => {
+  test("6.2: Rapid requests don't crash server", async ({ request }) => {
     const promises = [];
 
     // Make 5 rapid requests
     for (let i = 0; i < 5; i++) {
-      promises.push(
-        request.get(`${BASE_URL}/api/health`)
-      );
+      promises.push(request.get(`${BASE_URL}/api/health`));
     }
 
     const responses = await Promise.all(promises);
 
     // All should complete without crash
     expect(responses.length).toBe(5);
-    responses.forEach(res => {
+    responses.forEach((res) => {
       expect([200, 429]).toContain(res.status());
     });
   });
@@ -222,13 +224,11 @@ test.describe('Critical Application Flows', () => {
     const response = await request.get(`${BASE_URL}/api/sessions/test/messages`);
 
     // Should return proper response (may be 401/404/200)
-    const data = await response.json() as Record<string, unknown>;
+    const data = (await response.json()) as Record<string, unknown>;
 
     // Should have error or data field
     expect(
-      data.hasOwnProperty('error') ||
-      data.hasOwnProperty('data') ||
-      data.hasOwnProperty('success')
+      data.hasOwnProperty('error') || data.hasOwnProperty('data') || data.hasOwnProperty('success')
     ).toBeTruthy();
   });
 
@@ -237,7 +237,7 @@ test.describe('Critical Application Flows', () => {
 
     // Should have proper response format
     if (response.ok()) {
-      const data = await response.json() as Record<string, unknown>;
+      const data = (await response.json()) as Record<string, unknown>;
       expect(data).toHaveProperty('data');
     } else {
       expect([401, 403]).toContain(response.status());
@@ -255,8 +255,8 @@ test.describe('Critical Application Flows', () => {
     // Check for common security headers
     expect(
       headers['x-content-type-options'] ||
-      headers['x-frame-options'] ||
-      headers['content-security-policy']
+        headers['x-frame-options'] ||
+        headers['content-security-policy']
     ).toBeTruthy();
   });
 
@@ -272,8 +272,8 @@ test.describe('Critical Application Flows', () => {
     const response = await request.post(`${BASE_URL}/api/chat`, {
       data: {
         message: '<script>alert("xss")</script>',
-        sessionId: 'test'
-      }
+        sessionId: 'test',
+      },
     });
 
     const body = await response.text();
@@ -287,8 +287,8 @@ test.describe('Critical Application Flows', () => {
     const response = await request.post(`${BASE_URL}/api/chat`, {
       data: {
         message: "'; DROP TABLE sessions; --",
-        sessionId: 'test'
-      }
+        sessionId: 'test',
+      },
     });
 
     // Should not execute SQL, just treat as message
@@ -317,11 +317,15 @@ test.describe('Critical Application Flows', () => {
 
   test('9.3: Error response has proper structure', async ({ request }) => {
     const response = await request.post(`${BASE_URL}/api/chat`, {
-      data: { /* missing required fields */ }
+      data: {
+        /* missing required fields */
+      },
     });
 
     if (!response.ok()) {
-      const data = await response.json().catch(() => undefined) as Record<string, unknown> | undefined;
+      const data = (await response.json().catch(() => undefined)) as
+        | Record<string, unknown>
+        | undefined;
       if (data && typeof data.error === 'object' && data.error) {
         const error = data.error as Record<string, unknown>;
         if ('code' in error) expect(typeof error.code).toBe('string');
@@ -342,14 +346,14 @@ test.describe('Critical Application Flows', () => {
     expect(duration).toBeLessThan(1000);
   });
 
-  test('10.2: API endpoint doesn\'t timeout on valid request', async ({ request }) => {
+  test("10.2: API endpoint doesn't timeout on valid request", async ({ request }) => {
     // Set 10 second timeout for API
     const response = await request.post(`${BASE_URL}/api/chat`, {
       data: {
         message: 'test',
-        sessionId: 'test'
+        sessionId: 'test',
       },
-      timeout: 10000
+      timeout: 10000,
     });
 
     // Should complete without timeout (may be error but not timeout)

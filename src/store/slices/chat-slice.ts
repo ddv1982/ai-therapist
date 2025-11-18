@@ -50,17 +50,16 @@ const chatSlice = createSlice({
   },
 });
 
-export const {
-  setStreaming,
-  setCurrentInput,
-  clearMessages,
-  setError,
-  updateSettings,
-} = chatSlice.actions;
+export const { setStreaming, setCurrentInput, clearMessages, setError, updateSettings } =
+  chatSlice.actions;
 
-export const selectIsStreaming = (state: { chat: ReturnType<typeof chatSlice.reducer> }) => state.chat.isStreaming;
-export const selectCurrentInput = (state: { chat: ReturnType<typeof chatSlice.reducer> }) => state.chat.currentInput;
-export const selectSettings = (state: { chat: ReturnType<typeof chatSlice.reducer> }) => state.chat.settings;
-export const selectError = (state: { chat: ReturnType<typeof chatSlice.reducer> }) => state.chat.error;
+export const selectIsStreaming = (state: { chat: ReturnType<typeof chatSlice.reducer> }) =>
+  state.chat.isStreaming;
+export const selectCurrentInput = (state: { chat: ReturnType<typeof chatSlice.reducer> }) =>
+  state.chat.currentInput;
+export const selectSettings = (state: { chat: ReturnType<typeof chatSlice.reducer> }) =>
+  state.chat.settings;
+export const selectError = (state: { chat: ReturnType<typeof chatSlice.reducer> }) =>
+  state.chat.error;
 
 export default chatSlice.reducer;

@@ -1,6 +1,6 @@
 import { generateText, convertToModelMessages, streamText } from 'ai';
 import type { UIMessage } from 'ai';
-import { groq } from "@ai-sdk/groq";
+import { groq } from '@ai-sdk/groq';
 import { languageModels, type ModelID } from '@/ai/providers';
 import { supportsWebSearch } from '@/ai/model-metadata';
 
@@ -16,8 +16,12 @@ export interface AIMessage {
 }
 
 import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
-export const generateSessionReport = async (messages: ReportMessage[], systemPrompt: string, selectedModel: string = ANALYTICAL_MODEL_ID) => {
-  const userPrompt = `Please generate a therapeutic session report based on the following conversation:\n\n${messages.map(m => `${m.role}: ${m.content}`).join('\n\n')}`;
+export const generateSessionReport = async (
+  messages: ReportMessage[],
+  systemPrompt: string,
+  selectedModel: string = ANALYTICAL_MODEL_ID
+) => {
+  const userPrompt = `Please generate a therapeutic session report based on the following conversation:\n\n${messages.map((m) => `${m.role}: ${m.content}`).join('\n\n')}`;
 
   const result = await generateText({
     model: languageModels[selectedModel as keyof typeof languageModels],
@@ -30,9 +34,13 @@ export const generateSessionReport = async (messages: ReportMessage[], systemPro
   return result.text;
 };
 
-export const extractStructuredAnalysis = async (reportContent: string, systemPrompt: string, selectedModel: string = ANALYTICAL_MODEL_ID) => {
+export const extractStructuredAnalysis = async (
+  reportContent: string,
+  systemPrompt: string,
+  selectedModel: string = ANALYTICAL_MODEL_ID
+) => {
   const userPrompt = `Please extract structured analysis data from the following therapeutic report:\n\n${reportContent}`;
-  
+
   const result = await generateText({
     model: languageModels[selectedModel as keyof typeof languageModels],
     system: systemPrompt,
@@ -51,7 +59,8 @@ export const streamTextWithBrowserSearch = async (
   modelId: string = ANALYTICAL_MODEL_ID
 ) => {
   // Ensure we're using a supported model for browser search
-  const isModelID = (m: string): m is ModelID => Object.prototype.hasOwnProperty.call(languageModels, m);
+  const isModelID = (m: string): m is ModelID =>
+    Object.prototype.hasOwnProperty.call(languageModels, m);
   if (!isModelID(modelId) || !supportsWebSearch(modelId)) {
     throw new Error('Browser search is only supported for models with web search capability');
   }
@@ -82,14 +91,14 @@ export const streamTextWithBrowserSearch = async (
       const { logger } = await import('@/lib/utils/logger');
       logger.error('Browser search failed', { module: 'groq-client' }, error as Error);
     } catch {}
-    
+
     // Fallback: Use regular text generation without browser search
     const fallbackResult = streamText({
       model: languageModels[modelId],
       system: systemPrompt,
       messages: convertToModelMessages(uiMessages),
     });
-    
+
     return fallbackResult;
   }
 };

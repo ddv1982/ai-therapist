@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Brain } from 'lucide-react';
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
@@ -34,7 +34,7 @@ function CBTDiaryPageContent() {
   const t = useTranslations('cbt');
   const toastT = useTranslations('toast');
   const { selectSession } = useSelectSession();
-  
+
   // Get session ID from Redux
   const reduxSessionId = useAppSelector((state) => state.cbt?.flow?.sessionId ?? null);
   // Streaming and view state
@@ -43,7 +43,7 @@ function CBTDiaryPageContent() {
   const [isMobile, setIsMobile] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+
   // CBT Diary Flow (encapsulated logic)
   const {
     messages,
@@ -77,8 +77,9 @@ function CBTDiaryPageContent() {
   // Check for existing draft using saved drafts for immediate UI updates
   const { draftActions, savedDrafts, currentDraft } = useCBTDataManager();
   const hasDraft = (savedDrafts?.length || 0) > 0 || !!currentDraft;
-  const draftLastSaved: string | undefined = (savedDrafts && savedDrafts[0]) ? savedDrafts[0].lastSaved : undefined;
-  
+  const draftLastSaved: string | undefined =
+    savedDrafts && savedDrafts[0] ? savedDrafts[0].lastSaved : undefined;
+
   // Delete existing draft from Redux
   const handleDeleteDraft = useCallback(() => {
     try {
@@ -93,13 +94,13 @@ function CBTDiaryPageContent() {
       showToast({
         type: 'success',
         title: toastT('draftDeletedTitle'),
-        message: toastT('draftDeletedBody')
+        message: toastT('draftDeletedBody'),
       });
     } catch {
       showToast({
         type: 'error',
         title: toastT('draftDeleteFailedTitle'),
-        message: toastT('draftDeleteFailedBody')
+        message: toastT('draftDeleteFailedBody'),
       });
     }
   }, [draftActions, savedDrafts, showToast, toastT]);
@@ -109,7 +110,7 @@ function CBTDiaryPageContent() {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -118,21 +119,21 @@ function CBTDiaryPageContent() {
   // Resume existing draft using unified CBT
   const handleResumeDraft = useCallback(async () => {
     setHasStarted(true);
-    
+
     // The unified CBT hook will automatically load the existing draft
     // No need to manually restore - it's already available via unifiedSessionData
     startCBTFlow();
-    
+
     showToast({
       type: 'success',
       title: toastT('draftResumedTitle'),
-      message: toastT('draftResumedBody')
+      message: toastT('draftResumedBody'),
     });
-    
+
     logger.info('Resumed CBT draft', {
       component: 'CBTDiaryPage',
       operation: 'handleResumeDraft',
-      sessionId: reduxSessionId || undefined
+      sessionId: reduxSessionId || undefined,
     });
   }, [startCBTFlow, showToast, reduxSessionId, toastT]);
 
@@ -144,7 +145,7 @@ function CBTDiaryPageContent() {
     showToast({
       type: 'info',
       title: toastT('newSessionStartedTitle'),
-      message: toastT('newSessionStartedBody')
+      message: toastT('newSessionStartedBody'),
     });
   }, [draftActions, showToast, toastT]);
 
@@ -166,7 +167,7 @@ function CBTDiaryPageContent() {
       showToast({
         type: 'warning',
         title: toastT('noCbtSessionTitle'),
-        message: toastT('noCbtSessionBody')
+        message: toastT('noCbtSessionBody'),
       });
       return;
     }
@@ -176,7 +177,7 @@ function CBTDiaryPageContent() {
 
     setIsLoading(true);
     setIsStreaming(true);
-    
+
     try {
       if (!cbtFlowState) {
         throw new Error('CBT flow state missing');
@@ -184,7 +185,11 @@ function CBTDiaryPageContent() {
 
       const contextual = messages
         .filter((msg: MessageData) => !msg.metadata?.step)
-        .map((m: MessageData) => ({ role: m.role, content: m.content, timestamp: m.timestamp.toISOString() }));
+        .map((m: MessageData) => ({
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp.toISOString(),
+        }));
 
       const { sessionId } = await sendToChat({
         title: t('sessionReportTitle'),
@@ -195,44 +200,65 @@ function CBTDiaryPageContent() {
 
       await selectSession(sessionId);
       dispatch(startReduxCBTSession({ sessionId }));
- 
+
       // Clear CBT session since it's complete - use unified CBT action
       draftActions.reset();
-      
-      // Reset component state  
+
+      // Reset component state
       setHasStarted(false);
-      
+
       // Show success
       showToast({
         type: 'success',
         title: toastT('cbtSentTitle'),
-        message: toastT('cbtSentBody')
+        message: toastT('cbtSentBody'),
       });
-      
+
       // Redirect back to root, chat will load current session
       router.replace('/');
-      
     } catch (error) {
-      logger.error('Error sending CBT session to chat', {
-        component: 'CBTDiaryPage',
-        operation: 'handleSendToChat',
-        sessionId: reduxSessionId || 'unknown',
-        hasStarted,
-        isCBTActive
-      }, error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Error sending CBT session to chat',
+        {
+          component: 'CBTDiaryPage',
+          operation: 'handleSendToChat',
+          sessionId: reduxSessionId || 'unknown',
+          hasStarted,
+          isCBTActive,
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
       showToast({
         type: 'error',
         title: toastT('cbtSendFailedTitle'),
-        message: toastT('cbtSendFailedBody')
+        message: toastT('cbtSendFailedBody'),
       });
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
     }
-  }, [hasStarted, isCBTActive, isLoading, isStreaming, cbtFlowState, messages, router, showToast, draftActions, reduxSessionId, dispatch, t, selectSession, toastT]);
+  }, [
+    hasStarted,
+    isCBTActive,
+    isLoading,
+    isStreaming,
+    cbtFlowState,
+    messages,
+    router,
+    showToast,
+    draftActions,
+    reduxSessionId,
+    dispatch,
+    t,
+    selectSession,
+    toastT,
+  ]);
 
   return (
-    <div className={cn("h-screen bg-background flex flex-col", isMobile && "cbt-compact")} style={{ height: '100dvh' }}>
+    <div
+      className={cn('bg-background flex h-screen flex-col', isMobile && 'cbt-compact')}
+      style={{ height: '100dvh' }}
+    >
       {/* Header */}
       <DiaryHeader
         isMobile={isMobile}
@@ -241,37 +267,51 @@ function CBTDiaryPageContent() {
         onBack={() => router.push('/')}
       />
 
-      <DiaryProgress isMobile={isMobile} isCBTActive={isCBTActive} cbtCurrentStep={cbtCurrentStep} />
+      <DiaryProgress
+        isMobile={isMobile}
+        isCBTActive={isCBTActive}
+        cbtCurrentStep={cbtCurrentStep}
+      />
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto min-h-0 scroll-container" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className={cn("max-w-4xl mx-auto py-6 min-h-full", isMobile ? "px-3 pb-6" : "px-4 sm:px-6 pb-8")}>
+      <div
+        className="scroll-container min-h-0 flex-1 overflow-y-auto"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        <div
+          className={cn(
+            'mx-auto min-h-full max-w-4xl py-6',
+            isMobile ? 'px-3 pb-6' : 'px-4 pb-8 sm:px-6'
+          )}
+        >
           {!hasStarted ? (
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <div className="text-center max-w-2xl animate-fade-in">
+            <div className="flex min-h-[60vh] items-center justify-center">
+              <div className="animate-fade-in max-w-2xl text-center">
                 <div className="mb-8">
-                  <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center mx-auto mb-6 shadow-lg">
-                    <Brain className="w-8 h-8 sm:w-12 sm:h-12 text-primary animate-pulse" />
+                  <div className="bg-muted mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full shadow-lg">
+                    <Brain className="text-primary h-8 w-8 animate-pulse sm:h-12 sm:w-12" />
                   </div>
-                  <h2 className="text-3xl mb-4 gradient-text">
-                    {t('welcome.title')}
-                  </h2>
+                  <h2 className="gradient-text mb-4 text-3xl">{t('welcome.title')}</h2>
                   <p className="text-muted-foreground mb-8 leading-relaxed">
                     {t('welcome.subtitle')}
                   </p>
                 </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                  <div className="p-4 rounded-xl bg-card/50 border border-border/50 text-left">
-                    <h3 className="text-xl font-semibold text-primary mb-2">🧠 {t('welcome.evidenceTitle')}</h3>
-                    <p className="text-sm text-muted-foreground">{t('welcome.evidenceDesc')}</p>
+
+                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="bg-card/50 border-border/50 rounded-xl border p-4 text-left">
+                    <h3 className="text-primary mb-2 text-xl font-semibold">
+                      🧠 {t('welcome.evidenceTitle')}
+                    </h3>
+                    <p className="text-muted-foreground text-sm">{t('welcome.evidenceDesc')}</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-card/50 border border-border/50 text-left">
-                    <h3 className="text-xl font-semibold text-accent mb-2">💡 {t('welcome.interactiveTitle')}</h3>
-                    <p className="text-sm text-muted-foreground">{t('welcome.interactiveDesc')}</p>
+                  <div className="bg-card/50 border-border/50 rounded-xl border p-4 text-left">
+                    <h3 className="text-accent mb-2 text-xl font-semibold">
+                      💡 {t('welcome.interactiveTitle')}
+                    </h3>
+                    <p className="text-muted-foreground text-sm">{t('welcome.interactiveDesc')}</p>
                   </div>
                 </div>
-                
+
                 {/* Draft detection and action buttons */}
                 {hasDraft ? (
                   <DraftPanel
@@ -293,7 +333,7 @@ function CBTDiaryPageContent() {
             </div>
           ) : (
             <div data-testid="cbt-welcome">
-              <VirtualizedMessageList 
+              <VirtualizedMessageList
                 messages={messages}
                 isStreaming={isLoading}
                 isMobile={isMobile}
@@ -313,14 +353,14 @@ function CBTDiaryPageContent() {
               {/* Inline quick draft form removed */}
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
       </div>
 
       {/* Progress Information - desktop only */}
       {!isMobile && (
-        <FooterInfo 
+        <FooterInfo
           isStreaming={isStreaming}
           isCBTActive={isCBTActive}
           cbtCurrentStep={cbtCurrentStep}
@@ -341,19 +381,24 @@ export default function CBTDiaryPage() {
     try {
       // Try to get current session first
       const current = await apiClient.getCurrentSession();
-      const currentSessionData: { currentSession?: { id: string } } = (current && (current as { success?: boolean }).success)
-        ? (current as { data: { currentSession?: { id: string } } }).data
-        : (current as { currentSession?: { id: string } } | null) || {};
+      const currentSessionData: { currentSession?: { id: string } } =
+        current && (current as { success?: boolean }).success
+          ? (current as { data: { currentSession?: { id: string } } }).data
+          : (current as { currentSession?: { id: string } } | null) || {};
       if (currentSessionData?.currentSession) {
         const sessionId = currentSessionData.currentSession.id;
         setCurrentSession(sessionId);
         return sessionId;
       }
     } catch (error) {
-      logger.error('Failed to ensure session for CBT diary', {
-        component: 'CBTDiaryPage',
-        operation: 'ensureSession'
-      }, error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to ensure session for CBT diary',
+        {
+          component: 'CBTDiaryPage',
+          operation: 'ensureSession',
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
     return null;
   }, []);
@@ -367,7 +412,7 @@ export default function CBTDiaryPage() {
   const chatUIBridge: ChatUIBridge = {
     addMessageToChat: async (message) => {
       // Ensure we have a session
-      const sessionId = message.sessionId || currentSession || await ensureSession();
+      const sessionId = message.sessionId || currentSession || (await ensureSession());
       if (!sessionId) {
         return { success: false, error: 'No session available' };
       }
@@ -375,11 +420,11 @@ export default function CBTDiaryPage() {
       // Use the message API directly since this is a standalone page
       return await addMessageToChat({
         ...message,
-        sessionId
+        sessionId,
       });
     },
     currentSessionId: currentSession,
-    isLoading: false
+    isLoading: false,
   };
 
   return (

@@ -3,7 +3,7 @@
  * Provides code splitting, lazy loading, and bundle optimization helpers
  */
 
-import React, { lazy, ComponentType, LazyExoticComponent } from 'react';
+import { lazy, ComponentType, LazyExoticComponent } from 'react';
 import { logger } from '@/lib/utils/logger';
 import { isDevelopment } from '@/config/env.public';
 
@@ -20,35 +20,35 @@ export function createLazyComponent<T = object>(
 ): LazyExoticComponent<ComponentType<T>> {
   return lazy(async () => {
     const startTime = performance.now();
-    
+
     try {
       const component = await importFn();
       const loadTime = performance.now() - startTime;
-      
+
       // Log performance metrics in development
       if (isDevelopment) {
-        logger.debug('Component loaded', { 
-          componentName, 
+        logger.debug('Component loaded', {
+          componentName,
           loadTime: Math.round(loadTime),
-          operation: 'lazyLoading'
+          operation: 'lazyLoading',
         });
       }
-      
+
       return component;
     } catch (error) {
       logger.error(`Failed to load component ${componentName}`, {
         error: error instanceof Error ? error.message : 'Unknown error',
         componentName,
-        loadTime: performance.now() - startTime
+        loadTime: performance.now() - startTime,
       });
-      
+
       // Return a fallback error component
       return {
         default: (() => (
-          <div className="p-4 text-center text-muted-foreground">
+          <div className="text-muted-foreground p-4 text-center">
             <p>Unable to load component. Please refresh the page.</p>
           </div>
-        )) as ComponentType<T>
+        )) as ComponentType<T>,
       };
     }
   });
@@ -63,19 +63,21 @@ export function preloadComponent<T = Record<string, unknown>>(
 ): void {
   // Use requestIdleCallback if available, otherwise setTimeout
   const preload = () => {
-    importFn().then(() => {
-      if (isDevelopment) {
-        logger.debug('Component preloaded', { 
+    importFn()
+      .then(() => {
+        if (isDevelopment) {
+          logger.debug('Component preloaded', {
+            componentName,
+            operation: 'preloading',
+          });
+        }
+      })
+      .catch((error) => {
+        logger.warn(`Failed to preload component ${componentName}`, {
+          error: error instanceof Error ? error.message : 'Unknown error',
           componentName,
-          operation: 'preloading'
         });
-      }
-    }).catch((error) => {
-      logger.warn(`Failed to preload component ${componentName}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        componentName
       });
-    });
   };
 
   if ('requestIdleCallback' in window) {
@@ -118,10 +120,10 @@ export class TherapeuticPerformanceMonitor {
     if (!this.metrics.has(componentName)) {
       this.metrics.set(componentName, []);
     }
-    
+
     const times = this.metrics.get(componentName)!;
     times.push(loadTime);
-    
+
     // Keep only last 10 measurements
     if (times.length > 10) {
       times.shift();
@@ -134,7 +136,7 @@ export class TherapeuticPerformanceMonitor {
   getAverageLoadTime(componentName: string): number {
     const times = this.metrics.get(componentName);
     if (!times || times.length === 0) return 0;
-    
+
     const sum = times.reduce((acc, time) => acc + time, 0);
     return sum / times.length;
   }
@@ -142,33 +144,39 @@ export class TherapeuticPerformanceMonitor {
   /**
    * Get performance report for therapeutic components
    */
-  getPerformanceReport(): Record<string, {
-    averageLoadTime: number;
-    measurements: number;
-    performance: 'excellent' | 'good' | 'fair' | 'poor';
-  }> {
-    const report: Record<string, {
+  getPerformanceReport(): Record<
+    string,
+    {
       averageLoadTime: number;
       measurements: number;
       performance: 'excellent' | 'good' | 'fair' | 'poor';
-    }> = {};
-    
+    }
+  > {
+    const report: Record<
+      string,
+      {
+        averageLoadTime: number;
+        measurements: number;
+        performance: 'excellent' | 'good' | 'fair' | 'poor';
+      }
+    > = {};
+
     this.metrics.forEach((times, componentName) => {
       const averageLoadTime = this.getAverageLoadTime(componentName);
-      
+
       let performance: 'excellent' | 'good' | 'fair' | 'poor';
       if (averageLoadTime < 100) performance = 'excellent';
       else if (averageLoadTime < 250) performance = 'good';
       else if (averageLoadTime < 500) performance = 'fair';
       else performance = 'poor';
-      
+
       report[componentName] = {
         averageLoadTime: Math.round(averageLoadTime),
         measurements: times.length,
-        performance
+        performance,
       };
     });
-    
+
     return report;
   }
 }
@@ -204,13 +212,13 @@ export class TherapeuticMessageCache {
   setMessages(sessionId: string, messages: MessageLike[]): void {
     // Limit message history to prevent memory bloat
     const limitedMessages = messages.slice(-this.maxCacheSize);
-    
+
     this.cache.set(sessionId, {
       messages: limitedMessages,
       timestamp: Date.now(),
-      size: JSON.stringify(limitedMessages).length
+      size: JSON.stringify(limitedMessages).length,
     });
-    
+
     // Trigger cleanup if cache is getting large
     if (this.cache.size > 10) {
       this.cleanup();
@@ -223,13 +231,13 @@ export class TherapeuticMessageCache {
   getMessages(sessionId: string): MessageLike[] | null {
     const cached = this.cache.get(sessionId);
     if (!cached) return null;
-    
+
     // Check if cache is stale
     if (Date.now() - cached.timestamp > this.maxSessionAge) {
       this.cache.delete(sessionId);
       return null;
     }
-    
+
     return cached.messages;
   }
 
@@ -239,19 +247,19 @@ export class TherapeuticMessageCache {
   private cleanup(): void {
     const now = Date.now();
     const keysToDelete: string[] = [];
-    
+
     this.cache.forEach((value, key) => {
       if (now - value.timestamp > this.maxSessionAge) {
         keysToDelete.push(key);
       }
     });
-    
-    keysToDelete.forEach(key => this.cache.delete(key));
-    
+
+    keysToDelete.forEach((key) => this.cache.delete(key));
+
     if (isDevelopment) {
       logger.debug('Message cache cleanup completed', {
         cleanedSessions: keysToDelete.length,
-        operation: 'cacheCleanup'
+        operation: 'cacheCleanup',
       });
     }
   }
@@ -266,16 +274,16 @@ export class TherapeuticMessageCache {
   } {
     let totalSize = 0;
     let sessionCount = 0;
-    
+
     this.cache.forEach((value) => {
       totalSize += value.size;
       sessionCount++;
     });
-    
+
     return {
       totalSessions: sessionCount,
       totalSize: Math.round(totalSize / 1024), // KB
-      averageSessionSize: sessionCount > 0 ? Math.round((totalSize / sessionCount) / 1024) : 0 // KB
+      averageSessionSize: sessionCount > 0 ? Math.round(totalSize / sessionCount / 1024) : 0, // KB
     };
   }
 }
@@ -294,24 +302,24 @@ export function optimizeMessageRendering(messages: MessageLike[]): {
 } {
   const VIRTUALIZATION_THRESHOLD = 100;
   const INITIAL_VISIBLE_COUNT = 50;
-  
+
   const shouldVirtualize = messages.length > VIRTUALIZATION_THRESHOLD;
-  
+
   if (shouldVirtualize) {
     // Show most recent messages initially
     const visibleMessages = messages.slice(-INITIAL_VISIBLE_COUNT);
-    
+
     return {
       visibleMessages,
       totalCount: messages.length,
-      shouldVirtualize: true
+      shouldVirtualize: true,
     };
   }
-  
+
   return {
     visibleMessages: messages,
     totalCount: messages.length,
-    shouldVirtualize: false
+    shouldVirtualize: false,
   };
 }
 
@@ -323,7 +331,7 @@ export function createDebouncedInputHandler(
   delay: number = 300
 ): (value: string) => void {
   let timeoutId: NodeJS.Timeout;
-  
+
   return (value: string) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => handler(value), delay);
@@ -338,10 +346,10 @@ export function createThrottledScrollHandler(
   delay: number = 100
 ): (event: Event) => void {
   let isThrottled = false;
-  
+
   return (event: Event) => {
     if (isThrottled) return;
-    
+
     isThrottled = true;
     requestAnimationFrame(() => {
       handler(event);
@@ -373,12 +381,12 @@ if (isDevelopment) {
     setInterval(() => {
       const report = performanceMonitor.getPerformanceReport();
       const cacheStats = messageCache.getCacheStats();
-      
+
       if (Object.keys(report).length > 0) {
         logger.debug('Therapeutic app performance report', {
           performanceReport: report,
           cacheStatistics: cacheStats,
-          operation: 'performanceReporting'
+          operation: 'performanceReporting',
         });
       }
     }, 30000);

@@ -23,7 +23,10 @@ export interface TableData {
 /**
  * Extract structured table data from markdown-it table tokens
  */
-export function extractTableDataFromTokens(tokens: Token[], startIndex: number): {
+export function extractTableDataFromTokens(
+  tokens: Token[],
+  startIndex: number
+): {
   data: TableData;
   endIndex: number;
 } {
@@ -37,33 +40,33 @@ export function extractTableDataFromTokens(tokens: Token[], startIndex: number):
   let currentRow: string[] = [];
   let isInHeader = false;
   let isInBody = false;
-  
+
   let index = startIndex + 1;
-  
+
   while (index < tokens.length && tokens[index].type !== 'table_close') {
     const token = tokens[index];
-    
+
     switch (token.type) {
       case 'thead_open':
         isInHeader = true;
         break;
-        
+
       case 'thead_close':
         isInHeader = false;
         break;
-        
+
       case 'tbody_open':
         isInBody = true;
         break;
-        
+
       case 'tbody_close':
         isInBody = false;
         break;
-        
+
       case 'tr_open':
         currentRow = [];
         break;
-        
+
       case 'tr_close':
         if (isInHeader && currentRow.length > 0) {
           headers.push(...currentRow);
@@ -72,36 +75,36 @@ export function extractTableDataFromTokens(tokens: Token[], startIndex: number):
         }
         currentRow = [];
         break;
-        
+
       case 'th_open':
       case 'td_open':
         // Start collecting cell content
         break;
-        
+
       case 'th_close':
       case 'td_close':
         // Cell content should be in inline tokens between open/close
         const cellContent = extractCellContent(tokens, index);
         currentRow.push(cellContent);
         break;
-        
+
       case 'inline':
         // This contains the actual text content
         break;
     }
-    
+
     index++;
   }
 
-  const columnCount = Math.max(headers.length, ...rows.map(row => row.length));
-  
+  const columnCount = Math.max(headers.length, ...rows.map((row) => row.length));
+
   return {
     data: {
       headers: headers.length > 0 ? headers : generateDefaultHeaders(columnCount),
       rows,
-      columnCount
+      columnCount,
     },
-    endIndex: index
+    endIndex: index,
   };
 }
 
@@ -114,7 +117,7 @@ function extractCellContent(tokens: Token[], cellCloseIndex: number): string {
   while (cellOpenIndex > 0 && !tokens[cellOpenIndex].type.endsWith('_open')) {
     cellOpenIndex--;
   }
-  
+
   // Collect all text content between cell_open and cell_close
   let content = '';
   for (let i = cellOpenIndex + 1; i < cellCloseIndex; i++) {
@@ -123,7 +126,7 @@ function extractCellContent(tokens: Token[], cellCloseIndex: number): string {
       content += token.content;
     }
   }
-  
+
   return content.trim();
 }
 
@@ -154,25 +157,33 @@ export function convertToColumnConfig(data: TableData): Array<{
     } else if (index >= data.headers.length - 2) {
       priority = 'low'; // Last columns often contain secondary info
     }
-    
+
     // Determine column type based on header text and typical content
     let type: 'badge' | 'status' | 'text' = 'text';
     const headerLower = header.toLowerCase();
-    
-    if (headerLower.includes('status') || headerLower.includes('state') || 
-        headerLower.includes('level') || headerLower.includes('priority')) {
+
+    if (
+      headerLower.includes('status') ||
+      headerLower.includes('state') ||
+      headerLower.includes('level') ||
+      headerLower.includes('priority')
+    ) {
       type = 'status';
-    } else if (headerLower.includes('tag') || headerLower.includes('type') ||
-               headerLower.includes('category') || headerLower.match(/^(high|medium|low)$/i)) {
+    } else if (
+      headerLower.includes('tag') ||
+      headerLower.includes('type') ||
+      headerLower.includes('category') ||
+      headerLower.match(/^(high|medium|low)$/i)
+    ) {
       type = 'badge';
     }
-    
+
     return {
       key: `col_${index}`,
       label: header,
       priority,
       type,
-      showInCompact: priority === 'high' || index < 3
+      showInCompact: priority === 'high' || index < 3,
     };
   });
 }
@@ -181,7 +192,7 @@ export function convertToColumnConfig(data: TableData): Array<{
  * Convert table data to row data format expected by TherapeuticTable
  */
 export function convertToRowData(data: TableData): Array<Record<string, unknown>> {
-  return data.rows.map(row => {
+  return data.rows.map((row) => {
     const rowData: Record<string, unknown> = {};
     row.forEach((cell, index) => {
       rowData[`col_${index}`] = cell;

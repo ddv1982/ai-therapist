@@ -23,7 +23,9 @@ export interface UseCbtDiaryFlowReturn {
   completedSteps: ReturnType<typeof useCBTChatExperience>['flowState']['completedSteps'];
   goToStep: ReturnType<typeof useCBTChatExperience>['goToStep'];
   startCBTFlow: () => void;
-  generateTherapeuticSummaryCard: ReturnType<typeof useCBTChatExperience>['generateTherapeuticSummaryCard'];
+  generateTherapeuticSummaryCard: ReturnType<
+    typeof useCBTChatExperience
+  >['generateTherapeuticSummaryCard'];
   handleCBTSituationComplete: (data: SituationData) => void;
   handleCBTEmotionComplete: (data: EmotionData) => void;
   handleCBTThoughtComplete: (data: ThoughtData[]) => void;
@@ -38,7 +40,7 @@ export interface UseCbtDiaryFlowReturn {
 function mapDescriptorToMessage(
   descriptor: ReturnType<typeof useCBTChatExperience>['cbtMessages'][number],
   sessionData: ReturnType<typeof useCBTChatExperience>['sessionData'],
-  translate: ReturnType<typeof useTranslations<'cbt'>>,
+  translate: ReturnType<typeof useTranslations<'cbt'>>
 ): MessageData {
   if (descriptor.type === 'cbt-component') {
     return {
@@ -55,9 +57,12 @@ function mapDescriptorToMessage(
     };
   }
 
-  const content = translate(descriptor.translationKey as unknown as Parameters<typeof translate>[0], {
-    default: descriptor.defaultText,
-  }) as string;
+  const content = translate(
+    descriptor.translationKey as unknown as Parameters<typeof translate>[0],
+    {
+      default: descriptor.defaultText,
+    }
+  ) as string;
 
   return {
     id: `${sessionData.id || 'cbt'}:${descriptor.id}`,
@@ -100,9 +105,8 @@ export function useCbtDiaryFlow(): UseCbtDiaryFlowReturn {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const messages = useMemo(
-    () =>
-      cbtMessages.map((descriptor) => mapDescriptorToMessage(descriptor, cbtSessionData, t)),
-    [cbtMessages, cbtSessionData, t],
+    () => cbtMessages.map((descriptor) => mapDescriptorToMessage(descriptor, cbtSessionData, t)),
+    [cbtMessages, cbtSessionData, t]
   );
 
   useEffect(() => {

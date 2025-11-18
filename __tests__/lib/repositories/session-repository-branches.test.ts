@@ -27,9 +27,9 @@ describe('session-repository - branch coverage', () => {
   describe('verifySessionOwnership', () => {
     it('returns invalid when session not found', async () => {
       mockQuery.mockResolvedValue(null);
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
       expect(result.session).toBeUndefined();
     });
@@ -42,9 +42,9 @@ describe('session-repository - branch coverage', () => {
           reports: [],
         })
         .mockResolvedValueOnce(null); // user not found
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
 
@@ -56,9 +56,9 @@ describe('session-repository - branch coverage', () => {
           reports: [],
         })
         .mockResolvedValueOnce({ _id: 'user456' }); // different user
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
 
@@ -70,9 +70,9 @@ describe('session-repository - branch coverage', () => {
           reports: [],
         })
         .mockResolvedValueOnce({ _id: 'user123' });
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(true);
       expect(result.session).toBeDefined();
       expect('messages' in (result.session || {})).toBe(false);
@@ -86,11 +86,11 @@ describe('session-repository - branch coverage', () => {
           reports: [],
         })
         .mockResolvedValueOnce({ _id: 'user123' });
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123', {
         includeMessages: true,
       });
-      
+
       expect(result.valid).toBe(true);
       expect(result.session).toBeDefined();
       expect('messages' in (result.session || {})).toBe(true);
@@ -98,15 +98,15 @@ describe('session-repository - branch coverage', () => {
 
     it('returns invalid on query error', async () => {
       mockQuery.mockRejectedValue(new Error('Query failed'));
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
 
     it('handles invalid sessionId', async () => {
       const result = await verifySessionOwnership('', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
   });
@@ -114,9 +114,9 @@ describe('session-repository - branch coverage', () => {
   describe('getUserSessions', () => {
     it('returns empty list when user not found', async () => {
       mockQuery.mockResolvedValue(null);
-      
+
       const result = await getUserSessions('clerk123');
-      
+
       expect(result.items).toEqual([]);
       expect(result.pagination.total).toBe(0);
       expect(result.pagination.hasMore).toBe(false);
@@ -127,9 +127,9 @@ describe('session-repository - branch coverage', () => {
         .mockResolvedValueOnce({ _id: 'user123' })
         .mockResolvedValueOnce([{ _id: 'session1', userId: 'user123' }])
         .mockResolvedValueOnce(1);
-      
+
       const result = await getUserSessions('clerk123');
-      
+
       expect(result.pagination.limit).toBe(50);
       expect(result.pagination.offset).toBe(0);
     });
@@ -139,9 +139,9 @@ describe('session-repository - branch coverage', () => {
         .mockResolvedValueOnce({ _id: 'user123' })
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce(0);
-      
+
       const result = await getUserSessions('clerk123', { limit: 500 });
-      
+
       expect(result.pagination.limit).toBe(100);
     });
 
@@ -153,9 +153,9 @@ describe('session-repository - branch coverage', () => {
           { _id: 'session2', userId: 'user123' },
         ])
         .mockResolvedValueOnce(5);
-      
+
       const result = await getUserSessions('clerk123', { limit: 2, offset: 0 });
-      
+
       expect(result.pagination.hasMore).toBe(true);
     });
 
@@ -164,9 +164,9 @@ describe('session-repository - branch coverage', () => {
         .mockResolvedValueOnce({ _id: 'user123' })
         .mockResolvedValueOnce([{ _id: 'session1', userId: 'user123' }])
         .mockResolvedValueOnce(1);
-      
+
       const result = await getUserSessions('clerk123', { limit: 10, offset: 0 });
-      
+
       expect(result.pagination.hasMore).toBe(false);
     });
 
@@ -175,9 +175,9 @@ describe('session-repository - branch coverage', () => {
         .mockResolvedValueOnce({ _id: 'user123' })
         .mockResolvedValueOnce([{ _id: 'session2', userId: 'user123' }])
         .mockResolvedValueOnce(5);
-      
+
       const result = await getUserSessions('clerk123', { offset: 10 });
-      
+
       expect(result.pagination.offset).toBe(10);
     });
   });
@@ -185,47 +185,41 @@ describe('session-repository - branch coverage', () => {
   describe('getSessionWithMessages', () => {
     it('returns null when user not found', async () => {
       mockQuery.mockResolvedValue(null);
-      
+
       const result = await getSessionWithMessages('session123', 'clerk123');
-      
+
       expect(result).toBeNull();
     });
 
     it('returns null when session not found', async () => {
-      mockQuery
-        .mockResolvedValueOnce({ _id: 'user123' })
-        .mockResolvedValueOnce(null);
-      
+      mockQuery.mockResolvedValueOnce({ _id: 'user123' }).mockResolvedValueOnce(null);
+
       const result = await getSessionWithMessages('session123', 'clerk123');
-      
+
       expect(result).toBeNull();
     });
 
     it('returns null when userId mismatch', async () => {
-      mockQuery
-        .mockResolvedValueOnce({ _id: 'user123' })
-        .mockResolvedValueOnce({
-          session: { _id: 'session123', userId: 'user456' },
-          messages: [],
-          reports: [],
-        });
-      
+      mockQuery.mockResolvedValueOnce({ _id: 'user123' }).mockResolvedValueOnce({
+        session: { _id: 'session123', userId: 'user456' },
+        messages: [],
+        reports: [],
+      });
+
       const result = await getSessionWithMessages('session123', 'clerk123');
-      
+
       expect(result).toBeNull();
     });
 
     it('returns session with messages on success', async () => {
-      mockQuery
-        .mockResolvedValueOnce({ _id: 'user123' })
-        .mockResolvedValueOnce({
-          session: { _id: 'session123', userId: 'user123', title: 'Test' },
-          messages: [{ _id: 'msg1', content: 'test' }],
-          reports: [{ _id: 'report1' }],
-        });
-      
+      mockQuery.mockResolvedValueOnce({ _id: 'user123' }).mockResolvedValueOnce({
+        session: { _id: 'session123', userId: 'user123', title: 'Test' },
+        messages: [{ _id: 'msg1', content: 'test' }],
+        reports: [{ _id: 'report1' }],
+      });
+
       const result = await getSessionWithMessages('session123', 'clerk123');
-      
+
       expect(result).not.toBeNull();
       expect(result?._id).toBe('session123');
       expect(result?.messages).toHaveLength(1);
@@ -242,9 +236,9 @@ describe('session-repository - branch coverage', () => {
           reports: [],
         })
         .mockResolvedValueOnce({ invalid: true }); // missing _id
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
 
@@ -256,9 +250,9 @@ describe('session-repository - branch coverage', () => {
           reports: [],
         })
         .mockResolvedValueOnce('invalid'); // not an object
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
 
@@ -268,9 +262,9 @@ describe('session-repository - branch coverage', () => {
         messages: [],
         reports: [],
       });
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
 
@@ -282,9 +276,9 @@ describe('session-repository - branch coverage', () => {
           reports: [],
         })
         .mockResolvedValueOnce({ _id: 'user123' });
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
 
@@ -296,9 +290,9 @@ describe('session-repository - branch coverage', () => {
           reports: [],
         })
         .mockResolvedValueOnce({ _id: 'user123' });
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
 
@@ -310,25 +304,25 @@ describe('session-repository - branch coverage', () => {
           reports: 'invalid', // not an array
         })
         .mockResolvedValueOnce({ _id: 'user123' });
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
 
     it('throws on non-object bundle', async () => {
       mockQuery.mockResolvedValueOnce('invalid'); // not an object
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
 
     it('handles non-Error exceptions', async () => {
       mockQuery.mockRejectedValue('string error');
-      
+
       const result = await verifySessionOwnership('session123', 'clerk123');
-      
+
       expect(result.valid).toBe(false);
     });
   });

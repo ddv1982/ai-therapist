@@ -42,11 +42,15 @@ describe('MemoryManagementService', () => {
 
   describe('getMemoryContext', () => {
     it('returns empty context when no reports found', async () => {
-      mockQuery.mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' });
+      mockQuery.mockResolvedValueOnce({
+        _id: 'user1',
+        clerkId: 'test-clerk-id',
+        email: 'test@test.com',
+      });
       mockQuery.mockResolvedValueOnce([]);
-      
+
       const result = await service.getMemoryContext('test-clerk-id', 5, null);
-      
+
       expect(result.memoryContext).toEqual([]);
       expect(result.reportCount).toBe(0);
       expect(result.stats.totalReportsFound).toBe(0);
@@ -73,9 +77,9 @@ describe('MemoryManagementService', () => {
           title: 'Test Session',
           startedAt: 500000,
         });
-      
+
       const result = await service.getMemoryContext('test-clerk-id', 5, null);
-      
+
       expect(result.memoryContext).toHaveLength(1);
       expect(result.memoryContext[0].sessionTitle).toBe('Test Session');
       expect(result.memoryContext[0].summary).toContain('Key insights');
@@ -93,19 +97,23 @@ describe('MemoryManagementService', () => {
             createdAt: 1000000,
           },
         ]);
-      
+
       const result = await service.getMemoryContext('test-clerk-id', 5, null);
-      
+
       expect(result.memoryContext).toHaveLength(0);
       expect(result.stats.failedDecryptions).toBe(1);
     });
 
     it('limits results to specified limit', async () => {
-      mockQuery.mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' });
+      mockQuery.mockResolvedValueOnce({
+        _id: 'user1',
+        clerkId: 'test-clerk-id',
+        email: 'test@test.com',
+      });
       mockQuery.mockResolvedValueOnce([]);
-      
+
       await service.getMemoryContext('test-clerk-id', 3, null);
-      
+
       expect(mockQuery).toHaveBeenCalledWith('reports.listRecent', {
         userId: 'user1',
         limit: 3,
@@ -114,11 +122,15 @@ describe('MemoryManagementService', () => {
     });
 
     it('caps limit at 10', async () => {
-      mockQuery.mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' });
+      mockQuery.mockResolvedValueOnce({
+        _id: 'user1',
+        clerkId: 'test-clerk-id',
+        email: 'test@test.com',
+      });
       mockQuery.mockResolvedValueOnce([]);
-      
+
       await service.getMemoryContext('test-clerk-id', 50, null);
-      
+
       expect(mockQuery).toHaveBeenCalledWith('reports.listRecent', {
         userId: 'user1',
         limit: 10,
@@ -127,11 +139,15 @@ describe('MemoryManagementService', () => {
     });
 
     it('excludes session when provided', async () => {
-      mockQuery.mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' });
+      mockQuery.mockResolvedValueOnce({
+        _id: 'user1',
+        clerkId: 'test-clerk-id',
+        email: 'test@test.com',
+      });
       mockQuery.mockResolvedValueOnce([]);
-      
+
       await service.getMemoryContext('test-clerk-id', 5, 'exclude123');
-      
+
       expect(mockQuery).toHaveBeenCalledWith('reports.listRecent', {
         userId: 'user1',
         limit: 5,
@@ -158,9 +174,9 @@ describe('MemoryManagementService', () => {
           title: 'Test Session',
           startedAt: 500000,
         });
-      
+
       const result = await service.getMemoryManagement('test-clerk-id', 5, null, false);
-      
+
       expect(result.memoryDetails).toHaveLength(1);
       expect(result.memoryDetails[0].contentPreview).toContain('Decrypted');
       expect(result.stats.hasMemory).toBe(true);
@@ -178,9 +194,9 @@ describe('MemoryManagementService', () => {
           },
         ])
         .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
-      
+
       const result = await service.getMemoryManagement('test-clerk-id', 5, null, true);
-      
+
       expect(result.memoryDetails[0].fullContent).toBeDefined();
     });
 
@@ -196,9 +212,9 @@ describe('MemoryManagementService', () => {
           },
         ])
         .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
-      
+
       const result = await service.getMemoryManagement('test-clerk-id', 5, null, false);
-      
+
       expect(result.memoryDetails[0].hasEncryptedContent).toBe(false);
       expect(result.stats.failedDecryptions).toBe(1);
     });
@@ -214,9 +230,9 @@ describe('MemoryManagementService', () => {
           { _id: 'report2', sessionId: 'session2' },
         ]);
       mockMutation.mockResolvedValue({ count: 1 });
-      
+
       const result = await service.deleteMemory('clerk123', ['session1']);
-      
+
       expect(result.deletedCount).toBe(1);
       expect(result.deletionType).toBe('specific');
       expect(mockMutation).toHaveBeenCalledWith('reports.removeMany', {
@@ -234,9 +250,9 @@ describe('MemoryManagementService', () => {
           { _id: 'report3', sessionId: 'session1', createdAt: 1000 },
         ]);
       mockMutation.mockResolvedValue({ count: 2 });
-      
+
       const result = await service.deleteMemory('clerk123', undefined, 2);
-      
+
       expect(result.deletedCount).toBe(2);
       expect(result.deletionType).toBe('recent');
       expect(mockMutation).toHaveBeenCalledWith('reports.removeMany', {
@@ -253,9 +269,9 @@ describe('MemoryManagementService', () => {
           { _id: 'report2', sessionId: 'session2' },
         ]);
       mockMutation.mockResolvedValue({ count: 1 });
-      
+
       const result = await service.deleteMemory('clerk123', undefined, undefined, 'session2');
-      
+
       expect(result.deletedCount).toBe(1);
       expect(result.deletionType).toBe('all-except-current');
     });
@@ -269,16 +285,16 @@ describe('MemoryManagementService', () => {
           { _id: 'report2', sessionId: 'session2' },
         ]);
       mockMutation.mockResolvedValue({ count: 2 });
-      
+
       const result = await service.deleteMemory('clerk123');
-      
+
       expect(result.deletedCount).toBe(2);
       expect(result.deletionType).toBe('all');
     });
 
     it('throws error when user not found', async () => {
       mockQuery.mockResolvedValueOnce(null); // getByClerkId returns null
-      
+
       await expect(service.deleteMemory('invalid')).rejects.toThrow('User not found');
     });
 
@@ -287,9 +303,9 @@ describe('MemoryManagementService', () => {
         .mockResolvedValueOnce({ _id: 'user123' }) // getByClerkId
         .mockResolvedValueOnce([]) // listByUser returns empty
         .mockResolvedValueOnce([]); // listBySession returns empty
-      
+
       const result = await service.deleteMemory('clerk123');
-      
+
       expect(result.deletedCount).toBe(0);
       expect(mockMutation).not.toHaveBeenCalled();
     });
@@ -314,9 +330,9 @@ describe('MemoryManagementService', () => {
           },
         ])
         .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
-      
+
       const result = await service.getMemoryContext('test-clerk-id', 5, null);
-      
+
       expect(result.memoryContext[0].summary).toContain('Key insights');
       expect(result.memoryContext[0].summary).toContain('Therapeutic focus');
       expect(result.memoryContext[0].summary).toContain('Growth areas');
@@ -336,9 +352,9 @@ describe('MemoryManagementService', () => {
           },
         ])
         .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
-      
+
       const result = await service.getMemoryContext('test-clerk-id', 5, null);
-      
+
       expect(result.memoryContext[0].summary.length).toBeLessThanOrEqual(510); // 500 + '...'
     });
   });

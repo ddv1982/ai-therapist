@@ -2,7 +2,7 @@
  * Unified Message Component - Single source of truth for all message display
  */
 
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/ui/design-system/message';
 import { MessageAvatar } from './message-avatar';
@@ -34,31 +34,24 @@ interface MessageProps {
   className?: string;
 }
 
-function MessageComponent({ 
-  message, 
-  className
-}: MessageProps) {
+function MessageComponent({ message, className }: MessageProps) {
   const containerClasses = buildMessageClasses(message.role, 'container');
   const contentWrapperClasses = buildMessageClasses(message.role, 'contentWrapper');
-  
+
   return (
-    <article 
+    <article
       className={cn(containerClasses, className)}
       role="article"
       aria-label={`Message from ${message.role}`}
     >
       {/* Avatar */}
       <MessageAvatar role={message.role} />
-      
+
       {/* Content Wrapper */}
-      <div className={cn(contentWrapperClasses, "relative group")}>
+      <div className={cn(contentWrapperClasses, 'group relative')}>
         {/* Message Content */}
-        <MessageContent 
-          content={message.content} 
-          role={message.role}
-          messageId={message.id}
-        />
-        
+        <MessageContent content={message.content} role={message.role} messageId={message.id} />
+
         {/* Message Actions (CBT Export) */}
         <MessageActions
           messageId={message.id}
@@ -75,7 +68,7 @@ function MessageComponent({
 export const Message = memo(MessageComponent, (prevProps, nextProps) => {
   const prevMsg = prevProps.message;
   const nextMsg = nextProps.message;
-  
+
   return (
     prevMsg.id === nextMsg.id &&
     prevMsg.content === nextMsg.content &&

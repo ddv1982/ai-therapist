@@ -1,4 +1,3 @@
-import React from 'react';
 import { screen, fireEvent } from '@testing-library/react';
 import { ComponentTestUtils } from '__tests__/utils/test-utilities';
 import { SystemBanner } from '@/features/chat/components/system-banner';
@@ -36,5 +35,3 @@ describe('SystemBanner', () => {
     expect(onManage).toHaveBeenCalled();
   });
 });
-
-

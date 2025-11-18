@@ -8,16 +8,22 @@ import {
   SchemaReflectionQuestion,
   SchemaReflectionData,
   DEFAULT_SCHEMA_REFLECTION_QUESTIONS,
-  getInitialCBTFormData
+  getInitialCBTFormData,
 } from '@/types/therapy';
 
 describe('Schema Reflection Types', () => {
   describe('SchemaReflectionCategory', () => {
     it('should include all expected category types', () => {
-      const categories: SchemaReflectionCategory[] = ['childhood', 'schemas', 'coping', 'modes', 'custom'];
-      
+      const categories: SchemaReflectionCategory[] = [
+        'childhood',
+        'schemas',
+        'coping',
+        'modes',
+        'custom',
+      ];
+
       // Test each category can be assigned
-      categories.forEach(category => {
+      categories.forEach((category) => {
         expect(typeof category).toBe('string');
         expect(['childhood', 'schemas', 'coping', 'modes', 'custom']).toContain(category);
       });
@@ -30,7 +36,7 @@ describe('Schema Reflection Types', () => {
         question: 'Test question',
         answer: 'Test answer',
         category: 'childhood',
-        isRequired: false
+        isRequired: false,
       };
 
       expect(question).toHaveProperty('question');
@@ -46,7 +52,7 @@ describe('Schema Reflection Types', () => {
       const question: SchemaReflectionQuestion = {
         question: 'Test question',
         answer: 'Test answer',
-        category: 'modes'
+        category: 'modes',
       };
 
       expect(question.isRequired).toBeUndefined();
@@ -57,12 +63,14 @@ describe('Schema Reflection Types', () => {
     it('should have correct structure', () => {
       const reflectionData: SchemaReflectionData = {
         enabled: true,
-        questions: [{
-          question: 'Test',
-          answer: 'Answer',
-          category: 'coping'
-        }],
-        selfAssessment: 'My reflection'
+        questions: [
+          {
+            question: 'Test',
+            answer: 'Answer',
+            category: 'coping',
+          },
+        ],
+        selfAssessment: 'My reflection',
       };
 
       expect(reflectionData).toHaveProperty('enabled');
@@ -78,19 +86,21 @@ describe('Schema Reflection Types', () => {
 describe('DEFAULT_SCHEMA_REFLECTION_QUESTIONS', () => {
   it('should contain questions for all categories', () => {
     const categories = ['childhood', 'schemas', 'coping', 'modes'];
-    
-    categories.forEach(category => {
-      const categoryQuestions = DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(q => q.category === category);
+
+    categories.forEach((category) => {
+      const categoryQuestions = DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(
+        (q) => q.category === category
+      );
       expect(categoryQuestions.length).toBeGreaterThan(0);
     });
   });
 
   it('should have proper question structure', () => {
-    DEFAULT_SCHEMA_REFLECTION_QUESTIONS.forEach(question => {
+    DEFAULT_SCHEMA_REFLECTION_QUESTIONS.forEach((question) => {
       expect(question).toHaveProperty('question');
       expect(question).toHaveProperty('answer');
       expect(question).toHaveProperty('category');
-      
+
       expect(typeof question.question).toBe('string');
       expect(typeof question.answer).toBe('string');
       expect(question.question.length).toBeGreaterThan(0);
@@ -101,10 +111,11 @@ describe('DEFAULT_SCHEMA_REFLECTION_QUESTIONS', () => {
 
   it('should contain expected number of questions per category', () => {
     const questionCounts = {
-      childhood: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(q => q.category === 'childhood').length,
-      schemas: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(q => q.category === 'schemas').length,
-      coping: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(q => q.category === 'coping').length,
-      modes: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(q => q.category === 'modes').length
+      childhood: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter((q) => q.category === 'childhood')
+        .length,
+      schemas: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter((q) => q.category === 'schemas').length,
+      coping: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter((q) => q.category === 'coping').length,
+      modes: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter((q) => q.category === 'modes').length,
     };
 
     // Verify we have the refined question set per category
@@ -112,45 +123,61 @@ describe('DEFAULT_SCHEMA_REFLECTION_QUESTIONS', () => {
     expect(questionCounts.schemas).toBe(2);
     expect(questionCounts.coping).toBe(1);
     expect(questionCounts.modes).toBe(1);
-    
+
     // Total should be 6 refined questions (quality over quantity)
     expect(DEFAULT_SCHEMA_REFLECTION_QUESTIONS.length).toBe(6);
   });
 
   describe('Question Content Quality', () => {
     it('should have meaningful childhood pattern questions', () => {
-      const childhoodQuestions = DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(q => q.category === 'childhood');
-      
-      expect(childhoodQuestions.some(q => q.question.toLowerCase().includes('childhood'))).toBe(true);
-      expect(childhoodQuestions.some(q => q.question.toLowerCase().includes('past'))).toBe(true);
+      const childhoodQuestions = DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(
+        (q) => q.category === 'childhood'
+      );
+
+      expect(childhoodQuestions.some((q) => q.question.toLowerCase().includes('childhood'))).toBe(
+        true
+      );
+      expect(childhoodQuestions.some((q) => q.question.toLowerCase().includes('past'))).toBe(true);
     });
 
     it('should have relevant schema domain questions', () => {
-      const schemaQuestions = DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(q => q.category === 'schemas');
-      
-      expect(schemaQuestions.some(q => 
-        q.question.toLowerCase().includes('abandonment') || 
-        q.question.toLowerCase().includes('perfectionism') ||
-        q.question.toLowerCase().includes('people-pleasing')
-      )).toBe(true);
+      const schemaQuestions = DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(
+        (q) => q.category === 'schemas'
+      );
+
+      expect(
+        schemaQuestions.some(
+          (q) =>
+            q.question.toLowerCase().includes('abandonment') ||
+            q.question.toLowerCase().includes('perfectionism') ||
+            q.question.toLowerCase().includes('people-pleasing')
+        )
+      ).toBe(true);
     });
 
     it('should have practical coping strategy questions', () => {
-      const copingQuestions = DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(q => q.category === 'coping');
-      
+      const copingQuestions = DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(
+        (q) => q.category === 'coping'
+      );
+
       // Should focus on protection mechanisms (refined from original question set)
-      expect(copingQuestions.some(q => q.question.toLowerCase().includes('protect'))).toBe(true);
+      expect(copingQuestions.some((q) => q.question.toLowerCase().includes('protect'))).toBe(true);
       expect(copingQuestions.length).toBe(1); // Streamlined to one high-quality question
     });
 
     it('should have insightful mode awareness questions', () => {
-      const modeQuestions = DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(q => q.category === 'modes');
-      
-      expect(modeQuestions.some(q => 
-        q.question.toLowerCase().includes('part') || 
-        q.question.toLowerCase().includes('child') ||
-        q.question.toLowerCase().includes('parent')
-      )).toBe(true);
+      const modeQuestions = DEFAULT_SCHEMA_REFLECTION_QUESTIONS.filter(
+        (q) => q.category === 'modes'
+      );
+
+      expect(
+        modeQuestions.some(
+          (q) =>
+            q.question.toLowerCase().includes('part') ||
+            q.question.toLowerCase().includes('child') ||
+            q.question.toLowerCase().includes('parent')
+        )
+      ).toBe(true);
     });
   });
 });
@@ -158,7 +185,7 @@ describe('DEFAULT_SCHEMA_REFLECTION_QUESTIONS', () => {
 describe('CBTDiaryFormData Integration', () => {
   it('should include schemaReflection in form data type', () => {
     const formData = getInitialCBTFormData();
-    
+
     expect(formData).toHaveProperty('schemaReflection');
     expect(formData.schemaReflection).toHaveProperty('enabled');
     expect(formData.schemaReflection).toHaveProperty('questions');
@@ -167,25 +194,27 @@ describe('CBTDiaryFormData Integration', () => {
 
   it('should initialize with reflection disabled by default', () => {
     const formData = getInitialCBTFormData();
-    
+
     expect(formData.schemaReflection.enabled).toBe(false);
     expect(formData.schemaReflection.selfAssessment).toBe('');
   });
 
   it('should initialize with all default reflection questions', () => {
     const formData = getInitialCBTFormData();
-    
-    expect(formData.schemaReflection.questions.length).toBe(DEFAULT_SCHEMA_REFLECTION_QUESTIONS.length);
+
+    expect(formData.schemaReflection.questions.length).toBe(
+      DEFAULT_SCHEMA_REFLECTION_QUESTIONS.length
+    );
     expect(formData.schemaReflection.questions).toEqual(DEFAULT_SCHEMA_REFLECTION_QUESTIONS);
   });
 
   it('should maintain question immutability in initial data', () => {
     const formData1 = getInitialCBTFormData();
     const formData2 = getInitialCBTFormData();
-    
+
     // Modify one instance
     formData1.schemaReflection.questions[0].answer = 'Modified answer';
-    
+
     // Other instance should not be affected
     expect(formData2.schemaReflection.questions[0].answer).toBe('');
   });
@@ -197,22 +226,28 @@ describe('Type Safety', () => {
     const validQuestion: SchemaReflectionQuestion = {
       question: 'Valid question',
       answer: 'Valid answer',
-      category: 'childhood' // Valid category
+      category: 'childhood', // Valid category
     };
-    
+
     expect(validQuestion.category).toBe('childhood');
   });
 
   it('should allow all valid categories', () => {
-    const categories: SchemaReflectionCategory[] = ['childhood', 'schemas', 'coping', 'modes', 'custom'];
-    
-    categories.forEach(category => {
+    const categories: SchemaReflectionCategory[] = [
+      'childhood',
+      'schemas',
+      'coping',
+      'modes',
+      'custom',
+    ];
+
+    categories.forEach((category) => {
       const question: SchemaReflectionQuestion = {
         question: 'Test',
         answer: 'Test',
-        category
+        category,
       };
-      
+
       expect(question.category).toBe(category);
     });
   });

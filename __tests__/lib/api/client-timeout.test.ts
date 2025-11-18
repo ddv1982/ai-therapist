@@ -19,7 +19,13 @@ describe('ApiClient timeout/abort and content-type fallbacks', () => {
         }
       });
     }) as any;
-    await expect((client as unknown as { request: (p: string, init?: RequestInit, t?: number) => Promise<unknown> }).request('/slow', {}, 1)).rejects.toBeInstanceOf(Error);
+    await expect(
+      (
+        client as unknown as {
+          request: (p: string, init?: RequestInit, t?: number) => Promise<unknown>;
+        }
+      ).request('/slow', {}, 1)
+    ).rejects.toBeInstanceOf(Error);
   }, 2000);
 
   it('throws on non-JSON error content-type', async () => {
@@ -28,11 +34,13 @@ describe('ApiClient timeout/abort and content-type fallbacks', () => {
       status: 500,
       statusText: 'Server Error',
       headers: { get: (k: string) => (k.toLowerCase() === 'content-type' ? 'text/plain' : null) },
-      json: async () => { throw new Error('not json'); },
+      json: async () => {
+        throw new Error('not json');
+      },
       text: async () => 'fail',
     })) as any;
-    await expect((client as unknown as { request: (p: string) => Promise<unknown> }).request('/x')).rejects.toThrow('fail');
+    await expect(
+      (client as unknown as { request: (p: string) => Promise<unknown> }).request('/x')
+    ).rejects.toThrow('fail');
   });
 });
-
-

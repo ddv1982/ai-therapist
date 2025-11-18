@@ -10,5 +10,3 @@ export const DEFAULT_CHAT_SETTINGS = {
 };
 
 export const REPORT_MODEL_ID = ANALYTICAL_MODEL_ID;
-
-

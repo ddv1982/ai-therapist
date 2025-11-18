@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useCallback, useContext } from 'react';
+import { createContext, useCallback, useContext, createElement, ReactNode } from 'react';
 import { apiClient } from '@/lib/api/client';
 import { logger } from '@/lib/utils/logger';
 import {
@@ -23,7 +23,9 @@ export interface SendStepOptions {
 export function useCBTChatBridge() {
   const sendChatMessage = useCallback(async (content: string, sessionId?: string) => {
     if (!sessionId) {
-      logger.warn('CBT data send attempted without active session', { operation: 'sendChatMessage' });
+      logger.warn('CBT data send attempted without active session', {
+        operation: 'sendChatMessage',
+      });
       return false;
     }
     try {
@@ -39,7 +41,12 @@ export function useCBTChatBridge() {
   }, []);
 
   const sendStepCard = useCallback(
-    async (stepId: CBTStepId, context: CBTFlowContext, sessionId?: string, options?: SendStepOptions) => {
+    async (
+      stepId: CBTStepId,
+      context: CBTFlowContext,
+      sessionId?: string,
+      options?: SendStepOptions
+    ) => {
       const card = buildStepCard(stepId, context);
       if (!card) {
         if (!options?.onlyIfExists) {
@@ -49,7 +56,7 @@ export function useCBTChatBridge() {
       }
       return sendChatMessage(card, sessionId);
     },
-    [sendChatMessage],
+    [sendChatMessage]
   );
 
   const sendAllCompletedSteps = useCallback(
@@ -63,7 +70,7 @@ export function useCBTChatBridge() {
       }
       return result;
     },
-    [sendChatMessage],
+    [sendChatMessage]
   );
 
   const sendSessionSummary = useCallback(
@@ -71,19 +78,15 @@ export function useCBTChatBridge() {
       const card = buildSessionSummaryCard(state);
       return sendChatMessage(card, sessionId);
     },
-    [sendChatMessage],
+    [sendChatMessage]
   );
 
   const sendEmotionComparison = useCallback(
-    async (
-      initialEmotions: EmotionData,
-      finalEmotions: EmotionData,
-      sessionId?: string,
-    ) => {
+    async (initialEmotions: EmotionData, finalEmotions: EmotionData, sessionId?: string) => {
       const card = buildEmotionComparisonCard(initialEmotions, finalEmotions);
       return sendChatMessage(card, sessionId);
     },
-    [sendChatMessage],
+    [sendChatMessage]
   );
 
   return {
@@ -102,15 +105,19 @@ interface CBTSessionContextType {
 
 const CBTSessionContext = createContext<CBTSessionContextType>({});
 
-export function CBTSessionProvider({ children, sessionId, setSessionId }: {
-  children: React.ReactNode;
+export function CBTSessionProvider({
+  children,
+  sessionId,
+  setSessionId,
+}: {
+  children: ReactNode;
   sessionId?: string;
   setSessionId?: (id: string) => void;
 }) {
-  return React.createElement(
+  return createElement(
     CBTSessionContext.Provider,
     { value: { sessionId, setSessionId } },
-    children,
+    children
   );
 }
 

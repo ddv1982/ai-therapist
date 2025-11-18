@@ -8,7 +8,7 @@ import {
   deleteMemory,
   refreshMemoryContext,
   getSessionReportDetail,
-  type MemoryContextInfo
+  type MemoryContextInfo,
 } from '@/lib/chat/memory-utils';
 
 // Mock fetch
@@ -24,9 +24,7 @@ describe('Memory Utils', () => {
     it('should fetch global memory when sessionId is not provided', async () => {
       const mockResponse = {
         success: true,
-        memoryContext: [
-          { sessionTitle: 'Session A', reportDate: '2024-01-01' },
-        ],
+        memoryContext: [{ sessionTitle: 'Session A', reportDate: '2024-01-01' }],
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -53,7 +51,7 @@ describe('Memory Utils', () => {
             reportDate: '2024-01-01',
           },
           {
-            sessionTitle: 'Session 2', 
+            sessionTitle: 'Session 2',
             reportDate: '2024-01-02',
           },
         ],
@@ -106,7 +104,9 @@ describe('Memory Utils', () => {
         lastReportDate: '2024-01-01',
       };
 
-      expect(formatMemoryInfo(memoryInfo)).toBe('Using insights from 1 previous session (2024-01-01)');
+      expect(formatMemoryInfo(memoryInfo)).toBe(
+        'Using insights from 1 previous session (2024-01-01)'
+      );
     });
 
     it('should format multiple sessions correctly', () => {
@@ -116,7 +116,9 @@ describe('Memory Utils', () => {
         lastReportDate: '2024-01-03',
       };
 
-      expect(formatMemoryInfo(memoryInfo)).toBe('Using insights from 3 previous sessions (latest: 2024-01-03)');
+      expect(formatMemoryInfo(memoryInfo)).toBe(
+        'Using insights from 3 previous sessions (latest: 2024-01-03)'
+      );
     });
   });
 
@@ -182,7 +184,7 @@ describe('Memory Utils', () => {
   describe('refreshMemoryContext', () => {
     it('should refresh memory context after deletion', async () => {
       const result = await refreshMemoryContext('test-session');
-      
+
       expect(result).toEqual({
         hasMemory: false,
         reportCount: 0,
@@ -194,20 +196,27 @@ describe('Memory Utils', () => {
     it('should fetch full content for specific report', async () => {
       const mockDetailResponse = {
         success: true,
-        memoryDetails: [{
-          id: 'report-1',
-          sessionId: 'session-1',
-          sessionTitle: 'Test Session',
-          sessionDate: '2024-01-01',
-          reportDate: '2024-01-01',
-          contentPreview: 'Preview content...',
-          fullContent: 'Complete therapeutic session content with detailed analysis...',
-          keyInsights: ['Insight 1', 'Insight 2'],
-          hasEncryptedContent: true,
-          reportSize: 2048
-        }],
+        memoryDetails: [
+          {
+            id: 'report-1',
+            sessionId: 'session-1',
+            sessionTitle: 'Test Session',
+            sessionDate: '2024-01-01',
+            reportDate: '2024-01-01',
+            contentPreview: 'Preview content...',
+            fullContent: 'Complete therapeutic session content with detailed analysis...',
+            keyInsights: ['Insight 1', 'Insight 2'],
+            hasEncryptedContent: true,
+            reportSize: 2048,
+          },
+        ],
         reportCount: 1,
-        stats: { totalReportsFound: 1, successfullyProcessed: 1, failedDecryptions: 0, hasMemory: true }
+        stats: {
+          totalReportsFound: 1,
+          successfullyProcessed: 1,
+          failedDecryptions: 0,
+          hasMemory: true,
+        },
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -229,26 +238,33 @@ describe('Memory Utils', () => {
         reportDate: '2024-01-01',
         fullContent: 'Complete therapeutic session content with detailed analysis...',
         keyInsights: ['Insight 1', 'Insight 2'],
-        reportSize: 2048
+        reportSize: 2048,
       });
     });
 
     it('should fetch full content without session exclusion', async () => {
       const mockDetailResponse = {
         success: true,
-        memoryDetails: [{
-          id: 'report-1',
-          sessionId: 'session-1',
-          sessionTitle: 'Test Session',
-          sessionDate: '2024-01-01',
-          reportDate: '2024-01-01',
-          fullContent: 'Complete content...',
-          keyInsights: [],
-          hasEncryptedContent: true,
-          reportSize: 1024
-        }],
+        memoryDetails: [
+          {
+            id: 'report-1',
+            sessionId: 'session-1',
+            sessionTitle: 'Test Session',
+            sessionDate: '2024-01-01',
+            reportDate: '2024-01-01',
+            fullContent: 'Complete content...',
+            keyInsights: [],
+            hasEncryptedContent: true,
+            reportSize: 1024,
+          },
+        ],
         reportCount: 1,
-        stats: { totalReportsFound: 1, successfullyProcessed: 1, failedDecryptions: 0, hasMemory: true }
+        stats: {
+          totalReportsFound: 1,
+          successfullyProcessed: 1,
+          failedDecryptions: 0,
+          hasMemory: true,
+        },
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -271,7 +287,12 @@ describe('Memory Utils', () => {
         success: true,
         memoryDetails: [],
         reportCount: 0,
-        stats: { totalReportsFound: 0, successfullyProcessed: 0, failedDecryptions: 0, hasMemory: false }
+        stats: {
+          totalReportsFound: 0,
+          successfullyProcessed: 0,
+          failedDecryptions: 0,
+          hasMemory: false,
+        },
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -287,20 +308,27 @@ describe('Memory Utils', () => {
     it('should return null when full content is missing', async () => {
       const mockDetailResponse = {
         success: true,
-        memoryDetails: [{
-          id: 'report-1',
-          sessionId: 'session-1',
-          sessionTitle: 'Test Session',
-          sessionDate: '2024-01-01',
-          reportDate: '2024-01-01',
-          contentPreview: 'Preview only...',
-          // fullContent is missing
-          keyInsights: [],
-          hasEncryptedContent: false,
-          reportSize: 1024
-        }],
+        memoryDetails: [
+          {
+            id: 'report-1',
+            sessionId: 'session-1',
+            sessionTitle: 'Test Session',
+            sessionDate: '2024-01-01',
+            reportDate: '2024-01-01',
+            contentPreview: 'Preview only...',
+            // fullContent is missing
+            keyInsights: [],
+            hasEncryptedContent: false,
+            reportSize: 1024,
+          },
+        ],
         reportCount: 1,
-        stats: { totalReportsFound: 1, successfullyProcessed: 0, failedDecryptions: 1, hasMemory: true }
+        stats: {
+          totalReportsFound: 1,
+          successfullyProcessed: 0,
+          failedDecryptions: 1,
+          hasMemory: true,
+        },
       };
 
       mockFetch.mockResolvedValueOnce({

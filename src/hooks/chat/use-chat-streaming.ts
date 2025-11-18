@@ -24,14 +24,7 @@ interface StartStreamArgs {
 }
 
 export function useChatStreaming(params: UseChatStreamingParams) {
-  const {
-    currentSession,
-    transport,
-    options,
-    setMessages,
-    loadSessions,
-    setIsLoading,
-  } = params;
+  const { currentSession, transport, options, setMessages, loadSessions, setIsLoading } = params;
 
   const optionsRef = useRef(options);
   const aiPlaceholderIdRef = useRef<string | null>(null);
@@ -59,9 +52,10 @@ export function useChatStreaming(params: UseChatStreamingParams) {
     },
     onFinish: async ({ message }) => {
       try {
-        const textContent = (message.parts ?? []).reduce((acc, part) => (
-          part.type === 'text' ? acc + (part.text ?? '') : acc
-        ), '');
+        const textContent = (message.parts ?? []).reduce(
+          (acc, part) => (part.type === 'text' ? acc + (part.text ?? '') : acc),
+          ''
+        );
         const trimmedContent = textContent.trim();
         const metadataModelId = (() => {
           const meta = message.metadata as { modelId?: unknown } | undefined;
@@ -79,11 +73,13 @@ export function useChatStreaming(params: UseChatStreamingParams) {
 
         const placeholderId = aiPlaceholderIdRef.current;
         if (placeholderId) {
-          setMessages((prev) => prev.map((existing) => (
-            existing.id === placeholderId
-              ? { ...existing, content: textContent, modelUsed: actualModelId }
-              : existing
-          )));
+          setMessages((prev) =>
+            prev.map((existing) =>
+              existing.id === placeholderId
+                ? { ...existing, content: textContent, modelUsed: actualModelId }
+                : existing
+            )
+          );
         }
 
         const sid = sessionIdRef.current;
@@ -96,10 +92,14 @@ export function useChatStreaming(params: UseChatStreamingParams) {
             });
             await loadSessions();
           } catch (error) {
-            logger.error('Failed to persist assistant stream result', {
-              component: 'useChatStreaming',
-              sessionId: sid,
-            }, error instanceof Error ? error : new Error(String(error)));
+            logger.error(
+              'Failed to persist assistant stream result',
+              {
+                component: 'useChatStreaming',
+                sessionId: sid,
+              },
+              error instanceof Error ? error : new Error(String(error))
+            );
           }
         }
       } finally {
@@ -109,41 +109,48 @@ export function useChatStreaming(params: UseChatStreamingParams) {
     },
   });
 
-  const startStream = useCallback(async ({ sessionId, placeholderId, userMessage }: StartStreamArgs) => {
-    aiPlaceholderIdRef.current = placeholderId;
-    sessionIdRef.current = sessionId;
-    setIsLoading(true);
+  const startStream = useCallback(
+    async ({ sessionId, placeholderId, userMessage }: StartStreamArgs) => {
+      aiPlaceholderIdRef.current = placeholderId;
+      sessionIdRef.current = sessionId;
+      setIsLoading(true);
 
-    try {
-      await sendAiMessage(
-        {
-          role: 'user',
-          parts: [{ type: 'text', text: userMessage }],
-        },
-        {
-          body: {
-            sessionId,
-            webSearchEnabled: optionsRef.current?.webSearchEnabled ?? false,
-            selectedModel: optionsRef.current?.model,
-            state: {},
+      try {
+        await sendAiMessage(
+          {
+            role: 'user',
+            parts: [{ type: 'text', text: userMessage }],
           },
-        },
-      );
-    } catch (error) {
-      const placeholder = aiPlaceholderIdRef.current;
-      if (placeholder) {
-        setMessages((prev) => prev.filter((message) => message.id !== placeholder));
-        aiPlaceholderIdRef.current = null;
+          {
+            body: {
+              sessionId,
+              webSearchEnabled: optionsRef.current?.webSearchEnabled ?? false,
+              selectedModel: optionsRef.current?.model,
+              state: {},
+            },
+          }
+        );
+      } catch (error) {
+        const placeholder = aiPlaceholderIdRef.current;
+        if (placeholder) {
+          setMessages((prev) => prev.filter((message) => message.id !== placeholder));
+          aiPlaceholderIdRef.current = null;
+        }
+        setIsLoading(false);
+        logger.error(
+          'Error sending message to AI',
+          {
+            component: 'useChatStreaming',
+            sessionId,
+            model: optionsRef.current?.model,
+          },
+          error instanceof Error ? error : new Error(String(error))
+        );
+        throw error;
       }
-      setIsLoading(false);
-      logger.error('Error sending message to AI', {
-        component: 'useChatStreaming',
-        sessionId,
-        model: optionsRef.current?.model,
-      }, error instanceof Error ? error : new Error(String(error)));
-      throw error;
-    }
-  }, [sendAiMessage, setIsLoading, setMessages]);
+    },
+    [sendAiMessage, setIsLoading, setMessages]
+  );
 
   const stopStream = useCallback(() => {
     try {

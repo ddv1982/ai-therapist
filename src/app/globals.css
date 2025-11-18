@@ -1,7 +1,7 @@
 /* Tailwind v4 - Single import for all utilities */
-@import "tailwindcss";
-@source "../../node_modules/streamdown/dist/index.js";
-@import "katex/dist/katex.min.css";
+@import 'tailwindcss';
+@source '../../node_modules/streamdown/dist/index.js';
+@import 'katex/dist/katex.min.css';
 
 /* Theme registration using @theme directive - Tailwind v4 approach */
 @theme {
@@ -25,7 +25,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  
+
   /* Therapeutic colors */
   --color-therapy-success: var(--therapy-success);
   --color-therapy-warning: var(--therapy-warning);
@@ -42,8 +42,8 @@
 }
 
 /* Essential CSS modules - Fire Your Design Team approach */
-@import "../styles/base.css";
-@import "../styles/typography.css"; 
-@import "../styles/layout.css";
-@import "../styles/utilities.css";
-@import "../components/ui/markdown-styles.css";
+@import '../styles/base.css';
+@import '../styles/typography.css';
+@import '../styles/layout.css';
+@import '../styles/utilities.css';
+@import '../components/ui/markdown-styles.css';

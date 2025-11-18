@@ -1,5 +1,4 @@
-import React from 'react';
-
+import { useState, useCallback } from 'react';
 import { ObsessionsCompulsionsData } from '@/types/therapy';
 import { parseObsessionsCompulsionsFromMarkdown } from './format-obsessions-compulsions';
 
@@ -51,7 +50,7 @@ export class ObsessionsExportManager {
     if (this.data.obsessions.length > 0) {
       text += 'OBSESSIONS\n';
       text += '----------\n\n';
-      
+
       this.data.obsessions.forEach((obsession, index) => {
         text += `${index + 1}. ${obsession.obsession}\n`;
         text += `   Intensity: ${obsession.intensity}/10\n`;
@@ -65,7 +64,7 @@ export class ObsessionsExportManager {
     if (this.data.compulsions.length > 0) {
       text += 'COMPULSIONS\n';
       text += '-----------\n\n';
-      
+
       this.data.compulsions.forEach((compulsion, index) => {
         text += `${index + 1}. ${compulsion.compulsion}\n`;
         text += `   Frequency: ${compulsion.frequency}/10\n`;
@@ -105,7 +104,7 @@ export class ObsessionsExportManager {
 export function createObsessionsExportManager(content: string): ObsessionsExportManager | null {
   const data = parseObsessionsCompulsionsFromMarkdown(content);
   if (!data) return null;
-  
+
   return new ObsessionsExportManager(data, content);
 }
 
@@ -120,19 +119,19 @@ export function useObsessionsExportActions(
     onError?: (error: Error, format: ObsessionsExportFormat) => void;
   } = {}
 ) {
-  const [isExporting, setIsExporting] = React.useState(false);
-  const [exportingFormat, setExportingFormat] = React.useState<ObsessionsExportFormat | null>(null);
-  const [exportError, setExportError] = React.useState<Error | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState<ObsessionsExportFormat | null>(null);
+  const [exportError, setExportError] = useState<Error | null>(null);
 
   // PDF export removed
 
-  const exportAsJSON = React.useCallback(async () => {
+  const exportAsJSON = useCallback(async () => {
     if (!data) return;
-    
+
     setIsExporting(true);
     setExportingFormat('json');
     setExportError(null);
-    
+
     try {
       const manager = new ObsessionsExportManager(data, content);
       await manager.exportAsJSON({ format: 'json' });
@@ -147,13 +146,13 @@ export function useObsessionsExportActions(
     }
   }, [data, content, options]);
 
-  const exportAsMarkdown = React.useCallback(async () => {
+  const exportAsMarkdown = useCallback(async () => {
     if (!data) return;
-    
+
     setIsExporting(true);
     setExportingFormat('markdown');
     setExportError(null);
-    
+
     try {
       const manager = new ObsessionsExportManager(data, content);
       await manager.exportAsMarkdown({ format: 'markdown' });
@@ -168,13 +167,13 @@ export function useObsessionsExportActions(
     }
   }, [data, content, options]);
 
-  const exportAsText = React.useCallback(async () => {
+  const exportAsText = useCallback(async () => {
     if (!data) return;
-    
+
     setIsExporting(true);
     setExportingFormat('text');
     setExportError(null);
-    
+
     try {
       const manager = new ObsessionsExportManager(data, content);
       const textContent = manager.exportAsText({ format: 'text' });
@@ -198,7 +197,7 @@ export function useObsessionsExportActions(
     }
   }, [data, content, options]);
 
-  const clearError = React.useCallback(() => {
+  const clearError = useCallback(() => {
     setExportError(null);
   }, []);
 
@@ -209,6 +208,6 @@ export function useObsessionsExportActions(
     isExporting,
     exportingFormat,
     exportError,
-    clearError
+    clearError,
   };
 }

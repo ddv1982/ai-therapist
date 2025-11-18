@@ -1,621 +1,677 @@
-# 🧠💙 AI Therapist - Compassionate Mental Health Support
+# 🤖 Droidz - AI-Powered Development Framework for Factory.ai
 
-A modern therapeutic AI application providing compassionate mental health support through AI-powered conversations with enterprise-grade security and professional therapeutic frameworks.
+**Transform vague ideas into production-ready code with AI-generated specifications, parallel task execution, and comprehensive coding standards.**
 
-## 🚀 Recent Improvements
-
-### 🔐 Clerk Authentication Migration (October 2025)
-- **Managed Authentication**: Replaced 2000+ lines of custom TOTP code with Clerk managed auth
-- **Webhook Synchronization**: Automatic user sync from Clerk to Convex via webhooks
-- **Simplified Setup**: No more TOTP setup required - Clerk handles all authentication
-- **Enhanced Security**: Leverages Clerk's enterprise-grade authentication infrastructure
-- **Message Encryption Preserved**: AES-256-GCM encryption still protects therapeutic data
-
-### 🛠️ Developer Experience
-- **Cleaner Codebase**: Removed custom auth endpoints, device fingerprinting, TOTP service
-- **Latest Dependencies**: All 27 packages upgraded to latest stable versions
-- **Better Test Coverage**: 862 passing tests (100% pass rate) with Clerk mocks
-- **Improved DX**: Turbopack provides 10x faster development builds
-
-## ✨ Features
-
-### 🎨 Beautiful Experience
-- **Dual Theme Support** - Elegant dark and light modes
-- **Mobile Optimized** - Touch-friendly responsive design
-- **Real-time Streaming** - AI responses with smooth animations
-- **Session Management** - Create and switch between therapy sessions
-
-### 🧠 Therapeutic Framework
-- **Professional AI Prompting** - Trained with therapeutic principles
-- **CBT & ERP Support** - Cognitive Behavioral Therapy and Exposure Response Prevention
-- **Schema Therapy** - Deep pattern recognition and healing approaches
-- **Crisis Intervention** - Automatic safety responses
-- **Session Reports** - AI-generated insights and progress tracking
-- **Web Search Integration** - Real-time access to therapeutic resources and current information
-
-### 🔒 Enterprise Security
-- **Clerk Managed Authentication** - Enterprise-grade authentication service (replaces custom TOTP)
-- **AES-256-GCM Encryption** - Field-level encryption for therapeutic message content
-- **Webhook Authentication** - Svix signature verification for Clerk events
-- **Cross-Device Sessions** - Access sessions on any authenticated device
-- **Database Transactions** - Race condition prevention with ACID compliance
-- **JWT Token Validation** - Secure API authentication via Clerk tokens
-- **HIPAA-Compliant Logging** - No sensitive data exposure
-
-### ⚡ Performance & Resilience
-- **Redis Caching** - High-performance caching with 90%+ hit rates
-- **Circuit Breaker Pattern** - Automatic failover for external services
-- **Request Deduplication** - Prevents duplicate operations from rapid clicks
-- **Storage Management** - Automatic quota monitoring and cleanup
-- **Enhanced Redux Persist** - Timeout handling and corruption recovery
-- **Health Monitoring** - Comprehensive system health checks
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 24+
-- Redis (for caching - auto-installed)
-- Convex (backend - runs locally during development)
-
-### Installation
-
-#### Option 1: Complete Automated Setup (Recommended)
-```bash
-git clone <your-repo-url>
-cd ai-therapist
-npm run setup:all
-```
-
-This will automatically:
-- Install all dependencies
-- Install and configure Redis
-- Set up encryption
-- Create environment configuration
-
-#### Option 2: Manual Setup
-
-1. **Clone and install**
-   ```bash
-   git clone <your-repo-url>
-   cd ai-therapist
-   npm install
-   ```
-
-2. **Set up Clerk** (Required)
-   - Go to [clerk.com](https://clerk.com) and create a new application
-   - Copy your API keys from the Clerk dashboard
-   - Configure webhook: Add endpoint at `/api/webhooks/clerk` with signing secret
-
-3. **Set up Convex** (Required)
-   - Go to [convex.dev](https://convex.dev) and create a new project
-   - Run `npx convex dev` to get your local development URL
-
-4. **Set up environment**
-  ```bash
-  # Create .env.local and add your keys
-  cat > .env.local <<'EOF'
-  # Clerk Authentication (required)
-  CLERK_SECRET_KEY=your_clerk_secret_key
-  CLERK_WEBHOOK_SECRET=your_clerk_webhook_secret
-  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-
-  # Convex Backend (required)
-  CONVEX_URL=http://127.0.0.1:6790/?d=...
-  NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:6790/?d=...
-
-  # AI & Encryption (required)
-  GROQ_API_KEY=your_groq_api_key_here
-  ENCRYPTION_KEY=your_32_character_encryption_key_here
-
-  # Redis Configuration
-  REDIS_URL="redis://localhost:6379"
-  CACHE_ENABLED="true"
-
-  # Local-only opts
-  RATE_LIMIT_DISABLED=true
-  EOF
-   ```
-
-5. **Initialize Redis and Convex**
-   ```bash
-   npm run redis:setup
-   npm run convex:dev   # in a separate terminal, leave running for local backend
-   ```
-   The Convex backend will automatically initialize the schema and be accessible at the URL configured above.
-
-6. **Start development**
-   ```bash
-   npm run dev
-   ```
-
-7. **Open browser**
-   - Navigate to `http://localhost:4000`
-   - Sign up with Clerk (or use the sign-in page if account exists)
-   - After authentication, you'll have access to the chat interface
-   - Enable web search in chat settings for access to current information
-   - Start your first therapeutic conversation
-
-## 🛠 Development Commands
-
-### Core Development
-- `npm run dev` - Start development server with Turbopack on port 4000 (network accessible)
-- `npm run dev:local` - Start development server on localhost only
-- `npm run build` - Build for production
-- `npm run start` - Start production server (network accessible)
-- `npm run lint` - Run ESLint for code quality
-- `npm run api:types` - Generate TypeScript types from OpenAPI spec (docs/api.yaml → src/types/api.generated.ts)
-
-### Database Management (Convex Backend)
-- `npm run convex:dev` - Start the Convex backend locally (used during development)
-- `npm run convex:deploy` - Deploy Convex backend to production
-
-**Note:** Database schema is defined in `/convex/schema.ts`. When making schema changes, restart the Convex development server and it will automatically apply changes.
-
-### Redis Caching
-- `npm run redis:setup` - Install and configure Redis
-- `npm run redis:start` - Start Redis server
-- `npm run redis:stop` - Stop Redis server
-- `npm run redis:status` - Check Redis status
-- `npm run cache:health` - Check cache health and statistics
-- `npm run cache:stats` - Get detailed cache statistics
-
-### Testing
-- `npm run test` - Run unit tests with Jest
-- `npm run test:watch` - Run tests in watch mode
-- `npm run test:coverage` - Generate test coverage report
-- `npm run test:e2e` - Run Playwright end-to-end tests
-- `npm run test:e2e:ui` - Run E2E tests with Playwright UI
-- `npm run test:e2e:debug` - Debug E2E tests
-
-### Setup & Configuration
-- `npm run setup:all` - Complete automated setup (database, Redis, encryption, environment)
-- `npm run setup:quick` - Quick setup (database and Redis only)
-- `npm run env:init` - Bootstrap .env.local file with default variables
-
-### Security & Encryption
-- `npm run encryption:generate` - Generate new encryption keys
-- `npm run encryption:setup` - Setup encryption configuration
-- `npm run encryption:validate` - Validate encryption setup
-- Clerk authentication: Managed via [clerk.com](https://clerk.com) dashboard
-
-### Health & Monitoring
-- `curl http://localhost:4000/api/health` - Get comprehensive system health status
-- Monitor circuit breaker status, storage usage, and database performance
-
-### Makefile Workflow
-
-The repository includes a comprehensive `Makefile` that wraps common npm scripts and setup tasks with intelligent dependency management. Running `make` with no arguments shows the help screen.
-
-#### Quick Start Commands
-
-| Command | Purpose |
-|---------|---------|
-| `make setup` | Complete setup + start dev (installs deps, Redis, encryption, Convex, Next.js) |
-| `make dev` | Start development server (Convex + Next.js) |
-| `make build` | Build for production |
-| `make start` | Start production server |
-
-#### Development & Testing
-
-| Command | Purpose |
-|---------|---------|
-| `make lint` | Run ESLint + TypeScript type checking |
-| `make fix` | Auto-fix linting issues |
-| `make tsc-check` | TypeScript type-check only |
-| `make test` | Run Jest unit/integration tests |
-| `make test-watch` | Run tests in watch mode |
-| `make coverage` | Generate test coverage report |
-| `make e2e` | Run Playwright E2E tests |
-| `make e2e-ui` | Run E2E tests with Playwright UI |
-| `make e2e-debug` | Debug E2E tests |
-| `make qa-smoke` | Quick QA (lint + typecheck + jest) |
-| `make qa-full` | Full QA (smoke + coverage + e2e) |
-
-#### Database & Backend
-
-| Command | Purpose |
-|---------|---------|
-| `make convex-dev` | Start Convex backend locally |
-| `make convex-deploy` | Deploy Convex to production |
-| `make convex-stop` | Stop local Convex server |
-| `make convex-health` | Check Convex health endpoint |
-
-#### Infrastructure & Configuration
-
-| Command | Purpose |
-|---------|---------|
-| `make redis-up` | Install/start Redis server |
-| `make redis-stop` | Stop Redis server |
-| `make env` | Initialize `.env.local` with defaults |
-| `make encryption` | Set up encryption key |
-| `make api-types` | Generate TypeScript types from OpenAPI spec |
-| `make playwright` | Install Playwright browsers for E2E |
-
-#### Authentication (TOTP)
-
-| Command | Purpose |
-|---------|---------|
-| `make auth-setup` | Set up TOTP (interactive with QR code) |
-| `make auth-reset` | Reset TOTP configuration |
-| `make auth-status` | Check TOTP status |
-| `make auth-health` | Run TOTP health diagnostics |
-
-#### Diagnostics & Cleanup
-
-| Command | Purpose |
-|---------|---------|
-| `make doctor` | Quick health check (Node, NPM, Redis, env, encryption, API types, health endpoint) |
-| `make clean` | Clean build artifacts |
-| `make clean-all` | Clean everything (including node_modules) |
-| `make next-stop` | Stop running Next.js dev server |
-
-#### Advanced Options
-
-- **Override app port**: `APP_PORT=5000 make setup` (run on port 5000 instead of 4000)
-- **Show all available targets**: `make help`
-
-#### Key Features
-
-- **Intelligent targets** automatically install dependencies, create `.env.local`, start Redis, launch Convex, validate encryption, and generate OpenAPI types
-- **Clean shutdown**: `Ctrl+C` properly stops both Convex and Next.js when using `make setup` or `make dev`
-- **Reusable building blocks**: Compose complex workflows by depending on simpler targets
-- **Verification checks**: Health diagnostics at each step
-
-## 🧠 AI Model System
-
-### Unified AI SDK 5 + Groq
-- Client streaming uses `@ai-sdk/react` `useChat` with `DefaultChatTransport` to `/api/chat`.
-- Server streaming uses AI SDK 5 `streamText` with Groq models from `src/ai/providers.ts`.
-- Reports use AI SDK 5 `generateText` via `src/lib/api/groq-client.ts`.
-- A single source of truth for models is defined in `src/ai/providers.ts`.
-
-### Typed API Client
-- Shared, typed client in `src/lib/api/client.ts` with helpers in `src/types/api.ts`.
-- Standardized server responses via `ApiResponse<T>` and `getApiData` (`src/lib/api/api-response.ts`).
-- Keep `docs/api.yaml` as the source of truth; after changing endpoints, run `npm run api:types` and use the updated types in the client and handlers.
-
-### Smart Model Selection
-The app automatically selects the optimal model based on features:
-
-- **🔍 Web Search Enabled**: `openai/gpt-oss-120b` with browser search tools
-- **💬 Regular Chat**: `openai/gpt-oss-20b` for fast responses
-- **⚙️ Manual Override**: Users can explicitly select any available model
-
-## 🎯 Therapeutic Features
-
-### CBT Draft Management
-- **Real-time Auto-save** - Never lose therapeutic progress
-- **Encrypted Storage** - AES-256-GCM encryption for all drafts
-- **Cross-Session Persistence** - Access drafts across devices
-- **Visual Feedback** - "Saved ✓" indicators
-
-### ERP Therapy Support
-- **Compassionate Approach** - Gradual exposure hierarchy
-- **Pattern Detection** - Identifies compulsive behaviors and intrusive thoughts
-- **Safety Mechanisms** - Built-in protections against forcing behaviors
-
-### Session Reports
-- **AI Analysis** - Professional therapeutic insights
-- **Privacy Protected** - No personal details reproduced
-- **Growth Focused** - Emphasizes healing and progress
-
-#### Context-Driven Inclusion Policy
-- Reports include sections only when supported by chat or CBT diary context.
-- ERP, Schema Therapy, Cognitive Distortion Analysis, and Framework Recommendations are omitted if irrelevant.
-- When in doubt about relevance, omit rather than include placeholders.
-- Defined in `src/lib/therapy/therapy-prompts.ts` (see “Section Inclusion Policy”).
-
-## 🔧 Configuration
-
-### Environment Variables
-```bash
-# Required
-GROQ_API_KEY="your_groq_api_key"
-NEXT_PUBLIC_CONVEX_URL="http://127.0.0.1:6790/?d=anonymous-ai-therapist"
-CONVEX_URL="http://127.0.0.1:6790/?d=anonymous-ai-therapist"
-
-# Security
-NEXTAUTH_SECRET="your_secret"
-ENCRYPTION_KEY="your_32_char_key"
-
-# Redis Caching
-REDIS_URL="redis://localhost:6379"
-CACHE_ENABLED="true"
-
-# Optional Configuration
-CHAT_INPUT_MAX_BYTES="131072"  # Request size limit (default: 128KB)
-
-# Development only
-BYPASS_AUTH="true"           # Skip authentication (localhost only)
-RATE_LIMIT_DISABLED="true"   # Disable API rate limiting
-```
-
-### API Key Setup
-- Server-side only via `GROQ_API_KEY` (used by AI SDK Groq provider); never sent to client.
-
-### Encryption Key Setup
-- Generate and save locally:
-  ```bash
-  npm run encryption:setup
-  ```
-  Writes `ENCRYPTION_KEY` to `.env.local` (or `.env` if `.env.local` is missing).
-- Generate only (copy manually):
-  ```bash
-  npm run encryption:generate
-  ```
-  Copy the printed `ENCRYPTION_KEY` into `.env.local`.
-- Validate a key:
-  ```bash
-  npm run encryption:validate
-  # or
-  ENCRYPTION_KEY="your_key" npm run encryption:validate
-  ```
-- Notes: use different keys per env (dev/staging/prod); keep `.env.local` out of git; rotate keys periodically.
-
-### Bootstrap .env.local
-If you need to scaffold a local env file with defaults (including an empty `ENCRYPTION_KEY`):
-```bash
-npm run env:init
-```
-This creates `.env.local` with common variables so you can paste your keys.
-
-## 📱 Mobile Experience
-
-- **Touch Optimized** - All interactions designed for mobile
-- **Full-width Messages** - Better readability on small screens
-- **Auto-collapsing Sidebar** - Clean mobile navigation
-- **Authentication Flow** - Mobile-optimized TOTP setup
-
-### PWA and iOS Fullscreen
-- Add to Home Screen in Safari to launch without browser UI.
-- Manifest served at `/manifest.webmanifest` via `src/app/manifest.ts`.
-- iOS metadata configured in `src/app/layout.tsx` (Apple web app, status bar, icons).
-- Place icons under `public/icons/`:
-  - `icon-192.png`, `icon-512.png`, `maskable-512.png`, `apple-touch-icon.png` (180×180)
-- Tip: After changes, delete the old Home Screen icon and add again.
-
-### iOS Keyboard Handling
-- Inputs use ≥16px font to prevent auto-zoom.
-- Safe areas applied via `env(safe-area-inset-*)` in `globals.css`.
-- Messages list sets `scroll-padding-bottom` based on the input/footer height (ResizeObserver) so `scrollIntoView` keeps the input visible above the keyboard.
-
-## 🛡️ Security & Resilience Features
-
-### Authentication
-- **QR Code Setup** - Easy authenticator app configuration
-- **Device Trust** - 30-day authenticated sessions with unique fingerprinting
-- **Enhanced Fingerprinting** - Multiple entropy sources with database constraints
-- **Backup Codes** - Encrypted recovery options with usage tracking
-- **Transaction Protection** - ACID compliance prevents race conditions in auth flows
-
-### Data Protection
-- **Field-level Encryption** - Database encryption for sensitive data
-- **CSRF Protection** - Signed tokens prevent attacks
-- **Content Security Policy** - XSS attack prevention
-- **No External Sharing** - Data only sent to Groq API
-- **Database Constraints** - Unique indexes prevent duplicate device registrations
-
-### Resilience & Performance
-- **Circuit Breaker** - Automatic failover when external services fail
-  - Configurable failure threshold (default: 3 failures)
-  - Automatic reset after timeout (default: 60 seconds)
-  - Graceful fallback responses
-- **Request Deduplication** - Prevents duplicate operations
-  - 5-second TTL for rapid-fire requests
-  - Key-based deduplication by user and operation
-  - Automatic cleanup of expired entries
-- **Storage Management** - Intelligent localStorage monitoring
-  - Quota usage tracking and warnings
-  - Automatic cleanup of old/large items
-  - Corruption detection and repair
-
-### Rate Limiting
-- **Defaults (per IP)**
-  - API: 300 requests / 5 minutes
-  - Chat streaming: 120 requests / 5 minutes, max concurrency 2
-- **Environment overrides**
-  - `API_MAX_REQS`, `API_WINDOW_MS`, `CHAT_MAX_REQS`, `CHAT_WINDOW_MS`, `CHAT_MAX_CONCURRENCY`, `RATE_LIMIT_BLOCK_MS`
-  - `RATE_LIMIT_DISABLED=true` disables limits (development only)
-- **Development**: localhost and private LAN IPs are exempt; production enforces limits.
-
-## 📊 Testing & Quality
-
-### Comprehensive Test Suite
-- **922 Total Tests** across 115 test suites with 100% pass rate
-- **Security Testing** - Encryption and authentication validation
-- **Component Testing** - React Testing Library coverage
-- **API Testing** - Complete endpoint validation
-- **Therapeutic Framework Testing** - CBT, ERP, and schema therapy validation
-
-### Test Organization
-```
-__tests__/
-├── api/              # API endpoint tests
-├── components/       # React component tests  
-├── lib/             # Utility function tests
-├── security/        # Security implementation tests
-└── integration/     # End-to-end integration tests
-```
-
-## 🤝 Troubleshooting
-
-### Common Issues
-
-**Authentication Problems**
-- Run `npm run totp health` to diagnose TOTP issues and time sync
-- Clear cookies to reset device trust
-- Verify `ENCRYPTION_KEY` is set
-- Ensure your Convex URL matches the backend you're targeting (check `NEXT_PUBLIC_CONVEX_URL`)
-
-### Authentication Recovery
-
-#### 🔐 TOTP Authentication Management
-
-The improved TOTP system provides comprehensive management through a unified command-line interface:
-
-```bash
-npm run totp [command]
-```
-
-#### Available Commands:
-
-**Health Check & Diagnostics:**
-```bash
-npm run totp health    # Comprehensive system health check with diagnostics
-npm run totp status    # Quick status overview
-```
-
-**TOTP Setup & Management:**
-```bash
-npm run totp setup     # Set up new TOTP configuration with QR code
-npm run totp reset     # Reset TOTP (server-side only, removes all config)
-npm run totp test      # Test TOTP functionality with diagnostics
-```
-
-#### Stable QR Code During Setup
-- The setup QR code is now stable across refreshes on the setup page, avoiding token mismatches.
-- Server caches setup data for 5 minutes and reuses it during initial setup.
-- Client also holds setup data in sessionStorage (5 minutes) to avoid unintentional regeneration on refresh.
-- Cache is automatically cleared when setup completes or when you run `npm run totp reset`.
-
-If you still get mismatches:
-- Ensure your device time is set to automatic and is in sync.
-- Avoid opening the setup page in multiple tabs while scanning.
-- Use the manual entry key if QR scanning is delayed.
-
-#### What the system provides:
-- ✅ **Comprehensive Health Monitoring** - Database, encryption, time sync, and configuration checks
-- 🔄 **Secure Server-Side Operations** - No external API access to sensitive operations
-- 💾 **Automatic Backup Codes** - 10 secure backup codes generated automatically
-- 🔑 **Manual Entry Support** - Manual key for devices without camera
-- 📱 **QR Code Generation** - Scannable QR codes for easy authenticator setup
-- 🛡️ **Enhanced Error Handling** - Graceful handling of decryption failures and edge cases
-- ⏰ **Improved Time Tolerance** - 4-time-window support for multi-device reliability
-
-#### Example Usage:
-
-**Check system health:**
-```bash
-npm run totp health
-```
-Output:
-```
-🏥 TOTP Health Check
-──────────────────────────────────────────────────
-Overall Health: ✅ Healthy
-Database: ✅ Accessible
-Configuration: ✅ Set up
-Encryption: ✅ Working
-Time Sync: ✅ In sync
-Current Token: 223943
-Server Time: 2025-08-28T22:03:22.806Z
-──────────────────────────────────────────────────
-```
-
-**Set up new TOTP (when locked out):**
-```bash
-npm run totp setup
-```
-Output:
-```
-🔄 Setting up new TOTP configuration...
-✅ TOTP configuration saved successfully!
-
-🔑 Manual Entry Key: EFTSSJRPEUWGI5B2ENCXITCUPBFT4TKWLV5SCXJTHIYUYJTMG5JQ
-📱 QR Code URL: data:image/png;base64,...
-💾 Backup Codes:
-   1. FQHRC3AC
-   2. GEF9DPQ1
-   ...
-```
-
-**Reset TOTP completely:**
-```bash
-npm run totp reset
-```
-Output:
-```
-⚠️  WARNING: This will completely reset TOTP authentication!
-   - All TOTP configuration will be deleted
-   - All sessions and trusted devices will be cleared
-   - You will need to set up TOTP again
-
-❓ Are you sure you want to reset TOTP? (type "RESET" to confirm): RESET
-✅ TOTP configuration reset successfully!
-```
-
-**API Key Issues**  
-- Confirm Groq API key validity
-- Check sufficient credits
-- Verify environment variable or UI setting
-
-**Database Issues**
-- Run `npm run db:generate && npm run db:push`
-- Convex backend runs via `npm run convex:dev` during development
-
-**Storage Issues**
-- High localStorage usage: Check browser DevTools > Application > Storage
-- Redux persist hangs: Clear browser storage or check console for errors
-- Storage quota exceeded: App will automatically cleanup old data
-
-**Performance Issues**
-- Circuit breaker activated: Check `/api/health` endpoint for service status
-- Duplicate requests: Request deduplication will prevent within 5-second window
-- Slow responses: Monitor health endpoint for degraded services
-
-**Build Issues**
-- Clear `.next` folder: `rm -rf .next`
-- Reinstall: `rm -rf node_modules && npm install`
-- Run tests: `npm test`
-
-## 🏗️ Architecture
-
-### Modern Stack
-- **Next.js 15** with App Router and Turbopack
-- **TypeScript** in strict mode
-- **Tailwind CSS v4** with modularized global styles (`src/styles/`)
-- **Convex** Backend-as-a-Service for data management
-- **AI SDK 5** with Groq integration
-- **Redux Toolkit** for global state management
-
-### Domain-Driven Structure
-```
-src/
-├── app/             # Next.js App Router
-├── components/      # React components by domain
-├── lib/             # Utilities by domain
-│   ├── auth/        # Authentication & device management
-│   ├── api/         # API clients and middleware
-│   ├── utils/       # Core utilities
-│   │   ├── graceful-degradation.ts    # Circuit breaker pattern
-│   │   ├── request-deduplication.ts   # Duplicate request prevention
-│   │   └── storage-management.ts      # localStorage monitoring
-│   ├── chat/        # Chat functionality
-│   └── therapy/     # Therapeutic frameworks
-├── styles/          # Modularized global styles (base, typography, layout, components, utilities)
-├── types/           # TypeScript definitions
-└── hooks/           # Custom React hooks
-```
-
-### Key Architectural Improvements
-- **Repository Pattern** - Clean data access layer for Convex operations (`src/lib/repositories/`)
-- **Circuit Breaker Pattern** - External service failure handling
-- **Request Deduplication** - Prevents race conditions from rapid user actions
-- **Storage Monitoring** - Proactive localStorage management
-- **Enhanced Error Handling** - Graceful degradation throughout the stack
-- **Redis Caching** - High-performance caching layer with TTL-based expiration
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **Groq** - AI inference API
-- **shadcn/ui** - Component library
-- **Next.js** - React framework
-- **Tailwind CSS** - Styling framework
+> **v0.5.3** - **Reliability & Transparency**: no phantom parallel starts, structured progress (step/next action/files/tests/heartbeat), stall detection, validation-gated completion, and headless guidance (`droid exec --auto high`)—all while keeping the user’s selected model.
 
 ---
 
-**Built with ❤️ for mental health support and AI-powered therapy**
+## ⚡ Quick Start
+
+### Install (One Command)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/korallis/Droidz/factory-ai/install.sh | bash
+```
+
+### Enable & Use
+
+```bash
+# Start Factory.ai droid
+droid
+
+# Enable custom features (first time only)
+/settings → Toggle "Custom Commands" ON
+
+# Generate a specification
+/droidz-build "add user authentication"
+
+# Or execute directly
+/auto-parallel "build REST API for todos"
+```
+
+**That's it!** 🎉
+
+---
+
+## 🎯 What is Droidz?
+
+Droidz is a framework for [Factory.ai](https://factory.ai) that adds:
+
+1. **🎓 Comprehensive Skills System** - 40 massive skills (35,552 lines) auto-load based on your code
+2. **🚀 AI-Powered Spec Generator** - `/droidz-build` transforms vague ideas into production-ready specifications
+3. **⚡ Parallel Task Execution** - Work on 3-5 tasks simultaneously using specialist droids
+4. **📊 Live Progress Tracking** - See what's happening every 60 seconds
+
+### 🔥 NEW in v0.5.3: Reliable Parallel Execution
+
+**Highlights:** no phantom task starts (Task IDs recorded), rich progress (step, next action, files touched, test results, heartbeat), stall detection, validation gating (lint/type/tests must pass), and headless readiness via `droid exec --auto high` using the user-selected model.
+
+### 🔥 Previously in v0.5.0: Complete Development Lifecycle
+
+Factory.ai automatically loads **production-ready coding standards** based on your code context:
+
+#### **Framework & Integration Skills (21)**
+
+| Skill              | Lines | Coverage                              |
+| ------------------ | ----- | ------------------------------------- |
+| **Vercel**         | 2,443 | Deployment, Edge Functions, Analytics |
+| **Clerk**          | 2,361 | Auth, Organizations, Webhooks         |
+| **Security**       | 2,337 | OWASP Top 10, Vulnerabilities         |
+| **React**          | 2,232 | Hooks, Server Components, Performance |
+| **PostgreSQL**     | 2,089 | Indexing, Optimization, Advanced SQL  |
+| **Prisma**         | 2,072 | Migrations, Relations, TypeScript     |
+| **Drizzle ORM**    | 1,992 | Type-safe Queries, Migrations         |
+| **Cloudflare**     | 1,927 | Workers, KV, Durable Objects, R2      |
+| **tRPC**           | 1,815 | Type Safety, Routers, Middleware      |
+| **Tanstack Query** | 1,729 | Caching, Mutations, Pagination        |
+| **Stripe**         | 1,686 | Payments, Webhooks, Subscriptions     |
+| **Neon**           | 1,304 | Database Branching, Serverless        |
+| **Design**         | 1,297 | Accessibility, Design Systems         |
+| **Next.js 16**     | 1,053 | App Router, Async APIs                |
+| **Supabase**       | 963   | RLS, Realtime, Auth                   |
+| **Tailwind v4**    | 963   | CSS-first, Container Queries          |
+| **TypeScript**     | 871   | Generics, Utility Types               |
+| **Convex**         | 818   | Realtime, Functions                   |
+| **+ 3 Utility**    | 1,344 | Stack Analyzer, Standards             |
+
+#### **Workflow & Process Skills (19)**
+
+| Skill                              | Category      | Focus                          |
+| ---------------------------------- | ------------- | ------------------------------ |
+| **test-driven-development**        | Testing       | RED-GREEN-REFACTOR cycle       |
+| **systematic-debugging**           | Testing       | 4-phase debugging framework    |
+| **verification-before-completion** | Quality       | Pre-completion checklist       |
+| **defense-in-depth**               | Testing       | Multi-layer validation         |
+| **testing-anti-patterns**          | Testing       | Common mistakes to avoid       |
+| **brainstorming**                  | Collaboration | Design through questions       |
+| **writing-skills**                 | Meta          | Creating new skills            |
+| **executing-plans**                | Collaboration | Following plans step-by-step   |
+| **requesting-code-review**         | Collaboration | Pre-review checklist           |
+| **receiving-code-review**          | Collaboration | Responding to feedback         |
+| **root-cause-tracing**             | Development   | Backward tracing technique     |
+| **subagent-driven-development**    | Development   | Task-by-task with fresh agents |
+| **finishing-a-development-branch** | Development   | Completion checklist           |
+| **using-git-worktrees**            | Development   | Parallel work branches         |
+| **condition-based-waiting**        | Development   | Replace arbitrary timeouts     |
+| **dispatching-parallel-agents**    | Advanced      | Spawning multiple agents       |
+| **testing-skills-with-subagents**  | Meta          | Validating skill quality       |
+| **sharing-skills**                 | Meta          | Publishing skills              |
+| **using-droidz**                   | Meta          | How to use this system         |
+
+**TOTAL:** **40 Skills, 35,552 Lines** (All based on official documentation)
+
+**How it works:**
+
+- Write Next.js code → Next.js 16 skill auto-loads (1,053 lines of guidance)
+- Write Supabase queries → Supabase skill auto-loads (963 lines of RLS, Auth patterns)
+- Write Tailwind classes → Tailwind v4 skill auto-loads (963 lines of modern CSS)
+- Write TypeScript → TypeScript skill auto-loads (871 lines of best practices)
+- No configuration needed - Factory.ai handles everything automatically!
+
+### The Problem
+
+```
+You: "Add authentication"
+Droid: "Here's a login form..."
+❌ Missing: password reset, email verification, rate limiting, tests, edge cases
+```
+
+### The Droidz Solution
+
+```
+You: /droidz-build "add authentication"
+
+Droid: 🔍 I'll create a spec. To make it comprehensive:
+       1. Email/password, OAuth, or both?
+       2. Session handling: JWT or sessions?
+       3. User roles?
+
+You: Email/password, JWT, existing Next.js
+
+Droid: ✅ Saved: .droidz/specs/001-user-authentication.md
+
+       📊 Summary:
+       - Tasks: 6 (3 parallel Phase 1, 3 parallel Phase 2)
+       - Time: 8-12h sequential → 2.5-4h parallel (3x speedup)
+
+       Includes:
+       ✅ bcrypt password hashing (10+ salt rounds)
+       ✅ Rate limiting (5 attempts/15min)
+       ✅ OWASP Top 10 compliance checklist
+       ✅ Edge cases (expired tokens, concurrent sessions)
+       ✅ Full test coverage plan (80%+)
+
+       Execute in parallel? (spawns 3 agents)
+```
+
+**Result:** Complete, production-ready implementation with security, tests, and edge cases handled.
+
+---
+
+## ✨ Key Features
+
+### 🚀 NEW: AI-Powered Specification Generator
+
+**Command:** `/droidz-build "feature description"`
+
+**What it does:**
+
+- 🔍 Asks clarifying questions for vague requests
+- 📚 Researches best practices via exa-code & ref MCP
+- 📝 Generates comprehensive XML-structured specs with:
+  - Task decomposition (parallelizable units)
+  - Security requirements (OWASP, GDPR when applicable)
+  - Edge cases & failure scenarios
+  - Testing strategy (unit, integration, E2E)
+  - Verification criteria (measurable success metrics)
+  - Ready-to-execute task prompts
+
+**Benefits:**
+
+- 80% less time writing specs manually
+- 70% fewer "forgot to consider X" issues
+- 3-5x execution speedup via parallel tasks
+- Zero missing security requirements
+
+**Example specs:**
+
+```bash
+/droidz-build "add dark mode toggle"
+→ Simple: 2 tasks, ~45 minutes
+
+/droidz-build "add contact form with email"
+→ Moderate: 3 tasks, 2-3h sequential, ~1h parallel
+
+/droidz-build "build blog with comments and search"
+→ Complex: 12 tasks, 24h sequential → 6-8h parallel
+```
+
+### ⚡ Parallel Task Execution
+
+**Command:** `/auto-parallel "task description"`
+
+**How it works:**
+
+1. Analyzes complexity and breaks into subtasks
+2. Identifies what can run in parallel
+3. Spawns specialist droids for each task
+4. Reports progress every 60 seconds
+5. Synthesizes results when complete
+
+**Example:**
+
+```bash
+/auto-parallel "build authentication system"
+
+✓ Spawning 3 parallel tasks...
+  Task 1: Database schema (droidz-infra)
+  Task 2: API endpoints (droidz-codegen)
+  Task 3: Frontend UI (droidz-codegen)
+
+[Progress updates appear every 60s]
+TODO LIST UPDATED
+✅ Database schema created (3 files)
+⏳ API endpoints (implementing login...)
+⏳ Frontend UI (building forms...)
+```
+
+### 🎓 Comprehensive Skills System (NEW in v0.4.0)
+
+**21 Massive Skills (31,296 Lines Total) - All Based on Official Documentation**
+
+Factory.ai automatically loads production-ready coding standards from `.factory/skills/`:
+
+#### **1. Next.js 16 Skill (1,053 lines)**
+
+- ✅ **CRITICAL**: Async request APIs - `await params`, `await searchParams`, `await cookies()`, `await headers()`
+- ✅ Server Components (default), Client Components (when needed)
+- ✅ Server Actions with Zod validation
+- ✅ Data fetching (parallel, sequential, caching strategies)
+- ✅ Loading & Streaming with Suspense
+- ✅ Route handlers, Middleware, Metadata
+- ✅ Error handling (error.tsx, not-found.tsx)
+- ✅ Migration guide from Next.js 15 → 16
+
+#### **2. Supabase Skill (963 lines)**
+
+- ✅ RLS: Complete guide with performance optimization
+- ✅ Realtime: Broadcast, Presence, Postgres Changes with authorization
+- ✅ Authentication: Email/Password, OAuth, Magic Links, SSR for Next.js
+- ✅ Storage: Upload, download, signed URLs, RLS policies
+- ✅ Edge Functions: Deno with Auth context
+- ✅ Database: Typed queries, transactions, pagination, full-text search
+
+#### **3. Tailwind v4 Skill (963 lines)**
+
+- ✅ CSS-first configuration with `@theme`
+- ✅ Oxide engine (10x faster builds, 100x faster incremental)
+- ✅ Container queries (built-in, no plugin)
+- ✅ 3D transforms (rotate-x, rotate-y, translate-z, scale-z)
+- ✅ Gradients (linear, radial, conic with color interpolation)
+- ✅ `@starting-style` for entry animations
+- ✅ `not-*` variant, composable variants
+- ✅ Modern oklch colors (P3 wide gamut)
+
+#### **4. TypeScript Skill (871 lines)**
+
+- ✅ Strict mode configuration
+- ✅ Avoiding `any` (use `unknown`, generics)
+- ✅ Generics (functions, classes, interfaces, constraints)
+- ✅ Utility types (Partial, Pick, Omit, Record, ReturnType, Awaited, etc.)
+- ✅ Advanced types (conditional, infer, mapped, template literals)
+- ✅ Type guards, function overloads
+- ✅ Result type pattern for error handling
+
+#### **5. Convex Skill (818 lines)**
+
+- ✅ Official rules from convex.link/convex_rules.txt
+- ✅ New function syntax (args, returns, handler)
+- ✅ All validators, pagination, file storage
+- ✅ Cron jobs, HTTP endpoints
+- ✅ TypeScript best practices
+
+**How it works:**
+
+```typescript
+// You write Next.js code...
+export default async function Page({ params }) {
+  const { id } = await params; // Next.js 16 skill auto-loads!
+}
+
+// Droid knows:
+// ✅ params must be awaited in Next.js 16
+// ✅ This is a breaking change from Next.js 15
+// ✅ searchParams, cookies(), headers() also need await
+// Plus 1,050+ more lines of Next.js 16 guidance
+```
+
+**Add your own skills:**
+
+```bash
+# Create custom skill in .factory/skills/
+vim .factory/skills/your-framework.md
+
+# Factory.ai auto-loads it on next start
+```
+
+---
+
+## 📋 All Commands
+
+| Command          | Description                                    | Example                                  |
+| ---------------- | ---------------------------------------------- | ---------------------------------------- |
+| `/droidz-build`  | 🆕 Generate production-ready specs             | `/droidz-build "add payment processing"` |
+| `/auto-parallel` | Execute tasks in parallel with live monitoring | `/auto-parallel "build REST API"`        |
+| `/gh-helper`     | GitHub CLI helpers (PR checks, status)         | `/gh-helper pr-status 10`                |
+
+**That's it!** Simple and powerful. 🎯
+
+---
+
+## 🤖 Specialist Droids
+
+Droidz includes 7 specialist droids that handle different types of work:
+
+| Droid                   | Specialty                               | When Used                   |
+| ----------------------- | --------------------------------------- | --------------------------- |
+| **droidz-orchestrator** | Task decomposition & parallel execution | Complex multi-step features |
+| **droidz-codegen**      | Feature implementation & bug fixes      | Building new functionality  |
+| **droidz-test**         | Writing & fixing tests                  | Test coverage & validation  |
+| **droidz-refactor**     | Code improvements & cleanup             | Improving code structure    |
+| **droidz-integration**  | External APIs & services                | Third-party integrations    |
+| **droidz-infra**        | CI/CD, builds, deployment               | Infrastructure changes      |
+| **droidz-generalist**   | Miscellaneous tasks                     | General-purpose work        |
+
+**You don't call these directly** - the orchestrator assigns tasks to the right specialist automatically.
+
+---
+
+## 📚 Documentation
+
+### Quick References
+
+- **Example Spec:** `.droidz/specs/000-example-contact-form.md` (6,000+ line reference)
+- **CHANGELOG:** See [CHANGELOG.md](CHANGELOG.md) for version history
+- **Skills Guide:** See [SKILLS.md](SKILLS.md) for details on skills system
+
+### Generated Specifications
+
+When you use `/droidz-build`, specs are saved to `.droidz/specs/NNN-feature-name.md` with:
+
+```markdown
+<objective>Clear goal</objective>
+<context>Tech stack, why it matters</context>
+<requirements>Functional + non-functional</requirements>
+<task-decomposition>Parallelizable tasks</task-decomposition>
+<security-requirements>OWASP, GDPR checklists</security-requirements>
+<edge-cases>Failure scenarios</edge-cases>
+<testing-strategy>Unit, integration, E2E</testing-strategy>
+<verification-criteria>Success checkboxes</verification-criteria>
+<execution-plan>Ready-to-run tasks</execution-plan>
+<success-metrics>Quality, performance, security, UX</success-metrics>
+```
+
+**See the example:** `cat .droidz/specs/000-example-contact-form.md`
+
+---
+
+## 🎯 Common Workflows
+
+### Workflow 1: Generate Spec → Execute in Parallel
+
+```bash
+# 1. Generate specification
+/droidz-build "add user authentication with JWT"
+
+# 2. Answer clarifying questions
+> Email/password with JWT, Next.js 14
+
+# 3. Review generated spec
+✅ Spec saved to .droidz/specs/001-user-authentication.md
+
+# 4. Execute in parallel
+> Execute in parallel? y
+
+# 5. Monitor progress
+[Updates appear every 60s in conversation]
+✅ Phase 1 complete (3 tasks)
+⏳ Phase 2 running (3 tasks)
+```
+
+### Workflow 2: Direct Parallel Execution
+
+```bash
+# Skip spec generation, execute immediately
+/auto-parallel "build REST API for todo items"
+
+# Droid breaks it down and executes
+✓ Task 1: Database schema
+✓ Task 2: CRUD endpoints
+✓ Task 3: Tests
+```
+
+### Workflow 3: Use Skills for Quality
+
+```bash
+# Skills auto-inject for standards enforcement
+You: "Create a secure login endpoint"
+
+Droid: [Security skill injected]
+       ✅ bcrypt password hashing
+       ✅ Rate limiting
+       ✅ Input validation
+       ✅ OWASP compliance
+```
+
+---
+
+## 🔧 Installation Details
+
+### What Gets Installed
+
+```
+your-project/
+├── .factory/
+│   ├── commands/
+│   │   ├── droidz-build.md    # Spec generator
+│   │   ├── auto-parallel.md   # Orchestration
+│   │   └── gh-helper.md       # GitHub tools
+│   ├── droids/                # 7 specialist droids
+│   ├── skills/                # 4 skill templates
+│   ├── hooks/                 # Skills injection
+│   └── settings.json          # Configuration
+├── .droidz/
+│   ├── specs/                 # Generated specifications
+│   │   └── 000-example-contact-form.md
+│   └── .gitignore             # Privacy by default
+└── config.yml                 # Your settings
+```
+
+### Requirements
+
+- **Git:** Version control (required)
+- **Factory.ai Droid CLI:** Get it at [factory.ai](https://factory.ai)
+- **Node.js/Bun:** Optional, for TypeScript projects
+
+**No tmux or jq required** - we use Factory.ai's native Task tool for orchestration.
+
+---
+
+## 🚀 Advanced Usage
+
+### Custom Specifications
+
+Modify generated specs before execution:
+
+```bash
+# 1. Generate spec
+/droidz-build "add feature"
+
+# 2. Edit the spec
+vim .droidz/specs/001-feature.md
+
+# 3. Execute manually
+/auto-parallel [paste task details from spec]
+```
+
+### Share Specifications
+
+Specs are git-ignored by default for privacy. To share:
+
+```bash
+# Edit .droidz/.gitignore to commit specific specs
+vim .droidz/.gitignore
+
+# Add line:
+!specs/001-user-authentication.md
+
+# Commit and share
+git add .droidz/specs/001-user-authentication.md
+git commit -m "docs: add authentication spec"
+```
+
+### Configure Skills
+
+Edit skills in `.factory/skills/*.md`:
+
+```bash
+# Add your own coding standards
+vim .factory/skills/typescript.md
+
+# Skills auto-inject when relevant code is detected
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### Commands not found
+
+**Problem:** `/droidz-build` or `/auto-parallel` not recognized
+
+**Solution:**
+
+```bash
+# In droid chat:
+/settings → Enable "Custom Commands" → Restart droid
+
+# Verify:
+/commands  # Should show droidz-build, auto-parallel, gh-helper
+```
+
+### No droids showing
+
+**Problem:** Specialist droids not available
+
+**Solution:**
+
+```bash
+# In droid chat:
+/settings → Enable "Custom Droids" → Restart droid
+
+# Verify:
+/droids  # Should show all 7 specialist droids
+```
+
+### Spec generation fails
+
+**Problem:** `/droidz-build` generates incomplete specs
+
+**Solution:**
+
+- Provide more context in your request
+- Answer clarifying questions thoroughly
+- Check that exa-code and ref MCP are available
+
+### Parallel execution not starting
+
+**Problem:** Tasks spawn but don't make progress
+
+**Solution:**
+
+```bash
+# Check droid is responding
+/commands  # Should list commands
+
+# Try sequential execution instead
+Choose option 3 (Execute sequentially) when prompted
+```
+
+---
+
+## 📊 Performance Benchmarks
+
+| Task Complexity      | Sequential Time | Parallel Time | Speedup |
+| -------------------- | --------------- | ------------- | ------- |
+| Simple (2 tasks)     | 45 min          | 30 min        | 1.5x    |
+| Moderate (3-5 tasks) | 3 hours         | 1 hour        | 3x      |
+| Complex (6+ tasks)   | 12 hours        | 3 hours       | 4x      |
+
+**Average:** 3-5x faster with parallel execution
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📜 License
+
+MIT License - see [LICENSE](LICENSE) file for details
+
+---
+
+## 🔗 Links
+
+- **GitHub:** https://github.com/korallis/Droidz
+- **Factory.ai:** https://factory.ai
+- **Issues:** https://github.com/korallis/Droidz/issues
+- **Discussions:** https://github.com/korallis/Droidz/discussions
+- **Latest Release:** https://github.com/korallis/Droidz/releases/tag/v0.2.0
+
+---
+
+## 🎓 Learning Path
+
+### Beginner (Day 1)
+
+1. Install Droidz
+2. Try `/droidz-build "add contact form"`
+3. Review the generated spec
+4. Execute it
+
+### Intermediate (Week 1)
+
+1. Use `/auto-parallel` for direct execution
+2. Explore specialist droids
+3. Customize skills for your tech stack
+
+### Advanced (Month 1)
+
+1. Create custom specifications
+2. Share specs with your team
+3. Build your own droids (see AGENTS.md.template)
+
+---
+
+## 💬 Community
+
+- **Discord:** Coming soon
+- **Twitter:** Coming soon
+- **GitHub Discussions:** https://github.com/korallis/Droidz/discussions
+
+---
+
+## 🙏 Acknowledgments
+
+- **Factory.ai** - For the amazing droid CLI
+- **taches-cc-prompts** - Inspiration for meta-prompting system
+- **Contributors** - Everyone who helped make Droidz better
+
+---
+
+## 📈 Roadmap
+
+### v0.3.0 (Coming Soon)
+
+- [ ] `/droidz-init` - Smart project initialization
+- [ ] `/droidz-status` - Resume conversations with state tracking
+- [ ] Spec execution tracking (`.droidz/tasks/`)
+- [ ] Community spec library
+
+### v0.4.0 (Future)
+
+- [ ] Template system for common specs
+- [ ] Droid marketplace
+- [ ] Team collaboration features
+- [ ] Analytics & metrics
+
+---
+
+**Built with ❤️ for the Factory.ai community**
+
+**Current Version:** v0.5.3 | **Last Updated:** 2025-11-17
+
+---
+
+## 🆕 What's New in v0.3.0
+
+### **Comprehensive Skills System (4,668 Lines)**
+
+We've created **5 massive, production-ready skills** based on official documentation:
+
+1. **Next.js 16** (1,053 lines) - Critical async API changes, Server Components, Server Actions
+2. **Supabase** (963 lines) - RLS optimization, Realtime authorization, SSR Auth
+3. **Tailwind v4** (963 lines) - CSS-first config, Container Queries, 3D transforms
+4. **TypeScript** (871 lines) - Generics, utility types, advanced patterns
+5. **Convex** (818 lines) - Official rules from Convex team
+
+**Every skill includes:**
+
+- ✅ Clear ✅ Good / ❌ Bad examples for every concept
+- ✅ Performance optimization tips
+- ✅ Migration guides (Next.js 15→16, Tailwind v3→v4)
+- ✅ Error handling patterns
+- ✅ Real-world usage examples
+
+**Research Method:**
+
+- Used exa-code MCP for latest documentation
+- Used ref MCP for official API references
+- All patterns verified against official docs
+
+**Impact:**
+
+- 10x more comprehensive than v0.2.0
+- Production-ready guidance
+- Auto-loads based on code context
+- No configuration needed

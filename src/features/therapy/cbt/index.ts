@@ -7,7 +7,7 @@ export { CBTExportButton } from './cbt-export-button';
 // Chat components for CBT steps (primary export)
 export * from './chat-components';
 
-// Hooks  
+// Hooks
 export { useCBTChatExperience } from './hooks/use-cbt-chat-experience';
 
 // Utilities

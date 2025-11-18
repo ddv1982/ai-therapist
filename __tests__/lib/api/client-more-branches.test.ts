@@ -16,7 +16,7 @@ describe('ApiClient more branches', () => {
       get: (key: string) => {
         if (!contentType) return null;
         return key.toLowerCase() === 'content-type' ? contentType : null;
-      }
+      },
     };
     return {
       ok: status >= 200 && status < 300,
@@ -50,7 +50,9 @@ describe('ApiClient more branches', () => {
       ok: false,
       status: 400,
       statusText: 'Bad Request',
-      headers: { get: (k: string) => (k.toLowerCase() === 'content-type' ? 'application/json' : null) },
+      headers: {
+        get: (k: string) => (k.toLowerCase() === 'content-type' ? 'application/json' : null),
+      },
       json: async () => ({ error: { message: 'bad' } }),
     })) as any;
     await expect(client.listSessions()).rejects.toMatchObject({ message: 'bad', status: 400 });
@@ -62,5 +64,3 @@ describe('ApiClient more branches', () => {
     expect(res).toBeNull();
   });
 });
-
-

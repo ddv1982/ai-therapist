@@ -68,11 +68,14 @@ export enum ApiErrorCode {
  * Descriptions and recommendations for each error code
  * Used for documentation and error recovery guidance
  */
-export const ErrorCodeDescriptions: Record<ApiErrorCode, {
-  description: string;
-  suggestedAction: string;
-  httpStatus: number;
-}> = {
+export const ErrorCodeDescriptions: Record<
+  ApiErrorCode,
+  {
+    description: string;
+    suggestedAction: string;
+    httpStatus: number;
+  }
+> = {
   // Validation Errors (400)
   [ApiErrorCode.VALIDATION_ERROR]: {
     description: 'Request data failed validation',
@@ -289,11 +292,13 @@ export const ErrorCodeDescriptions: Record<ApiErrorCode, {
  * Helper function to get error details by code
  */
 export function getErrorDetails(code: ApiErrorCode) {
-  return ErrorCodeDescriptions[code] || {
-    description: 'An unknown error occurred',
-    suggestedAction: 'Please try again or contact support',
-    httpStatus: 500,
-  };
+  return (
+    ErrorCodeDescriptions[code] || {
+      description: 'An unknown error occurred',
+      suggestedAction: 'Please try again or contact support',
+      httpStatus: 500,
+    }
+  );
 }
 
 /**

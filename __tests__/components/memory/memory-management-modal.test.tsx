@@ -2,7 +2,6 @@
  * Tests for MemoryManagementModal component
  */
 
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryManagementModal } from '@/features/therapy/memory/memory-management-modal';
 import * as memoryUtils from '@/lib/chat/memory-utils';
@@ -23,7 +22,7 @@ jest.mock('@/components/ui/toast', () => ({
 
 // Mock Dialog components
 jest.mock('@/components/ui/dialog', () => ({
-  Dialog: ({ children, open }: any) => open ? <div data-testid="dialog">{children}</div> : null,
+  Dialog: ({ children, open }: any) => (open ? <div data-testid="dialog">{children}</div> : null),
   DialogContent: ({ children }: any) => <div data-testid="dialog-content">{children}</div>,
   DialogHeader: ({ children }: any) => <div data-testid="dialog-header">{children}</div>,
   DialogTitle: ({ children }: any) => <h2 data-testid="dialog-title">{children}</h2>,
@@ -31,26 +30,29 @@ jest.mock('@/components/ui/dialog', () => ({
   DialogFooter: ({ children }: any) => <div data-testid="dialog-footer">{children}</div>,
 }));
 
-// Mock Button component  
+// Mock Button component
 jest.mock('@/components/ui/button', () => ({
-  Button: ({ children, onClick, disabled }: any) => 
-    <button onClick={onClick} disabled={disabled} data-testid="button">{children}</button>
+  Button: ({ children, onClick, disabled }: any) => (
+    <button onClick={onClick} disabled={disabled} data-testid="button">
+      {children}
+    </button>
+  ),
 }));
 
 // Mock Card component
 jest.mock('@/components/ui/card', () => ({
-  Card: ({ children }: any) => <div data-testid="card">{children}</div>
+  Card: ({ children }: any) => <div data-testid="card">{children}</div>,
 }));
 
 // Mock session report detail modal
 jest.mock('@/features/therapy/memory/session-report-detail-modal', () => ({
-  SessionReportDetailModal: ({ open, reportInfo, onOpenChange }: any) => 
+  SessionReportDetailModal: ({ open, reportInfo, onOpenChange }: any) =>
     open ? (
       <div data-testid="session-report-detail-modal">
         <h2>{reportInfo?.sessionTitle || 'Detail Modal'}</h2>
         <button onClick={() => onOpenChange(false)}>Close Detail</button>
       </div>
-    ) : null
+    ) : null,
 }));
 
 // Mock lucide icons
@@ -140,7 +142,7 @@ describe('MemoryManagementModal', () => {
     render(<MemoryManagementModal {...defaultProps} />);
 
     expect(screen.getByText('Therapeutic Memory Management')).toBeInTheDocument();
-    
+
     // Component renders successfully with mocked UI
     expect(screen.getByTestId('dialog')).toBeInTheDocument();
   });
@@ -160,5 +162,4 @@ describe('MemoryManagementModal', () => {
 
     expect(mockMemoryUtils.getMemoryManagementData).not.toHaveBeenCalled();
   });
-
 });

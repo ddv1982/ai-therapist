@@ -10,32 +10,44 @@ interface ChatEmptyStateProps {
 export function ChatEmptyState({ isMobile, translate }: ChatEmptyStateProps) {
   return (
     <div className={`flex items-center justify-center ${isMobile ? 'py-2' : 'py-16'}`}>
-      <div className={`text-center max-w-2xl animate-fade-in ${isMobile ? 'px-3' : 'px-6'}`}>
+      <div className={`animate-fade-in max-w-2xl text-center ${isMobile ? 'px-3' : 'px-6'}`}>
         <div className={isMobile ? 'mb-4' : 'mb-8 sm:mb-10'}>
-          <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4 shadow-md">
-            <Brain className="w-8 h-8 text-primary" />
+          <div className="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full shadow-md">
+            <Brain className="text-primary h-8 w-8" />
           </div>
-          <h2 className="text-3xl mb-4 tracking-tight gradient-text">
+          <h2 className="gradient-text mb-4 text-3xl tracking-tight">
             {translate('empty.welcome')}
           </h2>
-          <p className={`text-sm sm:text-base text-muted-foreground ${isMobile ? 'mb-6' : 'mb-8'} leading-relaxed`}>
+          <p
+            className={`text-muted-foreground text-sm sm:text-base ${isMobile ? 'mb-6' : 'mb-8'} leading-relaxed`}
+          >
             {translate('empty.intro')}
           </p>
         </div>
 
-        <div className={`grid grid-cols-1 sm:grid-cols-2 ${isMobile ? 'gap-4 mb-6' : 'gap-6 mb-10'}`}>
-          <div className="p-6 rounded-xl bg-card/70 border border-border text-left flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow">
-            <Sparkles className="w-4 h-4 text-primary flex-shrink-0 mt-1" />
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 ${isMobile ? 'mb-6 gap-4' : 'mb-10 gap-6'}`}
+        >
+          <div className="bg-card/70 border-border flex items-start gap-3 rounded-xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+            <Sparkles className="text-primary mt-1 h-4 w-4 flex-shrink-0" />
             <div>
-              <h3 className="text-base font-semibold text-foreground mb-1">{translate('empty.compassionTitle')}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{translate('empty.compassionDesc')}</p>
+              <h3 className="text-foreground mb-1 text-base font-semibold">
+                {translate('empty.compassionTitle')}
+              </h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {translate('empty.compassionDesc')}
+              </p>
             </div>
           </div>
-          <div className="p-6 rounded-xl bg-card/70 border border-border text-left flex items-start gap-3 shadow-sm hover:shadow-md transition-shadow">
-            <Lock className="w-4 h-4 text-accent flex-shrink-0 mt-1" />
+          <div className="bg-card/70 border-border flex items-start gap-3 rounded-xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+            <Lock className="text-accent mt-1 h-4 w-4 flex-shrink-0" />
             <div>
-              <h3 className="text-base font-semibold text-foreground mb-1">{translate('empty.privateTitle')}</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">{translate('empty.privateDesc')}</p>
+              <h3 className="text-foreground mb-1 text-base font-semibold">
+                {translate('empty.privateTitle')}
+              </h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {translate('empty.privateDesc')}
+              </p>
             </div>
           </div>
         </div>

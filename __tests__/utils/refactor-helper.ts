@@ -1,7 +1,7 @@
 /**
  * Test Refactoring Helper
  * Automated utilities to help migrate existing tests to use the unified architecture
- * 
+ *
  * This helper provides:
  * - Pattern detection and replacement suggestions
  * - Automated mock conversion
@@ -30,14 +30,13 @@ interface TestFileAnalysis {
 }
 
 export class TestRefactorHelper {
-  
   /**
    * Analyze a test file for optimization opportunities
    */
   static analyzeTestFile(filePath: string): TestFileAnalysis {
     const content = fs.readFileSync(filePath, 'utf8');
     const lines = content.split('\n');
-    
+
     const analysis: TestFileAnalysis = {
       filePath,
       linesOfCode: lines.length,
@@ -72,50 +71,50 @@ export class TestRefactorHelper {
         pattern: 'jest.mock',
         regex: /jest\.mock\(/g,
         canOptimize: true,
-        description: 'Manual jest.mock calls can be replaced with MockFactory'
+        description: 'Manual jest.mock calls can be replaced with MockFactory',
       },
       {
         pattern: 'beforeEach setup',
         regex: /beforeEach\(\(\) => \{[\s\S]*jest\.clearAllMocks/g,
         canOptimize: true,
-        description: 'Standard beforeEach setup can use TestSetupUtils'
+        description: 'Standard beforeEach setup can use TestSetupUtils',
       },
       {
         pattern: 'render with providers',
         regex: /render\([^)]+\)/g,
         canOptimize: true,
-        description: 'Standard render calls can use ComponentTestUtils.renderWithProviders'
+        description: 'Standard render calls can use ComponentTestUtils.renderWithProviders',
       },
       {
         pattern: 'Lucide icon mocks',
         regex: /\{\s*className[^}]+testid[^}]+\}/g,
         canOptimize: true,
-        description: 'Icon mocks can use MockFactory.createLucideIconMocks'
+        description: 'Icon mocks can use MockFactory.createLucideIconMocks',
       },
       {
         pattern: 'Form field testing',
         regex: /fireEvent\.change.*target.*value/g,
         canOptimize: true,
-        description: 'Form interactions can use ComponentTestUtils.fillFormField'
+        description: 'Form interactions can use ComponentTestUtils.fillFormField',
       },
       {
         pattern: 'Toast expectations',
         regex: /expect.*getByText.*toBeInTheDocument/g,
         canOptimize: true,
-        description: 'Toast checks can use ComponentTestUtils.expectToastMessage'
+        description: 'Toast checks can use ComponentTestUtils.expectToastMessage',
       },
       {
         pattern: 'Modal expectations',
         regex: /expect.*getByRole\('dialog'\)/g,
         canOptimize: true,
-        description: 'Modal checks can use ComponentTestUtils.expectModalDialog'
+        description: 'Modal checks can use ComponentTestUtils.expectModalDialog',
       },
       {
         pattern: 'Table structure testing',
         regex: /expect.*getByRole\('table'\)/g,
         canOptimize: true,
-        description: 'Table tests can use ComponentTestUtils.expectTherapeuticTable'
-      }
+        description: 'Table tests can use ComponentTestUtils.expectTherapeuticTable',
+      },
     ];
 
     return patterns.map(({ pattern, regex, canOptimize, description }) => {
@@ -134,7 +133,7 @@ export class TestRefactorHelper {
    */
   private static analyzeMockComplexity(content: string): number {
     let complexity = 0;
-    
+
     // Count manual mocks
     const mockCalls = content.match(/jest\.mock\(/g) || [];
     complexity += mockCalls.length * 2;
@@ -191,7 +190,7 @@ export class TestRefactorHelper {
     potential += Math.min(analysis.mockSetupComplexity * 2, 30);
 
     // Duplicate pattern reduction potential
-    const optimizablePatterns = analysis.duplicatePatterns.filter(p => p.canOptimize);
+    const optimizablePatterns = analysis.duplicatePatterns.filter((p) => p.canOptimize);
     potential += optimizablePatterns.length * 5;
 
     // Performance improvement potential
@@ -218,7 +217,7 @@ export class TestRefactorHelper {
     }
 
     // Pattern-specific suggestions
-    analysis.duplicatePatterns.forEach(pattern => {
+    analysis.duplicatePatterns.forEach((pattern) => {
       if (pattern.canOptimize && pattern.occurrences > 2) {
         suggestions.push(
           `Replace ${pattern.occurrences} instances of '${pattern.pattern}' with utility functions`
@@ -227,7 +226,7 @@ export class TestRefactorHelper {
     });
 
     // Performance suggestions
-    analysis.performanceIssues.forEach(issue => {
+    analysis.performanceIssues.forEach((issue) => {
       suggestions.push(`Performance: ${issue}`);
     });
 
@@ -246,7 +245,7 @@ export class TestRefactorHelper {
    */
   static analyzeAllTests(testDir = '__tests__'): TestFileAnalysis[] {
     const testFiles = this.findTestFiles(testDir);
-    return testFiles.map(file => this.analyzeTestFile(file));
+    return testFiles.map((file) => this.analyzeTestFile(file));
   }
 
   /**
@@ -254,14 +253,14 @@ export class TestRefactorHelper {
    */
   private static findTestFiles(dir: string): string[] {
     const testFiles: string[] = [];
-    
+
     const walkDir = (currentDir: string) => {
       const files = fs.readdirSync(currentDir);
-      
-      files.forEach(file => {
+
+      files.forEach((file) => {
         const fullPath = path.join(currentDir, file);
         const stat = fs.statSync(fullPath);
-        
+
         if (stat.isDirectory() && !file.startsWith('.')) {
           walkDir(fullPath);
         } else if (file.endsWith('.test.ts') || file.endsWith('.test.tsx')) {
@@ -279,13 +278,14 @@ export class TestRefactorHelper {
    */
   static generateOptimizationReport(): string {
     const analyses = this.analyzeAllTests();
-    
+
     const totalTests = analyses.length;
     const totalLOC = analyses.reduce((sum, a) => sum + a.linesOfCode, 0);
-    const avgOptimizationPotential = analyses.reduce((sum, a) => sum + a.optimizationPotential, 0) / totalTests;
-    
+    const avgOptimizationPotential =
+      analyses.reduce((sum, a) => sum + a.optimizationPotential, 0) / totalTests;
+
     const highOptimizationFiles = analyses
-      .filter(a => a.optimizationPotential > 50)
+      .filter((a) => a.optimizationPotential > 50)
       .sort((a, b) => b.optimizationPotential - a.optimizationPotential);
 
     const report = `
@@ -299,21 +299,28 @@ export class TestRefactorHelper {
 
 ## Top Files for Optimization
 
-${highOptimizationFiles.slice(0, 10).map(file => `
+${highOptimizationFiles
+  .slice(0, 10)
+  .map(
+    (file) => `
 ### ${path.basename(file.filePath)} (${file.optimizationPotential}% potential)
 - **Lines of code**: ${file.linesOfCode}
 - **Mock complexity**: ${file.mockSetupComplexity}
 - **Performance issues**: ${file.performanceIssues.length}
 
 **Optimization opportunities**:
-${this.generateRefactoringSuggestions(file).map(s => `- ${s}`).join('\n')}
+${this.generateRefactoringSuggestions(file)
+  .map((s) => `- ${s}`)
+  .join('\n')}
 
 **Duplicate patterns found**:
 ${file.duplicatePatterns
-  .filter(p => p.canOptimize && p.occurrences > 0)
-  .map(p => `- ${p.pattern}: ${p.occurrences} occurrences`)
+  .filter((p) => p.canOptimize && p.occurrences > 0)
+  .map((p) => `- ${p.pattern}: ${p.occurrences} occurrences`)
   .join('\n')}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 ## Overall Patterns Analysis
 
@@ -353,8 +360,8 @@ ${this.generatePatternSummary(analyses)}
   private static generatePatternSummary(analyses: TestFileAnalysis[]): string {
     const patternSummary = new Map<string, { total: number; canOptimize: number }>();
 
-    analyses.forEach(analysis => {
-      analysis.duplicatePatterns.forEach(pattern => {
+    analyses.forEach((analysis) => {
+      analysis.duplicatePatterns.forEach((pattern) => {
         const existing = patternSummary.get(pattern.pattern) || { total: 0, canOptimize: 0 };
         existing.total += pattern.occurrences;
         if (pattern.canOptimize) existing.canOptimize += pattern.occurrences;
@@ -364,9 +371,9 @@ ${this.generatePatternSummary(analyses)}
 
     let summary = 'Pattern | Total Occurrences | Optimizable\n';
     summary += '--------|-------------------|------------\n';
-    
+
     Array.from(patternSummary.entries())
-      .sort(([,a], [,b]) => b.total - a.total)
+      .sort(([, a], [, b]) => b.total - a.total)
       .forEach(([pattern, data]) => {
         summary += `${pattern} | ${data.total} | ${data.canOptimize}\n`;
       });
@@ -380,7 +387,6 @@ ${this.generatePatternSummary(analyses)}
 // =============================================================================
 
 export class TestMigrationHelper {
-  
   /**
    * Generate migration script for a specific test file
    */
@@ -396,7 +402,7 @@ export class TestMigrationHelper {
 OPTIMIZATION POTENTIAL: ${analysis.optimizationPotential}%
 
 CURRENT ISSUES:
-${suggestions.map(s => `- ${s}`).join('\n')}
+${suggestions.map((s) => `- ${s}`).join('\n')}
 
 MIGRATION STEPS:
 1. Add import: import { ComponentTestUtils, TestSetupUtils } from '../utils/test-utilities';
@@ -437,13 +443,13 @@ ComponentTestTemplate.createTestSuite(
   static generateBatchMigrationScripts(): void {
     const analyses = TestRefactorHelper.analyzeAllTests();
     const highPriorityFiles = analyses
-      .filter(a => a.optimizationPotential > 40)
+      .filter((a) => a.optimizationPotential > 40)
       .sort((a, b) => b.optimizationPotential - a.optimizationPotential);
 
-    highPriorityFiles.forEach(analysis => {
+    highPriorityFiles.forEach((analysis) => {
       const script = this.generateMigrationScript(analysis.filePath);
       const scriptPath = analysis.filePath.replace('.test.', '.migration.');
-      
+
       fs.writeFileSync(scriptPath, script);
       console.log(`Generated migration script: ${scriptPath}`);
     });
@@ -461,7 +467,7 @@ if (require.main === module) {
   console.log('Generating Test Optimization Report...');
   const report = TestRefactorHelper.generateOptimizationReport();
   console.log(report);
-  
+
   // Optionally generate migration scripts
   if (process.argv.includes('--generate-scripts')) {
     TestMigrationHelper.generateBatchMigrationScripts();

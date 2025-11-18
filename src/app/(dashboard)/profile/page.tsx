@@ -15,7 +15,7 @@ export default function ProfilePage() {
         </CardHeader>
       </Card>
 
-      <div className="rounded-lg border bg-card p-6">
+      <div className="bg-card rounded-lg border p-6">
         <UserProfile routing="hash" />
       </div>
     </div>

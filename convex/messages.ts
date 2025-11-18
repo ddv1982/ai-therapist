@@ -2,14 +2,18 @@ import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
 
 export const listBySession = query({
-  args: { sessionId: v.id('sessions'), limit: v.optional(v.number()), offset: v.optional(v.number()) },
+  args: {
+    sessionId: v.id('sessions'),
+    limit: v.optional(v.number()),
+    offset: v.optional(v.number()),
+  },
   handler: async (ctx, { sessionId, limit = 50, offset = 0 }) => {
     const limit_clamped = Math.min(limit, 200); // Max 200 messages per request (messages can be long)
     const offset_clamped = Math.max(offset, 0);
 
     const all = await ctx.db
       .query('messages')
-      .withIndex('by_session_time', q => q.eq('sessionId', sessionId))
+      .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
       .order('asc')
       .collect();
 
@@ -22,7 +26,7 @@ export const countBySession = query({
   handler: async (ctx, { sessionId }) => {
     const messages = await ctx.db
       .query('messages')
-      .withIndex('by_session_time', q => q.eq('sessionId', sessionId))
+      .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
       .collect();
     return messages.length;
   },

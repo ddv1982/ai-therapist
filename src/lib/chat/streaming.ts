@@ -63,5 +63,3 @@ export async function collectStreamToString(stream: ReadableStream<Uint8Array>):
   }
   return new TextDecoder().decode(merged);
 }
-
-

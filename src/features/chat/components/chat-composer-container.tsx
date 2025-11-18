@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { ChatComposer } from './chat-composer';
 import { useSendMessageMutation } from '@/store/slices/chat-api';
 import { useToast } from '@/components/ui/toast';
@@ -33,12 +33,19 @@ export function ChatComposerContainer({ sessionId, isMobile }: ChatComposerConta
       setInput('');
     } catch (err) {
       showToast({ type: 'error', title: t('sendFailedTitle'), message: t('sendFailedBody') });
-      logger.error('Failed to send message', { component: 'ChatComposerContainer', sessionId }, err as Error);
+      logger.error(
+        'Failed to send message',
+        { component: 'ChatComposerContainer', sessionId },
+        err as Error
+      );
     }
   };
 
   const handleStop = () => {
-    logger.info('Stop streaming requested (not yet implemented)', { component: 'ChatComposerContainer', sessionId });
+    logger.info('Stop streaming requested (not yet implemented)', {
+      component: 'ChatComposerContainer',
+      sessionId,
+    });
   };
 
   return (

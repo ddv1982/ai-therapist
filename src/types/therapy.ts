@@ -132,21 +132,21 @@ export interface CBTFormData {
   // Basic Information
   date: string;
   situation: string;
-  
+
   // Emotional Journey
   initialEmotions: EmotionData;
   finalEmotions: EmotionData;
-  
+
   // Cognitive Processing
   automaticThoughts: ThoughtData[];
   coreBeliefText: string;
   coreBeliefCredibility: number;
   challengeQuestions: ChallengeQuestionData[];
   rationalThoughts: RationalThoughtData[];
-  
+
   // Schema Work
   schemaModes: SchemaMode[];
-  
+
   // Action Planning
   newBehaviors: string;
   // alternativeResponses removed from current UX
@@ -162,7 +162,7 @@ export interface CBTSessionState {
   isActive: boolean;
   isComplete: boolean;
   lastModified: string | null;
-  
+
   // Step data
   situation: SituationData | null;
   emotions: EmotionData | null;
@@ -189,12 +189,29 @@ export interface CBTFormValidationError {
 /**
  * Numeric emotion keys for processing
  */
-export type NumericEmotionKeys = 'fear' | 'anger' | 'sadness' | 'joy' | 'anxiety' | 'shame' | 'guilt';
+export type NumericEmotionKeys =
+  | 'fear'
+  | 'anger'
+  | 'sadness'
+  | 'joy'
+  | 'anxiety'
+  | 'shame'
+  | 'guilt';
 
 /**
  * CBT step types for flow control
  */
-export type CBTStepType = 'situation' | 'emotions' | 'thoughts' | 'core-belief' | 'challenge-questions' | 'rational-thoughts' | 'schema-modes' | 'final-emotions' | 'actions' | 'complete';
+export type CBTStepType =
+  | 'situation'
+  | 'emotions'
+  | 'thoughts'
+  | 'core-belief'
+  | 'challenge-questions'
+  | 'rational-thoughts'
+  | 'schema-modes'
+  | 'final-emotions'
+  | 'actions'
+  | 'complete';
 
 /**
  * Generic CBT step data container
@@ -290,43 +307,43 @@ export const DEFAULT_SCHEMA_MODES: SchemaMode[] = [
     name: 'The Vulnerable Child',
     description: 'scared, helpless, needy',
     selected: false,
-    intensity: 5
+    intensity: 5,
   },
   {
     id: 'angry-child',
     name: 'The Angry Child',
     description: 'frustrated, defiant, rebellious',
     selected: false,
-    intensity: 5
+    intensity: 5,
   },
   {
     id: 'punishing-parent',
     name: 'The Punishing Parent',
     description: 'critical, harsh, demanding',
     selected: false,
-    intensity: 5
+    intensity: 5,
   },
   {
     id: 'demanding-parent',
     name: 'The Demanding Parent',
     description: 'controlling, entitled, impatient',
     selected: false,
-    intensity: 5
+    intensity: 5,
   },
   {
     id: 'detached-self-soother',
     name: 'The Detached Self-Soother',
     description: 'withdrawn, disconnected, avoiding',
     selected: false,
-    intensity: 5
+    intensity: 5,
   },
   {
     id: 'healthy-adult',
     name: 'The Healthy Adult',
     description: 'balanced, rational, caring',
     selected: false,
-    intensity: 5
-  }
+    intensity: 5,
+  },
 ];
 
 /**
@@ -334,29 +351,29 @@ export const DEFAULT_SCHEMA_MODES: SchemaMode[] = [
  */
 export const DEFAULT_CHALLENGE_QUESTIONS: ChallengeQuestionData[] = [
   {
-    question: "What evidence supports this thought?",
-    answer: ""
+    question: 'What evidence supports this thought?',
+    answer: '',
   },
   {
-    question: "What evidence contradicts this thought?",
-    answer: ""
+    question: 'What evidence contradicts this thought?',
+    answer: '',
   },
   {
-    question: "What would I tell a friend in this situation?",
-    answer: ""
+    question: 'What would I tell a friend in this situation?',
+    answer: '',
   },
   {
-    question: "How helpful is this thought?",
-    answer: ""
+    question: 'How helpful is this thought?',
+    answer: '',
   },
   {
     question: "What's the worst that could realistically happen?",
-    answer: ""
+    answer: '',
   },
   {
     question: "What's a more balanced way to think about this?",
-    answer: ""
-  }
+    answer: '',
+  },
 ];
 
 /**
@@ -371,7 +388,7 @@ export const createEmptyEmotionData = (): EmotionData => ({
   shame: 0,
   guilt: 0,
   other: '',
-  otherIntensity: 0
+  otherIntensity: 0,
 });
 
 /**
@@ -385,11 +402,11 @@ export const createInitialCBTFormData = (): CBTFormData => ({
   automaticThoughts: [{ thought: '...', credibility: 5 }],
   coreBeliefText: '',
   coreBeliefCredibility: 5,
-  challengeQuestions: DEFAULT_CHALLENGE_QUESTIONS.map(q => ({ ...q })),
+  challengeQuestions: DEFAULT_CHALLENGE_QUESTIONS.map((q) => ({ ...q })),
   rationalThoughts: [{ thought: '', confidence: 5 }],
-  schemaModes: DEFAULT_SCHEMA_MODES.map(mode => ({ ...mode })),
+  schemaModes: DEFAULT_SCHEMA_MODES.map((mode) => ({ ...mode })),
   newBehaviors: '',
-  originalThoughtCredibility: 5
+  originalThoughtCredibility: 5,
 });
 
 // Legacy CBTDiary* aliases have been removed. Use consolidated types above.
@@ -414,47 +431,50 @@ export interface SchemaReflectionData {
 
 export const DEFAULT_SCHEMA_REFLECTION_QUESTIONS: SchemaReflectionQuestion[] = [
   {
-    question: "What does this situation remind you of from your childhood or past?",
-    answer: "",
-    category: "childhood"
+    question: 'What does this situation remind you of from your childhood or past?',
+    answer: '',
+    category: 'childhood',
   },
   {
-    question: "Does this trigger any familiar feelings from earlier in your life?",
-    answer: "",
-    category: "childhood"
+    question: 'Does this trigger any familiar feelings from earlier in your life?',
+    answer: '',
+    category: 'childhood',
   },
   {
-    question: "Do you notice patterns of abandonment fears, perfectionism, or people-pleasing in this situation?",
-    answer: "",
-    category: "schemas"
+    question:
+      'Do you notice patterns of abandonment fears, perfectionism, or people-pleasing in this situation?',
+    answer: '',
+    category: 'schemas',
   },
   {
-    question: "What core needs (safety, acceptance, autonomy, competence) feel threatened here?",
-    answer: "",
-    category: "schemas"
+    question: 'What core needs (safety, acceptance, autonomy, competence) feel threatened here?',
+    answer: '',
+    category: 'schemas',
   },
   {
-    question: "How are you trying to protect yourself in this situation?",
-    answer: "",
-    category: "coping"
+    question: 'How are you trying to protect yourself in this situation?',
+    answer: '',
+    category: 'coping',
   },
   {
     question: "Which 'part' of you is most active right now?",
-    answer: "",
-    category: "modes"
-  }
+    answer: '',
+    category: 'modes',
+  },
 ];
 
 // Extended initial data with schema reflection to maintain legacy compatibility
-export const getInitialCBTFormData = (): CBTFormData & { schemaReflection: SchemaReflectionData } => {
+export const getInitialCBTFormData = (): CBTFormData & {
+  schemaReflection: SchemaReflectionData;
+} => {
   const base = createInitialCBTFormData();
   return {
     ...base,
     schemaReflection: {
       enabled: false,
-      questions: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.map(q => ({ ...q })),
-      selfAssessment: ''
-    }
+      questions: DEFAULT_SCHEMA_REFLECTION_QUESTIONS.map((q) => ({ ...q })),
+      selfAssessment: '',
+    },
   } as CBTFormData & { schemaReflection: SchemaReflectionData };
 };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import { ErrorBoundary as ChatErrorBoundary } from '@/components/ui/error-boundary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MessageSquare, Loader2 } from 'lucide-react';
@@ -14,9 +14,9 @@ interface SuspenseChatProps {
 // Chat loading skeleton
 function ChatSkeleton() {
   return (
-    <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full space-y-6 p-4">
+    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col space-y-6 p-4">
       {/* Header skeleton */}
-      <div className="flex items-center gap-3 pb-4 border-b border-border">
+      <div className="border-border flex items-center gap-3 border-b pb-4">
         <Skeleton className="h-8 w-8 rounded-full" />
         <div className="space-y-1">
           <Skeleton className="h-4 w-32" />
@@ -29,8 +29,8 @@ function ChatSkeleton() {
         <div key={i} className="space-y-4">
           {/* User message */}
           <div className="flex justify-end">
-            <div className="flex items-start gap-3 max-w-2xl">
-              <div className="bg-primary/10 rounded-lg p-4 space-y-2">
+            <div className="flex max-w-2xl items-start gap-3">
+              <div className="bg-primary/10 space-y-2 rounded-lg p-4">
                 <Skeleton className="h-4 w-48" />
                 <Skeleton className="h-4 w-32" />
               </div>
@@ -40,9 +40,9 @@ function ChatSkeleton() {
 
           {/* Assistant message */}
           <div className="flex justify-start">
-            <div className="flex items-start gap-3 max-w-2xl">
+            <div className="flex max-w-2xl items-start gap-3">
               <Skeleton className="h-8 w-8 rounded-full" />
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <div className="bg-muted/50 space-y-2 rounded-lg p-4">
                 <Skeleton className="h-4 w-64" />
                 <Skeleton className="h-4 w-56" />
                 <Skeleton className="h-4 w-40" />
@@ -53,9 +53,9 @@ function ChatSkeleton() {
       ))}
 
       {/* Input skeleton */}
-      <div className="sticky bottom-0 bg-background pt-4 border-t border-border">
+      <div className="bg-background border-border sticky bottom-0 border-t pt-4">
         <div className="flex gap-2">
-          <Skeleton className="flex-1 h-12 rounded-lg" />
+          <Skeleton className="h-12 flex-1 rounded-lg" />
           <Skeleton className="h-12 w-12 rounded-lg" />
         </div>
       </div>
@@ -66,16 +66,14 @@ function ChatSkeleton() {
 // Connection loading component
 function ConnectionSkeleton() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8">
-      <div className="text-center space-y-4">
-        <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-          <Loader2 className="h-8 w-8 text-primary animate-spin" />
+    <div className="flex flex-1 flex-col items-center justify-center p-8">
+      <div className="space-y-4 text-center">
+        <div className="bg-primary/10 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-xl font-semibold text-foreground">
-            Connecting to AI Therapist
-          </h3>
-          <p className="text-sm text-muted-foreground max-w-md">
+          <h3 className="text-foreground text-xl font-semibold">Connecting to AI Therapist</h3>
+          <p className="text-muted-foreground max-w-md text-sm">
             Setting up your secure therapeutic session...
           </p>
         </div>
@@ -87,16 +85,14 @@ function ConnectionSkeleton() {
 // Error fallback component
 function ChatErrorFallback() {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8">
-      <div className="text-center space-y-4 max-w-md">
-        <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center">
-          <MessageSquare className="h-8 w-8 text-destructive" />
+    <div className="flex flex-1 flex-col items-center justify-center p-8">
+      <div className="max-w-md space-y-4 text-center">
+        <div className="bg-destructive/10 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+          <MessageSquare className="text-destructive h-8 w-8" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-xl font-semibold text-foreground">
-            Unable to Load Chat
-          </h3>
-          <p className="text-sm text-muted-foreground">
+          <h3 className="text-foreground text-xl font-semibold">Unable to Load Chat</h3>
+          <p className="text-muted-foreground text-sm">
             There was an issue loading the chat interface. This is usually temporary.
           </p>
         </div>
@@ -105,46 +101,42 @@ function ChatErrorFallback() {
   );
 }
 
-export function SuspenseChat({ 
-  children, 
-  fallback = <ChatSkeleton />, 
-  errorFallback = <ChatErrorFallback />
+export function SuspenseChat({
+  children,
+  fallback = <ChatSkeleton />,
+  errorFallback = <ChatErrorFallback />,
 }: SuspenseChatProps) {
   return (
     <ChatErrorBoundary fallback={errorFallback}>
-      <Suspense fallback={fallback}>
-        {children}
-      </Suspense>
+      <Suspense fallback={fallback}>{children}</Suspense>
     </ChatErrorBoundary>
   );
 }
 
 // Specialized suspense wrappers
 export function SuspenseChatConnection({ children }: { children: React.ReactNode }) {
-  return (
-    <SuspenseChat fallback={<ConnectionSkeleton />}>
-      {children}
-    </SuspenseChat>
-  );
+  return <SuspenseChat fallback={<ConnectionSkeleton />}>{children}</SuspenseChat>;
 }
 
 export function SuspenseChatMessages({ children }: { children: React.ReactNode }) {
   return (
-    <SuspenseChat fallback={
-      <div className="space-y-4">
-        {[1, 2].map((i) => (
-          <div key={i} className="flex justify-start">
-            <div className="flex items-start gap-3 max-w-2xl">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <Skeleton className="h-4 w-64" />
-                <Skeleton className="h-4 w-48" />
+    <SuspenseChat
+      fallback={
+        <div className="space-y-4">
+          {[1, 2].map((i) => (
+            <div key={i} className="flex justify-start">
+              <div className="flex max-w-2xl items-start gap-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="bg-muted/50 space-y-2 rounded-lg p-4">
+                  <Skeleton className="h-4 w-64" />
+                  <Skeleton className="h-4 w-48" />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-    }>
+          ))}
+        </div>
+      }
+    >
       {children}
     </SuspenseChat>
   );

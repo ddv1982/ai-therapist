@@ -21,14 +21,15 @@ export type WithAuth = <T = unknown>(
   routeParams: { params: Promise<Record<string, string>> }
 ) => Promise<NextResponse<ApiResponse<T>>>;
 
-export function buildValidation(
-  deps: {
-    withAuth: WithAuth;
-    validateRequest: <S extends z.ZodSchema>(schema: S, data: unknown) => { success: boolean; data?: z.infer<S>; error?: string };
-    createValidationErrorResponse: (message: string, requestId: string) => NextResponse<ApiResponse>;
-    logger: { validationError: (url: string, detail: string, ctx?: Record<string, unknown>) => void };
-  }
-) {
+export function buildValidation(deps: {
+  withAuth: WithAuth;
+  validateRequest: <S extends z.ZodSchema>(
+    schema: S,
+    data: unknown
+  ) => { success: boolean; data?: z.infer<S>; error?: string };
+  createValidationErrorResponse: (message: string, requestId: string) => NextResponse<ApiResponse>;
+  logger: { validationError: (url: string, detail: string, ctx?: Record<string, unknown>) => void };
+}) {
   function withValidation<TSchema extends z.ZodSchema, TResponse = unknown>(
     schema: TSchema,
     handler: (
@@ -45,8 +46,15 @@ export function buildValidation(
           try {
             requestData = await (request as NextRequest).json();
           } catch {
-            deps.logger.validationError(context.url || 'unknown', 'Invalid JSON in request body', context);
-            return deps.createValidationErrorResponse('Invalid JSON format in request body', context.requestId) as NextResponse<ApiResponse<TResponse>>;
+            deps.logger.validationError(
+              context.url || 'unknown',
+              'Invalid JSON in request body',
+              context
+            );
+            return deps.createValidationErrorResponse(
+              'Invalid JSON format in request body',
+              context.requestId
+            ) as NextResponse<ApiResponse<TResponse>>;
           }
         } else {
           const { searchParams } = new URL((request as { url: string }).url);
@@ -54,13 +62,23 @@ export function buildValidation(
         }
       } catch {
         deps.logger.validationError(context.url || 'unknown', 'Invalid request data', context);
-        return deps.createValidationErrorResponse('Invalid request data', context.requestId) as NextResponse<ApiResponse<TResponse>>;
+        return deps.createValidationErrorResponse(
+          'Invalid request data',
+          context.requestId
+        ) as NextResponse<ApiResponse<TResponse>>;
       }
 
       const validation = deps.validateRequest(schema, requestData);
       if (!validation.success) {
-        deps.logger.validationError(context.url || 'unknown', validation.error || 'Validation failed', context);
-        return deps.createValidationErrorResponse(validation.error || 'Validation failed', context.requestId) as NextResponse<ApiResponse<TResponse>>;
+        deps.logger.validationError(
+          context.url || 'unknown',
+          validation.error || 'Validation failed',
+          context
+        );
+        return deps.createValidationErrorResponse(
+          validation.error || 'Validation failed',
+          context.requestId
+        ) as NextResponse<ApiResponse<TResponse>>;
       }
 
       return handler(request, context, validation.data as z.infer<TSchema>, params);
@@ -86,5 +104,3 @@ export function buildValidation(
 
   return { withValidation, withValidationAndParams };
 }
-
-

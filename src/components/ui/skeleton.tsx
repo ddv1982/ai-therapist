@@ -1,23 +1,15 @@
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils';
 
-function Skeleton({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("animate-pulse rounded-md bg-muted", className)}
-      {...props}
-    />
-  )
+function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('bg-muted animate-pulse rounded-md', className)} {...props} />;
 }
 
 // Common skeleton patterns for the chat app
 function MessageSkeleton() {
   return (
     <div className="animate-message-in">
-      <div className="flex gap-4 justify-start mb-6">
-        <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
+      <div className="mb-6 flex justify-start gap-4">
+        <Skeleton className="h-10 w-10 flex-shrink-0 rounded-full" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-4 w-1/2" />
@@ -25,41 +17,41 @@ function MessageSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function SessionSkeleton() {
   return (
-    <div className="p-4 mb-3 animate-fade-in">
+    <div className="animate-fade-in mb-3 p-4">
       <div className="flex items-start gap-3">
-        <Skeleton className="h-8 w-8 rounded-lg flex-shrink-0" />
+        <Skeleton className="h-8 w-8 flex-shrink-0 rounded-lg" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-3 w-1/2" />
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function SettingsFormSkeleton() {
   return (
     <div className="mt-4 space-y-4">
       <div>
-        <Skeleton className="h-4 w-20 mb-2" />
+        <Skeleton className="mb-2 h-4 w-20" />
         <Skeleton className="h-10 w-full" />
       </div>
       <div>
-        <Skeleton className="h-4 w-16 mb-2" />
+        <Skeleton className="mb-2 h-4 w-16" />
         <Skeleton className="h-10 w-full" />
       </div>
       <div>
-        <Skeleton className="h-4 w-24 mb-2" />
+        <Skeleton className="mb-2 h-4 w-24" />
         <Skeleton className="h-6 w-full" />
-        <Skeleton className="h-3 w-3/4 mt-1" />
+        <Skeleton className="mt-1 h-3 w-3/4" />
       </div>
     </div>
-  )
+  );
 }
 
-export { Skeleton, MessageSkeleton, SessionSkeleton, SettingsFormSkeleton }
+export { Skeleton, MessageSkeleton, SessionSkeleton, SettingsFormSkeleton };

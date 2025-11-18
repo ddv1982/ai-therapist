@@ -49,7 +49,7 @@ const STEP_INDEX: Record<CBTStepId, number> = CBT_STEP_ORDER.reduce(
     acc[step] = index;
     return acc;
   },
-  {} as Record<CBTStepId, number>,
+  {} as Record<CBTStepId, number>
 );
 
 export function createInitialContext(): CBTFlowContext {
@@ -94,7 +94,7 @@ function ensureCompletedSteps(previous: CBTStepId[], next: CBTStepId): CBTStepId
 function applyStepPayload<K extends CBTStepId>(
   context: CBTFlowContext,
   stepId: K,
-  payload: CBTStepPayloadMap[K],
+  payload: CBTStepPayloadMap[K]
 ): CBTFlowContext {
   const config = CBT_STEP_CONFIG[stepId];
   return config.persist(context, payload);

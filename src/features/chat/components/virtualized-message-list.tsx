@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { CheckCircle, Heart } from 'lucide-react';
 import { Message, type MessageData } from '@/features/chat/messages';
@@ -27,43 +27,63 @@ import { useToast } from '@/components/ui/toast';
 import { useTranslations } from 'next-intl';
 
 const SituationPrompt = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/situation-prompt').then((mod) => ({ default: mod.SituationPrompt }))
+  import('@/features/therapy/cbt/chat-components/situation-prompt').then((mod) => ({
+    default: mod.SituationPrompt,
+  }))
 );
 
 const EmotionScale = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/emotion-scale').then((mod) => ({ default: mod.EmotionScale }))
+  import('@/features/therapy/cbt/chat-components/emotion-scale').then((mod) => ({
+    default: mod.EmotionScale,
+  }))
 );
 
 const ThoughtRecord = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/thought-record').then((mod) => ({ default: mod.ThoughtRecord }))
+  import('@/features/therapy/cbt/chat-components/thought-record').then((mod) => ({
+    default: mod.ThoughtRecord,
+  }))
 );
 
 const CoreBelief = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/core-belief').then((mod) => ({ default: mod.CoreBelief }))
+  import('@/features/therapy/cbt/chat-components/core-belief').then((mod) => ({
+    default: mod.CoreBelief,
+  }))
 );
 
 const ChallengeQuestions = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/challenge-questions').then((mod) => ({ default: mod.ChallengeQuestions }))
+  import('@/features/therapy/cbt/chat-components/challenge-questions').then((mod) => ({
+    default: mod.ChallengeQuestions,
+  }))
 );
 
 const RationalThoughts = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/rational-thoughts').then((mod) => ({ default: mod.RationalThoughts }))
+  import('@/features/therapy/cbt/chat-components/rational-thoughts').then((mod) => ({
+    default: mod.RationalThoughts,
+  }))
 );
 
 const SchemaModes = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/schema-modes').then((mod) => ({ default: mod.SchemaModes }))
+  import('@/features/therapy/cbt/chat-components/schema-modes').then((mod) => ({
+    default: mod.SchemaModes,
+  }))
 );
 
 const FinalEmotionReflection = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/final-emotion-reflection').then((mod) => ({ default: mod.FinalEmotionReflection }))
+  import('@/features/therapy/cbt/chat-components/final-emotion-reflection').then((mod) => ({
+    default: mod.FinalEmotionReflection,
+  }))
 );
 
 const ActionPlan = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/action-plan').then((mod) => ({ default: mod.ActionPlan }))
+  import('@/features/therapy/cbt/chat-components/action-plan').then((mod) => ({
+    default: mod.ActionPlan,
+  }))
 );
 
 const ObsessionsCompulsionsFlow = dynamic(() =>
-  import('@/features/therapy/obsessions-compulsions/obsessions-compulsions-flow').then((mod) => ({ default: mod.ObsessionsCompulsionsFlow }))
+  import('@/features/therapy/obsessions-compulsions/obsessions-compulsions-flow').then((mod) => ({
+    default: mod.ObsessionsCompulsionsFlow,
+  }))
 );
 
 type SchemaModeLike = SchemaMode | SchemaModeData;
@@ -129,7 +149,7 @@ function renderCompletedStepSummary(
   step: CBTStepType,
   sessionData: CBTChatFlowSessionData | undefined,
   onNavigate?: (step: CBTStepType) => void,
-  isFinalStep: boolean = false,
+  isFinalStep: boolean = false
 ) {
   if (step === 'complete') {
     return null;
@@ -144,36 +164,43 @@ function renderCompletedStepSummary(
     case 'situation': {
       const situation = sessionData?.situationData;
       if (situation?.situation) {
-        content.push(<p key="situation" className="text-sm text-foreground">{situation.situation}</p>);
+        content.push(
+          <p key="situation" className="text-foreground text-sm">
+            {situation.situation}
+          </p>
+        );
       }
       if (situation?.date) {
         const formatted = new Date(situation.date).toLocaleDateString();
         content.push(
-          <p key="date" className="text-xs text-muted-foreground">
+          <p key="date" className="text-muted-foreground text-xs">
             Date: {formatted}
-          </p>,
+          </p>
         );
       }
       break;
     }
     case 'emotions':
       content.push(
-        <div key="emotions" className="text-sm text-muted-foreground">
+        <div key="emotions" className="text-muted-foreground text-sm">
           {renderEmotionBadges(sessionData?.emotionData)}
-        </div>,
+        </div>
       );
       break;
     case 'thoughts': {
       const thoughts = sessionData?.thoughtData ?? [];
       if (thoughts.length > 0) {
         content.push(
-          <ul key="thoughts" className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+          <ul
+            key="thoughts"
+            className="text-muted-foreground list-inside list-disc space-y-1 text-sm"
+          >
             {thoughts.map((thought, index) => (
               <li key={`${thought.thought}-${index}`}>
                 {thought.thought} ({thought.credibility}/10)
               </li>
             ))}
-          </ul>,
+          </ul>
         );
       }
       break;
@@ -182,9 +209,9 @@ function renderCompletedStepSummary(
       const coreBelief = sessionData?.coreBeliefData;
       if (coreBelief) {
         content.push(
-          <p key="core-belief" className="text-sm text-muted-foreground">
+          <p key="core-belief" className="text-muted-foreground text-sm">
             “{coreBelief.coreBeliefText}” ({coreBelief.coreBeliefCredibility}/10)
-          </p>,
+          </p>
         );
       }
       break;
@@ -193,7 +220,7 @@ function renderCompletedStepSummary(
       const questions = sessionData?.challengeQuestionsData?.challengeQuestions ?? [];
       if (questions.length > 0) {
         content.push(
-          <ul key="challenge" className="space-y-2 text-sm text-muted-foreground">
+          <ul key="challenge" className="text-muted-foreground space-y-2 text-sm">
             {questions.map((item, index) => (
               <li key={`${item.question}-${index}`}>
                 <span className="font-medium">{item.question}</span>
@@ -201,7 +228,7 @@ function renderCompletedStepSummary(
                 <span>{item.answer}</span>
               </li>
             ))}
-          </ul>,
+          </ul>
         );
       }
       break;
@@ -210,21 +237,24 @@ function renderCompletedStepSummary(
       const rational = sessionData?.rationalThoughtsData?.rationalThoughts ?? [];
       if (rational.length > 0) {
         content.push(
-          <ul key="rational" className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+          <ul
+            key="rational"
+            className="text-muted-foreground list-inside list-disc space-y-1 text-sm"
+          >
             {rational.map((thought, index) => (
               <li key={`${thought.thought}-${index}`}>
                 {thought.thought} ({thought.confidence}/10)
               </li>
             ))}
-          </ul>,
+          </ul>
         );
       }
       break;
     }
     case 'schema-modes': {
-      const modes = sessionData?.schemaModesData?.selectedModes?.filter((mode) =>
-        isSchemaModeSelected(mode),
-      ) ?? [];
+      const modes =
+        sessionData?.schemaModesData?.selectedModes?.filter((mode) => isSchemaModeSelected(mode)) ??
+        [];
       if (modes.length > 0) {
         content.push(
           <div key="schema" className="flex flex-wrap gap-2">
@@ -234,7 +264,7 @@ function renderCompletedStepSummary(
                 {typeof mode.intensity === 'number' ? ` (${mode.intensity}/10)` : ''}
               </Badge>
             ))}
-          </div>,
+          </div>
         );
       }
       break;
@@ -243,17 +273,17 @@ function renderCompletedStepSummary(
       const actionPlan = sessionData?.actionData;
       if (actionPlan?.newBehaviors) {
         content.push(
-          <p key="actions" className="text-sm text-muted-foreground">
+          <p key="actions" className="text-muted-foreground text-sm">
             {actionPlan.newBehaviors}
-          </p>,
+          </p>
         );
       }
       const finalEmotions = renderEmotionBadges(actionPlan?.finalEmotions);
       if (finalEmotions) {
         content.push(
-          <div key="action-emotions" className="text-sm text-muted-foreground">
+          <div key="action-emotions" className="text-muted-foreground text-sm">
             {finalEmotions}
-          </div>,
+          </div>
         );
       }
       break;
@@ -262,9 +292,9 @@ function renderCompletedStepSummary(
       const final = renderEmotionBadges(sessionData?.actionData?.finalEmotions);
       if (final) {
         content.push(
-          <div key="final-emotions" className="text-sm text-muted-foreground">
+          <div key="final-emotions" className="text-muted-foreground text-sm">
             {final}
-          </div>,
+          </div>
         );
       }
       break;
@@ -274,17 +304,13 @@ function renderCompletedStepSummary(
   }
 
   return (
-    <Card className="border border-muted/50 bg-muted/30">
-      <CardHeader className="py-3 flex flex-row items-center gap-2">
-        <CheckCircle className="w-4 h-4 text-primary" />
-        <CardTitle className="text-sm font-semibold text-foreground">
-          {title}
-        </CardTitle>
+    <Card className="border-muted/50 bg-muted/30 border">
+      <CardHeader className="flex flex-row items-center gap-2 py-3">
+        <CheckCircle className="text-primary h-4 w-4" />
+        <CardTitle className="text-foreground text-sm font-semibold">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="pt-0 space-y-2">
-        {content.length > 0 ? content : (
-          <p className="text-sm text-muted-foreground">Completed.</p>
-        )}
+      <CardContent className="space-y-2 pt-0">
+        {content.length > 0 ? content : <p className="text-muted-foreground text-sm">Completed.</p>}
         {onNavigate && isFinalStep ? (
           <div className="flex justify-end pt-2">
             <Button variant="ghost" size="sm" onClick={() => onNavigate(step)}>
@@ -326,9 +352,9 @@ interface VirtualizedMessageListProps {
 }
 
 // Simple virtualization - only render visible and near-visible messages
-function VirtualizedMessageListComponent({ 
-  messages, 
-  isStreaming, 
+function VirtualizedMessageListComponent({
+  messages,
+  isStreaming,
   isMobile,
   maxVisible = 50,
   activeCBTStep,
@@ -372,40 +398,43 @@ function VirtualizedMessageListComponent({
     return map;
   }, [visibleMessages]);
 
-  const containerClassName = useMemo(() => 
-    `max-w-4xl mx-auto ${isMobile ? 'space-y-3 pb-6' : 'space-y-6 pb-12'}`,
+  const containerClassName = useMemo(
+    () => `max-w-4xl mx-auto ${isMobile ? 'space-y-3 pb-6' : 'space-y-6 pb-12'}`,
     [isMobile]
   );
 
-  const handleDismissObsessionsFlow = useCallback(async (messageId: string) => {
-    if (!sessionId || !onUpdateMessageMetadata) {
-      showToast({
-        type: 'error',
-        title: t('hideTrackerUnavailableTitle'),
-        message: t('hideTrackerUnavailableBody'),
-      });
-      return;
-    }
+  const handleDismissObsessionsFlow = useCallback(
+    async (messageId: string) => {
+      if (!sessionId || !onUpdateMessageMetadata) {
+        showToast({
+          type: 'error',
+          title: t('hideTrackerUnavailableTitle'),
+          message: t('hideTrackerUnavailableBody'),
+        });
+        return;
+      }
 
-    const result = await onUpdateMessageMetadata(sessionId, messageId, {
-      dismissed: true,
-      dismissedReason: 'manual',
-    });
-
-    if (!result.success) {
-      showToast({
-        type: 'error',
-        title: t('hideTrackerFailedTitle'),
-        message: result.error ?? t('generalRetry'),
+      const result = await onUpdateMessageMetadata(sessionId, messageId, {
+        dismissed: true,
+        dismissedReason: 'manual',
       });
-      return;
-    }
-    showToast({
-      type: 'info',
-      title: t('hideTrackerSuccessTitle'),
-      message: t('hideTrackerSuccessBody'),
-    });
-  }, [sessionId, onUpdateMessageMetadata, showToast, t]);
+
+      if (!result.success) {
+        showToast({
+          type: 'error',
+          title: t('hideTrackerFailedTitle'),
+          message: result.error ?? t('generalRetry'),
+        });
+        return;
+      }
+      showToast({
+        type: 'info',
+        title: t('hideTrackerSuccessTitle'),
+        message: t('hideTrackerSuccessBody'),
+      });
+    },
+    [sessionId, onUpdateMessageMetadata, showToast, t]
+  );
 
   // Function to render CBT components based on step
   const renderCBTComponent = (message: MessageData) => {
@@ -430,12 +459,17 @@ function VirtualizedMessageListComponent({
         <ObsessionsCompulsionsFlow
           onComplete={async (data) => {
             if (sessionId && onUpdateMessageMetadata) {
-              await onUpdateMessageMetadata(sessionId, message.id, {
-                step: 'obsessions-compulsions',
-                data,
-                dismissed: false,
-                dismissedReason: null,
-              }, { mergeStrategy: 'merge' });
+              await onUpdateMessageMetadata(
+                sessionId,
+                message.id,
+                {
+                  step: 'obsessions-compulsions',
+                  data,
+                  dismissed: false,
+                  dismissedReason: null,
+                },
+                { mergeStrategy: 'merge' }
+              );
             }
             await onObsessionsCompulsionsComplete(data);
           }}
@@ -465,18 +499,12 @@ function VirtualizedMessageListComponent({
     switch (step) {
       case 'situation':
         return onCBTSituationComplete ? (
-          <SituationPrompt
-            onComplete={onCBTSituationComplete}
-            onNavigateStep={onCBTStepNavigate}
-          />
+          <SituationPrompt onComplete={onCBTSituationComplete} onNavigateStep={onCBTStepNavigate} />
         ) : null;
 
       case 'emotions':
         return onCBTEmotionComplete ? (
-          <EmotionScale
-            onComplete={onCBTEmotionComplete}
-            onNavigateStep={onCBTStepNavigate}
-          />
+          <EmotionScale onComplete={onCBTEmotionComplete} onNavigateStep={onCBTStepNavigate} />
         ) : null;
 
       case 'thoughts':
@@ -531,7 +559,7 @@ function VirtualizedMessageListComponent({
 
       case 'final-emotions':
         return (
-          <FinalEmotionReflection 
+          <FinalEmotionReflection
             onComplete={onCBTFinalEmotionsComplete}
             onSendToChat={onCBTSendToChat}
             onNavigateStep={onCBTStepNavigate}
@@ -549,12 +577,7 @@ function VirtualizedMessageListComponent({
         ) : null;
 
       default:
-        return renderCompletedStepSummary(
-          step,
-          sessionData,
-          onCBTStepNavigate,
-          isFinalStep
-        );
+        return renderCompletedStepSummary(step, sessionData, onCBTStepNavigate, isFinalStep);
     }
   };
 
@@ -574,26 +597,23 @@ function VirtualizedMessageListComponent({
 
         const isLastMessage = index === visibleMessages.length - 1;
         const isAssistantMessage = message.role === 'assistant';
-        const shouldShowTypingIndicator = isStreaming && isLastMessage && isAssistantMessage && message.content === '';
+        const shouldShowTypingIndicator =
+          isStreaming && isLastMessage && isAssistantMessage && message.content === '';
 
         return (
           <div key={message.id}>
             {shouldShowTypingIndicator && <TypingIndicator />}
 
             {metadata?.step ? (
-              <div
-                role="article"
-                aria-label={`CBT ${metadata.step} step`}
-              >
+              <div role="article" aria-label={`CBT ${metadata.step} step`}>
                 {renderCBTComponent(message)}
               </div>
-            ) : message.content && (
-              <div
-                role="article"
-                aria-label={`Message from ${message.role}`}
-              >
-                <Message message={message} />
-              </div>
+            ) : (
+              message.content && (
+                <div role="article" aria-label={`Message from ${message.role}`}>
+                  <Message message={message} />
+                </div>
+              )
             )}
           </div>
         );
@@ -604,15 +624,24 @@ function VirtualizedMessageListComponent({
 
 const TypingIndicator = memo(function TypingIndicator() {
   return (
-    <div className="flex justify-start items-center py-2 mb-2 max-w-4xl mx-auto" aria-live="polite">
+    <div className="mx-auto mb-2 flex max-w-4xl items-center justify-start py-2" aria-live="polite">
       <div className="flex items-center gap-4">
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-600 shadow-lg flex items-center justify-center">
-          <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-purple-600 shadow-lg">
+          <Heart className="h-4 w-4 fill-red-500 text-red-500" />
         </div>
-        <div className="flex space-x-2 animate-pulse motion-reduce:animate-none" aria-label="Assistant is typing">
-          <div className="w-2 h-2 bg-primary rounded-full animate-bounce motion-reduce:animate-none"></div>
-          <div className="w-2 h-2 bg-primary rounded-full animate-bounce motion-reduce:animate-none" style={{ animationDelay: '0.1s' }}></div>
-          <div className="w-2 h-2 bg-primary rounded-full animate-bounce motion-reduce:animate-none" style={{ animationDelay: '0.2s' }}></div>
+        <div
+          className="flex animate-pulse space-x-2 motion-reduce:animate-none"
+          aria-label="Assistant is typing"
+        >
+          <div className="bg-primary h-2 w-2 animate-bounce rounded-full motion-reduce:animate-none"></div>
+          <div
+            className="bg-primary h-2 w-2 animate-bounce rounded-full motion-reduce:animate-none"
+            style={{ animationDelay: '0.1s' }}
+          ></div>
+          <div
+            className="bg-primary h-2 w-2 animate-bounce rounded-full motion-reduce:animate-none"
+            style={{ animationDelay: '0.2s' }}
+          ></div>
         </div>
       </div>
     </div>
@@ -626,8 +655,63 @@ function getMessageDigest(message: MessageData): string {
   return `${message.id}:${contentKey}:${stepKey}`;
 }
 
-export const VirtualizedMessageList = memo(VirtualizedMessageListComponent, (prevProps, nextProps) => {
-  if (prevProps.messages === nextProps.messages) {
+export const VirtualizedMessageList = memo(
+  VirtualizedMessageListComponent,
+  (prevProps, nextProps) => {
+    if (prevProps.messages === nextProps.messages) {
+      return (
+        prevProps.isStreaming === nextProps.isStreaming &&
+        prevProps.isMobile === nextProps.isMobile &&
+        prevProps.maxVisible === nextProps.maxVisible &&
+        prevProps.activeCBTStep === nextProps.activeCBTStep &&
+        prevProps.onCBTStepNavigate === nextProps.onCBTStepNavigate &&
+        prevProps.onObsessionsCompulsionsComplete === nextProps.onObsessionsCompulsionsComplete &&
+        prevProps.onUpdateMessageMetadata === nextProps.onUpdateMessageMetadata &&
+        prevProps.sessionId === nextProps.sessionId
+      );
+    }
+
+    if (prevProps.messages.length !== nextProps.messages.length) {
+      return false;
+    }
+
+    const equalWindow = (windowSize: number) => {
+      if (windowSize <= 0) return true;
+      const prevSliceStart = Math.max(prevProps.messages.length - windowSize, 0);
+      const nextSliceStart = Math.max(nextProps.messages.length - windowSize, 0);
+      if (
+        prevProps.messages.length - prevSliceStart !==
+        nextProps.messages.length - nextSliceStart
+      ) {
+        return false;
+      }
+      const prevDigests = new Array(windowSize);
+      const nextDigests = new Array(windowSize);
+      for (let i = 0; i < windowSize; i += 1) {
+        const prevMessage = prevProps.messages[prevSliceStart + i];
+        const nextMessage = nextProps.messages[nextSliceStart + i];
+        if (!prevMessage || !nextMessage) {
+          return false;
+        }
+        if (prevMessage.id !== nextMessage.id) {
+          return false;
+        }
+        prevDigests[i] = getMessageDigest(prevMessage);
+        nextDigests[i] = getMessageDigest(nextMessage);
+      }
+      for (let i = 0; i < prevDigests.length; i += 1) {
+        if (prevDigests[i] !== nextDigests[i]) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    const prevVisible = prevProps.maxVisible ?? 50;
+    const nextVisible = nextProps.maxVisible ?? 50;
+    if (!equalWindow(prevVisible)) return false;
+    if (prevVisible !== nextVisible && !equalWindow(nextVisible)) return false;
+
     return (
       prevProps.isStreaming === nextProps.isStreaming &&
       prevProps.isMobile === nextProps.isMobile &&
@@ -639,53 +723,4 @@ export const VirtualizedMessageList = memo(VirtualizedMessageListComponent, (pre
       prevProps.sessionId === nextProps.sessionId
     );
   }
-
-  if (prevProps.messages.length !== nextProps.messages.length) {
-    return false;
-  }
-
-  const equalWindow = (windowSize: number) => {
-    if (windowSize <= 0) return true;
-    const prevSliceStart = Math.max(prevProps.messages.length - windowSize, 0);
-    const nextSliceStart = Math.max(nextProps.messages.length - windowSize, 0);
-    if (prevProps.messages.length - prevSliceStart !== nextProps.messages.length - nextSliceStart) {
-      return false;
-    }
-    const prevDigests = new Array(windowSize);
-    const nextDigests = new Array(windowSize);
-    for (let i = 0; i < windowSize; i += 1) {
-      const prevMessage = prevProps.messages[prevSliceStart + i];
-      const nextMessage = nextProps.messages[nextSliceStart + i];
-      if (!prevMessage || !nextMessage) {
-        return false;
-      }
-      if (prevMessage.id !== nextMessage.id) {
-        return false;
-      }
-      prevDigests[i] = getMessageDigest(prevMessage);
-      nextDigests[i] = getMessageDigest(nextMessage);
-    }
-    for (let i = 0; i < prevDigests.length; i += 1) {
-      if (prevDigests[i] !== nextDigests[i]) {
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const prevVisible = prevProps.maxVisible ?? 50;
-  const nextVisible = nextProps.maxVisible ?? 50;
-  if (!equalWindow(prevVisible)) return false;
-  if (prevVisible !== nextVisible && !equalWindow(nextVisible)) return false;
-
-  return (
-    prevProps.isStreaming === nextProps.isStreaming &&
-    prevProps.isMobile === nextProps.isMobile &&
-    prevProps.maxVisible === nextProps.maxVisible &&
-    prevProps.activeCBTStep === nextProps.activeCBTStep &&
-    prevProps.onCBTStepNavigate === nextProps.onCBTStepNavigate &&
-    prevProps.onObsessionsCompulsionsComplete === nextProps.onObsessionsCompulsionsComplete &&
-    prevProps.onUpdateMessageMetadata === nextProps.onUpdateMessageMetadata &&
-    prevProps.sessionId === nextProps.sessionId
-  );
-});
+);

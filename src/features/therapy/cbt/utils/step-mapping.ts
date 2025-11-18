@@ -7,15 +7,15 @@ import type { CBTStepId } from '@/features/therapy/cbt/flow';
 
 // The canonical CBT steps in order - matches use-cbt-chat-experience.ts
 export const CBT_STEPS: CBTStepId[] = [
-  'situation', 
-  'emotions', 
-  'thoughts', 
-  'core-belief', 
-  'challenge-questions', 
-  'rational-thoughts', 
+  'situation',
+  'emotions',
+  'thoughts',
+  'core-belief',
+  'challenge-questions',
+  'rational-thoughts',
   'schema-modes',
   'actions',
-  'final-emotions'
+  'final-emotions',
 ];
 
 // Total number of steps (excluding 'complete' which is not a user-facing step)
@@ -47,7 +47,7 @@ export function getTotalSteps(): number {
 export function getStepInfo(step: CBTStepId): { stepNumber: number; totalSteps: number } {
   return {
     stepNumber: getStepNumber(step),
-    totalSteps: getTotalSteps()
+    totalSteps: getTotalSteps(),
   };
 }
 

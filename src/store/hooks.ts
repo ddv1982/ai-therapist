@@ -22,6 +22,8 @@ export const selectChatMessages = (state: RootState): unknown[] => {
 
 export const selectIsStreaming = (state: RootState) => state.chat?.isStreaming || false;
 
-export const selectChatSettings = (state: RootState) => state.chat?.settings || { webSearchEnabled: false, model: DEFAULT_MODEL_ID };
+export const selectChatSettings = (state: RootState) =>
+  state.chat?.settings || { webSearchEnabled: false, model: DEFAULT_MODEL_ID };
 // Prefer selectors in src/store/selectors.ts; retained for backward compatibility
-export const selectChatSettingsSafe = (state: RootState) => state.chat?.settings || { webSearchEnabled: false, model: DEFAULT_MODEL_ID };
+export const selectChatSettingsSafe = (state: RootState) =>
+  state.chat?.settings || { webSearchEnabled: false, model: DEFAULT_MODEL_ID };

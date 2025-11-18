@@ -2,7 +2,6 @@
  * Dashboard Layout
  * Layout for main application pages (home, chat, reports, test)
  */
-import React from 'react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -10,10 +9,8 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="min-h-screen bg-background">
-      <main className="h-screen">
-        {children}
-      </main>
+    <div className="bg-background min-h-screen">
+      <main className="h-screen">{children}</main>
     </div>
   );
 }

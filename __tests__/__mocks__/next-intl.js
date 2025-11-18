@@ -8,12 +8,15 @@ function resolveMessage(namespace, key) {
   }
 
   const segments = fullKey.split('.');
-  return segments.reduce((acc, segment) => (acc && acc[segment] !== undefined ? acc[segment] : undefined), defaultMessages);
+  return segments.reduce(
+    (acc, segment) => (acc && acc[segment] !== undefined ? acc[segment] : undefined),
+    defaultMessages
+  );
 }
 
 function interpolate(message, values = {}) {
   if (typeof message !== 'string') return message;
-  return message.replace(/\{(\w+)\}/g, (_, token) => (values[token] ?? `{${token}}`));
+  return message.replace(/\{(\w+)\}/g, (_, token) => values[token] ?? `{${token}}`);
 }
 
 function useTranslations(namespace) {
@@ -34,7 +37,7 @@ function useTranslations(namespace) {
     return interpolate(message, values);
   };
 
-  translate.raw = key => resolveMessage(namespace, key);
+  translate.raw = (key) => resolveMessage(namespace, key);
   translate.rich = translate;
 
   return translate;
@@ -42,9 +45,9 @@ function useTranslations(namespace) {
 
 function useFormatter() {
   return {
-    dateTime: value => value,
-    number: value => value,
-    relativeTime: value => value,
+    dateTime: (value) => value,
+    number: (value) => value,
+    relativeTime: (value) => value,
   };
 }
 

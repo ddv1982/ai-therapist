@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslations } from 'next-intl';
 import { CBT_STEP_CONFIG } from '@/features/therapy/cbt/flow/config';
 import type { CBTStepId } from '@/features/therapy/cbt/flow';
@@ -10,18 +9,23 @@ interface FooterInfoProps {
   hasStarted: boolean;
 }
 
-export function FooterInfo({ isStreaming, isCBTActive, cbtCurrentStep, hasStarted }: FooterInfoProps) {
+export function FooterInfo({
+  isStreaming,
+  isCBTActive,
+  cbtCurrentStep,
+  hasStarted,
+}: FooterInfoProps) {
   const t = useTranslations('cbt');
 
   const STEP_I18N_MAP: Record<string, string> = {
-    'situation': 'situation',
-    'emotions': 'emotions',
-    'thoughts': 'thoughts',
+    situation: 'situation',
+    emotions: 'emotions',
+    thoughts: 'thoughts',
     'core-belief': 'coreBelief',
     'challenge-questions': 'challenge',
     'rational-thoughts': 'rational',
     'schema-modes': 'schema',
-    'actions': 'actions',
+    actions: 'actions',
     'final-emotions': 'finalEmotions',
   };
   const stepKey = STEP_I18N_MAP[cbtCurrentStep as keyof typeof STEP_I18N_MAP];
@@ -35,12 +39,14 @@ export function FooterInfo({ isStreaming, isCBTActive, cbtCurrentStep, hasStarte
   })();
 
   return (
-    <div className="border-t bg-card/50 backdrop-blur-md">
-      <div className={"max-w-4xl mx-auto py-4 text-center px-4 sm:px-6"}>
-        <div className="text-sm text-muted-foreground">
+    <div className="bg-card/50 border-t backdrop-blur-md">
+      <div className={'mx-auto max-w-4xl px-4 py-4 text-center sm:px-6'}>
+        <div className="text-muted-foreground text-sm">
           {isStreaming ? (
             <span>🔄 {t('footer.analyzing')}</span>
-          ) : isCBTActive && cbtCurrentStep !== 'complete' && cbtCurrentStep !== 'final-emotions' ? (
+          ) : isCBTActive &&
+            cbtCurrentStep !== 'complete' &&
+            cbtCurrentStep !== 'final-emotions' ? (
             <span>💙 {t('footer.completeStep', { step: stepTitle })}</span>
           ) : isCBTActive && cbtCurrentStep === 'final-emotions' ? (
             <span>💙 {t('footer.reflectAndSend')}</span>

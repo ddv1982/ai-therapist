@@ -22,7 +22,7 @@ import {
   encryptTherapeuticRecommendations,
   decryptTherapeuticRecommendations,
   encryptEnhancedAnalysisData,
-  decryptEnhancedAnalysisData
+  decryptEnhancedAnalysisData,
 } from '@/lib/chat/message-encryption';
 
 // Mock the crypto utils
@@ -39,11 +39,11 @@ const mockDecrypt = decryptSensitiveData as jest.Mock;
 describe('Message Encryption Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Default mocks
     mockEncrypt.mockImplementation((data: string) => `encrypted-${data}`);
     mockDecrypt.mockImplementation((data: string) => data.replace('encrypted-', ''));
-    
+
     // Mock console.error to suppress expected error messages in tests
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -83,12 +83,12 @@ describe('Message Encryption Service', () => {
 
     it('should generate timestamp if not provided', () => {
       const beforeTime = new Date();
-      
+
       const result = encryptMessage({
         role: 'user',
         content: 'Test message',
       });
-      
+
       const afterTime = new Date();
 
       expect(result.timestamp.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
@@ -107,7 +107,7 @@ describe('Message Encryption Service', () => {
 
     it('should handle special characters in content', () => {
       const content = 'Message with émojis 🎭 and symbols ©®™';
-      
+
       const result = encryptMessage({
         role: 'user',
         content,
@@ -209,7 +209,7 @@ describe('Message Encryption Service', () => {
     it('should preserve individual timestamps when provided', () => {
       const timestamp1 = new Date('2024-01-01T10:00:00Z');
       const timestamp2 = new Date('2024-01-01T11:00:00Z');
-      
+
       const messages = [
         { role: 'user', content: 'Message 1', timestamp: timestamp1 },
         { role: 'assistant', content: 'Message 2', timestamp: timestamp2 },
@@ -237,9 +237,9 @@ describe('Message Encryption Service', () => {
     });
 
     it('should handle errors in individual messages', () => {
-      mockDecrypt
-        .mockReturnValueOnce('Successfully decrypted')
-        .mockImplementationOnce(() => { throw new Error('Decryption failed'); });
+      mockDecrypt.mockReturnValueOnce('Successfully decrypted').mockImplementationOnce(() => {
+        throw new Error('Decryption failed');
+      });
 
       const encryptedMessages = [
         { role: 'user', content: 'encrypted-good', timestamp: new Date() },
@@ -301,7 +301,8 @@ describe('Message Encryption Service', () => {
   describe('isContentEncrypted', () => {
     it('should identify encrypted content by format', () => {
       // Base64-like content with sufficient length
-      const encryptedLookingContent = 'YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY3ODkwYWJjZGVmZ2hpams=';
+      const encryptedLookingContent =
+        'YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY3ODkwYWJjZGVmZ2hpams=';
 
       const result = isContentEncrypted(encryptedLookingContent);
 
@@ -325,7 +326,8 @@ describe('Message Encryption Service', () => {
     });
 
     it('should handle invalid base64 gracefully', () => {
-      const invalidBase64 = 'this-is-not-base64-but-looks-similar-with-dashes-and-long-enough-content';
+      const invalidBase64 =
+        'this-is-not-base64-but-looks-similar-with-dashes-and-long-enough-content';
 
       const result = isContentEncrypted(invalidBase64);
 
@@ -350,8 +352,9 @@ describe('Message Encryption Service', () => {
   describe('safeDecryptMessage', () => {
     it('should decrypt encrypted-looking content', () => {
       // Use actual content that looks encrypted (base64-like, long enough)
-      const encryptedContent = 'VGhpcyBpcyBhIHRlc3QgbWVzc2FnZSB0aGF0IGxvb2tzIGVuY3J5cHRlZC5BYmNkZWZnaGlqa2xtbm9wcXJzdHU=';
-      
+      const encryptedContent =
+        'VGhpcyBpcyBhIHRlc3QgbWVzc2FnZSB0aGF0IGxvb2tzIGVuY3J5cHRlZC5BYmNkZWZnaGlqa2xtbm9wcXJzdHU=';
+
       const message = {
         role: 'user',
         content: encryptedContent,
@@ -383,7 +386,12 @@ describe('Message Encryption Service', () => {
 
     it('should handle mixed encrypted and unencrypted messages in bulk', () => {
       const messages = [
-        { role: 'user', content: 'VGhpcyBpcyBlbmNyeXB0ZWQgdGV4dCB0aGF0IGlzIGxvbmcgZW5vdWdoIHRvIGJlIGRldGVjdGVkQWJjZGVmZzEyMzQ=', timestamp: new Date() },
+        {
+          role: 'user',
+          content:
+            'VGhpcyBpcyBlbmNyeXB0ZWQgdGV4dCB0aGF0IGlzIGxvbmcgZW5vdWdoIHRvIGJlIGRldGVjdGVkQWJjZGVmZzEyMzQ=',
+          timestamp: new Date(),
+        },
         { role: 'assistant', content: 'This is plain text with spaces!', timestamp: new Date() },
       ];
 
@@ -401,8 +409,18 @@ describe('Message Encryption Service', () => {
       mockDecrypt.mockReturnValue('Decrypted content');
 
       const messages = [
-        { role: 'user', content: 'VGhpcyBpcyBlbmNyeXB0ZWQgdGV4dCB0aGF0IGlzIGxvbmcgZW5vdWdoIHRvIGJlIGRldGVjdGVkQWJjZGVmZ2hpams=', timestamp: new Date() },
-        { role: 'assistant', content: 'QW5vdGhlciBlbmNyeXB0ZWQgbWVzc2FnZSB0aGF0IGxvb2tzIGxpa2UgYmFzZTY0IGVuY29kZWQgY29udGVudEFiY2Q=', timestamp: new Date() },
+        {
+          role: 'user',
+          content:
+            'VGhpcyBpcyBlbmNyeXB0ZWQgdGV4dCB0aGF0IGlzIGxvbmcgZW5vdWdoIHRvIGJlIGRldGVjdGVkQWJjZGVmZ2hpams=',
+          timestamp: new Date(),
+        },
+        {
+          role: 'assistant',
+          content:
+            'QW5vdGhlciBlbmNyeXB0ZWQgbWVzc2FnZSB0aGF0IGxvb2tzIGxpa2UgYmFzZTY0IGVuY29kZWQgY29udGVudEFiY2Q=',
+          timestamp: new Date(),
+        },
       ];
 
       const results = safeDecryptMessages(messages);
@@ -424,7 +442,7 @@ describe('Message Encryption Service', () => {
       it('should encrypt and decrypt cognitive distortions', () => {
         const distortions = [
           { type: 'catastrophizing', severity: 'high' },
-          { type: 'black-and-white-thinking', severity: 'medium' }
+          { type: 'black-and-white-thinking', severity: 'medium' },
         ];
 
         const encrypted = encryptCognitiveDistortions(distortions);
@@ -462,7 +480,7 @@ describe('Message Encryption Service', () => {
           predominantMode: 'vulnerable-child',
           behavioralPatterns: ['avoidance'],
           copingStrategies: { adaptive: ['mindfulness'], maladaptive: ['isolation'] },
-          therapeuticRecommendations: ['cognitive-restructuring']
+          therapeuticRecommendations: ['cognitive-restructuring'],
         };
 
         const encrypted = encryptSchemaAnalysis(schemaAnalysis);
@@ -485,7 +503,7 @@ describe('Message Encryption Service', () => {
           predominantMode: null,
           behavioralPatterns: [],
           copingStrategies: { adaptive: [], maladaptive: [] },
-          therapeuticRecommendations: []
+          therapeuticRecommendations: [],
         });
       });
     });
@@ -494,7 +512,7 @@ describe('Message Encryption Service', () => {
       it('should encrypt and decrypt therapeutic frameworks', () => {
         const frameworks = [
           { name: 'CBT', applicability: 'high' },
-          { name: 'DBT', applicability: 'medium' }
+          { name: 'DBT', applicability: 'medium' },
         ];
 
         const encrypted = encryptTherapeuticFrameworks(frameworks);
@@ -518,7 +536,7 @@ describe('Message Encryption Service', () => {
       it('should encrypt and decrypt therapeutic recommendations', () => {
         const recommendations = [
           { intervention: 'mindfulness', priority: 'high' },
-          { intervention: 'journaling', priority: 'medium' }
+          { intervention: 'journaling', priority: 'medium' },
         ];
 
         const encrypted = encryptTherapeuticRecommendations(recommendations);
@@ -545,7 +563,7 @@ describe('Message Encryption Service', () => {
         cognitiveDistortions: [{ type: 'catastrophizing' }],
         schemaAnalysis: { activeModes: ['vulnerable-child'] },
         therapeuticFrameworks: [{ name: 'CBT' }],
-        recommendations: [{ intervention: 'mindfulness' }]
+        recommendations: [{ intervention: 'mindfulness' }],
       };
 
       const result = encryptEnhancedAnalysisData(analysisData);
@@ -575,7 +593,7 @@ describe('Message Encryption Service', () => {
         cognitiveDistortions: 'encrypted-[{"type":"catastrophizing"}]',
         schemaAnalysis: 'encrypted-{"activeModes":["vulnerable-child"]}',
         therapeuticFrameworks: 'encrypted-[{"name":"CBT"}]',
-        recommendations: 'encrypted-[{"intervention":"mindfulness"}]'
+        recommendations: 'encrypted-[{"intervention":"mindfulness"}]',
       };
 
       // Setup mock to parse JSON correctly
@@ -585,10 +603,10 @@ describe('Message Encryption Service', () => {
 
       const result = decryptEnhancedAnalysisData(encryptedData);
 
-      expect(result.cognitiveDistortions).toEqual([{type:"catastrophizing"}]);
-      expect(result.schemaAnalysis).toEqual({activeModes:["vulnerable-child"]});
-      expect(result.therapeuticFrameworks).toEqual([{name:"CBT"}]);
-      expect(result.recommendations).toEqual([{intervention:"mindfulness"}]);
+      expect(result.cognitiveDistortions).toEqual([{ type: 'catastrophizing' }]);
+      expect(result.schemaAnalysis).toEqual({ activeModes: ['vulnerable-child'] });
+      expect(result.therapeuticFrameworks).toEqual([{ name: 'CBT' }]);
+      expect(result.recommendations).toEqual([{ intervention: 'mindfulness' }]);
     });
 
     it('should handle null values in encrypted data', () => {
@@ -596,7 +614,7 @@ describe('Message Encryption Service', () => {
         cognitiveDistortions: null,
         schemaAnalysis: null,
         therapeuticFrameworks: null,
-        recommendations: null
+        recommendations: null,
       };
 
       const result = decryptEnhancedAnalysisData(encryptedData);
@@ -608,7 +626,7 @@ describe('Message Encryption Service', () => {
         predominantMode: null,
         behavioralPatterns: [],
         copingStrategies: { adaptive: [], maladaptive: [] },
-        therapeuticRecommendations: []
+        therapeuticRecommendations: [],
       });
       expect(result.therapeuticFrameworks).toEqual([]);
       expect(result.recommendations).toEqual([]);
@@ -629,29 +647,33 @@ describe('Message Encryption Service', () => {
     it('should handle mixed success and failure in comprehensive decryption', () => {
       mockDecrypt
         .mockReturnValueOnce('[{"type":"success"}]') // cognitiveDistortions success
-        .mockImplementationOnce(() => { throw new Error('Schema decryption failed'); }) // schemaAnalysis fails
+        .mockImplementationOnce(() => {
+          throw new Error('Schema decryption failed');
+        }) // schemaAnalysis fails
         .mockReturnValueOnce('[{"name":"CBT"}]') // therapeuticFrameworks success
-        .mockImplementationOnce(() => { throw new Error('Recommendations decryption failed'); }); // recommendations fails
+        .mockImplementationOnce(() => {
+          throw new Error('Recommendations decryption failed');
+        }); // recommendations fails
 
       const encryptedData = {
         cognitiveDistortions: 'encrypted-data1',
         schemaAnalysis: 'corrupted-data',
         therapeuticFrameworks: 'encrypted-data2',
-        recommendations: 'corrupted-data2'
+        recommendations: 'corrupted-data2',
       };
 
       const result = decryptEnhancedAnalysisData(encryptedData);
 
-      expect(result.cognitiveDistortions).toEqual([{type:"success"}]);
+      expect(result.cognitiveDistortions).toEqual([{ type: 'success' }]);
       expect(result.schemaAnalysis).toEqual({
         activeModes: [],
         triggeredSchemas: [],
         predominantMode: null,
         behavioralPatterns: [],
         copingStrategies: { adaptive: [], maladaptive: [] },
-        therapeuticRecommendations: []
+        therapeuticRecommendations: [],
       });
-      expect(result.therapeuticFrameworks).toEqual([{name:"CBT"}]);
+      expect(result.therapeuticFrameworks).toEqual([{ name: 'CBT' }]);
       expect(result.recommendations).toEqual([]);
     });
   });
@@ -660,7 +682,7 @@ describe('Message Encryption Service', () => {
     it('should handle complete message encryption/decryption workflow', () => {
       const originalMessage = {
         role: 'user',
-        content: 'I have been feeling overwhelmed with work lately.'
+        content: 'I have been feeling overwhelmed with work lately.',
       };
 
       // Encrypt
@@ -677,12 +699,12 @@ describe('Message Encryption Service', () => {
       const originalMessages = [
         { role: 'user', content: 'Message 1' },
         { role: 'assistant', content: 'Response 1' },
-        { role: 'user', content: 'Message 2' }
+        { role: 'user', content: 'Message 2' },
       ];
 
       // Bulk encrypt
       const encrypted = encryptMessages(originalMessages);
-      encrypted.forEach(msg => {
+      encrypted.forEach((msg) => {
         expect(msg.content).toContain('encrypted-');
       });
 
@@ -695,7 +717,8 @@ describe('Message Encryption Service', () => {
     });
 
     it('should handle complete session report workflow', () => {
-      const reportContent = 'Patient shows significant improvement in managing anxiety through CBT techniques.';
+      const reportContent =
+        'Patient shows significant improvement in managing anxiety through CBT techniques.';
 
       const encrypted = encryptSessionReportContent(reportContent);
       const decrypted = decryptSessionReportContent(encrypted);
@@ -708,14 +731,14 @@ describe('Message Encryption Service', () => {
         cognitiveDistortions: [{ type: 'catastrophizing', severity: 'high' }],
         schemaAnalysis: { activeModes: ['vulnerable-child'], triggeredSchemas: ['abandonment'] },
         therapeuticFrameworks: [{ name: 'CBT', applicability: 'high' }],
-        recommendations: [{ intervention: 'cognitive-restructuring', priority: 'high' }]
+        recommendations: [{ intervention: 'cognitive-restructuring', priority: 'high' }],
       };
 
       const encrypted = encryptEnhancedAnalysisData(analysisData);
-      
+
       // Setup proper JSON parsing for decryption
       mockDecrypt.mockImplementation((data: string) => data.replace('encrypted-', ''));
-      
+
       const decrypted = decryptEnhancedAnalysisData(encrypted);
 
       expect(decrypted.cognitiveDistortions).toEqual(analysisData.cognitiveDistortions);

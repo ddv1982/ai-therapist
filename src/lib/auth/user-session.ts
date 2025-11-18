@@ -10,11 +10,19 @@
  * Extract device type from user agent
  */
 function getDeviceTypeFromUserAgent(userAgent: string): string {
-  if (userAgent.includes('Mobile') || userAgent.includes('Android') || userAgent.includes('iPhone')) {
+  if (
+    userAgent.includes('Mobile') ||
+    userAgent.includes('Android') ||
+    userAgent.includes('iPhone')
+  ) {
     return 'Mobile';
   } else if (userAgent.includes('iPad') || userAgent.includes('Tablet')) {
     return 'Tablet';
-  } else if (userAgent.includes('Windows') || userAgent.includes('Mac') || userAgent.includes('Linux')) {
+  } else if (
+    userAgent.includes('Windows') ||
+    userAgent.includes('Mac') ||
+    userAgent.includes('Linux')
+  ) {
     return 'Computer';
   }
   return 'Device';
@@ -55,7 +63,7 @@ export function generateDeviceUserId(request: Request): string {
   let hash = 0;
   for (let i = 0; i < browserFingerprint.length; i++) {
     const char = browserFingerprint.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
 

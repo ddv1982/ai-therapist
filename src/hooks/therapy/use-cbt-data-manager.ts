@@ -3,9 +3,7 @@
 import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { logger } from '@/lib/utils/logger';
-import { 
-  createSelector
-} from '@reduxjs/toolkit';
+import { createSelector } from '@reduxjs/toolkit';
 import { type RootState } from '@/store';
 import {
   createDraft,
@@ -25,7 +23,11 @@ import {
   type CBTDraft,
   cbtFormSchema,
 } from '@/store/slices/cbt-slice';
-import { type CBTStepPayloadMap, type CBTFlowState, TOTAL_CBT_STEPS } from '@/features/therapy/cbt/flow';
+import {
+  type CBTStepPayloadMap,
+  type CBTFlowState,
+  TOTAL_CBT_STEPS,
+} from '@/features/therapy/cbt/flow';
 
 import type {
   SituationData,
@@ -67,15 +69,17 @@ const asEmotionData = (e: unknown): EmotionData => {
 
 const asThoughtDataArray = (arr: unknown): ThoughtData[] => {
   if (!Array.isArray(arr)) return [];
-  return arr.map((t) => {
-    if (t && typeof t === 'object') {
-      const o = t as Record<string, unknown>;
-      const text = String((o.thought ?? o.text ?? o.content ?? ''));
-      const credibility = Number(o.credibility ?? 5);
-      return { thought: text, credibility };
-    }
-    return { thought: String(t ?? ''), credibility: 5 };
-  }).filter((t) => t.thought.length > 0);
+  return arr
+    .map((t) => {
+      if (t && typeof t === 'object') {
+        const o = t as Record<string, unknown>;
+        const text = String(o.thought ?? o.text ?? o.content ?? '');
+        const credibility = Number(o.credibility ?? 5);
+        return { thought: text, credibility };
+      }
+      return { thought: String(t ?? ''), credibility: 5 };
+    })
+    .filter((t) => t.thought.length > 0);
 };
 
 const asCoreBeliefData = (input: unknown): CoreBeliefData => {
@@ -88,28 +92,32 @@ const asCoreBeliefData = (input: unknown): CoreBeliefData => {
 
 const asChallengeQuestionsArray = (arr: unknown): ChallengeQuestionData[] => {
   if (!Array.isArray(arr)) return [];
-  return arr.map((q) => {
-    if (q && typeof q === 'object') {
-      const o = q as Record<string, unknown>;
-      const question = String(o.question ?? o.q ?? o.prompt ?? '');
-      const answer = String(o.answer ?? o.a ?? o.response ?? '');
-      return { question, answer };
-    }
-    return { question: String(q ?? ''), answer: '' };
-  }).filter((q) => q.question.length > 0);
+  return arr
+    .map((q) => {
+      if (q && typeof q === 'object') {
+        const o = q as Record<string, unknown>;
+        const question = String(o.question ?? o.q ?? o.prompt ?? '');
+        const answer = String(o.answer ?? o.a ?? o.response ?? '');
+        return { question, answer };
+      }
+      return { question: String(q ?? ''), answer: '' };
+    })
+    .filter((q) => q.question.length > 0);
 };
 
 const asRationalThoughtsArray = (arr: unknown): RationalThoughtData[] => {
   if (!Array.isArray(arr)) return [];
-  return arr.map((t) => {
-    if (t && typeof t === 'object') {
-      const o = t as Record<string, unknown>;
-      const thought = String(o.thought ?? o.text ?? o.content ?? '');
-      const confidence = Number(o.confidence ?? 5);
-      return { thought, confidence };
-    }
-    return { thought: String(t ?? ''), confidence: 5 };
-  }).filter((t) => t.thought.length > 0);
+  return arr
+    .map((t) => {
+      if (t && typeof t === 'object') {
+        const o = t as Record<string, unknown>;
+        const thought = String(o.thought ?? o.text ?? o.content ?? '');
+        const confidence = Number(o.confidence ?? 5);
+        return { thought, confidence };
+      }
+      return { thought: String(t ?? ''), confidence: 5 };
+    })
+    .filter((t) => t.thought.length > 0);
 };
 
 const asActionPlanData = (input: unknown): ActionPlanData => {
@@ -155,12 +163,13 @@ const EMPTY_SESSION: LegacySessionData = {
 const mapFlowToLegacySession = (flow?: CBTFlowState | null): LegacySessionData => {
   if (!flow) return EMPTY_SESSION;
   const context = flow.context;
-  const legacySchemaModes = context.schemaModes?.selectedModes?.map((mode) => ({
-    mode: mode.id,
-    description: mode.description,
-    intensity: typeof mode.intensity === 'number' ? mode.intensity : 0,
-    isActive: Boolean(mode.selected),
-  })) ?? [];
+  const legacySchemaModes =
+    context.schemaModes?.selectedModes?.map((mode) => ({
+      mode: mode.id,
+      description: mode.description,
+      intensity: typeof mode.intensity === 'number' ? mode.intensity : 0,
+      isActive: Boolean(mode.selected),
+    })) ?? [];
   return {
     sessionId: flow.sessionId ?? null,
     situation: context.situation ?? null,
@@ -205,7 +214,7 @@ interface UseCBTDataManagerReturn {
   sessionData: ReturnType<typeof selectCBTSessionData>;
   validationState: ReturnType<typeof selectCBTValidationState>;
   savedDrafts: CBTDraft[];
-  
+
   draftActions: {
     create: (id?: string) => void;
     update: (data: Partial<CBTFormData>) => void;
@@ -215,7 +224,7 @@ interface UseCBTDataManagerReturn {
     reset: () => void;
     complete: (data: CBTFormData) => void;
   };
-  
+
   sessionActions: {
     start: (sessionId?: string) => void;
     clear: () => void;
@@ -223,40 +232,40 @@ interface UseCBTDataManagerReturn {
     updateEmotions: (data: EmotionData) => void;
     clearEmotions: () => void;
   };
-  
+
   thoughtActions: {
     updateThoughts: (data: ThoughtData[]) => void;
     addThought: (data: ThoughtData) => void;
     removeThought: (index: number) => void;
   };
-  
+
   beliefActions: {
     updateCoreBeliefs: (data: CoreBeliefData[]) => void;
     addCoreBelief: (data: CoreBeliefData) => void;
     removeCoreBelief: (index: number) => void;
   };
-  
+
   challengeActions: {
     updateChallengeQuestions: (data: ChallengeQuestionData[]) => void;
     addChallengeQuestion: (data: ChallengeQuestionData) => void;
     removeChallengeQuestion: (index: number) => void;
   };
-  
+
   rationalActions: {
     updateRationalThoughts: (data: RationalThoughtData[]) => void;
     addRationalThought: (data: RationalThoughtData) => void;
     removeRationalThought: (index: number) => void;
   };
-  
+
   schemaActions: {
     updateSchemaModes: (data: SchemaModeData[]) => void;
     toggleSchemaMode: (index: number, isActive: boolean) => void;
   };
-  
+
   actionActions: {
     updateActionPlan: (data: ActionPlanData) => void;
   };
-  
+
   navigation: {
     currentStep: number;
     setCurrentStep: (step: number) => void;
@@ -265,14 +274,14 @@ interface UseCBTDataManagerReturn {
     goNext: () => boolean;
     goPrevious: () => boolean;
   };
-  
+
   validation: {
     validateForm: () => CBTFormValidationError[];
     isFormValid: boolean;
     errors: Record<string, string>;
     clearErrors: () => void;
   };
-  
+
   status: {
     isSubmitting: boolean;
     isDraftSaved: boolean;
@@ -283,7 +292,7 @@ interface UseCBTDataManagerReturn {
       percentage: number;
     };
   };
-  
+
   chatIntegration: {
     sendSessionSummary: () => Promise<boolean>;
     sendStepCard: (stepId: CBTStepId, options?: SendStepOptions) => Promise<boolean>;
@@ -291,7 +300,7 @@ interface UseCBTDataManagerReturn {
     sendEmotionComparison: (initial: EmotionData, final: EmotionData) => Promise<boolean>;
     isIntegrationAvailable: boolean;
   };
-  
+
   utilities: {
     exportData: () => string;
     generateSummary: () => string;
@@ -308,7 +317,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     enableValidation = true,
     enableChatIntegration = true,
   } = options;
-  
+
   const dispatch = useDispatch();
   const flowState = useSelector(selectCBTFlowState);
   const hasStartedSessionRef = useRef(false);
@@ -327,53 +336,51 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       ensureActiveSession();
       dispatch(applyCBTEvent({ type: 'UPDATE_STEP', stepId, payload }));
     },
-    [dispatch, ensureActiveSession],
+    [dispatch, ensureActiveSession]
   );
   const flowClear = useCallback(
     (stepId: CBTStepId) => {
       ensureActiveSession();
       dispatch(applyCBTEvent({ type: 'CLEAR_STEP', stepId }));
     },
-    [dispatch, ensureActiveSession],
+    [dispatch, ensureActiveSession]
   );
-
 
   const currentDraft = useSelector(selectCBTCurrentDraft);
   const sessionData = useSelector(selectCBTSessionData);
   const validationState = useSelector(selectCBTValidationState);
   const savedDrafts = useSelector(selectCBTSavedDrafts);
   const lastAutoSave = useSelector((state: RootState) => state.cbt?.lastAutoSave);
-  
 
   const autoSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const uiSavingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isSavingUI, setIsSavingUI] = useState<boolean>(false);
-  
-  const debouncedAutoSave = useCallback((data: Partial<CBTFormInput>) => {
-    if (autoSaveTimeout.current) {
-      clearTimeout(autoSaveTimeout.current);
-    }
-    
-    const effectiveDelay = typeof autoSaveDelay === 'number' && autoSaveDelay > 0
-      ? autoSaveDelay
-      : 600;
 
-    autoSaveTimeout.current = setTimeout(() => {
-      if (data?.situation) {
-        flowUpdate('situation', {
-          situation: data.situation,
-          date: data.date || new Date().toISOString().split('T')[0],
-        });
+  const debouncedAutoSave = useCallback(
+    (data: Partial<CBTFormInput>) => {
+      if (autoSaveTimeout.current) {
+        clearTimeout(autoSaveTimeout.current);
       }
 
+      const effectiveDelay =
+        typeof autoSaveDelay === 'number' && autoSaveDelay > 0 ? autoSaveDelay : 600;
 
-      if (data?.initialEmotions) {
-        const emotions = asEmotionData(data.initialEmotions);
-        flowUpdate('emotions', emotions);
-      }
-    }, effectiveDelay);
+      autoSaveTimeout.current = setTimeout(() => {
+        if (data?.situation) {
+          flowUpdate('situation', {
+            situation: data.situation,
+            date: data.date || new Date().toISOString().split('T')[0],
+          });
+        }
 
-  }, [flowUpdate, autoSaveDelay]);
+        if (data?.initialEmotions) {
+          const emotions = asEmotionData(data.initialEmotions);
+          flowUpdate('emotions', emotions);
+        }
+      }, effectiveDelay);
+    },
+    [flowUpdate, autoSaveDelay]
+  );
 
   useEffect(() => {
     return () => {
@@ -386,28 +393,26 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     };
   }, []);
 
-  
   const { currentSessionId } = useChatUI();
   const chatBridge = useCBTChatBridge();
-  
+
   useEffect(() => {
     if (!currentDraft || autoSaveDelay <= 0) return;
-    
+
     if (autoSaveTimeout.current) {
       clearTimeout(autoSaveTimeout.current);
     }
-    
+
     autoSaveTimeout.current = setTimeout(() => {
       dispatch(saveDraft());
     }, autoSaveDelay);
-    
+
     return () => {
       if (autoSaveTimeout.current) {
         clearTimeout(autoSaveTimeout.current);
         autoSaveTimeout.current = null;
       }
     };
-
   }, [currentDraft, autoSaveDelay, dispatch]);
 
   // UI-saving indicator: whenever a draft/save occurs, briefly show "saving" then "saved"
@@ -426,12 +431,11 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       }
     };
   }, [lastAutoSave]);
-  
+
   useEffect(() => {
     if (sessionId && sessionId !== sessionData?.sessionId) {
       dispatch(startCBTSession({ sessionId }));
     }
-
   }, [sessionId, sessionData?.sessionId, dispatch]);
 
   useEffect(() => {
@@ -447,15 +451,14 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         return;
       }
 
-
       const draft = JSON.parse(rawDraft) as CBTFormInput;
 
-      const isEmpty = !sessionData?.situation && !sessionData?.emotions && sessionData?.thoughts.length === 0;
+      const isEmpty =
+        !sessionData?.situation && !sessionData?.emotions && sessionData?.thoughts.length === 0;
       if (!isEmpty) {
         localStorage.setItem(migrationKey, 'true');
         return;
       }
-
 
       const draftId = `cbt-draft-${generateUUID()}`;
       dispatch(createDraft({ id: draftId }));
@@ -467,43 +470,40 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       if (draft.situation) {
         const situationData = { situation: draft.situation, date: draft.date };
         flowUpdate('situation', situationData);
-
       }
 
       if (draft.initialEmotions) {
         flowUpdate('emotions', asEmotionData(draft.initialEmotions));
-
       }
 
       if (Array.isArray(draft.automaticThoughts) && draft.automaticThoughts.length > 0) {
         flowUpdate('thoughts', asThoughtDataArray(draft.automaticThoughts));
-
       }
 
       if (draft.coreBeliefText && draft.coreBeliefText.trim().length > 0) {
-        flowUpdate('core-belief', asCoreBeliefData({
-          coreBeliefText: draft.coreBeliefText,
-          coreBeliefCredibility: draft.coreBeliefCredibility,
-        }));
-
+        flowUpdate(
+          'core-belief',
+          asCoreBeliefData({
+            coreBeliefText: draft.coreBeliefText,
+            coreBeliefCredibility: draft.coreBeliefCredibility,
+          })
+        );
       }
 
       if (Array.isArray(draft.challengeQuestions)) {
         flowUpdate('challenge-questions', {
           challengeQuestions: asChallengeQuestionsArray(draft.challengeQuestions),
         } as ChallengeQuestionsData);
-
       }
 
       if (Array.isArray(draft.rationalThoughts)) {
         flowUpdate('rational-thoughts', {
           rationalThoughts: asRationalThoughtsArray(draft.rationalThoughts),
         } as RationalThoughtsData);
-
       }
 
       if (Array.isArray(draft.schemaModes)) {
-    const mapped: SchemaMode[] = draft.schemaModes.map((mode, index) => ({
+        const mapped: SchemaMode[] = draft.schemaModes.map((mode, index) => ({
           id: mode.id ?? mode.name ?? `legacy-schema-mode-${index}`,
           name: mode.name ?? mode.id ?? '',
           description: mode.description ?? '',
@@ -513,7 +513,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         flowUpdate('schema-modes', {
           selectedModes: mapped,
         });
-
       }
 
       if (draft.newBehaviors) {
@@ -533,198 +532,218 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       logger.info('Successfully migrated CBT draft from localStorage to Redux', {
         component: 'useCBTDataManager',
         operation: 'migration',
-        draftId
+        draftId,
       });
     } catch (error) {
       logger.error('Failed to migrate CBT draft from localStorage', {
         component: 'useCBTDataManager',
         operation: 'migration',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       localStorage.setItem(migrationKey, 'true');
     }
   }, [dispatch, sessionData, flowUpdate]);
 
-  const draftActions = useMemo(() => ({
-    create: (id?: string) => {
-      const draftId = id || `cbt-draft-${generateUUID()}`;
-      dispatch(createDraft({ id: draftId }));
-    },
-    
-    update: (data: Partial<CBTFormData>) => {
-      dispatch(updateDraft(data));
-    },
-    
-    save: () => {
-      dispatch(saveDraft());
-    },
-    
-    load: (id: string) => {
-      dispatch(loadDraft(id));
-    },
-    
-    delete: (id: string) => {
-      dispatch(deleteDraft(id));
-    },
-    
-    reset: () => {
-      dispatch(resetCurrentDraft());
-    },
-    
-    complete: (data: CBTFormData) => {
-      dispatch(completeCBTEntry(data));
-    },
+  const draftActions = useMemo(
+    () => ({
+      create: (id?: string) => {
+        const draftId = id || `cbt-draft-${generateUUID()}`;
+        dispatch(createDraft({ id: draftId }));
+      },
 
-  }), [dispatch]);
-  
-  const sessionActions = useMemo(() => ({
-    start: (sessionId?: string) => {
-      const id = sessionId || currentSessionId || `session-${generateUUID()}`;
-      dispatch(startCBTSession({ sessionId: id }));
-    },
-    
-    clear: () => {
-      dispatch(clearCBTSession());
-    },
-    
-    updateSituation: (data: SituationData) => {
-      flowUpdate('situation', data);
-    },
-    
-    updateEmotions: (data: EmotionData) => {
-      flowUpdate('emotions', data);
-    },
-    
-    clearEmotions: () => {
-      flowClear('emotions');
-    },
+      update: (data: Partial<CBTFormData>) => {
+        dispatch(updateDraft(data));
+      },
 
-  }), [dispatch, currentSessionId, flowUpdate, flowClear]);
-  
-  const thoughtActions = useMemo(() => ({
-    updateThoughts: (data: ThoughtData[]) => {
-      flowUpdate('thoughts', data);
-    },
+      save: () => {
+        dispatch(saveDraft());
+      },
 
-    addThought: (data: ThoughtData) => {
-      const next = [...(sessionData.thoughts ?? []), data];
-      flowUpdate('thoughts', next);
-    },
+      load: (id: string) => {
+        dispatch(loadDraft(id));
+      },
 
-    removeThought: (index: number) => {
-      const current = sessionData.thoughts ?? [];
-      const next = current.filter((_, i) => i !== index);
-      if (next.length === 0) {
-        flowClear('thoughts');
-      } else {
+      delete: (id: string) => {
+        dispatch(deleteDraft(id));
+      },
+
+      reset: () => {
+        dispatch(resetCurrentDraft());
+      },
+
+      complete: (data: CBTFormData) => {
+        dispatch(completeCBTEntry(data));
+      },
+    }),
+    [dispatch]
+  );
+
+  const sessionActions = useMemo(
+    () => ({
+      start: (sessionId?: string) => {
+        const id = sessionId || currentSessionId || `session-${generateUUID()}`;
+        dispatch(startCBTSession({ sessionId: id }));
+      },
+
+      clear: () => {
+        dispatch(clearCBTSession());
+      },
+
+      updateSituation: (data: SituationData) => {
+        flowUpdate('situation', data);
+      },
+
+      updateEmotions: (data: EmotionData) => {
+        flowUpdate('emotions', data);
+      },
+
+      clearEmotions: () => {
+        flowClear('emotions');
+      },
+    }),
+    [dispatch, currentSessionId, flowUpdate, flowClear]
+  );
+
+  const thoughtActions = useMemo(
+    () => ({
+      updateThoughts: (data: ThoughtData[]) => {
+        flowUpdate('thoughts', data);
+      },
+
+      addThought: (data: ThoughtData) => {
+        const next = [...(sessionData.thoughts ?? []), data];
         flowUpdate('thoughts', next);
-      }
-    },
+      },
 
-  }), [flowUpdate, flowClear, sessionData.thoughts]);
-  
-  const beliefActions = useMemo(() => ({
-    updateCoreBeliefs: (data: CoreBeliefData[]) => {
-      if (!data?.length) {
-        flowClear('core-belief');
-        return;
-      }
-      flowUpdate('core-belief', data[0]);
-    },
+      removeThought: (index: number) => {
+        const current = sessionData.thoughts ?? [];
+        const next = current.filter((_, i) => i !== index);
+        if (next.length === 0) {
+          flowClear('thoughts');
+        } else {
+          flowUpdate('thoughts', next);
+        }
+      },
+    }),
+    [flowUpdate, flowClear, sessionData.thoughts]
+  );
 
-    addCoreBelief: (data: CoreBeliefData) => {
-      flowUpdate('core-belief', data);
-    },
+  const beliefActions = useMemo(
+    () => ({
+      updateCoreBeliefs: (data: CoreBeliefData[]) => {
+        if (!data?.length) {
+          flowClear('core-belief');
+          return;
+        }
+        flowUpdate('core-belief', data[0]);
+      },
 
-    removeCoreBelief: (index: number) => {
-      if (index === 0) {
-        flowClear('core-belief');
-      }
-    },
+      addCoreBelief: (data: CoreBeliefData) => {
+        flowUpdate('core-belief', data);
+      },
 
-  }), [flowUpdate, flowClear]);
-  
-  const challengeActions = useMemo(() => ({
-    updateChallengeQuestions: (data: ChallengeQuestionData[]) => {
-      flowUpdate('challenge-questions', { challengeQuestions: data } as ChallengeQuestionsData);
-    },
+      removeCoreBelief: (index: number) => {
+        if (index === 0) {
+          flowClear('core-belief');
+        }
+      },
+    }),
+    [flowUpdate, flowClear]
+  );
 
-    addChallengeQuestion: (data: ChallengeQuestionData) => {
-      const current = sessionData.challengeQuestions ?? [];
-      flowUpdate('challenge-questions', { challengeQuestions: [...current, data] } as ChallengeQuestionsData);
-    },
+  const challengeActions = useMemo(
+    () => ({
+      updateChallengeQuestions: (data: ChallengeQuestionData[]) => {
+        flowUpdate('challenge-questions', { challengeQuestions: data } as ChallengeQuestionsData);
+      },
 
-    removeChallengeQuestion: (index: number) => {
-      const current = sessionData.challengeQuestions ?? [];
-      const next = current.filter((_, i) => i !== index);
-      if (next.length === 0) {
-        flowClear('challenge-questions');
-      } else {
-        flowUpdate('challenge-questions', { challengeQuestions: next } as ChallengeQuestionsData);
-      }
-    },
+      addChallengeQuestion: (data: ChallengeQuestionData) => {
+        const current = sessionData.challengeQuestions ?? [];
+        flowUpdate('challenge-questions', {
+          challengeQuestions: [...current, data],
+        } as ChallengeQuestionsData);
+      },
 
-  }), [flowUpdate, flowClear, sessionData.challengeQuestions]);
-  
-  const rationalActions = useMemo(() => ({
-    updateRationalThoughts: (data: RationalThoughtData[]) => {
-      flowUpdate('rational-thoughts', { rationalThoughts: data } as RationalThoughtsData);
-    },
+      removeChallengeQuestion: (index: number) => {
+        const current = sessionData.challengeQuestions ?? [];
+        const next = current.filter((_, i) => i !== index);
+        if (next.length === 0) {
+          flowClear('challenge-questions');
+        } else {
+          flowUpdate('challenge-questions', { challengeQuestions: next } as ChallengeQuestionsData);
+        }
+      },
+    }),
+    [flowUpdate, flowClear, sessionData.challengeQuestions]
+  );
 
-    addRationalThought: (data: RationalThoughtData) => {
-      const current = sessionData.rationalThoughts ?? [];
-      flowUpdate('rational-thoughts', { rationalThoughts: [...current, data] } as RationalThoughtsData);
-    },
+  const rationalActions = useMemo(
+    () => ({
+      updateRationalThoughts: (data: RationalThoughtData[]) => {
+        flowUpdate('rational-thoughts', { rationalThoughts: data } as RationalThoughtsData);
+      },
 
-    removeRationalThought: (index: number) => {
-      const current = sessionData.rationalThoughts ?? [];
-      const next = current.filter((_, i) => i !== index);
-      if (next.length === 0) {
-        flowClear('rational-thoughts');
-      } else {
-        flowUpdate('rational-thoughts', { rationalThoughts: next } as RationalThoughtsData);
-      }
-    },
+      addRationalThought: (data: RationalThoughtData) => {
+        const current = sessionData.rationalThoughts ?? [];
+        flowUpdate('rational-thoughts', {
+          rationalThoughts: [...current, data],
+        } as RationalThoughtsData);
+      },
 
-  }), [flowUpdate, flowClear, sessionData.rationalThoughts]);
-  
-  const schemaActions = useMemo(() => ({
-    updateSchemaModes: (data: SchemaModeData[]) => {
-      const mapped: SchemaMode[] = data.map((mode, index) => ({
-        id: mode.mode ?? `schema-mode-${index}`,
-        name: mode.mode ?? `Schema Mode ${index + 1}`,
-        description: mode.description ?? '',
-        selected: Boolean(mode.isActive),
-        intensity: typeof mode.intensity === 'number' ? mode.intensity : 0,
-      }));
-      flowUpdate('schema-modes', { selectedModes: mapped });
-    },
+      removeRationalThought: (index: number) => {
+        const current = sessionData.rationalThoughts ?? [];
+        const next = current.filter((_, i) => i !== index);
+        if (next.length === 0) {
+          flowClear('rational-thoughts');
+        } else {
+          flowUpdate('rational-thoughts', { rationalThoughts: next } as RationalThoughtsData);
+        }
+      },
+    }),
+    [flowUpdate, flowClear, sessionData.rationalThoughts]
+  );
 
-    toggleSchemaMode: (index: number, isActive: boolean) => {
-      const current = sessionData.schemaModes ?? [];
-      const mapped: SchemaMode[] = current.map((mode, idx) => ({
-        id: mode.mode ?? `schema-mode-${idx}`,
-        name: mode.mode ?? '',
-        description: mode.description ?? '',
-        selected: idx === index ? isActive : Boolean(mode.isActive),
-        intensity: typeof mode.intensity === 'number' ? mode.intensity : 0,
-      }));
-      flowUpdate('schema-modes', { selectedModes: mapped });
-    },
+  const schemaActions = useMemo(
+    () => ({
+      updateSchemaModes: (data: SchemaModeData[]) => {
+        const mapped: SchemaMode[] = data.map((mode, index) => ({
+          id: mode.mode ?? `schema-mode-${index}`,
+          name: mode.mode ?? `Schema Mode ${index + 1}`,
+          description: mode.description ?? '',
+          selected: Boolean(mode.isActive),
+          intensity: typeof mode.intensity === 'number' ? mode.intensity : 0,
+        }));
+        flowUpdate('schema-modes', { selectedModes: mapped });
+      },
 
-  }), [flowUpdate, sessionData.schemaModes]);
-  
-  const actionActions = useMemo(() => ({
-    updateActionPlan: (data: ActionPlanData) => {
-      flowUpdate('actions', data);
-    },
+      toggleSchemaMode: (index: number, isActive: boolean) => {
+        const current = sessionData.schemaModes ?? [];
+        const mapped: SchemaMode[] = current.map((mode, idx) => ({
+          id: mode.mode ?? `schema-mode-${idx}`,
+          name: mode.mode ?? '',
+          description: mode.description ?? '',
+          selected: idx === index ? isActive : Boolean(mode.isActive),
+          intensity: typeof mode.intensity === 'number' ? mode.intensity : 0,
+        }));
+        flowUpdate('schema-modes', { selectedModes: mapped });
+      },
+    }),
+    [flowUpdate, sessionData.schemaModes]
+  );
 
-  }), [flowUpdate]);
-  
+  const actionActions = useMemo(
+    () => ({
+      updateActionPlan: (data: ActionPlanData) => {
+        flowUpdate('actions', data);
+      },
+    }),
+    [flowUpdate]
+  );
+
   const navigation = useMemo(() => {
     const currentStep = validationState?.currentStep || 1;
     const maxSteps = TOTAL_CBT_STEPS;
-    
+
     return {
       currentStep,
       setCurrentStep: (step: number) => {
@@ -748,11 +767,11 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       },
     };
   }, [validationState?.currentStep, dispatch]);
-  
+
   const validation = useMemo(() => {
     const validateForm = (): CBTFormValidationError[] => {
       if (!enableValidation || !currentDraft) return [];
-      
+
       try {
         cbtFormSchema.parse(currentDraft.data);
         return [];
@@ -763,7 +782,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         return [{ field: 'form', message: 'Validation failed' }];
       }
     };
-    
+
     return {
       validateForm,
       isFormValid: Object.keys(validationState?.validationErrors || {}).length === 0,
@@ -771,21 +790,23 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       clearErrors: () => dispatch(clearValidationErrors()),
     };
   }, [currentDraft, validationState?.validationErrors, enableValidation, dispatch]);
-  
+
   const status = useMemo(() => {
-    const completedSteps = sessionData ? [
-      sessionData?.situation,
-      sessionData?.emotions, 
-      sessionData?.thoughts.length > 0,
-      sessionData?.coreBeliefs.length > 0,
-      sessionData?.challengeQuestions.length > 0,
-      sessionData?.rationalThoughts.length > 0,
-      sessionData?.schemaModes.length > 0,
-      sessionData?.actionPlan,
-    ].filter(Boolean).length : 0;
-    
+    const completedSteps = sessionData
+      ? [
+          sessionData?.situation,
+          sessionData?.emotions,
+          sessionData?.thoughts.length > 0,
+          sessionData?.coreBeliefs.length > 0,
+          sessionData?.challengeQuestions.length > 0,
+          sessionData?.rationalThoughts.length > 0,
+          sessionData?.schemaModes.length > 0,
+          sessionData?.actionPlan,
+        ].filter(Boolean).length
+      : 0;
+
     const totalSteps = TOTAL_CBT_STEPS;
-    
+
     return {
       isSubmitting: validationState?.isSubmitting || false,
       // Consider draft saved when no UI-saving is pending.
@@ -798,51 +819,57 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       },
     };
   }, [validationState?.isSubmitting, lastAutoSave, sessionData, isSavingUI]);
-  
-  const chatIntegration = useMemo(() => ({
-    sendSessionSummary: async (): Promise<boolean> => {
-      if (!enableChatIntegration || !currentSessionId || !flowState) return false;
-      return chatBridge.sendSessionSummary(flowState, currentSessionId);
-    },
-    sendStepCard: async (stepId: CBTStepId, options?: SendStepOptions): Promise<boolean> => {
-      if (!enableChatIntegration || !currentSessionId || !flowState) return false;
-      return chatBridge.sendStepCard(stepId, flowState.context, currentSessionId, options);
-    },
-    sendAllCompletedSteps: async (): Promise<boolean> => {
-      if (!enableChatIntegration || !currentSessionId || !flowState) return false;
-      return chatBridge.sendAllCompletedSteps(flowState.context, currentSessionId);
-    },
-    sendEmotionComparison: async (initial: EmotionData, final: EmotionData): Promise<boolean> => {
-      if (!enableChatIntegration || !currentSessionId) return false;
-      return chatBridge.sendEmotionComparison(initial, final, currentSessionId);
-    },
-    isIntegrationAvailable: enableChatIntegration && !!currentSessionId,
-  }), [enableChatIntegration, currentSessionId, chatBridge, flowState]);
-  
-  const utilities = useMemo(() => ({
-    exportData: (): string => {
-      if (!currentDraft) return '';
-      return JSON.stringify(currentDraft.data, null, 2);
-    },
-    
-    generateSummary: (): string => {
-      if (!flowState) return '';
-      return buildMarkdownSummary(flowState);
-    },
 
-    getFormattedOutput: (): string => {
-      if (!flowState) return '';
-      return buildSessionSummaryCard(flowState);
-    },
-  }), [currentDraft, flowState]);
-  
+  const chatIntegration = useMemo(
+    () => ({
+      sendSessionSummary: async (): Promise<boolean> => {
+        if (!enableChatIntegration || !currentSessionId || !flowState) return false;
+        return chatBridge.sendSessionSummary(flowState, currentSessionId);
+      },
+      sendStepCard: async (stepId: CBTStepId, options?: SendStepOptions): Promise<boolean> => {
+        if (!enableChatIntegration || !currentSessionId || !flowState) return false;
+        return chatBridge.sendStepCard(stepId, flowState.context, currentSessionId, options);
+      },
+      sendAllCompletedSteps: async (): Promise<boolean> => {
+        if (!enableChatIntegration || !currentSessionId || !flowState) return false;
+        return chatBridge.sendAllCompletedSteps(flowState.context, currentSessionId);
+      },
+      sendEmotionComparison: async (initial: EmotionData, final: EmotionData): Promise<boolean> => {
+        if (!enableChatIntegration || !currentSessionId) return false;
+        return chatBridge.sendEmotionComparison(initial, final, currentSessionId);
+      },
+      isIntegrationAvailable: enableChatIntegration && !!currentSessionId,
+    }),
+    [enableChatIntegration, currentSessionId, chatBridge, flowState]
+  );
+
+  const utilities = useMemo(
+    () => ({
+      exportData: (): string => {
+        if (!currentDraft) return '';
+        return JSON.stringify(currentDraft.data, null, 2);
+      },
+
+      generateSummary: (): string => {
+        if (!flowState) return '';
+        return buildMarkdownSummary(flowState);
+      },
+
+      getFormattedOutput: (): string => {
+        if (!flowState) return '';
+        return buildSessionSummaryCard(flowState);
+      },
+    }),
+    [currentDraft, flowState]
+  );
+
   return {
     // Current State
     currentDraft: currentDraft || null,
     sessionData,
     validationState,
     savedDrafts: savedDrafts || [],
-    
+
     // Actions
     draftActions,
     sessionActions,
@@ -852,17 +879,17 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     rationalActions,
     schemaActions,
     actionActions,
-    
+
     // Navigation & Validation
     navigation,
     validation,
-    
+
     // Status & Progress
     status,
-    
+
     // Chat Integration
     chatIntegration,
-    
+
     // Export Utilities
     utilities,
 
@@ -884,23 +911,26 @@ export function useUnifiedCBTActions() {
     <K extends CBTStepId>(stepId: K, payload: CBTStepPayloadMap[K]) => {
       dispatch(applyCBTEvent({ type: 'UPDATE_STEP', stepId, payload }));
     },
-    [dispatch],
+    [dispatch]
   );
-  
-  return useMemo(() => ({
-    createDraft: (id: string) => dispatch(createDraft({ id })),
-    updateDraft: (data: Partial<CBTFormData>) => dispatch(updateDraft(data)),
-    saveDraft: () => dispatch(saveDraft()),
-    deleteDraft: (id: string) => dispatch(deleteDraft(id)),
-    startSession: (sessionId: string) => dispatch(startCBTSession({ sessionId })),
-    clearSession: () => dispatch(clearCBTSession()),
-    updateSituation: (data: SituationData) => updateStep('situation', data),
-    updateEmotions: (data: EmotionData) => updateStep('emotions', data),
-    addThought: (data: ThoughtData) => updateStep('thoughts', [data]),
-    addCoreBelief: (data: CoreBeliefData) => updateStep('core-belief', data),
-    setCurrentStep: (step: number) => dispatch(setCurrentStep(step)),
-    setSubmitting: (isSubmitting: boolean) => dispatch(setSubmitting(isSubmitting)),
-  }), [dispatch, updateStep]);
+
+  return useMemo(
+    () => ({
+      createDraft: (id: string) => dispatch(createDraft({ id })),
+      updateDraft: (data: Partial<CBTFormData>) => dispatch(updateDraft(data)),
+      saveDraft: () => dispatch(saveDraft()),
+      deleteDraft: (id: string) => dispatch(deleteDraft(id)),
+      startSession: (sessionId: string) => dispatch(startCBTSession({ sessionId })),
+      clearSession: () => dispatch(clearCBTSession()),
+      updateSituation: (data: SituationData) => updateStep('situation', data),
+      updateEmotions: (data: EmotionData) => updateStep('emotions', data),
+      addThought: (data: ThoughtData) => updateStep('thoughts', [data]),
+      addCoreBelief: (data: CoreBeliefData) => updateStep('core-belief', data),
+      setCurrentStep: (step: number) => dispatch(setCurrentStep(step)),
+      setSubmitting: (isSubmitting: boolean) => dispatch(setSubmitting(isSubmitting)),
+    }),
+    [dispatch, updateStep]
+  );
 }
 
 export const useUnifiedCBT = useCBTDataManager;

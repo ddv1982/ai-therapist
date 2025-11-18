@@ -1,9 +1,9 @@
 const validateApiAuthMock = jest.fn(async (_req?: unknown) => ({ isValid: true }));
 jest.mock('@/lib/api/api-auth', () => ({
-  validateApiAuth: (req: unknown) => validateApiAuthMock(req)
+  validateApiAuth: (req: unknown) => validateApiAuthMock(req),
 }));
 jest.mock('@/lib/auth/user-session', () => ({
-  getSingleUserInfo: jest.fn(() => ({ userId: 'u1' }))
+  getSingleUserInfo: jest.fn(() => ({ userId: 'u1' })),
 }));
 
 describe('authenticateRequest', () => {
@@ -12,7 +12,11 @@ describe('authenticateRequest', () => {
     const { getSingleUserInfo } = require('@/lib/auth/user-session');
     const authenticateRequest = async (request: unknown) => {
       const authResult = await validateApiAuth(request);
-      if (!authResult.isValid) return { isAuthenticated: false as const, error: authResult.error || 'Authentication required' };
+      if (!authResult.isValid)
+        return {
+          isAuthenticated: false as const,
+          error: authResult.error || 'Authentication required',
+        };
       const userInfo = getSingleUserInfo(request);
       return { isAuthenticated: true as const, userInfo };
     };
@@ -27,7 +31,11 @@ describe('authenticateRequest', () => {
     const { getSingleUserInfo } = require('@/lib/auth/user-session');
     const authenticateRequest = async (request: unknown) => {
       const authResult = await validateApiAuth(request);
-      if (!authResult.isValid) return { isAuthenticated: false as const, error: authResult.error || 'Authentication required' };
+      if (!authResult.isValid)
+        return {
+          isAuthenticated: false as const,
+          error: authResult.error || 'Authentication required',
+        };
       const userInfo = getSingleUserInfo(request);
       return { isAuthenticated: true as const, userInfo };
     };
@@ -37,5 +45,3 @@ describe('authenticateRequest', () => {
     expect(res).toHaveProperty('userInfo');
   });
 });
-
-

@@ -1,4 +1,10 @@
-import reducer, { setStreaming, setCurrentInput, clearMessages, setError, updateSettings } from '@/store/slices/chat-slice';
+import reducer, {
+  setStreaming,
+  setCurrentInput,
+  clearMessages,
+  setError,
+  updateSettings,
+} from '@/store/slices/chat-slice';
 
 describe('chatSlice reducer', () => {
   it('should return the initial state', () => {
@@ -50,5 +56,3 @@ describe('chatSlice reducer', () => {
     expect(next.settings).toEqual({ model: 'test-model', webSearchEnabled: true });
   });
 });
-
-

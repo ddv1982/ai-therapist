@@ -23,9 +23,9 @@ describe('error-handlers', () => {
   describe('handleDatabaseError', () => {
     it('returns validation error for UNIQUE constraint violation', async () => {
       const error = new Error('UNIQUE constraint failed: users.email');
-      
+
       const result = errorHandlers.handleDatabaseError(error, 'create user', mockContext);
-      
+
       expect(result.status).toBe(400);
       const body = await result.json();
       expect(body.success).toBe(false);
@@ -36,9 +36,9 @@ describe('error-handlers', () => {
 
     it('returns validation error for FOREIGN KEY constraint violation', async () => {
       const error = new Error('FOREIGN KEY constraint failed on sessions.userId');
-      
+
       const result = errorHandlers.handleDatabaseError(error, 'create session', mockContext);
-      
+
       expect(result.status).toBe(400);
       const body = await result.json();
       expect(body.success).toBe(false);
@@ -49,9 +49,9 @@ describe('error-handlers', () => {
 
     it('returns server error for generic database error', async () => {
       const error = new Error('Connection timeout');
-      
+
       const result = errorHandlers.handleDatabaseError(error, 'fetch data', mockContext);
-      
+
       expect(result.status).toBe(500);
       const body = await result.json();
       expect(body.success).toBe(false);
@@ -62,9 +62,9 @@ describe('error-handlers', () => {
     it('logs error with correct context', async () => {
       const error = new Error('Test error');
       const operation = 'test operation';
-      
+
       errorHandlers.handleDatabaseError(error, operation, mockContext);
-      
+
       expect(logger.databaseError).toHaveBeenCalledTimes(1);
       expect(logger.databaseError).toHaveBeenCalledWith(operation, error, mockContext);
     });

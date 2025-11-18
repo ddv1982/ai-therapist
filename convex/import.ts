@@ -98,7 +98,13 @@ export const importAll = action({
   args: { data: v.any() },
   handler: async (ctx, { data }) => {
     const payload = data as ExportShape;
-    const idMap = { users: new Map<string, string>(), sessions: new Map<string, string>(), messages: new Map<string, string>(), devices: new Map<string, string>(), sessionsByUuid: new Map<string, string>() };
+    const idMap = {
+      users: new Map<string, string>(),
+      sessions: new Map<string, string>(),
+      messages: new Map<string, string>(),
+      devices: new Map<string, string>(),
+      sessionsByUuid: new Map<string, string>(),
+    };
 
     // Users
     for (const u of payload.users || []) {
@@ -266,7 +272,7 @@ export const internalInsert = internalMutation({
       v.literal('sessionReports'),
       v.literal('authConfigs'),
       v.literal('trustedDevices'),
-      v.literal('authSessions'),
+      v.literal('authSessions')
     ),
     doc: v.any(),
   },

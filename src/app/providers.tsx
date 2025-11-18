@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React from 'react';
+import { useState, ReactNode } from 'react';
 import { ClerkProvider, useAuth } from '@clerk/nextjs';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ConvexReactClient } from 'convex/react';
@@ -12,7 +12,7 @@ import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { publicEnv } from '@/config/env.public';
 
 interface RootProvidersProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function RootProviders({ children }: RootProvidersProps) {
@@ -27,7 +27,7 @@ export function RootProviders({ children }: RootProvidersProps) {
     throw new Error('NEXT_PUBLIC_CONVEX_URL is not configured');
   }
 
-  const [convexClient] = React.useState(() => new ConvexReactClient(convexUrl));
+  const [convexClient] = useState(() => new ConvexReactClient(convexUrl));
 
   return (
     <ClerkProvider publishableKey={clerkPublishableKey}>
@@ -36,9 +36,7 @@ export function RootProviders({ children }: RootProvidersProps) {
           <ReduxProvider>
             <ToastProvider>
               <Toaster />
-              <ErrorBoundary>
-                {children}
-              </ErrorBoundary>
+              <ErrorBoundary>{children}</ErrorBoundary>
             </ToastProvider>
           </ReduxProvider>
         </ThemeProvider>
@@ -46,4 +44,3 @@ export function RootProviders({ children }: RootProvidersProps) {
     </ClerkProvider>
   );
 }
-

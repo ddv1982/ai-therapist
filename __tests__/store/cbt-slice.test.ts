@@ -34,8 +34,13 @@ describe('cbtSlice reducer', () => {
 
   it('updateDraft should merge data and set timestamps', () => {
     const pre = reducer(undefined, createDraft({ id: 'd1' }));
-    const state = reducer(pre, updateDraft({ situation: 'A detailed situation description' } as any));
-    expect(state.currentDraft?.data).toMatchObject({ situation: 'A detailed situation description' });
+    const state = reducer(
+      pre,
+      updateDraft({ situation: 'A detailed situation description' } as any)
+    );
+    expect(state.currentDraft?.data).toMatchObject({
+      situation: 'A detailed situation description',
+    });
     expect(state.currentDraft?.lastSaved).toEqual(expect.any(String));
     expect(state.lastAutoSave).toEqual(expect.any(String));
   });
@@ -50,11 +55,13 @@ describe('cbtSlice reducer', () => {
   it('saveDraft should insert or update savedDrafts', () => {
     let state = reducer(undefined, createDraft({ id: 'd1' }));
     state = reducer(state, saveDraft());
-    expect(state.savedDrafts.find(d => d.id === 'd1')).toBeTruthy();
+    expect(state.savedDrafts.find((d) => d.id === 'd1')).toBeTruthy();
 
     state = reducer(state, updateDraft({ situation: 'Changed' } as any));
     state = reducer(state, saveDraft());
-    expect(state.savedDrafts.find(d => d.id === 'd1')?.data).toMatchObject({ situation: 'Changed' });
+    expect(state.savedDrafts.find((d) => d.id === 'd1')?.data).toMatchObject({
+      situation: 'Changed',
+    });
   });
 
   it('loadDraft should set currentDraft and currentStep', () => {
@@ -71,7 +78,7 @@ describe('cbtSlice reducer', () => {
     let state = reducer(undefined, createDraft({ id: 'd1' }));
     state = reducer(state, saveDraft());
     const after = reducer(state, deleteDraft('d1'));
-    expect(after.savedDrafts.find(d => d.id === 'd1')).toBeUndefined();
+    expect(after.savedDrafts.find((d) => d.id === 'd1')).toBeUndefined();
     expect(after.currentDraft).toBeNull();
     expect(after.currentStep).toBe(1);
     expect(after.lastAutoSave).toBeNull();
@@ -79,7 +86,11 @@ describe('cbtSlice reducer', () => {
 
   it('completeCBTEntry should push entry and clear draft', () => {
     const state = reducer(undefined, createDraft({ id: 'd1' }));
-    const entry = { situation: 'something', emotions: [{ emotion: 'fear', intensity: 5 }], thoughts: ['ok'] } as any;
+    const entry = {
+      situation: 'something',
+      emotions: [{ emotion: 'fear', intensity: 5 }],
+      thoughts: ['ok'],
+    } as any;
     const after = reducer(state, completeCBTEntry(entry));
     expect(after.completedEntries[after.completedEntries.length - 1]).toBe(entry);
     expect(after.currentDraft).toBeNull();
@@ -118,5 +129,3 @@ describe('cbtSlice reducer', () => {
     expect(state.currentStep).toEqual(expect.any(Number));
   });
 });
-
-

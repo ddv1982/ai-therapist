@@ -1,4 +1,10 @@
-import reducer, { deleteSession, setCurrentSession, setCreatingSession, setDeletingSession, setError } from '@/store/slices/sessions-slice';
+import reducer, {
+  deleteSession,
+  setCurrentSession,
+  setCreatingSession,
+  setDeletingSession,
+  setError,
+} from '@/store/slices/sessions-slice';
 
 describe('sessionsSlice reducer', () => {
   it('should return initial state', () => {
@@ -43,5 +49,3 @@ describe('sessionsSlice reducer', () => {
     expect(state.error).toBe('boom');
   });
 });
-
-

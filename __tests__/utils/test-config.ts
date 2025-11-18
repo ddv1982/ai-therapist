@@ -1,7 +1,7 @@
 /**
  * Unified Test Configuration and Setup
  * Provides consistent Jest configuration and global test utilities
- * 
+ *
  * Features:
  * - Global mock configurations
  * - Performance monitoring setup
@@ -78,7 +78,6 @@ if (typeof global.crypto === 'undefined') {
  * Applied automatically across all test files
  */
 export function setupGlobalMocks() {
-  
   // Mock Next.js router
   jest.mock('next/router', () => ({
     useRouter: jest.fn(() => ({
@@ -144,15 +143,15 @@ expect.extend({
    */
   toBeValidCBTData(received: any) {
     const requiredFields = [
-      'situation', 
-      'initialEmotions', 
+      'situation',
+      'initialEmotions',
       'automaticThoughts',
       'coreBeliefText',
-      'finalEmotions'
+      'finalEmotions',
     ];
 
-    const missingFields = requiredFields.filter(field => !received[field]);
-    
+    const missingFields = requiredFields.filter((field) => !received[field]);
+
     if (missingFields.length > 0) {
       return {
         message: () => `Expected valid CBT data but missing fields: ${missingFields.join(', ')}`,
@@ -162,10 +161,11 @@ expect.extend({
 
     // Validate emotion structure
     const emotionFields = ['fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt'];
-    const hasValidEmotions = emotionFields.every(emotion => 
-      typeof received.initialEmotions[emotion] === 'number' &&
-      received.initialEmotions[emotion] >= 0 &&
-      received.initialEmotions[emotion] <= 10
+    const hasValidEmotions = emotionFields.every(
+      (emotion) =>
+        typeof received.initialEmotions[emotion] === 'number' &&
+        received.initialEmotions[emotion] >= 0 &&
+        received.initialEmotions[emotion] <= 10
     );
 
     if (!hasValidEmotions) {
@@ -192,14 +192,13 @@ expect.extend({
       /\d+\/10/, // Emotion ratings
     ];
 
-    const hasTherapeuticElements = therapeuticPatterns.some(pattern => 
-      pattern.test(received)
-    );
+    const hasTherapeuticElements = therapeuticPatterns.some((pattern) => pattern.test(received));
 
     return {
-      message: () => hasTherapeuticElements 
-        ? 'Content has therapeutic structure'
-        : 'Expected content to have therapeutic structure (tables, lists, ratings)',
+      message: () =>
+        hasTherapeuticElements
+          ? 'Content has therapeutic structure'
+          : 'Expected content to have therapeutic structure (tables, lists, ratings)',
       pass: hasTherapeuticElements,
     };
   },
@@ -212,9 +211,10 @@ expect.extend({
     const isSecure = secureTokenPattern.test(received) && received.length >= 32;
 
     return {
-      message: () => isSecure
-        ? 'Token format is secure'
-        : `Expected secure token format (32+ chars, alphanumeric), got: ${received}`,
+      message: () =>
+        isSecure
+          ? 'Token format is secure'
+          : `Expected secure token format (32+ chars, alphanumeric), got: ${received}`,
       pass: isSecure,
     };
   },
@@ -226,9 +226,10 @@ expect.extend({
     const isValid = typeof received === 'number' && received >= 0 && received <= 10;
 
     return {
-      message: () => isValid
-        ? 'Emotion rating is within valid range'
-        : `Expected emotion rating between 0-10, got: ${received}`,
+      message: () =>
+        isValid
+          ? 'Emotion rating is within valid range'
+          : `Expected emotion rating between 0-10, got: ${received}`,
       pass: isValid,
     };
   },
@@ -242,13 +243,14 @@ expect.extend({
     const hasResponsiveWrapper = received.includes('table-container');
     const hasMobileLabels = received.includes('data-label=');
 
-    const isProperStructure = hasTable && hasTherapeuticClass && 
-                             hasResponsiveWrapper && hasMobileLabels;
+    const isProperStructure =
+      hasTable && hasTherapeuticClass && hasResponsiveWrapper && hasMobileLabels;
 
     return {
-      message: () => isProperStructure
-        ? 'Table has proper therapeutic structure'
-        : 'Expected table with therapeutic classes, responsive wrapper, and mobile labels',
+      message: () =>
+        isProperStructure
+          ? 'Table has proper therapeutic structure'
+          : 'Expected table with therapeutic classes, responsive wrapper, and mobile labels',
       pass: isProperStructure,
     };
   },
@@ -279,12 +281,13 @@ export class TestPerformanceMonitor {
     const startTime = this.testTimes.get(suiteName);
     if (startTime) {
       const duration = performance.now() - startTime;
-      
-      if (duration > 5000) { // Log slow tests (>5 seconds)
+
+      if (duration > 5000) {
+        // Log slow tests (>5 seconds)
         this.slowTests.push({ name: suiteName, duration });
         console.warn(`⚠️ Slow test suite: ${suiteName} took ${duration.toFixed(2)}ms`);
       }
-      
+
       this.testTimes.delete(suiteName);
     }
   }
@@ -316,7 +319,6 @@ export class TestPerformanceMonitor {
  * Validates test data integrity across test files
  */
 export class TestDataValidator {
-  
   /**
    * Validate therapeutic test data consistency
    */
@@ -329,7 +331,7 @@ export class TestDataValidator {
 
     // Check required therapeutic fields
     const requiredFields = ['situation', 'initialEmotions', 'automaticThoughts'];
-    requiredFields.forEach(field => {
+    requiredFields.forEach((field) => {
       if (!data[field]) {
         validationResults.errors.push(`Missing required field: ${field}`);
         validationResults.isValid = false;
@@ -339,8 +341,8 @@ export class TestDataValidator {
     // Validate emotion progression (therapeutic improvement)
     if (data.initialEmotions && data.finalEmotions) {
       const negativeEmotions = ['fear', 'anger', 'sadness', 'anxiety', 'shame', 'guilt'];
-      const hasImprovement = negativeEmotions.some(emotion => 
-        data.finalEmotions[emotion] < data.initialEmotions[emotion]
+      const hasImprovement = negativeEmotions.some(
+        (emotion) => data.finalEmotions[emotion] < data.initialEmotions[emotion]
       );
 
       if (!hasImprovement) {
@@ -401,27 +403,26 @@ export class TestDataValidator {
  * Global cleanup utilities
  */
 export class TestCleanup {
-  
   /**
    * Clean up after all tests
    */
   static globalCleanup() {
     // Clear all timers
     jest.clearAllTimers();
-    
+
     // Clear all mocks
     jest.clearAllMocks();
-    
+
     // Reset performance monitoring
     TestPerformanceMonitor.reset();
-    
+
     // Clear DOM
     document.body.innerHTML = '';
-    
+
     // Clear storage
     localStorage.clear();
     sessionStorage.clear();
-    
+
     // Reset console methods
     jest.restoreAllMocks();
   }
@@ -454,16 +455,16 @@ export class TestCleanup {
 export function initializeTestConfig() {
   setupGlobalMocks();
   TestSetupUtils.setupTestEnvironment();
-  
+
   // Setup global cleanup
   afterAll(() => {
     TestCleanup.globalCleanup();
-    
+
     // Log performance report
     const report = TestPerformanceMonitor.getReport();
     if (report.totalSlowTests > 0) {
       console.log('\n📊 Test Performance Report:');
-      report.slowTests.forEach(test => {
+      report.slowTests.forEach((test) => {
         console.log(`   ${test.name}: ${test.duration.toFixed(2)}ms`);
       });
     }

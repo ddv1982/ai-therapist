@@ -15,11 +15,15 @@ describe('ApiClient error branches', () => {
         status: 500,
         statusText: 'Server Error',
         headers: { get: (k: string) => (k.toLowerCase() === 'content-type' ? 'text/plain' : null) },
-        json: async () => { throw new Error('not json'); },
+        json: async () => {
+          throw new Error('not json');
+        },
         text: async () => 'plain-error',
       } as unknown as Response;
     });
-    await expect((client as unknown as { request: (p: string) => Promise<unknown> }).request('/x')).rejects.toThrow('plain-error');
+    await expect(
+      (client as unknown as { request: (p: string) => Promise<unknown> }).request('/x')
+    ).rejects.toThrow('plain-error');
   });
 
   it('throws Error with parsed details on JSON error responses', async () => {
@@ -28,11 +32,15 @@ describe('ApiClient error branches', () => {
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
-        headers: { get: (k: string) => (k.toLowerCase() === 'content-type' ? 'application/json' : null) },
+        headers: {
+          get: (k: string) => (k.toLowerCase() === 'content-type' ? 'application/json' : null),
+        },
         json: async () => ({ error: { message: 'Authentication required', details: 'No token' } }),
       } as unknown as Response;
     });
-    await expect((client as unknown as { request: (p: string) => Promise<unknown> }).request('/y')).rejects.toThrow('No token');
+    await expect(
+      (client as unknown as { request: (p: string) => Promise<unknown> }).request('/y')
+    ).rejects.toThrow('No token');
   });
 
   it('returns parsed JSON on success and preserves provided headers', async () => {
@@ -43,12 +51,16 @@ describe('ApiClient error branches', () => {
       return {
         ok: true,
         status: 200,
-        headers: { get: (k: string) => (k.toLowerCase() === 'content-type' ? 'application/json' : null) },
+        headers: {
+          get: (k: string) => (k.toLowerCase() === 'content-type' ? 'application/json' : null),
+        },
         json: async () => ({ success: true }),
       } as unknown as Response;
     });
 
-    const result = await (client as unknown as { request: (p: string, init?: RequestInit) => Promise<unknown> }).request('/z', {
+    const result = await (
+      client as unknown as { request: (p: string, init?: RequestInit) => Promise<unknown> }
+    ).request('/z', {
       headers: new Headers({ 'Content-Type': 'application/custom', 'X-Request-Id': 'provided-id' }),
     });
 
@@ -68,7 +80,9 @@ describe('ApiClient error branches', () => {
       } as unknown as Response;
     });
 
-    const result = await (client as unknown as { request: (p: string) => Promise<unknown> }).request('/text');
+    const result = await (
+      client as unknown as { request: (p: string) => Promise<unknown> }
+    ).request('/text');
     expect(result).toBeNull();
   });
 
@@ -77,12 +91,18 @@ describe('ApiClient error branches', () => {
       return {
         ok: true,
         status: 200,
-        headers: { get: (k: string) => (k.toLowerCase() === 'content-type' ? 'application/json' : null) },
-        json: async () => { throw new Error('bad json'); },
+        headers: {
+          get: (k: string) => (k.toLowerCase() === 'content-type' ? 'application/json' : null),
+        },
+        json: async () => {
+          throw new Error('bad json');
+        },
       } as unknown as Response;
     });
 
-    const result = await (client as unknown as { request: (p: string) => Promise<unknown> }).request('/invalid-json');
+    const result = await (
+      client as unknown as { request: (p: string) => Promise<unknown> }
+    ).request('/invalid-json');
     expect(result).toBeNull();
   });
 
@@ -96,9 +116,9 @@ describe('ApiClient error branches', () => {
       } as unknown as Response;
     });
 
-    const result = await (client as unknown as { request: (p: string) => Promise<unknown> }).request('/no-headers');
+    const result = await (
+      client as unknown as { request: (p: string) => Promise<unknown> }
+    ).request('/no-headers');
     expect(result).toBeNull();
   });
 });
-
-

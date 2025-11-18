@@ -13,7 +13,7 @@ export interface AuthValidationResult {
  * Validate authentication for API routes using Clerk
  * Can be called with or without a request parameter (request param is ignored for Clerk)
  * Clerk's auth() function works in route handlers
- * 
+ *
  * In development mode with BYPASS_AUTH=true, returns a dev user without Clerk validation
  */
 export async function validateApiAuth(request?: NextRequest): Promise<AuthValidationResult> {

@@ -30,17 +30,17 @@ export const cbtRHFSchema = z.object({
     other: z.string().optional(),
     otherIntensity: z.number().min(0).max(10).optional(),
   }),
-  automaticThoughts: z.array(
-    z.object({
-      thought: z.string().min(3),
-      credibility: z.number().min(0).max(10),
-    })
-  ).min(1),
+  automaticThoughts: z
+    .array(
+      z.object({
+        thought: z.string().min(3),
+        credibility: z.number().min(0).max(10),
+      })
+    )
+    .min(1),
   coreBeliefText: z.string().min(0).optional().default(''),
   coreBeliefCredibility: z.number().min(0).max(10),
-  challengeQuestions: z.array(
-    z.object({ question: z.string().min(0), answer: z.string().min(0) })
-  ),
+  challengeQuestions: z.array(z.object({ question: z.string().min(0), answer: z.string().min(0) })),
   rationalThoughts: z.array(
     z.object({ thought: z.string().min(0), confidence: z.number().min(0).max(10) })
   ),

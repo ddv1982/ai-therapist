@@ -1,4 +1,3 @@
-import React from 'react';
 import { useTranslations } from 'next-intl';
 import { getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
 import type { CBTStepType } from '@/types/therapy';
@@ -17,24 +16,24 @@ export function DiaryProgress({ isMobile, isCBTActive, cbtCurrentStep }: DiaryPr
   const percent = Math.round((stepNumber / totalSteps) * 100);
 
   return (
-    <div className="border-b bg-muted/30">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-semibold text-foreground">
+    <div className="bg-muted/30 border-b">
+      <div className="mx-auto max-w-4xl px-4 py-3 sm:px-6">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-foreground text-sm font-semibold">
             {t('progress.step', { current: stepNumber, total: totalSteps })}
           </span>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             {t('progress.complete', { percent })}
           </span>
         </div>
-        <div className="w-full bg-muted rounded-full h-2">
-          <div 
+        <div className="bg-muted h-2 w-full rounded-full">
+          <div
             className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${percent}%` }}
           ></div>
         </div>
         {!isMobile && (
-          <div className="flex justify-between mt-1 text-sm text-muted-foreground">
+          <div className="text-muted-foreground mt-1 flex justify-between text-sm">
             <span>{t('steps.situation.label')}</span>
             <span>{t('steps.emotions.label')}</span>
             <span>{t('steps.thoughts.label')}</span>

@@ -13,10 +13,10 @@ export const THERAPY_MODELS = {
 export const CBT = {
   THOUGHT_RECORD_SECTIONS: [
     'Situation',
-    'Thoughts', 
+    'Thoughts',
     'Emotions',
     'Physical Sensations',
-    'Behaviors'
+    'Behaviors',
   ] as const,
   DISTORTION_TYPES: [
     'All-or-Nothing Thinking',
@@ -28,7 +28,7 @@ export const CBT = {
     'Emotional Reasoning',
     'Should Statements',
     'Labeling',
-    'Personalization'
+    'Personalization',
   ] as const,
 } as const;
 

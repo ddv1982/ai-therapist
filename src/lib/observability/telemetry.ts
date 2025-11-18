@@ -18,11 +18,11 @@ const telemetryEnv = {
   application: sanitizeString(env.AI_TELEMETRY_APPLICATION),
 };
 
-export function getTelemetrySettings(toggle?: TelemetryToggle | boolean): TelemetrySettings | undefined {
+export function getTelemetrySettings(
+  toggle?: TelemetryToggle | boolean
+): TelemetrySettings | undefined {
   const resolvedToggle: TelemetryToggle | undefined =
-    typeof toggle === 'boolean'
-      ? { enabled: toggle }
-      : toggle;
+    typeof toggle === 'boolean' ? { enabled: toggle } : toggle;
 
   const enabled = resolvedToggle?.enabled ?? telemetryEnv.enabled;
   if (!enabled) {
@@ -44,7 +44,9 @@ export function getTelemetrySettings(toggle?: TelemetryToggle | boolean): Teleme
   } satisfies TelemetrySettings;
 }
 
-function buildTelemetryMetadata(metadata?: Record<string, unknown>): Record<string, string> | undefined {
+function buildTelemetryMetadata(
+  metadata?: Record<string, unknown>
+): Record<string, string> | undefined {
   const base: Record<string, string> = {};
 
   if (telemetryEnv.application) {
@@ -93,4 +95,3 @@ function sanitizeString(value: string | undefined): string | undefined {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }
-

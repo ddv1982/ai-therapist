@@ -85,7 +85,14 @@ describe('api-response helpers (with NextResponse mock from setup)', () => {
   it('createPaginatedResponse computes pagination and includes request id', async () => {
     const res = createPaginatedResponse([1, 2, 3], 2, 3, 10, 'rid-page') as any;
     const json = await res.json();
-    expect(json.data.pagination).toMatchObject({ page: 2, limit: 3, total: 10, totalPages: 4, hasNext: true, hasPrev: true });
+    expect(json.data.pagination).toMatchObject({
+      page: 2,
+      limit: 3,
+      total: 10,
+      totalPages: 4,
+      hasNext: true,
+      hasPrev: true,
+    });
     expect(json.meta.requestId).toBe('rid-page');
   });
 
@@ -95,7 +102,11 @@ describe('api-response helpers (with NextResponse mock from setup)', () => {
   });
 
   it('validateApiResponse validates shapes', () => {
-    const ok = validateApiResponse({ success: true, data: { x: 1 }, meta: { timestamp: new Date().toISOString() } });
+    const ok = validateApiResponse({
+      success: true,
+      data: { x: 1 },
+      meta: { timestamp: new Date().toISOString() },
+    });
     expect(ok.valid).toBe(true);
     const bad = validateApiResponse({});
     expect(bad.valid).toBe(false);
@@ -119,9 +130,15 @@ describe('api-response helpers (with NextResponse mock from setup)', () => {
   });
 
   it('createSessionResponse and createChatCompletionResponse include request id header', async () => {
-    const session = await (createSessionResponse({ sessionId: 's1', status: 'active', messageCount: 0 } as any, 'rid-sess') as any);
+    const session = await (createSessionResponse(
+      { sessionId: 's1', status: 'active', messageCount: 0 } as any,
+      'rid-sess'
+    ) as any);
     expect(session.headers.get('X-Request-Id')).toBe('rid-sess');
-    const chat = await (createChatCompletionResponse({ messageId: 'm1', content: 'hi', model: 'gpt' } as any, 'rid-chat') as any);
+    const chat = await (createChatCompletionResponse(
+      { messageId: 'm1', content: 'hi', model: 'gpt' } as any,
+      'rid-chat'
+    ) as any);
     expect(chat.headers.get('X-Request-Id')).toBe('rid-chat');
   });
 });

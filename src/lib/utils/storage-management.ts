@@ -28,16 +28,16 @@ export async function getStorageInfo(): Promise<StorageInfo | null> {
         used,
         quota,
         available,
-        usagePercentage
+        usagePercentage,
       };
     }
   } catch (error) {
     logger.warn('Failed to get storage estimate', {
       operation: 'getStorageInfo',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-  
+
   return null;
 }
 
@@ -48,21 +48,21 @@ export function cleanupLocalStorage(): void {
   try {
     // Only remove items that are clearly temporary or corrupted
     const itemsToRemove: string[] = [];
-    
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (!key) continue;
-      
+
       // Skip our main app data
       if (key === 'persist:therapeuticAI' || key === 'currentSessionId') {
         continue;
       }
-      
+
       // Check if item looks corrupted (too large or unparseable)
       try {
         const item = localStorage.getItem(key);
         if (!item) continue;
-        
+
         // If item is larger than 1MB, consider removing it
         if (item.length > 1024 * 1024) {
           itemsToRemove.push(key);
@@ -72,28 +72,27 @@ export function cleanupLocalStorage(): void {
         itemsToRemove.push(key);
       }
     }
-    
+
     // Remove problematic items
-    itemsToRemove.forEach(key => {
+    itemsToRemove.forEach((key) => {
       try {
         localStorage.removeItem(key);
         logger.info('Removed large/corrupted localStorage item', {
           operation: 'cleanupLocalStorage',
-          key
+          key,
         });
       } catch (error) {
         logger.warn('Failed to remove localStorage item', {
           operation: 'cleanupLocalStorage',
           key,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     });
-    
   } catch (error) {
     logger.error('Storage cleanup failed', {
       operation: 'cleanupLocalStorage',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }
@@ -117,14 +116,14 @@ export async function initializeStorage(): Promise<void> {
   try {
     if (await shouldCleanupStorage()) {
       logger.info('Storage usage high, performing cleanup', {
-        operation: 'initializeStorage'
+        operation: 'initializeStorage',
       });
       cleanupLocalStorage();
     }
   } catch (error) {
     logger.error('Storage initialization failed', {
       operation: 'initializeStorage',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }

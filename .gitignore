@@ -58,3 +58,11 @@ src/app/test-*/
 /test-results/
 /playwright-report/
 new-auth-qr.png
+
+# Droidz configuration - NEVER commit this!
+config.yml
+
+# .droidz/ - Local state and specs
+.droidz/*
+!.droidz/.gitignore
+!.droidz/specs/000-*.md

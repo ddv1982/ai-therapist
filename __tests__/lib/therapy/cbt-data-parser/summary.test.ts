@@ -17,10 +17,7 @@ describe('cbt-data-parser summary', () => {
           },
         },
         thoughts: {
-          automaticThoughts: [
-            'I will fail',
-            'Everyone will judge me',
-          ],
+          automaticThoughts: ['I will fail', 'Everyone will judge me'],
         },
         coreBeliefs: {
           belief: 'I am not good enough',
@@ -238,7 +235,9 @@ describe('cbt-data-parser summary', () => {
     it('handles single emotion change', () => {
       const cbtData: CBTStructuredAssessment = {
         emotionComparison: {
-          changes: [{ emotion: 'anxiety', initial: 8, final: 4, direction: 'decreased', change: -4 }],
+          changes: [
+            { emotion: 'anxiety', initial: 8, final: 4, direction: 'decreased', change: -4 },
+          ],
         },
       };
 

@@ -23,4 +23,3 @@ export interface SessionWithMessages extends SessionDoc {
   messages: MessageDoc[];
   reports?: SessionReportDoc[];
 }
-

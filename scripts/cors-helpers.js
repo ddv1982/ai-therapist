@@ -46,7 +46,9 @@ export function ensureAllowedOrigins(env = process.env, options = {}) {
 
   if (!result.isDevelopment) {
     if (result.allowedOrigins.length === 0 || result.usedFallback) {
-      throw new Error('CORS configuration missing: set CORS_ALLOWED_ORIGIN or APP_ORIGIN for production builds.');
+      throw new Error(
+        'CORS configuration missing: set CORS_ALLOWED_ORIGIN or APP_ORIGIN for production builds.'
+      );
     }
   } else if (!silent && result.usedFallback) {
     console.warn(`[CORS] Using development fallback origins: ${result.allowedOrigins.join(', ')}`);
@@ -61,7 +63,9 @@ export function ensureCorsEnvValue(env = process.env, options = {}) {
 
   if (!isDevelopment) {
     if (allowedOrigins.length === 0 || usedFallback) {
-      throw new Error('CORS configuration missing: set CORS_ALLOWED_ORIGIN or APP_ORIGIN for production builds.');
+      throw new Error(
+        'CORS configuration missing: set CORS_ALLOWED_ORIGIN or APP_ORIGIN for production builds.'
+      );
     }
   } else if (!silent && usedFallback) {
     console.warn(`[CORS] Using development fallback origins: ${allowedOrigins.join(', ')}`);

@@ -1,4 +1,12 @@
-import { generateSecureUUID, generateSecureRandomString, generateSecureHex, generateSessionToken, generateRequestId, isCryptoAvailable, getCryptoCapabilities } from '@/lib/auth/crypto-secure';
+import {
+  generateSecureUUID,
+  generateSecureRandomString,
+  generateSecureHex,
+  generateSessionToken,
+  generateRequestId,
+  isCryptoAvailable,
+  getCryptoCapabilities,
+} from '@/lib/auth/crypto-secure';
 
 describe('crypto-secure edges', () => {
   beforeAll(() => {
@@ -33,5 +41,3 @@ describe('crypto-secure edges', () => {
     expect(generateSecureRandomString(12)).toHaveLength(12);
   });
 });
-
-

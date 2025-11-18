@@ -27,7 +27,8 @@ describe('observability/telemetry', () => {
     process.env.AI_TELEMETRY_RECORD_OUTPUTS = 'false';
     process.env.AI_TELEMETRY_FUNCTION_ID = ' fn-123 ';
     process.env.AI_TELEMETRY_APPLICATION = ' therapist ';
-    process.env.NEXT_PUBLIC_CONVEX_URL = process.env.NEXT_PUBLIC_CONVEX_URL || 'http://127.0.0.1:3210';
+    process.env.NEXT_PUBLIC_CONVEX_URL =
+      process.env.NEXT_PUBLIC_CONVEX_URL || 'http://127.0.0.1:3210';
     reloadServerEnvForTesting();
     reloadPublicEnvForTesting();
     const { getTelemetrySettings } = await import('@/lib/observability/telemetry');

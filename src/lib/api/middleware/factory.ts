@@ -12,8 +12,16 @@ import {
   ApiResponse,
 } from '@/lib/api/api-response';
 import { getRateLimiter } from '@/lib/api/rate-limiter';
-import { recordEndpointError, recordEndpointSuccess, recordEndpointLatency } from '@/lib/metrics/metrics';
-import { getClientIPFromRequest, toRequestContext, setResponseHeaders } from '@/lib/api/middleware/request-utils';
+import {
+  recordEndpointError,
+  recordEndpointSuccess,
+  recordEndpointLatency,
+} from '@/lib/metrics/metrics';
+import {
+  getClientIPFromRequest,
+  toRequestContext,
+  setResponseHeaders,
+} from '@/lib/api/middleware/request-utils';
 import { buildWithAuth, buildWithAuthStreaming } from '@/lib/api/middleware/builders/auth';
 import { buildValidation } from '@/lib/api/middleware/builders/validation';
 import { buildRateLimit } from '@/lib/api/middleware/builders/rate-limit';
@@ -71,18 +79,33 @@ export function createApiMiddleware(deps: Partial<ApiMiddlewareDeps> = {}) {
         const res = await handler(request, requestContext, routeParams?.params);
         const durationMs = Math.round(performance.now() - startHighRes);
         setResponseHeaders(res, requestContext.requestId, durationMs);
-        try { recordEndpointLatency(requestContext.method, requestContext.url, durationMs); } catch {}
-        logger.info('API request completed', { requestId: requestContext.requestId, url: requestContext.url, method: requestContext.method, durationMs });
-        try { recordEndpointSuccess(requestContext.method, requestContext.url); } catch {}
+        try {
+          recordEndpointLatency(requestContext.method, requestContext.url, durationMs);
+        } catch {}
+        logger.info('API request completed', {
+          requestId: requestContext.requestId,
+          url: requestContext.url,
+          method: requestContext.method,
+          durationMs,
+        });
+        try {
+          recordEndpointSuccess(requestContext.method, requestContext.url);
+        } catch {}
         return res;
       } catch (error) {
         const err = error instanceof Error ? error : new Error('Unknown error');
         const rid = requestContext.requestId || 'unknown';
-        const resp = createServerErrorResponse(err, rid, requestContext) as NextResponse<ApiResponse<T>>;
+        const resp = createServerErrorResponse(err, rid, requestContext) as NextResponse<
+          ApiResponse<T>
+        >;
         const durationMs = Math.round(performance.now() - startHighRes);
         setResponseHeaders(resp, rid, durationMs);
-        try { recordEndpointLatency(requestContext.method, requestContext.url, durationMs); } catch {}
-        try { recordEndpointError(requestContext.method, requestContext.url); } catch {}
+        try {
+          recordEndpointLatency(requestContext.method, requestContext.url, durationMs);
+        } catch {}
+        try {
+          recordEndpointError(requestContext.method, requestContext.url);
+        } catch {}
         return resp;
       }
     };
@@ -131,7 +154,11 @@ export function createApiMiddleware(deps: Partial<ApiMiddlewareDeps> = {}) {
 
   const { withValidation, withValidationAndParams } = buildValidation({
     withAuth: withAuth as WithAuthAlias,
-    validateRequest: (<S extends z.ZodSchema>(schema: S, data: unknown) => validateRequest(schema, data)) as <S extends z.ZodSchema>(schema: S, data: unknown) => { success: boolean; data?: z.infer<S>; error?: string },
+    validateRequest: (<S extends z.ZodSchema>(schema: S, data: unknown) =>
+      validateRequest(schema, data)) as <S extends z.ZodSchema>(
+      schema: S,
+      data: unknown
+    ) => { success: boolean; data?: z.infer<S>; error?: string },
     createValidationErrorResponse,
     logger,
   });
@@ -148,7 +175,12 @@ export function createApiMiddleware(deps: Partial<ApiMiddlewareDeps> = {}) {
       routeParams: { params: Promise<Record<string, string>> }
     ) => Promise<NextResponse<ApiResponse<T>>>,
     getClientIPFromRequest,
-    getRateLimiter: getRateLimiterLocal as unknown as () => { checkRateLimit: (ip: string, bucket?: string) => Promise<{ allowed: boolean; retryAfter?: number }> },
+    getRateLimiter: getRateLimiterLocal as unknown as () => {
+      checkRateLimit: (
+        ip: string,
+        bucket?: string
+      ) => Promise<{ allowed: boolean; retryAfter?: number }>;
+    },
   });
 
   // Build auth+rate-limit wrappers (regular and streaming) from builder
@@ -157,26 +189,34 @@ export function createApiMiddleware(deps: Partial<ApiMiddlewareDeps> = {}) {
     createRequestLogger: createRequestLoggerLocal,
     validateApiAuth: validateApiAuthLocal,
     getClientIPFromRequest,
-    getRateLimiter: getRateLimiterLocal as unknown as () => { checkRateLimit: (ip: string, bucket?: string) => Promise<{ allowed: boolean; retryAfter?: number }> },
+    getRateLimiter: getRateLimiterLocal as unknown as () => {
+      checkRateLimit: (
+        ip: string,
+        bucket?: string
+      ) => Promise<{ allowed: boolean; retryAfter?: number }>;
+    },
     getSingleUserInfo: getSingleUserInfoLocal,
     recordEndpointError,
     recordEndpointSuccess,
     createAuthenticationErrorResponse,
   });
 
-  const withAuthAndRateLimitStreaming = authRateLimitBuilders.withAuthAndRateLimitStreaming as unknown as (
-    handler: (
+  const withAuthAndRateLimitStreaming =
+    authRateLimitBuilders.withAuthAndRateLimitStreaming as unknown as (
+      handler: (
+        request: NextRequest,
+        context: AuthenticatedRequestContext,
+        params: Promise<Record<string, string>>
+      ) => Promise<Response>,
+      options?: { maxRequests?: number; windowMs?: number; maxConcurrent?: number }
+    ) => (
       request: NextRequest,
-      context: AuthenticatedRequestContext,
-      params: Promise<Record<string, string>>
-    ) => Promise<Response>,
-    options?: { maxRequests?: number; windowMs?: number; maxConcurrent?: number }
-  ) => (
-    request: NextRequest,
-    routeParams: { params: Promise<Record<string, string>> }
-  ) => Promise<Response>;
+      routeParams: { params: Promise<Record<string, string>> }
+    ) => Promise<Response>;
 
-  const withAuthAndRateLimit = authRateLimitBuilders.withAuthAndRateLimit as unknown as <T = unknown>(
+  const withAuthAndRateLimit = authRateLimitBuilders.withAuthAndRateLimit as unknown as <
+    T = unknown,
+  >(
     handler: (
       request: NextRequest,
       context: AuthenticatedRequestContext,
@@ -199,5 +239,3 @@ export function createApiMiddleware(deps: Partial<ApiMiddlewareDeps> = {}) {
     withAuthAndRateLimitStreaming,
   };
 }
-
-

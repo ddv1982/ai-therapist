@@ -1,12 +1,7 @@
 import type { CBTSessionSummaryData } from '@/components/ui/cbt-session-summary-card';
 export type { CBTSessionSummaryData } from '@/components/ui/cbt-session-summary-card';
 import type { EmotionData, ThoughtData } from '@/types/therapy';
-import {
-  CBT_STEP_ORDER,
-  type CBTFlowContext,
-  type CBTFlowState,
-  type CBTStepId,
-} from './types';
+import { CBT_STEP_ORDER, type CBTFlowContext, type CBTFlowState, type CBTStepId } from './types';
 import { buildSummaryCardFromState } from './summary';
 import { CBT_STEP_CONFIG } from './config';
 
@@ -19,7 +14,15 @@ function toCardString(data: Partial<CBTSessionSummaryData>): string {
 
 function emotionList(emotions?: EmotionData | null): Array<{ emotion: string; rating: number }> {
   if (!emotions) return [];
-  const keys: Array<keyof EmotionData> = ['fear', 'anger', 'sadness', 'joy', 'anxiety', 'shame', 'guilt'];
+  const keys: Array<keyof EmotionData> = [
+    'fear',
+    'anger',
+    'sadness',
+    'joy',
+    'anxiety',
+    'shame',
+    'guilt',
+  ];
   const result: Array<{ emotion: string; rating: number }> = [];
   for (const key of keys) {
     const value = emotions[key];
@@ -28,7 +31,11 @@ function emotionList(emotions?: EmotionData | null): Array<{ emotion: string; ra
       result.push({ emotion: label.charAt(0).toUpperCase() + label.slice(1), rating: value });
     }
   }
-  if (emotions.other && typeof emotions.otherIntensity === 'number' && emotions.otherIntensity > 0) {
+  if (
+    emotions.other &&
+    typeof emotions.otherIntensity === 'number' &&
+    emotions.otherIntensity > 0
+  ) {
     result.push({ emotion: emotions.other, rating: emotions.otherIntensity });
   }
   return result;
@@ -42,7 +49,10 @@ function completedLabel(stepId: CBTStepId): string {
 
 function formatThoughts(thoughts?: ThoughtData[]): Array<{ thought: string; credibility: number }> {
   if (!thoughts || thoughts.length === 0) return [];
-  return thoughts.map((thought) => ({ thought: thought.thought, credibility: thought.credibility }));
+  return thoughts.map((thought) => ({
+    thought: thought.thought,
+    credibility: thought.credibility,
+  }));
 }
 
 export function buildStepCard(stepId: CBTStepId, context: CBTFlowContext): string | null {
@@ -76,7 +86,10 @@ export function buildStepCard(stepId: CBTStepId, context: CBTFlowContext): strin
         completedSteps: [completedLabel(stepId)],
       });
     case 'challenge-questions':
-      if (!context.challengeQuestions || context.challengeQuestions.challengeQuestions.length === 0) {
+      if (
+        !context.challengeQuestions ||
+        context.challengeQuestions.challengeQuestions.length === 0
+      ) {
         return null;
       }
       return toCardString({
@@ -110,7 +123,9 @@ export function buildStepCard(stepId: CBTStepId, context: CBTFlowContext): strin
     case 'actions':
       if (!context.actionPlan) return null;
       return toCardString({
-        newBehaviors: context.actionPlan.newBehaviors ? [context.actionPlan.newBehaviors] : undefined,
+        newBehaviors: context.actionPlan.newBehaviors
+          ? [context.actionPlan.newBehaviors]
+          : undefined,
         finalEmotions: emotionList(context.actionPlan.finalEmotions),
         completedSteps: [completedLabel(stepId)],
       });

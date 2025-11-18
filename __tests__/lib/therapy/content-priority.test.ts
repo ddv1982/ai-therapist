@@ -7,17 +7,15 @@ import {
   analyzeContentTier,
   getContentTierExplanation,
   meetsAnalysisThreshold,
-  type ContentTierAnalysis
+  type ContentTierAnalysis,
 } from '@/lib/therapy/content-priority';
 
 describe('Content Priority System', () => {
-  
   // ========================================
   // TIER 1 (PREMIUM) TESTS - CBT DIARY + SCHEMA REFLECTION
   // ========================================
-  
+
   describe('Tier 1 Premium Content Analysis', () => {
-    
     test('should classify comprehensive CBT diary as Tier 1', () => {
       const messages = [
         {
@@ -55,12 +53,12 @@ describe('Content Priority System', () => {
             ## ✨ Final Reflection
             I can acknowledge the anxiety without letting it control my actions.
             These patterns developed to protect me but now limit my growth.
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       expect(analysis.tier).toBe('tier1_premium');
       expect(analysis.confidence).toBeGreaterThan(85);
       expect(analysis.triggers).toContain('CBT diary header detected');
@@ -68,7 +66,7 @@ describe('Content Priority System', () => {
       expect(analysis.triggers).toContain('Automatic thoughts with user credibility ratings');
       expect(analysis.userSelfAssessmentPresent).toBe(true);
       expect(analysis.reportType).toBe('client_friendly');
-      
+
       // Analysis recommendations should be comprehensive
       const rec = analysis.analysisRecommendation;
       expect(rec.shouldAnalyzeCognitiveDistortions).toBe(true);
@@ -78,7 +76,7 @@ describe('Content Priority System', () => {
       expect(rec.analysisDepth).toBe('comprehensive');
       expect(rec.prioritizeUserAssessments).toBe(true);
     });
-    
+
     test('should classify schema reflection content as Tier 1', () => {
       const messages = [
         {
@@ -102,20 +100,20 @@ describe('Content Priority System', () => {
             The patterns that once protected me now limit my potential for growth and connection.
             I'm developing awareness of when my schema modes are activated and can pause to
             respond from my healthy adult self instead of old wound patterns.
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       expect(analysis.tier).toBe('tier1_premium');
       expect(analysis.confidence).toBeGreaterThan(80);
       expect(analysis.schemaReflectionDepth).toBe('comprehensive');
-      expect(analysis.triggers.some(t => t.includes('schema reflection'))).toBe(true);
+      expect(analysis.triggers.some((t) => t.includes('schema reflection'))).toBe(true);
       expect(analysis.analysisRecommendation.shouldAnalyzeSchemas).toBe(true);
       expect(analysis.analysisRecommendation.prioritizeUserAssessments).toBe(true);
     });
-    
+
     test('should handle mixed Tier 1 indicators', () => {
       const messages = [
         {
@@ -128,12 +126,12 @@ describe('Content Priority System', () => {
             ## Personal Self-Assessment  
             On a scale of 1-10, I feel my self-awareness is 8/10 today.
             These schema modes get triggered in social situations.
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       expect(analysis.tier).toBe('tier1_premium');
       expect(analysis.userSelfAssessmentPresent).toBe(true);
       expect(['moderate', 'comprehensive']).toContain(analysis.schemaReflectionDepth); // Allow classification flexibility
@@ -141,13 +139,12 @@ describe('Content Priority System', () => {
       expect(analysis.analysisRecommendation.prioritizeUserAssessments).toBe(true);
     });
   });
-  
+
   // ========================================
   // TIER 2 (STANDARD) TESTS - THERAPEUTIC CONVERSATION
   // ========================================
-  
+
   describe('Tier 2 Standard Content Analysis', () => {
-    
     test('should classify therapeutic conversation as Tier 2', () => {
       const messages = [
         {
@@ -159,25 +156,25 @@ describe('Content Priority System', () => {
             is so confident while I'm falling apart inside. I've been losing sleep over this
             and it's affecting my focus during the day. The worst part is feeling like I'm
             trapped in these worried thoughts and can't find a way out.
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       expect(analysis.tier).toBe('tier2_standard');
       expect(analysis.confidence).toBeGreaterThan(65); // Relaxed upper bound - classification correctness matters
-      expect(analysis.triggers.some(t => t.includes('therapeutic context'))).toBe(true);
-      expect(analysis.triggers.some(t => t.includes('emotional intensity'))).toBe(true);
+      expect(analysis.triggers.some((t) => t.includes('therapeutic context'))).toBe(true);
+      expect(analysis.triggers.some((t) => t.includes('emotional intensity'))).toBe(true);
       expect(analysis.reportType).toBe('client_friendly');
-      
+
       // Should recommend moderate analysis
       const rec = analysis.analysisRecommendation;
       expect(rec.analysisDepth).toBe('moderate');
       expect(rec.shouldProvideTherapeuticInsights).toBe(true);
       expect(rec.prioritizeUserAssessments).toBe(false); // No explicit user assessments
     });
-    
+
     test('should handle Tier 2 with some user assessments', () => {
       const messages = [
         {
@@ -188,18 +185,18 @@ describe('Content Priority System', () => {
             these thoughts spiraling and getting worse. It's been affecting my relationships
             and I feel isolated. My confidence in social situations is probably 3/10.
             I want to work on this but don't know where to start.
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       expect(analysis.tier).toBe('tier2_standard');
       expect(analysis.userSelfAssessmentPresent).toBe(true);
       expect(analysis.triggers).toContain('User self-assessments and ratings detected');
       expect(analysis.analysisRecommendation.prioritizeUserAssessments).toBe(true);
     });
-    
+
     test('should handle borderline Tier 2 content', () => {
       const messages = [
         {
@@ -207,40 +204,39 @@ describe('Content Priority System', () => {
           content: `
             Had some stress at work today. The meeting didn't go as planned and I'm
             feeling a bit overwhelmed. Wondering if I handled the situation correctly.
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       expect(analysis.tier).toBe('tier2_standard');
       expect(analysis.confidence).toBeGreaterThan(50); // Focus on correct tier classification
       expect(analysis.analysisRecommendation.analysisDepth).toBe('moderate');
     });
   });
-  
+
   // ========================================
   // TIER 3 (MINIMAL) TESTS - BRIEF CONVERSATION
   // ========================================
-  
+
   describe('Tier 3 Minimal Content Analysis', () => {
-    
     test('should classify brief search requests as Tier 3', () => {
       const messages = [
         {
           role: 'user',
-          content: 'Can you search for meditation apps for anxiety?'
-        }
+          content: 'Can you search for meditation apps for anxiety?',
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       expect(analysis.tier).toBe('tier2_standard'); // Contains therapeutic term "anxiety"
       expect(analysis.confidence).toBeGreaterThanOrEqual(69); // Allow for scoring algorithm variance
       expect(analysis.triggers).toContain('therapeutic context'); // Updated to match actual implementation
       expect(analysis.reportType).toBe('client_friendly');
       expect(analysis.schemaReflectionDepth).toBe('none');
-      
+
       // Should prevent over-pathologizing (updated expectations to match implementation)
       const rec = analysis.analysisRecommendation;
       expect(rec.shouldAnalyzeCognitiveDistortions).toBe(true); // Actually analyzes due to therapeutic context
@@ -250,22 +246,22 @@ describe('Content Priority System', () => {
       expect(rec.analysisDepth).toBe('moderate');
       expect(rec.prioritizeUserAssessments).toBe(false);
     });
-    
+
     test('should classify casual check-ins as Tier 3', () => {
       const messages = [
         {
           role: 'user',
-          content: 'Just wanted to check in and say hi. How are things going?'
-        }
+          content: 'Just wanted to check in and say hi. How are things going?',
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       expect(analysis.tier).toBe('tier3_minimal');
       expect(analysis.triggers).toContain('Low emotional intensity');
       expect(analysis.analysisRecommendation.shouldAnalyzeCognitiveDistortions).toBe(false);
     });
-    
+
     test('should handle organizational context as Tier 3', () => {
       const messages = [
         {
@@ -273,17 +269,17 @@ describe('Content Priority System', () => {
           content: `
             I need to organize everything for the team event next week. Everyone will be
             attending and I want to make sure all the details are covered properly.
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       expect(analysis.tier).toBe('tier3_minimal');
-      expect(analysis.triggers.some(t => t.includes('organizational'))).toBe(true);
+      expect(analysis.triggers.some((t) => t.includes('organizational'))).toBe(true);
       expect(analysis.analysisRecommendation.shouldAnalyzeCognitiveDistortions).toBe(false);
     });
-    
+
     test('should elevate Tier 3 with unexpected user assessments', () => {
       const messages = [
         {
@@ -291,78 +287,76 @@ describe('Content Priority System', () => {
           content: `
             Quick question about resources. My stress level is 8/10 today though.
             I rate my coping as 3/10 right now. Any suggestions?
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       // Might still be Tier 3 but with higher confidence due to user data
       expect(analysis.userSelfAssessmentPresent).toBe(true);
       expect(analysis.confidence).toBeGreaterThan(60);
     });
   });
-  
+
   // ========================================
   // EDGE CASES AND ERROR HANDLING
   // ========================================
-  
+
   describe('Edge Cases and Error Handling', () => {
-    
     test('should handle empty messages', () => {
       const analysis = analyzeContentTier([]);
-      
+
       expect(analysis.tier).toBe('tier3_minimal');
       expect(analysis.confidence).toBeGreaterThan(0);
     });
-    
+
     test('should handle messages with empty content', () => {
       const messages = [
         { role: 'user', content: '' },
         { role: 'assistant', content: 'How can I help you?' },
-        { role: 'user', content: '   ' }
+        { role: 'user', content: '   ' },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       expect(analysis.tier).toBe('tier3_minimal');
     });
-    
+
     test('should filter out non-user messages', () => {
       const messages = [
         { role: 'system', content: 'System message' },
         { role: 'assistant', content: 'Assistant response' },
-        { role: 'user', content: 'I feel anxious about the presentation. My anxiety is 8/10.' }
+        { role: 'user', content: 'I feel anxious about the presentation. My anxiety is 8/10.' },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       // Should only analyze user message
       expect(analysis.userSelfAssessmentPresent).toBe(true);
       expect(analysis.tier).toBe('tier2_standard');
     });
-    
+
     test('should handle mixed role types', () => {
       const messages = [
         { role: 'user', content: 'First part of my concern...' },
         { role: 'assistant', content: 'I understand, please continue.' },
-        { role: 'user', content: 'My anxiety is 9/10 and I feel completely overwhelmed.' }
+        { role: 'user', content: 'My anxiety is 9/10 and I feel completely overwhelmed.' },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       // Should combine all user messages
       expect(analysis.userSelfAssessmentPresent).toBe(true);
       expect(analysis.tier).toBe('tier2_standard');
     });
   });
-  
+
   // ========================================
   // TIER BOUNDARY TESTS
   // ========================================
-  
+
   describe('Tier Boundary Conditions', () => {
-    
     test('should prefer Tier 1 when CBT signature is strong', () => {
       const messages = [
         {
@@ -376,75 +370,77 @@ describe('Content Priority System', () => {
             - "I'll fail" *(8/10)*
             
             Brief schema reflection about childhood patterns.
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
       expect(analysis.tier).toBe('tier1_premium');
     });
-    
+
     test('should prefer Tier 1 when schema reflection is present', () => {
       const messages = [
         {
-          role: 'user',  
+          role: 'user',
           content: `
             Looking at my core beliefs and how childhood experiences shaped my schema modes.
             These maladaptive patterns developed as protective mechanisms but my inner critic
             voice dominates now. Part of my healing journey involves recognizing these patterns.
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
       expect(analysis.tier).toBe('tier1_premium');
       expect(analysis.schemaReflectionDepth).not.toBe('none');
     });
-    
+
     test('should distinguish between Tier 2 and Tier 3 based on emotional context', () => {
       const tier2Content = `
         I'm worried about tomorrow's presentation. I keep thinking everyone will judge me
         harshly and see my mistakes. This anxiety is really affecting my sleep.
       `;
-      
+
       const tier3Content = `
         Tomorrow I have a presentation. Need to make sure everything is organized properly.
       `;
-      
+
       const tier2Analysis = analyzeContentTier([{ role: 'user', content: tier2Content }]);
       const tier3Analysis = analyzeContentTier([{ role: 'user', content: tier3Content }]);
-      
+
       expect(tier2Analysis.tier).toBe('tier2_standard');
       expect(tier3Analysis.tier).toBe('tier3_minimal');
     });
   });
-  
+
   // ========================================
   // UTILITY FUNCTION TESTS
   // ========================================
-  
+
   describe('Utility Functions', () => {
-    
     test('getContentTierExplanation should provide clear explanations', () => {
       const tier1Analysis: ContentTierAnalysis = {
         tier: 'tier1_premium',
         confidence: 92,
-        triggers: ['CBT diary header detected', 'User emotion ratings (quantified self-assessment)'],
+        triggers: [
+          'CBT diary header detected',
+          'User emotion ratings (quantified self-assessment)',
+        ],
         analysisRecommendation: {
           shouldAnalyzeCognitiveDistortions: true,
           shouldAnalyzeSchemas: true,
           shouldGenerateActionItems: true,
           shouldProvideTherapeuticInsights: true,
           analysisDepth: 'comprehensive',
-          prioritizeUserAssessments: true
+          prioritizeUserAssessments: true,
         },
         reportType: 'client_friendly',
         userSelfAssessmentPresent: true,
-        schemaReflectionDepth: 'moderate'
+        schemaReflectionDepth: 'moderate',
       };
-      
+
       const explanation = getContentTierExplanation(tier1Analysis);
-      
+
       expect(explanation).toContain('Premium CBT/Schema Analysis');
       expect(explanation).toContain('Confidence: 92%');
       expect(explanation).toContain('CBT diary header detected');
@@ -452,7 +448,7 @@ describe('Content Priority System', () => {
       expect(explanation).toContain('User self-assessments detected');
       expect(explanation).toContain('Schema reflection depth: moderate');
     });
-    
+
     test('meetsAnalysisThreshold should correctly identify analysis worthiness', () => {
       const tier1Analysis: ContentTierAnalysis = {
         tier: 'tier1_premium',
@@ -464,13 +460,13 @@ describe('Content Priority System', () => {
           shouldGenerateActionItems: true,
           shouldProvideTherapeuticInsights: true,
           analysisDepth: 'comprehensive',
-          prioritizeUserAssessments: true
+          prioritizeUserAssessments: true,
         },
         reportType: 'client_friendly',
         userSelfAssessmentPresent: true,
-        schemaReflectionDepth: 'comprehensive'
+        schemaReflectionDepth: 'comprehensive',
       };
-      
+
       const tier3Analysis: ContentTierAnalysis = {
         tier: 'tier3_minimal',
         confidence: 75,
@@ -481,33 +477,32 @@ describe('Content Priority System', () => {
           shouldGenerateActionItems: false,
           shouldProvideTherapeuticInsights: false,
           analysisDepth: 'surface',
-          prioritizeUserAssessments: false
+          prioritizeUserAssessments: false,
         },
         reportType: 'client_friendly',
         userSelfAssessmentPresent: false,
-        schemaReflectionDepth: 'none'
+        schemaReflectionDepth: 'none',
       };
-      
+
       expect(meetsAnalysisThreshold(tier1Analysis)).toBe(true);
       expect(meetsAnalysisThreshold(tier3Analysis)).toBe(false);
     });
   });
-  
+
   // ========================================
   // REAL-WORLD SCENARIO TESTS
   // ========================================
-  
+
   describe('Real-World Scenarios', () => {
-    
     test('should handle progressive conversation deepening', () => {
       const messages = [
         {
           role: 'user',
-          content: 'I wanted to talk about some work stress.'
+          content: 'I wanted to talk about some work stress.',
         },
         {
-          role: 'assistant', 
-          content: 'I\'d like to hear more about what\'s been stressful for you.'
+          role: 'assistant',
+          content: "I'd like to hear more about what's been stressful for you.",
         },
         {
           role: 'user',
@@ -516,18 +511,18 @@ describe('Content Priority System', () => {
             My anxiety is probably 7/10 and I feel overwhelmed. I always seem to
             catastrophize these situations and assume the worst will happen.
             It's a pattern I've noticed where I never feel good enough.
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
+
       // Should classify as Tier 2 based on final substantive content
-      expect(analysis.tier).toBe('tier2_standard'); 
+      expect(analysis.tier).toBe('tier2_standard');
       expect(analysis.userSelfAssessmentPresent).toBe(true);
       expect(analysis.analysisRecommendation.shouldProvideTherapeuticInsights).toBe(true);
     });
-    
+
     test('should handle crisis support request', () => {
       const messages = [
         {
@@ -537,13 +532,13 @@ describe('Content Priority System', () => {
             completely hopeless. I can't see any way out of this pain. Everything feels
             pointless and I'm scared of these dark thoughts. I desperately need help
             but don't know where to turn. Please help me understand what's happening.
-          `
-        }
+          `,
+        },
       ];
-      
+
       const analysis = analyzeContentTier(messages);
-      
-      // Should be Tier 2 with high confidence for therapeutic intervention  
+
+      // Should be Tier 2 with high confidence for therapeutic intervention
       expect(analysis.tier).toBe('tier2_standard');
       expect(analysis.confidence).toBeGreaterThan(70); // Relaxed - tier classification is what matters
       expect(analysis.userSelfAssessmentPresent).toBe(true);
@@ -557,9 +552,10 @@ expect.extend({
   toBeBetween(received: number, floor: number, ceiling: number) {
     const pass = received >= floor && received <= ceiling;
     return {
-      message: () => pass 
-        ? `expected ${received} not to be between ${floor} and ${ceiling}`
-        : `expected ${received} to be between ${floor} and ${ceiling}`,
+      message: () =>
+        pass
+          ? `expected ${received} not to be between ${floor} and ${ceiling}`
+          : `expected ${received} to be between ${floor} and ${ceiling}`,
       pass,
     };
   },

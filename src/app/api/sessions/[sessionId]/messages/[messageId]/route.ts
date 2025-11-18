@@ -17,15 +17,20 @@ export const PATCH = withValidationAndParams(
   patchBodySchema,
   async (_request, context, validatedData, params) => {
     try {
-      const { sessionId, messageId } = params as { sessionId: string; messageId: string };
+      const { sessionId, messageId } = (await params) as { sessionId: string; messageId: string };
 
-      const { valid } = await verifySessionOwnership(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
+      const { valid } = await verifySessionOwnership(
+        sessionId,
+        (context.userInfo as { clerkId?: string }).clerkId ?? ''
+      );
       if (!valid) {
         return createNotFoundErrorResponse('Session', context.requestId);
       }
 
       const client = getConvexHttpClient();
-      const existing = await client.query(anyApi.messages.getById, { messageId }) as ConvexMessage | null;
+      const existing = (await client.query(anyApi.messages.getById, {
+        messageId,
+      })) as ConvexMessage | null;
 
       if (!existing || existing.sessionId !== sessionId) {
         return createNotFoundErrorResponse('Message', context.requestId);
@@ -34,7 +39,7 @@ export const PATCH = withValidationAndParams(
       const currentMetadata = (existing.metadata as Record<string, unknown> | null) ?? {};
 
       const sanitizedMetadata = validatedData.metadata
-        ? JSON.parse(JSON.stringify(validatedData.metadata)) as Record<string, unknown>
+        ? (JSON.parse(JSON.stringify(validatedData.metadata)) as Record<string, unknown>)
         : undefined;
 
       const nextMetadata: Record<string, unknown> = (() => {
@@ -48,10 +53,10 @@ export const PATCH = withValidationAndParams(
         };
       })();
 
-      const updated = await client.mutation(anyApi.messages.update, {
+      const updated = (await client.mutation(anyApi.messages.update, {
         messageId,
         metadata: nextMetadata,
-      }) as ConvexMessage;
+      })) as ConvexMessage;
 
       try {
         await MessageCache.invalidate(sessionId);
@@ -63,18 +68,25 @@ export const PATCH = withValidationAndParams(
         timestamp: new Date(updated.timestamp),
       });
 
-      return createSuccessResponse({
-        id: updated._id,
-        sessionId,
-        role: decrypted.role as 'user' | 'assistant',
-        content: decrypted.content,
-        modelUsed: updated.modelUsed ?? undefined,
-        metadata: nextMetadata,
-        timestamp: decrypted.timestamp,
-        createdAt: new Date(updated.createdAt),
-      }, { requestId: context.requestId });
+      return createSuccessResponse(
+        {
+          id: updated._id,
+          sessionId,
+          role: decrypted.role as 'user' | 'assistant',
+          content: decrypted.content,
+          modelUsed: updated.modelUsed ?? undefined,
+          metadata: nextMetadata,
+          timestamp: decrypted.timestamp,
+          createdAt: new Date(updated.createdAt),
+        },
+        { requestId: context.requestId }
+      );
     } catch (error) {
-      return enhancedErrorHandlers.handleDatabaseError(error as Error, 'update message metadata', context);
+      return enhancedErrorHandlers.handleDatabaseError(
+        error as Error,
+        'update message metadata',
+        context
+      );
     }
   }
 );

@@ -1,4 +1,7 @@
-import { __setCreateRequestLoggerForTests, __setApiMiddlewareDepsForTests } from '@/lib/api/api-middleware';
+import {
+  __setCreateRequestLoggerForTests,
+  __setApiMiddlewareDepsForTests,
+} from '@/lib/api/api-middleware';
 
 const originalNodeEnv = process.env.NODE_ENV;
 const setNodeEnv = (value: string | undefined) => {
@@ -32,14 +35,14 @@ describe('api-middleware test helpers', () => {
     });
 
     __setCreateRequestLoggerForTests(customLogger);
-    
+
     // The function should accept and store the custom logger
     expect(customLogger).toBeDefined();
   });
 
   it('allows resetting request logger with null', () => {
     __setCreateRequestLoggerForTests(null);
-    
+
     // Should not throw
     expect(true).toBe(true);
   });
@@ -51,7 +54,7 @@ describe('api-middleware test helpers', () => {
     });
 
     __setApiMiddlewareDepsForTests({ validateApiAuth: customAuth });
-    
+
     expect(customAuth).toBeDefined();
   });
 
@@ -61,7 +64,7 @@ describe('api-middleware test helpers', () => {
     });
 
     __setApiMiddlewareDepsForTests({ getRateLimiter: customLimiter });
-    
+
     expect(customLimiter).toBeDefined();
   });
 
@@ -72,7 +75,7 @@ describe('api-middleware test helpers', () => {
     });
 
     __setApiMiddlewareDepsForTests({ getSingleUserInfo: customGetter });
-    
+
     expect(customGetter).toBeDefined();
   });
 
@@ -83,14 +86,14 @@ describe('api-middleware test helpers', () => {
         checkRateLimit: async () => ({ allowed: true }),
       }),
     });
-    
+
     // Should not throw
     expect(true).toBe(true);
   });
 
   it('handles empty deps object', () => {
     __setApiMiddlewareDepsForTests({});
-    
+
     // Should not throw
     expect(true).toBe(true);
   });
@@ -107,7 +110,7 @@ describe('api-middleware test helpers - non-test environment', () => {
     // These should be no-ops in production
     __setCreateRequestLoggerForTests(() => ({ requestId: 'prod' }));
     __setApiMiddlewareDepsForTests({ validateApiAuth: async () => ({ isValid: true }) });
-    
+
     // Should not throw, just silently do nothing
     expect(true).toBe(true);
   });

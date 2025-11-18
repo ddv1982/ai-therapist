@@ -95,7 +95,11 @@ export class MessageProcessingError extends ChatError {
  * Error for session-related failures
  */
 export class SessionError extends ChatError {
-  constructor(operation: 'create' | 'fetch' | 'update' | 'delete', originalError?: Error, context?: Record<string, unknown>) {
+  constructor(
+    operation: 'create' | 'fetch' | 'update' | 'delete',
+    originalError?: Error,
+    context?: Record<string, unknown>
+  ) {
     const operationNames = {
       create: 'create session',
       fetch: 'fetch session',
@@ -103,11 +107,12 @@ export class SessionError extends ChatError {
       delete: 'delete session',
     };
 
-    const code = operation === 'create'
-      ? ApiErrorCode.SESSION_CREATION_FAILED
-      : operation === 'delete'
-      ? ApiErrorCode.SESSION_DELETION_FAILED
-      : ApiErrorCode.INTERNAL_SERVER_ERROR;
+    const code =
+      operation === 'create'
+        ? ApiErrorCode.SESSION_CREATION_FAILED
+        : operation === 'delete'
+          ? ApiErrorCode.SESSION_DELETION_FAILED
+          : ApiErrorCode.INTERNAL_SERVER_ERROR;
 
     super({
       code,
@@ -125,7 +130,12 @@ export class SessionError extends ChatError {
  * Error for AI service failures
  */
 export class AIServiceError extends ChatError {
-  constructor(details: string, isUnavailable: boolean = false, originalError?: Error, context?: Record<string, unknown>) {
+  constructor(
+    details: string,
+    isUnavailable: boolean = false,
+    originalError?: Error,
+    context?: Record<string, unknown>
+  ) {
     const code = isUnavailable
       ? ApiErrorCode.AI_SERVICE_UNAVAILABLE
       : ApiErrorCode.AI_SERVICE_ERROR;
@@ -185,10 +195,13 @@ export class TherapeuticAnalysisError extends ChatError {
  * Error for encryption/decryption failures
  */
 export class EncryptionError extends ChatError {
-  constructor(operation: 'encrypt' | 'decrypt', originalError?: Error, context?: Record<string, unknown>) {
-    const code = operation === 'encrypt'
-      ? ApiErrorCode.ENCRYPTION_ERROR
-      : ApiErrorCode.DECRYPTION_ERROR;
+  constructor(
+    operation: 'encrypt' | 'decrypt',
+    originalError?: Error,
+    context?: Record<string, unknown>
+  ) {
+    const code =
+      operation === 'encrypt' ? ApiErrorCode.ENCRYPTION_ERROR : ApiErrorCode.DECRYPTION_ERROR;
 
     super({
       code,
@@ -207,12 +220,17 @@ export class EncryptionError extends ChatError {
  * Error for database operation failures
  */
 export class DatabaseOperationError extends ChatError {
-  constructor(operation: 'read' | 'write' | 'query', originalError?: Error, context?: Record<string, unknown>) {
-    const code = operation === 'write'
-      ? ApiErrorCode.DATABASE_WRITE_FAILED
-      : operation === 'query'
-      ? ApiErrorCode.DATABASE_QUERY_FAILED
-      : ApiErrorCode.DATABASE_ERROR;
+  constructor(
+    operation: 'read' | 'write' | 'query',
+    originalError?: Error,
+    context?: Record<string, unknown>
+  ) {
+    const code =
+      operation === 'write'
+        ? ApiErrorCode.DATABASE_WRITE_FAILED
+        : operation === 'query'
+          ? ApiErrorCode.DATABASE_QUERY_FAILED
+          : ApiErrorCode.DATABASE_ERROR;
 
     super({
       code,
@@ -231,10 +249,15 @@ export class DatabaseOperationError extends ChatError {
  * Error for memory management failures
  */
 export class MemoryManagementError extends ChatError {
-  constructor(operation: 'retrieve' | 'delete', originalError?: Error, context?: Record<string, unknown>) {
-    const code = operation === 'retrieve'
-      ? ApiErrorCode.MEMORY_RETRIEVAL_FAILED
-      : ApiErrorCode.MEMORY_DELETION_FAILED;
+  constructor(
+    operation: 'retrieve' | 'delete',
+    originalError?: Error,
+    context?: Record<string, unknown>
+  ) {
+    const code =
+      operation === 'retrieve'
+        ? ApiErrorCode.MEMORY_RETRIEVAL_FAILED
+        : ApiErrorCode.MEMORY_DELETION_FAILED;
 
     super({
       code,

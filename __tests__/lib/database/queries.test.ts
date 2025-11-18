@@ -121,16 +121,20 @@ describe('database queries type safety', () => {
 
   it('returns a typed session bundle when verifying ownership with messages included', async () => {
     const bundle = buildBundle();
-    mockQuery
-      .mockResolvedValueOnce(bundle)
-      .mockResolvedValueOnce(buildUserDoc());
+    mockQuery.mockResolvedValueOnce(bundle).mockResolvedValueOnce(buildUserDoc());
 
-    const result = await queries.verifySessionOwnership(bundle.session._id as string, 'clerk_test_user', {
-      includeMessages: true,
-    });
+    const result = await queries.verifySessionOwnership(
+      bundle.session._id as string,
+      'clerk_test_user',
+      {
+        includeMessages: true,
+      }
+    );
 
     expect(mockQuery).toHaveBeenCalledTimes(2);
-    expect(mockQuery.mock.calls[0][1]).toEqual({ sessionId: bundle.session._id as unknown as string });
+    expect(mockQuery.mock.calls[0][1]).toEqual({
+      sessionId: bundle.session._id as unknown as string,
+    });
     expect(mockQuery.mock.calls[1][1]).toEqual({ clerkId: 'clerk_test_user' });
     expect(result.valid).toBe(true);
     expect(result.session).toBeDefined();
@@ -143,11 +147,11 @@ describe('database queries type safety', () => {
 
   it('logs and returns invalid when bundle validation fails', async () => {
     const invalidBundle = { session: null, messages: [], reports: [] };
-    mockQuery
-      .mockResolvedValueOnce(invalidBundle)
-      .mockResolvedValueOnce(buildUserDoc());
+    mockQuery.mockResolvedValueOnce(invalidBundle).mockResolvedValueOnce(buildUserDoc());
 
-    const result = await queries.verifySessionOwnership('session_1', 'clerk_test_user', { includeMessages: true });
+    const result = await queries.verifySessionOwnership('session_1', 'clerk_test_user', {
+      includeMessages: true,
+    });
 
     expect(result.valid).toBe(false);
     expect(mockDatabaseError).toHaveBeenCalledWith(
@@ -163,14 +167,15 @@ describe('database queries type safety', () => {
   it('returns null when requesting session with mismatched ownership', async () => {
     const bundle = buildBundle();
     const otherUser = buildUserDoc();
-    mockQuery
-      .mockResolvedValueOnce(otherUser)
-      .mockResolvedValueOnce({
-        ...bundle,
-        session: buildSessionDoc({ userId: 'user_2' as Id<'users'> }),
-      });
+    mockQuery.mockResolvedValueOnce(otherUser).mockResolvedValueOnce({
+      ...bundle,
+      session: buildSessionDoc({ userId: 'user_2' as Id<'users'> }),
+    });
 
-    const result = await queries.getSessionWithMessages(bundle.session._id as string, otherUser.clerkId ?? '');
+    const result = await queries.getSessionWithMessages(
+      bundle.session._id as string,
+      otherUser.clerkId ?? ''
+    );
 
     expect(result).toBeNull();
   });
