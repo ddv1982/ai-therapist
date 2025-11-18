@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
+import { CBTStepWrapper } from '@/features/therapy/components/cbt-step-wrapper';
 import { HelpCircle, Plus, Minus } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { CBTStepType, ChallengeQuestionsData } from '@/types';

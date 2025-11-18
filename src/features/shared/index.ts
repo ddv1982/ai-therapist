@@ -22,7 +22,7 @@ export { MobileDebugInfo } from '@/components/layout/mobile-debug-info';
 // UI utilities
 export { CommandPalette, useCommandPalette } from '@/components/ui/command-palette';
 export { TherapeuticTable, useTherapeuticTableStyles } from '@/components/ui/therapeutic-table';
-export { MobileCBTSheet } from '@/components/ui/mobile-cbt-sheet';
+export { MobileCBTSheet } from '@/features/therapy/components/mobile-cbt-sheet';
 
 // Hook utilities
 export { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';

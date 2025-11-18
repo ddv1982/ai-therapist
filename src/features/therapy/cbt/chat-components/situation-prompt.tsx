@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { CBTStepType, SituationData } from '@/types';
 import { useTranslations } from 'next-intl';
-import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
+import { CBTStepWrapper } from '@/features/therapy/components/cbt-step-wrapper';
 
 interface SituationPromptProps {
   onComplete?: (data: SituationData) => void;

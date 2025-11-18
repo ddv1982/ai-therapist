@@ -58,6 +58,7 @@ export {
 export function isLocalhost(host: string): boolean {
   if (!host) return false;
 
+  // Special case for IPv6 localhost, as split(':') would break it
   if (host === '::1') return true;
 
   const cleanHost = host.toLowerCase().split(':')[0];

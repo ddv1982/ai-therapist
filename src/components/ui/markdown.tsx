@@ -5,7 +5,7 @@ import { Streamdown } from 'streamdown';
 import {
   CBTSessionSummaryCard,
   type CBTSessionSummaryData,
-} from '@/components/ui/cbt-session-summary-card';
+} from '@/features/therapy/components/cbt-session-summary-card';
 import { safeParseFromMatch } from '@/lib/utils/helpers';
 
 function extractCBTSummaryData(text: string): {
