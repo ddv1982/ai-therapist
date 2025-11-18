@@ -6,10 +6,10 @@ exports[`DraftPanel renders with draft found 1`] = `
     class="space-y-4"
   >
     <div
-      class="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
+      class="rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300"
     >
       <div
-        class="flex items-center justify-between mb-2"
+        class="mb-2 flex items-center justify-between"
       >
         <div
           class="flex items-center gap-2"
@@ -20,7 +20,7 @@ exports[`DraftPanel renders with draft found 1`] = `
             📝 Previous Session Found
           </h3>
           <span
-            class="px-2 py-1 text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full"
+            class="rounded-full bg-green-100 px-2 py-1 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-400"
           >
             Saved
           </span>
@@ -31,7 +31,7 @@ exports[`DraftPanel renders with draft found 1`] = `
           title="Delete draft"
         >
           <div
-            class="w-4 h-4"
+            class="h-4 w-4"
             data-testid="trash-icon"
           />
         </button>
@@ -42,22 +42,22 @@ exports[`DraftPanel renders with draft found 1`] = `
         We found an in-progress CBT session.
       </p>
       <p
-        class="text-sm opacity-75 mt-1"
+        class="mt-1 text-sm opacity-75"
       >
         Choose to continue where you left off or start fresh.
       </p>
     </div>
     <div
-      class="flex flex-col sm:flex-row gap-3 justify-center"
+      class="flex flex-col justify-center gap-3 sm:flex-row"
     >
       <button
-        class="inline-flex items-center whitespace-nowrap text-base font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 py-2 justify-center gap-3 h-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 group px-6"
+        class="inline-flex items-center whitespace-nowrap text-base font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 py-2 group h-12 justify-center gap-3 rounded-xl px-6 shadow-lg transition-all duration-200 hover:shadow-xl"
       >
         <div
-          class="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"
+          class="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-colors group-hover:bg-white/30"
         >
           <div
-            class="w-4 h-4"
+            class="h-4 w-4"
             data-testid="brain-icon"
           />
         </div>
@@ -67,12 +67,12 @@ exports[`DraftPanel renders with draft found 1`] = `
           Resume Previous Session
         </span>
         <div
-          class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"
+          class="h-4 w-4 opacity-60 transition-opacity group-hover:opacity-100"
           data-testid="sparkles-icon"
         />
       </button>
       <button
-        class="inline-flex items-center gap-2 whitespace-nowrap text-base transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border-input bg-background shadow-sm py-2 justify-center h-12 rounded-xl border-2 hover:bg-accent hover:text-accent-foreground px-6 font-semibold"
+        class="inline-flex items-center gap-2 whitespace-nowrap text-base transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border-input bg-background shadow-sm py-2 hover:bg-accent hover:text-accent-foreground h-12 justify-center rounded-xl border-2 px-6 font-semibold"
       >
         Start New Session
       </button>
@@ -87,13 +87,13 @@ exports[`DraftPanel renders without draft (begin button) 1`] = `
     class="flex justify-center"
   >
     <button
-      class="inline-flex items-center whitespace-nowrap text-base font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 py-2 justify-center gap-3 h-12 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 group px-8"
+      class="inline-flex items-center whitespace-nowrap text-base font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 py-2 group h-12 justify-center gap-3 rounded-xl px-8 shadow-lg transition-all duration-200 hover:shadow-xl"
     >
       <div
-        class="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors"
+        class="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-colors group-hover:bg-white/30"
       >
         <div
-          class="w-4 h-4"
+          class="h-4 w-4"
           data-testid="brain-icon"
         />
       </div>
@@ -103,7 +103,7 @@ exports[`DraftPanel renders without draft (begin button) 1`] = `
         Begin CBT Session
       </span>
       <div
-        class="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity"
+        class="h-4 w-4 opacity-60 transition-opacity group-hover:opacity-100"
         data-testid="sparkles-icon"
       />
     </button>

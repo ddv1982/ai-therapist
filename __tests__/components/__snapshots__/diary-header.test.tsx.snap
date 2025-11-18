@@ -3,20 +3,20 @@
 exports[`DiaryHeader renders mobile header 1`] = `
 <div>
   <div
-    class="border-b bg-card/70 backdrop-blur-md sticky top-0 z-10"
+    class="bg-card/70 sticky top-0 z-10 border-b backdrop-blur-md"
   >
     <div
-      class="max-w-4xl mx-auto px-3 py-2"
+      class="mx-auto max-w-4xl px-3 py-2"
     >
       <div
         class="flex items-center justify-between gap-2"
       >
         <button
-          class="flex items-center gap-1 h-8 px-2"
+          class="flex h-8 items-center gap-1 px-2"
           variant="ghost"
         >
           <div
-            class="w-4 h-4"
+            class="h-4 w-4"
             data-testid="icon-arrow-left"
           />
           <span
@@ -26,7 +26,7 @@ exports[`DiaryHeader renders mobile header 1`] = `
           </span>
         </button>
         <span
-          class="text-xs text-primary"
+          class="text-primary text-xs"
         >
           Step 
           3
@@ -35,7 +35,7 @@ exports[`DiaryHeader renders mobile header 1`] = `
         </span>
       </div>
       <div
-        class="w-full bg-muted rounded-full h-1 mt-2"
+        class="bg-muted mt-2 h-1 w-full rounded-full"
       >
         <div
           class="bg-primary h-1 rounded-full transition-all duration-500 ease-out"
@@ -50,10 +50,10 @@ exports[`DiaryHeader renders mobile header 1`] = `
 exports[`DiaryHeader renders simplified desktop header 1`] = `
 <div>
   <div
-    class="border-b bg-card/50 backdrop-blur-md sticky top-0 z-10"
+    class="bg-card/50 sticky top-0 z-10 border-b backdrop-blur-md"
   >
     <div
-      class="max-w-4xl mx-auto px-4 sm:px-6 py-4"
+      class="mx-auto max-w-4xl px-4 py-4 sm:px-6"
     >
       <div
         class="flex items-center justify-between"
@@ -62,11 +62,11 @@ exports[`DiaryHeader renders simplified desktop header 1`] = `
           class="flex items-center gap-4"
         >
           <button
-            class="flex items-center gap-2 hover:bg-accent hover:text-accent-foreground"
+            class="hover:bg-accent hover:text-accent-foreground flex items-center gap-2"
             variant="ghost"
           >
             <div
-              class="w-4 h-4"
+              class="h-4 w-4"
               data-testid="icon-arrow-left"
             />
             <span
@@ -79,10 +79,10 @@ exports[`DiaryHeader renders simplified desktop header 1`] = `
             class="flex items-center gap-3"
           >
             <div
-              class="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg"
+              class="bg-primary flex h-12 w-12 items-center justify-center rounded-xl shadow-lg"
             >
               <div
-                class="w-6 h-6 text-primary-foreground"
+                class="text-primary-foreground h-6 w-6"
                 data-testid="icon-brain"
               />
             </div>
