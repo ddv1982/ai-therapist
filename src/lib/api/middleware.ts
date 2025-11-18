@@ -125,18 +125,25 @@ export function withAuth<T = unknown>(
 
     let userInfo: ReturnType<typeof getSingleUserInfo> & { clerkId?: string };
     try {
+      console.log('Calling getSingleUserInfo');
       userInfo = getSingleUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
         clerkId?: string;
       };
-    } catch {
+      console.log('getSingleUserInfo result:', userInfo);
+    } catch (e) {
+      console.log('getSingleUserInfo failed, creating fallback', e);
       userInfo = createFallbackUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
         clerkId?: string;
       };
+      console.log('Fallback userInfo:', userInfo);
     }
     const authWithId = authResult as unknown as { userId?: string };
     const mergedUserInfo = authWithId?.userId
       ? { ...userInfo, clerkId: authWithId.userId }
       : userInfo;
+    
+    console.log('Merged userInfo:', mergedUserInfo);
+
     const authenticatedContext: AuthenticatedRequestContext = {
       ...(baseContext as RequestContext),
       userInfo: mergedUserInfo,
@@ -147,7 +154,9 @@ export function withAuth<T = unknown>(
       clerkId: (mergedUserInfo as { clerkId?: string } | undefined)?.clerkId,
     });
 
+    console.log('Calling handler with context');
     const res = await handler(request, authenticatedContext, params);
+    console.log('Handler returned');
     setResponseHeaders(res, authenticatedContext.requestId);
     return res;
   });
