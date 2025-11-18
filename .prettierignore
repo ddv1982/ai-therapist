@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+
+# Build outputs
+.next
+build
+dist
+out
+
+# Testing
+coverage
+playwright-report
+test-results
+
+# Generated files
+*.generated.ts
+convex/_generated
+
+# Factory/Droidz
+.droidz
+.factory
+
+# Misc
+.DS_Store
+*.log
+*.tsbuildinfo
+package-lock.json
