@@ -1,6 +1,6 @@
 /**
  * CBT (Cognitive Behavioral Therapy) Diary Template Generator
- * 
+ *
  * Provides structured CBT diary entry templates for therapeutic reflection.
  * Based on standard CBT practices with intensity scales from 1-10.
  */
@@ -11,7 +11,7 @@
  */
 export function generateCBTTemplate(): string {
   const today = new Date().toISOString().split('T')[0];
-  
+
   return `📝 **CBT Diary Entry**
 
 **Date:** ${today}
@@ -154,7 +154,7 @@ export function generateCBTTemplate(): string {
  */
 export function generateQuickCBTTemplate(): string {
   const today = new Date().toISOString().split('T')[0];
-  
+
   return `📝 **Quick CBT Check-in**
 
 **Date:** ${today}
@@ -178,56 +178,56 @@ export function generateQuickCBTTemplate(): string {
 export function getCBTPromptsForEmotion(emotion: string): string[] {
   const prompts: Record<string, string[]> = {
     anxiety: [
-      "What is the worst that could realistically happen?",
-      "How likely is this feared outcome (0-100%)?",
-      "Have I survived similar situations before?",
-      "What would I tell a friend who had this worry?"
+      'What is the worst that could realistically happen?',
+      'How likely is this feared outcome (0-100%)?',
+      'Have I survived similar situations before?',
+      'What would I tell a friend who had this worry?',
     ],
     depression: [
-      "Is this thought helping or hurting me?",
-      "What evidence contradicts this negative view?",
-      "What small step could I take right now?",
-      "When did I last feel differently about this?"
+      'Is this thought helping or hurting me?',
+      'What evidence contradicts this negative view?',
+      'What small step could I take right now?',
+      'When did I last feel differently about this?',
     ],
     anger: [
-      "What need or value is being threatened here?",
-      "Is my reaction proportionate to the situation?",
+      'What need or value is being threatened here?',
+      'Is my reaction proportionate to the situation?',
       "What can I control vs. what can't I control?",
-      "How will I feel about this in a week?"
+      'How will I feel about this in a week?',
     ],
     shame: [
-      "Would I judge a friend this harshly for the same thing?",
-      "Is this mistake part of being human?",
-      "What can I learn from this experience?",
-      "How can I show myself compassion right now?"
+      'Would I judge a friend this harshly for the same thing?',
+      'Is this mistake part of being human?',
+      'What can I learn from this experience?',
+      'How can I show myself compassion right now?',
     ],
     // ERP-specific prompts for OCD and intrusive thoughts
     ocd: [
-      "What compulsion am I feeling urged to perform right now?",
+      'What compulsion am I feeling urged to perform right now?',
       "What would happen if I didn't do this ritual/check/wash?",
       "How certain do I need to be (0-100%) vs. how certain is 'enough'?",
-      "Can I sit with this uncertainty for 5 more minutes?"
+      'Can I sit with this uncertainty for 5 more minutes?',
     ],
     intrusive_thoughts: [
-      "Is having this thought the same as wanting to act on it?",
-      "Would I judge someone else for having this thought?",
-      "What does fighting this thought do - does it make it stronger?",
-      "Can I notice this thought and let it pass like a cloud?"
+      'Is having this thought the same as wanting to act on it?',
+      'Would I judge someone else for having this thought?',
+      'What does fighting this thought do - does it make it stronger?',
+      'Can I notice this thought and let it pass like a cloud?',
     ],
     contamination: [
       "What am I truly afraid will happen if I don't wash/clean?",
-      "How long can most people go without washing in this situation?",
+      'How long can most people go without washing in this situation?',
       "What evidence do I have that I'm actually contaminated?",
-      "What would 'normal' cleanliness look like here?"
+      "What would 'normal' cleanliness look like here?",
     ],
     checking: [
       "What am I checking for - what's the feared outcome?",
       "How many times is 'enough' to check something?",
-      "What evidence do I have that something is actually wrong?",
-      "Can I leave this unchecked and see what happens?"
-    ]
+      'What evidence do I have that something is actually wrong?',
+      'Can I leave this unchecked and see what happens?',
+    ],
   };
-  
+
   return prompts[emotion.toLowerCase()] || prompts.anxiety;
 }
 
@@ -241,35 +241,35 @@ export function getERPChallengeQuestions(obsessionType: string): string[] {
     contamination: [
       "What level of cleanliness is 'normal' for this situation?",
       "What would happen if I touched this and didn't wash immediately?",
-      "How do other people handle this same situation?",
-      "Can I tolerate this feeling of 'dirtiness' for 10 more minutes?"
+      'How do other people handle this same situation?',
+      "Can I tolerate this feeling of 'dirtiness' for 10 more minutes?",
     ],
     checking: [
-      "What evidence do I actually have that something is wrong?",
-      "How many times have my fears actually come true?",
+      'What evidence do I actually have that something is wrong?',
+      'How many times have my fears actually come true?',
       "What would I do if I couldn't check this at all?",
-      "Can I practice trusting that I did it right the first time?"
+      'Can I practice trusting that I did it right the first time?',
     ],
     harm: [
-      "Is having a scary thought the same as being dangerous?",
-      "What evidence do I have that I would ever act on this thought?",
-      "How do I treat people I care about - does that match my fears?",
-      "Can I let this thought exist without pushing it away?"
+      'Is having a scary thought the same as being dangerous?',
+      'What evidence do I have that I would ever act on this thought?',
+      'How do I treat people I care about - does that match my fears?',
+      'Can I let this thought exist without pushing it away?',
     ],
     symmetry: [
-      "What would happen if things stayed uneven/imperfect?",
-      "How much of my time do I spend on arranging things perfectly?",
+      'What would happen if things stayed uneven/imperfect?',
+      'How much of my time do I spend on arranging things perfectly?',
       "Can I practice leaving something 'good enough' today?",
-      "What really matters more - perfection or my time/energy?"
+      'What really matters more - perfection or my time/energy?',
     ],
     moral: [
-      "Is having a disturbing thought the same as being immoral?",
-      "Do my actions align with my values, regardless of my thoughts?",
+      'Is having a disturbing thought the same as being immoral?',
+      'Do my actions align with my values, regardless of my thoughts?',
       "Can I accept uncertainty about whether I'm 'good enough'?",
-      "What would self-compassion look like in this moment?"
-    ]
+      'What would self-compassion look like in this moment?',
+    ],
   };
-  
+
   return erpPrompts[obsessionType.toLowerCase()] || erpPrompts.contamination;
 }
 
@@ -279,7 +279,7 @@ export function getERPChallengeQuestions(obsessionType: string): string[] {
  */
 export function generateERPTemplate(): string {
   const today = new Date().toISOString().split('T')[0];
-  
+
   return `🎯 **ERP (Exposure and Response Prevention) Plan**
 
 **Date:** ${today}
@@ -431,7 +431,7 @@ export function generateERPTemplate(): string {
  */
 export function generateQuickERPTemplate(): string {
   const today = new Date().toISOString().split('T')[0];
-  
+
   return `🎯 **Quick ERP Check-in**
 
 **Date:** ${today}

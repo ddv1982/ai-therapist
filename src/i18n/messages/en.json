@@ -161,8 +161,7 @@
   "cbt.draft.choice": "Choose to continue where you left off or start fresh.",
   "cbt.actions.resume": "Resume Previous Session",
   "cbt.actions.startNew": "Start New Session",
-  "cbt.actions.begin": "Begin CBT Session"
-  ,
+  "cbt.actions.begin": "Begin CBT Session",
   "cbt.sessionReportTitle": "CBT Session Report",
   "auth.setup.qrAlt": "TOTP QR Code",
   "cbt.actionPlan.title": "Future Action Plan",
@@ -465,7 +464,7 @@
   "obsessions.buttonTooltip": "Open obsessions and compulsions tracker",
   "obsessions.tableTitle": "Obsessions and Compulsions Tracker",
   "obsessions.tableSubtitle": "Record your obsessions and the compulsions they trigger",
-  
+
   "obsessions.obsessions": "Obsessions",
   "obsessions.compulsions": "Compulsions",
   "obsessions.start": "Start",
@@ -477,7 +476,7 @@
   "obsessions.deleteCompulsion": "Delete Compulsion",
   "obsessions.step1Title": "Describe Your Obsession",
   "obsessions.step1Subtitle": "What obsessive thought are you experiencing?",
-  "obsessions.step2Title": "Describe Your Compulsion", 
+  "obsessions.step2Title": "Describe Your Compulsion",
   "obsessions.step2Subtitle": "What compulsive behavior does this trigger?",
   "obsessions.savePair": "Save Pair",
   "obsessions.updatePair": "Update Pair",
@@ -487,7 +486,7 @@
   "obsessions.pair": "Pair",
   "obsessions.recorded": "Recorded",
   "obsessions.minutes": "minutes",
-  
+
   "obsessions.obsessionLabel": "Obsession",
   "obsessions.obsessionPlaceholder": "Describe the obsessive thought...",
   "obsessions.intensityLabel": "Intensity (1-10)",
@@ -495,7 +494,7 @@
   "obsessions.triggersLabel": "Triggers",
   "obsessions.triggersPlaceholder": "What triggers this obsession?",
   "obsessions.triggersHelp": "Separate multiple triggers with commas",
-  
+
   "obsessions.compulsionLabel": "Compulsion",
   "obsessions.compulsionPlaceholder": "Describe the compulsive behavior...",
   "obsessions.frequencyLabel": "Frequency (1-10)",
@@ -504,7 +503,7 @@
   "obsessions.durationHelp": "How long does this compulsion typically last?",
   "obsessions.reliefLabel": "Relief Level (1-10)",
   "obsessions.reliefHelp": "How much relief does this compulsion provide?",
-  
+
   "obsessions.intensityScale.1": "Very mild",
   "obsessions.intensityScale.2": "Mild",
   "obsessions.intensityScale.3": "Slight",
@@ -515,7 +514,7 @@
   "obsessions.intensityScale.8": "Very strong",
   "obsessions.intensityScale.9": "Intense",
   "obsessions.intensityScale.10": "Overwhelming",
-  
+
   "obsessions.frequencyScale.1": "Rarely",
   "obsessions.frequencyScale.2": "Occasionally",
   "obsessions.frequencyScale.3": "Sometimes",
@@ -526,7 +525,7 @@
   "obsessions.frequencyScale.8": "Almost always",
   "obsessions.frequencyScale.9": "Constantly",
   "obsessions.frequencyScale.10": "Continuously",
-  
+
   "obsessions.reliefScale.1": "No relief",
   "obsessions.reliefScale.2": "Minimal relief",
   "obsessions.reliefScale.3": "Slight relief",
@@ -537,7 +536,7 @@
   "obsessions.reliefScale.8": "Very strong relief",
   "obsessions.reliefScale.9": "Complete relief",
   "obsessions.reliefScale.10": "Total relief",
-  
+
   "obsessions.actions.save": "Save",
   "obsessions.actions.cancel": "Cancel",
   "obsessions.actions.delete": "Delete",
@@ -546,7 +545,7 @@
   "obsessions.actions.saving": "Saving...",
   "obsessions.actions.saved": "Saved",
   "obsessions.actions.error": "Error saving data",
-  
+
   "obsessions.validation.obsessionRequired": "Obsession description is required",
   "obsessions.validation.compulsionRequired": "Compulsion description is required",
   "obsessions.validation.intensityRequired": "Intensity rating is required",
@@ -556,17 +555,17 @@
   "obsessions.validation.durationMin": "Duration must be at least 1 minute",
   "obsessions.validation.durationMax": "Duration cannot exceed 999 minutes",
   "obsessions.addPairButton": "Add Pair",
-"obsessions.removeBlock": "Remove block",
+  "obsessions.removeBlock": "Remove block",
   "obsessions.complete": "Complete & Send to Chat",
   "obsessions.editLabel": "Editing",
   "obsessions.editPair": "Edit Pair",
   "obsessions.cancelAction": "Cancel",
   "obsessions.deletePair": "Delete Pair",
-  
+
   "obsessions.emptyState.title": "No obsessions or compulsions recorded yet",
   "obsessions.emptyState.subtitle": "Start by adding your first obsession or compulsion to begin tracking patterns",
   "obsessions.emptyState.addFirst": "Add your first entry",
-  
+
   "obsessions.export.title": "Export Obsessions & Compulsions Data",
   "obsessions.export.format": "Export as {format}",
   "obsessions.export.success": "Data exported successfully",

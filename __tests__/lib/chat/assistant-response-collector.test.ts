@@ -27,7 +27,14 @@ describe('AssistantResponseCollector', () => {
 
   it('appends chunks with limit and marks truncation', async () => {
     const { AssistantResponseCollector } = await import('@/lib/chat/assistant-response-collector');
-    const c = new AssistantResponseCollector('s1', { valid: true } as any, 'm1', 'rid', 5, concatWithLimit);
+    const c = new AssistantResponseCollector(
+      's1',
+      { valid: true } as any,
+      'm1',
+      'rid',
+      5,
+      concatWithLimit
+    );
     expect(c.append('Hello')).toBe(false);
     expect(c.append(' World')).toBe(true); // truncated
     expect(c.wasTruncated()).toBe(true);
@@ -35,7 +42,14 @@ describe('AssistantResponseCollector', () => {
 
   it('persists when ownership is valid and updates model id', async () => {
     const { AssistantResponseCollector } = await import('@/lib/chat/assistant-response-collector');
-    const c = new AssistantResponseCollector('s1', { valid: true } as any, 'm1', 'rid', 100, concatWithLimit);
+    const c = new AssistantResponseCollector(
+      's1',
+      { valid: true } as any,
+      'm1',
+      'rid',
+      100,
+      concatWithLimit
+    );
     c.append('Hello');
     await c.persist();
 
@@ -47,10 +61,24 @@ describe('AssistantResponseCollector', () => {
 
   it('does not persist when sessionId missing or ownership invalid', async () => {
     const { AssistantResponseCollector } = await import('@/lib/chat/assistant-response-collector');
-    const c1 = new AssistantResponseCollector(undefined as any, { valid: true } as any, 'm', 'rid', 50, concatWithLimit);
+    const c1 = new AssistantResponseCollector(
+      undefined as any,
+      { valid: true } as any,
+      'm',
+      'rid',
+      50,
+      concatWithLimit
+    );
     c1.append('x');
     await c1.persist();
-    const c2 = new AssistantResponseCollector('s2', { valid: false } as any, 'm', 'rid', 50, concatWithLimit);
+    const c2 = new AssistantResponseCollector(
+      's2',
+      { valid: false } as any,
+      'm',
+      'rid',
+      50,
+      concatWithLimit
+    );
     c2.append('y');
     await c2.persist();
     expect(c2.wasTruncated()).toBe(false);

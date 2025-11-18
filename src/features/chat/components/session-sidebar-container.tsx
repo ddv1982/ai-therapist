@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { SessionSidebar } from './session-sidebar';
-import { 
-  useFetchSessionsQuery, 
+import {
+  useFetchSessionsQuery,
   useDeleteSessionMutation,
   useGetCurrentSessionQuery,
-  SessionData
+  SessionData,
 } from '@/store/slices/sessions-api';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setCurrentSession as setCurrentSessionAction } from '@/store/slices/sessions-slice';
@@ -20,7 +20,12 @@ export function SessionSidebarContainer({
   showSidebar,
   setShowSidebar,
   children,
-}: { isMobile: boolean; showSidebar: boolean; setShowSidebar: (show: boolean) => void; children?: React.ReactNode }) {
+}: {
+  isMobile: boolean;
+  showSidebar: boolean;
+  setShowSidebar: (show: boolean) => void;
+  children?: React.ReactNode;
+}) {
   // i18n available if needed in future; unused here as we defer creation
   const dispatch = useAppDispatch();
   // Normalize SessionData to match SessionSidebarProps expectations
@@ -31,11 +36,16 @@ export function SessionSidebarContainer({
     updatedAt: new Date(s.updatedAt),
     startedAt: new Date(s.createdAt),
     status: 'active',
-    _count: { messages: (s as unknown as { _count?: { messages?: number } })._count?.messages ?? (s as unknown as { messageCount?: number }).messageCount ?? 0 }
+    _count: {
+      messages:
+        (s as unknown as { _count?: { messages?: number } })._count?.messages ??
+        (s as unknown as { messageCount?: number }).messageCount ??
+        0,
+    },
   }));
   const [deleteSession] = useDeleteSessionMutation();
   const { data: currentServerSession, refetch: refetchCurrent } = useGetCurrentSessionQuery();
-  const currentSessionId = useAppSelector(state => state.sessions.currentSessionId);
+  const currentSessionId = useAppSelector((state) => state.sessions.currentSessionId);
   const { selectSession } = useSelectSession();
   const { showToast } = useToast();
   const t = useTranslations('toast');
@@ -68,8 +78,16 @@ export function SessionSidebarContainer({
         } catch {}
       }
     } catch (err) {
-      showToast({ type: 'error', title: t('deleteSessionFailedTitle'), message: t('deleteSessionFailedBody') });
-      logger.error('Failed to delete session', { component: 'SessionSidebarContainer', sessionId }, err as Error);
+      showToast({
+        type: 'error',
+        title: t('deleteSessionFailedTitle'),
+        message: t('deleteSessionFailedBody'),
+      });
+      logger.error(
+        'Failed to delete session',
+        { component: 'SessionSidebarContainer', sessionId },
+        err as Error
+      );
     }
   };
 

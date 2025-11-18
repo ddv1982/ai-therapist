@@ -12,10 +12,12 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Message Encryption Preserved**: AES-256-GCM encryption still protects therapeutic data
 
 ### 🛠️ Developer Experience
+- **Next.js 16**: Upgraded to latest version with Turbopack for 2-3× faster builds
+- **Prettier Auto-Format**: Consistent code formatting across the codebase with auto-format on save
 - **Cleaner Codebase**: Removed custom auth endpoints, device fingerprinting, TOTP service
-- **Latest Dependencies**: All 27 packages upgraded to latest stable versions
-- **Better Test Coverage**: 862 passing tests (100% pass rate) with Clerk mocks
-- **Improved DX**: Turbopack provides 10x faster development builds
+- **Latest Dependencies**: All packages upgraded to latest stable versions
+- **Better Test Coverage**: 177 E2E tests + unit tests passing (100% pass rate)
+- **Improved DX**: Turbopack provides instant Fast Refresh and 10× faster development builds
 
 ## ✨ Features
 

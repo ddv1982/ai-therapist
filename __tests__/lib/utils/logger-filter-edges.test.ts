@@ -17,5 +17,3 @@ describe('logger filterSensitiveData edges', () => {
     spy.mockRestore();
   });
 });
-
-

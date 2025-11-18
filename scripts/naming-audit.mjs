@@ -6,7 +6,13 @@ const ROOT = new URL('..', import.meta.url).pathname;
 const SRC = join(ROOT, 'src');
 
 const NEXT_RESERVED_FILES = new Set([
-  'page.tsx', 'layout.tsx', 'route.ts', 'loading.tsx', 'error.tsx', 'not-found.tsx', 'manifest.ts'
+  'page.tsx',
+  'layout.tsx',
+  'route.ts',
+  'loading.tsx',
+  'error.tsx',
+  'not-found.tsx',
+  'manifest.ts',
 ]);
 const ALLOWED_BASENAMES = new Set(['env.defaults', 'env.public', 'logger.data']);
 
@@ -15,12 +21,17 @@ const isKebabFile = (s) => {
   if (s.endsWith('.d.ts')) return true;
   if (!/\.(ts|tsx)$/.test(s)) return true; // ignore other files
   if (NEXT_RESERVED_FILES.has(s)) return true;
-  const base = s.replace(/\.(ts|tsx)$/,'');
+  const base = s.replace(/\.(ts|tsx)$/, '');
   if (ALLOWED_BASENAMES.has(base)) return true;
   return isKebab(base);
 };
 
-const shouldSkipDir = (name) => name.startsWith('(') || name.startsWith('_') || name.startsWith('[') || name === '.next' || name === 'node_modules';
+const shouldSkipDir = (name) =>
+  name.startsWith('(') ||
+  name.startsWith('_') ||
+  name.startsWith('[') ||
+  name === '.next' ||
+  name === 'node_modules';
 
 /** @param {string} dir */
 async function walk(dir, out) {
@@ -51,7 +62,7 @@ async function main() {
     process.exit(2);
   }
   await walk(SRC, issues);
-  const shareHits = issues.filter(i => /\bshare\b/.test(i.path) && !i.path.includes('/app/'));
+  const shareHits = issues.filter((i) => /\bshare\b/.test(i.path) && !i.path.includes('/app/'));
   const total = issues.length;
   console.log(`Naming audit complete. Issues: ${total}`);
   if (total) {
@@ -60,7 +71,9 @@ async function main() {
     }
   }
   if (shareHits.length) {
-    console.log(`\nFound ${shareHits.length} paths containing "share". Consider consolidating to "shared".`);
+    console.log(
+      `\nFound ${shareHits.length} paths containing "share". Consider consolidating to "shared".`
+    );
   }
   process.exit(total ? 1 : 0);
 }

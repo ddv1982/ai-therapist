@@ -1,22 +1,13 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LanguageToggle } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { therapeuticInteractive } from '@/lib/ui/design-tokens';
 import type { ChatSessionSummary } from '@/hooks/use-chat-controller';
-import {
-  Plus,
-  MessageSquare,
-  Trash2,
-  X,
-  Sparkles,
-  Brain,
-  Globe,
-  EyeOff,
-} from 'lucide-react';
+import { Plus, MessageSquare, Trash2, X, Sparkles, Brain, Globe, EyeOff } from 'lucide-react';
 
 interface ChatSidebarProps {
   open: boolean;
@@ -55,15 +46,17 @@ export function ChatSidebar(props: ChatSidebarProps) {
     translate,
   } = props;
 
-  const sidebarClasses = useMemo(() => (
-    `${open ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${open ? 'fixed md:relative' : ''} ${open ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} transition-all duration-500 ease-in-out overflow-hidden bg-card/80 dark:bg-card/80 backdrop-blur-md border-r border-border/50 flex flex-col shadow-xl animate-slide-in`
-  ), [open]);
+  const sidebarClasses = useMemo(
+    () =>
+      `${open ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${open ? 'fixed md:relative' : ''} ${open ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} transition-all duration-500 ease-in-out overflow-hidden bg-card/80 dark:bg-card/80 backdrop-blur-md border-r border-border/50 flex flex-col shadow-xl animate-slide-in`,
+    [open]
+  );
 
   return (
     <>
       {open && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -83,14 +76,16 @@ export function ChatSidebar(props: ChatSidebarProps) {
           `,
         }}
       >
-        <div className="p-6 border-b border-border/30">
-          <div className="flex items-center justify-between mb-6">
+        <div className="border-border/30 border-b p-6">
+          <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
-                <Brain className="w-6 h-6 text-primary-foreground" />
+              <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-xl shadow-lg">
+                <Brain className="text-primary-foreground h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold gradient-text">{translate('sidebar.brandName')}</h2>
+                <h2 className="gradient-text text-xl font-semibold">
+                  {translate('sidebar.brandName')}
+                </h2>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -102,27 +97,29 @@ export function ChatSidebar(props: ChatSidebarProps) {
                 aria-label="Close sidebar"
                 className={therapeuticInteractive.iconButtonSmall}
               >
-                <X className="w-4 h-4 relative z-10" />
+                <X className="relative z-10 h-4 w-4" />
               </Button>
             </div>
           </div>
           <Button
-            onClick={() => { void onStartNewSession(); }}
-            className="w-full justify-start gap-3 h-12 rounded-xl transition-all duration-200 group"
+            onClick={() => {
+              void onStartNewSession();
+            }}
+            className="group h-12 w-full justify-start gap-3 rounded-xl transition-all duration-200"
           >
-            <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-              <Plus className="w-4 h-4" />
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-colors group-hover:bg-white/30">
+              <Plus className="h-4 w-4" />
             </div>
             <span className="font-semibold">{translate('sidebar.startNew')}</span>
-            <Sparkles className="w-4 h-4 ml-auto opacity-60 group-hover:opacity-100 transition-opacity" />
+            <Sparkles className="ml-auto h-4 w-4 opacity-60 transition-opacity group-hover:opacity-100" />
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        <div className="custom-scrollbar flex-1 overflow-y-auto p-4">
           {sessions.length === 0 ? (
-            <div className="text-center py-12">
-              <MessageSquare className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">{translate('sidebar.noSessions')}</p>
+            <div className="py-12 text-center">
+              <MessageSquare className="text-muted-foreground/50 mx-auto mb-3 h-12 w-12" />
+              <p className="text-muted-foreground text-sm">{translate('sidebar.noSessions')}</p>
             </div>
           ) : (
             sessions.map((session) => {
@@ -131,10 +128,10 @@ export function ChatSidebar(props: ChatSidebarProps) {
               return (
                 <Card
                   key={session.id}
-                  className={`p-4 mb-3 group transition-all duration-300 hover:shadow-lg cursor-pointer ${
+                  className={`group mb-3 cursor-pointer p-4 transition-all duration-300 hover:shadow-lg ${
                     isActive
-                      ? 'ring-2 ring-primary/50 bg-primary/5 dark:bg-primary/5 border-primary/30 shadow-md'
-                      : 'hover:border-primary/20 bg-white/50 dark:bg-card/50 hover:bg-white/80 dark:hover:bg-card/70'
+                      ? 'ring-primary/50 bg-primary/5 dark:bg-primary/5 border-primary/30 shadow-md ring-2'
+                      : 'hover:border-primary/20 dark:bg-card/50 dark:hover:bg-card/70 bg-white/50 hover:bg-white/80'
                   }`}
                 >
                   <div
@@ -147,33 +144,31 @@ export function ChatSidebar(props: ChatSidebarProps) {
                     }}
                   >
                     <div
-                      className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                      className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
                         isActive
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary'
                       }`}
                     >
-                      <MessageSquare className="w-4 h-4" />
+                      <MessageSquare className="h-4 w-4" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-base font-semibold line-clamp-2 mb-1">
-                        {session.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="mb-1 line-clamp-2 text-base font-semibold">{session.title}</h3>
+                      <p className="text-muted-foreground text-sm">
                         {startedAt ? startedAt.toLocaleString() : ''}
                       </p>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1 h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive"
+                      className="hover:bg-destructive/10 hover:text-destructive h-8 w-8 rounded-lg p-1 opacity-0 transition-all duration-200 group-hover:opacity-100"
                       onClick={(event) => {
                         event.stopPropagation();
                         void onDeleteSession(session.id);
                       }}
                       aria-label="Delete session"
                     >
-                      <Trash2 className="w-4 h-4 relative z-10" />
+                      <Trash2 className="relative z-10 h-4 w-4" />
                     </Button>
                   </div>
                 </Card>
@@ -182,51 +177,77 @@ export function ChatSidebar(props: ChatSidebarProps) {
           )}
         </div>
 
-        <div className="p-4 border-t border-border/50 bg-muted/30">
+        <div className="border-border/50 bg-muted/30 border-t p-4">
           <div className="flex items-center justify-end gap-3">
             <button
               onClick={onToggleSmartModel}
-              className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 ${
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:outline-none ${
                 smartModelActive
                   ? 'bg-violet-600 text-white'
                   : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
               }`}
               aria-pressed={smartModelActive}
-              aria-label={smartModelActive ? translate('sidebar.smartEnabled') : translate('sidebar.smartDisabled')}
-              title={smartModelActive ? translate('sidebar.smartEnabled') : translate('sidebar.smartDisabled')}
+              aria-label={
+                smartModelActive
+                  ? translate('sidebar.smartEnabled')
+                  : translate('sidebar.smartDisabled')
+              }
+              title={
+                smartModelActive
+                  ? translate('sidebar.smartEnabled')
+                  : translate('sidebar.smartDisabled')
+              }
             >
-              <Sparkles className="w-4 h-4" />
+              <Sparkles className="h-4 w-4" />
             </button>
             <button
               onClick={onToggleWebSearch}
-              className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${
                 webSearchEnabled
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
               }`}
               aria-pressed={webSearchEnabled}
-              aria-label={webSearchEnabled ? translate('sidebar.webSearchEnabled') : translate('sidebar.webSearchDisabled')}
-              title={webSearchEnabled ? translate('sidebar.webSearchEnabled') : translate('sidebar.webSearchDisabled')}
+              aria-label={
+                webSearchEnabled
+                  ? translate('sidebar.webSearchEnabled')
+                  : translate('sidebar.webSearchDisabled')
+              }
+              title={
+                webSearchEnabled
+                  ? translate('sidebar.webSearchEnabled')
+                  : translate('sidebar.webSearchDisabled')
+              }
             >
-              <Globe className="w-4 h-4" />
+              <Globe className="h-4 w-4" />
             </button>
-            <div className="relative group">
+            <div className="group relative">
               <button
                 onClick={onToggleLocalModel}
-                className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:outline-none ${
                   localModelActive
                     ? 'bg-violet-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.65)]'
                     : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
                 }`}
                 aria-pressed={localModelActive}
-                aria-label={localModelActive ? translate('sidebar.localModelEnabled') : translate('sidebar.localModelDisabled')}
-                title={localModelActive ? translate('sidebar.localModelTooltipActive') : translate('sidebar.localModelTooltipInactive')}
+                aria-label={
+                  localModelActive
+                    ? translate('sidebar.localModelEnabled')
+                    : translate('sidebar.localModelDisabled')
+                }
+                title={
+                  localModelActive
+                    ? translate('sidebar.localModelTooltipActive')
+                    : translate('sidebar.localModelTooltipInactive')
+                }
               >
-                <EyeOff className="w-4 h-4" />
+                <EyeOff className="h-4 w-4" />
               </button>
               {/* Tooltip */}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                {localModelActive ? translate('sidebar.localModelTooltipActive') : translate('sidebar.localModelTooltipInactive')}
+              <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 transform rounded bg-gray-800 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100">
+                {localModelActive
+                  ? translate('sidebar.localModelTooltipActive')
+                  : translate('sidebar.localModelTooltipInactive')}
               </div>
             </div>
             <LanguageToggle />

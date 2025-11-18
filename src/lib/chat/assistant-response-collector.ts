@@ -16,7 +16,11 @@ export class AssistantResponseCollector {
     modelId: string,
     private readonly requestId: string,
     private readonly maxChars: number,
-    private readonly appendWithLimit: (current: string, addition: string, maxChars: number) => { value: string; truncated: boolean }
+    private readonly appendWithLimit: (
+      current: string,
+      addition: string,
+      maxChars: number
+    ) => { value: string; truncated: boolean }
   ) {
     this.currentModelId = modelId;
   }
@@ -40,7 +44,11 @@ export class AssistantResponseCollector {
     const trimmed = this.buffer.trim();
     if (!trimmed) return;
 
-    const encrypted = encryptMessage({ role: 'assistant', content: trimmed, timestamp: new Date() });
+    const encrypted = encryptMessage({
+      role: 'assistant',
+      content: trimmed,
+      timestamp: new Date(),
+    });
     try {
       const client = getConvexHttpClient();
       await client.mutation(anyApi.messages.create, {
@@ -65,7 +73,7 @@ export class AssistantResponseCollector {
       logger.error(
         'Failed to persist assistant message after stream',
         { apiEndpoint: '/api/chat', requestId: this.requestId, sessionId: this.sessionId },
-        error instanceof Error ? error : new Error(String(error)),
+        error instanceof Error ? error : new Error(String(error))
       );
     }
   }

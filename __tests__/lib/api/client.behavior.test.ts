@@ -17,12 +17,20 @@ describe('ApiClient request behavior', () => {
 
     const fetchMock = jest.fn(async (url: RequestInfo | URL, init?: RequestInit) => {
       capturedUrl = String(url);
-      capturedHeaders = init?.headers instanceof Headers ? init.headers : new Headers(init?.headers);
+      capturedHeaders =
+        init?.headers instanceof Headers ? init.headers : new Headers(init?.headers);
       const payload = {
         success: true,
         data: {
           items: [],
-          pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false },
+          pagination: {
+            page: 1,
+            limit: 20,
+            total: 0,
+            totalPages: 0,
+            hasNext: false,
+            hasPrev: false,
+          },
         },
       };
       return {
@@ -45,14 +53,17 @@ describe('ApiClient request behavior', () => {
 
   it('returns undefined for successful 204 responses', async () => {
     const client = new ApiClient('https://api.example');
-    const fetchMock = jest.fn(async () => ({
-      ok: true,
-      status: 204,
-      statusText: 'No Content',
-      headers: new Headers(),
-      json: jest.fn().mockResolvedValue(null),
-      text: jest.fn().mockResolvedValue(''),
-    } as unknown as Response));
+    const fetchMock = jest.fn(
+      async () =>
+        ({
+          ok: true,
+          status: 204,
+          statusText: 'No Content',
+          headers: new Headers(),
+          json: jest.fn().mockResolvedValue(null),
+          text: jest.fn().mockResolvedValue(''),
+        }) as unknown as Response
+    );
     global.fetch = fetchMock as typeof global.fetch;
 
     // @ts-expect-error accessing internal request helper for targeted validation
@@ -62,14 +73,17 @@ describe('ApiClient request behavior', () => {
 
   it('returns raw text for non-JSON responses', async () => {
     const client = new ApiClient();
-    const fetchMock = jest.fn(async () => ({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      headers: new Headers({ 'Content-Type': 'text/plain' }),
-      json: jest.fn(),
-      text: jest.fn().mockResolvedValue('plain-value'),
-    } as unknown as Response));
+    const fetchMock = jest.fn(
+      async () =>
+        ({
+          ok: true,
+          status: 200,
+          statusText: 'OK',
+          headers: new Headers({ 'Content-Type': 'text/plain' }),
+          json: jest.fn(),
+          text: jest.fn().mockResolvedValue('plain-value'),
+        }) as unknown as Response
+    );
     global.fetch = fetchMock as typeof global.fetch;
 
     // @ts-expect-error accessing internal request helper for targeted validation

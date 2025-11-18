@@ -1,7 +1,7 @@
 /**
  * Unified Test Utilities for Therapeutic AI Application
  * Provides consistent utilities, mocking, and fixtures across all test files
- * 
+ *
  * This utility consolidates 23+ identified duplicate patterns:
  * - Mock setup/teardown patterns
  * - Therapeutic data fixtures
@@ -10,9 +10,16 @@
  * - Performance monitoring helpers
  */
 
-import { render, RenderOptions, RenderResult, screen, fireEvent, waitFor } from '@testing-library/react';
+import * as React from 'react';
+import {
+  render,
+  RenderOptions,
+  RenderResult,
+  screen,
+  fireEvent,
+  waitFor,
+} from '@testing-library/react';
 import { ReactElement, ReactNode } from 'react';
-import React from 'react';
 import { NextRequest } from 'next/server';
 // Use compatible RequestInit type
 
@@ -45,28 +52,43 @@ import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
  * Eliminates duplicate mock setups across 41 test files
  */
 export class MockFactory {
-  
   /**
    * Standard Lucide React icon mocks - used in 12+ test files
    */
   static createLucideIconMocks() {
     return {
-      X: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'x-icon', className, ...props }),
-      Send: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'send-icon', className, ...props }),
-      Menu: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'menu-icon', className, ...props }),
-      FileText: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'filetext-icon', className, ...props }),
-      Brain: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'brain-icon', className, ...props }),
-      Sparkles: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'sparkles-icon', className, ...props }),
-      CheckCircle: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'check-circle-icon', className, ...props }),
-      AlertCircle: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'alert-circle-icon', className, ...props }),
-      Info: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'info-icon', className, ...props }),
-      AlertTriangle: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'alert-triangle-icon', className, ...props }),
-      Heart: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'heart-icon', className, ...props }),
-      User: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'user-icon', className, ...props }),
-      Settings: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'settings-icon', className, ...props }),
-      Download: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'download-icon', className, ...props }),
-      Trash2: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'trash-icon', className, ...props }),
-      Edit3: ({ className, ...props }: any) => React.createElement('div', { 'data-testid': 'edit-icon', className, ...props })
+      X: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'x-icon', className, ...props }),
+      Send: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'send-icon', className, ...props }),
+      Menu: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'menu-icon', className, ...props }),
+      FileText: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'filetext-icon', className, ...props }),
+      Brain: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'brain-icon', className, ...props }),
+      Sparkles: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'sparkles-icon', className, ...props }),
+      CheckCircle: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'check-circle-icon', className, ...props }),
+      AlertCircle: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'alert-circle-icon', className, ...props }),
+      Info: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'info-icon', className, ...props }),
+      AlertTriangle: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'alert-triangle-icon', className, ...props }),
+      Heart: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'heart-icon', className, ...props }),
+      User: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'user-icon', className, ...props }),
+      Settings: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'settings-icon', className, ...props }),
+      Download: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'download-icon', className, ...props }),
+      Trash2: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'trash-icon', className, ...props }),
+      Edit3: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'edit-icon', className, ...props }),
     };
   }
 
@@ -76,8 +98,8 @@ export class MockFactory {
   static createUtilsMock() {
     return {
       ...(jest.requireActual('@/lib/utils/utils') as Record<string, unknown>),
-      generateSecureRandomString: jest.fn((length: number) => 
-        'mock-secure-' + 'x'.repeat(Math.max(0, length - 12))
+      generateSecureRandomString: jest.fn(
+        (length: number) => 'mock-secure-' + 'x'.repeat(Math.max(0, length - 12))
       ),
       generateUUID: jest.fn(() => 'mock-uuid-1234-5678-9abc-def012345678'),
       cn: jest.fn((...classes) => classes.filter(Boolean).join(' ')),
@@ -95,8 +117,10 @@ export class MockFactory {
     return {
       // Auth mocks
       apiAuth: {
-        validateApiAuth: createMockFn<AuthValidationResult>()
-          .mockResolvedValue({ isValid: true, userId: 'test-user' }),
+        validateApiAuth: createMockFn<AuthValidationResult>().mockResolvedValue({
+          isValid: true,
+          userId: 'test-user',
+        }),
         // createAuthErrorResponse removed in favor of standardized helpers
       },
       // Logger mocks
@@ -148,12 +172,12 @@ export class MockFactory {
     } = {}
   ) {
     const { method = 'GET', body, searchParams = {}, headers = {} } = options;
-    
+
     const requestUrl = new URL(url);
     Object.entries(searchParams).forEach(([key, value]) => {
       requestUrl.searchParams.set(key, value);
     });
-    
+
     const requestInit = {
       method,
       headers: {
@@ -161,11 +185,11 @@ export class MockFactory {
         ...headers,
       },
     };
-    
+
     if (body && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
       (requestInit as any).body = JSON.stringify(body);
     }
-    
+
     return new NextRequest(requestUrl, requestInit as ConstructorParameters<typeof NextRequest>[1]);
   }
 
@@ -186,9 +210,13 @@ export class MockFactory {
         generateDeviceName: jest.fn().mockReturnValue('Mock Device Browser'),
       },
       apiAuth: {
-        validateApiAuth: jest.fn(() => Promise.resolve<AuthValidationResult>({ isValid: true, userId: 'mock-user-id' })),
-        createAuthErrorResponse: jest.fn().mockReturnValue({ status: 401, body: { error: 'Unauthorized' } }),
-      }
+        validateApiAuth: jest.fn(() =>
+          Promise.resolve<AuthValidationResult>({ isValid: true, userId: 'mock-user-id' })
+        ),
+        createAuthErrorResponse: jest
+          .fn()
+          .mockReturnValue({ status: 401, body: { error: 'Unauthorized' } }),
+      },
     };
   }
 
@@ -201,22 +229,26 @@ export class MockFactory {
         url: string;
         method: string;
         headers: Map<string, string>;
-        
+
         constructor(url: string, init?: { method?: string; headers?: Record<string, string> }) {
           this.url = url;
           this.method = init?.method || 'GET';
           this.headers = new Map(Object.entries(init?.headers || {}));
         }
-        
-        get(key: string) { return this.headers.get(key); }
-        json() { return Promise.resolve({}); }
+
+        get(key: string) {
+          return this.headers.get(key);
+        }
+        json() {
+          return Promise.resolve({});
+        }
       },
       NextResponse: {
-        json: jest.fn().mockImplementation((data, init) => ({ 
-          status: (init as any)?.status || 200, 
-          body: data 
+        json: jest.fn().mockImplementation((data, init) => ({
+          status: (init as any)?.status || 200,
+          body: data,
         })),
-      }
+      },
     };
   }
 
@@ -225,39 +257,59 @@ export class MockFactory {
    */
   static createUIComponentMocks() {
     return {
-      Dialog: ({ children, open, ...props }: any) => 
-        open ? React.createElement('div', { role: 'dialog', 'data-testid': 'dialog', ...props }, children) : null,
-      DialogContent: ({ children, className, ...props }: any) => 
-        React.createElement('div', { className: className || 'dialog-content', ...props }, children),
-      DialogHeader: ({ children, ...props }: any) => 
+      Dialog: ({ children, open, ...props }: any) =>
+        open
+          ? React.createElement(
+              'div',
+              { role: 'dialog', 'data-testid': 'dialog', ...props },
+              children
+            )
+          : null,
+      DialogContent: ({ children, className, ...props }: any) =>
+        React.createElement(
+          'div',
+          { className: className || 'dialog-content', ...props },
+          children
+        ),
+      DialogHeader: ({ children, ...props }: any) =>
         React.createElement('div', { className: 'dialog-header', ...props }, children),
-      DialogTitle: ({ children, ...props }: any) => 
+      DialogTitle: ({ children, ...props }: any) =>
         React.createElement('h2', { ...props }, children),
-      DialogFooter: ({ children, ...props }: any) => 
+      DialogFooter: ({ children, ...props }: any) =>
         React.createElement('div', { className: 'dialog-footer', ...props }, children),
-      Button: ({ children, variant, size, className, onClick, ...props }: any) => 
-        React.createElement('button', { 
-          className: `btn ${variant || 'default'} ${size || 'default'} ${className || ''}`.trim(),
-          onClick,
-          ...props 
-        }, children),
-      Card: ({ children, className, ...props }: any) => 
-        React.createElement('div', { className: `card ${className || ''}`.trim(), ...props }, children),
-      CardHeader: ({ children, ...props }: any) => 
+      Button: ({ children, variant, size, className, onClick, ...props }: any) =>
+        React.createElement(
+          'button',
+          {
+            className: `btn ${variant || 'default'} ${size || 'default'} ${className || ''}`.trim(),
+            onClick,
+            ...props,
+          },
+          children
+        ),
+      Card: ({ children, className, ...props }: any) =>
+        React.createElement(
+          'div',
+          { className: `card ${className || ''}`.trim(), ...props },
+          children
+        ),
+      CardHeader: ({ children, ...props }: any) =>
         React.createElement('div', { className: 'card-header', ...props }, children),
-      CardContent: ({ children, ...props }: any) => 
+      CardContent: ({ children, ...props }: any) =>
         React.createElement('div', { className: 'card-content', ...props }, children),
-      CardTitle: ({ children, ...props }: any) => 
-        React.createElement('h3', { ...props }, children),
-      Input: ({ className, ...props }: any) => 
+      CardTitle: ({ children, ...props }: any) => React.createElement('h3', { ...props }, children),
+      Input: ({ className, ...props }: any) =>
         React.createElement('input', { className: `input ${className || ''}`.trim(), ...props }),
-      Textarea: ({ className, ...props }: any) => 
-        React.createElement('textarea', { className: `textarea ${className || ''}`.trim(), ...props }),
-      Select: ({ children, ...props }: any) => 
+      Textarea: ({ className, ...props }: any) =>
+        React.createElement('textarea', {
+          className: `textarea ${className || ''}`.trim(),
+          ...props,
+        }),
+      Select: ({ children, ...props }: any) =>
         React.createElement('select', { className: 'select', ...props }, children),
-      SelectContent: ({ children, ...props }: any) => 
+      SelectContent: ({ children, ...props }: any) =>
         React.createElement('div', { className: 'select-content', ...props }, children),
-      SelectItem: ({ children, value, ...props }: any) => 
+      SelectItem: ({ children, value, ...props }: any) =>
         React.createElement('option', { value, ...props }, children),
     };
   }
@@ -272,7 +324,6 @@ export class MockFactory {
  * Provides realistic CBT, session, and therapeutic data for testing
  */
 export class TherapeuticDataFactory {
-  
   /**
    * Generate realistic CBT diary form data
    */
@@ -289,11 +340,11 @@ export class TherapeuticDataFactory {
         shame: 3,
         guilt: 2,
         other: '',
-        otherIntensity: 0
+        otherIntensity: 0,
       },
       automaticThoughts: [
-        { thought: 'Everyone will think I\'m incompetent', credibility: 7 },
-        { thought: 'I should have prepared better', credibility: 8 }
+        { thought: "Everyone will think I'm incompetent", credibility: 7 },
+        { thought: 'I should have prepared better', credibility: 8 },
       ],
       coreBeliefText: 'I am not good enough',
       coreBeliefCredibility: 6,
@@ -301,20 +352,36 @@ export class TherapeuticDataFactory {
       avoidantBehaviors: 'Skipped the Q&A session',
       overridingBehaviors: 'Took deep breaths before speaking',
       schemaModes: [
-        { id: 'vulnerable-child', name: 'The Vulnerable Child', description: 'scared, helpless', selected: true },
-        { id: 'punishing-parent', name: 'The Punishing Parent', description: 'critical, harsh', selected: false }
+        {
+          id: 'vulnerable-child',
+          name: 'The Vulnerable Child',
+          description: 'scared, helpless',
+          selected: true,
+        },
+        {
+          id: 'punishing-parent',
+          name: 'The Punishing Parent',
+          description: 'critical, harsh',
+          selected: false,
+        },
       ],
       challengeQuestions: [
-        { question: 'What evidence supports this thought?', answer: 'Limited evidence - mostly assumptions' },
-        { question: 'What evidence contradicts this thought?', answer: 'Previous presentations went well' }
+        {
+          question: 'What evidence supports this thought?',
+          answer: 'Limited evidence - mostly assumptions',
+        },
+        {
+          question: 'What evidence contradicts this thought?',
+          answer: 'Previous presentations went well',
+        },
       ],
       rationalThoughts: [
-        { thought: 'One presentation doesn\'t define my competence', credibility: 6 },
-        { thought: 'Everyone has difficult days', credibility: 8 }
+        { thought: "One presentation doesn't define my competence", credibility: 6 },
+        { thought: 'Everyone has difficult days', credibility: 8 },
       ],
       actionPlan: [
         { action: 'Practice presentation skills weekly', commitment: 7 },
-        { action: 'Ask for feedback from trusted colleagues', commitment: 8 }
+        { action: 'Ask for feedback from trusted colleagues', commitment: 8 },
       ],
       finalEmotions: {
         fear: 3,
@@ -325,9 +392,9 @@ export class TherapeuticDataFactory {
         shame: 1,
         guilt: 1,
         other: '',
-        otherIntensity: 0
+        otherIntensity: 0,
       },
-      ...overrides
+      ...overrides,
     };
   }
 
@@ -338,10 +405,10 @@ export class TherapeuticDataFactory {
     return {
       id: 'msg-123',
       role: 'user',
-      content: 'I\'m feeling anxious about an upcoming presentation',
+      content: "I'm feeling anxious about an upcoming presentation",
       timestamp: new Date('2024-01-15T10:30:00Z'),
       sessionId: 'session-456',
-      ...overrides
+      ...overrides,
     };
   }
 
@@ -369,7 +436,7 @@ Would you like to explore what specifically concerns you about this presentation
       timestamp: new Date('2024-01-15T10:31:00Z'),
       sessionId: 'session-456',
       modelUsed: 'openai/gpt-oss-20b',
-      ...overrides
+      ...overrides,
     };
   }
 
@@ -383,10 +450,13 @@ Would you like to explore what specifically concerns you about this presentation
       userId: 'user-123',
       summary: 'Session focused on presentation anxiety and coping strategies',
       keyInsights: ['Client experiences performance anxiety', 'Responds well to CBT techniques'],
-      recommendations: ['Continue practicing breathing exercises', 'Work on challenging negative thoughts'],
+      recommendations: [
+        'Continue practicing breathing exercises',
+        'Work on challenging negative thoughts',
+      ],
       mood: { before: 3, after: 6 },
       createdAt: new Date('2024-01-15T11:00:00Z'),
-      ...overrides
+      ...overrides,
     };
   }
 
@@ -405,7 +475,7 @@ Would you like to explore what specifically concerns you about this presentation
       },
       createdAt: new Date('2024-01-01T00:00:00Z'),
       lastActive: new Date('2024-01-15T10:30:00Z'),
-      ...overrides
+      ...overrides,
     };
   }
 
@@ -414,11 +484,36 @@ Would you like to explore what specifically concerns you about this presentation
    */
   static createSchemaModes() {
     return [
-      { id: 'vulnerable-child', name: 'The Vulnerable Child', description: 'scared, helpless, abandoned', selected: false },
-      { id: 'angry-child', name: 'The Angry Child', description: 'frustrated, enraged', selected: false },
-      { id: 'punishing-parent', name: 'The Punishing Parent', description: 'critical, harsh, demanding', selected: false },
-      { id: 'demanding-parent', name: 'The Demanding Parent', description: 'entitled, controlling', selected: false },
-      { id: 'healthy-adult', name: 'The Healthy Adult', description: 'balanced, rational, caring', selected: false }
+      {
+        id: 'vulnerable-child',
+        name: 'The Vulnerable Child',
+        description: 'scared, helpless, abandoned',
+        selected: false,
+      },
+      {
+        id: 'angry-child',
+        name: 'The Angry Child',
+        description: 'frustrated, enraged',
+        selected: false,
+      },
+      {
+        id: 'punishing-parent',
+        name: 'The Punishing Parent',
+        description: 'critical, harsh, demanding',
+        selected: false,
+      },
+      {
+        id: 'demanding-parent',
+        name: 'The Demanding Parent',
+        description: 'entitled, controlling',
+        selected: false,
+      },
+      {
+        id: 'healthy-adult',
+        name: 'The Healthy Adult',
+        description: 'balanced, rational, caring',
+        selected: false,
+      },
     ];
   }
 }
@@ -432,7 +527,6 @@ Would you like to explore what specifically concerns you about this presentation
  * Provides therapeutic-specific testing helpers
  */
 export class ComponentTestUtils {
-
   /**
    * Create Redux test store with all slices
    */
@@ -442,7 +536,7 @@ export class ComponentTestUtils {
       sessions: sessionsSlice,
       cbt: cbtSlice,
     });
-    
+
     return configureStore({
       reducer: rootReducer,
       preloadedState,
@@ -478,10 +572,9 @@ export class ComponentTestUtils {
       CardTitle: uiMocks.CardTitle,
     }));
 
-
     // Mock Lucide React icons
     jest.mock('lucide-react', () => MockFactory.createLucideIconMocks());
-    
+
     // Mock utils
     jest.mock('@/lib/utils/index', () => MockFactory.createUtilsMock());
   }
@@ -510,20 +603,20 @@ export class ComponentTestUtils {
 
     function AllProviders({ children }: { children: ReactNode }) {
       let content = children;
-      
+
       // Add Redux Provider first (innermost)
       if (withReduxProvider) {
         content = React.createElement(Provider as any, { store }, content);
       }
-      
+
       if (withToastProvider) {
-        const ToastProvider = ({ children }: { children?: ReactNode }) => 
+        const ToastProvider = ({ children }: { children?: ReactNode }) =>
           React.createElement('div', { 'data-testid': 'toast-provider' }, children);
         content = React.createElement(ToastProvider, {}, content);
       }
-      
+
       if (withThemeProvider) {
-        const ThemeProvider = ({ children }: { children?: ReactNode }) => 
+        const ThemeProvider = ({ children }: { children?: ReactNode }) =>
           React.createElement('div', { 'data-testid': 'theme-provider' }, children);
         content = React.createElement(ThemeProvider, {}, content);
       }
@@ -539,9 +632,9 @@ export class ComponentTestUtils {
    */
   static renderWithRedux(ui: ReactElement, initialState?: any): RenderResult {
     const store = ComponentTestUtils.createTestStore(initialState);
-    const TestWrapper = ({ children }: { children?: ReactNode }) => 
+    const TestWrapper = ({ children }: { children?: ReactNode }) =>
       React.createElement(Provider as any, { store }, children as any);
-    
+
     return render(ui, { wrapper: TestWrapper });
   }
 
@@ -552,18 +645,20 @@ export class ComponentTestUtils {
     beforeEach(() => {
       // Clear all mocks
       jest.clearAllMocks();
-      
+
       // Reset DOM state
       document.body.innerHTML = '';
-      
+
       // Mock fetch for API calls
       const mockResponse: any = {
-        json: jest.fn().mockImplementation(() => Promise.resolve({ success: false, memoryDetails: [] })),
+        json: jest
+          .fn()
+          .mockImplementation(() => Promise.resolve({ success: false, memoryDetails: [] })),
         ok: true,
         status: 200,
       };
       (global as any).fetch = jest.fn().mockImplementation(() => Promise.resolve(mockResponse));
-      
+
       // Setup common component and utility mocks
       ComponentTestUtils.setupCommonMocks();
     });
@@ -579,29 +674,29 @@ export class ComponentTestUtils {
    */
   static setupAPITest() {
     const mocks = MockFactory.createAPITestMocks();
-    
+
     beforeEach(() => {
       jest.clearAllMocks();
       // Mock authentication
       jest.doMock('@/lib/api/api-auth', () => mocks.apiAuth);
-      
+
       // Mock logger
       jest.doMock('@/lib/utils/logger', () => ({
         logger: mocks.logger,
         createRequestLogger: jest.fn(() => mocks.requestLogger),
       }));
-      
+
       // Mock encryption
       jest.doMock('@/lib/chat/message-encryption', () => mocks.encryption);
-      
+
       // Mock AI SDK if needed
       jest.doMock('ai', () => mocks.aiSdk);
     });
-    
+
     afterEach(() => {
       jest.restoreAllMocks();
     });
-    
+
     return mocks;
   }
 
@@ -609,10 +704,11 @@ export class ComponentTestUtils {
    * Common form interaction utilities
    */
   static async fillFormField(fieldName: string, value: string) {
-    const field = screen.getByLabelText(new RegExp(fieldName, 'i')) || 
-                  screen.getByRole('textbox', { name: new RegExp(fieldName, 'i') }) ||
-                  screen.getByTestId(fieldName);
-    
+    const field =
+      screen.getByLabelText(new RegExp(fieldName, 'i')) ||
+      screen.getByRole('textbox', { name: new RegExp(fieldName, 'i') }) ||
+      screen.getByTestId(fieldName);
+
     fireEvent.change(field, { target: { value } });
     await waitFor(() => {
       expect(field).toHaveValue(value);
@@ -625,7 +721,7 @@ export class ComponentTestUtils {
   static async submitForm(formTestId = 'form') {
     const form = screen.getByTestId(formTestId);
     fireEvent.submit(form);
-    
+
     await waitFor(() => {
       // Form should either show success or update state
       expect(form).toBeInTheDocument();
@@ -638,16 +734,16 @@ export class ComponentTestUtils {
   static expectTherapeuticTable(headers: string[], data?: string[][]) {
     // Check for table structure
     expect(screen.getByRole('table')).toBeInTheDocument();
-    
+
     // Check headers
-    headers.forEach(header => {
+    headers.forEach((header) => {
       expect(screen.getByText(header)).toBeInTheDocument();
     });
-    
+
     // Check data if provided
     if (data) {
-      data.forEach(row => {
-        row.forEach(cell => {
+      data.forEach((row) => {
+        row.forEach((cell) => {
           expect(screen.getByText(cell)).toBeInTheDocument();
         });
       });
@@ -661,9 +757,14 @@ export class ComponentTestUtils {
   /**
    * Check toast notification display
    */
-  static expectToastMessage(message: string, type: 'success' | 'error' | 'warning' | 'info' = 'success') {
+  static expectToastMessage(
+    message: string,
+    type: 'success' | 'error' | 'warning' | 'info' = 'success'
+  ) {
     expect(screen.getByText(message)).toBeInTheDocument();
-    expect(screen.getByTestId(`${type === 'success' ? 'check-circle' : 'alert-circle'}-icon`)).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`${type === 'success' ? 'check-circle' : 'alert-circle'}-icon`)
+    ).toBeInTheDocument();
   }
 
   /**
@@ -690,7 +791,6 @@ export class ComponentTestUtils {
  * Provides reusable security test scenarios
  */
 export class SecurityTestUtils {
-
   /**
    * Generate XSS attack vectors for testing
    */
@@ -701,7 +801,7 @@ export class SecurityTestUtils {
       '<img src="x" onerror="alert(1)">',
       '<svg onload="alert(1)">',
       '"><script>alert(1)</script>',
-      '\';alert(1);//',
+      "';alert(1);//",
     ];
   }
 
@@ -710,10 +810,10 @@ export class SecurityTestUtils {
    */
   static getSQLInjectionVectors() {
     return [
-      '\'; DROP TABLE users; --',
-      '\' OR \'1\'=\'1',
-      '\' UNION SELECT password FROM users --',
-      '\'; INSERT INTO users VALUES (\'hacker\', \'password\'); --',
+      "'; DROP TABLE users; --",
+      "' OR '1'='1",
+      "' UNION SELECT password FROM users --",
+      "'; INSERT INTO users VALUES ('hacker', 'password'); --",
     ];
   }
 
@@ -736,8 +836,8 @@ export class SecurityTestUtils {
       strong: [
         'Kj8#mN2$pL9&qR4*tS6@uV1!wX3%yZ5^',
         'A7b#C9d$E2f&G4h*I6j@K8l!M3n%P5q^',
-        'R9s#T2u$V7w&X4y*Z6a@B8c!D3e%F5g^'
-      ]
+        'R9s#T2u$V7w&X4y*Z6a@B8c!D3e%F5g^',
+      ],
     };
   }
 
@@ -749,22 +849,22 @@ export class SecurityTestUtils {
     return {
       valid: {
         token: 'valid-session-token',
-        expiresAt: now + (30 * 24 * 60 * 60 * 1000), // 30 days
+        expiresAt: now + 30 * 24 * 60 * 60 * 1000, // 30 days
         userId: 'user-123',
-        deviceFingerprint: 'valid-fingerprint'
+        deviceFingerprint: 'valid-fingerprint',
       },
       expired: {
         token: 'expired-session-token',
         expiresAt: now - 1000, // 1 second ago
         userId: 'user-123',
-        deviceFingerprint: 'valid-fingerprint'
+        deviceFingerprint: 'valid-fingerprint',
       },
       invalid: {
         token: 'invalid-token',
-        expiresAt: now + (24 * 60 * 60 * 1000),
+        expiresAt: now + 24 * 60 * 60 * 1000,
         userId: 'nonexistent-user',
-        deviceFingerprint: 'invalid-fingerprint'
-      }
+        deviceFingerprint: 'invalid-fingerprint',
+      },
     };
   }
 }
@@ -777,7 +877,6 @@ export class SecurityTestUtils {
  * Performance monitoring utilities for tests
  */
 export class PerformanceTestUtils {
-
   /**
    * Measure test execution time
    */
@@ -786,9 +885,9 @@ export class PerformanceTestUtils {
     const result = fn();
     const endTime = performance.now();
     const duration = endTime - startTime;
-    
+
     expect(duration).toBeLessThan(maxDuration);
-    
+
     return { result, duration };
   }
 
@@ -807,10 +906,10 @@ export class PerformanceTestUtils {
     const beforeMemory = performance.memory?.usedJSHeapSize || 0;
     const result = fn();
     const afterMemory = performance.memory?.usedJSHeapSize || 0;
-    
+
     return {
       result,
-      memoryUsed: afterMemory - beforeMemory
+      memoryUsed: afterMemory - beforeMemory,
     };
   }
 
@@ -819,18 +918,18 @@ export class PerformanceTestUtils {
    */
   static benchmark(name: string, fn: () => void, iterations = 100) {
     const times: number[] = [];
-    
+
     for (let i = 0; i < iterations; i++) {
       const startTime = performance.now();
       fn();
       const endTime = performance.now();
       times.push(endTime - startTime);
     }
-    
+
     const avg = times.reduce((sum, time) => sum + time, 0) / times.length;
     const min = Math.min(...times);
     const max = Math.max(...times);
-    
+
     return { name, avg, min, max, iterations };
   }
 }
@@ -844,7 +943,6 @@ export class PerformanceTestUtils {
  * Eliminates duplicate beforeEach/afterEach patterns
  */
 export class TestSetupUtils {
-
   /**
    * Standard test environment setup
    */
@@ -852,14 +950,14 @@ export class TestSetupUtils {
     beforeEach(() => {
       // Clear all mocks
       jest.clearAllMocks();
-      
+
       // Reset DOM state
       document.body.innerHTML = '';
-      
+
       // Clear local storage
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Reset console methods - check if already spied
       try {
         if (!jest.isMockFunction(console.warn)) {
@@ -867,7 +965,7 @@ export class TestSetupUtils {
         } else {
           (console.warn as jest.Mock).mockImplementation(() => {});
         }
-        
+
         if (!jest.isMockFunction(console.error)) {
           jest.spyOn(console, 'error').mockImplementation(() => {});
         } else {
@@ -881,7 +979,7 @@ export class TestSetupUtils {
     afterEach(() => {
       // Restore console methods
       jest.restoreAllMocks();
-      
+
       // Clear any pending timers
       jest.clearAllTimers();
     });
@@ -890,26 +988,28 @@ export class TestSetupUtils {
   /**
    * Setup with specific mocks
    */
-  static setupWithMocks(mocks: {
-    utils?: boolean;
-    database?: boolean;
-    auth?: boolean;
-    lucide?: boolean;
-  } = {}) {
+  static setupWithMocks(
+    mocks: {
+      utils?: boolean;
+      database?: boolean;
+      auth?: boolean;
+      lucide?: boolean;
+    } = {}
+  ) {
     beforeEach(() => {
       this.setupTestEnvironment();
-      
+
       if (mocks.utils) {
         jest.mock('@/lib/utils/utils', () => MockFactory.createUtilsMock());
       }
-      
+
       if (mocks.auth) {
         const authMocks = MockFactory.createAuthMocks();
         // Note: TOTP service removed, using Clerk for authentication instead
         jest.mock('@/lib/auth/device-fingerprint', () => authMocks.deviceFingerprint);
         jest.mock('@/lib/api/api-auth', () => authMocks.apiAuth);
       }
-      
+
       if (mocks.lucide) {
         jest.mock('lucide-react', () => MockFactory.createLucideIconMocks());
       }
@@ -926,7 +1026,9 @@ export class TestSetupUtils {
   }
 }
 
-export function createMockCBTStore(overrides: Partial<RootState> = {}): ReturnType<typeof ComponentTestUtils.createTestStore> {
+export function createMockCBTStore(
+  overrides: Partial<RootState> = {}
+): ReturnType<typeof ComponentTestUtils.createTestStore> {
   return ComponentTestUtils.createTestStore(overrides);
 }
 

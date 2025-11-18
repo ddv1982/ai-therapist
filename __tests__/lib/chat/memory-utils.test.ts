@@ -1,8 +1,4 @@
-import {
-  checkMemoryContext,
-  getMemoryManagementData,
-  deleteMemory,
-} from '@/lib/chat/memory-utils';
+import { checkMemoryContext, getMemoryManagementData, deleteMemory } from '@/lib/chat/memory-utils';
 
 global.fetch = jest.fn();
 
@@ -17,10 +13,7 @@ describe('memory-utils', () => {
         ok: true,
         json: async () => ({
           data: {
-            memoryContext: [
-              { reportDate: '2023-12-01' },
-              { reportDate: '2023-11-15' },
-            ],
+            memoryContext: [{ reportDate: '2023-12-01' }, { reportDate: '2023-11-15' }],
           },
         }),
       });
@@ -40,7 +33,9 @@ describe('memory-utils', () => {
 
       await checkMemoryContext('session123');
 
-      expect(global.fetch).toHaveBeenCalledWith('/api/reports/memory?excludeSessionId=session123&limit=3');
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/reports/memory?excludeSessionId=session123&limit=3'
+      );
     });
 
     it('returns no memory when empty array', async () => {
@@ -130,7 +125,12 @@ describe('memory-utils', () => {
           data: {
             memoryDetails: [],
             reportCount: 0,
-            stats: { hasMemory: false, totalReportsFound: 0, successfullyProcessed: 0, failedDecryptions: 0 },
+            stats: {
+              hasMemory: false,
+              totalReportsFound: 0,
+              successfullyProcessed: 0,
+              failedDecryptions: 0,
+            },
           },
         }),
       });
@@ -145,13 +145,24 @@ describe('memory-utils', () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          data: { memoryDetails: [], reportCount: 0, stats: { hasMemory: false, totalReportsFound: 0, successfullyProcessed: 0, failedDecryptions: 0 } },
+          data: {
+            memoryDetails: [],
+            reportCount: 0,
+            stats: {
+              hasMemory: false,
+              totalReportsFound: 0,
+              successfullyProcessed: 0,
+              failedDecryptions: 0,
+            },
+          },
         }),
       });
 
       await getMemoryManagementData('session123');
 
-      expect(global.fetch).toHaveBeenCalledWith('/api/reports/memory?manage=true&excludeSessionId=session123');
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/reports/memory?manage=true&excludeSessionId=session123'
+      );
     });
 
     it('returns memory details on success', async () => {
@@ -170,7 +181,12 @@ describe('memory-utils', () => {
           },
         ],
         reportCount: 1,
-        stats: { hasMemory: true, totalReportsFound: 1, successfullyProcessed: 1, failedDecryptions: 0 },
+        stats: {
+          hasMemory: true,
+          totalReportsFound: 1,
+          successfullyProcessed: 1,
+          failedDecryptions: 0,
+        },
       };
 
       (global.fetch as jest.Mock).mockResolvedValueOnce({
@@ -261,7 +277,11 @@ describe('memory-utils', () => {
         }),
       });
 
-      const result = await deleteMemory({ type: 'all-except-current', sessionId: 'current123', limit: 5 });
+      const result = await deleteMemory({
+        type: 'all-except-current',
+        sessionId: 'current123',
+        limit: 5,
+      });
 
       expect(result.success).toBe(true);
       expect(global.fetch).toHaveBeenCalledWith(

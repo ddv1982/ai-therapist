@@ -12,7 +12,9 @@ import { logger } from '@/lib/utils/logger';
 /**
  * Ensure a user exists in the database, creating if necessary
  */
-export async function ensureUserExists(userInfo: ReturnType<typeof getSingleUserInfo>): Promise<boolean> {
+export async function ensureUserExists(
+  userInfo: ReturnType<typeof getSingleUserInfo>
+): Promise<boolean> {
   try {
     const client = getConvexHttpClient();
     await client.mutation(api.users.ensureByClerkId, {

@@ -28,7 +28,9 @@ if (!ok) {
     console.warn(`⚠️  Playwright skipped: sandbox blocked listening on ${TEST_HOST}:${TEST_PORT}.`);
     process.exit(0);
   }
-  console.warn(`⚠️  Playwright skipped: unable to bind ${TEST_HOST}:${TEST_PORT} (${error?.code || 'unknown error'}).`);
+  console.warn(
+    `⚠️  Playwright skipped: unable to bind ${TEST_HOST}:${TEST_PORT} (${error?.code || 'unknown error'}).`
+  );
   process.exit(0);
 }
 

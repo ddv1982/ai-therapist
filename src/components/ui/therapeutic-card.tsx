@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,41 +35,37 @@ export interface TherapeuticCardProps {
  * Handles different variants and provides mobile-optimized layouts
  */
 export function TherapeuticCard(props: TherapeuticCardProps) {
-  const {
-    data,
-    columns,
-    variant = 'default',
-    onClick,
-    className,
-    index = 0
-  } = props;
+  const { data, columns, variant = 'default', onClick, className, index = 0 } = props;
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Determine which columns to show based on variant and screen size
-  const primaryColumns = columns.filter(col => col.priority === 'high' || col.showInCompact !== false).slice(0, 3);
-  const secondaryColumns = columns.filter(col => !primaryColumns.includes(col));
+  const primaryColumns = columns
+    .filter((col) => col.priority === 'high' || col.showInCompact !== false)
+    .slice(0, 3);
+  const secondaryColumns = columns.filter((col) => !primaryColumns.includes(col));
   const hasSecondaryData = secondaryColumns.length > 0;
 
   // Get the primary field for the card title (first high priority or first column)
-  const titleColumn = columns.find(col => col.priority === 'high') || columns[0];
+  const titleColumn = columns.find((col) => col.priority === 'high') || columns[0];
   const titleValue = titleColumn ? data[titleColumn.key] : '';
 
   // Variant-specific styling
   const cardVariants = {
     default: 'hover:shadow-md transition-all duration-200',
-    therapeutic: 'bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 hover:border-primary/40 hover:shadow-lg transition-all duration-300',
+    therapeutic:
+      'bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 hover:border-primary/40 hover:shadow-lg transition-all duration-300',
     compact: 'shadow-sm hover:shadow-md transition-shadow duration-200',
-    detailed: 'hover:shadow-xl transition-all duration-300 min-h-[200px]'
+    detailed: 'hover:shadow-xl transition-all duration-300 min-h-[200px]',
   };
 
   // Animation delay for stagger effect
   const animationDelay = `${index * 50}ms`;
 
   return (
-    <Card 
+    <Card
       className={cn(
         cardVariants[variant],
-        'cursor-pointer group relative overflow-hidden border-0',
+        'group relative cursor-pointer overflow-hidden border-0',
         variant === 'therapeutic' && 'therapeutic-card',
         className
       )}
@@ -77,60 +73,67 @@ export function TherapeuticCard(props: TherapeuticCardProps) {
       style={{ animationDelay }}
     >
       {/* Card Header with Title and Badge */}
-      <CardHeader className={cn(
-        'pb-3',
-        variant === 'compact' && 'pb-2 pt-4',
-        variant === 'detailed' && 'pb-4'
-      )}>
+      <CardHeader
+        className={cn(
+          'pb-3',
+          variant === 'compact' && 'pt-4 pb-2',
+          variant === 'detailed' && 'pb-4'
+        )}
+      >
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <CardTitle className={cn(
-              'truncate',
-              variant === 'compact' ? 'text-base' : 'text-xl',
-              variant === 'therapeutic' && 'text-primary'
-            )}>
-              {titleColumn?.render ? titleColumn.render(titleValue, data) : String(titleValue || 'Untitled')}
+          <div className="min-w-0 flex-1">
+            <CardTitle
+              className={cn(
+                'truncate',
+                variant === 'compact' ? 'text-base' : 'text-xl',
+                variant === 'therapeutic' && 'text-primary'
+              )}
+            >
+              {titleColumn?.render
+                ? titleColumn.render(titleValue, data)
+                : String(titleValue || 'Untitled')}
             </CardTitle>
-            
+
             {/* Primary badge if available */}
-            {primaryColumns.find(col => col.type === 'badge') && (
-              <div className="flex gap-2 mt-2 flex-wrap">
+            {primaryColumns.find((col) => col.type === 'badge') && (
+              <div className="mt-2 flex flex-wrap gap-2">
                 {primaryColumns
-                  .filter(col => col.type === 'badge')
+                  .filter((col) => col.type === 'badge')
                   .map((col) => (
                     <Badge key={col.key} variant="therapy" size="sm">
                       {col.render ? col.render(data[col.key], data) : String(data[col.key] || '')}
                     </Badge>
-                  ))
-                }
+                  ))}
               </div>
             )}
           </div>
-
         </div>
       </CardHeader>
 
       {/* Card Content */}
-      <CardContent className={cn(
-        'space-y-3',
-        variant === 'compact' && 'space-y-2 py-2',
-        variant === 'detailed' && 'space-y-4'
-      )}>
+      <CardContent
+        className={cn(
+          'space-y-3',
+          variant === 'compact' && 'space-y-2 py-2',
+          variant === 'detailed' && 'space-y-4'
+        )}
+      >
         {/* Primary Fields - Always Visible */}
         <div className="space-y-2">
           {primaryColumns
-            .filter(col => col.type !== 'badge' && col.key !== titleColumn?.key)
+            .filter((col) => col.type !== 'badge' && col.key !== titleColumn?.key)
             .map((column) => (
               <CardFieldDisplay
                 key={column.key}
                 label={column.label}
                 value={data[column.key]}
-                render={column.render ? (value, row) => column.render!(value, row || data) : undefined}
+                render={
+                  column.render ? (value, row) => column.render!(value, row || data) : undefined
+                }
                 row={data}
                 variant={getFieldVariant(column.key, column)}
               />
-            ))
-          }
+            ))}
         </div>
 
         {/* Secondary Fields - Collapsible on Mobile */}
@@ -139,20 +142,24 @@ export function TherapeuticCard(props: TherapeuticCardProps) {
             {/* Mobile: Collapsible Section */}
             <div className="md:hidden">
               {isExpanded && (
-                <div className="space-y-2 pt-2 border-t border-border">
+                <div className="border-border space-y-2 border-t pt-2">
                   {secondaryColumns.map((column) => (
                     <CardFieldDisplay
                       key={column.key}
                       label={column.label}
                       value={data[column.key]}
-                      render={column.render ? (value, row) => column.render!(value, row || data) : undefined}
+                      render={
+                        column.render
+                          ? (value, row) => column.render!(value, row || data)
+                          : undefined
+                      }
                       row={data}
                       variant="secondary"
                     />
                   ))}
                 </div>
               )}
-              
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -160,16 +167,16 @@ export function TherapeuticCard(props: TherapeuticCardProps) {
                   e.stopPropagation();
                   setIsExpanded(!isExpanded);
                 }}
-                className="w-full mt-2 h-8 text-sm text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground mt-2 h-8 w-full text-sm"
               >
                 {isExpanded ? (
                   <>
-                    <ChevronUp className="h-3 w-3 mr-1" />
+                    <ChevronUp className="mr-1 h-3 w-3" />
                     Show Less
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="h-3 w-3 mr-1" />
+                    <ChevronDown className="mr-1 h-3 w-3" />
                     Show More ({secondaryColumns.length} more)
                   </>
                 )}
@@ -177,13 +184,15 @@ export function TherapeuticCard(props: TherapeuticCardProps) {
             </div>
 
             {/* Desktop: Always Visible */}
-            <div className="hidden md:block space-y-2 pt-2 border-t border-border">
+            <div className="border-border hidden space-y-2 border-t pt-2 md:block">
               {secondaryColumns.map((column) => (
                 <CardFieldDisplay
                   key={column.key}
                   label={column.label}
                   value={data[column.key]}
-                  render={column.render ? (value, row) => column.render!(value, row || data) : undefined}
+                  render={
+                    column.render ? (value, row) => column.render!(value, row || data) : undefined
+                  }
                   row={data}
                   variant="secondary"
                 />
@@ -195,7 +204,7 @@ export function TherapeuticCard(props: TherapeuticCardProps) {
 
       {/* Therapeutic gradient overlay for enhanced variant */}
       {variant === 'therapeutic' && (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="from-primary/5 to-accent/5 pointer-events-none absolute inset-0 bg-gradient-to-br via-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       )}
     </Card>
   );

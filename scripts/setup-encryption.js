@@ -42,11 +42,11 @@ function validateEncryptionKey(key) {
   if (!key) {
     return { valid: false, error: 'Encryption key is required' };
   }
-  
+
   if (key.length < 32) {
     return { valid: false, error: 'Encryption key must be at least 32 characters long' };
   }
-  
+
   // Check if it's a properly formatted base64 key (recommended)
   try {
     const decoded = Buffer.from(key, 'base64');
@@ -56,10 +56,13 @@ function validateEncryptionKey(key) {
   } catch {
     // If base64 decoding fails, check if it's at least 32 UTF-8 characters
     if (Buffer.from(key, 'utf8').length < 32) {
-      return { valid: false, error: 'Encryption key must be at least 32 bytes when encoded as UTF-8' };
+      return {
+        valid: false,
+        error: 'Encryption key must be at least 32 bytes when encoded as UTF-8',
+      };
     }
   }
-  
+
   return { valid: true };
 }
 
@@ -69,10 +72,10 @@ function validateEncryptionKey(key) {
 function updateEnvFile(key) {
   const envPath = path.join(__dirname, '..', '.env');
   const envLocalPath = path.join(__dirname, '..', '.env.local');
-  
+
   let envContent = '';
   let targetFile = envLocalPath; // Prefer .env.local for local development
-  
+
   // Read existing .env.local first, then .env
   if (fs.existsSync(envLocalPath)) {
     envContent = fs.readFileSync(envLocalPath, 'utf8');
@@ -80,7 +83,7 @@ function updateEnvFile(key) {
     envContent = fs.readFileSync(envPath, 'utf8');
     targetFile = envPath;
   }
-  
+
   // Check if ENCRYPTION_KEY already exists
   if (envContent.includes('ENCRYPTION_KEY=')) {
     // Replace existing key
@@ -90,7 +93,7 @@ function updateEnvFile(key) {
     envContent += envContent.endsWith('\n') ? '' : '\n';
     envContent += `ENCRYPTION_KEY="${key}"\n`;
   }
-  
+
   fs.writeFileSync(targetFile, envContent);
   return targetFile;
 }
@@ -101,9 +104,9 @@ function updateEnvFile(key) {
 function main() {
   const args = process.argv.slice(2);
   const command = args[0];
-  
+
   console.log('🔐 Therapeutic AI - Encryption Key Setup\n');
-  
+
   switch (command) {
     case 'generate':
       const newKey = generateSecureEncryptionKey();
@@ -115,7 +118,7 @@ function main() {
       console.log('- Keep a secure backup of production keys');
       console.log('- Rotate keys periodically for enhanced security');
       break;
-      
+
     case 'setup':
       try {
         // If an encryption key already exists and is valid, do not overwrite
@@ -129,7 +132,7 @@ function main() {
 
         const setupKey = generateSecureEncryptionKey();
         const envFile = updateEnvFile(setupKey);
-        
+
         console.log('✅ Encryption key setup completed!');
         console.log(`📁 Updated file: ${envFile}`);
         console.log(`🔑 Generated key: ${setupKey.substring(0, 16)}...`);
@@ -138,13 +141,12 @@ function main() {
         console.log('- ⚠️  Ensure .env files are in .gitignore');
         console.log('- ⚠️  Use different keys for production deployment');
         console.log('- ⚠️  Store production keys in secure environment variables');
-        
       } catch (error) {
         console.error('❌ Setup failed:', error.message);
         process.exit(1);
       }
       break;
-      
+
     case 'validate':
       const keyToValidate = args[1] || process.env.ENCRYPTION_KEY;
       if (!keyToValidate) {
@@ -153,7 +155,7 @@ function main() {
         console.log('   Or: ENCRYPTION_KEY=<key> node setup-encryption.js validate');
         process.exit(1);
       }
-      
+
       const validation = validateEncryptionKey(keyToValidate);
       if (validation.valid) {
         console.log('✅ Encryption key is valid and secure');
@@ -170,7 +172,7 @@ function main() {
         process.exit(1);
       }
       break;
-      
+
     case 'help':
     default:
       console.log('🔐 Encryption Key Management Commands:');

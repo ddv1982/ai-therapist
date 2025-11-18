@@ -14,7 +14,7 @@ export enum MetricType {
   STREAMING_RESPONSE = 'streaming_response',
   CACHE_HIT = 'cache_hit',
   CACHE_MISS = 'cache_miss',
-  ERROR_RATE = 'error_rate'
+  ERROR_RATE = 'error_rate',
 }
 
 /**
@@ -42,7 +42,7 @@ export const PERFORMANCE_THRESHOLDS = {
   STREAMING_WARNING: 2000, // ms
   STREAMING_CRITICAL: 5000, // ms
   ERROR_RATE_WARNING: 0.05, // 5%
-  ERROR_RATE_CRITICAL: 0.10 // 10%
+  ERROR_RATE_CRITICAL: 0.1, // 10%
 };
 
 /**
@@ -67,12 +67,12 @@ class MetricsBuffer {
       return [...this.metrics];
     }
 
-    return this.metrics.filter(m => m.type === type);
+    return this.metrics.filter((m) => m.type === type);
   }
 
   getMetricsSince(minutes: number): Metric[] {
-    const since = Date.now() - (minutes * 60 * 1000);
-    return this.metrics.filter(m => m.timestamp.getTime() > since);
+    const since = Date.now() - minutes * 60 * 1000;
+    return this.metrics.filter((m) => m.timestamp.getTime() > since);
   }
 
   clear(): void {
@@ -89,7 +89,7 @@ class MetricsBuffer {
     return {
       totalMetrics: this.metrics.length,
       uptime,
-      metricsPerMinute: this.metrics.length / minutes
+      metricsPerMinute: this.metrics.length / minutes,
     };
   }
 }
@@ -116,13 +116,13 @@ function checkThresholds(metric: Metric): void {
         logger.warn('API latency critical', {
           endpoint: metric.endpoint,
           duration: metric.duration,
-          threshold: PERFORMANCE_THRESHOLDS.API_LATENCY_CRITICAL
+          threshold: PERFORMANCE_THRESHOLDS.API_LATENCY_CRITICAL,
         });
       } else if (metric.duration > PERFORMANCE_THRESHOLDS.API_LATENCY_WARNING) {
         logger.info('API latency warning', {
           endpoint: metric.endpoint,
           duration: metric.duration,
-          threshold: PERFORMANCE_THRESHOLDS.API_LATENCY_WARNING
+          threshold: PERFORMANCE_THRESHOLDS.API_LATENCY_WARNING,
         });
       }
       break;
@@ -133,13 +133,13 @@ function checkThresholds(metric: Metric): void {
         logger.warn('Database query critical', {
           operation: metric.operation,
           duration: metric.duration,
-          threshold: PERFORMANCE_THRESHOLDS.DATABASE_QUERY_CRITICAL
+          threshold: PERFORMANCE_THRESHOLDS.DATABASE_QUERY_CRITICAL,
         });
       } else if (metric.duration > PERFORMANCE_THRESHOLDS.DATABASE_QUERY_WARNING) {
         logger.info('Database query warning', {
           operation: metric.operation,
           duration: metric.duration,
-          threshold: PERFORMANCE_THRESHOLDS.DATABASE_QUERY_WARNING
+          threshold: PERFORMANCE_THRESHOLDS.DATABASE_QUERY_WARNING,
         });
       }
       break;
@@ -150,13 +150,13 @@ function checkThresholds(metric: Metric): void {
         logger.warn('Streaming response critical', {
           endpoint: metric.endpoint,
           duration: metric.duration,
-          threshold: PERFORMANCE_THRESHOLDS.STREAMING_CRITICAL
+          threshold: PERFORMANCE_THRESHOLDS.STREAMING_CRITICAL,
         });
       } else if (metric.duration > PERFORMANCE_THRESHOLDS.STREAMING_WARNING) {
         logger.info('Streaming response warning', {
           endpoint: metric.endpoint,
           duration: metric.duration,
-          threshold: PERFORMANCE_THRESHOLDS.STREAMING_WARNING
+          threshold: PERFORMANCE_THRESHOLDS.STREAMING_WARNING,
         });
       }
       break;
@@ -191,7 +191,7 @@ export class PerformanceTimer {
       duration,
       timestamp: new Date(),
       statusCode,
-      metadata
+      metadata,
     });
 
     return duration;
@@ -211,7 +211,9 @@ export class PerformanceTimer {
  */
 export function trackApiLatency(
   endpoint: string
-): (handler: (request: Request, ...args: unknown[]) => Promise<Response>) => (request: Request, ...args: unknown[]) => Promise<unknown> {
+): (
+  handler: (request: Request, ...args: unknown[]) => Promise<Response>
+) => (request: Request, ...args: unknown[]) => Promise<unknown> {
   return (handler: (request: Request, ...args: unknown[]) => Promise<Response>) => {
     return async (request: Request, ...args: unknown[]) => {
       const timer = new PerformanceTimer(endpoint);
@@ -220,19 +222,11 @@ export function trackApiLatency(
         const response = await handler(request, ...args);
         const status = (response as Response).status || 200;
 
-        timer.end(
-          MetricType.API_LATENCY,
-          { method: request.method },
-          status
-        );
+        timer.end(MetricType.API_LATENCY, { method: request.method }, status);
 
         return response;
       } catch (error) {
-        timer.end(
-          MetricType.API_LATENCY,
-          { method: request.method, error: true },
-          500
-        );
+        timer.end(MetricType.API_LATENCY, { method: request.method, error: true }, 500);
 
         throw error;
       }
@@ -291,12 +285,10 @@ export interface PerformanceStats {
   lastUpdated: Date;
 }
 
-export function getPerformanceStats(
-  endpoint?: string,
-  minutesWindow = 5
-): PerformanceStats[] {
-  const metrics = buffer.getMetricsSince(minutesWindow)
-    .filter(m => m.type === MetricType.API_LATENCY && (!endpoint || m.endpoint === endpoint));
+export function getPerformanceStats(endpoint?: string, minutesWindow = 5): PerformanceStats[] {
+  const metrics = buffer
+    .getMetricsSince(minutesWindow)
+    .filter((m) => m.type === MetricType.API_LATENCY && (!endpoint || m.endpoint === endpoint));
 
   if (!metrics.length) {
     return [];
@@ -309,7 +301,7 @@ export function getPerformanceStats(
   // Group by endpoint
   const byEndpoint = new Map<string, Metric[]>();
 
-  metrics.forEach(m => {
+  metrics.forEach((m) => {
     const ep = m.endpoint || 'unknown';
     if (!byEndpoint.has(ep)) {
       byEndpoint.set(ep, []);
@@ -317,13 +309,12 @@ export function getPerformanceStats(
     byEndpoint.get(ep)!.push(m);
   });
 
-  return Array.from(byEndpoint.entries())
-    .map(([ep, ms]) => calculateEndpointStats(ep, ms));
+  return Array.from(byEndpoint.entries()).map(([ep, ms]) => calculateEndpointStats(ep, ms));
 }
 
 function calculateEndpointStats(endpoint: string, metrics: Metric[]): PerformanceStats {
-  const durations = metrics.map(m => m.duration).sort((a, b) => a - b);
-  const errors = metrics.filter(m => m.error).length;
+  const durations = metrics.map((m) => m.duration).sort((a, b) => a - b);
+  const errors = metrics.filter((m) => m.error).length;
 
   return {
     endpoint,
@@ -336,7 +327,7 @@ function calculateEndpointStats(endpoint: string, metrics: Metric[]): Performanc
     minLatency: Math.min(...durations),
     errorCount: errors,
     errorRate: errors / metrics.length,
-    lastUpdated: new Date()
+    lastUpdated: new Date(),
   };
 }
 
@@ -359,7 +350,7 @@ export function getSystemHealth(): SystemHealth {
   let criticalAlerts = 0;
   let warningAlerts = 0;
 
-  allMetrics.forEach(m => {
+  allMetrics.forEach((m) => {
     if (m.type === MetricType.API_LATENCY) {
       if (m.duration > PERFORMANCE_THRESHOLDS.API_LATENCY_CRITICAL) {
         criticalAlerts++;
@@ -374,7 +365,7 @@ export function getSystemHealth(): SystemHealth {
     totalMetrics: stats.totalMetrics,
     metricsPerMinute: stats.metricsPerMinute,
     criticalAlerts,
-    warningAlerts
+    warningAlerts,
   };
 }
 
@@ -398,6 +389,6 @@ export function exportMetricsSnapshot(): {
     timestamp: new Date(),
     metrics: buffer.getMetrics(),
     stats: getPerformanceStats(),
-    health: getSystemHealth()
+    health: getSystemHealth(),
   };
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, ReactNode } from 'react';
+import { useState, ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,21 +14,21 @@ export interface TherapeuticBaseCardProps {
   subtitle?: ReactNode;
   content?: ReactNode;
   children?: ReactNode;
-  
+
   // Visual variants
   variant?: 'default' | 'therapeutic' | 'modal' | 'compact' | 'interactive' | 'cbt-section';
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  
+
   // Therapeutic features
   stepIndicator?: { current: number; total: number };
   statusBadge?: { text: string; variant?: 'default' | 'therapy' | 'success' | 'warning' };
   isDraftSaved?: boolean;
-  
+
   // Interactive features
   collapsible?: boolean;
   defaultExpanded?: boolean;
   onToggle?: (expanded: boolean) => void;
-  
+
   // Actions
   onAction?: () => void;
   actionLabel?: string;
@@ -39,21 +39,21 @@ export interface TherapeuticBaseCardProps {
     onClick: () => void;
     variant?: 'default' | 'ghost' | 'outline';
   }>;
-  
+
   // Animation and styling
   animationDelay?: number;
   className?: string;
   headerClassName?: string;
   contentClassName?: string;
-  
+
   // Layout options
   headerLayout?: 'default' | 'centered' | 'split' | 'minimal';
   contentPadding?: 'none' | 'sm' | 'md' | 'lg';
-  
+
   // CBT-specific props
   emotionColor?: string;
   progressPercentage?: number;
-  
+
   // Responsive behavior
   mobileOptimized?: boolean;
   hideOnMobile?: boolean;
@@ -62,7 +62,7 @@ export interface TherapeuticBaseCardProps {
 /**
  * Unified therapeutic card component that consolidates all card patterns
  * Replaces: TherapeuticCard, CBT chat components, session cards, modal cards
- * 
+ *
  * Features:
  * - Multiple therapeutic variants with consistent styling
  * - Built-in collapsible sections and animations
@@ -111,11 +111,14 @@ export function TherapeuticBaseCard({
   // Variant-specific styling
   const cardVariants = {
     default: 'hover:shadow-md transition-all duration-200',
-    therapeutic: 'bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 hover:border-primary/40 hover:shadow-lg transition-all duration-300 therapeutic-card',
+    therapeutic:
+      'bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 hover:border-primary/40 hover:shadow-lg transition-all duration-300 therapeutic-card',
     modal: 'shadow-lg border-0 bg-card',
     compact: 'shadow-sm hover:shadow-md transition-shadow duration-200',
-    interactive: 'cursor-pointer hover:shadow-xl transition-all duration-300 group relative overflow-hidden',
-    'cbt-section': 'min-h-[200px] cbt-modal-card border-primary/10 bg-gradient-to-br from-background to-muted/30'
+    interactive:
+      'cursor-pointer hover:shadow-xl transition-all duration-300 group relative overflow-hidden',
+    'cbt-section':
+      'min-h-[200px] cbt-modal-card border-primary/10 bg-gradient-to-br from-background to-muted/30',
   };
 
   // Size variations
@@ -124,7 +127,7 @@ export function TherapeuticBaseCard({
     md: 'max-w-2xl',
     lg: 'max-w-4xl',
     xl: 'max-w-6xl',
-    full: 'w-full'
+    full: 'w-full',
   };
 
   // Header layout variations
@@ -132,15 +135,15 @@ export function TherapeuticBaseCard({
     default: 'flex items-start justify-between gap-3',
     centered: 'text-center',
     split: 'flex items-center justify-between',
-    minimal: 'pb-2'
+    minimal: 'pb-2',
   };
 
-  // Content padding variations  
+  // Content padding variations
   const contentPaddingVariants = {
     none: 'p-0',
     sm: 'p-2',
     md: 'p-4',
-    lg: 'p-6'
+    lg: 'p-6',
   };
 
   // Animation delay for stagger effects
@@ -163,49 +166,56 @@ export function TherapeuticBaseCard({
       {...props}
     >
       {/* Header Section */}
-      {(title || subtitle || stepIndicator || statusBadge || collapsible || secondaryActions.length > 0) && (
-        <CardHeader className={cn(
-          'pb-3',
-          variant === 'compact' && 'pb-2 pt-4',
-          variant === 'modal' && 'pb-4',
-          variant === 'cbt-section' && 'pb-6',
-          headerClassName
-        )}>
+      {(title ||
+        subtitle ||
+        stepIndicator ||
+        statusBadge ||
+        collapsible ||
+        secondaryActions.length > 0) && (
+        <CardHeader
+          className={cn(
+            'pb-3',
+            variant === 'compact' && 'pt-4 pb-2',
+            variant === 'modal' && 'pb-4',
+            variant === 'cbt-section' && 'pb-6',
+            headerClassName
+          )}
+        >
           <div className={headerLayouts[headerLayout]}>
             {/* Title and subtitle section */}
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               {/* Step indicator */}
               {stepIndicator && (
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-semibold mb-3">
+                <div className="bg-primary/10 text-primary mb-3 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
                   {stepIndicator.current && (
-                    <span>Step {stepIndicator.current} of {stepIndicator.total}</span>
+                    <span>
+                      Step {stepIndicator.current} of {stepIndicator.total}
+                    </span>
                   )}
                 </div>
               )}
 
               {/* Main title */}
               {title && (
-                <CardTitle className={cn(
-                  'truncate',
-                  variant === 'compact' ? 'text-base' : 'text-xl',
-                  variant === 'therapeutic' && 'text-primary',
-                  variant === 'cbt-section' && 'text-xl font-semibold flex items-center gap-2'
-                )}>
+                <CardTitle
+                  className={cn(
+                    'truncate',
+                    variant === 'compact' ? 'text-base' : 'text-xl',
+                    variant === 'therapeutic' && 'text-primary',
+                    variant === 'cbt-section' && 'flex items-center gap-2 text-xl font-semibold'
+                  )}
+                >
                   {title}
                 </CardTitle>
               )}
 
               {/* Subtitle */}
-              {subtitle && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  {subtitle}
-                </p>
-              )}
+              {subtitle && <p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>}
 
               {/* Status badge */}
               {statusBadge && (
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  <Badge variant={statusBadge.variant || "therapy"} size="sm">
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Badge variant={statusBadge.variant || 'therapy'} size="sm">
                     {statusBadge.text}
                   </Badge>
                 </div>
@@ -216,13 +226,15 @@ export function TherapeuticBaseCard({
             <div className="flex items-center gap-2">
               {/* Draft saved indicator */}
               {isDraftSaved !== undefined && (
-                <div className={cn(
-                  'flex items-center gap-1 text-sm px-2 py-1 rounded transition-all duration-300',
-                  isDraftSaved 
-                    ? 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 opacity-100 scale-100' 
-                    : 'opacity-0 scale-95'
-                )}>
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div
+                  className={cn(
+                    'flex items-center gap-1 rounded px-2 py-1 text-sm transition-all duration-300',
+                    isDraftSaved
+                      ? 'scale-100 bg-green-50 text-green-600 opacity-100 dark:bg-green-900/20 dark:text-green-400'
+                      : 'scale-95 opacity-0'
+                  )}
+                >
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
                   Saved
                 </div>
               )}
@@ -267,9 +279,9 @@ export function TherapeuticBaseCard({
 
           {/* Progress bar for CBT sections */}
           {progressPercentage !== undefined && (
-            <div className="w-full h-1 bg-muted rounded-full overflow-hidden mt-3">
+            <div className="bg-muted mt-3 h-1 w-full overflow-hidden rounded-full">
               <div
-                className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+                className="from-primary to-accent h-full bg-gradient-to-r transition-all duration-500"
                 style={{ width: `${progressPercentage}%` }}
               />
             </div>
@@ -279,13 +291,15 @@ export function TherapeuticBaseCard({
 
       {/* Content Section */}
       {(content || children) && (!collapsible || isExpanded) && (
-        <CardContent className={cn(
-          'space-y-4',
-          contentPaddingVariants[contentPadding],
-          variant === 'compact' && 'space-y-2',
-          variant === 'cbt-section' && 'space-y-6',
-          contentClassName
-        )}>
+        <CardContent
+          className={cn(
+            'space-y-4',
+            contentPaddingVariants[contentPadding],
+            variant === 'compact' && 'space-y-2',
+            variant === 'cbt-section' && 'space-y-6',
+            contentClassName
+          )}
+        >
           {content || children}
         </CardContent>
       )}
@@ -308,13 +322,13 @@ export function TherapeuticBaseCard({
 
       {/* Therapeutic gradient overlay */}
       {variant === 'therapeutic' && (
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="from-primary/5 to-accent/5 pointer-events-none absolute inset-0 bg-gradient-to-br via-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       )}
 
       {/* CBT emotion color accent */}
       {emotionColor && (
-        <div 
-          className="absolute left-0 top-0 bottom-0 w-1 opacity-60"
+        <div
+          className="absolute top-0 bottom-0 left-0 w-1 opacity-60"
           style={{ backgroundColor: emotionColor }}
         />
       )}
@@ -330,7 +344,7 @@ export const therapeuticCardPresets = {
     size: 'full' as const,
     contentPadding: 'lg' as const,
     mobileOptimized: true,
-    ...props
+    ...props,
   }),
 
   // Emotion rating cards
@@ -338,7 +352,7 @@ export const therapeuticCardPresets = {
     variant: 'therapeutic' as const,
     size: 'md' as const,
     mobileOptimized: true,
-    ...props
+    ...props,
   }),
 
   // Session report cards
@@ -346,7 +360,7 @@ export const therapeuticCardPresets = {
     variant: 'interactive' as const,
     size: 'lg' as const,
     headerLayout: 'split' as const,
-    ...props
+    ...props,
   }),
 
   // Modal content cards
@@ -354,7 +368,7 @@ export const therapeuticCardPresets = {
     variant: 'modal' as const,
     size: 'full' as const,
     contentPadding: 'lg' as const,
-    ...props
+    ...props,
   }),
 
   // Compact list cards
@@ -362,14 +376,15 @@ export const therapeuticCardPresets = {
     variant: 'compact' as const,
     size: 'sm' as const,
     contentPadding: 'sm' as const,
-    ...props
-  })
+    ...props,
+  }),
 } as const;
 
 // CSS classes for integration with existing styling
 export const therapeuticCardClasses = {
   'therapeutic-card': 'bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20',
-  'cbt-section-card': 'min-h-[200px] border-primary/10 bg-gradient-to-br from-background to-muted/30',
+  'cbt-section-card':
+    'min-h-[200px] border-primary/10 bg-gradient-to-br from-background to-muted/30',
   'mobile-optimized-card': 'transition-transform active:scale-[0.98] sm:active:scale-100',
-  'cbt-modal-card': 'shadow-lg border-primary/10 bg-card'
+  'cbt-modal-card': 'shadow-lg border-primary/10 bg-card',
 } as const;

@@ -153,12 +153,18 @@ export async function checkOllamaAvailability(): Promise<OllamaHealthResult> {
 
 // Legacy compatibility
 
-function createLocalOllamaLanguageModel(params: { chatUrl: string; modelId: string }): LanguageModel {
+function createLocalOllamaLanguageModel(params: {
+  chatUrl: string;
+  modelId: string;
+}): LanguageModel {
   const { chatUrl, modelId } = params;
 
-  const toHeadersRecord = (headers: Headers): Record<string, string> => Object.fromEntries(headers.entries());
+  const toHeadersRecord = (headers: Headers): Record<string, string> =>
+    Object.fromEntries(headers.entries());
 
-  const mapFinishReason = (value: unknown): 'stop' | 'length' | 'content-filter' | 'tool-calls' | 'error' | 'other' | 'unknown' => {
+  const mapFinishReason = (
+    value: unknown
+  ): 'stop' | 'length' | 'content-filter' | 'tool-calls' | 'error' | 'other' | 'unknown' => {
     if (typeof value !== 'string' || value.length === 0) return 'stop';
     const normalized = value.toLowerCase();
     if (normalized === 'stop') return 'stop';
@@ -188,7 +194,11 @@ function createLocalOllamaLanguageModel(params: { chatUrl: string; modelId: stri
   };
 
   const convertPrompt = (prompt: LanguageModelV2Prompt) => {
-    const messages: Array<{ role: 'system' | 'user' | 'assistant' | 'tool'; content: string; tool_call_id?: string }> = [];
+    const messages: Array<{
+      role: 'system' | 'user' | 'assistant' | 'tool';
+      content: string;
+      tool_call_id?: string;
+    }> = [];
     for (const entry of prompt) {
       switch (entry.role) {
         case 'system': {
@@ -200,7 +210,7 @@ function createLocalOllamaLanguageModel(params: { chatUrl: string; modelId: stri
         case 'user': {
           const text = entry.content
             .filter((part) => part.type === 'text')
-            .map((part) => part.type === 'text' ? part.text : '')
+            .map((part) => (part.type === 'text' ? part.text : ''))
             .join('');
           messages.push({ role: 'user', content: text });
           break;
@@ -208,7 +218,7 @@ function createLocalOllamaLanguageModel(params: { chatUrl: string; modelId: stri
         case 'assistant': {
           const text = entry.content
             .filter((part) => part.type === 'text' || part.type === 'reasoning')
-            .map((part) => 'text' in part ? part.text : '')
+            .map((part) => ('text' in part ? part.text : ''))
             .join('');
           if (text.length > 0) {
             messages.push({ role: 'assistant', content: text });
@@ -296,7 +306,7 @@ function createLocalOllamaLanguageModel(params: { chatUrl: string; modelId: stri
       const { payload, warnings } = buildPayload(options);
       const body = { ...payload, stream: false };
       const response = await performRequest(body, options);
-      const json = await response.json() as {
+      const json = (await response.json()) as {
         message?: { content?: string };
         done_reason?: string | null;
         eval_count?: number | null;
@@ -314,9 +324,10 @@ function createLocalOllamaLanguageModel(params: { chatUrl: string; modelId: stri
         usage: {
           inputTokens: json.prompt_eval_count ?? undefined,
           outputTokens: json.eval_count ?? undefined,
-          totalTokens: json.prompt_eval_count != null && json.eval_count != null
-            ? json.prompt_eval_count + json.eval_count
-            : undefined,
+          totalTokens:
+            json.prompt_eval_count != null && json.eval_count != null
+              ? json.prompt_eval_count + json.eval_count
+              : undefined,
         },
         response: {
           id: `${modelId}-${Date.now()}`,
@@ -383,7 +394,11 @@ function createLocalOllamaLanguageModel(params: { chatUrl: string; modelId: stri
             controller.close();
           }
 
-          async function processBuffer(params: { buffer: string; controller: ReadableStreamDefaultController<LanguageModelV2StreamPart>; flush?: boolean; }) {
+          async function processBuffer(params: {
+            buffer: string;
+            controller: ReadableStreamDefaultController<LanguageModelV2StreamPart>;
+            flush?: boolean;
+          }) {
             const { controller, flush } = params;
             let remaining = params.buffer;
             let newlineIndex = remaining.indexOf('\n');
@@ -399,17 +414,25 @@ function createLocalOllamaLanguageModel(params: { chatUrl: string; modelId: stri
                   const parsed = JSON.parse(rawLine) as Record<string, unknown>;
                   if (parsed.done === true) {
                     finishReason = mapFinishReason(parsed.done_reason ?? 'stop');
-                    const promptEval = typeof parsed.prompt_eval_count === 'number' ? parsed.prompt_eval_count : undefined;
-                    const evalCount = typeof parsed.eval_count === 'number' ? parsed.eval_count : undefined;
+                    const promptEval =
+                      typeof parsed.prompt_eval_count === 'number'
+                        ? parsed.prompt_eval_count
+                        : undefined;
+                    const evalCount =
+                      typeof parsed.eval_count === 'number' ? parsed.eval_count : undefined;
                     usage = {
                       inputTokens: promptEval,
                       outputTokens: evalCount,
-                      totalTokens: promptEval != null && evalCount != null ? promptEval + evalCount : undefined,
+                      totalTokens:
+                        promptEval != null && evalCount != null
+                          ? promptEval + evalCount
+                          : undefined,
                     };
                   } else if (typeof parsed.message === 'object' && parsed.message !== null) {
-                    const text = typeof (parsed.message as { content?: unknown }).content === 'string'
-                      ? (parsed.message as { content?: string }).content!
-                      : '';
+                    const text =
+                      typeof (parsed.message as { content?: unknown }).content === 'string'
+                        ? (parsed.message as { content?: string }).content!
+                        : '';
                     if (text.length > 0) {
                       if (!textStarted) {
                         textStarted = true;
@@ -434,12 +457,17 @@ function createLocalOllamaLanguageModel(params: { chatUrl: string; modelId: stri
                 const parsed = JSON.parse(remaining.trim()) as Record<string, unknown>;
                 if (parsed.done === true) {
                   finishReason = mapFinishReason(parsed.done_reason ?? 'stop');
-                  const promptEval = typeof parsed.prompt_eval_count === 'number' ? parsed.prompt_eval_count : undefined;
-                  const evalCount = typeof parsed.eval_count === 'number' ? parsed.eval_count : undefined;
+                  const promptEval =
+                    typeof parsed.prompt_eval_count === 'number'
+                      ? parsed.prompt_eval_count
+                      : undefined;
+                  const evalCount =
+                    typeof parsed.eval_count === 'number' ? parsed.eval_count : undefined;
                   usage = {
                     inputTokens: promptEval,
                     outputTokens: evalCount,
-                    totalTokens: promptEval != null && evalCount != null ? promptEval + evalCount : undefined,
+                    totalTokens:
+                      promptEval != null && evalCount != null ? promptEval + evalCount : undefined,
                   };
                 }
               } catch (error) {
@@ -475,7 +503,9 @@ function createLocalOllamaLanguageModel(params: { chatUrl: string; modelId: stri
 
 function removeUndefined<T extends Record<string, unknown>>(value: T): T {
   return Object.fromEntries(
-    Object.entries(value).filter(([, v]) => v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0)),
+    Object.entries(value).filter(
+      ([, v]) => v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0)
+    )
   ) as T;
 }
 

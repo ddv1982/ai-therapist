@@ -26,7 +26,7 @@ describe('MessageCache', () => {
     expect(cache.get).toHaveBeenCalledWith(
       CACHE_KEYS.MESSAGES(sessionId, page, limit),
       {},
-      expect.objectContaining({ prefix: 'therapist' }),
+      expect.objectContaining({ prefix: 'therapist' })
     );
   });
 
@@ -39,7 +39,7 @@ describe('MessageCache', () => {
     expect(cache.get).toHaveBeenCalledWith(
       CACHE_KEYS.MESSAGES(sessionId, undefined, undefined),
       {},
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -52,8 +52,7 @@ describe('MessageCache', () => {
       CACHE_KEYS.MESSAGES('session-3', 3, 10),
       data,
       {},
-      expect.objectContaining({ prefix: 'therapist' }),
+      expect.objectContaining({ prefix: 'therapist' })
     );
   });
 });
-

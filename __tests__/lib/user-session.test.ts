@@ -1,7 +1,7 @@
 import {
   generateDeviceUserId,
   getSingleUserInfo,
-  getDeviceUserInfo
+  getDeviceUserInfo,
 } from '@/lib/auth/user-session';
 
 // Mock Request class for testing
@@ -22,8 +22,8 @@ function createMockRequest(headers: Record<string, string> = {}): Request {
   const mockRequest = new MockRequest(headers);
   return {
     headers: {
-      get: (name: string) => mockRequest.get(name)
-    }
+      get: (name: string) => mockRequest.get(name),
+    },
   } as Request;
 }
 
@@ -33,7 +33,7 @@ describe('User Session Management', () => {
       const headers = {
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br'
+        'accept-encoding': 'gzip, deflate, br',
       };
 
       const request1 = createMockRequest(headers);
@@ -50,13 +50,13 @@ describe('User Session Management', () => {
       const request1 = createMockRequest({
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
         'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br'
+        'accept-encoding': 'gzip, deflate, br',
       });
 
       const request2 = createMockRequest({
         'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/537.36',
         'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br'
+        'accept-encoding': 'gzip, deflate, br',
       });
 
       const userId1 = generateDeviceUserId(request1);
@@ -71,13 +71,13 @@ describe('User Session Management', () => {
       const request1 = createMockRequest({
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
         'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br'
+        'accept-encoding': 'gzip, deflate, br',
       });
 
       const request2 = createMockRequest({
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
         'accept-language': 'es-ES,es;q=0.9',
-        'accept-encoding': 'gzip, deflate, br'
+        'accept-encoding': 'gzip, deflate, br',
       });
 
       const userId1 = generateDeviceUserId(request1);
@@ -90,13 +90,13 @@ describe('User Session Management', () => {
       const request1 = createMockRequest({
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
         'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br'
+        'accept-encoding': 'gzip, deflate, br',
       });
 
       const request2 = createMockRequest({
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
         'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate'
+        'accept-encoding': 'gzip, deflate',
       });
 
       const userId1 = generateDeviceUserId(request1);
@@ -110,7 +110,7 @@ describe('User Session Management', () => {
       const request2 = createMockRequest({
         'user-agent': undefined as any,
         'accept-language': null as any,
-        'accept-encoding': ''
+        'accept-encoding': '',
       });
 
       const userId1 = generateDeviceUserId(request1);
@@ -126,7 +126,7 @@ describe('User Session Management', () => {
       const request = createMockRequest({
         'user-agent': 'Test Browser/1.0',
         'accept-language': 'en-US',
-        'accept-encoding': 'gzip'
+        'accept-encoding': 'gzip',
       });
 
       const userId = generateDeviceUserId(request);
@@ -137,9 +137,10 @@ describe('User Session Management', () => {
 
     it('should handle special characters in headers', () => {
       const request = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'user-agent':
+          'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
-        'accept-encoding': 'gzip, deflate, br'
+        'accept-encoding': 'gzip, deflate, br',
       });
 
       const userId = generateDeviceUserId(request);
@@ -153,11 +154,11 @@ describe('User Session Management', () => {
       const requests = [
         createMockRequest({ 'user-agent': '', 'accept-language': '', 'accept-encoding': '' }),
         createMockRequest({ 'user-agent': ' ', 'accept-language': ' ', 'accept-encoding': ' ' }),
-        createMockRequest({ 'user-agent': 'a', 'accept-language': 'b', 'accept-encoding': 'c' })
+        createMockRequest({ 'user-agent': 'a', 'accept-language': 'b', 'accept-encoding': 'c' }),
       ];
 
-      const userIds = requests.map(request => generateDeviceUserId(request));
-      
+      const userIds = requests.map((request) => generateDeviceUserId(request));
+
       // First two should be the same (empty vs spaces makes difference)
       expect(userIds[0]).not.toBe(userIds[1]);
       expect(userIds[1]).not.toBe(userIds[2]);
@@ -168,11 +169,11 @@ describe('User Session Management', () => {
   describe('getSingleUserInfo', () => {
     it('should return consistent single user ID regardless of request', () => {
       const request1 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0'
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
       });
 
       const request2 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/537.36'
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/537.36',
       });
 
       const userInfo1 = getSingleUserInfo(request1);
@@ -188,10 +189,10 @@ describe('User Session Management', () => {
       const mobileUserAgents = [
         'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15',
         'Mozilla/5.0 (Android 10; Mobile; rv:89.0) Gecko/89.0 Firefox/89.0',
-        'Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36 Mobile Safari/537.36'
+        'Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36 Mobile Safari/537.36',
       ];
 
-      mobileUserAgents.forEach(userAgent => {
+      mobileUserAgents.forEach((userAgent) => {
         const request = createMockRequest({ 'user-agent': userAgent });
         const userInfo = getSingleUserInfo(request);
 
@@ -204,10 +205,10 @@ describe('User Session Management', () => {
       const tabletUserAgents = [
         'Mozilla/5.0 (iPad; CPU OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15',
         // Use generic tablet user agent that doesn't contain "Mobile", "Android", or "iPhone"
-        'Mozilla/5.0 (Tablet; rv:89.0) Gecko/89.0 Firefox/89.0'
+        'Mozilla/5.0 (Tablet; rv:89.0) Gecko/89.0 Firefox/89.0',
       ];
 
-      tabletUserAgents.forEach(userAgent => {
+      tabletUserAgents.forEach((userAgent) => {
         const request = createMockRequest({ 'user-agent': userAgent });
         const userInfo = getSingleUserInfo(request);
 
@@ -222,10 +223,10 @@ describe('User Session Management', () => {
       const computerUserAgents = [
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15',
-        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36'
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36',
       ];
 
-      computerUserAgents.forEach(userAgent => {
+      computerUserAgents.forEach((userAgent) => {
         const request = createMockRequest({ 'user-agent': userAgent });
         const userInfo = getSingleUserInfo(request);
 
@@ -235,14 +236,9 @@ describe('User Session Management', () => {
     });
 
     it('should default to "Device" for unknown user agents', () => {
-      const unknownUserAgents = [
-        'SomeUnknownBot/1.0',
-        'CustomApp/2.0',
-        '',
-        '   '
-      ];
+      const unknownUserAgents = ['SomeUnknownBot/1.0', 'CustomApp/2.0', '', '   '];
 
-      unknownUserAgents.forEach(userAgent => {
+      unknownUserAgents.forEach((userAgent) => {
         const request = createMockRequest({ 'user-agent': userAgent });
         const userInfo = getSingleUserInfo(request);
 
@@ -263,7 +259,8 @@ describe('User Session Management', () => {
 
     it('should prioritize device detection correctly', () => {
       // Test priority: Mobile > Tablet > Computer
-      const mixedUserAgent = 'Mozilla/5.0 (iPad; Mobile; CPU iPhone OS like Mac OS X Windows Linux)';
+      const mixedUserAgent =
+        'Mozilla/5.0 (iPad; Mobile; CPU iPhone OS like Mac OS X Windows Linux)';
       const request = createMockRequest({ 'user-agent': mixedUserAgent });
       const userInfo = getSingleUserInfo(request);
 
@@ -274,7 +271,8 @@ describe('User Session Management', () => {
     it('should detect Android tablets as Mobile due to detection priority', () => {
       // Real Android tablet user agents often contain both "Android" and "Tablet"
       // but should be detected as Mobile due to the detection logic priority
-      const androidTabletUserAgent = 'Mozilla/5.0 (Linux; Android 10; SM-T870) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Safari/537.36';
+      const androidTabletUserAgent =
+        'Mozilla/5.0 (Linux; Android 10; SM-T870) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Safari/537.36';
       const request = createMockRequest({ 'user-agent': androidTabletUserAgent });
       const userInfo = getSingleUserInfo(request);
 
@@ -285,9 +283,9 @@ describe('User Session Management', () => {
 
     it('should return correct user info structure', () => {
       const request = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0'
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
       });
-      
+
       const userInfo = getSingleUserInfo(request);
 
       expect(userInfo).toHaveProperty('userId');
@@ -307,7 +305,7 @@ describe('User Session Management', () => {
       const request = createMockRequest({
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
         'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br'
+        'accept-encoding': 'gzip, deflate, br',
       });
 
       const userInfo = getDeviceUserInfo(request);
@@ -319,11 +317,11 @@ describe('User Session Management', () => {
 
     it('should generate different user info for different devices', () => {
       const request1 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0'
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
       });
 
       const request2 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)'
+        'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)',
       });
 
       const userInfo1 = getDeviceUserInfo(request1);
@@ -338,20 +336,20 @@ describe('User Session Management', () => {
       const testCases = [
         {
           userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)',
-          expectedName: 'Mobile User'
+          expectedName: 'Mobile User',
         },
         {
           userAgent: 'Mozilla/5.0 (iPad; CPU OS 14_7_1 like Mac OS X)',
-          expectedName: 'Tablet User'
+          expectedName: 'Tablet User',
         },
         {
           userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-          expectedName: 'Computer User'
+          expectedName: 'Computer User',
         },
         {
           userAgent: 'SomeUnknownBot/1.0',
-          expectedName: 'Device User'
-        }
+          expectedName: 'Device User',
+        },
       ];
 
       testCases.forEach(({ userAgent, expectedName }) => {
@@ -364,7 +362,7 @@ describe('User Session Management', () => {
 
     it('should generate consistent email format', () => {
       const request = createMockRequest({
-        'user-agent': 'Test Browser/1.0'
+        'user-agent': 'Test Browser/1.0',
       });
 
       const userInfo = getDeviceUserInfo(request);
@@ -375,7 +373,7 @@ describe('User Session Management', () => {
 
     it('should handle empty user agent', () => {
       const request = createMockRequest({
-        'user-agent': ''
+        'user-agent': '',
       });
 
       const userInfo = getDeviceUserInfo(request);
@@ -387,7 +385,7 @@ describe('User Session Management', () => {
 
     it('should return correct user info structure', () => {
       const request = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0'
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
       });
 
       const userInfo = getDeviceUserInfo(request);
@@ -405,11 +403,11 @@ describe('User Session Management', () => {
   describe('Integration Tests', () => {
     it('should demonstrate difference between single user and device user approaches', () => {
       const request1 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0'
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
       });
 
       const request2 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)'
+        'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)',
       });
 
       // Single user approach - same user ID across devices
@@ -427,24 +425,26 @@ describe('User Session Management', () => {
       const headers = {
         'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/537.36',
         'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br'
+        'accept-encoding': 'gzip, deflate, br',
       };
 
       // Multiple calls with same headers should return same results
-      const calls = Array(5).fill(0).map(() => {
-        const request = createMockRequest(headers);
-        return {
-          single: getSingleUserInfo(request),
-          device: getDeviceUserInfo(request)
-        };
-      });
+      const calls = Array(5)
+        .fill(0)
+        .map(() => {
+          const request = createMockRequest(headers);
+          return {
+            single: getSingleUserInfo(request),
+            device: getDeviceUserInfo(request),
+          };
+        });
 
       // All single user calls should be identical
-      const singleUserIds = calls.map(call => call.single.userId);
+      const singleUserIds = calls.map((call) => call.single.userId);
       expect(new Set(singleUserIds).size).toBe(1);
 
       // All device user calls should be identical
-      const deviceUserIds = calls.map(call => call.device.userId);
+      const deviceUserIds = calls.map((call) => call.device.userId);
       expect(new Set(deviceUserIds).size).toBe(1);
     });
 
@@ -456,16 +456,16 @@ describe('User Session Management', () => {
         { 'user-agent': '' },
         { 'user-agent': '   ' },
         { 'user-agent': 'null' },
-        { 'user-agent': 'undefined' }
+        { 'user-agent': 'undefined' },
       ];
 
       edgeCaseHeaders.forEach((headers, _index) => {
         const request = createMockRequest(headers as Record<string, string>);
-        
+
         expect(() => {
           const singleUser = getSingleUserInfo(request);
           const deviceUser = getDeviceUserInfo(request);
-          
+
           expect(singleUser.userId).toBeTruthy();
           expect(deviceUser.userId).toBeTruthy();
         }).not.toThrow();
@@ -476,13 +476,13 @@ describe('User Session Management', () => {
   describe('Hash Algorithm Consistency', () => {
     it('should generate consistent hashes for same input', () => {
       const testString = 'Mozilla/5.0-en-US,en;q=0.9-gzip, deflate, br';
-      
+
       // Simulate the hash algorithm from generateDeviceUserId
       const createHash = (str: string): number => {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
           const char = str.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
+          hash = (hash << 5) - hash + char;
           hash = hash & hash; // Convert to 32bit integer
         }
         return Math.abs(hash);
@@ -490,7 +490,7 @@ describe('User Session Management', () => {
 
       const hash1 = createHash(testString);
       const hash2 = createHash(testString);
-      
+
       expect(hash1).toBe(hash2);
       expect(hash1).toBeGreaterThan(0);
     });
@@ -500,7 +500,7 @@ describe('User Session Management', () => {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
           const char = str.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
+          hash = (hash << 5) - hash + char;
           hash = hash & hash;
         }
         return Math.abs(hash);
@@ -510,12 +510,12 @@ describe('User Session Management', () => {
         'Mozilla/5.0-en-US-gzip',
         'Mozilla/5.0-es-ES-gzip',
         'Safari/537.36-en-US-deflate',
-        'Chrome/91.0-fr-FR-br'
+        'Chrome/91.0-fr-FR-br',
       ];
 
       const hashes = inputs.map(createHash);
       const uniqueHashes = new Set(hashes);
-      
+
       expect(uniqueHashes.size).toBe(inputs.length);
     });
   });

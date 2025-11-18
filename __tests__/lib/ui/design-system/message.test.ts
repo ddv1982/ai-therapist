@@ -72,7 +72,7 @@ describe('message design system', () => {
   describe('getMessageTokens', () => {
     it('returns tokens for user role', () => {
       const tokens = getMessageTokens('user');
-      
+
       expect(tokens.base).toBe(messageBase);
       expect(tokens.variant).toBe(messageVariants.user);
       expect(tokens.typography).toBe(messageTypography);
@@ -80,7 +80,7 @@ describe('message design system', () => {
 
     it('returns tokens for assistant role', () => {
       const tokens = getMessageTokens('assistant');
-      
+
       expect(tokens.base).toBe(messageBase);
       expect(tokens.variant).toBe(messageVariants.assistant);
       expect(tokens.typography).toBe(messageTypography);
@@ -90,60 +90,60 @@ describe('message design system', () => {
   describe('buildMessageClasses', () => {
     it('builds container classes for user', () => {
       const classes = buildMessageClasses('user', 'container');
-      
+
       expect(classes).toContain('flex');
       expect(classes.length).toBeGreaterThan(0);
     });
 
     it('builds container classes for assistant', () => {
       const classes = buildMessageClasses('assistant', 'container');
-      
+
       expect(classes).toContain('flex');
       expect(classes.length).toBeGreaterThan(0);
     });
 
     it('builds avatar classes for user', () => {
       const classes = buildMessageClasses('user', 'avatar');
-      
+
       expect(classes).toContain('bg-primary');
       expect(classes).toContain('text-primary-foreground');
     });
 
     it('builds avatar classes for assistant', () => {
       const classes = buildMessageClasses('assistant', 'avatar');
-      
+
       expect(classes).toContain('bg-purple-600');
     });
 
     it('builds bubble classes for user', () => {
       const classes = buildMessageClasses('user', 'bubble');
-      
+
       expect(classes).toContain('bg-primary');
       expect(classes).toContain('text-white');
     });
 
     it('builds bubble classes for assistant', () => {
       const classes = buildMessageClasses('assistant', 'bubble');
-      
+
       expect(classes).toContain('bg-card');
       expect(classes).toContain('text-foreground');
     });
 
     it('builds timestamp classes for user', () => {
       const classes = buildMessageClasses('user', 'timestamp');
-      
+
       expect(classes.length).toBeGreaterThan(0);
     });
 
     it('builds timestamp classes for assistant', () => {
       const classes = buildMessageClasses('assistant', 'timestamp');
-      
+
       expect(classes).toContain('text-muted-foreground');
     });
 
     it('combines base and variant classes', () => {
       const classes = buildMessageClasses('user', 'avatar');
-      
+
       // Should contain both base classes and variant classes
       expect(classes).toContain('flex-shrink-0');
       expect(classes).toContain('bg-primary');
@@ -151,7 +151,7 @@ describe('message design system', () => {
 
     it('trims extra whitespace', () => {
       const classes = buildMessageClasses('user', 'container');
-      
+
       expect(classes).not.toMatch(/^\s/);
       expect(classes).not.toMatch(/\s$/);
     });

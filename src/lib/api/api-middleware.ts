@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createApiMiddleware as createFactory } from '@/lib/api/middleware/factory';
-import type { RequestContext, AuthenticatedRequestContext, ApiMiddlewareDeps } from '@/lib/api/middleware/factory';
+import type {
+  RequestContext,
+  AuthenticatedRequestContext,
+  ApiMiddlewareDeps,
+} from '@/lib/api/middleware/factory';
 import type { ApiResponse } from '@/lib/api/api-response';
 export type { RequestContext, AuthenticatedRequestContext };
 import { isTest } from '@/config/env.public';
@@ -42,17 +46,19 @@ export function withValidation<TSchema extends z.ZodSchema, TResponse = unknown>
   ) => Promise<NextResponse<ApiResponse<TResponse>>>
 ) {
   // Delegate to factory while preserving generic types for callers
-  return (defaultInstance as unknown as {
-    withValidation: <S extends z.ZodSchema, R = unknown>(
-      schema: S,
-      handler: (
-        request: NextRequest,
-        context: AuthenticatedRequestContext,
-        validatedData: z.infer<S>,
-        params?: unknown
-      ) => Promise<NextResponse<ApiResponse<R>>>
-    ) => ReturnType<typeof defaultInstance.withValidation>;
-  }).withValidation(schema, handler);
+  return (
+    defaultInstance as unknown as {
+      withValidation: <S extends z.ZodSchema, R = unknown>(
+        schema: S,
+        handler: (
+          request: NextRequest,
+          context: AuthenticatedRequestContext,
+          validatedData: z.infer<S>,
+          params?: unknown
+        ) => Promise<NextResponse<ApiResponse<R>>>
+      ) => ReturnType<typeof defaultInstance.withValidation>;
+    }
+  ).withValidation(schema, handler);
 }
 
 export function withValidationAndParams<TSchema extends z.ZodSchema, TResponse = unknown>(
@@ -64,17 +70,19 @@ export function withValidationAndParams<TSchema extends z.ZodSchema, TResponse =
     params: Record<string, string>
   ) => Promise<NextResponse<ApiResponse<TResponse>>>
 ) {
-  return (defaultInstance as unknown as {
-    withValidationAndParams: <S extends z.ZodSchema, R = unknown>(
-      schema: S,
-      handler: (
-        request: NextRequest,
-        context: AuthenticatedRequestContext,
-        validatedData: z.infer<S>,
-        params: Record<string, string>
-      ) => Promise<NextResponse<ApiResponse<R>>>
-    ) => ReturnType<typeof defaultInstance.withValidationAndParams>;
-  }).withValidationAndParams(schema, handler);
+  return (
+    defaultInstance as unknown as {
+      withValidationAndParams: <S extends z.ZodSchema, R = unknown>(
+        schema: S,
+        handler: (
+          request: NextRequest,
+          context: AuthenticatedRequestContext,
+          validatedData: z.infer<S>,
+          params: Record<string, string>
+        ) => Promise<NextResponse<ApiResponse<R>>>
+      ) => ReturnType<typeof defaultInstance.withValidationAndParams>;
+    }
+  ).withValidationAndParams(schema, handler);
 }
 
 export function withRateLimitUnauthenticated<T = unknown>(
@@ -121,25 +129,45 @@ export function withAuthAndRateLimitStreaming(
 }
 
 // Test-only setters: rebuild the default instance with overrides
-export function __setCreateRequestLoggerForTests(fn: ((req: unknown) => unknown) | null | undefined): void {
+export function __setCreateRequestLoggerForTests(
+  fn: ((req: unknown) => unknown) | null | undefined
+): void {
   if (!isTest) return;
-  const createRequestLogger = (fn as ((req: unknown) => unknown)) || undefined;
-  const createRequestLoggerTyped = createRequestLogger as unknown as ApiMiddlewareDeps['createRequestLogger'] | undefined;
+  const createRequestLogger = (fn as (req: unknown) => unknown) || undefined;
+  const createRequestLoggerTyped = createRequestLogger as unknown as
+    | ApiMiddlewareDeps['createRequestLogger']
+    | undefined;
   currentOverrides = { ...currentOverrides, createRequestLogger: createRequestLoggerTyped };
   defaultInstance = createFactory(currentOverrides);
 }
 
-export function __setApiMiddlewareDepsForTests(deps: {
-  validateApiAuth?: (req: unknown) => Promise<{ isValid: boolean; error?: string }>;
-  getRateLimiter?: () => { checkRateLimit: (clientIP: string, bucket?: string) => Promise<{ allowed: boolean; retryAfter?: number }> };
-  getSingleUserInfo?: (req: unknown) => unknown;
-} = {}): void {
+export function __setApiMiddlewareDepsForTests(
+  deps: {
+    validateApiAuth?: (req: unknown) => Promise<{ isValid: boolean; error?: string }>;
+    getRateLimiter?: () => {
+      checkRateLimit: (
+        clientIP: string,
+        bucket?: string
+      ) => Promise<{ allowed: boolean; retryAfter?: number }>;
+    };
+    getSingleUserInfo?: (req: unknown) => unknown;
+  } = {}
+): void {
   if (!isTest) return;
   currentOverrides = {
     ...currentOverrides,
-    ...(deps.validateApiAuth ? { validateApiAuth: deps.validateApiAuth as unknown as ApiMiddlewareDeps['validateApiAuth'] } : {}),
-    ...(deps.getRateLimiter ? { getRateLimiter: deps.getRateLimiter as unknown as ApiMiddlewareDeps['getRateLimiter'] } : {}),
-    ...(deps.getSingleUserInfo ? { getSingleUserInfo: deps.getSingleUserInfo as unknown as ApiMiddlewareDeps['getSingleUserInfo'] } : {}),
+    ...(deps.validateApiAuth
+      ? { validateApiAuth: deps.validateApiAuth as unknown as ApiMiddlewareDeps['validateApiAuth'] }
+      : {}),
+    ...(deps.getRateLimiter
+      ? { getRateLimiter: deps.getRateLimiter as unknown as ApiMiddlewareDeps['getRateLimiter'] }
+      : {}),
+    ...(deps.getSingleUserInfo
+      ? {
+          getSingleUserInfo:
+            deps.getSingleUserInfo as unknown as ApiMiddlewareDeps['getSingleUserInfo'],
+        }
+      : {}),
   };
   defaultInstance = createFactory(currentOverrides);
 }

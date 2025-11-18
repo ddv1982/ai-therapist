@@ -23,7 +23,12 @@ class RequestDeduplicator {
   /**
    * Generate deduplication key for a request
    */
-  static generateKey(userId: string, operation: string, resource?: string, sessionId?: string): string {
+  static generateKey(
+    userId: string,
+    operation: string,
+    resource?: string,
+    sessionId?: string
+  ): string {
     const parts = [userId, operation];
     if (resource) parts.push(resource);
     if (sessionId) parts.push(sessionId);
@@ -76,7 +81,7 @@ class RequestDeduplicator {
       }
     });
 
-    toDelete.forEach(key => this.entries.delete(key));
+    toDelete.forEach((key) => this.entries.delete(key));
   }
 
   /**
@@ -113,7 +118,7 @@ const deduplicator = new RequestDeduplicator();
 
 /**
  * Deduplicate critical operations to prevent race conditions
- * 
+ *
  * @param userId - User ID for scoping
  * @param operation - Operation name (e.g., 'create_session', 'send_message')
  * @param asyncOperation - The async operation to deduplicate

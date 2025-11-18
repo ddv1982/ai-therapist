@@ -1,7 +1,7 @@
 /**
  * Global Jest Setup File
  * Automatically integrates unified test utilities across all test files
- * 
+ *
  * This setup file:
  * - Imports unified test configuration
  * - Sets up global mocks and utilities
@@ -22,16 +22,9 @@ export {
   TestSetupUtils,
 } from './utils/test-utilities';
 
-export {
-  ComponentTestTemplate,
-  APITestTemplate,
-} from './utils/test-templates';
+export { ComponentTestTemplate, APITestTemplate } from './utils/test-templates';
 
-export {
-  TestPerformanceMonitor,
-  TestDataValidator,
-  TestCleanup,
-} from './utils/test-config';
+export { TestPerformanceMonitor, TestDataValidator, TestCleanup } from './utils/test-config';
 
 // Global test configuration message
 console.log('🧪 Unified Test Architecture Loaded - 23 optimization patterns active');
@@ -43,11 +36,13 @@ jest.mock('uuid', () => ({
 
 // Mock Clerk modules for api-auth.ts
 jest.mock('@clerk/nextjs/server', () => ({
-  getAuth: jest.fn(() => Promise.resolve({
-    userId: 'test-user-id',
-    sessionId: 'test-session-id',
-    getToken: jest.fn(),
-  })),
+  getAuth: jest.fn(() =>
+    Promise.resolve({
+      userId: 'test-user-id',
+      sessionId: 'test-session-id',
+      getToken: jest.fn(),
+    })
+  ),
 }));
 
 // Mock Clerk client hooks/components used in client code

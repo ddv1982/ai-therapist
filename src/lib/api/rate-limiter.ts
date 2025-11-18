@@ -38,31 +38,37 @@ class RedisRateLimiter {
     }
   }
 
-  async checkRateLimit(ip: string, bucketName: 'default' | 'api' | 'chat' = 'default'): Promise<{ allowed: boolean; retryAfter?: number }> {
+  async checkRateLimit(
+    ip: string,
+    bucketName: 'default' | 'api' | 'chat' = 'default'
+  ): Promise<{ allowed: boolean; retryAfter?: number }> {
     const config = this.getConfigForBucket(bucketName);
     const key = this.getKey(ip, bucketName);
 
-    const result = await redisManager.executeCommand<{ allowed: boolean; retryAfter?: number }>(async (client) => {
-      const tx = client.multi();
-      tx.incr(key);
-      tx.pTTL(key);
-      const execResult = await tx.exec();
-      const count = Number(execResult?.[0] ?? 0);
-      let ttl = Number(execResult?.[1]);
-      if (!Number.isFinite(ttl) || ttl <= 0) {
-        ttl = config.windowMs;
-      }
+    const result = await redisManager.executeCommand<{ allowed: boolean; retryAfter?: number }>(
+      async (client) => {
+        const tx = client.multi();
+        tx.incr(key);
+        tx.pTTL(key);
+        const execResult = await tx.exec();
+        const count = Number(execResult?.[0] ?? 0);
+        let ttl = Number(execResult?.[1]);
+        if (!Number.isFinite(ttl) || ttl <= 0) {
+          ttl = config.windowMs;
+        }
 
-      if (count === 1) {
-        await client.pExpire(key, config.windowMs);
-      }
+        if (count === 1) {
+          await client.pExpire(key, config.windowMs);
+        }
 
-      if (count > config.maxAttempts) {
-        return { allowed: false, retryAfter: Math.max(1, Math.ceil(ttl / 1000)) };
-      }
+        if (count > config.maxAttempts) {
+          return { allowed: false, retryAfter: Math.max(1, Math.ceil(ttl / 1000)) };
+        }
 
-      return { allowed: true };
-    }, { allowed: true });
+        return { allowed: true };
+      },
+      { allowed: true }
+    );
 
     // Ensure non-null return
     return result || { allowed: true };
@@ -93,7 +99,10 @@ class RedisRateLimiter {
 }
 
 class NetworkRateLimiter {
-  private buckets = new Map<string, { store: Map<string, RateLimitEntry>; config: RateLimitConfig }>();
+  private buckets = new Map<
+    string,
+    { store: Map<string, RateLimitEntry>; config: RateLimitConfig }
+  >();
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   // Safe accessor using centralised env handling
@@ -104,9 +113,12 @@ class NetworkRateLimiter {
   constructor() {
     // Clean up expired entries every 5 minutes (only if setInterval is available)
     if (typeof setInterval !== 'undefined') {
-      this.cleanupInterval = setInterval(() => {
-        this.cleanup();
-      }, 5 * 60 * 1000);
+      this.cleanupInterval = setInterval(
+        () => {
+          this.cleanup();
+        },
+        5 * 60 * 1000
+      );
     }
     // Initialize default buckets
     this.ensureBucket('default');
@@ -140,7 +152,10 @@ class NetworkRateLimiter {
 
   private ensureBucket(name: string): void {
     if (!this.buckets.has(name)) {
-      this.buckets.set(name, { store: new Map<string, RateLimitEntry>(), config: this.getConfigForBucket(name) });
+      this.buckets.set(name, {
+        store: new Map<string, RateLimitEntry>(),
+        config: this.getConfigForBucket(name),
+      });
     } else {
       const bucket = this.buckets.get(name)!;
       bucket.config = this.getConfigForBucket(name);
@@ -191,7 +206,12 @@ class NetworkRateLimiter {
       candidate = candidate.split(':')[0];
     }
 
-    if (candidate === 'localhost' || candidate === '127.0.0.1' || candidate === '::1' || candidate === '::ffff:127.0.0.1') {
+    if (
+      candidate === 'localhost' ||
+      candidate === '127.0.0.1' ||
+      candidate === '::1' ||
+      candidate === '::ffff:127.0.0.1'
+    ) {
       return true;
     }
 
@@ -223,13 +243,19 @@ class NetworkRateLimiter {
   /**
    * Check if IP is allowed to make a request
    */
-  checkRateLimit(ip: string, bucketName: 'default' | 'api' | 'chat' = 'default'): { allowed: boolean; retryAfter?: number } {
+  checkRateLimit(
+    ip: string,
+    bucketName: 'default' | 'api' | 'chat' = 'default'
+  ): { allowed: boolean; retryAfter?: number } {
     this.ensureBucket(bucketName);
     const bucket = this.buckets.get(bucketName)!;
     // Always allow exempt IPs (localhost, private networks)
     if (this.isExemptIP(ip)) {
       if (this.getNodeEnv() === 'development') {
-        logger.debug('Rate limiter allowing exempt IP', { operation: 'checkRateLimit', bucket: bucketName });
+        logger.debug('Rate limiter allowing exempt IP', {
+          operation: 'checkRateLimit',
+          bucket: bucketName,
+        });
       }
       return { allowed: true };
     }
@@ -242,7 +268,7 @@ class NetworkRateLimiter {
       bucket.store.set(storageKey, {
         count: 1,
         resetTime: now + bucket.config.windowMs,
-        attempts: [{ timestamp: now }]
+        attempts: [{ timestamp: now }],
       });
       return { allowed: true };
     }
@@ -252,25 +278,25 @@ class NetworkRateLimiter {
       const blockExpiry = entry.resetTime + bucket.config.blockDuration;
       if (now < blockExpiry) {
         if (this.getNodeEnv() === 'development') {
-          logger.warn('Rate limiter blocking IP', { 
+          logger.warn('Rate limiter blocking IP', {
             // do not include raw IP to respect no-IP logging policy
-            attempts: entry.count, 
+            attempts: entry.count,
             maxAttempts: bucket.config.maxAttempts,
             retryInSeconds: Math.ceil((blockExpiry - now) / 1000),
             operation: 'checkRateLimit',
-            bucket: bucketName
+            bucket: bucketName,
           });
         }
-        return { 
-          allowed: false, 
-          retryAfter: Math.ceil((blockExpiry - now) / 1000) 
+        return {
+          allowed: false,
+          retryAfter: Math.ceil((blockExpiry - now) / 1000),
         };
       }
       // Block expired, reset
       bucket.store.set(storageKey, {
         count: 1,
         resetTime: now + bucket.config.windowMs,
-        attempts: [{ timestamp: now }]
+        attempts: [{ timestamp: now }],
       });
       return { allowed: true };
     }
@@ -278,10 +304,10 @@ class NetworkRateLimiter {
     // Increment count
     entry.count++;
     entry.attempts.push({ timestamp: now });
-    
+
     // Keep only recent attempts for analysis
     entry.attempts = entry.attempts.filter(
-      attempt => attempt.timestamp > now - bucket.config.windowMs
+      (attempt) => attempt.timestamp > now - bucket.config.windowMs
     );
 
     return { allowed: entry.count <= bucket.config.maxAttempts };
@@ -290,7 +316,10 @@ class NetworkRateLimiter {
   /**
    * Get current rate limit status for IP
    */
-  getStatus(ip: string, bucketName: 'default' | 'api' | 'chat' = 'default'): { count: number; remaining: number; resetTime: number } {
+  getStatus(
+    ip: string,
+    bucketName: 'default' | 'api' | 'chat' = 'default'
+  ): { count: number; remaining: number; resetTime: number } {
     this.ensureBucket(bucketName);
     const bucket = this.buckets.get(bucketName)!;
     const entry = bucket.store.get(this.fingerprintIp(ip));
@@ -300,14 +329,14 @@ class NetworkRateLimiter {
       return {
         count: 0,
         remaining: bucket.config.maxAttempts,
-        resetTime: now + bucket.config.windowMs
+        resetTime: now + bucket.config.windowMs,
       };
     }
 
     return {
       count: entry.count,
       remaining: Math.max(0, bucket.config.maxAttempts - entry.count),
-      resetTime: entry.resetTime
+      resetTime: entry.resetTime,
     };
   }
 
@@ -323,9 +352,13 @@ class NetworkRateLimiter {
           toDelete.push(ip);
         }
       });
-      toDelete.forEach(ip => bucket.store.delete(ip));
+      toDelete.forEach((ip) => bucket.store.delete(ip));
       if (typeof console !== 'undefined' && this.getNodeEnv() === 'development') {
-        logger.debug('Rate limiter cleanup completed', { cleanedEntries: toDelete.length, operation: 'cleanup', bucket: bucketName });
+        logger.debug('Rate limiter cleanup completed', {
+          cleanedEntries: toDelete.length,
+          operation: 'cleanup',
+          bucket: bucketName,
+        });
       }
     });
   }
@@ -333,14 +366,29 @@ class NetworkRateLimiter {
   /**
    * Get suspicious activity report
    */
-  getSuspiciousActivity(): Array<{ fingerprint: string; ip: string; attempts: number; lastAttempt: number }> {
-    const suspicious: Array<{ fingerprint: string; ip: string; attempts: number; lastAttempt: number }> = [];
+  getSuspiciousActivity(): Array<{
+    fingerprint: string;
+    ip: string;
+    attempts: number;
+    lastAttempt: number;
+  }> {
+    const suspicious: Array<{
+      fingerprint: string;
+      ip: string;
+      attempts: number;
+      lastAttempt: number;
+    }> = [];
     // Aggregate across all buckets
     this.buckets.forEach((bucket) => {
       bucket.store.forEach((entry, ip) => {
         if (entry.count >= bucket.config.maxAttempts) {
-          const lastAttempt = Math.max(...entry.attempts.map(a => a.timestamp));
-          suspicious.push({ fingerprint: ip, ip: this.formatLegacyIpField(ip), attempts: entry.count, lastAttempt });
+          const lastAttempt = Math.max(...entry.attempts.map((a) => a.timestamp));
+          suspicious.push({
+            fingerprint: ip,
+            ip: this.formatLegacyIpField(ip),
+            attempts: entry.count,
+            lastAttempt,
+          });
         }
       });
     });

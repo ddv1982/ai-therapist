@@ -1,4 +1,3 @@
-import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
@@ -41,16 +40,16 @@ export function CompulsionForm({
           className={cn('min-h-[100px]', errors.compulsion && 'border-destructive')}
         />
         {errors.compulsion && (
-          <div className="flex items-center gap-1 mt-1 text-xs text-destructive">
-            <AlertCircle className="w-3 h-3" />
+          <div className="text-destructive mt-1 flex items-center gap-1 text-xs">
+            <AlertCircle className="h-3 w-3" />
             {errors.compulsion}
           </div>
         )}
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div>
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-muted-foreground text-xs">
             {frequencyLabel}: {form.frequency}/10
           </Label>
           <Slider
@@ -59,17 +58,17 @@ export function CompulsionForm({
             min={1}
             max={10}
             step={1}
-            className="w-full mt-1"
+            className="mt-1 w-full"
           />
           {errors.frequency && (
-            <div className="flex items-center gap-1 mt-1 text-xs text-destructive">
-              <AlertCircle className="w-3 h-3" />
+            <div className="text-destructive mt-1 flex items-center gap-1 text-xs">
+              <AlertCircle className="h-3 w-3" />
               {errors.frequency}
             </div>
           )}
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-muted-foreground text-xs">
             {durationLabel}: {form.duration} {durationUnit}
           </Label>
           <Input
@@ -79,14 +78,14 @@ export function CompulsionForm({
             className={cn('text-sm', errors.duration && 'border-destructive')}
           />
           {errors.duration && (
-            <div className="flex items-center gap-1 mt-1 text-xs text-destructive">
-              <AlertCircle className="w-3 h-3" />
+            <div className="text-destructive mt-1 flex items-center gap-1 text-xs">
+              <AlertCircle className="h-3 w-3" />
               {errors.duration}
             </div>
           )}
         </div>
         <div>
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-muted-foreground text-xs">
             {reliefLabel}: {form.reliefLevel}/10
           </Label>
           <Slider
@@ -95,11 +94,11 @@ export function CompulsionForm({
             min={1}
             max={10}
             step={1}
-            className="w-full mt-1"
+            className="mt-1 w-full"
           />
           {errors.reliefLevel && (
-            <div className="flex items-center gap-1 mt-1 text-xs text-destructive">
-              <AlertCircle className="w-3 h-3" />
+            <div className="text-destructive mt-1 flex items-center gap-1 text-xs">
+              <AlertCircle className="h-3 w-3" />
               {errors.reliefLevel}
             </div>
           )}

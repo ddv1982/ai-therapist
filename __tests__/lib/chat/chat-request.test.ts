@@ -34,7 +34,15 @@ describe('chat-request', () => {
 
   it('handles parts with non-text types', () => {
     const result = buildForwardedMessages(
-      [{ role: 'user', parts: [{ type: 'image', text: 'ignored' }, { type: 'text', text: 'visible' }] }] as any,
+      [
+        {
+          role: 'user',
+          parts: [
+            { type: 'image', text: 'ignored' },
+            { type: 'text', text: 'visible' },
+          ],
+        },
+      ] as any,
       'fallback'
     );
     expect(result[0].content).toBe('visible');
@@ -49,10 +57,7 @@ describe('chat-request', () => {
   });
 
   it('coerces non-string content to empty', () => {
-    const result = buildForwardedMessages(
-      [{ role: 'user', content: 123 }] as any,
-      'fallback'
-    );
+    const result = buildForwardedMessages([{ role: 'user', content: 123 }] as any, 'fallback');
     expect(result[0].content).toBe('');
   });
 
@@ -82,10 +87,7 @@ describe('chat-request', () => {
   });
 
   it('handles empty parts array', () => {
-    const result = buildForwardedMessages(
-      [{ role: 'user', parts: [] }] as any,
-      'fallback'
-    );
+    const result = buildForwardedMessages([{ role: 'user', parts: [] }] as any, 'fallback');
     expect(result[0].content).toBe('');
   });
 

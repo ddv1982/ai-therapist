@@ -6,7 +6,7 @@
   --popover: oklch(1 0 0);
   --secondary: oklch(0.96 0.01 247);
   --muted: oklch(0.96 0.01 247);
-  
+
   /* 30% - Complementary text and UI */
   --foreground: oklch(0.145 0.045 258);
   --card-foreground: oklch(0.145 0.045 258);
@@ -15,7 +15,7 @@
   --muted-foreground: oklch(0.5 0.01 258);
   --border: oklch(0.91 0.01 247);
   --input: oklch(0.91 0.01 247);
-  
+
   /* 10% - Accent colors for CTAs and highlights */
   --primary: oklch(0.6 0.19 237);
   --primary-foreground: oklch(0.98 0.01 247);
@@ -48,7 +48,7 @@
   /* Component-specific variables */
   --sidebar-background: oklch(0.98 0.01 247);
   --modal-backdrop: oklch(0.25 0.02 258 / 0.8);
-  
+
   /* Shadows using 8pt grid system */
   --shadow-sm: 0 2px 4px 0 oklch(0.145 0.045 258 / 5%);
   --shadow-md: 0 8px 16px -4px oklch(0.145 0.045 258 / 10%);
@@ -68,7 +68,7 @@
   --popover: oklch(0.13 0.02 258);
   --secondary: oklch(0.2 0.015 258);
   --muted: oklch(0.2 0.015 258);
-  
+
   /* 30% - Light text and UI for contrast */
   --foreground: oklch(0.98 0.01 247);
   --card-foreground: oklch(0.98 0.01 247);
@@ -77,7 +77,7 @@
   --muted-foreground: oklch(0.7 0.01 258);
   --border: oklch(0.2 0.015 258);
   --input: oklch(0.2 0.015 258);
-  
+
   /* 10% - Accent colors for dark mode */
   --primary: oklch(0.7 0.15 237);
   --primary-foreground: oklch(0.13 0.02 258);
@@ -109,7 +109,7 @@
   /* Dark component variables */
   --sidebar-background: oklch(0.13 0.02 258);
   --modal-backdrop: oklch(0.05 0.01 258 / 0.9);
-  
+
   /* Dark shadows using 8pt grid */
   --shadow-sm: 0 2px 4px 0 oklch(0.05 0.01 258 / 30%);
   --shadow-md: 0 8px 16px -4px oklch(0.05 0.01 258 / 30%);
@@ -122,7 +122,7 @@
   border-color: var(--border);
 }
 
-html[data-scroll-behavior="smooth"] {
+html[data-scroll-behavior='smooth'] {
   scroll-behavior: smooth;
   height: 100%;
 }
@@ -131,8 +131,12 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), system-ui, sans-serif;
-  font-feature-settings: "rlig" 1, "calt" 1;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-feature-settings:
+    'rlig' 1,
+    'calt' 1;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
   height: 100%;
   width: 100%;
   padding-top: env(safe-area-inset-top);

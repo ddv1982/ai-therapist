@@ -1,9 +1,22 @@
-import { extractChunk, appendWithLimit, persistFromClonedStream, attachResponseHeadersRaw, teeAndPersistStream } from '@/lib/chat/stream-utils';
+import {
+  extractChunk,
+  appendWithLimit,
+  persistFromClonedStream,
+  attachResponseHeadersRaw,
+  teeAndPersistStream,
+} from '@/lib/chat/stream-utils';
 
 describe('stream-utils', () => {
   it('extractChunk parses text, parts and delta', () => {
     expect(extractChunk({ text: 'a' } as any)).toBe('a');
-    expect(extractChunk({ parts: [{ type: 'text', text: 'a' }, { type: 'text', text: 'b' }] } as any)).toBe('ab');
+    expect(
+      extractChunk({
+        parts: [
+          { type: 'text', text: 'a' },
+          { type: 'text', text: 'b' },
+        ],
+      } as any)
+    ).toBe('ab');
     expect(extractChunk({ delta: { text: 'd' } } as any)).toBe('d');
     expect(extractChunk(undefined as any)).toBe('');
   });
@@ -26,17 +39,17 @@ describe('stream-utils', () => {
   });
 
   it('persistFromClonedStream parses SSE lines', async () => {
-    const lines = [
-      'data: {"text":"Hello"}',
-      'data: {"delta":{"text":"!"}}',
-    ].join('\n');
+    const lines = ['data: {"text":"Hello"}', 'data: {"delta":{"text":"!"}}'].join('\n');
     const fakeResponse = {
       clone: () => ({ text: async () => lines }),
       text: async () => lines,
     } as unknown as Response;
     const appended: string[] = [];
     await persistFromClonedStream(fakeResponse, {
-      append: (chunk: string) => { appended.push(chunk); return false; },
+      append: (chunk: string) => {
+        appended.push(chunk);
+        return false;
+      },
       persist: async () => {},
       wasTruncated: () => false,
     });
@@ -89,7 +102,10 @@ describe('stream-utils', () => {
 
     const out: string[] = [];
     await persistFromClonedStream(base, {
-      append: (c: string) => { out.push(c); return out.length >= 2; },
+      append: (c: string) => {
+        out.push(c);
+        return out.length >= 2;
+      },
       wasTruncated: () => false,
       persist: async () => {},
     });
@@ -111,7 +127,10 @@ describe('stream-utils', () => {
 
     const captured: string[] = [];
     await persistFromClonedStream(base, {
-      append: (c: string) => { captured.push(c); return false; },
+      append: (c: string) => {
+        captured.push(c);
+        return false;
+      },
       wasTruncated: () => true,
       persist: async () => undefined,
     });
@@ -147,7 +166,9 @@ describe('stream-utils', () => {
     expect(extractChunk({ parts: [{ type: 'other', text: 'ignored' }] } as any)).toBe('');
 
     // Parts with null entries
-    expect(extractChunk({ parts: [null, { type: 'text', text: 'kept' }, undefined] } as any)).toBe('kept');
+    expect(extractChunk({ parts: [null, { type: 'text', text: 'kept' }, undefined] } as any)).toBe(
+      'kept'
+    );
 
     // Non-string delta text
     expect(extractChunk({ delta: { text: 123 } } as any)).toBe('');
@@ -186,10 +207,7 @@ describe('stream-utils', () => {
   });
 
   it('persistFromClonedStream handles invalid JSON gracefully', async () => {
-    const lines = [
-      'data: {invalid json}',
-      'data: {"text":"valid"}',
-    ].join('\n');
+    const lines = ['data: {invalid json}', 'data: {"text":"valid"}'].join('\n');
     const fakeResponse = {
       clone: () => ({ text: async () => lines }),
       text: async () => lines,
@@ -197,7 +215,10 @@ describe('stream-utils', () => {
 
     const appended: string[] = [];
     await persistFromClonedStream(fakeResponse, {
-      append: (chunk: string) => { appended.push(chunk); return false; },
+      append: (chunk: string) => {
+        appended.push(chunk);
+        return false;
+      },
       persist: async () => {},
       wasTruncated: () => false,
     });
@@ -207,12 +228,9 @@ describe('stream-utils', () => {
   });
 
   it('persistFromClonedStream ignores non-data lines', async () => {
-    const lines = [
-      'event: ping',
-      'data: {"text":"A"}',
-      ': comment',
-      'data: {"text":"B"}',
-    ].join('\n');
+    const lines = ['event: ping', 'data: {"text":"A"}', ': comment', 'data: {"text":"B"}'].join(
+      '\n'
+    );
     const fakeResponse = {
       clone: () => ({ text: async () => lines }),
       text: async () => lines,
@@ -220,7 +238,10 @@ describe('stream-utils', () => {
 
     const appended: string[] = [];
     await persistFromClonedStream(fakeResponse, {
-      append: (chunk: string) => { appended.push(chunk); return false; },
+      append: (chunk: string) => {
+        appended.push(chunk);
+        return false;
+      },
       persist: async () => {},
       wasTruncated: () => false,
     });

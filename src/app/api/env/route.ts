@@ -12,7 +12,7 @@ interface EnvironmentResponse {
 
 /**
  * GET /api/env - Returns environment configuration
- * 
+ *
  * @returns {EnvironmentResponse} Environment configuration details
  */
 export const GET = withApiMiddleware(async (_request, context) => {

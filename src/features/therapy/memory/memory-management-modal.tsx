@@ -1,36 +1,36 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import { useState, useEffect, useCallback } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
-  DialogFooter 
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { 
-  Trash2, 
-  AlertTriangle, 
+import {
+  Trash2,
+  AlertTriangle,
   Calendar,
   FileText,
   CheckCircle,
   Loader2,
   Brain,
   RefreshCw,
-  Eye
+  Eye,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
-import { 
-  getMemoryManagementData, 
-  deleteMemory, 
+import {
+  getMemoryManagementData,
+  deleteMemory,
   refreshMemoryContext,
   type MemoryDetailInfo,
   type MemoryManagementResponse,
-  type MemoryContextInfo
+  type MemoryContextInfo,
 } from '@/lib/chat/memory-utils';
 import { logger } from '@/lib/utils/logger';
 import { SessionReportDetailModal } from './session-report-detail-modal';
@@ -43,11 +43,11 @@ interface MemoryManagementModalProps {
   onMemoryUpdated: (newMemoryContext: MemoryContextInfo) => void;
 }
 
-export function MemoryManagementModal({ 
-  open, 
-  onOpenChange, 
+export function MemoryManagementModal({
+  open,
+  onOpenChange,
   currentSessionId,
-  onMemoryUpdated 
+  onMemoryUpdated,
 }: MemoryManagementModalProps) {
   const { showToast } = useToast();
   const t = useTranslations('toast');
@@ -63,7 +63,7 @@ export function MemoryManagementModal({
     isActive: false,
     type: '',
     affectedCount: 0,
-    onConfirm: () => {}
+    onConfirm: () => {},
   });
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedReport, setSelectedReport] = useState<MemoryDetailInfo | null>(null);
@@ -71,17 +71,21 @@ export function MemoryManagementModal({
 
   const loadMemoryData = useCallback(async () => {
     if (!open) return;
-    
+
     setIsLoading(true);
     try {
       const data = await getMemoryManagementData(currentSessionId);
       setMemoryData(data);
     } catch (error) {
-      logger.error('Failed to load memory management data', {
-        component: 'MemoryManagementModal',
-        operation: 'loadMemoryData',
-        currentSessionId
-      }, error as Error);
+      logger.error(
+        'Failed to load memory management data',
+        {
+          component: 'MemoryManagementModal',
+          operation: 'loadMemoryData',
+          currentSessionId,
+        },
+        error as Error
+      );
       showToast({
         title: t('memoryLoadErrorTitle'),
         message: t('memoryLoadErrorBody'),
@@ -96,9 +100,12 @@ export function MemoryManagementModal({
     loadMemoryData();
   }, [loadMemoryData]);
 
-  const handleDeleteMemory = async (type: 'all' | 'recent' | 'specific' | 'all-except-current', options?: { limit?: number }) => {
+  const handleDeleteMemory = async (
+    type: 'all' | 'recent' | 'specific' | 'all-except-current',
+    options?: { limit?: number }
+  ) => {
     setIsDeleting(true);
-    
+
     try {
       let deleteOptions: {
         type: 'all' | 'recent' | 'specific' | 'all-except-current';
@@ -106,7 +113,7 @@ export function MemoryManagementModal({
         sessionIds?: string[];
         limit?: number;
       };
-      
+
       switch (type) {
         case 'all':
           deleteOptions = { type: 'all' };
@@ -115,7 +122,11 @@ export function MemoryManagementModal({
           deleteOptions = { type: 'all-except-current', sessionId: currentSessionId };
           break;
         case 'recent':
-          deleteOptions = { type: 'recent', limit: options?.limit || 3, sessionId: currentSessionId };
+          deleteOptions = {
+            type: 'recent',
+            limit: options?.limit || 3,
+            sessionId: currentSessionId,
+          };
           break;
         case 'specific':
           deleteOptions = { type: 'specific', sessionIds: Array.from(selectedReports) };
@@ -123,24 +134,24 @@ export function MemoryManagementModal({
         default:
           throw new Error(`Unknown deletion type: ${type}`);
       }
-      
+
       const result = await deleteMemory(deleteOptions);
-      
+
       if (result.success) {
         // Close the modal first
         onOpenChange(false);
-        
+
         // Show success toast after modal closes
         showToast({
           title: t('memoryDeleteSuccessTitle'),
           message: result.message ?? t('memoryDeleteSuccessBody'),
           type: 'success',
         });
-        
+
         // Refresh memory context for main app
         const newMemoryContext = await refreshMemoryContext(currentSessionId);
         onMemoryUpdated(newMemoryContext);
-        
+
         // Reset internal state for next time modal opens
         setSelectedReports(new Set());
         setMemoryData(null);
@@ -152,13 +163,17 @@ export function MemoryManagementModal({
         });
       }
     } catch (error) {
-      logger.error('Memory deletion failed', {
-        component: 'MemoryManagementModal',
-        operation: 'handleDeleteMemory',
-        type,
-        currentSessionId,
-        selectedCount: selectedReports.size
-      }, error as Error);
+      logger.error(
+        'Memory deletion failed',
+        {
+          component: 'MemoryManagementModal',
+          operation: 'handleDeleteMemory',
+          type,
+          currentSessionId,
+          selectedCount: selectedReports.size,
+        },
+        error as Error
+      );
       showToast({
         title: t('memoryDeleteErrorTitle'),
         message: t('memoryDeleteErrorBody'),
@@ -175,7 +190,7 @@ export function MemoryManagementModal({
       isActive: true,
       type,
       affectedCount,
-      onConfirm
+      onConfirm,
     });
   };
 
@@ -198,11 +213,14 @@ export function MemoryManagementModal({
     }
   };
 
-  const toggleReportSelection = (reportId: string, event?: React.MouseEvent | React.ChangeEvent<HTMLInputElement>) => {
+  const toggleReportSelection = (
+    reportId: string,
+    event?: React.MouseEvent | React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event) {
       event.stopPropagation();
     }
-    
+
     const newSelected = new Set(selectedReports);
     if (newSelected.has(reportId)) {
       newSelected.delete(reportId);
@@ -235,65 +253,71 @@ export function MemoryManagementModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-5xl h-[85vh] overflow-hidden flex flex-col bg-card border border-border">
+        <DialogContent className="bg-card border-border flex h-[85vh] max-w-5xl flex-col overflow-hidden border">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl text-foreground" title="Therapeutic Memory Management">
-              <Brain className="w-5 h-5 text-primary" />
+            <DialogTitle
+              className="text-foreground flex items-center gap-2 text-xl"
+              title="Therapeutic Memory Management"
+            >
+              <Brain className="text-primary h-5 w-5" />
               Therapeutic Memory Management
             </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
+            <DialogDescription className="text-muted-foreground text-sm">
               Manage your therapeutic session memory to control AI context and insights.
               {hasMemory && ` Currently storing ${reportCount} session reports.`}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-hidden space-y-4">
+          <div className="flex-1 space-y-4 overflow-hidden">
             {confirmationState.isActive ? (
-              <div className="h-full flex items-center justify-center">
-                <div className="bg-destructive/5 border border-destructive/20 rounded-lg spacing-md max-w-2xl w-full">
-                  <div className="flex items-center gap-3 mb-4">
-                    <AlertTriangle className="w-6 h-6 text-destructive" />
-                    <h3 className="text-xl font-semibold text-foreground">Confirm Memory Deletion</h3>
+              <div className="flex h-full items-center justify-center">
+                <div className="bg-destructive/5 border-destructive/20 spacing-md w-full max-w-2xl rounded-lg border">
+                  <div className="mb-4 flex items-center gap-3">
+                    <AlertTriangle className="text-destructive h-6 w-6" />
+                    <h3 className="text-foreground text-xl font-semibold">
+                      Confirm Memory Deletion
+                    </h3>
                   </div>
-                  
+
                   <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-muted-foreground text-sm leading-relaxed">
                       {getConfirmationMessage()}
                     </p>
-                    
-                    <div className="bg-destructive/10 border border-destructive/20 rounded-lg spacing-sm">
-                      <p className="text-sm text-destructive font-semibold">
-                        ⚠️ This action cannot be undone. Your therapeutic insights and session continuity will be lost.
+
+                    <div className="bg-destructive/10 border-destructive/20 spacing-sm rounded-lg border">
+                      <p className="text-destructive text-sm font-semibold">
+                        ⚠️ This action cannot be undone. Your therapeutic insights and session
+                        continuity will be lost.
                       </p>
                     </div>
                   </div>
-                  
-                  <div className="flex gap-3 mt-6">
-                    <Button 
-                      variant="outline" 
+
+                  <div className="mt-6 flex gap-3">
+                    <Button
+                      variant="outline"
                       onClick={cancelConfirmation}
                       disabled={isDeleting}
-                      className="flex-1 text-sm h-10"
+                      className="h-10 flex-1 text-sm"
                     >
                       No, Cancel
                     </Button>
-                    <Button 
-                      variant="destructive" 
+                    <Button
+                      variant="destructive"
                       onClick={() => {
                         confirmationState.onConfirm();
                         // Modal will close automatically after successful deletion
                       }}
                       disabled={isDeleting}
-                      className="flex-1 text-sm h-10"
+                      className="h-10 flex-1 text-sm"
                     >
                       {isDeleting ? (
                         <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Deleting...
                         </>
                       ) : (
                         <>
-                          <Trash2 className="w-4 h-4 mr-2" />
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Yes, Delete
                         </>
                       )}
@@ -302,43 +326,51 @@ export function MemoryManagementModal({
                 </div>
               </div>
             ) : isLoading ? (
-              <div className="h-full flex items-center justify-center">
+              <div className="flex h-full items-center justify-center">
                 <div className="text-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
-                  <span className="text-sm text-muted-foreground">Loading memory data...</span>
+                  <Loader2 className="text-primary mx-auto mb-2 h-6 w-6 animate-spin" />
+                  <span className="text-muted-foreground text-sm">Loading memory data...</span>
                 </div>
               </div>
             ) : !hasMemory ? (
-              <div className="h-full flex items-center justify-center">
+              <div className="flex h-full items-center justify-center">
                 <div className="text-center">
-                  <Brain className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">No Memory Data</h3>
-                  <p className="text-sm text-muted-foreground">
-                    You don&apos;t have any therapeutic session reports stored yet. 
-                    Generate session reports to build therapeutic memory.
+                  <Brain className="text-muted-foreground/50 mx-auto mb-4 h-12 w-12" />
+                  <h3 className="text-foreground mb-2 text-xl font-semibold">No Memory Data</h3>
+                  <p className="text-muted-foreground text-sm">
+                    You don&apos;t have any therapeutic session reports stored yet. Generate session
+                    reports to build therapeutic memory.
                   </p>
                 </div>
               </div>
             ) : (
-              <div className="h-full overflow-y-auto custom-scrollbar space-y-4 pr-2">
+              <div className="custom-scrollbar h-full space-y-4 overflow-y-auto pr-2">
                 {/* Quick Actions */}
                 <div className="spacing-sm">
-                  <h4 className="text-sm font-semibold text-foreground mb-3">Quick Actions</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <h4 className="text-foreground mb-3 text-sm font-semibold">Quick Actions</h4>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => showConfirmation('all-except-current', reportCount, () => handleDeleteMemory('all-except-current'))}
-                      className="text-sm h-10"
+                      onClick={() =>
+                        showConfirmation('all-except-current', reportCount, () =>
+                          handleDeleteMemory('all-except-current')
+                        )
+                      }
+                      className="h-10 text-sm"
                     >
-                      <Trash2 className="w-4 h-4 mr-2" />
+                      <Trash2 className="mr-2 h-4 w-4" />
                       Clear All Memory
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => showConfirmation('recent', Math.min(reportCount, 3), () => handleDeleteMemory('recent', { limit: 3 }))}
-                      className="text-sm h-10 border-destructive/30 text-destructive hover:bg-destructive/10"
+                      onClick={() =>
+                        showConfirmation('recent', Math.min(reportCount, 3), () =>
+                          handleDeleteMemory('recent', { limit: 3 })
+                        )
+                      }
+                      className="border-destructive/30 text-destructive hover:bg-destructive/10 h-10 text-sm"
                     >
                       Clear Recent (3)
                     </Button>
@@ -347,9 +379,9 @@ export function MemoryManagementModal({
                       size="sm"
                       onClick={loadMemoryData}
                       disabled={isLoading}
-                      className="text-sm h-10"
+                      className="h-10 text-sm"
                     >
-                      <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+                      <RefreshCw className={cn('mr-2 h-4 w-4', isLoading && 'animate-spin')} />
                       Refresh
                     </Button>
                   </div>
@@ -357,18 +389,22 @@ export function MemoryManagementModal({
 
                 {/* Selected Actions */}
                 {selectedCount > 0 && (
-                  <div className="bg-primary/5 border border-primary/20 rounded-lg spacing-sm">
+                  <div className="bg-primary/5 border-primary/20 spacing-sm rounded-lg border">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-semibold text-foreground">
+                      <span className="text-foreground text-sm font-semibold">
                         {selectedCount} report{selectedCount > 1 ? 's' : ''} selected
                       </span>
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => showConfirmation('specific', selectedCount, () => handleDeleteMemory('specific'))}
-                        className="text-sm h-8"
+                        onClick={() =>
+                          showConfirmation('specific', selectedCount, () =>
+                            handleDeleteMemory('specific')
+                          )
+                        }
+                        className="h-8 text-sm"
                       >
-                        <Trash2 className="w-4 h-4 mr-2" />
+                        <Trash2 className="mr-2 h-4 w-4" />
                         Delete Selected
                       </Button>
                     </div>
@@ -377,23 +413,23 @@ export function MemoryManagementModal({
 
                 {/* Session Reports List */}
                 <div className="spacing-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-semibold text-foreground">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h4 className="text-foreground text-sm font-semibold">
                       Session Reports
                       {reportCount > 0 && (
-                        <span className="ml-2 text-muted-foreground font-normal">
+                        <span className="text-muted-foreground ml-2 font-normal">
                           ({reportCount} total)
                         </span>
                       )}
                     </h4>
                     {selectedCount > 0 && (
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-primary font-semibold">
+                        <span className="text-primary text-sm font-semibold">
                           {selectedCount} selected
                         </span>
                         <button
                           onClick={() => setSelectedReports(new Set())}
-                          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                          className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                           title="Clear selection"
                         >
                           Clear
@@ -402,35 +438,37 @@ export function MemoryManagementModal({
                     )}
                   </div>
                   {reportCount > 0 && selectedCount === 0 && (
-                    <p className="text-sm text-muted-foreground mb-3 leading-relaxed">
-                      Select reports using the checkboxes to delete multiple at once, or click the eye icon to view details.
+                    <p className="text-muted-foreground mb-3 text-sm leading-relaxed">
+                      Select reports using the checkboxes to delete multiple at once, or click the
+                      eye icon to view details.
                     </p>
                   )}
                   <div className="space-y-2">
                     {memoryData?.memoryDetails?.map((report: MemoryDetailInfo) => (
-                      <Card 
-                        key={report.id} 
+                      <Card
+                        key={report.id}
                         className={cn(
-                          "bg-card border-border transition-all duration-200 relative",
-                          selectedReports.has(report.sessionId) && "bg-primary/5 border-primary/30 ring-1 ring-primary/20"
+                          'bg-card border-border relative transition-all duration-200',
+                          selectedReports.has(report.sessionId) &&
+                            'bg-primary/5 border-primary/30 ring-primary/20 ring-1'
                         )}
                       >
-                        <div className="flex items-start gap-4 spacing-sm">
+                        <div className="spacing-sm flex items-start gap-4">
                           {/* Enhanced Checkbox Section */}
                           <div className="flex-shrink-0 pt-1">
-                            <label className="cursor-pointer inline-flex p-3 -m-3 rounded-lg hover:bg-muted/30 transition-all duration-200 focus-within:bg-muted/20">
+                            <label className="hover:bg-muted/30 focus-within:bg-muted/20 -m-3 inline-flex cursor-pointer rounded-lg p-3 transition-all duration-200">
                               <input
                                 type="checkbox"
                                 checked={selectedReports.has(report.sessionId)}
                                 onChange={(e) => toggleReportSelection(report.sessionId, e)}
                                 className={cn(
-                                  "w-5 h-5 rounded border-2 bg-background transition-all duration-200",
-                                  "hover:border-primary/50 focus:ring-2 focus:ring-primary/30 focus:ring-offset-2 focus:outline-none",
-                                  "checked:bg-primary checked:border-primary checked:hover:bg-primary/90",
-                                  "disabled:opacity-50 disabled:cursor-not-allowed",
-                                  selectedReports.has(report.sessionId) 
-                                    ? "border-primary shadow-sm" 
-                                    : "border-border hover:border-primary/30"
+                                  'bg-background h-5 w-5 rounded border-2 transition-all duration-200',
+                                  'hover:border-primary/50 focus:ring-primary/30 focus:ring-2 focus:ring-offset-2 focus:outline-none',
+                                  'checked:bg-primary checked:border-primary checked:hover:bg-primary/90',
+                                  'disabled:cursor-not-allowed disabled:opacity-50',
+                                  selectedReports.has(report.sessionId)
+                                    ? 'border-primary shadow-sm'
+                                    : 'border-border hover:border-primary/30'
                                 )}
                                 aria-label={`Select ${report.sessionTitle}`}
                                 tabIndex={0}
@@ -438,48 +476,57 @@ export function MemoryManagementModal({
                               <span className="sr-only">Select this session report</span>
                             </label>
                           </div>
-                          
+
                           {/* Content Section */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-2">
-                              <h5 className="text-sm font-semibold truncate text-foreground">{report.sessionTitle}</h5>
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <Calendar className="w-3 h-3" />
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-2 flex items-center justify-between">
+                              <h5 className="text-foreground truncate text-sm font-semibold">
+                                {report.sessionTitle}
+                              </h5>
+                              <div className="text-muted-foreground flex items-center gap-1 text-sm">
+                                <Calendar className="h-3 w-3" />
                                 {report.reportDate}
                               </div>
                             </div>
-                            
-                            <p className="text-sm text-muted-foreground mb-3 line-clamp-2 leading-relaxed">
+
+                            <p className="text-muted-foreground mb-3 line-clamp-2 text-sm leading-relaxed">
                               {report.contentPreview}
                             </p>
-                            
+
                             {report.keyInsights.length > 0 && (
                               <div className="mb-3">
-                                <p className="text-sm font-semibold text-foreground mb-2">Key Insights:</p>
+                                <p className="text-foreground mb-2 text-sm font-semibold">
+                                  Key Insights:
+                                </p>
                                 <div className="flex flex-wrap gap-1">
                                   {report.keyInsights.slice(0, 3).map((insight, index) => (
-                                    <span key={index} className="text-sm bg-primary/10 text-primary px-2 py-1 rounded border border-primary/20">
-                                      {insight.length > 30 ? insight.substring(0, 30) + '...' : insight}
+                                    <span
+                                      key={index}
+                                      className="bg-primary/10 text-primary border-primary/20 rounded border px-2 py-1 text-sm"
+                                    >
+                                      {insight.length > 30
+                                        ? insight.substring(0, 30) + '...'
+                                        : insight}
                                     </span>
                                   ))}
                                 </div>
                               </div>
                             )}
-                            
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+
+                            <div className="text-muted-foreground flex items-center gap-4 text-sm">
                               <div className="flex items-center gap-1">
-                                <FileText className="w-3 h-3" />
+                                <FileText className="h-3 w-3" />
                                 {formatReportSize(report.reportSize)}
                               </div>
                               <div className="flex items-center gap-1">
-                                <CheckCircle className="w-3 h-3" />
+                                <CheckCircle className="h-3 w-3" />
                                 {report.hasEncryptedContent ? 'Encrypted' : 'Accessible'}
                               </div>
                             </div>
                           </div>
-                          
+
                           {/* Dedicated Actions Section */}
-                          <div className="flex-shrink-0 flex items-start pt-1">
+                          <div className="flex flex-shrink-0 items-start pt-1">
                             <button
                               onClick={() => handleReportClick(report)}
                               onKeyDown={(e) => {
@@ -488,12 +535,12 @@ export function MemoryManagementModal({
                                   handleReportClick(report);
                                 }
                               }}
-                              className="group p-3 rounded-lg border border-transparent hover:border-primary/30 hover:bg-primary/5 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2"
+                              className="group hover:border-primary/30 hover:bg-primary/5 focus:ring-primary/30 rounded-lg border border-transparent p-3 transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:outline-none"
                               aria-label={`View details for ${report.sessionTitle}`}
                               title="View session details"
                               tabIndex={0}
                             >
-                              <Eye className="w-5 h-5 text-muted-foreground group-hover:text-primary group-focus:text-primary transition-colors" />
+                              <Eye className="text-muted-foreground group-hover:text-primary group-focus:text-primary h-5 w-5 transition-colors" />
                             </button>
                           </div>
                         </div>
@@ -505,11 +552,11 @@ export function MemoryManagementModal({
             )}
           </div>
 
-          <DialogFooter className="border-t border-border/30">
-            <Button 
-              variant="outline" 
+          <DialogFooter className="border-border/30 border-t">
+            <Button
+              variant="outline"
               onClick={() => onOpenChange(false)}
-              className="text-sm h-10 min-w-20"
+              className="h-10 min-w-20 text-sm"
             >
               Close
             </Button>

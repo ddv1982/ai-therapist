@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Core Development
+
 - `npm run dev` - Start development server with Turbopack (fast bundling)
 - `npm run dev:local` - Start development server with Turbopack (localhost only)
 - `npm run build` - Build for production
@@ -15,23 +16,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run api:types` - Generate TypeScript types from OpenAPI spec at docs/api.yaml
 
 ### Database Management (Convex Backend)
+
 - `npm run convex:dev` - Start the Convex backend locally (used during development)
 - `npm run convex:deploy` - Deploy Convex backend to production
 
 ### Redis & Caching Commands
+
 - `npm run redis:setup` - Install and configure Redis for caching
 - `npm run redis:start` - Start Redis server
-- `npm run redis:stop` - Stop Redis server  
+- `npm run redis:stop` - Stop Redis server
 - `npm run redis:status` - Check Redis connection status
 - `npm run cache:health` - Check cache health and get statistics
 - `npm run cache:stats` - Get detailed cache performance statistics
 
 ### Setup & Configuration Commands
+
 - `npm run setup:all` - Complete automated setup (database, Redis, encryption, environment)
 - `npm run setup:quick` - Quick setup (database and Redis only)
 - `npm run env:init` - Bootstrap .env.local file with default variables
 
 ### Environment Configuration
+
 - Runtime configuration lives in `src/config/env.ts` (server) and `src/config/env.public.ts` (client-safe values)
 - Import `env` for server-only secrets and numbers (`import { env } from '@/config/env'`)
 - Import `publicEnv`/`isDevelopment` from `@/config/env.public` inside client components
@@ -39,6 +44,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Test utilities: `reloadServerEnvForTesting` / `reloadPublicEnvForTesting` keep Jest suites in sync with temporary env overrides
 
 ### Testing Commands
+
 - `npm run test` - Run unit tests (108 test suites, 862 tests, 100% pass rate)
 - `npm run test:watch` - Run tests in watch mode for development
 - `npm run test:coverage` - Generate test coverage report
@@ -49,6 +55,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run test:e2e:headed` - Run E2E tests in headed mode
 
 ### Important Notes
+
 - The app uses Convex backend for data management (start with `npm run convex:dev`)
 - Database schema is defined in `/convex/schema.ts`
 - The app requires Groq API key and Clerk API keys to function
@@ -61,28 +68,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Architecture Overview
 
 ### Therapeutic AI Application
+
 This is a compassionate AI therapist application built with specific therapeutic principles and safety considerations. The architecture centers around providing professional mental health support through AI conversation.
 
 ### Key Architectural Components
 
 **Database Schema (Prisma + SQLite)**
+
 - `User` → `Session` → `Message` relationship for chat history
 - `SessionReport` for therapeutic insights and progress tracking
 - All models use UUID primary keys and proper cascade deletes
 - Database stores conversation history for session continuity
 
 **AI SDK 5 Integration Pattern**
+
 - Chat API (`/api/chat`) uses AI SDK 5 with `@ai-sdk/groq` and `streamText()` function
 - Clean provider pattern with `customProvider` and `languageModels` configuration
 - Supports OpenAI GPT OSS models: "openai/gpt-oss-20b" and "openai/gpt-oss-120b"
 - API key is passed from frontend settings or environment variables for flexibility
 
 **Therapeutic System Design**
+
 - System prompts in `src/lib/therapy/therapy-prompts.ts` define AI personality and therapeutic approach
 - Session reports use AI to generate therapeutic insights and action items
 - Email report generation allows users to receive session summaries via email
 
 **Frontend State Management**
+
 - Redux Toolkit for global state management (CBT data, sessions, auth)
 - React Context for UI-specific state (chat interface, themes)
 - Real-time streaming implemented with ReadableStream API
@@ -96,6 +108,7 @@ This is a compassionate AI therapist application built with specific therapeutic
 This codebase strictly enforces a simplified design system with exactly 4 font sizes, 2 font weights, 8pt grid spacing, and 60/30/10 color distribution.
 
 **Typography System (STRICT: 4 Sizes, 2 Weights Only)**
+
 - **Size 1**: `text-3xl font-semibold` - Large headings only
 - **Size 2**: `text-xl font-semibold` - Subheadings/important content
 - **Size 3**: `text-base` - Body text and general content
@@ -104,12 +117,14 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 - **FORBIDDEN**: text-2xl, text-lg, text-xs, font-medium, font-bold
 
 **8pt Grid System (STRICT)**
+
 - ALL spacing values MUST be divisible by 8 or 4
 - **Approved values**: p-0.5 (2px), p-1 (4px), p-2 (8px), p-3 (12px), p-4 (16px), p-6 (24px), p-8 (32px), p-12 (48px), p-16 (64px), p-20 (80px), p-24 (96px)
 - **FORBIDDEN**: p-1.5, p-2.5, p-3.5, p-4.5, p-5.5, p-6.5, p-7.5, p-18, p-88
 - Same rules apply to margin (m-), gap-, space-y-, space-x-
 
 **Color System (60/30/10 Rule with OKLCH)**
+
 - **60% - Neutral Backgrounds**: `bg-background`, `bg-card`, `bg-muted`
 - **30% - Text and UI**: `text-foreground`, `border-border`, subtle interface elements
 - **10% - Accent Colors**: `bg-primary`, `bg-accent` for CTAs and highlights only
@@ -119,6 +134,7 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 ### Technology Stack Specifics
 
 **Tailwind CSS v4 Configuration (Modern Approach)**
+
 - Uses OKLCH color format for better accessibility: `oklch(0.6 0.19 237)`
 - @theme directive for CSS variable registration (no @layer needed)
 - @import "tailwindcss" for simplified imports
@@ -128,6 +144,7 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 - **Streaming Animation System** - GPU-accelerated diffusion effects in CSS
 
 **Next.js 14+ App Router with Turbopack**
+
 - Development uses Turbopack (`--turbo`) for 10x faster bundling
 - Server components where possible
 - API routes use AI SDK 5 streaming with `streamText()` and `toUIMessageStreamResponse()`
@@ -136,6 +153,7 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 - Simplified configuration without complex network binding
 
 **AI SDK 5 + Groq Integration**
+
 - Uses `@ai-sdk/groq` with clean provider pattern and `languageModels` configuration
 - Streaming chat completions via AI SDK's `streamText()` function
 - OpenAI GPT OSS models: "openai/gpt-oss-20b" (fast) and "openai/gpt-oss-120b" (analytical)
@@ -147,6 +165,7 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 - Session management with auto-generated titles and delete functionality
 
 **Security & Encryption**
+
 - Clerk managed authentication (replacing custom TOTP implementation)
 - Field-level AES-256-GCM encryption for therapeutic message content
 - Webhook synchronization with Clerk for user lifecycle events
@@ -156,6 +175,7 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 ### Streaming Message Diffusion System
 
 **Advanced Animation Architecture**
+
 - **3-Stage Animation**: Blur → Stabilizing → Revealed for smooth content transitions
 - **Content Analysis**: Smart detection of markdown tables and complex content
 - **Layout Stability**: GPU-accelerated transforms prevent Cumulative Layout Shift (CLS)
@@ -163,12 +183,14 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 - **Accessibility Compliant**: Respects `prefers-reduced-motion` setting
 
 **Key Components**:
+
 - `/src/types/streaming.ts` - TypeScript definitions for streaming system
 - `/src/components/ui/streaming-table-buffer.tsx` - Streaming table processing
 - `/src/lib/ui/markdown-processor.ts` - Enhanced table processing with streaming support
 - `/src/app/globals.css` - CSS animations and GPU optimizations
 
 **Performance Features**:
+
 - Dimension pre-calculation for complex content
 - CSS containment for better rendering performance
 - Table-specific optimizations with `table-layout: fixed`
@@ -180,6 +202,7 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 - System bypasses normal AI processing for immediate safety intervention
 
 **Therapeutic Boundaries**
+
 - AI system prompt enforces professional therapeutic principles
 - No medical diagnosis or medication advice allowed
 - Maintains compassionate, judgment-free conversation tone
@@ -187,6 +210,7 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 ### Component Structure
 
 **Main Chat Interface** (`src/app/(dashboard)/page.tsx`)
+
 - Single-page application with sidebar for sessions and settings
 - Real-time streaming chat with typing indicators
 - Integrated session management with create/delete functionality
@@ -195,6 +219,7 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 - API key configuration with environment variable detection
 
 **UI Components** (`src/components/ui/`)
+
 - shadcn/ui based components adapted for therapeutic use
 - Custom Button, Card, Textarea components following design system
 - All components use consistent `cn()` utility for class merging
@@ -203,29 +228,35 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 
 **Required Environment Variables**
 
-*Clerk Authentication*
+_Clerk Authentication_
+
 - `CLERK_SECRET_KEY` - Clerk API secret key (get from Clerk dashboard)
 - `CLERK_WEBHOOK_SECRET` - Webhook signing secret from Clerk dashboard
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk publishable key for frontend (NEXT_PUBLIC prefix)
 
-*Convex Backend*
+_Convex Backend_
+
 - `CONVEX_URL` - Convex deployment URL
 - `NEXT_PUBLIC_CONVEX_URL` - Public Convex URL for frontend (NEXT_PUBLIC prefix)
 
-*AI & Encryption*
+_AI & Encryption_
+
 - `GROQ_API_KEY` - Groq API key (auto-detected by frontend, hides manual input when present)
 - `ENCRYPTION_KEY` - 256-bit encryption key for therapeutic message encryption (see setup below)
 
 **Optional Environment Variables (for Email Reports)**
+
 - Configure your preferred email service in `/app/api/reports/send/route.ts`
 - Examples: SendGrid, Nodemailer (SMTP), AWS SES, or any email service
 
 **API Key Behavior**
+
 - If `GROQ_API_KEY` is set in environment, the settings panel shows "✓ API Key Configured"
 - If not set, users can manually enter API key in settings panel
 - Frontend checks `/api/env` route to detect if environment variable exists
 
 **Clerk Setup & Authentication**
+
 - User management: Sign-in/sign-up via `/sign-in` and `/sign-up` routes
 - User profile management: `/profile` route for user settings
 - Webhook synchronization: Convex receives user lifecycle events from Clerk via `POST /api/webhooks/clerk`
@@ -233,6 +264,7 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 - API authentication: Uses `getAuth()` from `@clerk/nextjs/server` for route protection
 
 **Database Setup**
+
 - Convex Backend-as-a-Service for data management
 - Schema is defined in `/convex/schema.ts` with tables for users, sessions, messages, and reports
 - Users table has `clerkId` field linking to Clerk user IDs
@@ -242,7 +274,8 @@ This codebase strictly enforces a simplified design system with exactly 4 font s
 **Encryption Key Setup (CRITICAL for Production)**
 For secure operation, the application requires a 256-bit encryption key:
 
-*Development Setup:*
+_Development Setup:_
+
 ```bash
 # Generate and setup encryption key automatically
 npm run encryption:setup
@@ -251,7 +284,8 @@ npm run encryption:setup
 npm run encryption:generate
 ```
 
-*Production Setup:*
+_Production Setup:_
+
 ```bash
 # Generate a secure key
 npm run encryption:generate
@@ -260,12 +294,14 @@ npm run encryption:generate
 export ENCRYPTION_KEY="your-generated-key-here"
 ```
 
-*Key Management Commands:*
+_Key Management Commands:_
+
 - `npm run encryption:generate` - Generate a new secure key
 - `npm run encryption:setup` - Auto-setup for development (.env file)
 - `npm run encryption:validate <key>` - Validate a key's security
 
 **Security Requirements:**
+
 - Use different keys for development, staging, and production
 - Never commit encryption keys to version control
 - Store production keys in secure environment variables
@@ -279,6 +315,7 @@ export ENCRYPTION_KEY="your-generated-key-here"
 ### Response Format Standards
 
 **Success Response**
+
 ```typescript
 {
   "success": true,
@@ -291,6 +328,7 @@ export ENCRYPTION_KEY="your-generated-key-here"
 ```
 
 **Error Response**
+
 ```typescript
 {
   "success": false,
@@ -309,25 +347,27 @@ export ENCRYPTION_KEY="your-generated-key-here"
 
 ### Standardized Error Codes
 
-| Code | HTTP Status | Description |
-|------|------------|-------------|
-| `VALIDATION_ERROR` | 400 | Request data validation failed |
-| `AUTHENTICATION_ERROR` | 401 | Authentication required or failed |
-| `FORBIDDEN` | 403 | Access denied |
-| `NOT_FOUND` | 404 | Resource not found |
-| `RATE_LIMIT_EXCEEDED` | 429 | Too many requests |
-| `DATABASE_ERROR` | 500 | Database operation failed |
-| `INTERNAL_SERVER_ERROR` | 500 | Unexpected server error |
+| Code                    | HTTP Status | Description                       |
+| ----------------------- | ----------- | --------------------------------- |
+| `VALIDATION_ERROR`      | 400         | Request data validation failed    |
+| `AUTHENTICATION_ERROR`  | 401         | Authentication required or failed |
+| `FORBIDDEN`             | 403         | Access denied                     |
+| `NOT_FOUND`             | 404         | Resource not found                |
+| `RATE_LIMIT_EXCEEDED`   | 429         | Too many requests                 |
+| `DATABASE_ERROR`        | 500         | Database operation failed         |
+| `INTERNAL_SERVER_ERROR` | 500         | Unexpected server error           |
 
 ### API Endpoints Documentation
 
 **Core Endpoints**
+
 - **GET** `/api/models` - Get available AI models
 - **GET** `/api/env` - Get environment configuration
 - **GET** `/api/health` - System health check
 - **HEAD** `/api/health` - Liveness probe
 
 **Session Management**
+
 - **GET** `/api/sessions` - List user sessions
 - **POST** `/api/sessions` - Create new session
 - **GET** `/api/sessions/current` - Get current session
@@ -335,19 +375,23 @@ export ENCRYPTION_KEY="your-generated-key-here"
 - **DELETE** `/api/sessions/[sessionId]` - Delete session
 
 **Messages API**
+
 - **GET** `/api/messages?sessionId=xxx` - Get session messages
 - **POST** `/api/messages` - Create new message
 
 **AI Chat**
+
 - **POST** `/api/chat` - Stream chat completion (Server-Sent Events)
 
 **Reports**
+
 - **GET** `/api/reports` - List session reports
 - **POST** `/api/reports/generate` - Generate session report
 - **GET** `/api/reports/memory` - Get memory details
 - **POST** `/api/reports/memory/manage` - Manage memory
 
 **Authentication (Clerk Managed)**
+
 - Sign-in/Sign-up flows handled via `/sign-in` and `/sign-up` routes (Clerk UI)
 - User profile management at `/profile` route (Clerk UserProfile component)
 - **POST** `/api/webhooks/clerk` - Webhook endpoint for Clerk user lifecycle events
@@ -358,6 +402,7 @@ export ENCRYPTION_KEY="your-generated-key-here"
 ### Implementation Guidelines
 
 **Use Middleware Pattern**
+
 ```typescript
 export const GET = withApiMiddleware(async (request, context) => {
   // Your endpoint logic
@@ -365,6 +410,7 @@ export const GET = withApiMiddleware(async (request, context) => {
 ```
 
 **Standardized Responses**
+
 ```typescript
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 
@@ -374,11 +420,12 @@ return createSuccessResponse(data, { requestId: context.requestId });
 // Error
 return createErrorResponse('Error message', 400, {
   code: 'VALIDATION_ERROR',
-  requestId: context.requestId
+  requestId: context.requestId,
 });
 ```
 
 **Type Safety**
+
 ```typescript
 interface YourResponse {
   field1: string;
@@ -387,33 +434,30 @@ interface YourResponse {
 
 const response: YourResponse = {
   field1: 'value',
-  field2: 123
+  field2: 123,
 };
 
 return createSuccessResponse(response);
 ```
 
 **Error Handling**
+
 ```typescript
 try {
   // Your logic
 } catch (error) {
-  return createServerErrorResponse(
-    error as Error, 
-    context.requestId,
-    { endpoint: '/api/your-endpoint' }
-  );
+  return createServerErrorResponse(error as Error, context.requestId, {
+    endpoint: '/api/your-endpoint',
+  });
 }
 ```
 
 **Request Validation**
+
 ```typescript
-export const POST = withValidation(
-  yourSchema,
-  async (request, context, validatedData) => {
-    // validatedData is now type-safe
-  }
-);
+export const POST = withValidation(yourSchema, async (request, context, validatedData) => {
+  // validatedData is now type-safe
+});
 ```
 
 ### Migration Checklist
@@ -432,6 +476,7 @@ For converting existing endpoints to the standard:
 ### Security Headers
 
 All responses automatically include:
+
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
 - `X-Therapeutic-Context: enabled`
@@ -440,6 +485,7 @@ All responses automatically include:
 ### Pagination Standard
 
 For list endpoints:
+
 ```typescript
 {
   "success": true,
@@ -469,18 +515,21 @@ For list endpoints:
 ### ✅ Implemented Security Enhancements
 
 **Authentication Security:**
+
 - Fixed authentication bypass vulnerability (removed host header spoofing)
 - Implemented AES-256-GCM encryption for TOTP secrets and backup codes
 - Enhanced device fingerprinting with screen resolution, timezone, and canvas data
 - Secured token generation (removed Math.random fallback)
 
 **Data Protection:**
+
 - Added field-level encryption for therapeutic message content
 - Implemented CSRF protection with signed tokens
 - Enhanced input validation and sanitization
 - Database schema optimized for SQLite with proper constraints
 
 **Code Quality:**
+
 - Enabled TypeScript strict mode
 - Added comprehensive security test suite
 - Implemented component separation and modular architecture
@@ -489,6 +538,7 @@ For list endpoints:
 ### Testing & Quality Assurance
 
 **Comprehensive Unit Test Suite (40 Test Suites, 769 Tests, 100% Pass Rate):**
+
 - `__tests__/lib/markdown-processor.test.ts` - Markdown processing with streaming (33 tests)
 - `__tests__/security/crypto-security.test.ts` - Encryption and key management tests (17 tests)
 - `__tests__/security/auth-security.test.ts` - Authentication flow security tests (8 tests)
@@ -502,6 +552,7 @@ For list endpoints:
 - **769 tests passing** out of 769 total (100% pass rate)
 
 **Key Security Libraries:**
+
 - `src/lib/auth/crypto-utils.ts` - AES-256-GCM encryption utilities
 - `src/lib/chat/message-encryption.ts` - Message content encryption service
 - Content Security Policy headers - XSS attack prevention
@@ -509,6 +560,7 @@ For list endpoints:
 ### Completed Implementation Checklist
 
 ✅ **Critical Security Fixes:**
+
 - [x] Authentication bypass vulnerability fixed
 - [x] TOTP secrets encrypted at rest
 - [x] Device fingerprinting enhanced
@@ -516,6 +568,7 @@ For list endpoints:
 - [x] Database schema standardized on SQLite
 
 ✅ **High Priority Improvements:**
+
 - [x] Content Security Policy headers implemented
 - [x] Therapeutic message encryption added
 - [x] TypeScript strict mode enabled
@@ -523,6 +576,7 @@ For list endpoints:
 - [x] Comprehensive unit test suite added (40 test suites, 769 tests, 100% pass rate)
 
 ✅ **Testing Infrastructure Completed:**
+
 - [x] Jest configuration optimized for ES6 modules and TypeScript
 - [x] React Testing Library setup for component testing
 - [x] Security-focused test coverage across all critical systems
@@ -534,6 +588,7 @@ For list endpoints:
 - [x] Removed problematic e2e tests that couldn't properly test authentication flows
 
 ✅ **Streaming Implementation Completed:**
+
 - [x] **3-Stage Animation System** implemented with blur-to-reveal transitions
 - [x] **Content Analysis Engine** for smart animation optimization
 - [x] **Layout Stability System** prevents CLS during streaming
@@ -552,6 +607,7 @@ Complete unit test suite with 40 test suites (769 tests passing, 100% pass rate)
 Streaming table processing system provides layout stability for real-time AI responses. Focused on table rendering optimization with proper TypeScript definitions. Fully tested and compatible with all existing functionality.
 
 ✅ **AI SDK 5 Migration Completed (August 2025):**
+
 - [x] **Simplified Architecture**: Migrated from complex custom Groq SDK to clean AI SDK 5 patterns
 - [x] **Turbopack Integration**: Development uses `--turbo` flag for 10x faster bundling
 - [x] **Clean Provider Pattern**: Uses `@ai-sdk/groq` with `customProvider` and `languageModels` configuration
@@ -570,6 +626,7 @@ Complete API interface standards documentation with response formats, error code
 ## Coding Conventions
 
 ### TypeScript/React Style Guide
+
 Based on `.cursor/rules/40-coding-style.mdc`:
 
 - **Function Signatures**: Prefer explicit function signatures for exported APIs
@@ -581,10 +638,12 @@ Based on `.cursor/rules/40-coding-style.mdc`:
 - **Comments**: Keep comments concise and focused on the "why"
 
 ### UI Conventions
+
 - Use the same font consistently across the chat interface
 - Hide scrollbars by default in chat views unless explicitly needed
 
 ### API Development Standards
+
 Based on `.cursor/rules/10-api-wrappers.mdc`:
 
 - **Middleware**: Use `withApiMiddleware` and `withAuthAndRateLimit` from `src/lib/api/api-middleware.ts`
@@ -594,6 +653,7 @@ Based on `.cursor/rules/10-api-wrappers.mdc`:
 - **Request IDs**: Include `X-Request-Id` headers in requests/responses where applicable
 
 ### Project Structure Standards
+
 Based on `.cursor/rules/00-project-structure.mdc`:
 
 - **State Management**: Redux with provider at `src/providers/redux-provider.tsx`

@@ -1,4 +1,9 @@
-import { encryptSensitiveData, decryptSensitiveData, encryptSensitiveDataAsync, decryptSensitiveDataAsync } from '@/lib/auth/crypto-utils';
+import {
+  encryptSensitiveData,
+  decryptSensitiveData,
+  encryptSensitiveDataAsync,
+  decryptSensitiveDataAsync,
+} from '@/lib/auth/crypto-utils';
 import { logger } from '@/lib/utils/logger';
 
 /**
@@ -28,7 +33,7 @@ export function encryptMessage(message: { role: string; content: string; timesta
 } {
   // Only encrypt the sensitive content, keep role and timestamp as-is
   const encryptedContent = encryptSensitiveData(message.content);
-  
+
   return {
     role: message.role,
     content: encryptedContent,
@@ -51,7 +56,7 @@ export function decryptMessage(encryptedMessage: {
   try {
     // Decrypt the sensitive content
     const decryptedContent = decryptSensitiveData(encryptedMessage.content);
-    
+
     return {
       role: encryptedMessage.role,
       content: decryptedContent,
@@ -60,7 +65,7 @@ export function decryptMessage(encryptedMessage: {
   } catch (error) {
     logger.error('Failed to decrypt therapeutic message', {
       operation: 'decryptMessage',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
     // Return a safe fallback for corrupted/undecryptable messages
     return {
@@ -74,40 +79,48 @@ export function decryptMessage(encryptedMessage: {
 /**
  * Encrypt multiple messages (bulk operation)
  */
-export function encryptMessages(messages: Array<{ role: string; content: string; timestamp?: Date }>): Array<{
+export function encryptMessages(
+  messages: Array<{ role: string; content: string; timestamp?: Date }>
+): Array<{
   role: string;
   content: string;
   timestamp: Date;
 }> {
-  return messages.map(message => encryptMessage(message));
+  return messages.map((message) => encryptMessage(message));
 }
 
 /**
  * Decrypt multiple messages (bulk operation)
  */
-export function decryptMessages(encryptedMessages: Array<{
-  role: string;
-  content: string;
-  timestamp: Date;
-}>): Array<{
+export function decryptMessages(
+  encryptedMessages: Array<{
+    role: string;
+    content: string;
+    timestamp: Date;
+  }>
+): Array<{
   role: string;
   content: string;
   timestamp: Date;
 }> {
-  return encryptedMessages.map(message => decryptMessage(message));
+  return encryptedMessages.map((message) => decryptMessage(message));
 }
 
 /**
  * Encrypt a message asynchronously for better performance
  */
-export async function encryptMessageAsync(message: { role: string; content: string; timestamp?: Date }): Promise<{
+export async function encryptMessageAsync(message: {
+  role: string;
+  content: string;
+  timestamp?: Date;
+}): Promise<{
   role: string;
   content: string;
   timestamp: Date;
 }> {
   // Only encrypt the sensitive content, keep role and timestamp as-is
   const encryptedContent = await encryptSensitiveDataAsync(message.content);
-  
+
   return {
     role: message.role,
     content: encryptedContent,
@@ -129,7 +142,7 @@ export async function decryptMessageAsync(encryptedMessage: {
 }> {
   try {
     const decryptedContent = await decryptSensitiveDataAsync(encryptedMessage.content);
-    
+
     return {
       role: encryptedMessage.role,
       content: decryptedContent,
@@ -140,9 +153,9 @@ export async function decryptMessageAsync(encryptedMessage: {
       operation: 'decryptMessageAsync',
       error: error instanceof Error ? error.message : 'Unknown error',
       hasContent: !!encryptedMessage.content,
-      contentLength: encryptedMessage.content?.length || 0
+      contentLength: encryptedMessage.content?.length || 0,
     });
-    
+
     // Return the message with a placeholder instead of throwing
     return {
       role: encryptedMessage.role,
@@ -155,27 +168,35 @@ export async function decryptMessageAsync(encryptedMessage: {
 /**
  * Encrypt multiple messages asynchronously (bulk operation with better performance)
  */
-export async function encryptMessagesAsync(messages: Array<{ role: string; content: string; timestamp?: Date }>): Promise<Array<{
-  role: string;
-  content: string;
-  timestamp: Date;
-}>> {
-  return Promise.all(messages.map(message => encryptMessageAsync(message)));
+export async function encryptMessagesAsync(
+  messages: Array<{ role: string; content: string; timestamp?: Date }>
+): Promise<
+  Array<{
+    role: string;
+    content: string;
+    timestamp: Date;
+  }>
+> {
+  return Promise.all(messages.map((message) => encryptMessageAsync(message)));
 }
 
 /**
  * Decrypt multiple messages asynchronously (bulk operation with better performance)
  */
-export async function decryptMessagesAsync(encryptedMessages: Array<{
-  role: string;
-  content: string;
-  timestamp: Date;
-}>): Promise<Array<{
-  role: string;
-  content: string;
-  timestamp: Date;
-}>> {
-  return Promise.all(encryptedMessages.map(message => decryptMessageAsync(message)));
+export async function decryptMessagesAsync(
+  encryptedMessages: Array<{
+    role: string;
+    content: string;
+    timestamp: Date;
+  }>
+): Promise<
+  Array<{
+    role: string;
+    content: string;
+    timestamp: Date;
+  }>
+> {
+  return Promise.all(encryptedMessages.map((message) => decryptMessageAsync(message)));
 }
 
 /**
@@ -194,7 +215,7 @@ export function decryptSessionReportContent(encryptedReportContent: string): str
   } catch (error) {
     logger.error('Failed to decrypt session report content', {
       operation: 'decryptSessionReportContent',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
     return '[Report content unavailable]';
   }
@@ -210,13 +231,15 @@ export async function encryptSessionReportContentAsync(reportContent: string): P
 /**
  * Decrypt session report content asynchronously for better performance
  */
-export async function decryptSessionReportContentAsync(encryptedReportContent: string): Promise<string> {
+export async function decryptSessionReportContentAsync(
+  encryptedReportContent: string
+): Promise<string> {
   try {
     return await decryptSensitiveDataAsync(encryptedReportContent);
   } catch (error) {
     logger.error('Failed to decrypt session report content', {
       operation: 'decryptSessionReportContentAsync',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
     return '[Report content unavailable]';
   }
@@ -244,11 +267,7 @@ export function isContentEncrypted(content: string): boolean {
  * Safe message retrieval that handles both encrypted and unencrypted content
  * Useful during migration or when encryption is being rolled out gradually
  */
-export function safeDecryptMessage(message: {
-  role: string;
-  content: string;
-  timestamp: Date;
-}): {
+export function safeDecryptMessage(message: { role: string; content: string; timestamp: Date }): {
   role: string;
   content: string;
   timestamp: Date;
@@ -257,7 +276,7 @@ export function safeDecryptMessage(message: {
   if (isContentEncrypted(message.content)) {
     return decryptMessage(message);
   }
-  
+
   // Otherwise, return as-is (unencrypted legacy content)
   return message;
 }
@@ -265,16 +284,18 @@ export function safeDecryptMessage(message: {
 /**
  * Bulk safe decryption for multiple messages
  */
-export function safeDecryptMessages(messages: Array<{
-  role: string;
-  content: string;
-  timestamp: Date;
-}>): Array<{
+export function safeDecryptMessages(
+  messages: Array<{
+    role: string;
+    content: string;
+    timestamp: Date;
+  }>
+): Array<{
   role: string;
   content: string;
   timestamp: Date;
 }> {
-  return messages.map(message => safeDecryptMessage(message));
+  return messages.map((message) => safeDecryptMessage(message));
 }
 
 // ========================================
@@ -298,7 +319,7 @@ export function decryptCognitiveDistortions(encryptedDistortions: string): unkno
   } catch (error) {
     logger.error('Failed to decrypt cognitive distortions data', {
       operation: 'decryptCognitiveDistortions',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
     return [];
   }
@@ -321,7 +342,7 @@ export function decryptSchemaAnalysis(encryptedSchemaAnalysis: string): Record<s
   } catch (error) {
     logger.error('Failed to decrypt schema analysis data', {
       operation: 'decryptSchemaAnalysis',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
     return {
       activeModes: [],
@@ -329,7 +350,7 @@ export function decryptSchemaAnalysis(encryptedSchemaAnalysis: string): Record<s
       predominantMode: null,
       behavioralPatterns: [],
       copingStrategies: { adaptive: [], maladaptive: [] },
-      therapeuticRecommendations: []
+      therapeuticRecommendations: [],
     };
   }
 }
@@ -351,7 +372,7 @@ export function decryptTherapeuticFrameworks(encryptedFrameworks: string): unkno
   } catch (error) {
     logger.error('Failed to decrypt therapeutic frameworks data', {
       operation: 'decryptTherapeuticFrameworks',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
     return [];
   }
@@ -365,7 +386,7 @@ export function encryptTherapeuticRecommendations(recommendations: unknown[]): s
 }
 
 /**
- * Decrypt therapeutic recommendations data  
+ * Decrypt therapeutic recommendations data
  */
 export function decryptTherapeuticRecommendations(encryptedRecommendations: string): unknown[] {
   try {
@@ -374,7 +395,7 @@ export function decryptTherapeuticRecommendations(encryptedRecommendations: stri
   } catch (error) {
     logger.error('Failed to decrypt therapeutic recommendations data', {
       operation: 'decryptTherapeuticRecommendations',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     });
     return [];
   }
@@ -390,14 +411,18 @@ export function encryptEnhancedAnalysisData(analysisData: {
   recommendations?: unknown[];
 }) {
   return {
-    cognitiveDistortions: analysisData.cognitiveDistortions ? 
-      encryptCognitiveDistortions(analysisData.cognitiveDistortions) : null,
-    schemaAnalysis: analysisData.schemaAnalysis ? 
-      encryptSchemaAnalysis(analysisData.schemaAnalysis) : null,
-    therapeuticFrameworks: analysisData.therapeuticFrameworks ? 
-      encryptTherapeuticFrameworks(analysisData.therapeuticFrameworks) : null,
-    recommendations: analysisData.recommendations ? 
-      encryptTherapeuticRecommendations(analysisData.recommendations) : null,
+    cognitiveDistortions: analysisData.cognitiveDistortions
+      ? encryptCognitiveDistortions(analysisData.cognitiveDistortions)
+      : null,
+    schemaAnalysis: analysisData.schemaAnalysis
+      ? encryptSchemaAnalysis(analysisData.schemaAnalysis)
+      : null,
+    therapeuticFrameworks: analysisData.therapeuticFrameworks
+      ? encryptTherapeuticFrameworks(analysisData.therapeuticFrameworks)
+      : null,
+    recommendations: analysisData.recommendations
+      ? encryptTherapeuticRecommendations(analysisData.recommendations)
+      : null,
   };
 }
 
@@ -411,20 +436,24 @@ export function decryptEnhancedAnalysisData(encryptedData: {
   recommendations?: string | null;
 }) {
   return {
-    cognitiveDistortions: encryptedData.cognitiveDistortions ? 
-      decryptCognitiveDistortions(encryptedData.cognitiveDistortions) : [],
-    schemaAnalysis: encryptedData.schemaAnalysis ? 
-      decryptSchemaAnalysis(encryptedData.schemaAnalysis) : {
-        activeModes: [],
-        triggeredSchemas: [],
-        predominantMode: null,
-        behavioralPatterns: [],
-        copingStrategies: { adaptive: [], maladaptive: [] },
-        therapeuticRecommendations: []
-      },
-    therapeuticFrameworks: encryptedData.therapeuticFrameworks ? 
-      decryptTherapeuticFrameworks(encryptedData.therapeuticFrameworks) : [],
-    recommendations: encryptedData.recommendations ? 
-      decryptTherapeuticRecommendations(encryptedData.recommendations) : [],
+    cognitiveDistortions: encryptedData.cognitiveDistortions
+      ? decryptCognitiveDistortions(encryptedData.cognitiveDistortions)
+      : [],
+    schemaAnalysis: encryptedData.schemaAnalysis
+      ? decryptSchemaAnalysis(encryptedData.schemaAnalysis)
+      : {
+          activeModes: [],
+          triggeredSchemas: [],
+          predominantMode: null,
+          behavioralPatterns: [],
+          copingStrategies: { adaptive: [], maladaptive: [] },
+          therapeuticRecommendations: [],
+        },
+    therapeuticFrameworks: encryptedData.therapeuticFrameworks
+      ? decryptTherapeuticFrameworks(encryptedData.therapeuticFrameworks)
+      : [],
+    recommendations: encryptedData.recommendations
+      ? decryptTherapeuticRecommendations(encryptedData.recommendations)
+      : [],
   };
 }

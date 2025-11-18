@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { store } from '@/store';
@@ -20,7 +19,9 @@ describe('CBTForm', () => {
 
     render(<CBTForm onSubmit={onSubmit} />, { wrapper });
 
-    const textarea = screen.getByPlaceholderText('Describe the situation...') as HTMLTextAreaElement;
+    const textarea = screen.getByPlaceholderText(
+      'Describe the situation...'
+    ) as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: 'abc' } });
 
     const button = screen.getByRole('button', { name: /save draft/i });
@@ -40,11 +41,13 @@ describe('CBTForm', () => {
 
     render(<CBTForm onSubmit={onSubmit} />, { wrapper });
 
-    const textarea = screen.getByPlaceholderText('Describe the situation...') as HTMLTextAreaElement;
+    const textarea = screen.getByPlaceholderText(
+      'Describe the situation...'
+    ) as HTMLTextAreaElement;
     fireEvent.change(textarea, { target: { value: 'Test situation for Redux auto-save' } });
 
     // Wait for auto-save debounce
-    await new Promise(resolve => setTimeout(resolve, 700));
+    await new Promise((resolve) => setTimeout(resolve, 700));
 
     // Check that data was saved to Redux
     const flow = store.getState().cbt.flow;

@@ -42,7 +42,7 @@ export function extractCBTDataFromCardFormat(content: string): CBTStructuredAsse
   if (cardData.situation) {
     extractedData.situation = {
       date: String(cardData.date || 'Unknown'),
-      description: String(cardData.situation || 'No description')
+      description: String(cardData.situation || 'No description'),
     };
   }
 
@@ -63,7 +63,7 @@ export function extractCBTDataFromCardFormat(content: string): CBTStructuredAsse
 
   if (Array.isArray(cardData.automaticThoughts) && cardData.automaticThoughts.length > 0) {
     extractedData.thoughts = {
-      automaticThoughts: cardData.automaticThoughts.map((t: { thought: string }) => t.thought)
+      automaticThoughts: cardData.automaticThoughts.map((t: { thought: string }) => t.thought),
     };
   }
 
@@ -71,31 +71,36 @@ export function extractCBTDataFromCardFormat(content: string): CBTStructuredAsse
     const coreBelief = cardData.coreBelief as Record<string, unknown>;
     extractedData.coreBeliefs = {
       belief: String(coreBelief.belief || 'No belief'),
-      credibility: Number(coreBelief.credibility || 0)
+      credibility: Number(coreBelief.credibility || 0),
     };
   }
 
   if (Array.isArray(cardData.rationalThoughts) && cardData.rationalThoughts.length > 0) {
     extractedData.rationalThoughts = {
-      thoughts: cardData.rationalThoughts.map((t: { thought: string }) => t.thought)
+      thoughts: cardData.rationalThoughts.map((t: { thought: string }) => t.thought),
     };
   }
 
   if (Array.isArray(cardData.schemaModes) && cardData.schemaModes.length > 0) {
-    extractedData.schemaModes = cardData.schemaModes.map((mode: { name: string; intensity?: number }) => ({
-      name: mode.name,
-      intensity: mode.intensity || 0,
-      description: mode.name
-    }));
+    extractedData.schemaModes = cardData.schemaModes.map(
+      (mode: { name: string; intensity?: number }) => ({
+        name: mode.name,
+        intensity: mode.intensity || 0,
+        description: mode.name,
+      })
+    );
   }
 
   if (Array.isArray(cardData.newBehaviors) || Array.isArray(cardData.alternativeResponses)) {
     extractedData.actionPlan = {
       newBehaviors: Array.isArray(cardData.newBehaviors) ? cardData.newBehaviors : [],
       ...(Array.isArray(cardData.alternativeResponses)
-        ? { alternativeResponses: (cardData.alternativeResponses as Array<{ response: string }>).
-            map((r) => typeof r?.response === 'string' ? r.response : String(r || '')) }
-        : {})
+        ? {
+            alternativeResponses: (
+              cardData.alternativeResponses as Array<{ response: string }>
+            ).map((r) => (typeof r?.response === 'string' ? r.response : String(r || ''))),
+          }
+        : {}),
     };
   }
 

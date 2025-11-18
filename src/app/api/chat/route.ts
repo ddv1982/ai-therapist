@@ -11,16 +11,17 @@ import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
 import { createErrorResponse } from '@/lib/api/api-response';
 import { env } from '@/config/env';
-import {
-  ChatError,
-  MessageValidationError,
-  getChatErrorResponse
-} from '@/lib/errors/chat-errors';
+import { ChatError, MessageValidationError, getChatErrorResponse } from '@/lib/errors/chat-errors';
 
 import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import { verifySessionOwnership } from '@/lib/repositories/session-repository';
 import { recordModelUsage } from '@/lib/metrics/metrics';
-import { appendWithLimit as appendWithLimitUtil, teeAndPersistStream as teeAndPersistStreamUtil, persistFromClonedStream as persistFromClonedStreamUtil, attachResponseHeadersRaw as attachResponseHeadersRawUtil } from '@/lib/chat/stream-utils';
+import {
+  appendWithLimit as appendWithLimitUtil,
+  teeAndPersistStream as teeAndPersistStreamUtil,
+  persistFromClonedStream as persistFromClonedStreamUtil,
+  attachResponseHeadersRaw as attachResponseHeadersRawUtil,
+} from '@/lib/chat/stream-utils';
 import { AssistantResponseCollector } from '@/lib/chat/assistant-response-collector';
 import { readJsonBody } from '@/lib/api/request';
 import type { SessionOwnershipResult, SessionWithMessages } from '@/types/database';
@@ -40,42 +41,69 @@ type SessionOwnership = SessionOwnershipResult;
 
 export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, context) => {
   try {
+    // Validate Content-Type header
+    const contentType = req.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      return new Response(
+        JSON.stringify({
+          error: 'Content-Type must be application/json',
+          requestId: context.requestId,
+        }),
+        {
+          status: 415,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     const parsedBody = await readJsonBody(req);
     const maxSize = env.CHAT_INPUT_MAX_BYTES;
-    if (parsedBody.size > maxSize) return createErrorResponse('Request too large', 413, { requestId: context.requestId });
+    if (parsedBody.size > maxSize)
+      return createErrorResponse('Request too large', 413, { requestId: context.requestId });
 
     const input = parsedBody.body;
-    const raw = input as { sessionId?: string; messages?: Array<{ role?: string; content?: unknown; parts?: Array<{ type?: string; text?: unknown }> }>; message?: unknown; selectedModel?: string; webSearchEnabled?: boolean };
-    const firstUser = Array.isArray(raw?.messages) ? raw.messages.find(m => m?.role === 'user') : undefined;
+    const raw = input as {
+      sessionId?: string;
+      messages?: Array<{
+        role?: string;
+        content?: unknown;
+        parts?: Array<{ type?: string; text?: unknown }>;
+      }>;
+      message?: unknown;
+      selectedModel?: string;
+      webSearchEnabled?: boolean;
+    };
+    const firstUser = Array.isArray(raw?.messages)
+      ? raw.messages.find((m) => m?.role === 'user')
+      : undefined;
     const normalized = normalizeChatRequest({
       sessionId: raw?.sessionId,
-      message: typeof raw?.message === 'string' && raw.message.length > 0
-        ? raw.message
-        : typeof firstUser?.content === 'string'
-          ? firstUser.content
-          : Array.isArray(firstUser?.parts)
-            ? firstUser!.parts.map(p => (p && p.type === 'text' && typeof p.text === 'string' ? p.text : '')).join('')
-            : '',
+      message:
+        typeof raw?.message === 'string' && raw.message.length > 0
+          ? raw.message
+          : typeof firstUser?.content === 'string'
+            ? firstUser.content
+            : Array.isArray(firstUser?.parts)
+              ? firstUser!.parts
+                  .map((p) => (p && p.type === 'text' && typeof p.text === 'string' ? p.text : ''))
+                  .join('')
+              : '',
       model: raw?.selectedModel,
       context: undefined,
       tools: undefined,
     });
     if (!normalized.success) {
-      const validationError = new MessageValidationError(
-        normalized.error,
-        { endpoint: '/api/chat', requestId: context.requestId }
-      );
+      const validationError = new MessageValidationError(normalized.error, {
+        endpoint: '/api/chat',
+        requestId: context.requestId,
+      });
       const errorResponse = getChatErrorResponse(validationError);
-      return createErrorResponse(
-        errorResponse.message,
-        errorResponse.statusCode,
-        {
-          code: errorResponse.code,
-          details: errorResponse.details,
-          suggestedAction: errorResponse.suggestedAction,
-          requestId: context.requestId,
-        }
-      );
+      return createErrorResponse(errorResponse.message, errorResponse.statusCode, {
+        code: errorResponse.code,
+        details: errorResponse.details,
+        suggestedAction: errorResponse.suggestedAction,
+        requestId: context.requestId,
+      });
     }
 
     const providedSessionId = normalized.data.sessionId;
@@ -83,12 +111,19 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       providedSessionId,
       (context.userInfo as unknown as { clerkId?: string }).clerkId ?? context.userInfo.userId
     );
-    const history = providedSessionId && ownership.valid ? await loadSessionHistory(providedSessionId, ownership) : [];
+    const history =
+      providedSessionId && ownership.valid
+        ? await loadSessionHistory(providedSessionId, ownership)
+        : [];
     // Prefer forwarding original payload messages (with ids) when available; otherwise build from normalized
     const payloadMessages = Array.isArray(raw?.messages) ? raw.messages : null;
     const forwarded = buildForwardedMessages(payloadMessages, normalized.data.message);
 
-    const decision = selectModelAndTools({ message: normalized.data.message, preferredModel: normalized.data.model, webSearchEnabled: Boolean(raw?.webSearchEnabled) });
+    const decision = selectModelAndTools({
+      message: normalized.data.message,
+      preferredModel: normalized.data.model,
+      webSearchEnabled: Boolean(raw?.webSearchEnabled),
+    });
     const modelId = decision.model;
     const hasWebSearch = decision.tools.includes('web-search');
     const toolChoiceHeader = hasWebSearch ? 'auto' : 'none';
@@ -103,13 +138,14 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     });
 
     const systemPrompt = await buildSystemPrompt(req, hasWebSearch);
-    try { recordModelUsage(modelId, toolChoiceHeader); } catch {}
-    const toUiMessages = (messages: ApiChatMessage[]): Array<Omit<UIMessage, 'id'>> => (
+    try {
+      recordModelUsage(modelId, toolChoiceHeader);
+    } catch {}
+    const toUiMessages = (messages: ApiChatMessage[]): Array<Omit<UIMessage, 'id'>> =>
       messages.map((message) => ({
         role: message.role,
         parts: [{ type: 'text', text: message.content }],
-      }))
-    );
+      }));
 
     const uiMessages: Array<Omit<UIMessage, 'id'>> = [
       ...toUiMessages(history),
@@ -123,7 +159,9 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       system: systemPrompt,
       messages: modelMessages,
       telemetry: { metadata: { requestId: context.requestId } },
-      ...(hasWebSearch ? { tools: { browser_search: groq.tools.browserSearch({}) }, toolChoice: 'auto' as const } : {}),
+      ...(hasWebSearch
+        ? { tools: { browser_search: groq.tools.browserSearch({}) }, toolChoice: 'auto' as const }
+        : {}),
     });
 
     const collector = new AssistantResponseCollector(
@@ -183,13 +221,17 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     }
 
     // Abort handling: if client disconnects, reader will error; we also hook into "abort" events
-    if ('body' in uiResponse && (uiResponse as Response).body && typeof (uiResponse as Response).body!.tee === 'function') {
+    if (
+      'body' in uiResponse &&
+      (uiResponse as Response).body &&
+      typeof (uiResponse as Response).body!.tee === 'function'
+    ) {
       const responseWithHeaders = await teeAndPersistStreamUtil(
         uiResponse as Response,
         collector,
         context.requestId,
         modelId,
-        toolChoiceHeader,
+        toolChoiceHeader
       );
       if (responseWithHeaders) return responseWithHeaders;
     }
@@ -214,30 +256,28 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     } else {
       logger.apiError('/api/chat', error as Error, {
         apiEndpoint: '/api/chat',
-        requestId: context.requestId
+        requestId: context.requestId,
       });
     }
 
-    return createErrorResponse(
-      chatErrorResponse.message,
-      chatErrorResponse.statusCode,
-      {
-        code: chatErrorResponse.code,
-        details: chatErrorResponse.details,
-        suggestedAction: chatErrorResponse.suggestedAction,
-        requestId: context.requestId,
-      }
-    );
+    return createErrorResponse(chatErrorResponse.message, chatErrorResponse.statusCode, {
+      code: chatErrorResponse.code,
+      details: chatErrorResponse.details,
+      suggestedAction: chatErrorResponse.suggestedAction,
+      requestId: context.requestId,
+    });
   }
 });
-
 
 async function resolveSessionOwnership(sessionId: string | undefined, userId: string) {
   if (!sessionId) return { valid: false } as SessionOwnership;
   return verifySessionOwnership(sessionId, userId, { includeMessages: true });
 }
 
-async function loadSessionHistory(sessionId: string, ownership: SessionOwnership): Promise<ApiChatMessage[]> {
+async function loadSessionHistory(
+  sessionId: string,
+  ownership: SessionOwnership
+): Promise<ApiChatMessage[]> {
   const HISTORY_LIMIT = 30;
   const sessionWithMessages: SessionWithMessages | undefined =
     ownership.session && 'messages' in ownership.session
@@ -248,17 +288,21 @@ async function loadSessionHistory(sessionId: string, ownership: SessionOwnership
     sessionWithMessages?.messages ??
     (await (async () => {
       const client = getConvexHttpClient();
-      const all = await client.query(anyApi.messages.listBySession, { sessionId }) as ConvexMessage[];
+      const all = (await client.query(anyApi.messages.listBySession, {
+        sessionId,
+      })) as ConvexMessage[];
       return Array.isArray(all) ? all : [];
     })());
 
   const sessionMessages = sessionMessagesRaw
     .map((message) => ({
-      id: 'id' in message ? (message as { id?: string }).id ?? message._id : message._id,
+      id: 'id' in message ? ((message as { id?: string }).id ?? message._id) : message._id,
       role: message.role,
       content: message.content,
       timestamp: new Date(
-        typeof message.timestamp === 'number' ? message.timestamp : new Date(message.timestamp).getTime()
+        typeof message.timestamp === 'number'
+          ? message.timestamp
+          : new Date(message.timestamp).getTime()
       ),
     }))
     .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
@@ -266,11 +310,11 @@ async function loadSessionHistory(sessionId: string, ownership: SessionOwnership
 
   const { safeDecryptMessages } = await import('@/lib/chat/message-encryption');
   const decrypted = safeDecryptMessages(
-    sessionMessages.map(message => ({
+    sessionMessages.map((message) => ({
       role: message.role,
       content: message.content,
       timestamp: message.timestamp,
-    })),
+    }))
   );
 
   return decrypted.map((message, index) => ({
@@ -287,9 +331,10 @@ async function buildSystemPrompt(req: NextRequest, hasWebSearch: boolean): Promi
   const locale = getApiRequestLocale(req);
   const base = getTherapySystemPrompt(locale, { webSearch: hasWebSearch });
   // Strong, localized language directive to ensure the next response follows the current app locale
-  const directive = locale === 'nl'
-    ? 'TAALBELEID: Antwoord uitsluitend in natuurlijk Nederlands. Als de app‑taal wijzigt of de gebruiker daarom vraagt, schakel direct over en ga verder in die taal; bevestig de wijziging éénmaal.'
-    : 'LANGUAGE POLICY: Respond exclusively in natural English. If the app locale changes or the user requests a language change, switch immediately and continue in that language; acknowledge the change once.';
+  const directive =
+    locale === 'nl'
+      ? 'TAALBELEID: Antwoord uitsluitend in natuurlijk Nederlands. Als de app‑taal wijzigt of de gebruiker daarom vraagt, schakel direct over en ga verder in die taal; bevestig de wijziging éénmaal.'
+      : 'LANGUAGE POLICY: Respond exclusively in natural English. If the app locale changes or the user requests a language change, switch immediately and continue in that language; acknowledge the change once.';
   return `${directive}\n\n${base}`;
 }
 
@@ -304,7 +349,8 @@ function createStreamErrorHandler(params: {
     const errorContext = {
       apiEndpoint: '/api/chat',
       requestId: context.requestId,
-      userId: (context.userInfo as unknown as { clerkId?: string }).clerkId ?? context.userInfo.userId,
+      userId:
+        (context.userInfo as unknown as { clerkId?: string }).clerkId ?? context.userInfo.userId,
       webSearchEnabled,
       modelId,
     };
@@ -322,8 +368,10 @@ function createStreamErrorHandler(params: {
     if (error instanceof Error) {
       const lower = error.message.toLowerCase();
 
-      if (lower.includes('tool choice is none, but model called a tool') ||
-          lower.includes('tool choice is required, but model did not call a tool')) {
+      if (
+        lower.includes('tool choice is none, but model called a tool') ||
+        lower.includes('tool choice is required, but model did not call a tool')
+      ) {
         logger.error('Tool choice conflict in chat stream', {
           ...errorContext,
           errorMessage: error.message,
@@ -334,7 +382,11 @@ function createStreamErrorHandler(params: {
       }
 
       // Handle web search/tool errors
-      if (lower.includes('browser_search') || lower.includes('web search') || lower.includes('tool')) {
+      if (
+        lower.includes('browser_search') ||
+        lower.includes('web search') ||
+        lower.includes('tool')
+      ) {
         logger.error('Web search tool error in chat stream', {
           ...errorContext,
           errorMessage: error.message,
@@ -356,17 +408,29 @@ function createStreamErrorHandler(params: {
 
     // Fallback error handling
     try {
-      const detail = typeof error === 'object' ? JSON.stringify(error as Record<string, unknown>) : String(error);
+      const detail =
+        typeof error === 'object'
+          ? JSON.stringify(error as Record<string, unknown>)
+          : String(error);
       logger.error('Unhandled chat stream error', { ...errorContext, detail });
     } catch {
-      logger.error('Unhandled chat stream error', errorContext, error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Unhandled chat stream error',
+        errorContext,
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
 
     return 'An unexpected error occurred. Please try again or contact support if the issue persists.';
   };
 }
 
-function attachResponseHeaders(response: Response, requestId: string, modelId: string, toolChoice: string) {
+function attachResponseHeaders(
+  response: Response,
+  requestId: string,
+  modelId: string,
+  toolChoice: string
+) {
   try {
     attachResponseHeadersRawUtil(response.headers, requestId, modelId, toolChoice);
   } catch {

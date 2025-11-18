@@ -1,4 +1,3 @@
-import React from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
@@ -37,16 +36,16 @@ export function ObsessionForm({
           className={cn('min-h-[100px]', errors.obsession && 'border-destructive')}
         />
         {errors.obsession && (
-          <div className="flex items-center gap-1 mt-1 text-xs text-destructive">
-            <AlertCircle className="w-3 h-3" />
+          <div className="text-destructive mt-1 flex items-center gap-1 text-xs">
+            <AlertCircle className="h-3 w-3" />
             {errors.obsession}
           </div>
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row">
         <div className="flex-1">
-          <Label className="text-xs text-muted-foreground">
+          <Label className="text-muted-foreground text-xs">
             {intensityLabel}: {form.intensity}/10
           </Label>
           <Slider
@@ -55,7 +54,7 @@ export function ObsessionForm({
             min={1}
             max={10}
             step={1}
-            className="w-full mt-1"
+            className="mt-1 w-full"
           />
         </div>
         <div className="flex-1">

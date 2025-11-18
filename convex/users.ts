@@ -12,7 +12,7 @@ export const getCurrentUser = query({
 
     return await ctx.db
       .query('users')
-      .withIndex('by_clerkId', q => q.eq('clerkId', identity.subject))
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
       .unique();
   },
 });
@@ -25,7 +25,7 @@ export const getByClerkId = query({
   handler: async (ctx, { clerkId }) => {
     return await ctx.db
       .query('users')
-      .withIndex('by_clerkId', q => q.eq('clerkId', clerkId))
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
       .unique();
   },
 });
@@ -39,7 +39,7 @@ export const ensureByClerkId = mutation({
   handler: async (ctx, { clerkId, email, name }) => {
     const existing = await ctx.db
       .query('users')
-      .withIndex('by_clerkId', q => q.eq('clerkId', clerkId))
+      .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
       .unique();
     if (existing) return existing;
 
@@ -65,7 +65,7 @@ export const internal = {
     handler: async (ctx, { clerkId, email, name }) => {
       const existing = await ctx.db
         .query('users')
-        .withIndex('by_clerkId', q => q.eq('clerkId', clerkId))
+        .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
         .unique();
 
       if (existing) return existing;
@@ -91,7 +91,7 @@ export const internal = {
     handler: async (ctx, { clerkId, email, name }) => {
       const user = await ctx.db
         .query('users')
-        .withIndex('by_clerkId', q => q.eq('clerkId', clerkId))
+        .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
         .unique();
 
       if (!user) {
@@ -127,7 +127,7 @@ export const internal = {
     handler: async (ctx, { clerkId }) => {
       const user = await ctx.db
         .query('users')
-        .withIndex('by_clerkId', q => q.eq('clerkId', clerkId))
+        .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
         .unique();
 
       if (!user) return;
@@ -147,12 +147,12 @@ export const getOrCreate = mutation({
   handler: async (ctx, { legacyId, email, name }) => {
     const byLegacy = await ctx.db
       .query('users')
-      .withIndex('by_legacyId', q => q.eq('legacyId', legacyId))
+      .withIndex('by_legacyId', (q) => q.eq('legacyId', legacyId))
       .unique();
     if (byLegacy) return byLegacy;
     const byEmail = await ctx.db
       .query('users')
-      .withIndex('email', q => q.eq('email', email))
+      .withIndex('email', (q) => q.eq('email', email))
       .unique();
     if (byEmail) return byEmail;
     const now = Date.now();
@@ -173,7 +173,7 @@ export const getByLegacyId = query({
   handler: async (ctx, { legacyId }) => {
     return await ctx.db
       .query('users')
-      .withIndex('by_legacyId', q => q.eq('legacyId', legacyId))
+      .withIndex('by_legacyId', (q) => q.eq('legacyId', legacyId))
       .unique();
   },
 });

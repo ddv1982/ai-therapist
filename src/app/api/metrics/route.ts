@@ -11,7 +11,7 @@ import {
   getPerformanceStats,
   getSystemHealth,
   exportMetricsSnapshot,
-  MetricType
+  MetricType,
 } from '@/lib/monitoring/performance-metrics';
 
 /**
@@ -32,15 +32,11 @@ export const GET = withApiMiddleware(async (req: NextRequest, context) => {
 
     // Validate window parameter
     if (window < 1 || window > 1440) {
-      return createErrorResponse(
-        'Invalid window parameter',
-        400,
-        {
-          code: 'INVALID_INPUT',
-          details: 'Window must be between 1 and 1440 minutes',
-          requestId: context.requestId
-        }
-      );
+      return createErrorResponse('Invalid window parameter', 400, {
+        code: 'INVALID_INPUT',
+        details: 'Window must be between 1 and 1440 minutes',
+        requestId: context.requestId,
+      });
     }
 
     // Get response based on format parameter
@@ -58,7 +54,7 @@ export const GET = withApiMiddleware(async (req: NextRequest, context) => {
         {
           status: health.warningAlerts === 0 && health.criticalAlerts === 0 ? 'healthy' : 'warning',
           ...health,
-          timestamp: new Date()
+          timestamp: new Date(),
         },
         { requestId: context.requestId }
       );
@@ -73,11 +69,11 @@ export const GET = withApiMiddleware(async (req: NextRequest, context) => {
     let metrics = getMetricsLastN(window);
 
     if (queryType) {
-      metrics = metrics.filter(m => m.type === queryType);
+      metrics = metrics.filter((m) => m.type === queryType);
     }
 
     if (endpoint) {
-      metrics = metrics.filter(m => m.endpoint === endpoint);
+      metrics = metrics.filter((m) => m.endpoint === endpoint);
     }
 
     return createSuccessResponse(
@@ -85,19 +81,15 @@ export const GET = withApiMiddleware(async (req: NextRequest, context) => {
         count: metrics.length,
         window,
         metrics,
-        filters: { type: queryType, endpoint }
+        filters: { type: queryType, endpoint },
       },
       { requestId: context.requestId }
     );
   } catch (error) {
-    return createErrorResponse(
-      'Failed to retrieve metrics',
-      500,
-      {
-        code: 'INTERNAL_SERVER_ERROR',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        requestId: context.requestId
-      }
-    );
+    return createErrorResponse('Failed to retrieve metrics', 500, {
+      code: 'INTERNAL_SERVER_ERROR',
+      details: error instanceof Error ? error.message : 'Unknown error',
+      requestId: context.requestId,
+    });
   }
 });

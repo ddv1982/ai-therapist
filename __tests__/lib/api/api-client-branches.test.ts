@@ -17,7 +17,9 @@ describe('ApiClient branches', () => {
       status: 500,
       statusText: 'Server Error',
       headers: { get: () => 'text/plain' },
-      json: async () => { throw new Error('not json'); },
+      json: async () => {
+        throw new Error('not json');
+      },
       text: async () => 'error-body',
     });
     await expect(client.listSessions()).rejects.toThrow('error-body');
@@ -35,5 +37,3 @@ describe('ApiClient branches', () => {
     await expect(client.getCurrentSession()).rejects.toMatchObject({ status: 401 });
   });
 });
-
-

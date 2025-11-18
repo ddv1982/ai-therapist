@@ -44,7 +44,7 @@ const sessionsSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-  }
+  },
 });
 
 export const {

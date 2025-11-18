@@ -19,8 +19,14 @@ function extractApiErrorDetails(parsed: unknown): string | undefined {
   if (!isRecord(parsed)) return undefined;
   const maybeError = (parsed as { error?: unknown }).error;
   if (isRecord(maybeError)) {
-    const details = typeof (maybeError as { details?: unknown }).details === 'string' ? (maybeError as { details: string }).details : undefined;
-    const message = typeof (maybeError as { message?: unknown }).message === 'string' ? (maybeError as { message: string }).message : undefined;
+    const details =
+      typeof (maybeError as { details?: unknown }).details === 'string'
+        ? (maybeError as { details: string }).details
+        : undefined;
+    const message =
+      typeof (maybeError as { message?: unknown }).message === 'string'
+        ? (maybeError as { message: string }).message
+        : undefined;
     return details || message;
   }
   try {
@@ -55,7 +61,11 @@ export class ApiClient {
     return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
   }
 
-  private async request<T>(path: string, init: RequestInit = {}, timeoutMs: number = 20000): Promise<T> {
+  private async request<T>(
+    path: string,
+    init: RequestInit = {},
+    timeoutMs: number = 20000
+  ): Promise<T> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -102,7 +112,7 @@ export class ApiClient {
         const text = typeof textFn === 'function' ? await textFn.call(res) : undefined;
         detail = typeof text === 'string' && text.length > 0 ? text : undefined;
       }
-      const message = detail && detail.length > 0 ? detail : (res.statusText || 'Request failed');
+      const message = detail && detail.length > 0 ? detail : res.statusText || 'Request failed';
       const error = new Error(message) as Error & { status?: number; body?: unknown };
       error.status = res.status;
       const bodyForError = isJson ? payload : detail;
@@ -124,11 +134,17 @@ export class ApiClient {
   // Token refresh removed; DB-backed session cookie handles auth.
 
   // Sessions
-  async listSessions(): Promise<ApiResponse<PaginatedResponse<SessionComponents['schemas']['Session']>>> {
-    return this.request<ApiResponse<PaginatedResponse<SessionComponents['schemas']['Session']>>>('/api/sessions');
+  async listSessions(): Promise<
+    ApiResponse<PaginatedResponse<SessionComponents['schemas']['Session']>>
+  > {
+    return this.request<ApiResponse<PaginatedResponse<SessionComponents['schemas']['Session']>>>(
+      '/api/sessions'
+    );
   }
 
-  async createSession(body: SessionPaths['/sessions']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<SessionComponents['schemas']['Session']>> {
+  async createSession(
+    body: SessionPaths['/sessions']['post']['requestBody']['content']['application/json']
+  ): Promise<ApiResponse<SessionComponents['schemas']['Session']>> {
     return this.request<ApiResponse<SessionComponents['schemas']['Session']>>('/api/sessions', {
       method: 'POST',
       body: JSON.stringify(body),
@@ -136,26 +152,38 @@ export class ApiClient {
   }
 
   async deleteSession(sessionId: string): Promise<ApiResponse<{ success: true }>> {
-    return this.request<ApiResponse<{ success: true }>>(`/api/sessions/${sessionId}`, { method: 'DELETE' });
+    return this.request<ApiResponse<{ success: true }>>(`/api/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
   }
 
   // Messages
-  async listMessages(sessionId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<PaginatedResponse<MessageComponents['schemas']['Message']>>> {
+  async listMessages(
+    sessionId: string,
+    params?: { page?: number; limit?: number }
+  ): Promise<ApiResponse<PaginatedResponse<MessageComponents['schemas']['Message']>>> {
     const qs = new URLSearchParams();
     if (params?.page) qs.set('page', String(params.page));
     if (params?.limit) qs.set('limit', String(params.limit));
     const path = `/api/sessions/${sessionId}/messages${qs.toString() ? `?${qs.toString()}` : ''}`;
-    return this.request<ApiResponse<PaginatedResponse<MessageComponents['schemas']['Message']>>>(path);
+    return this.request<ApiResponse<PaginatedResponse<MessageComponents['schemas']['Message']>>>(
+      path
+    );
   }
 
   async postMessage(
     sessionId: string,
-    body: MessagePaths['/sessions/{sessionId}/messages']['post']['requestBody']['content']['application/json'] & { metadata?: Record<string, unknown> }
+    body: MessagePaths['/sessions/{sessionId}/messages']['post']['requestBody']['content']['application/json'] & {
+      metadata?: Record<string, unknown>;
+    }
   ): Promise<ApiResponse<MessageComponents['schemas']['Message']>> {
-    return this.request<ApiResponse<MessageComponents['schemas']['Message']>>(`/api/sessions/${sessionId}/messages`, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
+    return this.request<ApiResponse<MessageComponents['schemas']['Message']>>(
+      `/api/sessions/${sessionId}/messages`,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      }
+    );
   }
 
   async patchMessageMetadata(
@@ -166,42 +194,107 @@ export class ApiClient {
       mergeStrategy?: 'merge' | 'replace';
     }
   ): Promise<ApiResponse<MessageComponents['schemas']['Message']>> {
-    return this.request<ApiResponse<MessageComponents['schemas']['Message']>>(`/api/sessions/${sessionId}/messages/${messageId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(body),
-    });
+    return this.request<ApiResponse<MessageComponents['schemas']['Message']>>(
+      `/api/sessions/${sessionId}/messages/${messageId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      }
+    );
   }
 
   // Reports (legacy POST /api/reports removed)
 
   // Reports (detailed generate endpoint)
-  async generateReportDetailed(body: ReportPaths['/reports/generate']['post']['requestBody']['content']['application/json']): Promise<ApiResponse<{ reportContent: string; modelUsed: string; modelDisplayName: string; cbtDataSource: string; cbtDataAvailable: boolean }>> {
-    return this.request<ApiResponse<{ reportContent: string; modelUsed: string; modelDisplayName: string; cbtDataSource: string; cbtDataAvailable: boolean }>>('/api/reports/generate', {
+  async generateReportDetailed(
+    body: ReportPaths['/reports/generate']['post']['requestBody']['content']['application/json']
+  ): Promise<
+    ApiResponse<{
+      reportContent: string;
+      modelUsed: string;
+      modelDisplayName: string;
+      cbtDataSource: string;
+      cbtDataAvailable: boolean;
+    }>
+  > {
+    return this.request<
+      ApiResponse<{
+        reportContent: string;
+        modelUsed: string;
+        modelDisplayName: string;
+        cbtDataSource: string;
+        cbtDataAvailable: boolean;
+      }>
+    >('/api/reports/generate', {
       method: 'POST',
       body: JSON.stringify(body),
     });
   }
 
   // Current session
-  async getCurrentSession(): Promise<ApiResponse<{ currentSession: { id: string; title: string; startedAt: string; updatedAt: string; status: string; messageCount: number } | null }>> {
-    return this.request<ApiResponse<{ currentSession: { id: string; title: string; startedAt: string; updatedAt: string; status: string; messageCount: number } | null }>>('/api/sessions/current');
+  async getCurrentSession(): Promise<
+    ApiResponse<{
+      currentSession: {
+        id: string;
+        title: string;
+        startedAt: string;
+        updatedAt: string;
+        status: string;
+        messageCount: number;
+      } | null;
+    }>
+  > {
+    return this.request<
+      ApiResponse<{
+        currentSession: {
+          id: string;
+          title: string;
+          startedAt: string;
+          updatedAt: string;
+          status: string;
+          messageCount: number;
+        } | null;
+      }>
+    >('/api/sessions/current');
   }
 
-  async setCurrentSession(sessionId: string): Promise<ApiResponse<{ success: boolean; session: SessionComponents['schemas']['Session'] }>> {
-    return this.request<ApiResponse<{ success: boolean; session: SessionComponents['schemas']['Session'] }>>('/api/sessions/current', {
+  async setCurrentSession(
+    sessionId: string
+  ): Promise<ApiResponse<{ success: boolean; session: SessionComponents['schemas']['Session'] }>> {
+    return this.request<
+      ApiResponse<{ success: boolean; session: SessionComponents['schemas']['Session'] }>
+    >('/api/sessions/current', {
       method: 'POST',
       body: JSON.stringify({ sessionId }),
     });
   }
 
   // Single session
-  async getSessionById(sessionId: string): Promise<ApiResponse<SessionComponents['schemas']['Session']>> {
-    return this.request<ApiResponse<SessionComponents['schemas']['Session']>>(`/api/sessions/${sessionId}`);
+  async getSessionById(
+    sessionId: string
+  ): Promise<ApiResponse<SessionComponents['schemas']['Session']>> {
+    return this.request<ApiResponse<SessionComponents['schemas']['Session']>>(
+      `/api/sessions/${sessionId}`
+    );
   }
 
   // Auth/session status
-  async getSessionStatus(): Promise<ApiResponse<{ isAuthenticated: boolean; needsSetup: boolean; needsVerification: boolean; device?: { name: string; deviceId: string } }>> {
-    return this.request<ApiResponse<{ isAuthenticated: boolean; needsSetup: boolean; needsVerification: boolean; device?: { name: string; deviceId: string } }>>('/api/auth/session');
+  async getSessionStatus(): Promise<
+    ApiResponse<{
+      isAuthenticated: boolean;
+      needsSetup: boolean;
+      needsVerification: boolean;
+      device?: { name: string; deviceId: string };
+    }>
+  > {
+    return this.request<
+      ApiResponse<{
+        isAuthenticated: boolean;
+        needsSetup: boolean;
+        needsVerification: boolean;
+        device?: { name: string; deviceId: string };
+      }>
+    >('/api/auth/session');
   }
 
   async revokeCurrentSession(): Promise<ApiResponse<{ success: true }>> {
@@ -214,7 +307,9 @@ export class ApiClient {
 
   // Devices
   async listDevices(): Promise<ApiResponse<{ devices: unknown[]; backupCodesCount: number }>> {
-    return this.request<ApiResponse<{ devices: unknown[]; backupCodesCount: number }>>('/api/auth/devices');
+    return this.request<ApiResponse<{ devices: unknown[]; backupCodesCount: number }>>(
+      '/api/auth/devices'
+    );
   }
 
   async revokeDevice(deviceId: string): Promise<ApiResponse<{ success: true }>> {

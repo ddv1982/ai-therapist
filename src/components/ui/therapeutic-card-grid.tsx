@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { TherapeuticCard, type ColumnConfig } from './therapeutic-card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -36,16 +36,15 @@ export function TherapeuticCardGrid({
   onCardDelete,
   onCardView,
   emptyState,
-  loading = false
+  loading = false,
 }: TherapeuticCardGridProps) {
-  
   // Memoize processed columns with default configurations
   const processedColumns = useMemo(() => {
     return columns.map((col, index) => ({
       ...col,
       priority: col.priority || (index === 0 ? 'high' : 'medium'),
       showInCompact: col.showInCompact !== false,
-      type: col.type || 'text'
+      type: col.type || 'text',
     }));
   }, [columns]);
 
@@ -56,27 +55,22 @@ export function TherapeuticCardGrid({
         'grid gap-4',
         // Mobile: 2 columns for better space utilization
         'grid-cols-2',
-        // Tablet: 2-3 columns  
+        // Tablet: 2-3 columns
         'sm:grid-cols-2',
         'md:grid-cols-3',
         // Desktop: 3-4 columns based on variant
         variant === 'compact' ? 'lg:grid-cols-4 xl:grid-cols-5' : 'lg:grid-cols-3 xl:grid-cols-4'
       ),
-      item: ''
+      item: '',
     },
     list: {
       container: 'flex flex-col gap-3',
-      item: 'w-full'
+      item: 'w-full',
     },
     masonry: {
-      container: cn(
-        'columns-1 gap-4 space-y-4',
-        'sm:columns-2',
-        'lg:columns-3',
-        'xl:columns-4'
-      ),
-      item: 'break-inside-avoid mb-4'
-    }
+      container: cn('columns-1 gap-4 space-y-4', 'sm:columns-2', 'lg:columns-3', 'xl:columns-4'),
+      item: 'break-inside-avoid mb-4',
+    },
   };
 
   // Handle loading state
@@ -85,15 +79,12 @@ export function TherapeuticCardGrid({
       <div className="space-y-4">
         {caption && (
           <div className="px-1">
-            <h3 className="text-xl font-semibold text-foreground">{caption}</h3>
+            <h3 className="text-foreground text-xl font-semibold">{caption}</h3>
           </div>
         )}
         <div className={layoutStyles.grid.container}>
           {Array.from({ length: 6 }).map((_, index) => (
-            <div
-              key={index}
-              className="animate-pulse bg-muted rounded-lg h-32"
-            />
+            <div key={index} className="bg-muted h-32 animate-pulse rounded-lg" />
           ))}
         </div>
       </div>
@@ -103,10 +94,10 @@ export function TherapeuticCardGrid({
   // Handle empty state
   if (!data || data.length === 0) {
     const defaultEmptyState = (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <div className="rounded-full bg-muted p-4 mb-4">
+      <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
+        <div className="bg-muted mb-4 rounded-full p-4">
           <svg
-            className="h-6 w-6 text-muted-foreground"
+            className="text-muted-foreground h-6 w-6"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -119,9 +110,10 @@ export function TherapeuticCardGrid({
             />
           </svg>
         </div>
-        <h3 className="text-xl font-semibold text-foreground mb-2">No data available</h3>
-        <p className="text-sm text-muted-foreground max-w-sm">
-          There&apos;s no information to display at the moment. Data will appear here once available.
+        <h3 className="text-foreground mb-2 text-xl font-semibold">No data available</h3>
+        <p className="text-muted-foreground max-w-sm text-sm">
+          There&apos;s no information to display at the moment. Data will appear here once
+          available.
         </p>
       </div>
     );
@@ -130,12 +122,10 @@ export function TherapeuticCardGrid({
       <div className="space-y-4">
         {caption && (
           <div className="px-1">
-            <h3 className="text-xl font-semibold text-foreground">{caption}</h3>
+            <h3 className="text-foreground text-xl font-semibold">{caption}</h3>
           </div>
         )}
-        <div className="rounded-lg border bg-card">
-          {emptyState || defaultEmptyState}
-        </div>
+        <div className="bg-card rounded-lg border">{emptyState || defaultEmptyState}</div>
       </div>
     );
   }
@@ -148,7 +138,7 @@ export function TherapeuticCardGrid({
       {/* Header with Caption and Summary */}
       {caption && (
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xl font-semibold text-foreground">{caption}</h3>
+          <h3 className="text-foreground text-xl font-semibold">{caption}</h3>
           <Badge variant="secondary" className="text-sm">
             {totalItems} {totalItems === 1 ? 'item' : 'items'}
           </Badge>
@@ -156,7 +146,7 @@ export function TherapeuticCardGrid({
       )}
 
       {/* Cards Container */}
-      <div 
+      <div
         className={cn(
           layoutStyles[layout].container,
           'therapeutic-card-grid',
@@ -212,7 +202,7 @@ export function convertTableColumnsToCardColumns(
     ...col,
     priority: index === 0 ? 'high' : index < 3 ? 'medium' : 'low',
     showInCompact: index < 4, // Show first 4 columns in compact mobile view
-    type: 'text' as const
+    type: 'text' as const,
   }));
 }
 
@@ -226,10 +216,10 @@ export const therapeuticCardLayouts = {
       { key: 'date', label: 'Date', priority: 'high' as const },
       { key: 'duration', label: 'Duration', priority: 'medium' as const },
       { key: 'status', label: 'Status', priority: 'medium' as const, type: 'badge' as const },
-      { key: 'notes', label: 'Notes', priority: 'low' as const, showInCompact: false }
-    ] as ColumnConfig[]
+      { key: 'notes', label: 'Notes', priority: 'low' as const, showInCompact: false },
+    ] as ColumnConfig[],
   },
-  
+
   insights: {
     variant: 'detailed' as const,
     layout: 'list' as const,
@@ -237,8 +227,8 @@ export const therapeuticCardLayouts = {
       { key: 'insight', label: 'Insight', priority: 'high' as const },
       { key: 'category', label: 'Category', priority: 'high' as const, type: 'badge' as const },
       { key: 'confidence', label: 'Confidence', priority: 'medium' as const },
-      { key: 'timestamp', label: 'Generated', priority: 'low' as const }
-    ] as ColumnConfig[]
+      { key: 'timestamp', label: 'Generated', priority: 'low' as const },
+    ] as ColumnConfig[],
   },
 
   reports: {
@@ -248,7 +238,7 @@ export const therapeuticCardLayouts = {
       { key: 'title', label: 'Report', priority: 'high' as const },
       { key: 'type', label: 'Type', priority: 'high' as const, type: 'badge' as const },
       { key: 'created', label: 'Created', priority: 'medium' as const },
-      { key: 'size', label: 'Size', priority: 'low' as const }
-    ] as ColumnConfig[]
-  }
+      { key: 'size', label: 'Size', priority: 'low' as const },
+    ] as ColumnConfig[],
+  },
 } as const;

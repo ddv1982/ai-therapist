@@ -32,5 +32,3 @@ export function useInputFooterHeight(
 
   return { inputHeight: inputHeightRef.current };
 }
-
-

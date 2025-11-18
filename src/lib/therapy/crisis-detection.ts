@@ -1,6 +1,6 @@
 /**
  * Crisis Detection System for CBT Diary Entries
- * 
+ *
  * This module provides keyword-based detection of concerning content
  * that may require immediate intervention or additional resources.
  */
@@ -15,7 +15,13 @@ export interface CrisisDetectionResult {
 }
 
 export interface CrisisCategory {
-  category: 'suicide' | 'self_harm' | 'severe_depression' | 'substance_abuse' | 'trauma' | 'psychosis';
+  category:
+    | 'suicide'
+    | 'self_harm'
+    | 'severe_depression'
+    | 'substance_abuse'
+    | 'trauma'
+    | 'psychosis';
   severity: 'low' | 'medium' | 'high';
   keywords: string[];
 }
@@ -32,83 +38,128 @@ export interface EmergencyResource {
 const CRISIS_KEYWORDS = {
   suicide: {
     high: [
-      'kill myself', 'end my life', 'don\'t want to live', 'want to die', 
-      'suicide plan', 'no point living', 'better off dead', 'end it all',
-      'take my own life', 'not worth living'
+      'kill myself',
+      'end my life',
+      "don't want to live",
+      'want to die',
+      'suicide plan',
+      'no point living',
+      'better off dead',
+      'end it all',
+      'take my own life',
+      'not worth living',
     ],
     medium: [
-      'suicidal', 'suicide', 'end my pain', 'can\'t go on', 'give up',
-      'no hope', 'pointless', 'worthless', 'escape this pain'
+      'suicidal',
+      'suicide',
+      'end my pain',
+      "can't go on",
+      'give up',
+      'no hope',
+      'pointless',
+      'worthless',
+      'escape this pain',
     ],
-    low: [
-      'wish I was dead', 'disappear', 'fade away', 'not here anymore'
-    ]
+    low: ['wish I was dead', 'disappear', 'fade away', 'not here anymore'],
   },
   self_harm: {
     high: [
-      'cut myself', 'hurt myself', 'self harm', 'cutting', 'burning myself',
-      'scratching', 'hitting myself', 'punish myself'
+      'cut myself',
+      'hurt myself',
+      'self harm',
+      'cutting',
+      'burning myself',
+      'scratching',
+      'hitting myself',
+      'punish myself',
     ],
     medium: [
-      'self-harm', 'harm myself', 'pain to cope', 'deserve pain',
-      'need to hurt', 'release through pain'
+      'self-harm',
+      'harm myself',
+      'pain to cope',
+      'deserve pain',
+      'need to hurt',
+      'release through pain',
     ],
-    low: [
-      'picking at', 'scratching until', 'bite myself'
-    ]
+    low: ['picking at', 'scratching until', 'bite myself'],
   },
   severe_depression: {
     high: [
-      'completely hopeless', 'nothing matters', 'can\'t function',
-      'can\'t get out of bed', 'lost all motivation', 'everything is pointless'
+      'completely hopeless',
+      'nothing matters',
+      "can't function",
+      "can't get out of bed",
+      'lost all motivation',
+      'everything is pointless',
     ],
     medium: [
-      'severely depressed', 'major depression', 'deep depression',
-      'overwhelming sadness', 'can barely cope', 'losing myself'
+      'severely depressed',
+      'major depression',
+      'deep depression',
+      'overwhelming sadness',
+      'can barely cope',
+      'losing myself',
     ],
-    low: [
-      'very depressed', 'really down', 'feeling empty', 'numb inside'
-    ]
+    low: ['very depressed', 'really down', 'feeling empty', 'numb inside'],
   },
   substance_abuse: {
     high: [
-      'can\'t stop drinking', 'addicted to', 'overdose', 'too much alcohol',
-      'drug problem', 'substance abuse', 'drinking to cope'
+      "can't stop drinking",
+      'addicted to',
+      'overdose',
+      'too much alcohol',
+      'drug problem',
+      'substance abuse',
+      'drinking to cope',
     ],
     medium: [
-      'drinking heavily', 'using drugs', 'self-medicating',
-      'alcohol dependency', 'substance use'
+      'drinking heavily',
+      'using drugs',
+      'self-medicating',
+      'alcohol dependency',
+      'substance use',
     ],
-    low: [
-      'drinking more', 'using substances', 'numbing with'
-    ]
+    low: ['drinking more', 'using substances', 'numbing with'],
   },
   trauma: {
     high: [
-      'flashbacks', 'reliving trauma', 'panic attacks', 'can\'t escape memories',
-      'traumatic memories', 'ptsd symptoms', 'triggered constantly'
+      'flashbacks',
+      'reliving trauma',
+      'panic attacks',
+      "can't escape memories",
+      'traumatic memories',
+      'ptsd symptoms',
+      'triggered constantly',
     ],
     medium: [
-      'trauma response', 'traumatic event', 'dissociating',
-      'nightmares', 'hypervigilant', 'emotional numbness'
+      'trauma response',
+      'traumatic event',
+      'dissociating',
+      'nightmares',
+      'hypervigilant',
+      'emotional numbness',
     ],
-    low: [
-      'traumatic', 'painful memories', 'triggered', 'upset memories'
-    ]
+    low: ['traumatic', 'painful memories', 'triggered', 'upset memories'],
   },
   psychosis: {
     high: [
-      'hearing voices', 'seeing things', 'not real', 'paranoid',
-      'being watched', 'conspiracy', 'voices telling me'
+      'hearing voices',
+      'seeing things',
+      'not real',
+      'paranoid',
+      'being watched',
+      'conspiracy',
+      'voices telling me',
     ],
     medium: [
-      'hallucinations', 'delusions', 'losing touch with reality',
-      'can\'t trust thoughts', 'confused about reality'
+      'hallucinations',
+      'delusions',
+      'losing touch with reality',
+      "can't trust thoughts",
+      'confused about reality',
     ],
-    low: [
-      'strange thoughts', 'weird experiences', 'unusual perceptions'
-    ]
-  }
+    low: ['strange thoughts', 'weird experiences', 'unusual perceptions'],
+  },
 };
 
 // Emergency resources
@@ -117,29 +168,31 @@ const EMERGENCY_RESOURCES: EmergencyResource[] = [
     name: 'National Suicide Prevention Lifeline',
     phone: '988',
     website: 'https://suicidepreventionlifeline.org/',
-    description: 'Free and confidential emotional support for people in suicidal crisis or emotional distress',
-    available24x7: true
+    description:
+      'Free and confidential emotional support for people in suicidal crisis or emotional distress',
+    available24x7: true,
   },
   {
     name: 'Crisis Text Line',
     phone: 'Text HOME to 741741',
     website: 'https://www.crisistextline.org/',
     description: 'Free, 24/7 support for those in crisis via text message',
-    available24x7: true
+    available24x7: true,
   },
   {
     name: 'SAMHSA National Helpline',
     phone: '1-800-662-4357',
     website: 'https://www.samhsa.gov/find-help/national-helpline',
-    description: 'Treatment referral and information service for mental health and substance use disorders',
-    available24x7: true
+    description:
+      'Treatment referral and information service for mental health and substance use disorders',
+    available24x7: true,
   },
   {
     name: 'Emergency Services',
     phone: '911',
     description: 'For immediate medical emergencies or if you are in immediate danger',
-    available24x7: true
-  }
+    available24x7: true,
+  },
 ];
 
 /**
@@ -149,7 +202,7 @@ export function detectCrisisContent(text: string): CrisisDetectionResult {
   const normalizedText = text.toLowerCase().trim();
   const triggeredKeywords: string[] = [];
   const detectedCategories: CrisisCategory[] = [];
-  
+
   let highestRiskLevel: 'low' | 'medium' | 'high' | 'crisis' = 'low';
   let isHighRisk = false;
 
@@ -161,12 +214,12 @@ export function detectCrisisContent(text: string): CrisisDetectionResult {
 
     // Check severity levels (high to low)
     Object.entries(severityLevels).forEach(([severity, keywords]) => {
-      keywords.forEach(keyword => {
+      keywords.forEach((keyword) => {
         if (normalizedText.includes(keyword.toLowerCase())) {
           triggeredKeywords.push(keyword);
           categoryKeywords.push(keyword);
           categorySeverity = severity as 'low' | 'medium' | 'high';
-          
+
           // Update overall risk level
           if (severity === 'high') {
             highestRiskLevel = 'crisis';
@@ -186,14 +239,14 @@ export function detectCrisisContent(text: string): CrisisDetectionResult {
       detectedCategories.push({
         category,
         severity: categorySeverity,
-        keywords: categoryKeywords
+        keywords: categoryKeywords,
       });
     }
   });
 
   // Generate recommended actions based on detected content
   const recommendedActions = generateRecommendedActions(detectedCategories, highestRiskLevel);
-  
+
   // Select emergency resources (currently returns a general list)
   const relevantResources = getRelevantResources();
 
@@ -203,7 +256,7 @@ export function detectCrisisContent(text: string): CrisisDetectionResult {
     triggeredKeywords,
     detectedCategories,
     recommendedActions,
-    emergencyResources: relevantResources
+    emergencyResources: relevantResources,
   };
 }
 
@@ -211,7 +264,7 @@ export function detectCrisisContent(text: string): CrisisDetectionResult {
  * Generates recommended actions based on detected crisis content
  */
 function generateRecommendedActions(
-  categories: CrisisCategory[], 
+  categories: CrisisCategory[],
   riskLevel: 'low' | 'medium' | 'high' | 'crisis'
 ): string[] {
   const actions: string[] = [];
@@ -224,7 +277,7 @@ function generateRecommendedActions(
   } else if (riskLevel === 'high') {
     actions.push('Consider contacting a mental health professional within 24-48 hours');
     actions.push('Reach out to your support network (friends, family, therapist)');
-    actions.push('Use healthy coping strategies you\'ve learned');
+    actions.push("Use healthy coping strategies you've learned");
     actions.push('Monitor your thoughts and feelings closely');
   } else if (riskLevel === 'medium') {
     actions.push('Schedule an appointment with a mental health professional');
@@ -234,7 +287,7 @@ function generateRecommendedActions(
   }
 
   // Category-specific recommendations
-  categories.forEach(category => {
+  categories.forEach((category) => {
     switch (category.category) {
       case 'suicide':
         if (!actions.includes('Create a safety plan with specific coping strategies')) {
@@ -262,10 +315,10 @@ function generateRecommendedActions(
 function getRelevantResources(): EmergencyResource[] {
   // Always include suicide prevention and general crisis resources
   const relevantResources = [...EMERGENCY_RESOURCES];
-  
+
   // Could be extended to include category-specific resources
   // For now, return all available resources as they're all generally helpful
-  
+
   return relevantResources;
 }
 
@@ -273,10 +326,13 @@ function getRelevantResources(): EmergencyResource[] {
  * Checks if content requires immediate intervention
  */
 export function requiresImmediateIntervention(result: CrisisDetectionResult): boolean {
-  return result.riskLevel === 'crisis' || 
-         (result.isHighRisk && result.detectedCategories.some(cat => 
-           cat.category === 'suicide' && cat.severity === 'high'
-         ));
+  return (
+    result.riskLevel === 'crisis' ||
+    (result.isHighRisk &&
+      result.detectedCategories.some(
+        (cat) => cat.category === 'suicide' && cat.severity === 'high'
+      ))
+  );
 }
 
 /**
@@ -285,9 +341,9 @@ export function requiresImmediateIntervention(result: CrisisDetectionResult): bo
 export function generateCrisisAlert(result: CrisisDetectionResult): string {
   if (!result.isHighRisk) return '';
 
-  const categoryNames = result.detectedCategories.map(cat => 
-    cat.category.replace('_', ' ')
-  ).join(', ');
+  const categoryNames = result.detectedCategories
+    .map((cat) => cat.category.replace('_', ' '))
+    .join(', ');
 
   let alertLevel = '';
   switch (result.riskLevel) {

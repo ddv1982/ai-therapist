@@ -2,7 +2,7 @@ import os from 'os';
 
 function getNetworkIP() {
   const interfaces = os.networkInterfaces();
-  
+
   for (const name of Object.keys(interfaces)) {
     for (const netInterface of interfaces[name]) {
       // Skip internal and non-IPv4 addresses
@@ -11,7 +11,7 @@ function getNetworkIP() {
       }
     }
   }
-  
+
   return 'localhost';
 }
 

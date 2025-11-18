@@ -12,7 +12,9 @@ import {
 describe('store/hooks selector branches', () => {
   it('selectCurrentSession returns null when no id and object when present', () => {
     expect(selectCurrentSession({ sessions: {} } as any)).toBeNull();
-    expect(selectCurrentSession({ sessions: { currentSessionId: 's1' } } as any)).toEqual({ id: 's1' });
+    expect(selectCurrentSession({ sessions: { currentSessionId: 's1' } } as any)).toEqual({
+      id: 's1',
+    });
   });
 
   it('selectChatMessages returns [] when none and values when present', () => {
@@ -26,7 +28,9 @@ describe('store/hooks selector branches', () => {
   it('selectCurrentCBTDraft and selectCBTValidationErrors fallbacks', () => {
     expect(selectCurrentCBTDraft({ cbt: {} } as any)).toBeUndefined();
     expect(selectCBTValidationErrors({ cbt: {} } as any)).toEqual({});
-    expect(selectCBTValidationErrors({ cbt: { validationErrors: { x: 'y' } } } as any)).toEqual({ x: 'y' });
+    expect(selectCBTValidationErrors({ cbt: { validationErrors: { x: 'y' } } } as any)).toEqual({
+      x: 'y',
+    });
   });
 
   it('selectIsStreaming defaults false and true when set', () => {
@@ -37,7 +41,9 @@ describe('store/hooks selector branches', () => {
   it('selectChatSettings returns fallback and actual when present', () => {
     const fallback = selectChatSettings({ chat: {} } as any) as any;
     expect(fallback).toMatchObject({ webSearchEnabled: false });
-    const actual = selectChatSettings({ chat: { settings: { webSearchEnabled: true, model: 'm' } } } as any) as any;
+    const actual = selectChatSettings({
+      chat: { settings: { webSearchEnabled: true, model: 'm' } },
+    } as any) as any;
     expect(actual).toMatchObject({ webSearchEnabled: true, model: 'm' });
   });
 

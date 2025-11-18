@@ -8,7 +8,7 @@ import { locales, defaultLocale, type AppLocale } from '@/i18n/config';
 import { RootProviders } from '@/app/providers';
 import { getMessagesForLocale } from '@/i18n/messages-loader';
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
@@ -18,7 +18,8 @@ const inter = Inter({
 });
 export const metadata: Metadata = {
   title: 'Therapist AI - Compassionate AI Therapy Support',
-  description: 'A professional, judgment-free AI therapist application providing therapeutic support with session continuity and progress tracking.',
+  description:
+    'A professional, judgment-free AI therapist application providing therapeutic support with session continuity and progress tracking.',
   keywords: ['therapy', 'mental health', 'AI therapist', 'counseling', 'support'],
   appleWebApp: {
     capable: true,
@@ -26,9 +27,7 @@ export const metadata: Metadata = {
     title: 'AI Therapist',
   },
   icons: {
-    apple: [
-      { url: '/icons/apple-touch-icon.png', sizes: '180x180' },
-    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
   },
 };
 
@@ -41,26 +40,33 @@ export const viewport = {
   themeColor: '#000000',
 };
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // If essential public env is missing, render a lightweight fallback layout
   const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   const convexUrlEnv = process.env.NEXT_PUBLIC_CONVEX_URL;
   if (!pk || !convexUrlEnv) {
     return (
-      <html lang={defaultLocale} className={inter.variable} data-scroll-behavior="smooth" suppressHydrationWarning>
+      <html
+        lang={defaultLocale}
+        className={inter.variable}
+        data-scroll-behavior="smooth"
+        suppressHydrationWarning
+      >
         <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+          />
           <link rel="manifest" href="/manifest.webmanifest" />
         </head>
         <body className="bg-background font-sans antialiased">
-          <div className="min-h-screen flex items-center justify-center p-8">
-            <div className="max-w-md text-center space-y-4">
+          <div className="flex min-h-screen items-center justify-center p-8">
+            <div className="max-w-md space-y-4 text-center">
               <h1 className="text-2xl font-semibold">Local environment not configured</h1>
-              <p className="text-muted-foreground">Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and NEXT_PUBLIC_CONVEX_URL in .env.local to enable the full app. The server is running.</p>
+              <p className="text-muted-foreground">
+                Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and NEXT_PUBLIC_CONVEX_URL in .env.local to
+                enable the full app. The server is running.
+              </p>
             </div>
           </div>
         </body>
@@ -77,9 +83,17 @@ export default async function RootLayout({
   // Load nested messages for the resolved locale (static imports for bundler compatibility)
   const messages = await getMessagesForLocale(resolvedLocale);
   return (
-    <html lang={resolvedLocale} className={inter.variable} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html
+      lang={resolvedLocale}
+      className={inter.variable}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+        />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -89,9 +103,7 @@ export default async function RootLayout({
       </head>
       <body className="bg-background font-sans antialiased">
         <NextIntlClientProvider locale={resolvedLocale} messages={messages}>
-          <RootProviders>
-            {children}
-          </RootProviders>
+          <RootProviders>{children}</RootProviders>
         </NextIntlClientProvider>
       </body>
     </html>

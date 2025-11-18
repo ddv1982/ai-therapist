@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -31,8 +31,8 @@ export function MessageTable<TData>({
   title = 'Messages',
   description = 'Your session messages',
 }: MessageTableProps<TData>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const table = useReactTable({
     data,
@@ -82,18 +82,15 @@ export function MessageTable<TData>({
             <table className="w-full text-sm">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id} className="border-b border-border">
+                  <tr key={headerGroup.id} className="border-border border-b">
                     {headerGroup.headers.map((header) => (
                       <th
                         key={header.id}
-                        className="text-left px-4 py-3 font-semibold text-muted-foreground"
+                        className="text-muted-foreground px-4 py-3 text-left font-semibold"
                       >
                         {header.isPlaceholder
                           ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
+                          : flexRender(header.column.columnDef.header, header.getContext())}
                       </th>
                     ))}
                   </tr>
@@ -109,16 +106,13 @@ export function MessageTable<TData>({
                       initial="hidden"
                       animate="visible"
                       className={cn(
-                        'border-b border-border transition-colors hover:bg-muted/50',
-                        row.getIsSelected() && 'bg-muted',
+                        'border-border hover:bg-muted/50 border-b transition-colors',
+                        row.getIsSelected() && 'bg-muted'
                       )}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <td key={cell.id} className="px-4 py-3">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       ))}
                     </motion.tr>
@@ -127,7 +121,7 @@ export function MessageTable<TData>({
                   <tr>
                     <td
                       colSpan={columns.length}
-                      className="px-4 py-8 text-center text-muted-foreground"
+                      className="text-muted-foreground px-4 py-8 text-center"
                     >
                       No messages found
                     </td>
@@ -139,9 +133,8 @@ export function MessageTable<TData>({
 
           {/* Pagination */}
           <div className="flex items-center justify-between gap-4 pt-6">
-            <div className="text-sm text-muted-foreground">
-              Page {table.getState().pagination.pageIndex + 1} of{' '}
-              {table.getPageCount()}
+            <div className="text-muted-foreground text-sm">
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
             </div>
             <div className="flex gap-2">
               <Button

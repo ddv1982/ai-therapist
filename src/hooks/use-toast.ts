@@ -13,9 +13,9 @@ export function useToast() {
     warning: (message: string, description?: string) =>
       toast.error(message, description ? { description } : undefined),
     loading: (message: string) => toast.loading(message),
-    promise: <T,>(
+    promise: <T>(
       promise: Promise<T>,
-      messages: { loading: string; success: string; error: string },
+      messages: { loading: string; success: string; error: string }
     ) => toast.promise(promise, messages),
   };
 }

@@ -1,8 +1,11 @@
 import { NextRequest } from 'next/server';
-import { logger, createRequestLogger } from '@/lib/utils/logger';
-import { validateApiAuth } from '@/lib/api/api-auth';
-import { withApiMiddleware, type RequestContext } from '@/lib/api/api-middleware';
-import { createSuccessResponse, createErrorResponse, createAuthenticationErrorResponse, type ApiResponse } from '@/lib/api/api-response';
+import { logger } from '@/lib/utils/logger';
+import { withAuth, type AuthenticatedRequestContext } from '@/lib/api/api-middleware';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  type ApiResponse,
+} from '@/lib/api/api-response';
 import { MemoryManagementService } from '@/lib/services/memory-management-service';
 
 type MemoryContextEntry = {
@@ -69,54 +72,48 @@ type DeleteResponseData = {
  * - manage: Set to 'true' for management view with detailed information
  * - includeFullContent: Set to 'true' to include full decrypted content
  */
-export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (request: NextRequest, context: RequestContext) => {
-  const requestContext = createRequestLogger(request);
+export const GET = withAuth<MemoryData | MemoryManageData>(
+  async (request: NextRequest, context: AuthenticatedRequestContext) => {
+    try {
+      // Get clerkId from authenticated context (guaranteed to exist via withAuth)
+      const userInfo = context.userInfo as { userId: string; clerkId?: string };
+      const clerkId = userInfo.clerkId || userInfo.userId;
 
-  try {
-    // Validate authentication - memory access requires valid user session
-    const authResult = await validateApiAuth(request);
-    if (!authResult.isValid) {
-      logger.warn('Unauthorized memory retrieval request', { ...requestContext, error: authResult.error });
-      return createAuthenticationErrorResponse(authResult.error || 'Authentication required', context.requestId) as import('next/server').NextResponse<ApiResponse<MemoryData | MemoryManageData>>;
+      const { searchParams } = new URL(request.url);
+      const limit = parseInt(searchParams.get('limit') || '5', 10);
+      const excludeSessionId = searchParams.get('excludeSessionId');
+      const manage = searchParams.get('manage') === 'true';
+      const includeFullContent = searchParams.get('includeFullContent') === 'true';
+
+      const service = new MemoryManagementService();
+
+      if (manage) {
+        // Management mode - return detailed report information
+        const data = await service.getMemoryManagement(
+          clerkId,
+          limit,
+          excludeSessionId,
+          includeFullContent
+        );
+        return createSuccessResponse<MemoryManageData>(data, { requestId: context.requestId });
+      }
+
+      // Standard memory context mode
+      const data = await service.getMemoryContext(clerkId, limit, excludeSessionId);
+      return createSuccessResponse<MemoryData>(data, { requestId: context.requestId });
+    } catch (error) {
+      logger.error('Error retrieving session reports for memory', {
+        requestId: context.requestId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      return createErrorResponse('Failed to retrieve memory context', 500, {
+        requestId: context.requestId,
+      }) as import('next/server').NextResponse<ApiResponse<MemoryData>>;
     }
-
-    const clerkId = (context.userInfo as { clerkId?: string } | undefined)?.clerkId;
-    if (!clerkId) {
-      return createAuthenticationErrorResponse('Unauthorized', context.requestId) as import('next/server').NextResponse<ApiResponse<MemoryData | MemoryManageData>>;
-    }
-
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '5', 10);
-    const excludeSessionId = searchParams.get('excludeSessionId');
-    const manage = searchParams.get('manage') === 'true';
-    const includeFullContent = searchParams.get('includeFullContent') === 'true';
-
-    const service = new MemoryManagementService();
-
-    if (manage) {
-      // Management mode - return detailed report information
-      const data = await service.getMemoryManagement(limit, excludeSessionId, includeFullContent);
-      return createSuccessResponse<MemoryManageData>(data, { requestId: context.requestId });
-    }
-
-    // Standard memory context mode
-    const data = await service.getMemoryContext(limit, excludeSessionId);
-    return createSuccessResponse<MemoryData>(data, { requestId: context.requestId });
-
-  } catch (error) {
-    logger.error('Error retrieving session reports for memory', {
-      ...requestContext,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
-
-    return createErrorResponse(
-      'Failed to retrieve memory context',
-      500,
-      { requestId: context.requestId }
-    ) as import('next/server').NextResponse<ApiResponse<MemoryData>>;
   }
-});
+);
 
 /**
  * DELETE /api/reports/memory
@@ -130,44 +127,35 @@ export const GET = withApiMiddleware<MemoryData | MemoryManageData>(async (reque
  * - Recent N reports: ?limit=3
  * - Exclude current: ?excludeSessionId=currentId&limit=N
  */
-export const DELETE = withApiMiddleware<DeleteResponseData>(async (request: NextRequest, context: RequestContext) => {
-  const requestContext = createRequestLogger(request);
+export const DELETE = withAuth<DeleteResponseData>(
+  async (request: NextRequest, context: AuthenticatedRequestContext) => {
+    try {
+      // Get clerkId from authenticated context (guaranteed to exist via withAuth)
+      const userInfo = context.userInfo as { userId: string; clerkId?: string };
+      const clerkId = userInfo.clerkId || userInfo.userId;
 
-  try {
-    // Validate authentication first
-    const authResult = await validateApiAuth(request);
-    if (!authResult.isValid) {
-      logger.warn('Unauthorized memory deletion request', { ...requestContext, error: authResult.error });
-      return createAuthenticationErrorResponse(authResult.error || 'Authentication required', context.requestId) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
+      const { searchParams } = new URL(request.url);
+      const limit = searchParams.get('limit')
+        ? parseInt(searchParams.get('limit')!, 10)
+        : undefined;
+      const excludeSessionId = searchParams.get('excludeSessionId');
+      const sessionIdsParam = searchParams.get('sessionIds');
+      const sessionIds = sessionIdsParam ? sessionIdsParam.split(',') : undefined;
+
+      const service = new MemoryManagementService();
+      const result = await service.deleteMemory(clerkId, sessionIds, limit, excludeSessionId);
+
+      return createSuccessResponse<DeleteResponseData>(result, { requestId: context.requestId });
+    } catch (error) {
+      logger.error('Error deleting memory context', {
+        requestId: context.requestId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
+      return createErrorResponse('Failed to delete memory context', 500, {
+        requestId: context.requestId,
+      }) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
     }
-
-    const clerkId = (context.userInfo as { clerkId?: string } | undefined)?.clerkId;
-    if (!clerkId) {
-      return createAuthenticationErrorResponse('Unauthorized', context.requestId) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
-    }
-
-    const { searchParams } = new URL(request.url);
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!, 10) : undefined;
-    const excludeSessionId = searchParams.get('excludeSessionId');
-    const sessionIdsParam = searchParams.get('sessionIds');
-    const sessionIds = sessionIdsParam ? sessionIdsParam.split(',') : undefined;
-
-    const service = new MemoryManagementService();
-    const result = await service.deleteMemory(clerkId, sessionIds, limit, excludeSessionId);
-
-    return createSuccessResponse<DeleteResponseData>(result, { requestId: context.requestId });
-
-  } catch (error) {
-    logger.error('Error deleting memory context', {
-      ...createRequestLogger(request),
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
-
-    return createErrorResponse(
-      'Failed to delete memory context',
-      500,
-      { requestId: context.requestId }
-    ) as import('next/server').NextResponse<ApiResponse<DeleteResponseData>>;
   }
-});
+);

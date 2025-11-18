@@ -45,7 +45,9 @@ describe('useChatSessions', () => {
   });
 
   it('creates a session when ensuring an active session', async () => {
-    const { result } = renderHook(() => useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle }));
+    const { result } = renderHook(() =>
+      useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle })
+    );
 
     await act(async () => {
       const sessionId = await result.current.ensureActiveSession();
@@ -59,7 +61,9 @@ describe('useChatSessions', () => {
   });
 
   it('clears session state when starting a new session', async () => {
-    const { result } = renderHook(() => useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle }));
+    const { result } = renderHook(() =>
+      useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle })
+    );
 
     await act(async () => {
       await result.current.startNewSession();
@@ -70,7 +74,9 @@ describe('useChatSessions', () => {
   });
 
   it('deletes the current session and refreshes sessions', async () => {
-    const { result } = renderHook(() => useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle }));
+    const { result } = renderHook(() =>
+      useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle })
+    );
 
     await act(async () => {
       await result.current.ensureActiveSession();

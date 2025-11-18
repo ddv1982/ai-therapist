@@ -11,15 +11,17 @@ interface UseChatTransportParams {
 export function useChatTransport(params: UseChatTransportParams) {
   const { sessionId } = params;
 
-  const transport = useMemo(() => new DefaultChatTransport<UIMessage>({
-    api: '/api/chat',
-    credentials: 'include',
-    body: {
-      sessionId: sessionId ?? undefined,
-    },
-  }), [sessionId]);
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport<UIMessage>({
+        api: '/api/chat',
+        credentials: 'include',
+        body: {
+          sessionId: sessionId ?? undefined,
+        },
+      }),
+    [sessionId]
+  );
 
   return transport;
 }
-
-

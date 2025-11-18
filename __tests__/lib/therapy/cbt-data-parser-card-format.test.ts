@@ -2,18 +2,21 @@ import { parseAllCBTData, hasCBTData } from '@/lib/therapy/cbt-data-parser';
 
 describe('cbt-data-parser card format', () => {
   it('parses unified card format from HTML comment JSON', () => {
-    const card = '<!-- CBT_SUMMARY_CARD:' + JSON.stringify({
-      situation: 'Short desc',
-      date: '2024-05-05',
-      initialEmotions: [{ emotion: 'fear', rating: 6 }],
-      finalEmotions: [{ emotion: 'fear', rating: 3 }],
-      automaticThoughts: [{ thought: 'I will fail' }],
-      coreBelief: { belief: 'I am not enough', credibility: 7 },
-      rationalThoughts: [{ thought: 'I can learn' }],
-      schemaModes: [{ name: 'Vulnerable Child', intensity: 4 }],
-      newBehaviors: ['Try once'],
-      alternativeResponses: [{ response: 'Practice reframing' }]
-    }) + ' -->';
+    const card =
+      '<!-- CBT_SUMMARY_CARD:' +
+      JSON.stringify({
+        situation: 'Short desc',
+        date: '2024-05-05',
+        initialEmotions: [{ emotion: 'fear', rating: 6 }],
+        finalEmotions: [{ emotion: 'fear', rating: 3 }],
+        automaticThoughts: [{ thought: 'I will fail' }],
+        coreBelief: { belief: 'I am not enough', credibility: 7 },
+        rationalThoughts: [{ thought: 'I can learn' }],
+        schemaModes: [{ name: 'Vulnerable Child', intensity: 4 }],
+        newBehaviors: ['Try once'],
+        alternativeResponses: [{ response: 'Practice reframing' }],
+      }) +
+      ' -->';
     const parsed = parseAllCBTData([{ role: 'assistant', content: card }]);
     expect(parsed.situation?.date).toBe('2024-05-05');
     expect(parsed.situation?.description).toBe('Short desc');
@@ -31,5 +34,3 @@ describe('cbt-data-parser card format', () => {
     expect(hasCBTData([{ role: 'assistant', content: card }])).toBe(true);
   });
 });
-
-

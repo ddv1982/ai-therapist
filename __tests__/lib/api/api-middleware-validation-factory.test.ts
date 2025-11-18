@@ -8,7 +8,13 @@ describe('api-middleware withValidation via factory', () => {
   const mw = createApiMiddleware({
     validateApiAuth: mockValidateApiAuth,
     getSingleUserInfo: mockGetSingleUserInfo,
-    createRequestLogger: () => ({ requestId: 'rid-factory', method: 'POST', url: 'http://localhost/val', userAgent: 'jest' }) as any,
+    createRequestLogger: () =>
+      ({
+        requestId: 'rid-factory',
+        method: 'POST',
+        url: 'http://localhost/val',
+        userAgent: 'jest',
+      }) as any,
   });
 
   beforeEach(() => {
@@ -19,13 +25,21 @@ describe('api-middleware withValidation via factory', () => {
 
   it('returns 400 on invalid JSON', async () => {
     const schema = z.object({ a: z.string() });
-    const handler = jest.fn(async () => NextResponse.json({ success: true, data: { ok: true }, meta: { timestamp: new Date().toISOString() } }));
+    const handler = jest.fn(async () =>
+      NextResponse.json({
+        success: true,
+        data: { ok: true },
+        meta: { timestamp: new Date().toISOString() },
+      })
+    );
     const wrapped = mw.withValidation(schema, handler);
     const req = new NextRequest('http://localhost/val', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
     }) as any;
-    req.json = jest.fn(async () => { throw new Error('bad'); });
+    req.json = jest.fn(async () => {
+      throw new Error('bad');
+    });
     const res = await wrapped(req as any, { params: Promise.resolve({}) } as any);
     expect(res.status).toBe(400);
     expect(handler).not.toHaveBeenCalled();
@@ -33,7 +47,13 @@ describe('api-middleware withValidation via factory', () => {
 
   it('returns 400 on schema validation failure', async () => {
     const schema = z.object({ a: z.string().min(2) });
-    const handler = jest.fn(async () => NextResponse.json({ success: true, data: { ok: true }, meta: { timestamp: new Date().toISOString() } }));
+    const handler = jest.fn(async () =>
+      NextResponse.json({
+        success: true,
+        data: { ok: true },
+        meta: { timestamp: new Date().toISOString() },
+      })
+    );
     const wrapped = mw.withValidation(schema, handler);
     const req = new NextRequest('http://localhost/val', {
       method: 'POST',
@@ -45,5 +65,3 @@ describe('api-middleware withValidation via factory', () => {
     expect(handler).not.toHaveBeenCalled();
   });
 });
-
-

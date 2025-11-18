@@ -4,14 +4,14 @@ describe('therapy prompts index', () => {
   describe('getTherapySystemPrompt', () => {
     it('returns English prompt for en locale', () => {
       const prompt = getTherapySystemPrompt('en');
-      
+
       expect(typeof prompt).toBe('string');
       expect(prompt.length).toBeGreaterThan(0);
     });
 
     it('returns Dutch prompt for nl locale', () => {
       const prompt = getTherapySystemPrompt('nl');
-      
+
       expect(typeof prompt).toBe('string');
       expect(prompt.length).toBeGreaterThan(0);
     });
@@ -28,7 +28,7 @@ describe('therapy prompts index', () => {
           },
         ],
       });
-      
+
       expect(typeof prompt).toBe('string');
       expect(prompt.length).toBeGreaterThan(0);
     });
@@ -37,14 +37,14 @@ describe('therapy prompts index', () => {
       const prompt = getTherapySystemPrompt('en', {
         webSearch: true,
       });
-      
+
       expect(typeof prompt).toBe('string');
       expect(prompt.length).toBeGreaterThan(0);
     });
 
     it('handles undefined options', () => {
       const prompt = getTherapySystemPrompt('en', undefined);
-      
+
       expect(typeof prompt).toBe('string');
       expect(prompt.length).toBeGreaterThan(0);
     });
@@ -68,7 +68,7 @@ describe('therapy prompts index', () => {
       ];
 
       const prompt = getTherapySystemPrompt('en', { memory });
-      
+
       expect(typeof prompt).toBe('string');
     });
 
@@ -84,7 +84,7 @@ describe('therapy prompts index', () => {
       ];
 
       const prompt = getTherapySystemPrompt('nl', { memory });
-      
+
       expect(typeof prompt).toBe('string');
       expect(prompt.length).toBeGreaterThan(0);
     });
@@ -101,14 +101,14 @@ describe('therapy prompts index', () => {
       ];
 
       const prompt = getTherapySystemPrompt('en', { memory, webSearch: true });
-      
+
       expect(typeof prompt).toBe('string');
       expect(prompt.length).toBeGreaterThan(0);
     });
 
     it('handles empty memory array', () => {
       const prompt = getTherapySystemPrompt('en', { memory: [] });
-      
+
       expect(typeof prompt).toBe('string');
       expect(prompt.length).toBeGreaterThan(0);
     });
@@ -117,14 +117,14 @@ describe('therapy prompts index', () => {
   describe('getReportPrompt', () => {
     it('returns English report prompt for en locale', () => {
       const prompt = getReportPrompt('en');
-      
+
       expect(typeof prompt).toBe('string');
       expect(prompt.length).toBeGreaterThan(0);
     });
 
     it('returns Dutch report prompt for nl locale', () => {
       const prompt = getReportPrompt('nl');
-      
+
       expect(typeof prompt).toBe('string');
       expect(prompt.length).toBeGreaterThan(0);
     });
@@ -132,7 +132,7 @@ describe('therapy prompts index', () => {
     it('returns different prompts for different locales', () => {
       const enPrompt = getReportPrompt('en');
       const nlPrompt = getReportPrompt('nl');
-      
+
       expect(enPrompt).not.toBe(nlPrompt);
     });
   });

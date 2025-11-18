@@ -12,13 +12,13 @@ describe('utils', () => {
   describe('cn', () => {
     it('merges class names', () => {
       const result = cn('class1', 'class2');
-      
+
       expect(result).toBe('class1 class2');
     });
 
     it('handles conditional classes', () => {
       const result = cn('base', false && 'hidden', true && 'visible');
-      
+
       expect(result).toContain('base');
       expect(result).toContain('visible');
       expect(result).not.toContain('hidden');
@@ -26,7 +26,7 @@ describe('utils', () => {
 
     it('handles Tailwind conflicts', () => {
       const result = cn('px-2', 'px-4');
-      
+
       expect(result).toBe('px-4');
     });
   });
@@ -53,14 +53,14 @@ describe('utils', () => {
     it('formats timestamp with AM/PM', () => {
       const date = new Date('2024-01-15T14:30:00Z');
       const result = formatTimestamp(date);
-      
+
       expect(result).toMatch(/\d+:\d+ (AM|PM)/);
     });
 
     it('formats midnight correctly', () => {
       const date = new Date('2024-01-15T00:00:00Z');
       const result = formatTimestamp(date);
-      
+
       expect(result).toMatch(/\d+:\d+ (AM|PM)/);
     });
   });
@@ -69,7 +69,7 @@ describe('utils', () => {
     it('formats full date', () => {
       const date = new Date('2024-01-15T12:00:00Z');
       const result = formatDate(date);
-      
+
       expect(result).toMatch(/January \d+, 2024/);
     });
   });
@@ -77,7 +77,7 @@ describe('utils', () => {
   describe('generateSessionTitle', () => {
     it('generates session title with date and time', () => {
       const title = generateSessionTitle();
-      
+
       expect(title).toContain('Session');
       expect(title.length).toBeGreaterThan('Session '.length);
     });
@@ -85,7 +85,7 @@ describe('utils', () => {
     it('generates unique titles', () => {
       const title1 = generateSessionTitle();
       const title2 = generateSessionTitle();
-      
+
       // Should be nearly identical but we just verify they exist
       expect(title1).toContain('Session');
       expect(title2).toContain('Session');

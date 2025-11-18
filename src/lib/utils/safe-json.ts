@@ -8,7 +8,9 @@ export function safeParse<T = unknown>(text: string): SafeParseResult<T> {
   }
 }
 
-export function safeParseFromMatch<T = unknown>(match: string | undefined | null): SafeParseResult<T> {
+export function safeParseFromMatch<T = unknown>(
+  match: string | undefined | null
+): SafeParseResult<T> {
   if (!match || typeof match !== 'string') return { ok: false };
   return safeParse<T>(match);
 }

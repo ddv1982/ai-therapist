@@ -8,11 +8,12 @@ import cbtReducer, {
 } from '@/store/slices/cbt-slice';
 
 describe('cbt-slice', () => {
-  const createTestStore = () => configureStore({
-    reducer: {
-      cbt: cbtReducer,
-    },
-  });
+  const createTestStore = () =>
+    configureStore({
+      reducer: {
+        cbt: cbtReducer,
+      },
+    });
 
   type TestStore = ReturnType<typeof createTestStore>;
   type TestState = ReturnType<TestStore['getState']>;
@@ -26,7 +27,7 @@ describe('cbt-slice', () => {
   describe('createDraft', () => {
     it('creates new draft with id', () => {
       store.dispatch(createDraft({ id: 'draft-123' }));
-      
+
       const state: TestState['cbt'] = store.getState().cbt;
       expect(state.currentDraft).not.toBeNull();
       expect(state.currentDraft?.id).toBe('draft-123');
@@ -37,7 +38,7 @@ describe('cbt-slice', () => {
     it('resets validation errors', () => {
       store.dispatch(setValidationErrors({ field: 'error' }));
       store.dispatch(createDraft({ id: 'draft-123' }));
-      
+
       const state: TestState['cbt'] = store.getState().cbt;
       expect(state.validationErrors).toEqual({});
     });
@@ -47,7 +48,7 @@ describe('cbt-slice', () => {
     it('updates draft data', () => {
       store.dispatch(createDraft({ id: 'draft-123' }));
       store.dispatch(updateDraft({ situation: 'Test situation' }));
-      
+
       const state: TestState['cbt'] = store.getState().cbt;
       expect(state.currentDraft?.data.situation).toBe('Test situation');
     });
@@ -56,7 +57,7 @@ describe('cbt-slice', () => {
       store.dispatch(createDraft({ id: 'draft-123' }));
       store.dispatch(updateDraft({ situation: 'Test situation' }));
       store.dispatch(updateDraft({ emotions: [{ emotion: 'anxiety', intensity: 7 }] }));
-      
+
       const state: TestState['cbt'] = store.getState().cbt;
       expect(state.currentDraft?.data.situation).toBe('Test situation');
       expect(state.currentDraft?.data.emotions?.[0]).toEqual({ emotion: 'anxiety', intensity: 7 });
@@ -66,7 +67,7 @@ describe('cbt-slice', () => {
   describe('setCurrentStep', () => {
     it('updates current step', () => {
       store.dispatch(setCurrentStep(3));
-      
+
       const state: TestState['cbt'] = store.getState().cbt;
       expect(state.currentStep).toBe(3);
     });
@@ -75,7 +76,7 @@ describe('cbt-slice', () => {
   describe('setCurrentStep', () => {
     it('updates current step', () => {
       store.dispatch(setCurrentStep(3));
-      
+
       const state: TestState['cbt'] = store.getState().cbt;
       expect(state.currentStep).toBe(3);
     });
@@ -84,7 +85,7 @@ describe('cbt-slice', () => {
   describe('validation errors', () => {
     it('sets validation errors', () => {
       store.dispatch(setValidationErrors({ field1: 'Error 1', field2: 'Error 2' }));
-      
+
       const state: TestState['cbt'] = store.getState().cbt;
       expect(state.validationErrors.field1).toBe('Error 1');
       expect(state.validationErrors.field2).toBe('Error 2');
@@ -93,7 +94,7 @@ describe('cbt-slice', () => {
     it('clears validation errors', () => {
       store.dispatch(setValidationErrors({ field: 'Error' }));
       store.dispatch(clearValidationErrors());
-      
+
       const state: TestState['cbt'] = store.getState().cbt;
       expect(state.validationErrors).toEqual({});
     });
@@ -102,7 +103,7 @@ describe('cbt-slice', () => {
   describe('setCurrentStep', () => {
     it('updates current step', () => {
       store.dispatch(setCurrentStep(3));
-      
+
       const state: TestState['cbt'] = store.getState().cbt;
       expect(state.currentStep).toBe(3);
     });

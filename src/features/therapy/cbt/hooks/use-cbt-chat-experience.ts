@@ -84,36 +84,33 @@ export function useCBTChatExperience(): UseCBTChatExperienceReturn {
     dispatch({ type: 'RESET' });
   }, []);
 
-  const completeStep = useCallback(
-    <K extends keyof StepMap>(stepId: K, payload: StepMap[K]) => {
-      dispatch({ type: 'COMPLETE_STEP', stepId, payload } as CBTFlowEvent);
-    },
-    [],
-  );
+  const completeStep = useCallback(<K extends keyof StepMap>(stepId: K, payload: StepMap[K]) => {
+    dispatch({ type: 'COMPLETE_STEP', stepId, payload } as CBTFlowEvent);
+  }, []);
 
-  const goToStep = useCallback(
-    (stepId: CBTStepId | 'complete') => {
-      dispatch({ type: 'GO_TO_STEP', stepId } as CBTFlowEvent);
-    },
-    [],
-  );
+  const goToStep = useCallback((stepId: CBTStepId | 'complete') => {
+    dispatch({ type: 'GO_TO_STEP', stepId } as CBTFlowEvent);
+  }, []);
 
-  const handlers: StepCompleteHandlers = useMemo(() => ({
-    completeSituationStep: (data) => completeStep('situation', data),
-    completeEmotionStep: (data) => completeStep('emotions', data),
-    completeThoughtStep: (data) => completeStep('thoughts', data),
-    completeCoreBeliefStep: (data) => completeStep('core-belief', data),
-    completeChallengeQuestionsStep: (data) => completeStep('challenge-questions', data),
-    completeRationalThoughtsStep: (data) => completeStep('rational-thoughts', data),
-    completeSchemaModesStep: (data) => completeStep('schema-modes', data),
-    completeActionStep: (data) => completeStep('actions', data),
-    completeFinalEmotionsStep: (data) => completeStep('final-emotions', data),
-  }), [completeStep]);
+  const handlers: StepCompleteHandlers = useMemo(
+    () => ({
+      completeSituationStep: (data) => completeStep('situation', data),
+      completeEmotionStep: (data) => completeStep('emotions', data),
+      completeThoughtStep: (data) => completeStep('thoughts', data),
+      completeCoreBeliefStep: (data) => completeStep('core-belief', data),
+      completeChallengeQuestionsStep: (data) => completeStep('challenge-questions', data),
+      completeRationalThoughtsStep: (data) => completeStep('rational-thoughts', data),
+      completeSchemaModesStep: (data) => completeStep('schema-modes', data),
+      completeActionStep: (data) => completeStep('actions', data),
+      completeFinalEmotionsStep: (data) => completeStep('final-emotions', data),
+    }),
+    [completeStep]
+  );
 
   const generateFinalSummary = useCallback(() => buildMarkdownSummary(flowState), [flowState]);
   const generateTherapeuticSummaryCard = useCallback(
     () => buildSummaryCardFromState(flowState),
-    [flowState],
+    [flowState]
   );
 
   return {

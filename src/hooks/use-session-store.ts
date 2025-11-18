@@ -18,7 +18,9 @@ export function useSessionStore() {
     loadingRef.current = true;
     try {
       const sessionsData = await apiClient.listSessions();
-      const response = getApiData(sessionsData) as PaginatedResponse<components['schemas']['Session']>;
+      const response = getApiData(sessionsData) as PaginatedResponse<
+        components['schemas']['Session']
+      >;
       const sessionsArray = response?.items || [];
       const uiSessions: UiSession[] = sessionsArray.map(mapApiSessionToUiSession) as UiSession[];
       setSessions(uiSessions);
@@ -30,7 +32,7 @@ export function useSessionStore() {
   const removeSession = useCallback(async (sessionId: string) => {
     const resp = await apiClient.deleteSession(sessionId);
     if (resp) {
-      setSessions(prev => prev.filter(s => s.id !== sessionId));
+      setSessions((prev) => prev.filter((s) => s.id !== sessionId));
     }
   }, []);
 
@@ -38,11 +40,9 @@ export function useSessionStore() {
     const result = await apiClient.createSession({ title });
     const created = getApiData(result) as components['schemas']['Session'];
     const ui = mapApiSessionToUiSession(created) as UiSession;
-    setSessions(prev => [ui, ...prev]);
+    setSessions((prev) => [ui, ...prev]);
     return ui;
   }, []);
 
   return { sessions, setSessions, loadSessions, removeSession, createSession } as const;
 }
-
-

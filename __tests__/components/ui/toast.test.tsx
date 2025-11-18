@@ -3,26 +3,34 @@
  * Tests the toast notification system
  */
 
-import React, { act } from 'react';
+import { act } from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ToastProvider, useToast } from '@/components/ui/toast';
 
 // Mock the secure random string generation
 jest.mock('@/lib/utils/utils', () => ({
   ...jest.requireActual('@/lib/utils/utils'),
-  generateSecureRandomString: jest.fn((length) => 
-    'mock-random-string-' + 'x'.repeat(length)
-  ),
+  generateSecureRandomString: jest.fn((length) => 'mock-random-string-' + 'x'.repeat(length)),
   cn: jest.fn((...classes) => classes.filter(Boolean).join(' ')),
 }));
 
 // Mock Lucide React icons
 jest.mock('lucide-react', () => ({
-  X: ({ className, ...props }: any) => <div data-testid="x-icon" className={className} {...props} />,
-  CheckCircle: ({ className, ...props }: any) => <div data-testid="check-circle-icon" className={className} {...props} />,
-  AlertCircle: ({ className, ...props }: any) => <div data-testid="alert-circle-icon" className={className} {...props} />,
-  Info: ({ className, ...props }: any) => <div data-testid="info-icon" className={className} {...props} />,
-  AlertTriangle: ({ className, ...props }: any) => <div data-testid="alert-triangle-icon" className={className} {...props} />,
+  X: ({ className, ...props }: any) => (
+    <div data-testid="x-icon" className={className} {...props} />
+  ),
+  CheckCircle: ({ className, ...props }: any) => (
+    <div data-testid="check-circle-icon" className={className} {...props} />
+  ),
+  AlertCircle: ({ className, ...props }: any) => (
+    <div data-testid="alert-circle-icon" className={className} {...props} />
+  ),
+  Info: ({ className, ...props }: any) => (
+    <div data-testid="info-icon" className={className} {...props} />
+  ),
+  AlertTriangle: ({ className, ...props }: any) => (
+    <div data-testid="alert-triangle-icon" className={className} {...props} />
+  ),
 }));
 
 // Test component to use the toast hook
@@ -31,44 +39,46 @@ function TestToastComponent() {
 
   return (
     <div>
-      <button 
-        data-testid="show-success" 
+      <button
+        data-testid="show-success"
         onClick={() => showToast({ type: 'success', message: 'Success message!' })}
       >
         Show Success
       </button>
-      <button 
-        data-testid="show-error" 
-        onClick={() => showToast({ type: 'error', message: 'Error message!', title: 'Error Title' })}
+      <button
+        data-testid="show-error"
+        onClick={() =>
+          showToast({ type: 'error', message: 'Error message!', title: 'Error Title' })
+        }
       >
         Show Error
       </button>
-      <button 
-        data-testid="show-warning" 
+      <button
+        data-testid="show-warning"
         onClick={() => showToast({ type: 'warning', message: 'Warning message!' })}
       >
         Show Warning
       </button>
-      <button 
-        data-testid="show-info" 
+      <button
+        data-testid="show-info"
         onClick={() => showToast({ type: 'info', message: 'Info message!' })}
       >
         Show Info
       </button>
-      <button 
-        data-testid="show-persistent" 
+      <button
+        data-testid="show-persistent"
         onClick={() => showToast({ type: 'info', message: 'Persistent message!', duration: 0 })}
       >
         Show Persistent
       </button>
-      <button 
-        data-testid="show-custom-duration" 
+      <button
+        data-testid="show-custom-duration"
         onClick={() => showToast({ type: 'success', message: 'Custom duration!', duration: 1000 })}
       >
         Show Custom Duration
       </button>
-      <button 
-        data-testid="remove-toast" 
+      <button
+        data-testid="remove-toast"
         onClick={() => {
           if (toasts.length > 0) {
             removeToast(toasts[0].id);
@@ -84,7 +94,7 @@ function TestToastComponent() {
 
 // Test component that throws error when used outside provider
 function _TestToastWithoutProvider() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, react-hooks/rules-of-hooks
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { showToast: _showToast } = useToast();
   return <div>Should not work</div>;
 }
@@ -346,9 +356,11 @@ describe('Toast System', () => {
       const TestComponent = () => {
         const { showToast } = useToast();
         return (
-          <button 
+          <button
             data-testid="show-negative-duration"
-            onClick={() => showToast({ type: 'info', message: 'Negative duration!', duration: -1000 })}
+            onClick={() =>
+              showToast({ type: 'info', message: 'Negative duration!', duration: -1000 })
+            }
           >
             Show Negative Duration
           </button>
@@ -456,7 +468,7 @@ describe('Toast System', () => {
 
       for (const test of tests) {
         fireEvent.click(screen.getByTestId(test.button));
-        
+
         await waitFor(() => {
           expect(screen.getByTestId(test.icon)).toBeInTheDocument();
         });
@@ -478,7 +490,7 @@ describe('Toast System', () => {
         // Find the toast container - it should exist and have the message
         const toastContainer = document.querySelector('.fixed.top-4.right-4');
         expect(toastContainer).toBeInTheDocument();
-        
+
         // Verify message appears
         expect(screen.getByText('Success message!')).toBeInTheDocument();
       });
@@ -581,7 +593,9 @@ describe('Toast System', () => {
 
       await waitFor(() => {
         // Find the toast container directly by its classes
-        const container = document.querySelector('.fixed.top-4.right-4.z-50.flex.flex-col.gap-2.max-w-sm.w-full');
+        const container = document.querySelector(
+          '.fixed.top-4.right-4.z-50.flex.flex-col.gap-2.max-w-sm.w-full'
+        );
         expect(container).toBeInTheDocument();
       });
     });
@@ -621,7 +635,7 @@ describe('Toast System', () => {
       await waitFor(() => {
         expect(screen.getByText('Success message!')).toBeInTheDocument();
       });
-      
+
       // The fact that the toast appears means animation is working
       expect(screen.getByTestId('toast-count')).toHaveTextContent('1');
     });
@@ -632,10 +646,7 @@ describe('Toast System', () => {
       const TestEmptyMessage = () => {
         const { showToast } = useToast();
         return (
-          <button 
-            data-testid="show-empty"
-            onClick={() => showToast({ type: 'info', message: '' })}
-          >
+          <button data-testid="show-empty" onClick={() => showToast({ type: 'info', message: '' })}>
             Show Empty
           </button>
         );
@@ -656,12 +667,13 @@ describe('Toast System', () => {
     });
 
     it('should handle very long messages', async () => {
-      const longMessage = 'This is a very long message that might overflow the toast container and should be handled gracefully by the toast system without breaking the layout or causing display issues.';
-      
+      const longMessage =
+        'This is a very long message that might overflow the toast container and should be handled gracefully by the toast system without breaking the layout or causing display issues.';
+
       const TestLongMessage = () => {
         const { showToast } = useToast();
         return (
-          <button 
+          <button
             data-testid="show-long"
             onClick={() => showToast({ type: 'info', message: longMessage })}
           >

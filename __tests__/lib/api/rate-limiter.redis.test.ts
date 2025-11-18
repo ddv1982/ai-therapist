@@ -12,12 +12,18 @@ function mockRedisExecute(count: number, ttl: number) {
   const fakeClient = {
     multi: jest.fn(() => fakeTx),
     pExpire: jest.fn(),
-  } as unknown as RedisClientType<Record<string, never>, Record<string, never>, Record<string, never>>;
+  } as unknown as RedisClientType<
+    Record<string, never>,
+    Record<string, never>,
+    Record<string, never>
+  >;
 
-  const executeCommand = jest.fn(async (command: (client: typeof fakeClient) => Promise<unknown>, fallback?: unknown) => {
-    const result = await command(fakeClient);
-    return (result as unknown) ?? fallback ?? null;
-  });
+  const executeCommand = jest.fn(
+    async (command: (client: typeof fakeClient) => Promise<unknown>, fallback?: unknown) => {
+      const result = await command(fakeClient);
+      return (result as unknown) ?? fallback ?? null;
+    }
+  );
 
   jest.doMock('@/lib/cache/redis-client', () => ({
     redisManager: { executeCommand },

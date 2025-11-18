@@ -60,7 +60,9 @@ const sampleFlowState = (): CBTFlowState => ({
       ],
     },
     rationalThoughts: {
-      rationalThoughts: [{ thought: 'I often do my best with the resources I have.', confidence: 8 }],
+      rationalThoughts: [
+        { thought: 'I often do my best with the resources I have.', confidence: 8 },
+      ],
     },
     schemaModes: {
       selectedModes: [
@@ -131,7 +133,7 @@ describe('sendToChat', () => {
     expect(apiClient.createSession).toHaveBeenCalledWith({ title: 'CBT Summary' });
 
     expect(apiClient.generateReportDetailed).toHaveBeenCalledWith(
-      expect.objectContaining({ sessionId: 'session-123', model: 'openai/gpt-oss-120b' }),
+      expect.objectContaining({ sessionId: 'session-123', model: 'openai/gpt-oss-120b' })
     );
 
     const messagesArg = (apiClient.generateReportDetailed as jest.Mock).mock.calls[0][0].messages;
@@ -154,7 +156,7 @@ describe('sendToChat', () => {
         title: 'Failure',
         flowState: sampleFlowState(),
         contextualMessages: [],
-      }),
+      })
     ).rejects.toThrow('Failed to generate session report');
   });
 });

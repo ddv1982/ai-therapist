@@ -1,12 +1,11 @@
 'use client';
 
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { 
-  SituationPrompt, 
-  EmotionScale, 
-  ThoughtRecord, 
+import {
+  SituationPrompt,
+  EmotionScale,
+  ThoughtRecord,
   CoreBelief,
   ChallengeQuestions,
   RationalThoughts,
@@ -16,7 +15,7 @@ import {
   type EmotionData,
   type ThoughtData,
   type ActionPlanData,
-  type CoreBeliefData
+  type CoreBeliefData,
 } from './index';
 import type { ChallengeQuestionsData, RationalThoughtsData, CBTStepType } from '@/types/therapy';
 
@@ -42,7 +41,7 @@ interface CBTMessageProps {
   onNavigateStep?: (step: CBTStepType) => void;
 }
 
-export function CBTMessage({ 
+export function CBTMessage({
   step,
   stepNumber,
   totalSteps,
@@ -62,25 +61,16 @@ export function CBTMessage({
   className,
   onNavigateStep,
 }: CBTMessageProps) {
-  
   const renderCBTComponent = () => {
     switch (step) {
       case 'situation':
         return (
-          <SituationPrompt
-            onComplete={onSituationComplete!}
-            onNavigateStep={onNavigateStep}
-          />
+          <SituationPrompt onComplete={onSituationComplete!} onNavigateStep={onNavigateStep} />
         );
-        
+
       case 'emotions':
-        return (
-          <EmotionScale
-            onComplete={onEmotionComplete!}
-            onNavigateStep={onNavigateStep}
-          />
-        );
-        
+        return <EmotionScale onComplete={onEmotionComplete!} onNavigateStep={onNavigateStep} />;
+
       case 'thoughts':
         return (
           <ThoughtRecord
@@ -91,7 +81,7 @@ export function CBTMessage({
             onNavigateStep={onNavigateStep}
           />
         );
-        
+
       case 'core-belief':
         return (
           <CoreBelief
@@ -102,7 +92,7 @@ export function CBTMessage({
             onNavigateStep={onNavigateStep}
           />
         );
-        
+
       case 'challenge-questions':
         return (
           <ChallengeQuestions
@@ -114,7 +104,7 @@ export function CBTMessage({
             onNavigateStep={onNavigateStep}
           />
         );
-        
+
       case 'rational-thoughts':
         return (
           <RationalThoughts
@@ -126,15 +116,10 @@ export function CBTMessage({
             onNavigateStep={onNavigateStep}
           />
         );
-      
+
       case 'final-emotions':
-        return (
-          <FinalEmotionReflection
-            onComplete={() => {}}
-            onNavigateStep={onNavigateStep}
-          />
-        );
-        
+        return <FinalEmotionReflection onComplete={() => {}} onNavigateStep={onNavigateStep} />;
+
       case 'actions':
         return (
           <ActionPlan
@@ -147,7 +132,7 @@ export function CBTMessage({
             onNavigateStep={onNavigateStep}
           />
         );
-        
+
       default:
         return (
           <Card className="p-4">

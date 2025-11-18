@@ -62,7 +62,10 @@ const PROMPT_INJECTION_PATTERNS = [
 /**
  * Validates AI response content
  */
-export function validateResponse(content: string, config: ValidationConfig = DEFAULT_CONFIG): ValidationResult {
+export function validateResponse(
+  content: string,
+  config: ValidationConfig = DEFAULT_CONFIG
+): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
   const suspiciousPatterns: string[] = [];
@@ -88,7 +91,9 @@ export function validateResponse(content: string, config: ValidationConfig = DEF
 
   // Check length constraints
   if (config.minLength && trimmedContent.length < config.minLength) {
-    warnings.push(`Response is unusually short (${trimmedContent.length} chars, minimum: ${config.minLength})`);
+    warnings.push(
+      `Response is unusually short (${trimmedContent.length} chars, minimum: ${config.minLength})`
+    );
   }
 
   if (config.maxLength && trimmedContent.length > config.maxLength) {
@@ -116,7 +121,8 @@ export function validateResponse(content: string, config: ValidationConfig = DEF
   // Analyze content structure
   const hasCodeBlocks = /```/g.test(trimmedContent);
   const hasMarkdown = /[*_`#\[\]()]/g.test(trimmedContent);
-  const hasUnbalancedBrackets = (trimmedContent.match(/[{[\(]/g) || []).length !==
+  const hasUnbalancedBrackets =
+    (trimmedContent.match(/[{[\(]/g) || []).length !==
     (trimmedContent.match(/[}\]\)]/g) || []).length;
 
   if (hasUnbalancedBrackets) {
@@ -136,7 +142,7 @@ export function validateResponse(content: string, config: ValidationConfig = DEF
   }
 
   // Determine content type
-  const contentType = hasCodeBlocks && hasMarkdown ? 'mixed' : (hasMarkdown ? 'text' : 'text');
+  const contentType = hasCodeBlocks && hasMarkdown ? 'mixed' : hasMarkdown ? 'text' : 'text';
 
   return {
     isValid: errors.length === 0,
@@ -156,7 +162,10 @@ export function validateResponse(content: string, config: ValidationConfig = DEF
  * Validates response and throws error if invalid
  * Used in critical paths where response must be safe
  */
-export function validateResponseStrict(content: string, config: ValidationConfig = DEFAULT_CONFIG): void {
+export function validateResponseStrict(
+  content: string,
+  config: ValidationConfig = DEFAULT_CONFIG
+): void {
   const result = validateResponse(content, config);
 
   if (!result.isValid) {
@@ -235,10 +244,22 @@ export function validateTherapeuticContent(content: string): {
 
   // Check for harmful or non-therapeutic language
   const harmfulPatterns = [
-    { pattern: /give.*medication|prescribe/i, message: 'Response appears to provide medical advice' },
-    { pattern: /kill.*yourself|hurt.*yourself|self.*harm/i, message: 'Response contains harmful suggestions' },
-    { pattern: /guaranteed.*cure|definite.*fix/i, message: 'Response makes unrealistic therapeutic claims' },
-    { pattern: /i.*love.*you|marry.*me/i, message: 'Response contains inappropriate personal declarations' },
+    {
+      pattern: /give.*medication|prescribe/i,
+      message: 'Response appears to provide medical advice',
+    },
+    {
+      pattern: /kill.*yourself|hurt.*yourself|self.*harm/i,
+      message: 'Response contains harmful suggestions',
+    },
+    {
+      pattern: /guaranteed.*cure|definite.*fix/i,
+      message: 'Response makes unrealistic therapeutic claims',
+    },
+    {
+      pattern: /i.*love.*you|marry.*me/i,
+      message: 'Response contains inappropriate personal declarations',
+    },
   ];
 
   for (const check of harmfulPatterns) {

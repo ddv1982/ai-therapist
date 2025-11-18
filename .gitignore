@@ -58,3 +58,17 @@ src/app/test-*/
 /test-results/
 /playwright-report/
 new-auth-qr.png
+
+# Droidz configuration - NEVER commit this!
+config.yml
+
+# .droidz/ - Local state and specs (completely ignored)
+.droidz/
+
+# .factory/ - Factory.AI framework files (auto-generated, not project-specific)
+.factory/
+
+# Factory.AI templates (generic documentation, not project-specific)
+AGENTS.md.template
+SKILLS.md
+SKILLS_SUMMARY.md

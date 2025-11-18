@@ -8,8 +8,8 @@ describe('buildTherapySystemPrompt localization', () => {
       sessionDate: '2024-10-01',
       reportDate: '2024-10-02',
       summary: 'Cliënt oefent met ademhaling en grenzen aangeven.',
-      content: 'Sensitive report content is omitted in prompts.'
-    }
+      content: 'Sensitive report content is omitted in prompts.',
+    },
   ];
 
   it('returns a fully localized Dutch prompt without English remnants', () => {

@@ -21,28 +21,39 @@ interface CurrentSessionResponse {
 
 export function useChatSessions(options: UseChatSessionsOptions) {
   const { loadMessages, clearMessages, resolveDefaultTitle } = options;
-  const { sessions, loadSessions: loadSessionsFromStore, removeSession, createSession } = useSessionStore();
+  const {
+    sessions,
+    loadSessions: loadSessionsFromStore,
+    removeSession,
+    createSession,
+  } = useSessionStore();
   const { selectSession } = useSelectSession();
   const [currentSession, setCurrentSession] = useState<string | null>(null);
   const loadingSessionsRef = useRef(false);
   const authReady = useAuthReady();
 
-  const persistSessionSelection = useCallback(async (sessionId: string | null) => {
-    await selectSession(sessionId);
-    setCurrentSession(sessionId);
-    if (typeof window !== 'undefined') {
-      if (sessionId) {
-        window.localStorage.setItem('currentSessionId', sessionId);
-      } else {
-        window.localStorage.removeItem('currentSessionId');
+  const persistSessionSelection = useCallback(
+    async (sessionId: string | null) => {
+      await selectSession(sessionId);
+      setCurrentSession(sessionId);
+      if (typeof window !== 'undefined') {
+        if (sessionId) {
+          window.localStorage.setItem('currentSessionId', sessionId);
+        } else {
+          window.localStorage.removeItem('currentSessionId');
+        }
       }
-    }
-  }, [selectSession]);
+    },
+    [selectSession]
+  );
 
-  const setCurrentSessionAndLoad = useCallback(async (sessionId: string) => {
-    await persistSessionSelection(sessionId);
-    await loadMessages(sessionId);
-  }, [persistSessionSelection, loadMessages]);
+  const setCurrentSessionAndLoad = useCallback(
+    async (sessionId: string) => {
+      await persistSessionSelection(sessionId);
+      await loadMessages(sessionId);
+    },
+    [persistSessionSelection, loadMessages]
+  );
 
   const clearCurrentSession = useCallback(async () => {
     await persistSessionSelection(null);
@@ -63,21 +74,26 @@ export function useChatSessions(options: UseChatSessionsOptions) {
     async function attempt(retry = false): Promise<void> {
       try {
         const response = await apiClient.getCurrentSession();
-        const normalized = (response && (response as { success?: boolean }).success)
-          ? (response as { data: CurrentSessionResponse }).data
-          : (response as CurrentSessionResponse | undefined);
+        const normalized =
+          response && (response as { success?: boolean }).success
+            ? (response as { data: CurrentSessionResponse }).data
+            : (response as CurrentSessionResponse | undefined);
         const active = normalized?.currentSession?.id;
         if (active) {
           await setCurrentSessionAndLoad(active);
         } else if (authReady && !retry) {
-          setTimeout(() => { void attempt(true); }, 400);
+          setTimeout(() => {
+            void attempt(true);
+          }, 400);
         } else {
           await clearCurrentSession();
         }
       } catch (e) {
         const status = (e as { status?: number }).status;
         if (authReady && !retry && status === 401) {
-          setTimeout(() => { void attempt(true); }, 400);
+          setTimeout(() => {
+            void attempt(true);
+          }, 400);
         }
         // otherwise ignore to avoid blocking UI
       }
@@ -102,19 +118,22 @@ export function useChatSessions(options: UseChatSessionsOptions) {
     await clearCurrentSession();
   }, [clearCurrentSession]);
 
-  const deleteSession = useCallback(async (sessionId: string) => {
-    try {
-      await removeSession(sessionId);
-      if (currentSession === sessionId) {
-        await clearCurrentSession();
-        await hydrateCurrentSession();
-      } else {
-        await loadSessions();
+  const deleteSession = useCallback(
+    async (sessionId: string) => {
+      try {
+        await removeSession(sessionId);
+        if (currentSession === sessionId) {
+          await clearCurrentSession();
+          await loadSessions();
+        } else {
+          await loadSessions();
+        }
+      } catch {
+        // ignore errors for deletion to keep UI responsive
       }
-    } catch {
-      // ignore errors for deletion to keep UI responsive
-    }
-  }, [removeSession, currentSession, clearCurrentSession, hydrateCurrentSession, loadSessions]);
+    },
+    [removeSession, currentSession, clearCurrentSession, loadSessions]
+  );
 
   useEffect(() => {
     if (!authReady) return;

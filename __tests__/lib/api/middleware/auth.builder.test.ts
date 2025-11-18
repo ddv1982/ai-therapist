@@ -36,7 +36,12 @@ describe('auth builder', () => {
     return {
       withApiMiddleware,
       validateApiAuth: jest.fn(async () => ({ isValid: true })),
-      getSingleUserInfo: jest.fn(() => ({ userId: 'user-1', email: 'user@example.test', name: 'User', currentDevice: 'Computer' })),
+      getSingleUserInfo: jest.fn(() => ({
+        userId: 'user-1',
+        email: 'user@example.test',
+        name: 'User',
+        currentDevice: 'Computer',
+      })),
       ...overrides,
     } satisfies Parameters<typeof buildWithAuth>[0];
   }
@@ -92,7 +97,7 @@ describe('auth builder', () => {
 
   it('injects clerkId into userInfo when validateApiAuth returns userId', async () => {
     const deps = createDeps({
-      validateApiAuth: jest.fn(async () => ({ isValid: true, userId: 'clerk_123' } as any)),
+      validateApiAuth: jest.fn(async () => ({ isValid: true, userId: 'clerk_123' }) as any),
     });
 
     const withAuth = buildWithAuth(deps);
@@ -110,10 +115,14 @@ describe('auth builder', () => {
 
   it('fallback user info infers Computer device from user-agent', async () => {
     const deps = createDeps({
-      getSingleUserInfo: jest.fn(() => { throw new Error('no session'); }),
+      getSingleUserInfo: jest.fn(() => {
+        throw new Error('no session');
+      }),
     });
     const withAuth = buildWithAuth(deps);
-    const handler = jest.fn(async (_req, ctx) => createSuccessResponse({ device: ctx.userInfo.currentDevice }));
+    const handler = jest.fn(async (_req, ctx) =>
+      createSuccessResponse({ device: ctx.userInfo.currentDevice })
+    );
     const wrapped = withAuth(handler);
     const req = new Request('http://localhost/api', {
       headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
@@ -125,10 +134,14 @@ describe('auth builder', () => {
 
   it('fallback user info infers Tablet device from user-agent', async () => {
     const deps = createDeps({
-      getSingleUserInfo: jest.fn(() => { throw new Error('no session'); }),
+      getSingleUserInfo: jest.fn(() => {
+        throw new Error('no session');
+      }),
     });
     const withAuth = buildWithAuth(deps);
-    const handler = jest.fn(async (_req, ctx) => createSuccessResponse({ device: ctx.userInfo.currentDevice }));
+    const handler = jest.fn(async (_req, ctx) =>
+      createSuccessResponse({ device: ctx.userInfo.currentDevice })
+    );
     const wrapped = withAuth(handler);
     const req = new Request('http://localhost/api', {
       headers: { 'user-agent': 'Mozilla/5.0 (iPad; CPU OS 15_0 like Mac OS X)' },
@@ -139,11 +152,23 @@ describe('auth builder', () => {
   });
 
   describe('withAuthStreaming', () => {
-    function createStreamingDeps(overrides: Partial<Parameters<typeof buildWithAuthStreaming>[0]> = {}) {
+    function createStreamingDeps(
+      overrides: Partial<Parameters<typeof buildWithAuthStreaming>[0]> = {}
+    ) {
       return {
         validateApiAuth: jest.fn(async () => ({ isValid: true })),
-        getSingleUserInfo: jest.fn(() => ({ userId: 'user-1', email: 'user@example.test', name: 'User', currentDevice: 'Computer' })),
-        createRequestLogger: jest.fn(() => ({ requestId: 'rid-stream', method: 'GET', url: '/stream', userAgent: 'jest' })),
+        getSingleUserInfo: jest.fn(() => ({
+          userId: 'user-1',
+          email: 'user@example.test',
+          name: 'User',
+          currentDevice: 'Computer',
+        })),
+        createRequestLogger: jest.fn(() => ({
+          requestId: 'rid-stream',
+          method: 'GET',
+          url: '/stream',
+          userAgent: 'jest',
+        })),
         ...overrides,
       } satisfies Parameters<typeof buildWithAuthStreaming>[0];
     }
@@ -197,7 +222,9 @@ describe('auth builder', () => {
     it('uses fallback request context when createRequestLogger is not provided', async () => {
       const deps = createStreamingDeps({ createRequestLogger: undefined });
       const wrapped = buildWithAuthStreaming(deps)(async (_req, ctx) => {
-        return new Response(JSON.stringify({ id: ctx.requestId, ua: ctx.userAgent }), { status: 200 });
+        return new Response(JSON.stringify({ id: ctx.requestId, ua: ctx.userAgent }), {
+          status: 200,
+        });
       });
       const req: any = new Request('http://localhost/api/stream');
       req.requestId = 'rfallback';

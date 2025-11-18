@@ -21,12 +21,31 @@ describe('export-utils edge cases', () => {
     const content = '# Provided Markdown\nHello';
     const originalCreate = (URL as any).createObjectURL;
     let capturedBlob: any;
-    (URL as any).createObjectURL = (b: any) => { capturedBlob = b; return 'blob://test'; };
+    (URL as any).createObjectURL = (b: any) => {
+      capturedBlob = b;
+      return 'blob://test';
+    };
     const originalCreateEl = document.createElement.bind(document);
-    const anchor: any = { click: jest.fn(), style: {}, download: '', _href: '', set href(v: string){ this._href=v; }, get href(){ return this._href; } };
-    (document as any).createElement = (tag: string) => tag === 'a' ? anchor : originalCreateEl(tag);
-    const appendSpy = jest.spyOn(document.body, 'appendChild').mockImplementation((node: any) => node as any);
-    const removeSpy = jest.spyOn(document.body, 'removeChild').mockImplementation((child: any) => child as any);
+    const anchor: any = {
+      click: jest.fn(),
+      style: {},
+      download: '',
+      _href: '',
+      set href(v: string) {
+        this._href = v;
+      },
+      get href() {
+        return this._href;
+      },
+    };
+    (document as any).createElement = (tag: string) =>
+      tag === 'a' ? anchor : originalCreateEl(tag);
+    const appendSpy = jest
+      .spyOn(document.body, 'appendChild')
+      .mockImplementation((node: any) => node as any);
+    const removeSpy = jest
+      .spyOn(document.body, 'removeChild')
+      .mockImplementation((child: any) => child as any);
 
     await exportAsMarkdown(form, content);
 
@@ -45,12 +64,31 @@ describe('export-utils edge cases', () => {
     const form = createInitialCBTFormData();
     const originalCreate = (URL as any).createObjectURL;
     let capturedBlob: any;
-    (URL as any).createObjectURL = (b: any) => { capturedBlob = b; return 'blob://test'; };
+    (URL as any).createObjectURL = (b: any) => {
+      capturedBlob = b;
+      return 'blob://test';
+    };
     const originalCreateEl = document.createElement.bind(document);
-    const anchor: any = { click: jest.fn(), style: {}, download: '', _href: '', set href(v: string){ this._href=v; }, get href(){ return this._href; } };
-    (document as any).createElement = (tag: string) => tag === 'a' ? anchor : originalCreateEl(tag);
-    const appendSpy = jest.spyOn(document.body, 'appendChild').mockImplementation((node: any) => node as any);
-    const removeSpy = jest.spyOn(document.body, 'removeChild').mockImplementation((child: any) => child as any);
+    const anchor: any = {
+      click: jest.fn(),
+      style: {},
+      download: '',
+      _href: '',
+      set href(v: string) {
+        this._href = v;
+      },
+      get href() {
+        return this._href;
+      },
+    };
+    (document as any).createElement = (tag: string) =>
+      tag === 'a' ? anchor : originalCreateEl(tag);
+    const appendSpy = jest
+      .spyOn(document.body, 'appendChild')
+      .mockImplementation((node: any) => node as any);
+    const removeSpy = jest
+      .spyOn(document.body, 'removeChild')
+      .mockImplementation((child: any) => child as any);
 
     await exportAsText(form);
 
@@ -64,5 +102,3 @@ describe('export-utils edge cases', () => {
     removeSpy.mockRestore();
   });
 });
-
-

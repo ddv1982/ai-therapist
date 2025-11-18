@@ -4,7 +4,7 @@ import {
   sessionActions,
   type SessionState,
   type Session,
-  type SessionAction
+  type SessionAction,
 } from '@/lib/chat/session-reducer';
 import type { Message } from '@/types';
 
@@ -16,7 +16,7 @@ const createMockSession = (overrides: Partial<Session> = {}): Session => ({
   startedAt: new Date('2024-01-01T00:00:00Z'),
   status: 'active',
   _count: { messages: 5 },
-  ...overrides
+  ...overrides,
 });
 
 const createMockMessage = (overrides: Partial<Message> = {}): Message => ({
@@ -24,7 +24,7 @@ const createMockMessage = (overrides: Partial<Message> = {}): Message => ({
   role: 'user',
   content: 'Test message',
   timestamp: new Date('2024-01-01T00:00:00Z'),
-  ...overrides
+  ...overrides,
 });
 
 describe('Session Reducer', () => {
@@ -34,15 +34,15 @@ describe('Session Reducer', () => {
     mockState = {
       sessions: [
         createMockSession({ id: 'session-1', title: 'First Session' }),
-        createMockSession({ id: 'session-2', title: 'Second Session' })
+        createMockSession({ id: 'session-2', title: 'Second Session' }),
       ],
       currentSession: 'session-1',
       messages: [
         createMockMessage({ id: 'msg-1', content: 'Hello' }),
-        createMockMessage({ id: 'msg-2', content: 'World' })
+        createMockMessage({ id: 'msg-2', content: 'World' }),
       ],
       isLoading: false,
-      error: null
+      error: null,
     };
   });
 
@@ -53,7 +53,7 @@ describe('Session Reducer', () => {
         currentSession: null,
         messages: [],
         isLoading: false,
-        error: null
+        error: null,
       });
     });
   });
@@ -62,9 +62,9 @@ describe('Session Reducer', () => {
     it('should set sessions and clear error', () => {
       const sessions = [
         createMockSession({ id: 'new-1', title: 'New Session 1' }),
-        createMockSession({ id: 'new-2', title: 'New Session 2' })
+        createMockSession({ id: 'new-2', title: 'New Session 2' }),
       ];
-      
+
       const action: SessionAction = { type: 'SET_SESSIONS', payload: sessions };
       const result = sessionReducer(mockState, action);
 
@@ -148,7 +148,7 @@ describe('Session Reducer', () => {
 
     it('should delete all sessions', () => {
       let state = mockState;
-      
+
       // Delete first session (current)
       state = sessionReducer(state, { type: 'DELETE_SESSION', payload: 'session-1' });
       expect(state.sessions).toHaveLength(1);
@@ -201,9 +201,9 @@ describe('Session Reducer', () => {
     it('should set messages and clear error', () => {
       const newMessages = [
         createMockMessage({ id: 'new-1', content: 'New message 1' }),
-        createMockMessage({ id: 'new-2', content: 'New message 2' })
+        createMockMessage({ id: 'new-2', content: 'New message 2' }),
       ];
-      
+
       const action: SessionAction = { type: 'SET_MESSAGES', payload: newMessages };
       const result = sessionReducer(mockState, action);
 
@@ -247,9 +247,9 @@ describe('Session Reducer', () => {
 
   describe('UPDATE_MESSAGE Action', () => {
     it('should update message content by id', () => {
-      const action: SessionAction = { 
-        type: 'UPDATE_MESSAGE', 
-        payload: { id: 'msg-1', content: 'Updated content' }
+      const action: SessionAction = {
+        type: 'UPDATE_MESSAGE',
+        payload: { id: 'msg-1', content: 'Updated content' },
       };
       const result = sessionReducer(mockState, action);
 
@@ -261,9 +261,9 @@ describe('Session Reducer', () => {
     });
 
     it('should handle updating non-existent message', () => {
-      const action: SessionAction = { 
-        type: 'UPDATE_MESSAGE', 
-        payload: { id: 'non-existent', content: 'New content' }
+      const action: SessionAction = {
+        type: 'UPDATE_MESSAGE',
+        payload: { id: 'non-existent', content: 'New content' },
       };
       const result = sessionReducer(mockState, action);
 
@@ -277,13 +277,13 @@ describe('Session Reducer', () => {
         messages: [
           createMockMessage({ id: 'duplicate', content: 'Original 1' }),
           createMockMessage({ id: 'duplicate', content: 'Original 2' }),
-          createMockMessage({ id: 'unique', content: 'Unique message' })
-        ]
+          createMockMessage({ id: 'unique', content: 'Unique message' }),
+        ],
       };
 
-      const action: SessionAction = { 
-        type: 'UPDATE_MESSAGE', 
-        payload: { id: 'duplicate', content: 'Updated' }
+      const action: SessionAction = {
+        type: 'UPDATE_MESSAGE',
+        payload: { id: 'duplicate', content: 'Updated' },
       };
       const result = sessionReducer(stateWithDuplicateIds, action);
 
@@ -375,7 +375,7 @@ describe('Session Reducer', () => {
         isLoading: true,
         error: 'Some error',
         sessions: [createMockSession(), createMockSession({ id: 'session-2' })],
-        messages: [createMockMessage(), createMockMessage({ id: 'msg-2' })]
+        messages: [createMockMessage(), createMockMessage({ id: 'msg-2' })],
       };
 
       const action: SessionAction = { type: 'RESET_STATE' };
@@ -404,20 +404,23 @@ describe('Session Reducer', () => {
   describe('State Immutability', () => {
     it('should not mutate original state', () => {
       // Deep clone with proper Date handling
-      const originalState = JSON.parse(JSON.stringify(mockState, (_key, value) => {
-        if (value instanceof Date) {
-          return value.toISOString();
+      const originalState = JSON.parse(
+        JSON.stringify(mockState, (_key, value) => {
+          if (value instanceof Date) {
+            return value.toISOString();
+          }
+          return value;
+        }),
+        (_key, value) => {
+          if (_key === 'timestamp' || _key === 'startedAt') {
+            return new Date(value);
+          }
+          return value;
         }
-        return value;
-      }), (_key, value) => {
-        if (_key === 'timestamp' || _key === 'startedAt') {
-          return new Date(value);
-        }
-        return value;
-      });
-      
+      );
+
       const action: SessionAction = { type: 'SET_LOADING', payload: true };
-      
+
       sessionReducer(mockState, action);
 
       expect(mockState).toEqual(originalState);
@@ -449,7 +452,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'SET_SESSIONS',
-        payload: sessions
+        payload: sessions,
       });
     });
   });
@@ -461,7 +464,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'ADD_SESSION',
-        payload: session
+        payload: session,
       });
     });
   });
@@ -473,7 +476,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'DELETE_SESSION',
-        payload: sessionId
+        payload: sessionId,
       });
     });
   });
@@ -485,7 +488,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'SET_CURRENT_SESSION',
-        payload: sessionId
+        payload: sessionId,
       });
     });
 
@@ -494,7 +497,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'SET_CURRENT_SESSION',
-        payload: null
+        payload: null,
       });
     });
   });
@@ -506,7 +509,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'SET_MESSAGES',
-        payload: messages
+        payload: messages,
       });
     });
   });
@@ -518,7 +521,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'ADD_MESSAGE',
-        payload: message
+        payload: message,
       });
     });
   });
@@ -531,7 +534,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'UPDATE_MESSAGE',
-        payload: { id, content }
+        payload: { id, content },
       });
     });
   });
@@ -542,7 +545,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'SET_LOADING',
-        payload: true
+        payload: true,
       });
     });
 
@@ -551,7 +554,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'SET_LOADING',
-        payload: false
+        payload: false,
       });
     });
   });
@@ -563,7 +566,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'SET_ERROR',
-        payload: error
+        payload: error,
       });
     });
 
@@ -572,7 +575,7 @@ describe('Session Action Creators', () => {
 
       expect(action).toEqual({
         type: 'SET_ERROR',
-        payload: null
+        payload: null,
       });
     });
   });
@@ -582,7 +585,7 @@ describe('Session Action Creators', () => {
       const action = sessionActions.clearMessages();
 
       expect(action).toEqual({
-        type: 'CLEAR_MESSAGES'
+        type: 'CLEAR_MESSAGES',
       });
     });
   });
@@ -592,7 +595,7 @@ describe('Session Action Creators', () => {
       const action = sessionActions.resetState();
 
       expect(action).toEqual({
-        type: 'RESET_STATE'
+        type: 'RESET_STATE',
       });
     });
   });

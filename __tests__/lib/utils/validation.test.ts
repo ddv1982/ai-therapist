@@ -15,7 +15,7 @@ describe('validation', () => {
 
     it('returns success for valid data', () => {
       const result = validateRequest(testSchema, { name: 'John', age: 30 });
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.name).toBe('John');
@@ -25,7 +25,7 @@ describe('validation', () => {
 
     it('returns error for invalid data', () => {
       const result = validateRequest(testSchema, { name: '', age: 30 });
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('name');
@@ -34,7 +34,7 @@ describe('validation', () => {
 
     it('returns error for missing required fields', () => {
       const result = validateRequest(testSchema, { name: 'John' });
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toBeDefined();
@@ -43,7 +43,7 @@ describe('validation', () => {
 
     it('returns error for wrong type', () => {
       const result = validateRequest(testSchema, { name: 'John', age: 'not a number' });
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('age');
@@ -58,7 +58,7 @@ describe('validation', () => {
       });
 
       const result = validateRequest(nestedSchema, { user: { email: 'invalid' } });
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('user.email');
@@ -67,7 +67,7 @@ describe('validation', () => {
 
     it('handles multiple validation errors', () => {
       const result = validateRequest(testSchema, { name: '', age: -5 });
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.length).toBeGreaterThan(0);
@@ -82,7 +82,7 @@ describe('validation', () => {
       } as unknown as z.ZodSchema;
 
       const result = validateRequest(throwingSchema, {});
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('Custom error');
@@ -97,7 +97,7 @@ describe('validation', () => {
       } as unknown as z.ZodSchema;
 
       const result = validateRequest(throwingSchema, {});
-      
+
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('error');
@@ -110,7 +110,7 @@ describe('validation', () => {
       const result = chatMessageSchema.safeParse({
         message: 'Hello, this is a test message',
       });
-      
+
       expect(result.success).toBe(true);
     });
 
@@ -118,7 +118,7 @@ describe('validation', () => {
       const result = chatMessageSchema.safeParse({
         message: '  Hello  ',
       });
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.message).toBe('Hello');
@@ -129,7 +129,7 @@ describe('validation', () => {
       const result = chatMessageSchema.safeParse({
         message: '',
       });
-      
+
       expect(result.success).toBe(false);
     });
 
@@ -137,7 +137,7 @@ describe('validation', () => {
       const result = chatMessageSchema.safeParse({
         message: 'a'.repeat(10001),
       });
-      
+
       expect(result.success).toBe(false);
     });
   });
@@ -147,7 +147,7 @@ describe('validation', () => {
       const result = createSessionSchema.safeParse({
         title: 'My Session',
       });
-      
+
       expect(result.success).toBe(true);
     });
 
@@ -155,7 +155,7 @@ describe('validation', () => {
       const result = createSessionSchema.safeParse({
         title: '  Session Title  ',
       });
-      
+
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.title).toBe('Session Title');
@@ -166,7 +166,7 @@ describe('validation', () => {
       const result = createSessionSchema.safeParse({
         title: '',
       });
-      
+
       expect(result.success).toBe(false);
     });
 
@@ -174,7 +174,7 @@ describe('validation', () => {
       const result = createSessionSchema.safeParse({
         title: 'a'.repeat(201),
       });
-      
+
       expect(result.success).toBe(false);
     });
   });
@@ -218,7 +218,7 @@ describe('validation', () => {
     it('handles complex HTML', () => {
       const input = '<div class="test">Hello</div>';
       const result = sanitizeInput.html(input);
-      
+
       expect(result).not.toContain('<');
       expect(result).not.toContain('>');
       expect(result).toContain('&lt;');

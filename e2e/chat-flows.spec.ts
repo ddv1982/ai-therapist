@@ -57,21 +57,20 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: 'Hello, how are you?',
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
-      // Should return valid response (may be 401 if not authenticated)
-      const data = await response.json() as Record<string, unknown>;
-      expect(data).toBeTruthy();
+      // Should return 401 (auth required) or valid response
+      expect([200, 401]).toContain(response.status());
     });
 
     test('2.2: Empty message rejected', async ({ request }) => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: '',
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
       // Should reject empty message
@@ -82,11 +81,11 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: '   \n\t   ',
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
-      // Should reject whitespace-only message
+      // Should reject whitespace OR require auth
       expect([400, 401]).toContain(response.status());
     });
 
@@ -96,8 +95,8 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: longMessage,
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
       // Should either accept or reject, not crash
@@ -110,8 +109,8 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: specialMessage,
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
       // Should not crash
@@ -124,8 +123,8 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: emojiMessage,
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
       // Should not crash
@@ -138,8 +137,8 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: 'Hello',
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
       // Should not crash, even if unauthorized
@@ -150,8 +149,8 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: 'Test message',
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
       const contentType = response.headers()['content-type'] || '';
@@ -159,20 +158,20 @@ test.describe('Chat Functionality', () => {
       // Should be either JSON or streaming
       expect(
         contentType.includes('application/json') ||
-        contentType.includes('text/event-stream') ||
-        contentType.includes('text/plain')
+          contentType.includes('text/event-stream') ||
+          contentType.includes('text/plain')
       ).toBeTruthy();
     });
 
-    test('3.3: Response doesn\'t timeout on valid request', async ({ request }) => {
+    test("3.3: Response doesn't timeout on valid request", async ({ request }) => {
       const startTime = Date.now();
 
       await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: 'Test',
-          sessionId: 'test-session-1'
+          sessionId: 'test-session-1',
         },
-        timeout: 15000 // 15 second timeout
+        timeout: 15000, // 15 second timeout
       });
 
       const duration = Date.now() - startTime;
@@ -189,8 +188,8 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: injectionMessage,
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
       // Should be handled gracefully (not execute injected commands)
@@ -203,8 +202,8 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: sqlMessage,
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
       // Should be treated as message content, not executed
@@ -217,8 +216,8 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: xssMessage,
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
       // Should not execute script
@@ -235,8 +234,8 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: htmlMessage,
-          sessionId: 'test-session-1'
-        }
+          sessionId: 'test-session-1',
+        },
       });
 
       // Should be handled correctly
@@ -250,7 +249,7 @@ test.describe('Chat Functionality', () => {
 
       // May be 404/401/200
       if (response.ok()) {
-        const data = await response.json() as Record<string, unknown>;
+        const data = (await response.json()) as Record<string, unknown>;
         expect(data).toHaveProperty('data');
       }
     });
@@ -275,11 +274,13 @@ test.describe('Chat Functionality', () => {
     });
 
     test('5.4: Session message pagination supported', async ({ request }) => {
-      const response = await request.get(`${BASE_URL}/api/sessions/test-session/messages?limit=10&offset=0`);
+      const response = await request.get(
+        `${BASE_URL}/api/sessions/test-session/messages?limit=10&offset=0`
+      );
 
       // Should support pagination parameters
       if (response.ok()) {
-        const data = await response.json() as Record<string, unknown>;
+        const data = (await response.json()) as Record<string, unknown>;
         expect(data).toHaveProperty('data');
       }
     });
@@ -291,8 +292,8 @@ test.describe('Chat Functionality', () => {
       const postResponse = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: 'Test message for persistence',
-          sessionId: 'test-session-persist'
-        }
+          sessionId: 'test-session-persist',
+        },
       });
 
       // If successful, verify it doesn't crash
@@ -303,7 +304,7 @@ test.describe('Chat Functionality', () => {
       const response = await request.get(`${BASE_URL}/api/sessions/test-session/messages`);
 
       if (response.ok()) {
-        const data = await response.json() as Record<string, unknown>;
+        const data = (await response.json()) as Record<string, unknown>;
 
         if (data.data && Array.isArray(data.data)) {
           if (data.data.length > 0) {
@@ -311,10 +312,7 @@ test.describe('Chat Functionality', () => {
 
             // Should have metadata
             expect(
-              message.createdAt ||
-              message.timestamp ||
-              message.role ||
-              message.content
+              message.createdAt || message.timestamp || message.role || message.content
             ).toBeTruthy();
           }
         }
@@ -323,15 +321,15 @@ test.describe('Chat Functionality', () => {
   });
 
   test.describe('7. Error Recovery', () => {
-    test('7.1: Network error doesn\'t crash app', async ({ request }) => {
+    test("7.1: Network error doesn't crash app", async ({ request }) => {
       // Simulate network issue by hitting closed port
       // In real test, this would be handled by browser
 
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: 'test',
-          sessionId: 'test'
-        }
+          sessionId: 'test',
+        },
       });
 
       // Should respond or timeout, not crash
@@ -342,29 +340,29 @@ test.describe('Chat Functionality', () => {
       const response = await request.post(`${BASE_URL}/api/chat`, {
         data: {
           // Missing required fields
-        }
+        },
       });
 
       // Should return validation error
       expect(response.status()).toBeGreaterThanOrEqual(400);
     });
 
-    test('7.3: Concurrent messages don\'t interfere', async ({ request }) => {
+    test("7.3: Concurrent messages don't interfere", async ({ request }) => {
       // Send multiple messages concurrently
       const responses = await Promise.all([
         request.post(`${BASE_URL}/api/chat`, {
-          data: { message: 'Message 1', sessionId: 'session-1' }
+          data: { message: 'Message 1', sessionId: 'session-1' },
         }),
         request.post(`${BASE_URL}/api/chat`, {
-          data: { message: 'Message 2', sessionId: 'session-2' }
+          data: { message: 'Message 2', sessionId: 'session-2' },
         }),
         request.post(`${BASE_URL}/api/chat`, {
-          data: { message: 'Message 3', sessionId: 'session-1' }
-        })
+          data: { message: 'Message 3', sessionId: 'session-1' },
+        }),
       ]);
 
       // All should complete
-      responses.forEach(response => {
+      responses.forEach((response) => {
         expect([200, 400, 401]).toContain(response.status());
       });
     });
@@ -377,7 +375,7 @@ test.describe('Chat Functionality', () => {
       // Capture console errors
       const errors: string[] = [];
 
-      page.on('console', msg => {
+      page.on('console', (msg) => {
         if (msg.type() === 'error') {
           errors.push(msg.text());
         }
@@ -398,7 +396,7 @@ test.describe('Chat Functionality', () => {
       if (chatInput) {
         await chatInput.focus();
 
-        const hasFocus = await chatInput.evaluate(el => {
+        const hasFocus = await chatInput.evaluate((el) => {
           return el === document.activeElement;
         });
 
@@ -450,9 +448,9 @@ test.describe('Chat Functionality', () => {
       await request.post(`${BASE_URL}/api/chat`, {
         data: {
           message: 'Test message',
-          sessionId: 'test-session-1'
+          sessionId: 'test-session-1',
         },
-        timeout: 10000
+        timeout: 10000,
       });
 
       const duration = Date.now() - startTime;
@@ -461,7 +459,7 @@ test.describe('Chat Functionality', () => {
       expect(duration).toBeLessThan(10000);
     });
 
-    test('9.3: Multiple messages don\'t cause memory leaks', async ({ request }) => {
+    test("9.3: Multiple messages don't cause memory leaks", async ({ request }) => {
       // Send 20 messages rapidly
       const promises = [];
 
@@ -470,8 +468,8 @@ test.describe('Chat Functionality', () => {
           request.post(`${BASE_URL}/api/chat`, {
             data: {
               message: `Message ${i}`,
-              sessionId: 'test-session-perf'
-            }
+              sessionId: 'test-session-perf',
+            },
           })
         );
       }
@@ -479,7 +477,7 @@ test.describe('Chat Functionality', () => {
       const responses = await Promise.all(promises);
 
       // All should complete
-      responses.forEach(response => {
+      responses.forEach((response) => {
         expect([200, 400, 401, 429]).toContain(response.status());
       });
     });

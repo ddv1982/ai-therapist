@@ -46,10 +46,10 @@ export interface ErrorComponentProps {
 /**
  * Combined props for components with common state management
  */
-export interface StatefulComponentProps 
-  extends ToggleComponentProps, 
-          LoadingComponentProps, 
-          ErrorComponentProps {}
+export interface StatefulComponentProps
+  extends ToggleComponentProps,
+    LoadingComponentProps,
+    ErrorComponentProps {}
 
 // ============================================================================
 // THERAPEUTIC MESSAGE COMPONENTS
@@ -163,11 +163,11 @@ export interface AIParametersProps {
 /**
  * Complete chat settings props (combining all configuration)
  */
-export interface ChatSettingsProps 
-  extends ModelConfigProps, 
-          ApiKeyProps, 
-          AIParametersProps,
-          ToggleComponentProps {
+export interface ChatSettingsProps
+  extends ModelConfigProps,
+    ApiKeyProps,
+    AIParametersProps,
+    ToggleComponentProps {
   showSettings: boolean;
   setShowSettings: (show: boolean) => void;
   onSave?: () => void;
@@ -191,10 +191,10 @@ export interface ResponsiveLayoutProps {
 /**
  * Sidebar component props
  */
-export interface SidebarProps 
+export interface SidebarProps
   extends ToggleComponentProps,
-          ResponsiveLayoutProps,
-          ContainerComponentProps {
+    ResponsiveLayoutProps,
+    ContainerComponentProps {
   showSidebar: boolean;
   setShowSidebar: (show: boolean) => void;
   position?: 'left' | 'right';
@@ -204,9 +204,7 @@ export interface SidebarProps
 /**
  * Modal component props
  */
-export interface ModalProps 
-  extends ToggleComponentProps,
-          ContainerComponentProps {
+export interface ModalProps extends ToggleComponentProps, ContainerComponentProps {
   title?: string;
   description?: string;
   onConfirm?: () => void;
@@ -332,11 +330,11 @@ export interface SessionAnalyticsProps {
 /**
  * Main chat interface props (combining multiple concerns)
  */
-export interface ChatInterfaceProps 
+export interface ChatInterfaceProps
   extends SessionListProps,
-          ChatSettingsProps,
-          ResponsiveLayoutProps,
-          MessageListProps {
+    ChatSettingsProps,
+    ResponsiveLayoutProps,
+    MessageListProps {
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
   onStopGeneration?: () => void;
@@ -345,9 +343,7 @@ export interface ChatInterfaceProps
 /**
  * Complete session sidebar props
  */
-export interface SessionSidebarProps 
-  extends SidebarProps,
-          SessionListProps {
+export interface SessionSidebarProps extends SidebarProps, SessionListProps {
   setCurrentSession: (sessionId: string) => void;
   loadMessages: (sessionId: string) => void;
   deleteSession: (sessionId: string) => void;
@@ -416,6 +412,6 @@ export type LegacyChatMessageProps = MessageComponentProps;
 export type LegacySessionSidebarProps = SessionSidebarProps;
 
 /**
- * @deprecated Use ChatSettingsProps instead  
+ * @deprecated Use ChatSettingsProps instead
  */
 export type LegacySettingsPanelProps = SettingsPanelProps;

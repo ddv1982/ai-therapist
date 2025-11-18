@@ -14,11 +14,7 @@ if (fs.existsSync(target)) {
 
   // Backfill missing keys if the file predates newer defaults
   if (!/^GROQ_API_KEY=/m.test(existing)) {
-    fs.appendFileSync(
-      target,
-      `\n# AI provider API keys\nGROQ_API_KEY=""\n`,
-      { encoding: 'utf8' }
-    );
+    fs.appendFileSync(target, `\n# AI provider API keys\nGROQ_API_KEY=""\n`, { encoding: 'utf8' });
     changed = true;
   }
 

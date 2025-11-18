@@ -11,5 +11,3 @@ describe('fallback-analysis', () => {
     expect(Array.isArray(analysis.actionItems)).toBe(true);
   });
 });
-
-

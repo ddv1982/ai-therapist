@@ -2,10 +2,14 @@ import { z } from 'zod';
 
 export const cbtFormSchema = z.object({
   situation: z.string().min(10, 'Please describe the situation in at least 10 characters'),
-  emotions: z.array(z.object({
-    emotion: z.string().min(1, 'Emotion name is required'),
-    intensity: z.number().min(0, 'Intensity must be 0-10').max(10, 'Intensity must be 0-10'),
-  })).min(1, 'Please rate at least one emotion'),
+  emotions: z
+    .array(
+      z.object({
+        emotion: z.string().min(1, 'Emotion name is required'),
+        intensity: z.number().min(0, 'Intensity must be 0-10').max(10, 'Intensity must be 0-10'),
+      })
+    )
+    .min(1, 'Please rate at least one emotion'),
   thoughts: z
     .array(z.string().min(5, 'Each thought must be at least 5 characters'))
     .min(1, 'Please record at least one thought'),
@@ -15,7 +19,7 @@ export const cbtFormSchema = z.object({
       z.object({
         question: z.string(),
         answer: z.string().min(10, 'Please provide a thoughtful answer'),
-      }),
+      })
     )
     .optional(),
   rationalThoughts: z
@@ -27,7 +31,7 @@ export const cbtFormSchema = z.object({
         mode: z.string(),
         description: z.string(),
         intensity: z.number().min(0).max(10),
-      }),
+      })
     )
     .optional(),
   actionPlan: z
@@ -40,5 +44,3 @@ export const cbtFormSchema = z.object({
 });
 
 export type CBTFormData = z.infer<typeof cbtFormSchema>;
-
-

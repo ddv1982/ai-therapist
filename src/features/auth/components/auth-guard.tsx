@@ -26,9 +26,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
   // Show loading state while Clerk is initializing or redirecting
   if (!isLoaded || !userId) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="bg-background flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
           <p className="text-muted-foreground">Checking authentication...</p>
         </div>
       </div>

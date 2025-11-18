@@ -9,19 +9,9 @@ type LocalMemoryContext = {
   content: string;
 };
 
-import {
-  THERAPY_SYSTEM_PROMPT_EN,
-  REPORT_PROMPT_EN,
-  WEB_SEARCH_EN,
-  MEMORY_SECTION_EN,
-} from './en';
+import { THERAPY_SYSTEM_PROMPT_EN, REPORT_PROMPT_EN, WEB_SEARCH_EN, MEMORY_SECTION_EN } from './en';
 
-import {
-  THERAPY_SYSTEM_PROMPT_NL,
-  REPORT_PROMPT_NL,
-  WEB_SEARCH_NL,
-  MEMORY_SECTION_NL,
-} from './nl';
+import { THERAPY_SYSTEM_PROMPT_NL, REPORT_PROMPT_NL, WEB_SEARCH_NL, MEMORY_SECTION_NL } from './nl';
 
 import { buildTherapySystemPrompt, REPORT_GENERATION_PROMPT } from '../therapy-prompts';
 

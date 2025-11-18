@@ -1,7 +1,14 @@
 import { updateSessionSchema } from '@/lib/utils/validation';
 import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
-import { verifySessionOwnership, getSessionWithMessages } from '@/lib/repositories/session-repository';
-import { createSuccessResponse, createNotFoundErrorResponse } from '@/lib/api/api-response';
+import {
+  verifySessionOwnership,
+  getSessionWithMessages,
+} from '@/lib/repositories/session-repository';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  createNotFoundErrorResponse,
+} from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
@@ -18,11 +25,14 @@ export const PATCH = withValidationAndParams(
   updateSessionSchema,
   async (_request, context, validatedData, params) => {
     try {
-      const { sessionId } = await params as { sessionId: string };
+      const { sessionId } = (await params) as { sessionId: string };
       const { status, endedAt, title } = validatedData;
 
       // Verify session belongs to this user
-      const { valid } = await verifySessionOwnership(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
+      const { valid } = await verifySessionOwnership(
+        sessionId,
+        (context.userInfo as { clerkId?: string }).clerkId ?? ''
+      );
       if (!valid) {
         return createNotFoundErrorResponse('Session', context.requestId);
       }
@@ -47,7 +57,7 @@ export const PATCH = withValidationAndParams(
         requestId: context.requestId,
         sessionId,
         updatedFields: Object.keys(validatedData),
-        userId: context.userInfo.userId
+        userId: context.userInfo.userId,
       });
 
       const convexSession = updated as ConvexSession;
@@ -63,20 +73,24 @@ export const PATCH = withValidationAndParams(
       };
       return createSuccessResponse(mapped, { requestId: context.requestId });
     } catch (error) {
-      return enhancedErrorHandlers.handleDatabaseError(
-        error as Error,
-        'update session',
-        context
-      );
+      return enhancedErrorHandlers.handleDatabaseError(error as Error, 'update session', context);
     }
   }
 );
 
 export const GET = withAuth(async (_request, context, params) => {
   try {
-    const { sessionId } = await params as { sessionId: string };
+    const { sessionId } = (await params) as { sessionId: string };
 
-    const session = await getSessionWithMessages(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
+    // Validate session ID format
+    if (!sessionId || sessionId.length === 0) {
+      return createErrorResponse('Invalid session ID', 400, { requestId: context.requestId });
+    }
+
+    const session = await getSessionWithMessages(
+      sessionId,
+      (context.userInfo as { clerkId?: string }).clerkId ?? ''
+    );
 
     if (!session) {
       return createNotFoundErrorResponse('Session', context.requestId);
@@ -87,12 +101,12 @@ export const GET = withAuth(async (_request, context, params) => {
       requestId: context.requestId,
       sessionId,
       messageCount: sessionData.messages?.length ?? 0,
-      userId: (context.userInfo as { clerkId?: string }).clerkId ?? ''
+      userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
     });
 
     const mapped = {
       id: String(sessionData._id),
-        userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
       title: sessionData.title,
       status: sessionData.status,
       startedAt: new Date(sessionData.startedAt),
@@ -123,20 +137,34 @@ export const GET = withAuth(async (_request, context, params) => {
     };
     return createSuccessResponse(mapped, { requestId: context.requestId });
   } catch (error) {
-    return enhancedErrorHandlers.handleDatabaseError(
-      error as Error,
-      'fetch session',
-      context
-    );
+    // Handle Convex ID validation errors
+    if (
+      error instanceof Error &&
+      (error.message.includes('Invalid ID') || error.message.includes('invalid id'))
+    ) {
+      return createErrorResponse('Invalid session ID format', 404, {
+        requestId: context.requestId,
+      });
+    }
+
+    return enhancedErrorHandlers.handleDatabaseError(error as Error, 'fetch session', context);
   }
 });
 
 export const DELETE = withAuth(async (_request, context, params) => {
   try {
-    const { sessionId } = await params as { sessionId: string };
+    const { sessionId } = (await params) as { sessionId: string };
+
+    // Validate session ID format
+    if (!sessionId || sessionId.length === 0) {
+      return createErrorResponse('Invalid session ID', 400, { requestId: context.requestId });
+    }
 
     // Verify session belongs to this user before deleting
-    const { valid } = await verifySessionOwnership(sessionId, (context.userInfo as { clerkId?: string }).clerkId ?? '');
+    const { valid } = await verifySessionOwnership(
+      sessionId,
+      (context.userInfo as { clerkId?: string }).clerkId ?? ''
+    );
     if (!valid) {
       return createNotFoundErrorResponse('Session', context.requestId);
     }
@@ -147,15 +175,21 @@ export const DELETE = withAuth(async (_request, context, params) => {
     logger.info('Session deleted successfully', {
       requestId: context.requestId,
       sessionId,
-      userId: (context.userInfo as { clerkId?: string }).clerkId ?? ''
+      userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
     });
 
     return createSuccessResponse({ success: true }, { requestId: context.requestId });
   } catch (error) {
-    return enhancedErrorHandlers.handleDatabaseError(
-      error as Error,
-      'delete session',
-      context
-    );
+    // Handle Convex ID validation errors
+    if (
+      error instanceof Error &&
+      (error.message.includes('Invalid ID') || error.message.includes('invalid id'))
+    ) {
+      return createErrorResponse('Invalid session ID format', 404, {
+        requestId: context.requestId,
+      });
+    }
+
+    return enhancedErrorHandlers.handleDatabaseError(error as Error, 'delete session', context);
   }
 });

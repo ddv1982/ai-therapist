@@ -92,7 +92,9 @@ const cbtSlice = createSlice({
     },
     saveDraft: (state) => {
       if (!state.currentDraft) return;
-      const existingDraftIndex = state.savedDrafts.findIndex((draft) => draft.id === state.currentDraft!.id);
+      const existingDraftIndex = state.savedDrafts.findIndex(
+        (draft) => draft.id === state.currentDraft!.id
+      );
       if (existingDraftIndex >= 0) {
         state.savedDrafts[existingDraftIndex] = { ...state.currentDraft };
       } else {

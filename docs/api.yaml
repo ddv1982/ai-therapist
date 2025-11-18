@@ -3,20 +3,20 @@ info:
   title: AI Therapist API
   description: |
     A comprehensive API for a therapeutic AI chat application that provides compassionate mental health support through AI conversation.
-    
+
     ## Features
     - Real-time streaming chat responses
     - Session management for conversation continuity
     - Professional report generation and email delivery
     - Comprehensive validation and error handling
     - Mobile-optimized responsive design
-    
+
     ## Security
     - CORS protection
     - Input validation with Zod schemas
     - Rate limiting considerations
     - Secure API key handling
-    
+
     ## Authentication
     The application authenticates requests using a cookie-backed session bound to a trusted device
     (TOTP-based verification with device fingerprinting). Client requests include the session cookie;
@@ -58,8 +58,8 @@ paths:
                   messages:
                     - role: user
                       content: "I'm feeling anxious about work"
-                  apiKey: "your-groq-api-key"
-                  model: "openai/gpt-oss-120b"
+                  apiKey: 'your-groq-api-key'
+                  model: 'openai/gpt-oss-120b'
                   temperature: 0.7
                   maxTokens: 2000
                   topP: 0.9
@@ -83,9 +83,9 @@ paths:
                   summary: Streaming response format
                   value: |
                     data: {"choices":[{"delta":{"content":"I understand you're feeling anxious about work. "}}]}
-                    
+
                     data: {"choices":[{"delta":{"content":"That's a very common experience. "}}]}
-                    
+
                     data: [DONE]
         400:
           $ref: '#/components/responses/BadRequest'
@@ -118,7 +118,7 @@ paths:
                       $ref: '#/components/schemas/Session'
         500:
           $ref: '#/components/responses/InternalServerError'
-    
+
     post:
       summary: Create a new chat session
       description: Creates a new therapeutic chat session with a specified title
@@ -134,7 +134,7 @@ paths:
               new_session:
                 summary: Create new session
                 value:
-                  title: "Anxiety Management Session"
+                  title: 'Anxiety Management Session'
       responses:
         200:
           description: Created session
@@ -243,7 +243,7 @@ paths:
             type: string
             format: uuid
           description: UUID of the session to delete
-          example: "123e4567-e89b-12d3-a456-426614174000"
+          example: '123e4567-e89b-12d3-a456-426614174000'
       responses:
         200:
           description: Session deleted successfully
@@ -260,7 +260,7 @@ paths:
                     example: true
                   message:
                     type: string
-                    example: "Session deleted successfully"
+                    example: 'Session deleted successfully'
         404:
           description: Session not found
           headers:
@@ -375,7 +375,7 @@ paths:
                 value:
                   role: assistant
                   content: "I hear you. Let's explore that together."
-                  modelUsed: "openai/gpt-oss-20b"
+                  modelUsed: 'openai/gpt-oss-20b'
       responses:
         200:
           description: Message saved successfully
@@ -430,14 +430,14 @@ paths:
               report_request:
                 summary: Generate report
                 value:
-                  sessionId: "123e4567-e89b-12d3-a456-426614174000"
+                  sessionId: '123e4567-e89b-12d3-a456-426614174000'
                   messages:
                     - role: user
                       content: "I've been feeling overwhelmed lately"
-                      sessionId: "123e4567-e89b-12d3-a456-426614174000"
+                      sessionId: '123e4567-e89b-12d3-a456-426614174000'
                     - role: assistant
                       content: "I hear that you're feeling overwhelmed..."
-                      sessionId: "123e4567-e89b-12d3-a456-426614174000"
+                      sessionId: '123e4567-e89b-12d3-a456-426614174000'
       responses:
         200:
           description: Generated report
@@ -473,29 +473,29 @@ paths:
               smtp_email:
                 summary: Send via SMTP
                 value:
-                  sessionId: "123e4567-e89b-12d3-a456-426614174000"
-                  emailAddress: "user@example.com"
+                  sessionId: '123e4567-e89b-12d3-a456-426614174000'
+                  emailAddress: 'user@example.com'
                   messages:
                     - role: user
-                      content: "I need help with anxiety"
-                      sessionId: "123e4567-e89b-12d3-a456-426614174000"
+                      content: 'I need help with anxiety'
+                      sessionId: '123e4567-e89b-12d3-a456-426614174000'
                   emailConfig:
-                    service: "smtp"
-                    smtpHost: "smtp.gmail.com"
-                    smtpUser: "your-email@gmail.com"
-                    smtpPass: "your-app-password"
-                    fromEmail: "therapist@example.com"
+                    service: 'smtp'
+                    smtpHost: 'smtp.gmail.com'
+                    smtpUser: 'your-email@gmail.com'
+                    smtpPass: 'your-app-password'
+                    fromEmail: 'therapist@example.com'
               console_log:
                 summary: Console logging (testing)
                 value:
-                  sessionId: "123e4567-e89b-12d3-a456-426614174000"
-                  emailAddress: "test@example.com"
+                  sessionId: '123e4567-e89b-12d3-a456-426614174000'
+                  emailAddress: 'test@example.com'
                   messages:
                     - role: user
-                      content: "Test message"
-                      sessionId: "123e4567-e89b-12d3-a456-426614174000"
+                      content: 'Test message'
+                      sessionId: '123e4567-e89b-12d3-a456-426614174000'
                   emailConfig:
-                    service: "console"
+                    service: 'console'
       responses:
         200:
           description: Report sent successfully
@@ -514,7 +514,7 @@ paths:
                     example: true
                   message:
                     type: string
-                    example: "Report generated and sent successfully"
+                    example: 'Report generated and sent successfully'
         400:
           $ref: '#/components/responses/BadRequest'
         500:
@@ -617,16 +617,16 @@ paths:
                   summary: Available models
                   value:
                     models:
-                      - id: "openai/gpt-oss-120b"
-                        name: "GPT OSS 120B (Deep Analysis)"
-                        provider: "Groq"
+                      - id: 'openai/gpt-oss-120b'
+                        name: 'GPT OSS 120B (Deep Analysis)'
+                        provider: 'Groq'
                         maxTokens: 32000
-                        category: "featured"
-                      - id: "openai/gpt-oss-20b"
-                        name: "GPT OSS 20B"
-                        provider: "Groq"
+                        category: 'featured'
+                      - id: 'openai/gpt-oss-20b'
+                        name: 'GPT OSS 20B'
+                        provider: 'Groq'
                         maxTokens: 32000
-                        category: "production"
+                        category: 'production'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -1012,7 +1012,7 @@ components:
           type: string
           format: uuid
           description: Unique identifier for the message
-          example: "msg-123e4567-e89b-12d3-a456-426614174000"
+          example: 'msg-123e4567-e89b-12d3-a456-426614174000'
         role:
           type: string
           enum: [user, assistant]
@@ -1064,17 +1064,17 @@ components:
           type: string
           format: uuid
           description: Unique session identifier
-          example: "123e4567-e89b-12d3-a456-426614174000"
+          example: '123e4567-e89b-12d3-a456-426614174000'
         userId:
           type: string
           description: User identifier (currently uses default user)
-          example: "default-user-id"
+          example: 'default-user-id'
         title:
           type: string
           minLength: 1
           maxLength: 200
           description: Human-readable session title
-          example: "Managing Work Stress"
+          example: 'Managing Work Stress'
         status:
           type: string
           enum: [active, completed]
@@ -1156,15 +1156,15 @@ components:
         id:
           type: string
           description: Model identifier used in API calls
-          example: "openai/gpt-oss-120b"
+          example: 'openai/gpt-oss-120b'
         name:
           type: string
           description: Human-readable model name
-          example: "GPT OSS 120B"
+          example: 'GPT OSS 120B'
         provider:
           type: string
           description: Model provider/company
-          example: "OpenAI"
+          example: 'OpenAI'
         maxTokens:
           type: integer
           minimum: 256
@@ -1175,7 +1175,7 @@ components:
           type: string
           enum: [featured, production, preview]
           description: Model category/stability level
-          example: "featured"
+          example: 'featured'
 
     ChatRequest:
       type: object
@@ -1200,7 +1200,7 @@ components:
         model:
           type: string
           description: AI model to use
-          example: "openai/gpt-oss-120b"
+          example: 'openai/gpt-oss-120b'
         apiKey:
           type: string
           description: Groq API key (if not set in environment)
@@ -1233,7 +1233,7 @@ components:
           minLength: 1
           maxLength: 200
           description: Session title
-          example: "Managing Anxiety and Stress"
+          example: 'Managing Anxiety and Stress'
 
     EmailReportRequest:
       type: object
@@ -1257,11 +1257,11 @@ components:
           format: email
           maxLength: 254
           description: Recipient email address
-          example: "user@example.com"
+          example: 'user@example.com'
         model:
           type: string
           description: AI model for report generation
-          example: "openai/gpt-oss-120b"
+          example: 'openai/gpt-oss-120b'
         emailConfig:
           type: object
           properties:
@@ -1272,7 +1272,7 @@ components:
             smtpHost:
               type: string
               description: SMTP server hostname
-              example: "smtp.gmail.com"
+              example: 'smtp.gmail.com'
             smtpUser:
               type: string
               format: email
@@ -1293,19 +1293,19 @@ components:
         error:
           type: string
           description: Error message
-          example: "Validation failed"
+          example: 'Validation failed'
         details:
           type: string
           description: Detailed error information
-          example: "Invalid email address format"
+          example: 'Invalid email address format'
         code:
           type: string
           description: Error code for programmatic handling
-          example: "VALIDATION_ERROR"
+          example: 'VALIDATION_ERROR'
         suggestedAction:
           type: string
           description: Suggested action to resolve the error
-          example: "Please check your input and try again"
+          example: 'Please check your input and try again'
 
   responses:
     BadRequest:
@@ -1323,15 +1323,15 @@ components:
             validation_error:
               summary: Validation error
               value:
-                error: "Invalid request data"
-                details: "emailAddress: Invalid email address format"
-                code: "VALIDATION_ERROR"
+                error: 'Invalid request data'
+                details: 'emailAddress: Invalid email address format'
+                code: 'VALIDATION_ERROR'
             missing_field:
               summary: Missing required field
               value:
-                error: "Missing required field"
-                details: "Session ID is required"
-                code: "MISSING_FIELD"
+                error: 'Missing required field'
+                details: 'Session ID is required'
+                code: 'MISSING_FIELD'
 
     InternalServerError:
       description: Internal server error
@@ -1348,15 +1348,15 @@ components:
             server_error:
               summary: Generic server error
               value:
-                error: "Internal server error"
-                details: "An unexpected error occurred"
-                code: "INTERNAL_ERROR"
+                error: 'Internal server error'
+                details: 'An unexpected error occurred'
+                code: 'INTERNAL_ERROR'
             database_error:
               summary: Database error
               value:
-                error: "Failed to create session"
-                details: "Unable to create a new therapy session. Please try again."
-                code: "SESSION_CREATE_ERROR"
+                error: 'Failed to create session'
+                details: 'Unable to create a new therapy session. Please try again.'
+                code: 'SESSION_CREATE_ERROR'
 
   securitySchemes:
     ApiKeyAuth:

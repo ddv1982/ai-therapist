@@ -1,4 +1,3 @@
-import React from 'react';
 import { render } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { DiaryProgress } from '@/features/therapy/cbt/components/diary-progress';
@@ -27,4 +26,3 @@ describe('DiaryProgress', () => {
     expect(container).toMatchSnapshot();
   });
 });
-

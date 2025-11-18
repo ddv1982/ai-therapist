@@ -12,7 +12,7 @@ import {
   createValidationErrorResponse,
   createForbiddenErrorResponse,
   createAuthenticationErrorResponse,
-  ApiResponse
+  ApiResponse,
 } from '@/lib/api/api-response';
 import { getPublicEnv } from '@/config/env.public';
 
@@ -23,7 +23,14 @@ const runtimeIsDevelopment = () => getPublicEnv().NODE_ENV === 'development';
 // ============================================================================
 
 export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
-export type ErrorCategory = 'authentication' | 'validation' | 'database' | 'external_api' | 'permission' | 'business_logic' | 'system';
+export type ErrorCategory =
+  | 'authentication'
+  | 'validation'
+  | 'database'
+  | 'external_api'
+  | 'permission'
+  | 'business_logic'
+  | 'system';
 
 export interface EnhancedErrorContext {
   requestId?: string;
@@ -118,7 +125,7 @@ export const TherapeuticErrorPatterns = {
     userMessage: 'The therapeutic session could not be found. Please start a new session.',
     statusCode: 404,
   },
-  
+
   SESSION_ACCESS_DENIED: {
     message: 'Session access denied for user',
     category: 'permission' as ErrorCategory,
@@ -126,7 +133,7 @@ export const TherapeuticErrorPatterns = {
     userMessage: 'You do not have permission to access this session.',
     statusCode: 403,
   },
-  
+
   // Message-related errors
   MESSAGE_ENCRYPTION_FAILED: {
     message: 'Failed to encrypt therapeutic message',
@@ -135,7 +142,7 @@ export const TherapeuticErrorPatterns = {
     userMessage: 'Unable to secure your message. Please try again.',
     statusCode: 500,
   },
-  
+
   MESSAGE_DECRYPTION_FAILED: {
     message: 'Failed to decrypt therapeutic message',
     category: 'system' as ErrorCategory,
@@ -143,7 +150,7 @@ export const TherapeuticErrorPatterns = {
     userMessage: 'Unable to retrieve your message. Please contact support if this persists.',
     statusCode: 500,
   },
-  
+
   // AI/API-related errors
   AI_MODEL_UNAVAILABLE: {
     message: 'Selected AI model is not available',
@@ -153,7 +160,7 @@ export const TherapeuticErrorPatterns = {
     statusCode: 503,
     shouldRetry: true,
   },
-  
+
   AI_RESPONSE_TIMEOUT: {
     message: 'AI response timeout exceeded',
     category: 'external_api' as ErrorCategory,
@@ -162,7 +169,7 @@ export const TherapeuticErrorPatterns = {
     statusCode: 504,
     shouldRetry: true,
   },
-  
+
   // Authentication errors
   AUTH_TOKEN_INVALID: {
     message: 'Authentication token is invalid or expired',
@@ -171,7 +178,7 @@ export const TherapeuticErrorPatterns = {
     userMessage: 'Your session has expired. Please log in again.',
     statusCode: 401,
   },
-  
+
   TOTP_VERIFICATION_FAILED: {
     message: 'TOTP verification failed',
     category: 'authentication' as ErrorCategory,
@@ -179,7 +186,7 @@ export const TherapeuticErrorPatterns = {
     userMessage: 'Authentication code is incorrect. Please try again.',
     statusCode: 401,
   },
-  
+
   // Rate limiting errors
   RATE_LIMIT_EXCEEDED: {
     message: 'Rate limit exceeded for therapeutic sessions',
@@ -203,28 +210,41 @@ export function classifyError(error: Error | unknown): {
   severity: ErrorSeverity;
   isRetryable: boolean;
 } {
-  const errorMessage = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
-  
+  const errorMessage =
+    error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+
   // Database errors
   if (errorMessage.includes('database') || errorMessage.includes('sqlite')) {
     return { category: 'database', severity: 'high', isRetryable: false };
   }
-  
+
   // External API errors
-  if (errorMessage.includes('groq') || errorMessage.includes('api') || errorMessage.includes('fetch')) {
+  if (
+    errorMessage.includes('groq') ||
+    errorMessage.includes('api') ||
+    errorMessage.includes('fetch')
+  ) {
     return { category: 'external_api', severity: 'medium', isRetryable: true };
   }
-  
+
   // Authentication errors
-  if (errorMessage.includes('auth') || errorMessage.includes('token') || errorMessage.includes('unauthorized')) {
+  if (
+    errorMessage.includes('auth') ||
+    errorMessage.includes('token') ||
+    errorMessage.includes('unauthorized')
+  ) {
     return { category: 'authentication', severity: 'high', isRetryable: false };
   }
-  
+
   // Validation errors
-  if (errorMessage.includes('validation') || errorMessage.includes('invalid') || errorMessage.includes('required')) {
+  if (
+    errorMessage.includes('validation') ||
+    errorMessage.includes('invalid') ||
+    errorMessage.includes('required')
+  ) {
     return { category: 'validation', severity: 'low', isRetryable: false };
   }
-  
+
   // Default classification
   return { category: 'system', severity: 'medium', isRetryable: false };
 }
@@ -235,15 +255,15 @@ export function classifyError(error: Error | unknown): {
 export function shouldLogError(severity: ErrorSeverity, category: ErrorCategory): boolean {
   // Always log critical and high severity errors
   if (severity === 'critical' || severity === 'high') return true;
-  
+
   // Log medium severity for system and database errors
   if (severity === 'medium' && (category === 'system' || category === 'database')) return true;
-  
+
   // Skip low severity validation errors unless in development
   if (severity === 'low' && category === 'validation') {
     return runtimeIsDevelopment();
   }
-  
+
   return true;
 }
 
@@ -260,14 +280,14 @@ export function handleApiError(
 ): NextResponse<ApiResponse> {
   const actualError = error instanceof Error ? error : new Error(String(error));
   const classification = classifyError(actualError);
-  
+
   const enhancedContext: EnhancedErrorContext = {
     ...context,
     category: context.category || classification.category,
     severity: context.severity || classification.severity,
     shouldRetry: context.shouldRetry ?? classification.isRetryable,
   };
-  
+
   // Log error if appropriate
   if (shouldLogError(enhancedContext.severity!, enhancedContext.category!)) {
     const logEntry: ErrorLogEntry = {
@@ -276,7 +296,7 @@ export function handleApiError(
       timestamp: new Date().toISOString(),
       stackTrace: actualError.stack,
     };
-    
+
     logger.error(`API Error [${enhancedContext.category}/${enhancedContext.severity}]`, {
       ...logEntry,
       errorMessage: actualError.message,
@@ -291,7 +311,7 @@ export function handleApiError(
       { requestId: context.requestId }
     );
   }
-  
+
   // Return appropriate response based on category
   switch (enhancedContext.category) {
     case 'authentication':
@@ -299,30 +319,26 @@ export function handleApiError(
         enhancedContext.userMessage || actualError.message || 'Authentication required',
         context.requestId
       );
-      
+
     case 'validation':
       return createValidationErrorResponse(
         enhancedContext.userMessage || actualError.message,
         context.requestId
       );
-      
+
     case 'permission':
       return createForbiddenErrorResponse(
         enhancedContext.userMessage || 'Access denied',
         context.requestId
       );
-      
+
     default:
-      return createServerErrorResponse(
-        actualError,
-        context.requestId,
-        {
-          category: enhancedContext.category,
-          severity: enhancedContext.severity,
-          shouldRetry: enhancedContext.shouldRetry,
-          userMessage: enhancedContext.userMessage,
-        }
-      );
+      return createServerErrorResponse(actualError, context.requestId, {
+        category: enhancedContext.category,
+        severity: enhancedContext.severity,
+        shouldRetry: enhancedContext.shouldRetry,
+        userMessage: enhancedContext.userMessage,
+      });
   }
 }
 
@@ -340,17 +356,18 @@ export function handleMessageError(
     category: 'system',
     severity: 'high',
   };
-  
+
   // Map operation to specific error patterns
   if (operation === 'encrypt' || operation === 'decrypt') {
-    const pattern = operation === 'encrypt' 
-      ? TherapeuticErrorPatterns.MESSAGE_ENCRYPTION_FAILED
-      : TherapeuticErrorPatterns.MESSAGE_DECRYPTION_FAILED;
-      
+    const pattern =
+      operation === 'encrypt'
+        ? TherapeuticErrorPatterns.MESSAGE_ENCRYPTION_FAILED
+        : TherapeuticErrorPatterns.MESSAGE_DECRYPTION_FAILED;
+
     enhancedContext.userMessage = pattern.userMessage;
     enhancedContext.severity = pattern.severity;
   }
-  
+
   return handleApiError(error, enhancedContext);
 }
 
@@ -368,13 +385,13 @@ export function handleSessionError(
     category: 'permission',
     severity: 'medium',
   };
-  
+
   // Check if this is an access denied scenario
   const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
   if (errorMessage.includes('not found') || errorMessage.includes('access denied')) {
     enhancedContext.userMessage = TherapeuticErrorPatterns.SESSION_NOT_FOUND.userMessage;
   }
-  
+
   return handleApiError(error, enhancedContext);
 }
 
@@ -386,14 +403,14 @@ export function handleAIError(
   context: Partial<EnhancedErrorContext> = {}
 ): NextResponse<ApiResponse> {
   const errorMessage = error instanceof Error ? error.message.toLowerCase() : '';
-  
+
   const enhancedContext: EnhancedErrorContext = {
     ...context,
     category: 'external_api',
     severity: 'medium',
     shouldRetry: true,
   };
-  
+
   // Map specific AI error patterns
   if (errorMessage.includes('model_not_found') || errorMessage.includes('model not available')) {
     enhancedContext.userMessage = TherapeuticErrorPatterns.AI_MODEL_UNAVAILABLE.userMessage;
@@ -401,9 +418,10 @@ export function handleAIError(
     enhancedContext.userMessage = TherapeuticErrorPatterns.AI_RESPONSE_TIMEOUT.userMessage;
     enhancedContext.severity = 'low';
   } else {
-    enhancedContext.userMessage = 'The AI service is temporarily unavailable. Please try again in a moment.';
+    enhancedContext.userMessage =
+      'The AI service is temporarily unavailable. Please try again in a moment.';
   }
-  
+
   return handleApiError(error, enhancedContext);
 }
 
@@ -430,28 +448,31 @@ export function handleClientError(
   const classification = classifyError(error);
   const errorMessage = error instanceof Error ? error.message : String(error);
   const lower = errorMessage.toLowerCase();
-  
+
   // Determine user-friendly message
   let userMessage = context.fallbackMessage || 'An unexpected error occurred. Please try again.';
-  
-  const isNetworkIssue = (
+
+  const isNetworkIssue =
     lower.includes('network') ||
     lower.includes('failed to fetch') ||
     lower.includes('fetch') ||
     lower.includes('unreachable') ||
     lower.includes('econn') ||
     lower.includes('net::err') ||
-    lower.includes('offline')
-  );
+    lower.includes('offline');
 
   if (isNetworkIssue) {
     userMessage = 'Network connection issue. Please check your internet connection.';
   } else if (lower.includes('timeout') || lower.includes('timed out')) {
     userMessage = 'The request timed out. Please try again.';
-  } else if (lower.includes('authentication') || lower.includes('unauthorized') || lower.includes('forbidden')) {
+  } else if (
+    lower.includes('authentication') ||
+    lower.includes('unauthorized') ||
+    lower.includes('forbidden')
+  ) {
     userMessage = 'Please log in again to continue.';
   }
-  
+
   // Log client errors if in development
   if (runtimeIsDevelopment()) {
     logger.error('Client error encountered', {
@@ -459,10 +480,10 @@ export function handleClientError(
       errorMessage,
       category: classification.category,
       severity: classification.severity,
-      errorContext: context
+      errorContext: context,
     });
   }
-  
+
   return {
     userMessage,
     shouldRetry: classification.isRetryable,
@@ -489,11 +510,11 @@ export async function withErrorHandling<T>(
       operation: context.operationName,
       fallbackMessage: context.fallbackMessage,
     });
-    
+
     if (context.onError) {
       context.onError(error as Error);
     }
-    
+
     return { error: result.userMessage };
   }
 }
@@ -508,8 +529,8 @@ export async function withErrorHandling<T>(
  */
 export const enhancedErrorHandlers = {
   handleDatabaseError: (
-    error: Error, 
-    operation: string, 
+    error: Error,
+    operation: string,
     context: RequestContext | Partial<EnhancedErrorContext>
   ) => {
     return handleApiError(error, {
@@ -519,7 +540,7 @@ export const enhancedErrorHandlers = {
       severity: 'high',
     });
   },
-  
+
   handleValidationError: (
     error: Error,
     context: RequestContext | Partial<EnhancedErrorContext>
@@ -530,11 +551,8 @@ export const enhancedErrorHandlers = {
       severity: 'low',
     });
   },
-  
-  handleAuthError: (
-    error: Error,
-    context: RequestContext | Partial<EnhancedErrorContext>
-  ) => {
+
+  handleAuthError: (error: Error, context: RequestContext | Partial<EnhancedErrorContext>) => {
     return handleApiError(error, {
       ...context,
       category: 'authentication',

@@ -1,4 +1,3 @@
-import React from 'react';
 import { screen } from '@testing-library/react';
 import { ComponentTestUtils } from '__tests__/utils/test-utilities';
 // Render a minimal shell that includes only the messages container to avoid

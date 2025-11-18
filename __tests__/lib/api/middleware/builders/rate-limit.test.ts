@@ -2,7 +2,8 @@ import { NextRequest } from 'next/server';
 import { buildRateLimit } from '@/lib/api/middleware/builders/rate-limit';
 import type { RequestContext } from '@/lib/api/middleware/factory';
 
-const { createSuccessResponse } = jest.requireActual<typeof import('@/lib/api/api-response')>('@/lib/api/api-response');
+const { createSuccessResponse } =
+  jest.requireActual<typeof import('@/lib/api/api-response')>('@/lib/api/api-response');
 
 const originalNodeEnv = process.env.NODE_ENV;
 const setNodeEnv = (value: string | undefined) => {
@@ -31,7 +32,7 @@ describe('rate-limit builder', () => {
     mockGetClientIP = jest.fn(() => '192.168.1.1');
     mockCheckRateLimit = jest.fn(async () => ({ allowed: true }));
     mockGetRateLimiter = jest.fn(() => ({ checkRateLimit: mockCheckRateLimit }));
-    
+
     mockWithApiMiddleware = jest.fn((handler) => {
       capturedHandler = handler;
       return async (request: NextRequest) => {

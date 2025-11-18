@@ -1,4 +1,10 @@
-import { getMetricsSnapshot, recordEndpointError, recordEndpointLatency, recordEndpointSuccess, recordModelUsage } from '@/lib/metrics/metrics';
+import {
+  getMetricsSnapshot,
+  recordEndpointError,
+  recordEndpointLatency,
+  recordEndpointSuccess,
+  recordModelUsage,
+} from '@/lib/metrics/metrics';
 
 describe('metrics', () => {
   it('records successes and errors per endpoint', () => {

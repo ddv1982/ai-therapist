@@ -28,8 +28,12 @@ const createNoopStorage = () => {
       return Promise.resolve();
     },
     clear() {},
-    key() { return null; },
-    get length() { return 0; },
+    key() {
+      return null;
+    },
+    get length() {
+      return 0;
+    },
   } as unknown as Storage;
 };
 
@@ -38,10 +42,10 @@ const safeStorage: Storage =
     ? createNoopStorage()
     : (() => {
         try {
-          return (createWebStorage('local') as unknown) as Storage;
+          return createWebStorage('local') as unknown as Storage;
         } catch {
           try {
-            return (createWebStorage('session') as unknown) as Storage;
+            return createWebStorage('session') as unknown as Storage;
           } catch {
             return createNoopStorage();
           }
@@ -66,11 +70,7 @@ export const store = configureStore({
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE', 'persist/REGISTER'],
         ignoredPaths: ['_persist'],
       },
-    })
-      .concat(
-        sessionsApi.middleware,
-        sessionHeartbeatMiddleware,
-      ),
+    }).concat(sessionsApi.middleware, sessionHeartbeatMiddleware),
 });
 
 setupListeners(store.dispatch);

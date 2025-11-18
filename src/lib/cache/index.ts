@@ -1,6 +1,6 @@
 /**
  * Redis Caching System - Main Export
- * 
+ *
  * Centralized export for all caching utilities, decorators, and implementations
  * for the AI Therapist application.
  */
@@ -19,7 +19,7 @@ export {
   withQueryCache,
   warmUpCache,
   BatchCache,
-  batchCache
+  batchCache,
 } from './cache-decorators';
 
 // API-specific caching implementations
@@ -35,21 +35,12 @@ export {
   CacheWarmer,
   CacheHealthMonitor,
   CACHE_TTL,
-  CACHE_KEYS
+  CACHE_KEYS,
 } from './api-cache';
 
 // Types
-export type {
-  CacheOptions,
-  CacheStats,
-  CacheKeyOptions
-} from './cache-utils';
+export type { CacheOptions, CacheStats, CacheKeyOptions } from './cache-utils';
 
-export type {
-  CacheDecoratorOptions
-} from './cache-decorators';
+export type { CacheDecoratorOptions } from './cache-decorators';
 
-export type {
-  RedisConfig,
-  RedisClientType
-} from './redis-client';
+export type { RedisConfig, RedisClientType } from './redis-client';

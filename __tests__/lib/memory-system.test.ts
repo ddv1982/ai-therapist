@@ -1,48 +1,60 @@
 /**
  * Memory System Unit Tests
- * 
+ *
  * Tests the core memory system functionality without complex API mocking
  */
 
-import { buildMemoryEnhancedPrompt, THERAPY_SYSTEM_PROMPT, type MemoryContext } from '@/lib/therapy/therapy-prompts';
+import {
+  buildMemoryEnhancedPrompt,
+  THERAPY_SYSTEM_PROMPT,
+  type MemoryContext,
+} from '@/lib/therapy/therapy-prompts';
 
 // Mock the message encryption module
 jest.mock('@/lib/chat/message-encryption', () => ({
   encryptSessionReportContent: jest.fn((content: string) => `encrypted_${content}`),
-  decryptSessionReportContent: jest.fn((encryptedContent: string) => 
-    encryptedContent.replace('encrypted_', '')),
+  decryptSessionReportContent: jest.fn((encryptedContent: string) =>
+    encryptedContent.replace('encrypted_', '')
+  ),
   encryptEnhancedAnalysisData: jest.fn(() => ({
     cognitiveDistortions: 'encrypted_distortions',
     schemaAnalysis: 'encrypted_schema',
     therapeuticFrameworks: 'encrypted_frameworks',
-    recommendations: 'encrypted_recommendations'
-  }))
+    recommendations: 'encrypted_recommendations',
+  })),
 }));
 
 // Import the mocked functions
-import { 
-  encryptSessionReportContent, 
+import {
+  encryptSessionReportContent,
   decryptSessionReportContent,
-  encryptEnhancedAnalysisData 
+  encryptEnhancedAnalysisData,
 } from '@/lib/chat/message-encryption';
 
-const mockEncryptSessionReportContent = encryptSessionReportContent as jest.MockedFunction<typeof encryptSessionReportContent>;
-const mockDecryptSessionReportContent = decryptSessionReportContent as jest.MockedFunction<typeof decryptSessionReportContent>;
-const mockEncryptEnhancedAnalysisData = encryptEnhancedAnalysisData as jest.MockedFunction<typeof encryptEnhancedAnalysisData>;
+const mockEncryptSessionReportContent = encryptSessionReportContent as jest.MockedFunction<
+  typeof encryptSessionReportContent
+>;
+const mockDecryptSessionReportContent = decryptSessionReportContent as jest.MockedFunction<
+  typeof decryptSessionReportContent
+>;
+const mockEncryptEnhancedAnalysisData = encryptEnhancedAnalysisData as jest.MockedFunction<
+  typeof encryptEnhancedAnalysisData
+>;
 
 describe('Memory System Core Functionality', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Reset mock implementations
     mockEncryptSessionReportContent.mockImplementation((content: string) => `encrypted_${content}`);
-    mockDecryptSessionReportContent.mockImplementation((encryptedContent: string) => 
-      encryptedContent.replace('encrypted_', ''));
+    mockDecryptSessionReportContent.mockImplementation((encryptedContent: string) =>
+      encryptedContent.replace('encrypted_', '')
+    );
     mockEncryptEnhancedAnalysisData.mockReturnValue({
       cognitiveDistortions: 'encrypted_distortions',
       schemaAnalysis: 'encrypted_schema',
       therapeuticFrameworks: 'encrypted_frameworks',
-      recommendations: 'encrypted_recommendations'
+      recommendations: 'encrypted_recommendations',
     });
   });
 
@@ -54,8 +66,9 @@ describe('Memory System Core Functionality', () => {
           sessionDate: '2025-08-09',
           reportDate: '2025-08-09',
           content: 'Full therapeutic report content here...',
-          summary: 'Key insights: Client shows catastrophic thinking patterns. Therapeutic focus: CBT techniques for anxiety management.'
-        }
+          summary:
+            'Key insights: Client shows catastrophic thinking patterns. Therapeutic focus: CBT techniques for anxiety management.',
+        },
       ];
 
       const prompt = buildMemoryEnhancedPrompt(memoryContext);
@@ -74,15 +87,15 @@ describe('Memory System Core Functionality', () => {
           sessionDate: '2025-08-07',
           reportDate: '2025-08-07',
           content: 'Content 1',
-          summary: 'Summary 1'
+          summary: 'Summary 1',
         },
         {
           sessionTitle: 'Session 2',
           sessionDate: '2025-08-08',
           reportDate: '2025-08-08',
           content: 'Content 2',
-          summary: 'Summary 2'
-        }
+          summary: 'Summary 2',
+        },
       ];
 
       const prompt = buildMemoryEnhancedPrompt(memoryContext);
@@ -103,8 +116,8 @@ describe('Memory System Core Functionality', () => {
           sessionDate: '2025-08-09',
           reportDate: '2025-08-09',
           content: 'Test content',
-          summary: 'Test summary'
-        }
+          summary: 'Test summary',
+        },
       ];
 
       const prompt = buildMemoryEnhancedPrompt(memoryContext);
@@ -120,16 +133,18 @@ describe('Memory System Core Functionality', () => {
       const memoryContexts = [
         [],
         undefined as any,
-        [{
-          sessionTitle: '',
-          sessionDate: '',
-          reportDate: '',
-          content: '',
-          summary: ''
-        }]
+        [
+          {
+            sessionTitle: '',
+            sessionDate: '',
+            reportDate: '',
+            content: '',
+            summary: '',
+          },
+        ],
       ];
 
-      memoryContexts.forEach(context => {
+      memoryContexts.forEach((context) => {
         expect(() => {
           const prompt = buildMemoryEnhancedPrompt(context);
           expect(typeof prompt).toBe('string');
@@ -144,8 +159,8 @@ describe('Memory System Core Functionality', () => {
           sessionDate: '2025-08-09',
           reportDate: '2025-08-09',
           content: 'Content with <tags> and &amp; entities',
-          summary: 'Summary with "complex" punctuation & symbols!'
-        }
+          summary: 'Summary with "complex" punctuation & symbols!',
+        },
       ];
 
       const prompt = buildMemoryEnhancedPrompt(memoryContext);
@@ -161,8 +176,8 @@ describe('Memory System Core Functionality', () => {
           sessionDate: '2025-08-09',
           reportDate: '2025-08-09',
           content: 'Test content',
-          summary: 'Test summary'
-        }
+          summary: 'Test summary',
+        },
       ];
 
       const prompt = buildMemoryEnhancedPrompt(memoryContext);
@@ -195,7 +210,7 @@ describe('Memory System Core Functionality', () => {
         cognitiveDistortions: [{ name: 'catastrophizing', severity: 'high' }],
         schemaAnalysis: { activeModes: ['vulnerable child'] },
         therapeuticFrameworks: [{ name: 'CBT', applicability: 'high' }],
-        recommendations: [{ technique: 'thought records', urgency: 'high' }]
+        recommendations: [{ technique: 'thought records', urgency: 'high' }],
       };
 
       const encrypted = mockEncryptEnhancedAnalysisData(analysisData);
@@ -204,7 +219,7 @@ describe('Memory System Core Functionality', () => {
         cognitiveDistortions: 'encrypted_distortions',
         schemaAnalysis: 'encrypted_schema',
         therapeuticFrameworks: 'encrypted_frameworks',
-        recommendations: 'encrypted_recommendations'
+        recommendations: 'encrypted_recommendations',
       });
     });
   });
@@ -216,7 +231,7 @@ describe('Memory System Core Functionality', () => {
         sessionDate: '2025-08-09',
         reportDate: '2025-08-09',
         content: 'Valid therapeutic content',
-        summary: 'Valid summary'
+        summary: 'Valid summary',
       };
 
       // Test that all required fields are present
@@ -225,7 +240,7 @@ describe('Memory System Core Functionality', () => {
         sessionDate: expect.any(String),
         reportDate: expect.any(String),
         content: expect.any(String),
-        summary: expect.any(String)
+        summary: expect.any(String),
       });
     });
 
@@ -236,8 +251,8 @@ describe('Memory System Core Functionality', () => {
           sessionDate: '2025-08-09',
           reportDate: '2025-08-09',
           content: 'Content',
-          summary: 'Summary'
-        }
+          summary: 'Summary',
+        },
       ];
 
       const prompt = buildMemoryEnhancedPrompt(memoryContext);
@@ -254,7 +269,7 @@ describe('Memory System Core Functionality', () => {
         sessionDate: `2025-08-${String(i + 1).padStart(2, '0')}`,
         reportDate: `2025-08-${String(i + 1).padStart(2, '0')}`,
         content: `Detailed therapeutic content for session ${i + 1} `.repeat(100),
-        summary: `Summary for session ${i + 1} with key insights and patterns`
+        summary: `Summary for session ${i + 1} with key insights and patterns`,
       }));
 
       const startTime = Date.now();
@@ -275,8 +290,8 @@ describe('Memory System Core Functionality', () => {
           sessionDate: '2025-08-09',
           reportDate: '2025-08-09',
           content: 'Very long content '.repeat(1000),
-          summary: 'Long summary '.repeat(100)
-        }
+          summary: 'Long summary '.repeat(100),
+        },
       ];
 
       const prompt = buildMemoryEnhancedPrompt(memoryContext);
@@ -296,8 +311,9 @@ describe('Memory System Core Functionality', () => {
           sessionDate: '2025-08-09',
           reportDate: '2025-08-09',
           content: 'Client engaged well with cognitive restructuring exercises...',
-          summary: 'Key insights: Progress with thought records. Therapeutic focus: Cognitive flexibility. Growth areas: Emotional regulation.'
-        }
+          summary:
+            'Key insights: Progress with thought records. Therapeutic focus: Cognitive flexibility. Growth areas: Emotional regulation.',
+        },
       ];
 
       const prompt = buildMemoryEnhancedPrompt(memoryContext);
@@ -316,13 +332,16 @@ describe('Memory System Core Functionality', () => {
           sessionDate: '2025-08-09',
           reportDate: '2025-08-09',
           content: 'Session focused on establishing healthy professional boundaries...',
-          summary: 'Client working on assertiveness and boundary setting in workplace relationships.'
-        }
+          summary:
+            'Client working on assertiveness and boundary setting in workplace relationships.',
+        },
       ];
 
       const prompt = buildMemoryEnhancedPrompt(memoryContext);
 
-      expect(prompt).toContain('IMPORTANT: Never reference specific conversation details from previous sessions');
+      expect(prompt).toContain(
+        'IMPORTANT: Never reference specific conversation details from previous sessions'
+      );
       expect(prompt).toContain('Only use the general therapeutic insights and patterns provided');
       expect(prompt).toContain('Maintain continuity in your therapeutic approach');
     });

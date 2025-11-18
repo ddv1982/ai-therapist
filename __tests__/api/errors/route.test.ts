@@ -54,7 +54,9 @@ jest.mock('@/lib/api/api-response', () => {
       status,
       headers: {
         get: (k: string) => store.get(k),
-        set: (k: string, v: unknown) => { store.set(k, v); },
+        set: (k: string, v: unknown) => {
+          store.set(k, v);
+        },
       },
       json: async () => payload,
       text: async () => JSON.stringify(payload),
@@ -62,8 +64,32 @@ jest.mock('@/lib/api/api-response', () => {
     };
   }
   return {
-    createSuccessResponse: (data: unknown, meta?: Record<string, unknown>) => makeResp(200, { success: true, data, meta: { timestamp: new Date().toISOString(), ...(meta || {}) } }),
-    createErrorResponse: (message: string, status = 400, options: { code?: string; details?: string; suggestedAction?: string; requestId?: string } = {}) => makeResp(status, { success: false, error: { message, code: options.code, details: options.details, suggestedAction: options.suggestedAction }, meta: { timestamp: new Date().toISOString(), requestId: options.requestId } }),
+    createSuccessResponse: (data: unknown, meta?: Record<string, unknown>) =>
+      makeResp(200, {
+        success: true,
+        data,
+        meta: { timestamp: new Date().toISOString(), ...(meta || {}) },
+      }),
+    createErrorResponse: (
+      message: string,
+      status = 400,
+      options: {
+        code?: string;
+        details?: string;
+        suggestedAction?: string;
+        requestId?: string;
+      } = {}
+    ) =>
+      makeResp(status, {
+        success: false,
+        error: {
+          message,
+          code: options.code,
+          details: options.details,
+          suggestedAction: options.suggestedAction,
+        },
+        meta: { timestamp: new Date().toISOString(), requestId: options.requestId },
+      }),
   };
 });
 
@@ -87,7 +113,10 @@ describe('/api/errors standardized responses and headers', () => {
 
   it('POST returns standardized success and X-Request-Id', async () => {
     const mod = await import('@/app/api/errors/route');
-    const res = await mod.POST(createReq('POST', { message: 'client error' }) as any, { params: Promise.resolve({}) } as any);
+    const res = await mod.POST(
+      createReq('POST', { message: 'client error' }) as any,
+      { params: Promise.resolve({}) } as any
+    );
     expect(res.status).toBe(200);
 
     const body = await res.json();

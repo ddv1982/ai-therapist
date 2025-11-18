@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -52,9 +52,9 @@ export function ObsessionsCompulsionsFlow({
   const translatedErrors = useMemo(
     () =>
       Object.fromEntries(
-        Object.entries(errors).map(([field, key]) => [field, t(key as Parameters<typeof t>[0])]),
+        Object.entries(errors).map(([field, key]) => [field, t(key as Parameters<typeof t>[0])])
       ),
-    [errors, t],
+    [errors, t]
   );
 
   const builderText = useMemo(
@@ -77,7 +77,7 @@ export function ObsessionsCompulsionsFlow({
       durationUnit: t('minutes'),
       compulsionPlaceholder: t('compulsionPlaceholder'),
     }),
-    [t],
+    [t]
   );
 
   const feedText = useMemo(
@@ -95,7 +95,7 @@ export function ObsessionsCompulsionsFlow({
       editAction: t('editPair'),
       deleteAction: t('deletePair'),
     }),
-    [t],
+    [t]
   );
 
   const isBuilderOpen = builderState.mode !== 'closed';
@@ -114,15 +114,15 @@ export function ObsessionsCompulsionsFlow({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <List className="w-5 h-5 text-primary" />
+            <List className="text-primary h-5 w-5" />
             <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
           </div>
-          <p className="max-w-2xl text-sm text-muted-foreground">{t('subtitle')}</p>
+          <p className="text-muted-foreground max-w-2xl text-sm">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           {builderState.mode === 'closed' && hasPairs && (
             <Button size="sm" className="flex items-center gap-2" onClick={beginAdd}>
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               {t('addPairButton')}
             </Button>
           )}
@@ -130,10 +130,10 @@ export function ObsessionsCompulsionsFlow({
             <Button
               size="sm"
               variant="ghost"
-              className="flex items-center gap-1 text-muted-foreground hover:text-destructive"
+              className="text-muted-foreground hover:text-destructive flex items-center gap-1"
               onClick={handleDismiss}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="h-4 w-4" />
               {t('removeBlock')}
             </Button>
           )}
@@ -158,14 +158,14 @@ export function ObsessionsCompulsionsFlow({
       )}
 
       {emptyStateVisible && (
-        <Card className="p-6 text-center border-dashed border-muted/60 bg-card/40">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <List className="w-6 h-6 text-primary" />
+        <Card className="border-muted/60 bg-card/40 border-dashed p-6 text-center">
+          <div className="bg-primary/10 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
+            <List className="text-primary h-6 w-6" />
           </div>
-          <h3 className="text-base font-semibold mb-1">{t('emptyState.title')}</h3>
-          <p className="text-sm text-muted-foreground mb-4">{t('emptyState.subtitle')}</p>
-          <Button onClick={beginAdd} size="sm" className="flex items-center gap-2 mx-auto">
-            <Plus className="w-4 h-4" />
+          <h3 className="mb-1 text-base font-semibold">{t('emptyState.title')}</h3>
+          <p className="text-muted-foreground mb-4 text-sm">{t('emptyState.subtitle')}</p>
+          <Button onClick={beginAdd} size="sm" className="mx-auto flex items-center gap-2">
+            <Plus className="h-4 w-4" />
             {t('start')}
           </Button>
         </Card>

@@ -15,5 +15,3 @@ test.describe('Health smoke checks (unauthenticated)', () => {
     expect(res?.ok()).toBeTruthy();
   });
 });
-
-

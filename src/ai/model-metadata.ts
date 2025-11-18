@@ -15,7 +15,7 @@ const MODEL_DISPLAY_NAMES: Record<ModelIdentifier, string> = {
 const WEB_SEARCH_MODELS = new Set<ModelIdentifier>([MODEL_IDS.analytical]);
 
 export function getModelDisplayName(modelId: string): string {
-  return MODEL_DISPLAY_NAMES[modelId as ModelIdentifier] ?? (modelId.split('/').pop() ?? modelId);
+  return MODEL_DISPLAY_NAMES[modelId as ModelIdentifier] ?? modelId.split('/').pop() ?? modelId;
 }
 
 export function supportsWebSearch(modelId: string): boolean {

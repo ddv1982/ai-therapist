@@ -1,4 +1,10 @@
-import { exportAsJSON, exportAsMarkdown, exportAsText, generateFileName, formatEmotionsForExport } from '@/lib/cbt/export-utils';
+import {
+  exportAsJSON,
+  exportAsMarkdown,
+  exportAsText,
+  generateFileName,
+  formatEmotionsForExport,
+} from '@/lib/cbt/export-utils';
 import { createInitialCBTFormData } from '@/types/therapy';
 
 // Ensure URL APIs exist for spying
@@ -11,8 +17,12 @@ if (!(URL as any).revokeObjectURL) {
 
 function mockDownload() {
   const link: any = { click: jest.fn(), style: {} };
-  const appendChild = jest.spyOn(document.body, 'appendChild').mockImplementation((node: any) => node as any);
-  const removeChild = jest.spyOn(document.body, 'removeChild').mockImplementation((child: any) => child as any);
+  const appendChild = jest
+    .spyOn(document.body, 'appendChild')
+    .mockImplementation((node: any) => node as any);
+  const removeChild = jest
+    .spyOn(document.body, 'removeChild')
+    .mockImplementation((child: any) => child as any);
   const createEl = jest.spyOn(document, 'createElement').mockImplementation(() => link);
   const revoke = jest.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
   const createUrl = jest.spyOn(URL, 'createObjectURL').mockImplementation(() => 'blob://test');
@@ -27,8 +37,15 @@ describe('export-utils', () => {
 
   it('formatEmotionsForExport filters and formats correctly', () => {
     const emotions: any = {
-      fear: 3, anger: 0, sadness: 2, joy: 0, anxiety: 1, shame: 0, guilt: 0,
-      other: 'surprise', otherIntensity: 4,
+      fear: 3,
+      anger: 0,
+      sadness: 2,
+      joy: 0,
+      anxiety: 1,
+      shame: 0,
+      guilt: 0,
+      other: 'surprise',
+      otherIntensity: 4,
     };
     const formatted = formatEmotionsForExport(emotions);
     expect(formatted).toEqual([
@@ -60,5 +77,3 @@ describe('export-utils', () => {
     expect(mocks.link.click).toHaveBeenCalled();
   });
 });
-
-

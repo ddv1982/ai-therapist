@@ -14,14 +14,9 @@ export const errorHandlers = {
     }
 
     if (error.message.includes('FOREIGN KEY constraint')) {
-      return createValidationErrorResponse(
-        'Referenced resource does not exist',
-        context.requestId
-      );
+      return createValidationErrorResponse('Referenced resource does not exist', context.requestId);
     }
 
     return createServerErrorResponse(error, context.requestId, context);
   },
 };
-
-

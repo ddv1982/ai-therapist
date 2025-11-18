@@ -5,8 +5,15 @@
 export { ThemeToggle } from '@/components/shared/theme-toggle';
 
 // Error handling
-export { ErrorBoundary as ChatErrorBoundary, withErrorBoundary } from '@/components/ui/error-boundary';
-export { SuspenseChat, SuspenseChatConnection, SuspenseChatMessages } from '@/components/chat/suspense-chat';
+export {
+  ErrorBoundary as ChatErrorBoundary,
+  withErrorBoundary,
+} from '@/components/ui/error-boundary';
+export {
+  SuspenseChat,
+  SuspenseChatConnection,
+  SuspenseChatMessages,
+} from '@/components/chat/suspense-chat';
 
 // Layout components
 export { ErrorBoundary } from '@/components/ui/error-boundary';

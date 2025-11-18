@@ -11,7 +11,12 @@ jest.mock('@/lib/api/api-middleware', () => {
   const withAuth = (handler: any) => async (req: any, routeParams?: any) => {
     const ctx = {
       requestId: 'test-request-id',
-      userInfo: { userId: 'legacy-user', clerkId: 'clerk_test_user', email: 't@example.com', name: 'T' },
+      userInfo: {
+        userId: 'legacy-user',
+        clerkId: 'clerk_test_user',
+        email: 't@example.com',
+        name: 'T',
+      },
     };
     const params = routeParams?.params ?? Promise.resolve({});
     return handler(req, ctx, params);
@@ -53,12 +58,15 @@ describe('DELETE /api/sessions/[sessionId]', () => {
   it('returns 200 when ownership is valid and deletion succeeds', async () => {
     const { verifySessionOwnership } = await import('@/lib/repositories/session-repository');
     (verifySessionOwnership as jest.Mock).mockResolvedValueOnce({ valid: true });
-    
+
     const mod = await import('@/app/api/sessions/[sessionId]/route');
-    const res = await mod.DELETE(createDeleteReq('http://localhost:4000/api/sessions/s_test') as any, {
-      params: Promise.resolve({ sessionId: 's_test' }),
-    } as any);
-    
+    const res = await mod.DELETE(
+      createDeleteReq('http://localhost:4000/api/sessions/s_test') as any,
+      {
+        params: Promise.resolve({ sessionId: 's_test' }),
+      } as any
+    );
+
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body?.success).toBe(true);
@@ -67,12 +75,15 @@ describe('DELETE /api/sessions/[sessionId]', () => {
   it('returns 404 when ownership is invalid', async () => {
     const { verifySessionOwnership } = await import('@/lib/repositories/session-repository');
     (verifySessionOwnership as jest.Mock).mockResolvedValueOnce({ valid: false });
-    
+
     const mod = await import('@/app/api/sessions/[sessionId]/route');
-    const res = await mod.DELETE(createDeleteReq('http://localhost:4000/api/sessions/s_no') as any, {
-      params: Promise.resolve({ sessionId: 's_no' }),
-    } as any);
-    
+    const res = await mod.DELETE(
+      createDeleteReq('http://localhost:4000/api/sessions/s_no') as any,
+      {
+        params: Promise.resolve({ sessionId: 's_no' }),
+      } as any
+    );
+
     expect(res.status).toBe(404);
   });
 });

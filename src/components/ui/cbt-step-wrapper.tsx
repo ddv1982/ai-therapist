@@ -1,10 +1,10 @@
 /**
  * CBT STEP WRAPPER COMPONENT
  * =============================================================================
- * 
+ *
  * A reusable wrapper component that provides consistent layout, state management,
  * and navigation for all CBT chat components using a composition pattern.
- * 
+ *
  * This eliminates the need for each CBT component to manage its own:
  * - State management boilerplate
  * - Navigation controls
@@ -12,7 +12,7 @@
  * - Error handling
  * - Auto-save functionality
  * - Validation display
- * 
+ *
  * FEATURES:
  * - Consistent step-by-step flow
  * - Unified validation and error display
@@ -25,7 +25,7 @@
 
 'use client';
 
-import React, { ReactNode, useCallback, useEffect, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   MessageCircle,
@@ -61,15 +61,15 @@ export interface CBTStepWrapperProps {
   title?: string;
   subtitle?: string;
   icon?: ReactNode;
-  
+
   // Content
   children: ReactNode;
-  
+
   // Step Validation
   isValid?: boolean;
   validationErrors?: CBTFormValidationError[];
   customValidation?: () => CBTFormValidationError[];
-  
+
   // Navigation Control
   canSkip?: boolean;
   hideNavigation?: boolean;
@@ -79,19 +79,19 @@ export interface CBTStepWrapperProps {
   onPrevious?: () => void | Promise<void>;
   onSkip?: () => void;
   onNavigateStep?: (step: CBTStepType) => void;
-  
+
   // Step Behavior
   autoSave?: boolean;
   autoSaveDelay?: number;
   showProgress?: boolean;
   hideProgressBar?: boolean; // Hide internal progress when parent shows it
   allowPartialCompletion?: boolean;
-  
+
   // Styling
   className?: string;
   contentClassName?: string;
   headerClassName?: string;
-  
+
   // Accessibility
   ariaLabel?: string;
   helpText?: string;
@@ -102,16 +102,16 @@ export interface CBTStepWrapperProps {
 // =============================================================================
 
 const STEP_ICONS: Record<CBTStepType, ReactNode> = {
-  situation: <MessageCircle className="w-6 h-6" />,
-  emotions: <Heart className="w-6 h-6" />,
-  'final-emotions': <Heart className="w-6 h-6" />,
-  thoughts: <Brain className="w-6 h-6" />,
-  'core-belief': <Target className="w-6 h-6" />,
-  'challenge-questions': <HelpCircle className="w-6 h-6" />,
-  'rational-thoughts': <Lightbulb className="w-6 h-6" />,
-  'schema-modes': <Users className="w-6 h-6" />,
-  actions: <Activity className="w-6 h-6" />,
-  complete: <CheckCircle className="w-6 h-6" />,
+  situation: <MessageCircle className="h-6 w-6" />,
+  emotions: <Heart className="h-6 w-6" />,
+  'final-emotions': <Heart className="h-6 w-6" />,
+  thoughts: <Brain className="h-6 w-6" />,
+  'core-belief': <Target className="h-6 w-6" />,
+  'challenge-questions': <HelpCircle className="h-6 w-6" />,
+  'rational-thoughts': <Lightbulb className="h-6 w-6" />,
+  'schema-modes': <Users className="h-6 w-6" />,
+  actions: <Activity className="h-6 w-6" />,
+  complete: <CheckCircle className="h-6 w-6" />,
 };
 
 const STEP_COLORS: Record<CBTStepType, string> = {
@@ -164,19 +164,22 @@ export function CBTStepWrapper({
 
   const stepConfig =
     step !== 'complete' ? CBT_STEP_CONFIG[step as keyof typeof CBT_STEP_CONFIG] : undefined;
-  const resolvedTitle = title ??
+  const resolvedTitle =
+    title ??
     (stepConfig
       ? (t(stepConfig.metadata.title.translationKey as Parameters<typeof t>[0], {
           default: stepConfig.metadata.title.defaultText,
         }) as string)
       : t('complete.title'));
-  const resolvedSubtitle = subtitle ??
+  const resolvedSubtitle =
+    subtitle ??
     (stepConfig?.metadata.subtitle
       ? (t(stepConfig.metadata.subtitle.translationKey as Parameters<typeof t>[0], {
           default: stepConfig.metadata.subtitle.defaultText,
         }) as string)
       : undefined);
-  const resolvedHelpText = helpText ??
+  const resolvedHelpText =
+    helpText ??
     (stepConfig?.metadata.helpText
       ? (t(stepConfig.metadata.helpText.translationKey as Parameters<typeof t>[0], {
           default: stepConfig.metadata.helpText.defaultText,
@@ -201,7 +204,8 @@ export function CBTStepWrapper({
   }
 
   const isStepValid =
-    propIsValid ?? (stepValidationErrors.length === 0 && (!validation.errors[step] || allowPartialCompletion));
+    propIsValid ??
+    (stepValidationErrors.length === 0 && (!validation.errors[step] || allowPartialCompletion));
 
   const handleNavigation = useCallback(
     async (action: 'next' | 'previous' | 'skip') => {
@@ -238,7 +242,7 @@ export function CBTStepWrapper({
         setIsProcessing(false);
       }
     },
-    [isProcessing, isStepValid, navigation, onNext, onPrevious, onSkip, onNavigateStep, step],
+    [isProcessing, isStepValid, navigation, onNext, onPrevious, onSkip, onNavigateStep, step]
   );
 
   useEffect(() => {
@@ -255,13 +259,13 @@ export function CBTStepWrapper({
     if (!showProgress || hideProgressBar) return null;
     return (
       <div className="flex items-center gap-2">
-        <div className="h-2 flex-1 rounded-full bg-muted">
+        <div className="bg-muted h-2 flex-1 rounded-full">
           <div
-            className="h-full rounded-full bg-primary transition-all"
+            className="bg-primary h-full rounded-full transition-all"
             style={{ width: `${progressPercentage}%` }}
           />
         </div>
-        <span className="text-xs font-medium text-muted-foreground">
+        <span className="text-muted-foreground text-xs font-medium">
           {stepNumber}/{totalSteps}
         </span>
       </div>
@@ -288,7 +292,7 @@ export function CBTStepWrapper({
     if (hideNavigation) return null;
     return (
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="text-muted-foreground flex items-center gap-2 text-xs">
           <Clock className="h-4 w-4" />
           <span>
             {t('progress.status', {
@@ -306,7 +310,7 @@ export function CBTStepWrapper({
             disabled={isProcessing || stepNumber <= 1}
           >
             <ChevronLeft className="h-4 w-4" />
-          {previousButtonText ?? (t('nav.back', { default: 'Back' }) as string)}
+            {previousButtonText ?? (t('nav.back', { default: 'Back' }) as string)}
           </Button>
           {canSkip && (
             <Button
@@ -316,7 +320,7 @@ export function CBTStepWrapper({
               onClick={() => handleNavigation('skip')}
               disabled={isProcessing}
             >
-            {t('nav.skip', { default: 'Skip' })}
+              {t('nav.skip', { default: 'Skip' })}
             </Button>
           )}
           <Button
@@ -324,7 +328,7 @@ export function CBTStepWrapper({
             onClick={() => handleNavigation('next')}
             disabled={isProcessing || (!allowPartialCompletion && !isStepValid)}
           >
-          {nextButtonText ?? (t('nav.next', { default: 'Continue' }) as string)}
+            {nextButtonText ?? (t('nav.next', { default: 'Continue' }) as string)}
             <ChevronRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
@@ -336,23 +340,23 @@ export function CBTStepWrapper({
   const headerStyle = cn(
     'flex flex-col gap-2 rounded-xl border px-4 py-3 transition-colors sm:flex-row sm:items-start sm:justify-between',
     STEP_COLORS[step],
-    headerClassName,
+    headerClassName
   );
 
   return (
     <section className={cn('space-y-5', className)} aria-label={ariaLabel}>
       <header className={headerStyle}>
         <div className="flex items-start gap-3">
-          <div className="rounded-xl bg-background/80 p-2 shadow-sm">
-            {resolvedIcon}
-          </div>
+          <div className="bg-background/80 rounded-xl p-2 shadow-sm">{resolvedIcon}</div>
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">{resolvedTitle}</h2>
+            <h2 className="text-foreground text-lg font-semibold tracking-tight">
+              {resolvedTitle}
+            </h2>
             {resolvedSubtitle ? (
-              <p className="text-sm text-muted-foreground">{resolvedSubtitle}</p>
+              <p className="text-muted-foreground text-sm">{resolvedSubtitle}</p>
             ) : null}
             {resolvedHelpText ? (
-              <p className="text-xs text-muted-foreground/80">{resolvedHelpText}</p>
+              <p className="text-muted-foreground/80 text-xs">{resolvedHelpText}</p>
             ) : null}
           </div>
         </div>
@@ -361,7 +365,12 @@ export function CBTStepWrapper({
 
       {renderValidation()}
 
-      <div className={cn('rounded-2xl border border-muted/30 bg-card/80 p-5 shadow-sm', contentClassName)}>
+      <div
+        className={cn(
+          'border-muted/30 bg-card/80 rounded-2xl border p-5 shadow-sm',
+          contentClassName
+        )}
+      >
         {children}
       </div>
 

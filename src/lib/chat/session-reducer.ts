@@ -61,7 +61,7 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       };
 
     case 'DELETE_SESSION':
-      const updatedSessions = state.sessions.filter(s => s.id !== action.payload);
+      const updatedSessions = state.sessions.filter((s) => s.id !== action.payload);
       return {
         ...state,
         sessions: updatedSessions,
@@ -98,10 +98,8 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
     case 'UPDATE_MESSAGE':
       return {
         ...state,
-        messages: state.messages.map(msg =>
-          msg.id === action.payload.id
-            ? { ...msg, content: action.payload.content }
-            : msg
+        messages: state.messages.map((msg) =>
+          msg.id === action.payload.id ? { ...msg, content: action.payload.content } : msg
         ),
         error: null,
       };

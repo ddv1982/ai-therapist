@@ -25,5 +25,3 @@ describe('session-mapper', () => {
     expect(ui.startedAt).toBeUndefined();
   });
 });
-
-

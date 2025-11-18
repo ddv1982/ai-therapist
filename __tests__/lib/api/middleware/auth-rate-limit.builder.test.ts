@@ -13,7 +13,8 @@ const { setResponseHeaders } = jest.requireMock('@/lib/api/middleware/request-ut
   setResponseHeaders: jest.Mock;
 };
 
-type BuilderFactory = typeof import('@/lib/api/middleware/builders/auth-rate-limit').buildAuthAndRateLimit;
+type BuilderFactory =
+  typeof import('@/lib/api/middleware/builders/auth-rate-limit').buildAuthAndRateLimit;
 type AuthBuilderDeps = Parameters<BuilderFactory>[0];
 
 function makeDeps(overrides: Partial<AuthBuilderDeps> = {}) {
@@ -90,7 +91,9 @@ describe('auth rate limit builder', () => {
       return createSuccessResponse({ ok: true });
     };
 
-    const res = await withAuthAndRateLimit(handler as any)(makeRequest(), { params: Promise.resolve({}) } as any);
+    const res = await withAuthAndRateLimit(handler as any)(makeRequest(), {
+      params: Promise.resolve({}),
+    } as any);
 
     expect(res.status).toBe(200);
     expect(handlerInvocations).toBe(1);
@@ -109,7 +112,9 @@ describe('auth rate limit builder', () => {
     const { withAuthAndRateLimit } = buildAuth(deps);
     const handler = jest.fn();
 
-    const res = await withAuthAndRateLimit(handler as any)(makeRequest(), { params: Promise.resolve({}) } as any);
+    const res = await withAuthAndRateLimit(handler as any)(makeRequest(), {
+      params: Promise.resolve({}),
+    } as any);
 
     expect(res.status).toBe(401);
     expect(handler).not.toHaveBeenCalled();
@@ -135,7 +140,9 @@ describe('auth rate limit builder', () => {
       return createSuccessResponse({ ok: true });
     };
 
-    const res = await withAuthAndRateLimit(handler as any)(makeRequest(), { params: Promise.resolve({}) } as any);
+    const res = await withAuthAndRateLimit(handler as any)(makeRequest(), {
+      params: Promise.resolve({}),
+    } as any);
 
     expect(handlerInvocations).toBe(0);
     expect(res.status).toBe(429);
@@ -156,7 +163,11 @@ describe('auth rate limit builder', () => {
     const failingHandler = async () => {
       throw new Error('stream fail');
     };
-    const streaming = withAuthAndRateLimitStreaming(failingHandler as any, { maxConcurrent: 1, maxRequests: 2, windowMs: 5000 });
+    const streaming = withAuthAndRateLimitStreaming(failingHandler as any, {
+      maxConcurrent: 1,
+      maxRequests: 2,
+      windowMs: 5000,
+    });
     const req = makeRequest('http://localhost/api/stream', 'GET');
 
     const failure = await streaming(req, { params: Promise.resolve({}) } as any);
@@ -168,7 +179,11 @@ describe('auth rate limit builder', () => {
       successInvocations += 1;
       return createSuccessResponse({ ok: true });
     };
-    const streamingSuccess = withAuthAndRateLimitStreaming(succeedingHandler as any, { maxConcurrent: 1, maxRequests: 2, windowMs: 5000 });
+    const streamingSuccess = withAuthAndRateLimitStreaming(succeedingHandler as any, {
+      maxConcurrent: 1,
+      maxRequests: 2,
+      windowMs: 5000,
+    });
     const success = await streamingSuccess(req, { params: Promise.resolve({}) } as any);
 
     expect(success.status).toBe(200);
@@ -191,7 +206,11 @@ describe('auth rate limit builder', () => {
     const buildAuth = loadBuilder();
     const { withAuthAndRateLimitStreaming } = buildAuth(deps);
     const handler = jest.fn(async () => new Response('ok', { status: 200 }));
-    const streaming = withAuthAndRateLimitStreaming(handler as any, { maxConcurrent: 2, maxRequests: 5, windowMs: 10000 });
+    const streaming = withAuthAndRateLimitStreaming(handler as any, {
+      maxConcurrent: 2,
+      maxRequests: 5,
+      windowMs: 10000,
+    });
     const req = makeRequest('http://localhost/api/stream', 'GET');
 
     const res = await streaming(req, { params: Promise.resolve({}) } as any);

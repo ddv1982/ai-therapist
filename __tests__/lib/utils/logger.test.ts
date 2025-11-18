@@ -10,12 +10,16 @@ describe('logger', () => {
   });
 
   it('filters sensitive keys and strings from context', () => {
-    logger.error('Test', {
-      situation: 'I feel bad about this situation',
-      email: 'user@example.com',
-      ip: '127.0.0.1',
-      nested: { thoughts: ['I think this will fail'] },
-    } as any, new Error('boom'));
+    logger.error(
+      'Test',
+      {
+        situation: 'I feel bad about this situation',
+        email: 'user@example.com',
+        ip: '127.0.0.1',
+        nested: { thoughts: ['I think this will fail'] },
+      } as any,
+      new Error('boom')
+    );
     expect(console.log).toHaveBeenCalled();
     const msg = (console.log as jest.Mock).mock.calls[0][0] as string;
     expect(msg).toContain('[FILTERED_SENSITIVE_DATA]');
@@ -25,7 +29,11 @@ describe('logger', () => {
   });
 
   it('createRequestLogger produces context and error logging includes requestId while redacting IP', () => {
-    const headers = new Headers({ 'user-agent': 'jest', 'x-request-id': 'rid-1', 'x-forwarded-for': '2.2.2.2' });
+    const headers = new Headers({
+      'user-agent': 'jest',
+      'x-request-id': 'rid-1',
+      'x-forwarded-for': '2.2.2.2',
+    });
     const ctx = createRequestLogger({ headers, method: 'GET', url: 'http://t' } as any);
     logger.error('Endpoint failed', ctx, new Error('oops'));
     expect(console.log).toHaveBeenCalled();

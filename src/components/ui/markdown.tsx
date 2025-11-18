@@ -1,11 +1,17 @@
 'use client';
 
-import React from 'react';
+import { isValidElement, ReactElement, ReactNode, Children } from 'react';
 import { Streamdown } from 'streamdown';
-import { CBTSessionSummaryCard, type CBTSessionSummaryData } from '@/components/ui/cbt-session-summary-card';
+import {
+  CBTSessionSummaryCard,
+  type CBTSessionSummaryData,
+} from '@/components/ui/cbt-session-summary-card';
 import { safeParseFromMatch } from '@/lib/utils/safe-json';
 
-function extractCBTSummaryData(text: string): { summaryData: CBTSessionSummaryData | null; cleanText: string } {
+function extractCBTSummaryData(text: string): {
+  summaryData: CBTSessionSummaryData | null;
+  cleanText: string;
+} {
   const cbtPattern = /<!-- CBT_SUMMARY_CARD:(.*?) -->[\s\S]*?<!-- END_CBT_SUMMARY_CARD -->/;
   const match = text.match(cbtPattern);
   if (match) {
@@ -41,37 +47,43 @@ function convertWideTablesToLists(markdown: string): string {
     // Regex to match a simple markdown table (header | separator | body)
     const tableRegex = /(^|\n)\|([^\n]+)\|\s*\n\|\s*[-:|\s]+\|\s*\n((?:\|[^\n]+\|\s*\n?)+)/g;
 
-    return segment.replace(tableRegex, (fullMatch: string, leadingNewline: string, headerRow: string, bodyRows: string) => {
-      const headers = headerRow.split('|').map((h: string) => h.trim()).filter(Boolean);
-      if (headers.length <= 3) return fullMatch; // keep small tables
+    return segment.replace(
+      tableRegex,
+      (fullMatch: string, leadingNewline: string, headerRow: string, bodyRows: string) => {
+        const headers = headerRow
+          .split('|')
+          .map((h: string) => h.trim())
+          .filter(Boolean);
+        if (headers.length <= 3) return fullMatch; // keep small tables
 
-      // Parse rows
-      const rows: string[][] = bodyRows
-        .trim()
-        .split(/\n/)
-        .map((r: string) => r.replace(/^\|/, '').replace(/\|\s*$/, ''))
-        .map((r: string) => r.split('|').map((c: string) => c.trim()));
+        // Parse rows
+        const rows: string[][] = bodyRows
+          .trim()
+          .split(/\n/)
+          .map((r: string) => r.replace(/^\|/, '').replace(/\|\s*$/, ''))
+          .map((r: string) => r.split('|').map((c: string) => c.trim()));
 
-      // Build list/card-like sections
-      const converted = rows
-        .map((cells: string[]) => {
-          const items = headers.map((h: string, i: number) => `- **${h}**: ${cells[i] ?? ''}`);
-          return items.join('\n');
-        })
-        .join('\n\n---\n\n');
+        // Build list/card-like sections
+        const converted = rows
+          .map((cells: string[]) => {
+            const items = headers.map((h: string, i: number) => `- **${h}**: ${cells[i] ?? ''}`);
+            return items.join('\n');
+          })
+          .join('\n\n---\n\n');
 
-      // Preserve the leading newline if present
-      return `${leadingNewline ?? ''}${converted}\n`;
-    });
+        // Preserve the leading newline if present
+        return `${leadingNewline ?? ''}${converted}\n`;
+      }
+    );
   });
 
   return processed.join('');
 }
 
-type TableSectionProps = { children?: React.ReactNode };
-type TableCellProps = { children?: React.ReactNode };
+type TableSectionProps = { children?: ReactNode };
+type TableCellProps = { children?: ReactNode };
 
-const extractTextContent = (node: React.ReactNode): string => {
+const extractTextContent = (node: ReactNode): string => {
   if (node === null || node === undefined || typeof node === 'boolean') {
     return '';
   }
@@ -81,45 +93,53 @@ const extractTextContent = (node: React.ReactNode): string => {
   if (Array.isArray(node)) {
     return node.map(extractTextContent).join(' ').trim();
   }
-  if (React.isValidElement(node)) {
-    const element = node as React.ReactElement<{ children?: React.ReactNode }>;
+  if (isValidElement(node)) {
+    const element = node as ReactElement<{ children?: ReactNode }>;
     return extractTextContent(element.props.children);
   }
   return '';
 };
 
-const ResponsiveMarkdownTable = ({ children }: { children?: React.ReactNode }) => {
-  const childArray = React.Children.toArray(children);
+const ResponsiveMarkdownTable = ({ children }: { children?: ReactNode }) => {
+  const childArray = Children.toArray(children);
   if (childArray.length === 0) return null;
 
-  const headerNode = childArray.find((child) => React.isValidElement(child) && child.type === 'thead') as React.ReactElement<TableSectionProps> | undefined;
-  const bodyNodes = childArray.filter((child) => React.isValidElement(child) && child.type === 'tbody') as Array<React.ReactElement<TableSectionProps>>;
+  const headerNode = childArray.find((child) => isValidElement(child) && child.type === 'thead') as
+    | ReactElement<TableSectionProps>
+    | undefined;
+  const bodyNodes = childArray.filter(
+    (child) => isValidElement(child) && child.type === 'tbody'
+  ) as Array<ReactElement<TableSectionProps>>;
 
   const headers: string[] = [];
   if (headerNode) {
-    const headerElement = headerNode as React.ReactElement<TableSectionProps>;
-    React.Children.forEach(headerElement.props.children, (row) => {
-      if (!React.isValidElement(row)) return;
-      const headerRow = row as React.ReactElement<TableSectionProps>;
-      React.Children.forEach(headerRow.props.children, (cell) => {
-        if (!React.isValidElement(cell)) return;
-        const headerCell = cell as React.ReactElement<TableCellProps>;
+    const headerElement = headerNode as ReactElement<TableSectionProps>;
+    Children.forEach(headerElement.props.children, (row) => {
+      if (!isValidElement(row)) return;
+      const headerRow = row as ReactElement<TableSectionProps>;
+      Children.forEach(headerRow.props.children, (cell) => {
+        if (!isValidElement(cell)) return;
+        const headerCell = cell as ReactElement<TableCellProps>;
         headers.push(extractTextContent(headerCell.props.children));
       });
     });
   }
 
   const mobileCards = bodyNodes.flatMap((tbody, tbodyIndex) => {
-    const rows: React.ReactNode[] = [];
-    React.Children.forEach(tbody.props.children, (row, rowIndex) => {
-      if (!React.isValidElement(row)) return;
-      const bodyRow = row as React.ReactElement<TableSectionProps>;
-      const cells: Array<{ label: string; content: React.ReactNode; key: string }> = [];
-      React.Children.forEach(bodyRow.props.children, (cell, cellIndex) => {
-        if (!React.isValidElement(cell)) return;
-        const bodyCell = cell as React.ReactElement<TableCellProps>;
+    const rows: ReactNode[] = [];
+    Children.forEach(tbody.props.children, (row, rowIndex) => {
+      if (!isValidElement(row)) return;
+      const bodyRow = row as ReactElement<TableSectionProps>;
+      const cells: Array<{ label: string; content: ReactNode; key: string }> = [];
+      Children.forEach(bodyRow.props.children, (cell, cellIndex) => {
+        if (!isValidElement(cell)) return;
+        const bodyCell = cell as ReactElement<TableCellProps>;
         const label = headers[cellIndex] ?? `Column ${cellIndex + 1}`;
-        cells.push({ label, content: bodyCell.props.children, key: `${tbodyIndex}-${rowIndex}-${cellIndex}` });
+        cells.push({
+          label,
+          content: bodyCell.props.children,
+          key: `${tbodyIndex}-${rowIndex}-${cellIndex}`,
+        });
       });
       rows.push(
         <div className="markdown-table-card" key={`${tbodyIndex}-${rowIndex}`}>

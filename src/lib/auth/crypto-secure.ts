@@ -12,31 +12,33 @@ export function generateSecureUUID(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  
+
   // Fallback for browsers and older Node.js versions using crypto.getRandomValues()
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
-    
+
     // Set version (4) and variant bits according to RFC 4122
     array[6] = (array[6] & 0x0f) | 0x40;
     array[8] = (array[8] & 0x3f) | 0x80;
-    
+
     const hex = Array.from(array)
-      .map(b => b.toString(16).padStart(2, '0'))
+      .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
-      
+
     return [
       hex.slice(0, 8),
       hex.slice(8, 12),
       hex.slice(12, 16),
       hex.slice(16, 20),
-      hex.slice(20, 32)
+      hex.slice(20, 32),
     ].join('-');
   }
-  
+
   // SECURITY: No fallback to Math.random() - fail hard if crypto is unavailable
-  throw new Error('Cryptographically secure random number generation is not available. Please ensure your environment supports crypto.randomUUID() or crypto.getRandomValues()');
+  throw new Error(
+    'Cryptographically secure random number generation is not available. Please ensure your environment supports crypto.randomUUID() or crypto.getRandomValues()'
+  );
 }
 
 /**
@@ -46,7 +48,7 @@ export function generateSecureUUID(): string {
 export function generateSecureRandomString(length: number = 32, charset?: string): string {
   const defaultCharset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const chars = charset || defaultCharset;
-  
+
   // Use Web Crypto API (available in browsers and Node.js 16+)
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     const array = new Uint8Array(length);
@@ -57,9 +59,11 @@ export function generateSecureRandomString(length: number = 32, charset?: string
     }
     return result;
   }
-  
+
   // SECURITY: No fallback to Math.random() - fail hard if crypto is unavailable
-  throw new Error('Cryptographically secure random number generation is not available. Please ensure your environment supports crypto.getRandomValues()');
+  throw new Error(
+    'Cryptographically secure random number generation is not available. Please ensure your environment supports crypto.getRandomValues()'
+  );
 }
 
 /**
@@ -70,7 +74,7 @@ export function generateSecureBytes(length: number = 32): string {
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     const array = new Uint8Array(length);
     crypto.getRandomValues(array);
-    
+
     // Convert to base64 in Node.js or browser compatible way
     if (typeof Buffer !== 'undefined') {
       // Node.js environment
@@ -80,7 +84,7 @@ export function generateSecureBytes(length: number = 32): string {
       return btoa(String.fromCharCode(...Array.from(array)));
     }
   }
-  
+
   throw new Error('Cryptographically secure random number generation is not available');
 }
 
@@ -93,10 +97,10 @@ export function generateSecureHex(length: number = 32): string {
     const array = new Uint8Array(length);
     crypto.getRandomValues(array);
     return Array.from(array)
-      .map(b => b.toString(16).padStart(2, '0'))
+      .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
   }
-  
+
   throw new Error('Cryptographically secure random number generation is not available');
 }
 
@@ -130,8 +134,7 @@ export function generateBackupCodes(count: number = 10): string[] {
  * Validate that crypto APIs are available in the current environment
  */
 export function isCryptoAvailable(): boolean {
-  return typeof crypto !== 'undefined' && 
-         !!(crypto.randomUUID || crypto.getRandomValues);
+  return typeof crypto !== 'undefined' && !!(crypto.randomUUID || crypto.getRandomValues);
 }
 
 /**
@@ -145,6 +148,6 @@ export function getCryptoCapabilities(): {
   return {
     hasRandomUUID: typeof crypto !== 'undefined' && !!crypto.randomUUID,
     hasGetRandomValues: typeof crypto !== 'undefined' && !!crypto.getRandomValues,
-    isSecure: typeof crypto !== 'undefined' && (!!crypto.randomUUID || !!crypto.getRandomValues)
+    isSecure: typeof crypto !== 'undefined' && (!!crypto.randomUUID || !!crypto.getRandomValues),
   };
 }

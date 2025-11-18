@@ -1,4 +1,3 @@
-import React from 'react';
 import { screen } from '@testing-library/react';
 import { ComponentTestUtils } from '__tests__/utils/test-utilities';
 import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
@@ -26,5 +25,3 @@ describe('VirtualizedMessageList', () => {
     expect(items.length).toBeGreaterThan(0);
   });
 });
-
-

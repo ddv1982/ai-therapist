@@ -1,9 +1,9 @@
 /**
  * API-Specific Caching Implementation
- * 
+ *
  * Provides specialized caching strategies for different API endpoints
  * in the AI Therapist application, with appropriate TTLs and invalidation patterns.
- * 
+ *
  * Features:
  * - Session-specific caching
  * - Message caching with streaming support
@@ -104,7 +104,7 @@ export const CACHE_KEYS = {
     return key;
   },
   CBT_DATA: (sessionId: string) => `cbt:${sessionId}`,
-  REPORT: (sessionId: string, reportId?: string) => 
+  REPORT: (sessionId: string, reportId?: string) =>
     `report:${sessionId}${reportId ? `:${reportId}` : ''}`,
   USER_SESSION: (userId: string) => `user_session:${userId}`,
   AUTH_CONFIG: () => 'auth:config',
@@ -120,29 +120,42 @@ export class SessionCache {
    * Get session data from cache
    */
   static async get(sessionId: string) {
-    return cache.get(CACHE_KEYS.SESSION(sessionId), {}, {
-      ttl: CACHE_TTL.SESSION_DATA,
-      prefix: 'therapist'
-    });
+    return cache.get(
+      CACHE_KEYS.SESSION(sessionId),
+      {},
+      {
+        ttl: CACHE_TTL.SESSION_DATA,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Set session data in cache
    */
   static async set(sessionId: string, data: SessionData) {
-    return cache.set(CACHE_KEYS.SESSION(sessionId), data, {}, {
-      ttl: CACHE_TTL.SESSION_DATA,
-      prefix: 'therapist'
-    });
+    return cache.set(
+      CACHE_KEYS.SESSION(sessionId),
+      data,
+      {},
+      {
+        ttl: CACHE_TTL.SESSION_DATA,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Invalidate session cache
    */
   static async invalidate(sessionId: string) {
-    return cache.delete(CACHE_KEYS.SESSION(sessionId), {}, {
-      prefix: 'therapist'
-    });
+    return cache.delete(
+      CACHE_KEYS.SESSION(sessionId),
+      {},
+      {
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
@@ -153,7 +166,7 @@ export class SessionCache {
       CACHE_KEYS.SESSION(sessionId),
       `messages:${sessionId}*`,
       CACHE_KEYS.CBT_DATA(sessionId),
-      `report:${sessionId}*`
+      `report:${sessionId}*`,
     ];
 
     let totalDeleted = 0;
@@ -165,7 +178,7 @@ export class SessionCache {
     logger.info('Session cache invalidated', {
       operation: 'session_cache_invalidate',
       sessionId,
-      deletedCount: totalDeleted
+      deletedCount: totalDeleted,
     });
 
     return totalDeleted;
@@ -180,31 +193,36 @@ export class MessageCache {
    * Get messages from cache
    */
   static async get(sessionId: string, page?: number, limit?: number) {
-    return cache.get(CACHE_KEYS.MESSAGES(sessionId, page, limit), {}, {
-      ttl: CACHE_TTL.MESSAGES,
-      prefix: 'therapist'
-    });
+    return cache.get(
+      CACHE_KEYS.MESSAGES(sessionId, page, limit),
+      {},
+      {
+        ttl: CACHE_TTL.MESSAGES,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Set messages in cache
    */
   static async set(sessionId: string, data: MessageData[], page?: number, limit?: number) {
-    return cache.set(CACHE_KEYS.MESSAGES(sessionId, page, limit), data, {}, {
-      ttl: CACHE_TTL.MESSAGES,
-      prefix: 'therapist'
-    });
+    return cache.set(
+      CACHE_KEYS.MESSAGES(sessionId, page, limit),
+      data,
+      {},
+      {
+        ttl: CACHE_TTL.MESSAGES,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Invalidate message cache for a session
    */
   static async invalidate(sessionId: string) {
-    return cache.invalidatePattern(
-      `messages:${sessionId}*`, 
-      {}, 
-      { prefix: 'therapist' }
-    );
+    return cache.invalidatePattern(`messages:${sessionId}*`, {}, { prefix: 'therapist' });
   }
 
   /**
@@ -223,20 +241,29 @@ export class CBTDataCache {
    * Get CBT data from cache
    */
   static async get(sessionId: string) {
-    return cache.get(CACHE_KEYS.CBT_DATA(sessionId), {}, {
-      ttl: CACHE_TTL.CBT_DATA,
-      prefix: 'therapist'
-    });
+    return cache.get(
+      CACHE_KEYS.CBT_DATA(sessionId),
+      {},
+      {
+        ttl: CACHE_TTL.CBT_DATA,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Set CBT data in cache
    */
   static async set(sessionId: string, data: CBTData) {
-    return cache.set(CACHE_KEYS.CBT_DATA(sessionId), data, {}, {
-      ttl: CACHE_TTL.CBT_DATA,
-      prefix: 'therapist'
-    });
+    return cache.set(
+      CACHE_KEYS.CBT_DATA(sessionId),
+      data,
+      {},
+      {
+        ttl: CACHE_TTL.CBT_DATA,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
@@ -244,12 +271,17 @@ export class CBTDataCache {
    */
   static async update(sessionId: string, updates: Partial<CBTData>) {
     const existing = await this.get(sessionId);
-    if (existing && typeof existing === 'object' && 'data' in existing && 'lastUpdated' in existing) {
+    if (
+      existing &&
+      typeof existing === 'object' &&
+      'data' in existing &&
+      'lastUpdated' in existing
+    ) {
       const existingData = existing as CBTData;
       const updated: CBTData = {
         sessionId,
         data: updates.data ?? existingData.data,
-        lastUpdated: updates.lastUpdated ?? existingData.lastUpdated
+        lastUpdated: updates.lastUpdated ?? existingData.lastUpdated,
       };
       return this.set(sessionId, updated);
     }
@@ -260,9 +292,13 @@ export class CBTDataCache {
    * Invalidate CBT data cache
    */
   static async invalidate(sessionId: string) {
-    return cache.delete(CACHE_KEYS.CBT_DATA(sessionId), {}, {
-      prefix: 'therapist'
-    });
+    return cache.delete(
+      CACHE_KEYS.CBT_DATA(sessionId),
+      {},
+      {
+        prefix: 'therapist',
+      }
+    );
   }
 }
 
@@ -274,20 +310,29 @@ export class ReportCache {
    * Get report from cache
    */
   static async get(sessionId: string, reportId?: string) {
-    return cache.get(CACHE_KEYS.REPORT(sessionId, reportId), {}, {
-      ttl: CACHE_TTL.REPORTS,
-      prefix: 'therapist'
-    });
+    return cache.get(
+      CACHE_KEYS.REPORT(sessionId, reportId),
+      {},
+      {
+        ttl: CACHE_TTL.REPORTS,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Set report in cache
    */
   static async set(sessionId: string, data: ReportData, reportId?: string) {
-    return cache.set(CACHE_KEYS.REPORT(sessionId, reportId), data, {}, {
-      ttl: CACHE_TTL.REPORTS,
-      prefix: 'therapist'
-    });
+    return cache.set(
+      CACHE_KEYS.REPORT(sessionId, reportId),
+      data,
+      {},
+      {
+        ttl: CACHE_TTL.REPORTS,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
@@ -295,15 +340,15 @@ export class ReportCache {
    */
   static async invalidate(sessionId: string, reportId?: string) {
     if (reportId) {
-      return cache.delete(CACHE_KEYS.REPORT(sessionId, reportId), {}, {
-        prefix: 'therapist'
-      });
-    } else {
-      return cache.invalidatePattern(
-        `report:${sessionId}*`, 
-        {}, 
-        { prefix: 'therapist' }
+      return cache.delete(
+        CACHE_KEYS.REPORT(sessionId, reportId),
+        {},
+        {
+          prefix: 'therapist',
+        }
       );
+    } else {
+      return cache.invalidatePattern(`report:${sessionId}*`, {}, { prefix: 'therapist' });
     }
   }
 }
@@ -316,29 +361,42 @@ export class UserSessionCache {
    * Get user session from cache
    */
   static async get(userId: string) {
-    return cache.get(CACHE_KEYS.USER_SESSION(userId), {}, {
-      ttl: CACHE_TTL.USER_SESSIONS,
-      prefix: 'therapist'
-    });
+    return cache.get(
+      CACHE_KEYS.USER_SESSION(userId),
+      {},
+      {
+        ttl: CACHE_TTL.USER_SESSIONS,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Set user session in cache
    */
   static async set(userId: string, data: UserSessionData) {
-    return cache.set(CACHE_KEYS.USER_SESSION(userId), data, {}, {
-      ttl: CACHE_TTL.USER_SESSIONS,
-      prefix: 'therapist'
-    });
+    return cache.set(
+      CACHE_KEYS.USER_SESSION(userId),
+      data,
+      {},
+      {
+        ttl: CACHE_TTL.USER_SESSIONS,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Invalidate user session cache
    */
   static async invalidate(userId: string) {
-    return cache.delete(CACHE_KEYS.USER_SESSION(userId), {}, {
-      prefix: 'therapist'
-    });
+    return cache.delete(
+      CACHE_KEYS.USER_SESSION(userId),
+      {},
+      {
+        prefix: 'therapist',
+      }
+    );
   }
 }
 
@@ -350,29 +408,42 @@ export class AuthConfigCache {
    * Get auth config from cache
    */
   static async get() {
-    return cache.get(CACHE_KEYS.AUTH_CONFIG(), {}, {
-      ttl: CACHE_TTL.AUTH_CONFIG,
-      prefix: 'therapist'
-    });
+    return cache.get(
+      CACHE_KEYS.AUTH_CONFIG(),
+      {},
+      {
+        ttl: CACHE_TTL.AUTH_CONFIG,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Set auth config in cache
    */
   static async set(data: AuthConfigData) {
-    return cache.set(CACHE_KEYS.AUTH_CONFIG(), data, {}, {
-      ttl: CACHE_TTL.AUTH_CONFIG,
-      prefix: 'therapist'
-    });
+    return cache.set(
+      CACHE_KEYS.AUTH_CONFIG(),
+      data,
+      {},
+      {
+        ttl: CACHE_TTL.AUTH_CONFIG,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Invalidate auth config cache
    */
   static async invalidate() {
-    return cache.delete(CACHE_KEYS.AUTH_CONFIG(), {}, {
-      prefix: 'therapist'
-    });
+    return cache.delete(
+      CACHE_KEYS.AUTH_CONFIG(),
+      {},
+      {
+        prefix: 'therapist',
+      }
+    );
   }
 }
 
@@ -384,29 +455,42 @@ export class DeviceCache {
    * Get device info from cache
    */
   static async get(deviceId: string) {
-    return cache.get(CACHE_KEYS.DEVICE(deviceId), {}, {
-      ttl: CACHE_TTL.DEVICE_INFO,
-      prefix: 'therapist'
-    });
+    return cache.get(
+      CACHE_KEYS.DEVICE(deviceId),
+      {},
+      {
+        ttl: CACHE_TTL.DEVICE_INFO,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Set device info in cache
    */
   static async set(deviceId: string, data: DeviceData) {
-    return cache.set(CACHE_KEYS.DEVICE(deviceId), data, {}, {
-      ttl: CACHE_TTL.DEVICE_INFO,
-      prefix: 'therapist'
-    });
+    return cache.set(
+      CACHE_KEYS.DEVICE(deviceId),
+      data,
+      {},
+      {
+        ttl: CACHE_TTL.DEVICE_INFO,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Invalidate device cache
    */
   static async invalidate(deviceId: string) {
-    return cache.delete(CACHE_KEYS.DEVICE(deviceId), {}, {
-      prefix: 'therapist'
-    });
+    return cache.delete(
+      CACHE_KEYS.DEVICE(deviceId),
+      {},
+      {
+        prefix: 'therapist',
+      }
+    );
   }
 }
 
@@ -418,20 +502,29 @@ export class TherapyPromptCache {
    * Get therapy prompt from cache
    */
   static async get(type: string) {
-    return cache.get(CACHE_KEYS.THERAPY_PROMPT(type), {}, {
-      ttl: CACHE_TTL.THERAPY_PROMPTS,
-      prefix: 'therapist'
-    });
+    return cache.get(
+      CACHE_KEYS.THERAPY_PROMPT(type),
+      {},
+      {
+        ttl: CACHE_TTL.THERAPY_PROMPTS,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
    * Set therapy prompt in cache
    */
   static async set(type: string, data: TherapyPromptData) {
-    return cache.set(CACHE_KEYS.THERAPY_PROMPT(type), data, {}, {
-      ttl: CACHE_TTL.THERAPY_PROMPTS,
-      prefix: 'therapist'
-    });
+    return cache.set(
+      CACHE_KEYS.THERAPY_PROMPT(type),
+      data,
+      {},
+      {
+        ttl: CACHE_TTL.THERAPY_PROMPTS,
+        prefix: 'therapist',
+      }
+    );
   }
 
   /**
@@ -439,13 +532,21 @@ export class TherapyPromptCache {
    */
   static async invalidate(type?: string) {
     if (type) {
-      return cache.delete(CACHE_KEYS.THERAPY_PROMPT(type), {}, {
-        prefix: 'therapist'
-      });
+      return cache.delete(
+        CACHE_KEYS.THERAPY_PROMPT(type),
+        {},
+        {
+          prefix: 'therapist',
+        }
+      );
     } else {
-      return cache.invalidatePattern('therapy_prompt:*', {}, {
-        prefix: 'therapist'
-      });
+      return cache.invalidatePattern(
+        'therapy_prompt:*',
+        {},
+        {
+          prefix: 'therapist',
+        }
+      );
     }
   }
 }
@@ -458,16 +559,14 @@ export class CacheWarmer {
    * Warm up session caches
    */
   static async warmUpSessions(sessions: Array<{ id: string; data: SessionData }>) {
-    const operations = sessions.map(session => 
-      SessionCache.set(session.id, session.data)
-    );
-    
+    const operations = sessions.map((session) => SessionCache.set(session.id, session.data));
+
     await Promise.allSettled(operations);
-    
+
     logger.info('Session caches warmed up', {
       operation: 'cache_warmup',
       type: 'sessions',
-      count: sessions.length
+      count: sessions.length,
     });
   }
 
@@ -475,16 +574,14 @@ export class CacheWarmer {
    * Warm up therapy prompts
    */
   static async warmUpTherapyPrompts(prompts: Array<{ type: string; content: TherapyPromptData }>) {
-    const operations = prompts.map(prompt => 
-      TherapyPromptCache.set(prompt.type, prompt.content)
-    );
-    
+    const operations = prompts.map((prompt) => TherapyPromptCache.set(prompt.type, prompt.content));
+
     await Promise.allSettled(operations);
-    
+
     logger.info('Therapy prompt caches warmed up', {
       operation: 'cache_warmup',
       type: 'therapy_prompts',
-      count: prompts.length
+      count: prompts.length,
     });
   }
 
@@ -493,10 +590,10 @@ export class CacheWarmer {
    */
   static async warmUpAuthConfig(config: AuthConfigData) {
     await AuthConfigCache.set(config);
-    
+
     logger.info('Auth config cache warmed up', {
       operation: 'cache_warmup',
-      type: 'auth_config'
+      type: 'auth_config',
     });
   }
 }
@@ -511,7 +608,7 @@ export class CacheHealthMonitor {
   static async getHealthInfo() {
     const health = await cache.health();
     const stats = cache.getStats();
-    
+
     return {
       redis: health.redis,
       totalKeys: health.totalKeys,
@@ -523,8 +620,8 @@ export class CacheHealthMonitor {
         reports: await this.getCacheTypeHealth('report'),
         auth: await this.getCacheTypeHealth('auth'),
         devices: await this.getCacheTypeHealth('device'),
-        prompts: await this.getCacheTypeHealth('therapy_prompt')
-      }
+        prompts: await this.getCacheTypeHealth('therapy_prompt'),
+      },
     };
   }
 

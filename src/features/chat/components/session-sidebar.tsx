@@ -1,16 +1,9 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import { useCallback, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { 
-  Plus, 
-  MessageSquare, 
-  Trash2,
-  X,
-  Heart,
-  Sparkles
-} from 'lucide-react';
+import { Plus, MessageSquare, Trash2, X, Heart, Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { therapeuticInteractive } from '@/lib/ui/design-tokens';
 import { SessionSidebarProps } from '@/types/ui';
@@ -18,7 +11,7 @@ import { SessionSidebarProps } from '@/types/ui';
 // Using centralized props interface from types/component-props.ts
 // SessionSidebarProps includes all necessary props
 
-export const SessionSidebar = React.memo(function SessionSidebar({
+export const SessionSidebar = memo(function SessionSidebar({
   showSidebar,
   setShowSidebar,
   sessions,
@@ -28,22 +21,22 @@ export const SessionSidebar = React.memo(function SessionSidebar({
   deleteSession,
   startNewSession,
   isMobile,
-  children
+  children,
 }: SessionSidebarProps) {
   return (
     <>
       {/* Mobile backdrop overlay */}
       {showSidebar && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+        <div
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
           onClick={() => setShowSidebar(false)}
         />
       )}
-      
+
       {/* Sidebar */}
-      <aside 
+      <aside
         id="chat-sidebar"
-        className={`${showSidebar ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${showSidebar ? 'fixed md:relative' : ''} ${showSidebar ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} transition-all duration-500 ease-in-out overflow-hidden bg-card/80 dark:bg-card/80 backdrop-blur-md border-r border-border/50 flex flex-col shadow-xl animate-slide-in`}
+        className={`${showSidebar ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${showSidebar ? 'fixed md:relative' : ''} ${showSidebar ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} bg-card/80 dark:bg-card/80 border-border/50 animate-slide-in flex flex-col overflow-hidden border-r shadow-xl backdrop-blur-md transition-all duration-500 ease-in-out`}
         role="navigation"
         aria-label="Chat sessions"
         aria-hidden={!showSidebar}
@@ -52,18 +45,16 @@ export const SessionSidebar = React.memo(function SessionSidebar({
           backgroundImage: `
             linear-gradient(180deg, transparent 0%, hsl(var(--accent) / 0.03) 100%),
             radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 50%)
-          `
+          `,
         }}
       >
-        <div className="p-6 border-b border-border/30">
-          <div className="flex items-center justify-between mb-6">
+        <div className="border-border/30 border-b p-6">
+          <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
-                <Heart className="w-6 h-6 text-white" />
+              <div className="from-primary to-accent flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg">
+                <Heart className="h-6 w-6 text-white" />
               </div>
-<h2 className="text-3xl mb-4 tracking-tight gradient-text">
-  Therapeutic AI
-</h2>
+              <h2 className="gradient-text mb-4 text-3xl tracking-tight">Therapeutic AI</h2>
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
@@ -73,87 +64,89 @@ export const SessionSidebar = React.memo(function SessionSidebar({
                 onClick={useCallback(() => setShowSidebar(false), [setShowSidebar])}
                 className={therapeuticInteractive.iconButtonSmall}
               >
-                <X className="w-4 h-4 relative z-10" />
+                <X className="relative z-10 h-4 w-4" />
               </Button>
             </div>
           </div>
-          <Button 
+          <Button
             onClick={startNewSession}
-            className="w-full justify-start gap-3 h-12 rounded-xl transition-all group"
+            className="group h-12 w-full justify-start gap-3 rounded-xl transition-all"
           >
-            <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-              <Plus className="w-4 h-4" />
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-colors group-hover:bg-white/30">
+              <Plus className="h-4 w-4" />
             </div>
             <span className="font-semibold">Start New Session</span>
-            <Sparkles className="w-4 h-4 ml-auto opacity-60 group-hover:opacity-100 transition-opacity" />
+            <Sparkles className="ml-auto h-4 w-4 opacity-60 transition-opacity group-hover:opacity-100" />
           </Button>
         </div>
 
         {/* Sessions */}
-        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+        <div className="custom-scrollbar flex-1 overflow-y-auto p-4">
           {sessions.length === 0 ? (
-            <div className="text-center py-12">
-              <MessageSquare className="w-12 h-12 text-muted-foreground/50 mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">No sessions yet</p>
-              <p className="text-sm text-muted-foreground/70">Start a conversation to begin</p>
+            <div className="py-12 text-center">
+              <MessageSquare className="text-muted-foreground/50 mx-auto mb-3 h-12 w-12" />
+              <p className="text-muted-foreground text-sm">No sessions yet</p>
+              <p className="text-muted-foreground/70 text-sm">Start a conversation to begin</p>
             </div>
           ) : (
             sessions.map((session, index) => (
-            <Card 
-              key={session.id}
-              className={`p-4 mb-3 group transition-all duration-300 hover:shadow-lg cursor-pointer animate-fade-in ${
-                currentSession === session.id 
-                  ? 'ring-2 ring-primary/50 bg-primary/5 border-primary/30 shadow-md' 
-                  : 'hover:border-primary/20 bg-card/50 hover:bg-card/70'
-              }`}
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div 
-                className="flex items-start gap-3"
-                onClick={() => {
-                  setCurrentSession(session.id);
-                  loadMessages(session.id);
-                  if (isMobile) {
-                    setShowSidebar(false);
-                  }
-                }}
+              <Card
+                key={session.id}
+                className={`group animate-fade-in mb-3 cursor-pointer p-4 transition-all duration-300 hover:shadow-lg ${
+                  currentSession === session.id
+                    ? 'ring-primary/50 bg-primary/5 border-primary/30 shadow-md ring-2'
+                    : 'hover:border-primary/20 bg-card/50 hover:bg-card/70'
+                }`}
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                  currentSession === session.id 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary'
-                }`}>
-                  <MessageSquare className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-semibold truncate mb-1">
-                    {session.title}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground truncate">
-                      {session._count?.messages ? `${session._count.messages} messages` : 'No messages yet'}
-                    </p>
-                    <div className="h-1 w-1 rounded-full bg-muted-foreground/30"></div>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(session.startedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="opacity-0 group-hover:opacity-100 transition-all duration-200 p-1 h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive relative overflow-hidden"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteSession(session.id);
+                <div
+                  className="flex items-start gap-3"
+                  onClick={() => {
+                    setCurrentSession(session.id);
+                    loadMessages(session.id);
+                    if (isMobile) {
+                      setShowSidebar(false);
+                    }
                   }}
                 >
-                  <Trash2 className="w-4 h-4 relative z-10" />
-                </Button>
-              </div>
-            </Card>
-          )))
-          }
+                  <div
+                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
+                      currentSession === session.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary'
+                    }`}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="mb-1 truncate text-base font-semibold">{session.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <p className="text-muted-foreground truncate text-sm">
+                        {session._count?.messages
+                          ? `${session._count.messages} messages`
+                          : 'No messages yet'}
+                      </p>
+                      <div className="bg-muted-foreground/30 h-1 w-1 rounded-full"></div>
+                      <p className="text-muted-foreground text-sm">
+                        {new Date(session.startedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hover:bg-destructive/10 hover:text-destructive relative h-8 w-8 overflow-hidden rounded-lg p-1 opacity-0 transition-all duration-200 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteSession(session.id);
+                    }}
+                  >
+                    <Trash2 className="relative z-10 h-4 w-4" />
+                  </Button>
+                </div>
+              </Card>
+            ))
+          )}
         </div>
 
         {/* Settings Panel */}

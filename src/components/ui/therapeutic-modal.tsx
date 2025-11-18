@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -27,18 +27,18 @@ export interface TherapeuticModalProps {
   trigger?: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  
+
   // Content
   title?: ReactNode;
   subtitle?: ReactNode;
   description?: ReactNode;
   children?: ReactNode;
-  
+
   // Modal type and behavior
   type?: 'dialog' | 'sheet' | 'fullscreen' | 'auto'; // Auto uses sheet on mobile
   variant?: 'default' | 'therapeutic' | 'cbt-flow' | 'report' | 'confirm';
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  
+
   // Actions
   primaryAction?: {
     label: string;
@@ -59,30 +59,30 @@ export interface TherapeuticModalProps {
     loading?: boolean;
     disabled?: boolean;
   }>;
-  
+
   // Modal-specific features
   preventClose?: boolean; // Prevent closing via escape/backdrop
   hideCloseButton?: boolean;
   showProgress?: boolean;
   progressValue?: number;
-  
+
   // Therapeutic features
   stepIndicator?: { current: number; total: number };
   therapeuticIcon?: ReactNode;
-  
+
   // Mobile optimization
   mobileOptimized?: boolean;
   mobileAsSheet?: boolean; // Force sheet on mobile
-  
+
   // Styling
   contentClassName?: string;
   headerClassName?: string;
   footerClassName?: string;
-  
+
   // Accessibility
   role?: string;
   ariaLabel?: string;
-  
+
   // Event handlers
   onClose?: () => void;
 }
@@ -90,7 +90,7 @@ export interface TherapeuticModalProps {
 /**
  * Unified therapeutic modal component that consolidates all modal patterns
  * Replaces: Dialog, Sheet, SessionReportModal, MobileCBTSheet (TherapyFlowModal deleted)
- * 
+ *
  * Features:
  * - Auto-responsive (dialog on desktop, sheet on mobile)
  * - Multiple therapeutic variants
@@ -129,19 +129,19 @@ export function TherapeuticModal({
   onClose,
   ...props
 }: TherapeuticModalProps) {
-
   // Determine which component to use
-  const useSheet = type === 'sheet' || 
-                  (type === 'auto' && mobileOptimized && mobileAsSheet) ||
-                  type === 'fullscreen';
-  
+  const useSheet =
+    type === 'sheet' ||
+    (type === 'auto' && mobileOptimized && mobileAsSheet) ||
+    type === 'fullscreen';
+
   // Size configurations
   const sizeClasses = {
     sm: 'max-w-sm',
     md: 'max-w-md',
-    lg: 'max-w-lg', 
+    lg: 'max-w-lg',
     xl: 'max-w-xl',
-    full: 'max-w-full'
+    full: 'max-w-full',
   };
 
   // Variant-specific styling
@@ -150,7 +150,7 @@ export function TherapeuticModal({
     therapeutic: 'therapeutic-modal',
     'cbt-flow': 'cbt-flow-modal min-h-[500px]',
     report: 'report-modal',
-    confirm: 'confirm-modal'
+    confirm: 'confirm-modal',
   };
 
   // Handle close events
@@ -165,7 +165,7 @@ export function TherapeuticModal({
   const allActions = [
     ...(primaryAction ? [{ ...primaryAction, isPrimary: true }] : []),
     ...(secondaryAction ? [{ ...secondaryAction, isSecondary: true }] : []),
-    ...actions
+    ...actions,
   ];
 
   // Header content
@@ -173,39 +173,39 @@ export function TherapeuticModal({
     <>
       {/* Step indicator */}
       {stepIndicator && (
-        <div className="flex justify-center mb-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-sm text-primary font-semibold">
-            <span>Step {stepIndicator.current} of {stepIndicator.total}</span>
+        <div className="mb-4 flex justify-center">
+          <div className="bg-primary/10 text-primary inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
+            <span>
+              Step {stepIndicator.current} of {stepIndicator.total}
+            </span>
           </div>
         </div>
       )}
 
       {/* Title with therapeutic icon */}
       <div className="flex items-center gap-3">
-        {therapeuticIcon && (
-          <div className="flex-shrink-0">{therapeuticIcon}</div>
-        )}
+        {therapeuticIcon && <div className="flex-shrink-0">{therapeuticIcon}</div>}
         <div className="flex-1">
           {title && (
-            <h2 className={cn(
-              "text-xl font-semibold",
-              variant === 'therapeutic' && "text-primary",
-              variant === 'cbt-flow' && "text-xl"
-            )}>
+            <h2
+              className={cn(
+                'text-xl font-semibold',
+                variant === 'therapeutic' && 'text-primary',
+                variant === 'cbt-flow' && 'text-xl'
+              )}
+            >
               {title}
             </h2>
           )}
-          {subtitle && (
-            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>}
         </div>
       </div>
 
       {/* Progress bar */}
       {showProgress && (
-        <div className="w-full h-2 bg-muted rounded-full overflow-hidden mt-4">
+        <div className="bg-muted mt-4 h-2 w-full overflow-hidden rounded-full">
           <div
-            className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+            className="from-primary to-accent h-full bg-gradient-to-r transition-all duration-500"
             style={{ width: `${Math.max(0, Math.min(100, progressValue))}%` }}
           />
         </div>
@@ -215,14 +215,16 @@ export function TherapeuticModal({
 
   // Footer content
   const footerContent = allActions.length > 0 && (
-    <div className="flex gap-2 justify-end flex-wrap">
+    <div className="flex flex-wrap justify-end gap-2">
       {allActions.map((action, index) => (
         <TherapeuticButton
           key={index}
           variant={
-            ('isPrimary' in action && action.isPrimary) ? 'therapeutic' : 
-            ('isSecondary' in action && action.isSecondary) ? 'outline' :
-            (action.variant as 'outline' | 'ghost' | 'destructive') || 'ghost'
+            'isPrimary' in action && action.isPrimary
+              ? 'therapeutic'
+              : 'isSecondary' in action && action.isSecondary
+                ? 'outline'
+                : (action.variant as 'outline' | 'ghost' | 'destructive') || 'ghost'
           }
           onClick={action.onClick}
           loading={'loading' in action ? action.loading : false}
@@ -242,36 +244,23 @@ export function TherapeuticModal({
         {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
         <SheetContent
           side="bottom"
-          className={cn(
-            'max-h-[90vh] overflow-y-auto',
-            variantClasses[variant],
-            contentClassName
-          )}
+          className={cn('max-h-[90vh] overflow-y-auto', variantClasses[variant], contentClassName)}
           role={role}
           aria-label={ariaLabel}
         >
           <SheetHeader className={cn('space-y-4', headerClassName)}>
             {headerContent}
             {description && (
-              <SheetDescription className="text-left">
-                {description}
-              </SheetDescription>
+              <SheetDescription className="text-left">{description}</SheetDescription>
             )}
           </SheetHeader>
 
-          <TherapeuticLayout
-            layout="stack"
-            spacing="md"
-            padding="none"
-            className="py-6"
-          >
+          <TherapeuticLayout layout="stack" spacing="md" padding="none" className="py-6">
             {children}
           </TherapeuticLayout>
 
           {footerContent && (
-            <div className={cn('pt-4 border-t', footerClassName)}>
-              {footerContent}
-            </div>
+            <div className={cn('border-t pt-4', footerClassName)}>{footerContent}</div>
           )}
         </SheetContent>
       </Sheet>
@@ -280,11 +269,7 @@ export function TherapeuticModal({
 
   // Dialog implementation for desktop
   return (
-    <Dialog 
-      open={open} 
-      onOpenChange={handleOpenChange}
-      {...props}
-    >
+    <Dialog open={open} onOpenChange={handleOpenChange} {...props}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
         className={cn(
@@ -303,7 +288,7 @@ export function TherapeuticModal({
         {!hideCloseButton && variant === 'therapeutic' && (
           <button
             onClick={() => handleOpenChange(false)}
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+            className="ring-offset-background focus:ring-ring absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none"
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
@@ -313,25 +298,16 @@ export function TherapeuticModal({
         <DialogHeader className={cn('space-y-4', headerClassName)}>
           {headerContent}
           {description && (
-            <DialogDescription className="text-left">
-              {description}
-            </DialogDescription>
+            <DialogDescription className="text-left">{description}</DialogDescription>
           )}
         </DialogHeader>
 
-        <TherapeuticLayout
-          layout="stack"
-          spacing="md"
-          padding="none"
-          className="py-6"
-        >
+        <TherapeuticLayout layout="stack" spacing="md" padding="none" className="py-6">
           {children}
         </TherapeuticLayout>
 
         {footerContent && (
-          <DialogFooter className={cn(footerClassName)}>
-            {footerContent}
-          </DialogFooter>
+          <DialogFooter className={cn(footerClassName)}>{footerContent}</DialogFooter>
         )}
       </DialogContent>
     </Dialog>
@@ -347,7 +323,7 @@ export const therapeuticModalPresets = {
     size: 'lg' as const,
     mobileOptimized: true,
     showProgress: true,
-    ...props
+    ...props,
   }),
 
   // Session report modal
@@ -356,7 +332,7 @@ export const therapeuticModalPresets = {
     type: 'dialog' as const,
     size: 'xl' as const,
     mobileAsSheet: true,
-    ...props
+    ...props,
   }),
 
   // Confirmation modal
@@ -365,7 +341,7 @@ export const therapeuticModalPresets = {
     type: 'dialog' as const,
     size: 'sm' as const,
     preventClose: true,
-    ...props
+    ...props,
   }),
 
   // Full-screen therapeutic modal
@@ -374,7 +350,7 @@ export const therapeuticModalPresets = {
     type: 'fullscreen' as const,
     size: 'full' as const,
     mobileOptimized: true,
-    ...props
+    ...props,
   }),
 
   // Mobile sheet
@@ -382,8 +358,8 @@ export const therapeuticModalPresets = {
     type: 'sheet' as const,
     variant: 'default' as const,
     mobileOptimized: true,
-    ...props
-  })
+    ...props,
+  }),
 } as const;
 
 // Quick confirmation modal hook
@@ -405,13 +381,13 @@ export function useTherapeuticConfirm() {
       primaryAction: {
         label: options.confirmText || 'Confirm',
         onClick: options.onConfirm,
-        variant: options.variant === 'destructive' ? 'destructive' : 'therapeutic'
+        variant: options.variant === 'destructive' ? 'destructive' : 'therapeutic',
       },
       secondaryAction: {
         label: options.cancelText || 'Cancel',
         onClick: () => {},
-        variant: 'ghost'
-      }
+        variant: 'ghost',
+      },
     };
   };
 }
@@ -421,5 +397,5 @@ export const therapeuticModalClasses = {
   'therapeutic-modal': 'bg-gradient-to-br from-background to-muted/20 border-primary/10',
   'cbt-flow-modal': 'min-h-[500px] cbt-modal-styling',
   'report-modal': 'max-w-4xl report-modal-styling',
-  'confirm-modal': 'max-w-md text-center'
+  'confirm-modal': 'max-w-md text-center',
 } as const;

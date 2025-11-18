@@ -1,7 +1,7 @@
 /**
  * Test Templates for Standardized Testing Patterns
  * Provides reusable test patterns to eliminate duplication across test files
- * 
+ *
  * Standardizes testing approaches for:
  * - Component rendering and interaction
  * - API endpoint testing
@@ -10,14 +10,10 @@
  * - Integration testing flows
  */
 
+import * as React from 'react';
 import { ReactElement } from 'react';
-import React from 'react';
 import { NextRequest } from 'next/server';
-import { 
-  ComponentTestUtils, 
-  PerformanceTestUtils,
-  MockFactory
-} from './test-utilities';
+import { ComponentTestUtils, PerformanceTestUtils, MockFactory } from './test-utilities';
 
 // =============================================================================
 // API TEST TEMPLATES
@@ -28,7 +24,6 @@ import {
  * Use for consistent testing of Next.js API routes
  */
 export class APITestTemplate {
-  
   /**
    * Complete API endpoint test suite
    */
@@ -58,10 +53,9 @@ export class APITestTemplate {
     }
   ) {
     describe(`${routeName} API Route`, () => {
-      
       // Setup API test environment
       const mocks = ComponentTestUtils.setupAPITest();
-      
+
       describe('Valid Requests', () => {
         testCases.validRequests.forEach(({ name, request, expectedResponse }) => {
           it(name, async () => {
@@ -74,11 +68,11 @@ export class APITestTemplate {
                 headers: request.headers,
               }
             );
-            
+
             const response = await apiHandler(mockRequest);
-            
+
             expect(response.status).toBe(expectedResponse.status);
-            
+
             if (expectedResponse.body) {
               const responseBody = await response.json();
               expect(responseBody).toEqual(expect.objectContaining(expectedResponse.body));
@@ -86,7 +80,7 @@ export class APITestTemplate {
           });
         });
       });
-      
+
       if (testCases.invalidRequests) {
         describe('Invalid Requests', () => {
           testCases.invalidRequests?.forEach(({ name, request, expectedStatus }) => {
@@ -95,30 +89,29 @@ export class APITestTemplate {
                 request.url || 'http://localhost:3000/api/test',
                 request
               );
-              
+
               const response = await apiHandler(mockRequest);
               expect(response.status).toBe(expectedStatus);
             });
           });
         });
       }
-      
+
       describe('Authentication', () => {
         it('should handle missing authentication', async () => {
           (mocks.apiAuth.validateApiAuth as any).mockResolvedValueOnce({ isValid: false });
-          
+
           const mockRequest = (ComponentTestUtils as any).createMockRequest(
             'http://localhost:3000/api/test'
           );
-          
+
           const response = await apiHandler(mockRequest);
           expect(response.status).toBe(401);
         });
       });
-      
     });
   }
-  
+
   /**
    * Quick setup for database API tests
    */
@@ -136,13 +129,12 @@ export class APITestTemplate {
  * Use for consistent testing of React components
  */
 export class ComponentTestTemplate {
-
   /**
    * Quick setup for Redux component tests
    */
   static setupReduxTest() {
     ComponentTestUtils.setupComponentTest();
-    
+
     beforeEach(() => {
       // Additional Redux-specific setup
       jest.mock('@/store/slices/chatSlice', () => ({
@@ -161,11 +153,11 @@ export class ComponentTestTemplate {
    */
   static setupModalTest() {
     ComponentTestUtils.setupComponentTest();
-    
+
     beforeEach(() => {
       // Mock dialog components more specifically
       const uiMocks = MockFactory.createUIComponentMocks();
-      
+
       jest.doMock('@/components/ui/dialog', () => ({
         Dialog: uiMocks.Dialog,
         DialogContent: uiMocks.DialogContent,
@@ -175,7 +167,7 @@ export class ComponentTestTemplate {
       }));
     });
   }
-  
+
   /**
    * Complete component test suite with Redux support
    */
@@ -191,21 +183,18 @@ export class ComponentTestTemplate {
     } = {}
   ) {
     const { needsRedux = true } = options;
-    
+
     describe(`${componentName} Component`, () => {
-      
       // Setup common test environment
       ComponentTestUtils.setupComponentTest();
-      
+
       describe('Basic Rendering', () => {
         it('should render without crashing', () => {
-          const renderFn = needsRedux 
+          const renderFn = needsRedux
             ? ComponentTestUtils.renderWithRedux
             : ComponentTestUtils.renderWithProviders;
-            
-          const result = renderFn(
-            React.createElement(ComponentToTest, defaultProps)
-          );
+
+          const result = renderFn(React.createElement(ComponentToTest, defaultProps));
           expect(result.container).toBeInTheDocument();
         });
 
@@ -226,16 +215,14 @@ export class ComponentTestTemplate {
       describe('Props and State', () => {
         it('should accept and use custom props', () => {
           const customProps = { ...defaultProps, testProp: 'test-value' };
-          ComponentTestUtils.renderWithProviders(
-            React.createElement(ComponentToTest, customProps)
-          );
+          ComponentTestUtils.renderWithProviders(React.createElement(ComponentToTest, customProps));
         });
 
         it('should handle prop changes', () => {
           const { rerender } = ComponentTestUtils.renderWithProviders(
             React.createElement(ComponentToTest, defaultProps)
           );
-          
+
           const newProps = { ...defaultProps, updated: true };
           rerender(React.createElement(ComponentToTest, newProps));
         });
@@ -245,21 +232,17 @@ export class ComponentTestTemplate {
         it('should handle click events', () => {
           const mockHandler = jest.fn();
           const props = { ...defaultProps, onClick: mockHandler };
-          
-          ComponentTestUtils.renderWithProviders(
-            React.createElement(ComponentToTest, props)
-          );
-          
+
+          ComponentTestUtils.renderWithProviders(React.createElement(ComponentToTest, props));
+
           // Click interactions would be tested here
         });
 
         it('should handle keyboard events', () => {
           const mockHandler = jest.fn();
           const props = { ...defaultProps, onKeyDown: mockHandler };
-          
-          ComponentTestUtils.renderWithProviders(
-            React.createElement(ComponentToTest, props)
-          );
+
+          ComponentTestUtils.renderWithProviders(React.createElement(ComponentToTest, props));
         });
       });
 
@@ -268,7 +251,7 @@ export class ComponentTestTemplate {
           ComponentTestUtils.renderWithProviders(
             React.createElement(ComponentToTest, defaultProps)
           );
-          
+
           // Accessibility checks would be performed here
         });
 
@@ -281,7 +264,7 @@ export class ComponentTestTemplate {
 
       describe('Performance', () => {
         it('should render within acceptable time limits', () => {
-          PerformanceTestUtils.measureRenderTime(() => 
+          PerformanceTestUtils.measureRenderTime(() =>
             ComponentTestUtils.renderWithProviders(
               React.createElement(ComponentToTest, defaultProps)
             )
@@ -305,7 +288,6 @@ export class ComponentTestTemplate {
     defaultProps: any = {}
   ) {
     describe(`${modalName} Modal`, () => {
-      
       describe('Modal Behavior', () => {
         it('should open when isOpen is true', () => {
           ComponentTestUtils.renderWithProviders(
@@ -324,18 +306,26 @@ export class ComponentTestTemplate {
         it('should handle close button click', () => {
           const mockClose = jest.fn();
           ComponentTestUtils.renderWithProviders(
-            React.createElement(ModalComponent, { ...defaultProps, isOpen: true, onClose: mockClose })
+            React.createElement(ModalComponent, {
+              ...defaultProps,
+              isOpen: true,
+              onClose: mockClose,
+            })
           );
-          
+
           // Close button interaction would be tested here
         });
 
         it('should handle escape key press', () => {
           const mockClose = jest.fn();
           ComponentTestUtils.renderWithProviders(
-            React.createElement(ModalComponent, { ...defaultProps, isOpen: true, onClose: mockClose })
+            React.createElement(ModalComponent, {
+              ...defaultProps,
+              isOpen: true,
+              onClose: mockClose,
+            })
           );
-          
+
           // Escape key handling would be tested here
         });
       });
@@ -343,9 +333,13 @@ export class ComponentTestTemplate {
       describe('Modal Content', () => {
         it('should display modal title', () => {
           ComponentTestUtils.renderWithProviders(
-            React.createElement(ModalComponent, { ...defaultProps, isOpen: true, title: "Test Modal" })
+            React.createElement(ModalComponent, {
+              ...defaultProps,
+              isOpen: true,
+              title: 'Test Modal',
+            })
           );
-          ComponentTestUtils.expectModalDialog("Test Modal");
+          ComponentTestUtils.expectModalDialog('Test Modal');
         });
 
         it('should render modal content', () => {
@@ -367,29 +361,24 @@ export class ComponentTestTemplate {
     defaultProps: any = {}
   ) {
     describe(`${formName} Form`, () => {
-      
       describe('Form Rendering', () => {
         it('should render all form fields', () => {
-          ComponentTestUtils.renderWithProviders(
-            React.createElement(FormComponent, defaultProps)
-          );
-          
-          formFields.forEach(_field => {
+          ComponentTestUtils.renderWithProviders(React.createElement(FormComponent, defaultProps));
+
+          formFields.forEach((_field) => {
             // Field existence checks would be here
           });
         });
 
         it('should show validation errors for required fields', () => {
-          ComponentTestUtils.renderWithProviders(
-            React.createElement(FormComponent, defaultProps)
-          );
-          
+          ComponentTestUtils.renderWithProviders(React.createElement(FormComponent, defaultProps));
+
           // Submit form without required fields
           ComponentTestUtils.submitForm();
-          
+
           // Check for validation errors
-          const requiredFields = formFields.filter(f => f.required);
-          requiredFields.forEach(_field => {
+          const requiredFields = formFields.filter((f) => f.required);
+          requiredFields.forEach((_field) => {
             // Validation error checks would be here
           });
         });
@@ -397,10 +386,8 @@ export class ComponentTestTemplate {
 
       describe('Form Interactions', () => {
         it('should accept user input', async () => {
-          ComponentTestUtils.renderWithProviders(
-            React.createElement(FormComponent, defaultProps)
-          );
-          
+          ComponentTestUtils.renderWithProviders(React.createElement(FormComponent, defaultProps));
+
           for (const field of formFields) {
             if (field.type === 'text' || field.type === 'email') {
               await ComponentTestUtils.fillFormField(field.name, 'test value');
@@ -413,14 +400,14 @@ export class ComponentTestTemplate {
           ComponentTestUtils.renderWithProviders(
             React.createElement(FormComponent, { ...defaultProps, onSubmit: mockSubmit })
           );
-          
+
           // Fill form with valid data
           for (const field of formFields) {
             if (field.type === 'text') {
               await ComponentTestUtils.fillFormField(field.name, `valid ${field.name}`);
             }
           }
-          
+
           await ComponentTestUtils.submitForm();
           expect(mockSubmit).toHaveBeenCalled();
         });

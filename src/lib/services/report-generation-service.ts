@@ -1,10 +1,20 @@
-import { generateSessionReport, extractStructuredAnalysis, type ReportMessage } from '@/lib/api/groq-client';
+import {
+  generateSessionReport,
+  extractStructuredAnalysis,
+  type ReportMessage,
+} from '@/lib/api/groq-client';
 import { ANALYSIS_EXTRACTION_PROMPT_TEXT } from '@/lib/therapy/therapy-prompts';
 import { getReportPrompt } from '@/lib/therapy/prompts';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import { logger, devLog } from '@/lib/utils/logger';
-import { encryptSessionReportContent, encryptEnhancedAnalysisData } from '@/lib/chat/message-encryption';
-import { validateTherapeuticContext, calculateContextualConfidence } from '@/lib/therapy/context-validator';
+import {
+  encryptSessionReportContent,
+  encryptEnhancedAnalysisData,
+} from '@/lib/chat/message-encryption';
+import {
+  validateTherapeuticContext,
+  calculateContextualConfidence,
+} from '@/lib/therapy/context-validator';
 import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/cbt-data-parser';
 import { generateFallbackAnalysis as generateFallbackAnalysisExternal } from '@/lib/reports/fallback-analysis';
 import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
@@ -54,7 +64,6 @@ interface ReportGenerationResult {
   cbtDataSource: string;
   cbtDataAvailable: boolean;
 }
-
 
 export class ReportGenerationService {
   private reportModel: string;
@@ -114,10 +123,16 @@ export class ReportGenerationService {
 
     devLog('Applying contextual validation to cognitive distortions...');
 
-    const fullConversationContent = messages.map(m => m.content).join(' ');
+    const fullConversationContent = messages.map((m) => m.content).join(' ');
     const contextValidation = validateTherapeuticContext(fullConversationContent);
 
-    analysis.cognitiveDistortions = (analysis.cognitiveDistortions as Array<{ contextAwareConfidence?: number; falsePositiveRisk?: string; name?: string }>)
+    analysis.cognitiveDistortions = (
+      analysis.cognitiveDistortions as Array<{
+        contextAwareConfidence?: number;
+        falsePositiveRisk?: string;
+        name?: string;
+      }>
+    )
       .map((distortion) => {
         if (typeof distortion.contextAwareConfidence === 'number') {
           const enhancedConfidence = calculateContextualConfidence(
@@ -130,8 +145,11 @@ export class ReportGenerationService {
         return distortion;
       })
       .filter((distortion) => {
-        if (distortion.falsePositiveRisk === 'high' &&
-          distortion.contextAwareConfidence && distortion.contextAwareConfidence < 60) {
+        if (
+          distortion.falsePositiveRisk === 'high' &&
+          distortion.contextAwareConfidence &&
+          distortion.contextAwareConfidence < 60
+        ) {
           devLog(`Filtered out potential false positive: ${distortion.name}`);
           return false;
         }
@@ -142,14 +160,19 @@ export class ReportGenerationService {
       originalCount: analysis.cognitiveDistortions.length,
       contextType: contextValidation.contextualAnalysis.contextType,
       emotionalIntensity: contextValidation.contextualAnalysis.emotionalIntensity,
-      therapeuticRelevance: contextValidation.contextualAnalysis.therapeuticRelevance
+      therapeuticRelevance: contextValidation.contextualAnalysis.therapeuticRelevance,
     });
   }
 
   /**
    * Integrates CBT data into the parsed analysis
    */
-  private integrateCBTData(analysis: ParsedAnalysis, cbtData: CBTStructuredAssessment, cbtSummary: string, dataSource: string): void {
+  private integrateCBTData(
+    analysis: ParsedAnalysis,
+    cbtData: CBTStructuredAssessment,
+    cbtSummary: string,
+    dataSource: string
+  ): void {
     devLog(`Integrating CBT data from ${dataSource} source into analysis...`);
 
     logger.therapeuticOperation('CBT data integration analysis', {
@@ -159,7 +182,7 @@ export class ReportGenerationService {
       hasActionPlan: !!cbtData.actionPlan,
       hasSchemaModes: !!cbtData.schemaModes,
       dataSize: JSON.stringify(cbtData).length,
-      source: dataSource
+      source: dataSource,
     });
 
     const dataReliability = 90;
@@ -171,16 +194,16 @@ export class ReportGenerationService {
         cbtData.emotions,
         cbtData.thoughts,
         cbtData.coreBeliefs,
-        cbtData.actionPlan
+        cbtData.actionPlan,
       ].filter(Boolean).length,
-      userInsightsPrioritized: true
+      userInsightsPrioritized: true,
     };
 
     analysis.contentTierMetadata = {
       tier: 'structured-cbt',
       analysisScope: 'comprehensive',
       userDataReliability: dataReliability,
-      dataSource: dataSource
+      dataSource: dataSource,
     };
 
     if (!analysis.keyPoints) {
@@ -200,7 +223,7 @@ export class ReportGenerationService {
         dataSource,
         hasData: !!cbtData,
         dataKeyCount: Object.keys(cbtData).length,
-        structuredAssessmentSize: JSON.stringify(cbtData).length
+        structuredAssessmentSize: JSON.stringify(cbtData).length,
       });
 
       const insights = analysis.therapeuticInsights as Record<string, unknown>;
@@ -211,7 +234,7 @@ export class ReportGenerationService {
 
       logger.therapeuticOperation('CBT therapeutic insights integration completed', {
         insightKeyCount: Object.keys(insights).length,
-        hasStructuredAssessment: !!insights.structuredAssessment
+        hasStructuredAssessment: !!insights.structuredAssessment,
       });
     }
   }
@@ -219,9 +242,17 @@ export class ReportGenerationService {
   /**
    * Extracts and processes structured analysis from AI report
    */
-  private async processStructuredAnalysis(completion: string, messages: ReportMessage[], _hasCBTContent: boolean): Promise<ParsedAnalysis> {
+  private async processStructuredAnalysis(
+    completion: string,
+    messages: ReportMessage[],
+    _hasCBTContent: boolean
+  ): Promise<ParsedAnalysis> {
     devLog('Extracting structured analysis data...');
-    const analysisData = await extractStructuredAnalysis(completion, ANALYSIS_EXTRACTION_PROMPT_TEXT, this.reportModel);
+    const analysisData = await extractStructuredAnalysis(
+      completion,
+      ANALYSIS_EXTRACTION_PROMPT_TEXT,
+      this.reportModel
+    );
 
     let parsedAnalysis: ParsedAnalysis = {};
 
@@ -237,7 +268,7 @@ export class ReportGenerationService {
           hasMarkdownBlocks: analysisData?.includes('```') || false,
           hasJsonStart: analysisData?.includes('{') || false,
           hasJsonEnd: analysisData?.includes('}') || false,
-          modelUsed: this.reportModel
+          modelUsed: this.reportModel,
         });
 
         devLog('Attempting fallback content analysis...');
@@ -247,11 +278,11 @@ export class ReportGenerationService {
 
           logger.info('Fallback analysis generated successfully', {
             fallbackStrategy: 'human_readable_content_analysis',
-            extractedInsights: Object.keys(parsedAnalysis).length
+            extractedInsights: Object.keys(parsedAnalysis).length,
           });
         } catch (fallbackError) {
           logger.error('Fallback analysis also failed', {
-            fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown error'
+            fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown error',
           });
         }
       }
@@ -263,7 +294,11 @@ export class ReportGenerationService {
   /**
    * Saves report to database with encryption
    */
-  private async saveReportToDatabase(sessionId: string, completion: string, parsedAnalysis: ParsedAnalysis): Promise<void> {
+  private async saveReportToDatabase(
+    sessionId: string,
+    completion: string,
+    parsedAnalysis: ParsedAnalysis
+  ): Promise<void> {
     const encryptedReportContent = encryptSessionReportContent(completion);
 
     const enhancedAnalysisData = {
@@ -274,10 +309,10 @@ export class ReportGenerationService {
         predominantMode: null,
         behavioralPatterns: [],
         copingStrategies: { adaptive: [], maladaptive: [] },
-        therapeuticRecommendations: []
+        therapeuticRecommendations: [],
       },
       therapeuticFrameworks: parsedAnalysis.therapeuticFrameworks || [],
-      recommendations: parsedAnalysis.recommendations || []
+      recommendations: parsedAnalysis.recommendations || [],
     };
 
     const encryptedAnalysisData = encryptEnhancedAnalysisData(enhancedAnalysisData);
@@ -291,25 +326,30 @@ export class ReportGenerationService {
       patternsIdentified: parsedAnalysis.patternsIdentified || [],
       actionItems: parsedAnalysis.actionItems || [],
       moodAssessment: parsedAnalysis.moodAssessment || '',
-      progressNotes: parsedAnalysis.progressNotes || `Report generated on ${new Date().toISOString()}`,
+      progressNotes:
+        parsedAnalysis.progressNotes || `Report generated on ${new Date().toISOString()}`,
       cognitiveDistortions: encryptedAnalysisData.cognitiveDistortions,
       schemaAnalysis: encryptedAnalysisData.schemaAnalysis,
       therapeuticFrameworks: encryptedAnalysisData.therapeuticFrameworks,
       recommendations: encryptedAnalysisData.recommendations,
       analysisConfidence: parsedAnalysis.analysisConfidence || 75,
-      analysisVersion: "enhanced_v1.0"
+      analysisVersion: 'enhanced_v1.0',
     });
 
     logger.info('Session report saved to database for therapeutic memory', {
       sessionId,
-      reportLength: completion.length
+      reportLength: completion.length,
     });
   }
 
   /**
    * Main method to generate complete session report
    */
-  async generateReport(sessionId: string, messages: ReportMessage[], locale: 'en' | 'nl'): Promise<ReportGenerationResult> {
+  async generateReport(
+    sessionId: string,
+    messages: ReportMessage[],
+    locale: 'en' | 'nl'
+  ): Promise<ReportGenerationResult> {
     const modelDisplay = (() => {
       const base = getModelDisplayName(this.reportModel) || this.reportModel;
       return supportsWebSearch(this.reportModel) ? `${base} (Deep Analysis)` : base;
@@ -319,7 +359,7 @@ export class ReportGenerationService {
       sessionId,
       modelUsed: this.reportModel,
       modelDisplayName: modelDisplay,
-      messageCount: messages.length
+      messageCount: messages.length,
     });
 
     // Check for CBT data in messages
@@ -343,7 +383,7 @@ export class ReportGenerationService {
         hasCoreBeliefs: !!cbtData.coreBeliefs,
         hasActionPlan: !!cbtData.actionPlan,
         cbtSummaryLength: cbtSummary.length,
-        dataSource: 'message-parsing'
+        dataSource: 'message-parsing',
       });
     }
 
@@ -351,7 +391,7 @@ export class ReportGenerationService {
     logger.info('Generating session report with AI model', {
       sessionId,
       modelUsed: this.reportModel,
-      messageCount: messages.length
+      messageCount: messages.length,
     });
 
     const reportPrompt = getReportPrompt(locale);
@@ -362,7 +402,11 @@ export class ReportGenerationService {
     }
 
     // Process structured analysis
-    const parsedAnalysis = await this.processStructuredAnalysis(completion, messages, hasCBTContent);
+    const parsedAnalysis = await this.processStructuredAnalysis(
+      completion,
+      messages,
+      hasCBTContent
+    );
 
     // Integrate CBT data if available
     if (cbtData && dataSource !== 'none') {
@@ -375,7 +419,7 @@ export class ReportGenerationService {
     } catch (dbError) {
       logger.error('Failed to save report to database', {
         error: dbError instanceof Error ? dbError.message : 'Unknown error',
-        sessionId
+        sessionId,
       });
     }
 
@@ -383,7 +427,7 @@ export class ReportGenerationService {
       sessionId,
       modelUsed: this.reportModel,
       reportLength: completion.length,
-      cbtDataSource: dataSource
+      cbtDataSource: dataSource,
     });
 
     return {
@@ -391,7 +435,7 @@ export class ReportGenerationService {
       modelUsed: this.reportModel,
       modelDisplayName: modelDisplay,
       cbtDataSource: dataSource,
-      cbtDataAvailable: dataSource !== 'none'
+      cbtDataAvailable: dataSource !== 'none',
     };
   }
 }

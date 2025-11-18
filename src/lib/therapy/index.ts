@@ -1,5 +1,5 @@
 /**
- * Therapy & CBT Domain  
+ * Therapy & CBT Domain
  * Centralized exports for therapeutic AI features, CBT tools, and therapy-specific functionality
  */
 

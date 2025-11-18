@@ -31,9 +31,9 @@ function checkRedisStatus() {
 function installRedis() {
   return new Promise((resolve, reject) => {
     console.log('🔧 Installing Redis...');
-    
+
     let command, args;
-    
+
     switch (platform) {
       case 'darwin': // macOS
         command = 'brew';
@@ -59,7 +59,7 @@ function installRedis() {
 
     const installProcess = spawn(command, args, {
       stdio: 'inherit',
-      shell: platform === 'linux' // Use shell for complex commands on Linux
+      shell: platform === 'linux', // Use shell for complex commands on Linux
     });
 
     installProcess.on('close', (code) => {
@@ -80,9 +80,9 @@ function installRedis() {
 function startRedis() {
   return new Promise((resolve, _reject) => {
     console.log('🚀 Starting Redis service...');
-    
+
     let command, args;
-    
+
     switch (platform) {
       case 'darwin': // macOS
         command = 'brew';
@@ -103,7 +103,7 @@ function startRedis() {
     }
 
     const startProcess = spawn(command, args, {
-      stdio: 'inherit'
+      stdio: 'inherit',
     });
 
     startProcess.on('close', (code) => {
@@ -123,10 +123,10 @@ function startRedis() {
  */
 function updateEnvFile() {
   const envPath = path.join(__dirname, '..', '.env.local');
-  
+
   if (!fs.existsSync(envPath)) {
     console.log('📝 Creating .env.local with Redis configuration...');
-    
+
     const envContent = `# Local environment configuration
 # Fill in your values as needed. ENCRYPTION_KEY should be a 32-byte (base64) value.
 
@@ -157,10 +157,10 @@ RATE_LIMIT_DISABLED=true
   } else {
     // Check if Redis config already exists
     const envContent = fs.readFileSync(envPath, 'utf8');
-    
+
     if (!envContent.includes('REDIS_URL')) {
       console.log('📝 Adding Redis configuration to existing .env.local...');
-      
+
       const redisConfig = `
 
 # Redis Configuration
@@ -191,33 +191,33 @@ CACHE_MESSAGE_TTL="900"
 async function setupRedis() {
   try {
     console.log('🔍 Checking Redis status...');
-    
+
     const { installed, running } = await checkRedisStatus();
-    
+
     if (installed && running) {
       console.log('✅ Redis is already installed and running!');
       updateEnvFile();
       return;
     }
-    
+
     if (installed && !running) {
       console.log('⚠️  Redis is installed but not running');
       await startRedis();
       updateEnvFile();
       return;
     }
-    
+
     if (!installed) {
       console.log('📦 Redis not found, installing...');
       await installRedis();
       await startRedis();
       updateEnvFile();
     }
-    
+
     // Final verification
     console.log('🔍 Verifying Redis installation...');
     const finalCheck = await checkRedisStatus();
-    
+
     if (finalCheck.running) {
       console.log('✅ Redis setup complete!');
       console.log('📊 You can check Redis status with: npm run redis:status');
@@ -226,12 +226,13 @@ async function setupRedis() {
       console.log('⚠️  Redis setup completed but service may not be running');
       console.log('   Try running: npm run redis:start');
     }
-    
   } catch (error) {
     console.error('❌ Redis setup failed:', error.message);
     console.log('\n🔧 Manual setup instructions:');
     console.log('   macOS: brew install redis && brew services start redis');
-    console.log('   Ubuntu: sudo apt-get install redis-server && sudo systemctl start redis-server');
+    console.log(
+      '   Ubuntu: sudo apt-get install redis-server && sudo systemctl start redis-server'
+    );
     console.log('   Windows: Download from https://github.com/microsoftarchive/redis/releases');
     console.log('   Docker: docker run -d --name redis -p 6379:6379 redis:alpine');
     process.exit(1);

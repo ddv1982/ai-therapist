@@ -18,5 +18,3 @@ describe('chat-request edges', () => {
     }
   });
 });
-
-

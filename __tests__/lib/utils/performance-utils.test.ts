@@ -1,4 +1,10 @@
-import { createDebouncedInputHandler, createThrottledScrollHandler, performanceMonitor, messageCache, optimizeMessageRendering } from '@/lib/utils/performance-utils';
+import {
+  createDebouncedInputHandler,
+  createThrottledScrollHandler,
+  performanceMonitor,
+  messageCache,
+  optimizeMessageRendering,
+} from '@/lib/utils/performance-utils';
 
 describe('performance-utils', () => {
   jest.useFakeTimers();
@@ -40,7 +46,12 @@ describe('performance-utils', () => {
   });
 
   it('optimizeMessageRendering virtualizes above threshold', () => {
-    const many = Array.from({ length: 120 }, (_, i) => ({ id: String(i), role: 'user', content: 'x', timestamp: new Date() }));
+    const many = Array.from({ length: 120 }, (_, i) => ({
+      id: String(i),
+      role: 'user',
+      content: 'x',
+      timestamp: new Date(),
+    }));
     const res = optimizeMessageRendering(many as any);
     expect(res.shouldVirtualize).toBe(true);
     expect(res.visibleMessages.length).toBe(50);
@@ -52,7 +63,12 @@ describe('performance-utils', () => {
 
   it('messageCache stores, retrieves, and cleans up stale sessions', () => {
     const session = 's1';
-    const msgs = Array.from({ length: 5 }, (_, i) => ({ id: String(i), role: 'user', content: 'x', timestamp: new Date() }));
+    const msgs = Array.from({ length: 5 }, (_, i) => ({
+      id: String(i),
+      role: 'user',
+      content: 'x',
+      timestamp: new Date(),
+    }));
     messageCache.setMessages(session, msgs as any);
     expect(messageCache.getMessages(session)?.length).toBe(5);
     // Force staleness and cleanup
@@ -68,5 +84,3 @@ describe('performance-utils', () => {
     expect(report['Comp'].measurements).toBeGreaterThan(0);
   });
 });
-
-

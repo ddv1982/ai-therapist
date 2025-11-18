@@ -2,7 +2,13 @@ import { ObsessionsCompulsionsData, ObsessionData, CompulsionData } from '@/type
 import { logger } from '@/lib/utils/logger';
 
 function generateStableId(prefix: string, seed: string): string {
-  const normalized = seed.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48) || 'entry';
+  const normalized =
+    seed
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'entry';
   let hash = 0;
   for (let i = 0; i < seed.length; i += 1) {
     hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
@@ -15,7 +21,7 @@ function generateStableId(prefix: string, seed: string): string {
  */
 export function formatObsessionsCompulsionsForChat(data: ObsessionsCompulsionsData): string {
   const { obsessions, compulsions } = data;
-  
+
   let content = '# Obsessions & Compulsions Tracker\n\n';
 
   if (obsessions.length > 0) {
@@ -53,7 +59,9 @@ export function formatObsessionsCompulsionsForChat(data: ObsessionsCompulsionsDa
 /**
  * Parse obsessions and compulsions data from markdown content
  */
-export function parseObsessionsCompulsionsFromMarkdown(content: string): ObsessionsCompulsionsData | null {
+export function parseObsessionsCompulsionsFromMarkdown(
+  content: string
+): ObsessionsCompulsionsData | null {
   try {
     const obsessions: ObsessionData[] = [];
     const compulsions: CompulsionData[] = [];
@@ -67,11 +75,22 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
         if (obsessionSection) {
           const description = extractMarkdownField(obsessionSection[0], 'Description');
           if (description) {
-            const intensity = parseInt(extractMarkdownField(obsessionSection[0], 'Intensity')?.replace('/10', '') || '5', 10);
+            const intensity = parseInt(
+              extractMarkdownField(obsessionSection[0], 'Intensity')?.replace('/10', '') || '5',
+              10
+            );
             const triggersRaw = extractMarkdownField(obsessionSection[0], 'Triggers');
-            const triggers = triggersRaw ? triggersRaw.split(',').map(trigger => trigger.trim()).filter(Boolean) : [];
+            const triggers = triggersRaw
+              ? triggersRaw
+                  .split(',')
+                  .map((trigger) => trigger.trim())
+                  .filter(Boolean)
+              : [];
             const createdAtRaw = extractMarkdownField(obsessionSection[0], 'Recorded');
-            const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
+            const createdAt =
+              createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw))
+                ? new Date(createdAtRaw).toISOString()
+                : new Date().toISOString();
 
             const obsessionSeed = `${description}-${intensity}-${triggers.join(',')}`;
             obsessions.push({
@@ -88,11 +107,25 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
         if (compulsionSection) {
           const description = extractMarkdownField(compulsionSection[0], 'Description');
           if (description) {
-            const frequency = parseInt(extractMarkdownField(compulsionSection[0], 'Frequency')?.replace('/10', '') || '5', 10);
-            const duration = parseInt(extractMarkdownField(compulsionSection[0], 'Duration')?.replace('minutes', '').trim() || '10', 10);
-            const reliefLevel = parseInt(extractMarkdownField(compulsionSection[0], 'Relief Level')?.replace('/10', '') || '5', 10);
+            const frequency = parseInt(
+              extractMarkdownField(compulsionSection[0], 'Frequency')?.replace('/10', '') || '5',
+              10
+            );
+            const duration = parseInt(
+              extractMarkdownField(compulsionSection[0], 'Duration')
+                ?.replace('minutes', '')
+                .trim() || '10',
+              10
+            );
+            const reliefLevel = parseInt(
+              extractMarkdownField(compulsionSection[0], 'Relief Level')?.replace('/10', '') || '5',
+              10
+            );
             const createdAtRaw = extractMarkdownField(compulsionSection[0], 'Recorded');
-            const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
+            const createdAt =
+              createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw))
+                ? new Date(createdAtRaw).toISOString()
+                : new Date().toISOString();
 
             const compulsionSeed = `${description}-${frequency}-${duration}-${reliefLevel}`;
             compulsions.push({
@@ -114,11 +147,22 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
       legacyObsessionMatches?.forEach((match) => {
         const description = extractMarkdownField(match, 'Description');
         if (!description) return;
-        const intensity = parseInt(extractMarkdownField(match, 'Intensity')?.replace('/10', '') || '5', 10);
+        const intensity = parseInt(
+          extractMarkdownField(match, 'Intensity')?.replace('/10', '') || '5',
+          10
+        );
         const triggersRaw = extractMarkdownField(match, 'Triggers');
-        const triggers = triggersRaw ? triggersRaw.split(',').map(trigger => trigger.trim()).filter(Boolean) : [];
+        const triggers = triggersRaw
+          ? triggersRaw
+              .split(',')
+              .map((trigger) => trigger.trim())
+              .filter(Boolean)
+          : [];
         const createdAtRaw = extractMarkdownField(match, 'Recorded');
-        const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
+        const createdAt =
+          createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw))
+            ? new Date(createdAtRaw).toISOString()
+            : new Date().toISOString();
 
         const obsessionSeed = `${description}-${intensity}-${triggers.join(',')}`;
         obsessions.push({
@@ -132,15 +176,29 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
     }
 
     if (compulsions.length === 0) {
-      const legacyCompulsionMatches = content.match(/### [^\n]*Compulsion[\s\S]*?(?=### [^\n]*|$)/g);
+      const legacyCompulsionMatches = content.match(
+        /### [^\n]*Compulsion[\s\S]*?(?=### [^\n]*|$)/g
+      );
       legacyCompulsionMatches?.forEach((match) => {
         const description = extractMarkdownField(match, 'Description');
         if (!description) return;
-        const frequency = parseInt(extractMarkdownField(match, 'Frequency')?.replace('/10', '') || '5', 10);
-        const duration = parseInt(extractMarkdownField(match, 'Duration')?.replace('minutes', '').trim() || '10', 10);
-        const reliefLevel = parseInt(extractMarkdownField(match, 'Relief Level')?.replace('/10', '') || '5', 10);
+        const frequency = parseInt(
+          extractMarkdownField(match, 'Frequency')?.replace('/10', '') || '5',
+          10
+        );
+        const duration = parseInt(
+          extractMarkdownField(match, 'Duration')?.replace('minutes', '').trim() || '10',
+          10
+        );
+        const reliefLevel = parseInt(
+          extractMarkdownField(match, 'Relief Level')?.replace('/10', '') || '5',
+          10
+        );
         const createdAtRaw = extractMarkdownField(match, 'Recorded');
-        const createdAt = createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw)) ? new Date(createdAtRaw).toISOString() : new Date().toISOString();
+        const createdAt =
+          createdAtRaw && !Number.isNaN(Date.parse(createdAtRaw))
+            ? new Date(createdAtRaw).toISOString()
+            : new Date().toISOString();
 
         const seed = `${description}-${frequency}-${duration}-${reliefLevel}`;
         compulsions.push({
@@ -156,9 +214,10 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
 
     const lastUpdatedMatch = content.match(/\*Last updated: ([^*]+)\*/);
     const lastModifiedCandidate = lastUpdatedMatch?.[1]?.trim() ?? '';
-    const lastModifiedDate = lastModifiedCandidate && !Number.isNaN(Date.parse(lastModifiedCandidate))
-      ? new Date(lastModifiedCandidate)
-      : new Date();
+    const lastModifiedDate =
+      lastModifiedCandidate && !Number.isNaN(Date.parse(lastModifiedCandidate))
+        ? new Date(lastModifiedCandidate)
+        : new Date();
 
     return {
       obsessions,
@@ -166,7 +225,11 @@ export function parseObsessionsCompulsionsFromMarkdown(content: string): Obsessi
       lastModified: lastModifiedDate.toISOString(),
     };
   } catch (error) {
-    logger.error('Error parsing obsessions and compulsions data', { module: 'format-obsessions-compulsions' }, error as Error);
+    logger.error(
+      'Error parsing obsessions and compulsions data',
+      { module: 'format-obsessions-compulsions' },
+      error as Error
+    );
     return null;
   }
 }

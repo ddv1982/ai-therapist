@@ -40,12 +40,15 @@ export function getClientIPFromRequest(request: NextRequest): string {
 
   // Fallback to request.ip if provided by runtime
   const ip = (request as { ip?: string | null }).ip;
-  return (ip && ip.length > 0) ? ip : 'unknown';
+  return ip && ip.length > 0 ? ip : 'unknown';
 }
 
 // Safely extracts request context information from a raw request logger result
-export function toRequestContext(raw: unknown, fallbackRequestId: string = 'unknown'): RequestContext {
-  const obj = (raw && typeof raw === 'object') ? (raw as Record<string, unknown>) : {};
+export function toRequestContext(
+  raw: unknown,
+  fallbackRequestId: string = 'unknown'
+): RequestContext {
+  const obj = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
   return {
     requestId: (obj.requestId as string) || fallbackRequestId,
     method: obj.method as string | undefined,
@@ -55,7 +58,11 @@ export function toRequestContext(raw: unknown, fallbackRequestId: string = 'unkn
 }
 
 // Sets standard response headers (X-Request-Id, Server-Timing) on a Response
-export function setResponseHeaders(response: NextResponse | Response, requestId: string, durationMs?: number): void {
+export function setResponseHeaders(
+  response: NextResponse | Response,
+  requestId: string,
+  durationMs?: number
+): void {
   try {
     response.headers.set('X-Request-Id', requestId);
     if (durationMs !== undefined) {
@@ -65,5 +72,3 @@ export function setResponseHeaders(response: NextResponse | Response, requestId:
     logger.warn('Failed to set response headers', { requestId, error: (error as Error).message });
   }
 }
-
-

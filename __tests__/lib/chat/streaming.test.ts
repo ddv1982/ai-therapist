@@ -26,18 +26,21 @@ class TestReadableStream {
           return { done: false, value };
         }
         return { done: true, value: undefined };
-      }
+      },
     };
   }
   tee(): [ReadableStream<Uint8Array>, ReadableStream<Uint8Array>] {
     const left = new TestReadableStream(this.chunks);
     const right = new TestReadableStream(this.chunks);
-    return [left as unknown as ReadableStream<Uint8Array>, right as unknown as ReadableStream<Uint8Array>];
+    return [
+      left as unknown as ReadableStream<Uint8Array>,
+      right as unknown as ReadableStream<Uint8Array>,
+    ];
   }
 }
 
 function makeReadableStreamFromStrings(parts: string[]): ReadableStream<Uint8Array> {
-  const encoded = parts.map(p => new TextEncoder().encode(p));
+  const encoded = parts.map((p) => new TextEncoder().encode(p));
   return new TestReadableStream(encoded) as unknown as ReadableStream<Uint8Array>;
 }
 
@@ -113,5 +116,3 @@ describe('chat streaming utils', () => {
     expect(out).toBe('hello world');
   });
 });
-
-

@@ -31,7 +31,7 @@ export class ServiceCircuitBreaker {
       failureThreshold: 3, // Open circuit after 3 consecutive failures
       resetTimeout: 60000, // Try to reset after 1 minute
       monitorWindow: 300000, // 5 minute monitoring window
-      ...options
+      ...options,
     };
   }
 
@@ -52,7 +52,7 @@ export class ServiceCircuitBreaker {
       if (now - status.lastChecked > this.options.resetTimeout) {
         logger.info(`Attempting to reset circuit breaker for ${serviceName}`, {
           lastChecked: new Date(status.lastChecked).toISOString(),
-          consecutiveFailures: status.consecutiveFailures
+          consecutiveFailures: status.consecutiveFailures,
         });
         // Half-open state - try one request
         try {
@@ -63,7 +63,7 @@ export class ServiceCircuitBreaker {
           this.recordFailure(serviceName, error);
           if (fallback) {
             logger.warn(`${serviceName} still failing, using fallback`, {
-              error: error instanceof Error ? error.message : 'Unknown error'
+              error: error instanceof Error ? error.message : 'Unknown error',
             });
             return await this.executeFallback(fallback);
           }
@@ -87,16 +87,16 @@ export class ServiceCircuitBreaker {
       return result;
     } catch (error) {
       this.recordFailure(serviceName, error);
-      
+
       // Use fallback if available
       if (fallback) {
         logger.warn(`${serviceName} failed, using fallback`, {
           error: error instanceof Error ? error.message : 'Unknown error',
-          consecutiveFailures: status.consecutiveFailures + 1
+          consecutiveFailures: status.consecutiveFailures + 1,
         });
         return await this.executeFallback(fallback);
       }
-      
+
       throw error;
     }
   }
@@ -109,7 +109,7 @@ export class ServiceCircuitBreaker {
       return await fallback();
     } catch (fallbackError) {
       logger.error('Fallback operation also failed', {
-        error: fallbackError instanceof Error ? fallbackError.message : 'Unknown fallback error'
+        error: fallbackError instanceof Error ? fallbackError.message : 'Unknown fallback error',
       });
       throw fallbackError;
     }
@@ -133,7 +133,7 @@ export class ServiceCircuitBreaker {
   private recordFailure(serviceName: string, error: unknown): void {
     const current = this.getServiceStatus(serviceName);
     const newFailures = current.consecutiveFailures + 1;
-    
+
     this.services.set(serviceName, {
       name: serviceName,
       available: newFailures < this.options.failureThreshold,
@@ -146,7 +146,7 @@ export class ServiceCircuitBreaker {
       logger.warn(`Circuit breaker opened for ${serviceName}`, {
         consecutiveFailures: newFailures,
         threshold: this.options.failureThreshold,
-        resetTimeout: this.options.resetTimeout
+        resetTimeout: this.options.resetTimeout,
       });
     }
   }
@@ -155,12 +155,14 @@ export class ServiceCircuitBreaker {
    * Get current service status
    */
   private getServiceStatus(serviceName: string): ServiceStatus {
-    return this.services.get(serviceName) || {
-      name: serviceName,
-      available: true,
-      lastChecked: 0,
-      consecutiveFailures: 0,
-    };
+    return (
+      this.services.get(serviceName) || {
+        name: serviceName,
+        available: true,
+        lastChecked: 0,
+        consecutiveFailures: 0,
+      }
+    );
   }
 
   /**
@@ -188,13 +190,13 @@ export class ServiceCircuitBreaker {
    */
   getHealthSummary(): { healthy: number; degraded: number; total: number } {
     const statuses = this.getAllStatuses();
-    const healthy = statuses.filter(s => s.available).length;
-    const degraded = statuses.filter(s => !s.available).length;
-    
+    const healthy = statuses.filter((s) => s.available).length;
+    const degraded = statuses.filter((s) => !s.available).length;
+
     return {
       healthy,
       degraded,
-      total: statuses.length
+      total: statuses.length,
     };
   }
 }
@@ -210,11 +212,7 @@ export async function withAIFallback<T>(
   fallbackResponse: T,
   serviceName = 'ai-service'
 ): Promise<T> {
-  return circuitBreaker.executeWithBreaker(
-    serviceName,
-    operation,
-    () => fallbackResponse
-  );
+  return circuitBreaker.executeWithBreaker(serviceName, operation, () => fallbackResponse);
 }
 
 /**
@@ -226,27 +224,30 @@ export async function withRetry<T>(
   baseDelay: number = 1000
 ): Promise<T> {
   let lastError: unknown;
-  
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await operation();
     } catch (error) {
       lastError = error;
-      
+
       if (attempt === maxRetries) {
         break; // Don't delay on the last attempt
       }
-      
+
       // Exponential backoff: 1s, 2s, 4s, etc.
       const delay = baseDelay * Math.pow(2, attempt);
-      logger.debug(`Retry attempt ${attempt + 1}/${maxRetries + 1} failed, retrying in ${delay}ms`, {
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, delay));
+      logger.debug(
+        `Retry attempt ${attempt + 1}/${maxRetries + 1} failed, retrying in ${delay}ms`,
+        {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        }
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
-  
+
   throw lastError;
 }
 
@@ -262,7 +263,7 @@ export async function withTimeout<T>(
     operation(),
     new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs);
-    })
+    }),
   ]);
 }
 
@@ -272,7 +273,7 @@ export async function withTimeout<T>(
 export function getCircuitBreakerStatus() {
   return {
     services: circuitBreaker.getAllStatuses(),
-    summary: circuitBreaker.getHealthSummary()
+    summary: circuitBreaker.getHealthSummary(),
   };
 }
 

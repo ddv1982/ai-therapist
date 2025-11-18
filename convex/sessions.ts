@@ -10,7 +10,7 @@ export const listByUser = query({
     // Fetch limit + 1 to determine if there are more results
     const all = await ctx.db
       .query('sessions')
-      .withIndex('by_user_created', q => q.eq('userId', userId))
+      .withIndex('by_user_created', (q) => q.eq('userId', userId))
       .order('desc')
       .collect();
 
@@ -23,7 +23,7 @@ export const countByUser = query({
   handler: async (ctx, { userId }) => {
     const sessions = await ctx.db
       .query('sessions')
-      .withIndex('by_user_created', q => q.eq('userId', userId))
+      .withIndex('by_user_created', (q) => q.eq('userId', userId))
       .collect();
     return sessions.length;
   },
@@ -36,12 +36,12 @@ export const getWithMessagesAndReports = query({
     if (!session) return null;
     const messages = await ctx.db
       .query('messages')
-      .withIndex('by_session_time', q => q.eq('sessionId', sessionId))
+      .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
       .order('asc')
       .collect();
     const reports = await ctx.db
       .query('sessionReports')
-      .withIndex('by_session', q => q.eq('sessionId', sessionId))
+      .withIndex('by_session', (q) => q.eq('sessionId', sessionId))
       .collect();
     return { session, messages, reports };
   },
@@ -94,12 +94,12 @@ export const remove = mutation({
     // delete messages and reports first
     const msgs = await ctx.db
       .query('messages')
-      .withIndex('by_session_time', q => q.eq('sessionId', sessionId))
+      .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
       .collect();
     for (const m of msgs) await ctx.db.delete(m._id);
     const reports = await ctx.db
       .query('sessionReports')
-      .withIndex('by_session', q => q.eq('sessionId', sessionId))
+      .withIndex('by_session', (q) => q.eq('sessionId', sessionId))
       .collect();
     for (const r of reports) await ctx.db.delete(r._id);
     await ctx.db.delete(sessionId);

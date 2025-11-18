@@ -1,20 +1,27 @@
 'use client';
 
-import React from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useMemo, useState, useEffect, ReactNode } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { TherapeuticCardGrid, convertTableColumnsToCardColumns } from './therapeutic-card-grid';
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 interface TherapeuticTableProps {
   data: Array<Record<string, unknown>>;
-  columns: Array<{ 
-    key: string; 
-    label: string; 
+  columns: Array<{
+    key: string;
+    label: string;
     className?: string;
-    render?: (value: unknown, row: Record<string, unknown>) => React.ReactNode;
+    render?: (value: unknown, row: Record<string, unknown>) => ReactNode;
   }>;
   className?: string;
-  variant?: "default" | "therapeutic" | "compact";
+  variant?: 'default' | 'therapeutic' | 'compact';
   caption?: string;
   // New card-specific props
   displayMode?: 'table' | 'cards' | 'auto'; // Auto switches based on screen size
@@ -31,29 +38,29 @@ interface TherapeuticTableProps {
  * Automatically switches between table and card layouts for optimal mobile experience
  * Fixes AI SDK markup formatting issues by providing proper CSS for all display modes
  */
-export function TherapeuticTable({ 
-  data, 
-  columns, 
+export function TherapeuticTable({
+  data,
+  columns,
   className,
-  variant = "default",
+  variant = 'default',
   caption,
-  displayMode = "auto",
-  layout = "grid",
+  displayMode = 'auto',
+  layout = 'grid',
   onItemClick,
   onItemEdit,
   onItemDelete,
   onItemView,
-  loading = false
+  loading = false,
 }: TherapeuticTableProps) {
   // Convert table columns to card columns
-  const cardColumns = React.useMemo(() => {
+  const cardColumns = useMemo(() => {
     return convertTableColumnsToCardColumns(columns);
   }, [columns]);
 
   // Determine display mode based on props and screen size
-  const [shouldUseCards, setShouldUseCards] = React.useState(false);
-  
-  React.useEffect(() => {
+  const [shouldUseCards, setShouldUseCards] = useState(false);
+
+  useEffect(() => {
     if (displayMode === 'cards') {
       setShouldUseCards(true);
     } else if (displayMode === 'table') {
@@ -63,7 +70,7 @@ export function TherapeuticTable({
       const checkScreenSize = () => {
         setShouldUseCards(window.innerWidth < 768);
       };
-      
+
       checkScreenSize();
       window.addEventListener('resize', checkScreenSize);
       return () => window.removeEventListener('resize', checkScreenSize);
@@ -72,21 +79,21 @@ export function TherapeuticTable({
 
   // Table-specific styling variants
   const tableVariants = {
-    default: "w-full",
-    therapeutic: "w-full border-primary/20 bg-primary/5 rounded-lg overflow-hidden",
-    compact: "w-full text-sm"
+    default: 'w-full',
+    therapeutic: 'w-full border-primary/20 bg-primary/5 rounded-lg overflow-hidden',
+    compact: 'w-full text-sm',
   };
 
   const headerVariants = {
-    default: "bg-muted/50",
-    therapeutic: "bg-primary/10 text-primary-foreground/90",
-    compact: "bg-muted/30 py-2"
+    default: 'bg-muted/50',
+    therapeutic: 'bg-primary/10 text-primary-foreground/90',
+    compact: 'bg-muted/30 py-2',
   };
 
   const rowVariants = {
-    default: "hover:bg-muted/30 transition-colors",
-    therapeutic: "hover:bg-primary/10 transition-colors border-b border-primary/10",
-    compact: "hover:bg-muted/20 py-1"
+    default: 'hover:bg-muted/30 transition-colors',
+    therapeutic: 'hover:bg-primary/10 transition-colors border-b border-primary/10',
+    compact: 'hover:bg-muted/20 py-1',
   };
 
   // Use card layout for mobile or when explicitly requested
@@ -95,7 +102,9 @@ export function TherapeuticTable({
       <TherapeuticCardGrid
         data={data}
         columns={cardColumns}
-        variant={variant === 'compact' ? 'compact' : variant === 'therapeutic' ? 'therapeutic' : 'default'}
+        variant={
+          variant === 'compact' ? 'compact' : variant === 'therapeutic' ? 'therapeutic' : 'default'
+        }
         layout={layout}
         className={className}
         caption={caption}
@@ -115,21 +124,27 @@ export function TherapeuticTable({
 
   // Traditional table layout for desktop
   return (
-    <div className={cn("rounded-md border overflow-hidden", variant === "therapeutic" && "border-primary/20", className)}>
+    <div
+      className={cn(
+        'overflow-hidden rounded-md border',
+        variant === 'therapeutic' && 'border-primary/20',
+        className
+      )}
+    >
       {caption && (
-        <div className="px-4 py-2 text-sm text-muted-foreground border-b bg-muted/20">
+        <div className="text-muted-foreground bg-muted/20 border-b px-4 py-2 text-sm">
           {caption}
         </div>
       )}
       <Table className={cn(tableVariants[variant])}>
         <TableHeader>
-          <TableRow className={cn(headerVariants[variant], "border-b")}>
+          <TableRow className={cn(headerVariants[variant], 'border-b')}>
             {columns.map((column) => (
-              <TableHead 
-                key={column.key} 
+              <TableHead
+                key={column.key}
                 className={cn(
-                  "font-semibold text-left py-3 px-4",
-                  variant === "compact" && "py-2",
+                  'px-4 py-3 text-left font-semibold',
+                  variant === 'compact' && 'py-2',
                   column.className
                 )}
               >
@@ -140,19 +155,15 @@ export function TherapeuticTable({
         </TableHeader>
         <TableBody>
           {data.map((row, index) => (
-            <TableRow 
-              key={index} 
-              className={cn(rowVariants[variant])}
-            >
+            <TableRow key={index} className={cn(rowVariants[variant])}>
               {columns.map((column) => (
-                <TableCell 
-                  key={column.key} 
-                  className={cn(
-                    "py-3 px-4",
-                    variant === "compact" && "py-2"
-                  )}
+                <TableCell
+                  key={column.key}
+                  className={cn('px-4 py-3', variant === 'compact' && 'py-2')}
                 >
-                  {column.render ? column.render(row[column.key], row) : String(row[column.key] ?? '')}
+                  {column.render
+                    ? column.render(row[column.key], row)
+                    : String(row[column.key] ?? '')}
                 </TableCell>
               ))}
             </TableRow>
@@ -178,23 +189,23 @@ export const therapeuticTableClasses = {
  * Hook to apply therapeutic table classes to markdown-generated tables
  */
 export function useTherapeuticTableStyles() {
-  React.useEffect(() => {
+  useEffect(() => {
     // Apply therapeutic styles to any existing markdown tables
     const tables = document.querySelectorAll('table');
     tables.forEach((table) => {
       if (table.closest('.message-content-assistant')) {
         table.className = therapeuticTableClasses['therapeutic-table'];
-        
+
         const header = table.querySelector('thead tr');
         if (header) {
           header.className = therapeuticTableClasses['table-header-therapeutic'];
         }
-        
+
         const rows = table.querySelectorAll('tbody tr');
         rows.forEach((row) => {
           row.className = therapeuticTableClasses['table-row-therapeutic'];
         });
-        
+
         const cells = table.querySelectorAll('td, th');
         cells.forEach((cell) => {
           cell.className = therapeuticTableClasses['table-cell-therapeutic'];

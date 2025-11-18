@@ -75,17 +75,11 @@ const serverEnvSchema = z.object({
   PORT: coerceNumber(envDefaults.PORT, { min: 1 }),
 
   // Clerk Authentication (will throw at runtime if not configured)
-  CLERK_SECRET_KEY: z
-    .string()
-    .optional(),
-  CLERK_WEBHOOK_SECRET: z
-    .string()
-    .optional(),
+  CLERK_SECRET_KEY: z.string().optional(),
+  CLERK_WEBHOOK_SECRET: z.string().optional(),
 
   // Encryption for therapeutic data
-  ENCRYPTION_KEY: z
-    .string()
-    .min(32, 'ENCRYPTION_KEY must be at least 32 characters'),
+  ENCRYPTION_KEY: z.string().min(32, 'ENCRYPTION_KEY must be at least 32 characters'),
 
   GROQ_API_KEY: z.string().min(1).optional(),
   CONVEX_URL: optionalUrl,
@@ -94,10 +88,7 @@ const serverEnvSchema = z.object({
     .string()
     .trim()
     .transform((value) => (value && value.length > 0 ? value : envDefaults.OLLAMA_BASE_URL)),
-  OLLAMA_MODEL_ID: z
-    .string()
-    .trim()
-    .default(envDefaults.OLLAMA_MODEL_ID),
+  OLLAMA_MODEL_ID: z.string().trim().default(envDefaults.OLLAMA_MODEL_ID),
 
   REDIS_URL: optionalUrl,
   REDIS_HOST: z.string().optional(),
@@ -205,7 +196,8 @@ function buildRawServerEnv(): Record<keyof ServerEnv, unknown> {
     ENABLE_METRICS_ENDPOINT: process.env.ENABLE_METRICS_ENDPOINT,
     BYPASS_AUTH: process.env.BYPASS_AUTH,
 
-    NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL ?? envDefaults.NEXT_PUBLIC_CONVEX_URL,
+    NEXT_PUBLIC_CONVEX_URL:
+      process.env.NEXT_PUBLIC_CONVEX_URL ?? envDefaults.NEXT_PUBLIC_CONVEX_URL,
     NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP: process.env.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP,
     NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO: process.env.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO,
   };
@@ -226,7 +218,8 @@ function parseServerEnv(): ServerEnv {
 
 let cachedEnv: ServerEnv | null = null;
 
-const isTestRuntime = () => process.env.NODE_ENV === 'test' || typeof process.env.JEST_WORKER_ID !== 'undefined';
+const isTestRuntime = () =>
+  process.env.NODE_ENV === 'test' || typeof process.env.JEST_WORKER_ID !== 'undefined';
 
 function getCachedEnv(): ServerEnv {
   if (isTestRuntime()) {

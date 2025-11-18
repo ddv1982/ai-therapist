@@ -3,11 +3,12 @@ import { type ReportMessage } from '@/lib/api/groq-client';
 import { logger } from '@/lib/utils/logger';
 import { reportGenerationSchema, validateRequest } from '@/lib/utils/validation';
 import { deduplicateRequest } from '@/lib/utils/request-deduplication';
-import { withApiMiddleware } from '@/lib/api/api-middleware';
+import { withAuth, type AuthenticatedRequestContext } from '@/lib/api/api-middleware';
 import { createErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
 import { ReportGenerationService } from '@/lib/services/report-generation-service';
+import { verifySessionOwnership } from '@/lib/repositories/session-repository';
 
-export const POST = withApiMiddleware(async (request: NextRequest, context) => {
+export const POST = withAuth(async (request: NextRequest, context: AuthenticatedRequestContext) => {
   try {
     // Always use analytical model for detailed session reports
     const { REPORT_MODEL_ID } = await import('@/features/chat/config');
@@ -16,7 +17,7 @@ export const POST = withApiMiddleware(async (request: NextRequest, context) => {
       ...context,
       modelUsed: REPORT_MODEL_ID,
       selectionReason: 'Report generation requires analytical model',
-      reportGenerationFlow: true
+      reportGenerationFlow: true,
     });
 
     const body = await request.json();
@@ -33,6 +34,22 @@ export const POST = withApiMiddleware(async (request: NextRequest, context) => {
     }
 
     const { sessionId, messages } = validation.data;
+
+    // Verify session ownership before generating report
+    const userInfo = context.userInfo as { userId: string; clerkId?: string };
+    const clerkId = userInfo.clerkId || userInfo.userId;
+    const hasAccess = await verifySessionOwnership(sessionId, clerkId);
+
+    if (!hasAccess) {
+      logger.warn('Unauthorized report generation attempt', {
+        ...context,
+        sessionId,
+        clerkId,
+      });
+      return createErrorResponse('Session not found or access denied', 404, {
+        requestId: context.requestId,
+      });
+    }
 
     // Deduplicate report generation to prevent multiple concurrent generations
     return await deduplicateRequest(
@@ -52,7 +69,6 @@ export const POST = withApiMiddleware(async (request: NextRequest, context) => {
       undefined,
       30000 // 30 second TTL for report generation deduplication
     );
-
   } catch (error) {
     logger.apiError('/api/reports/generate', error as Error, context);
     return createErrorResponse('Failed to generate report', 500, { requestId: context.requestId });

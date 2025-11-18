@@ -51,22 +51,22 @@ export default function middleware(request: NextRequest, event: unknown) {
   }
 
   const handler = async (auth: unknown, request: NextRequest) => {
-  const { pathname } = request.nextUrl;
+    const { pathname } = request.nextUrl;
     const userId = (auth as { userId?: string | null }).userId;
 
-  // Skip API routes - API auth is handled at individual route level via middleware
-  if (pathname.startsWith('/api')) {
-    return NextResponse.next();
-  }
+    // Skip API routes - API auth is handled at individual route level via middleware
+    if (pathname.startsWith('/api')) {
+      return NextResponse.next();
+    }
 
-  // Skip middleware for static files and Next.js internals
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/favicon') ||
-    pathname.includes('.')
-  ) {
-    return NextResponse.next();
-  }
+    // Skip middleware for static files and Next.js internals
+    if (
+      pathname.startsWith('/_next') ||
+      pathname.startsWith('/favicon') ||
+      pathname.includes('.')
+    ) {
+      return NextResponse.next();
+    }
 
     // If already signed in, avoid rendering auth pages; send to profile
     if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
@@ -76,14 +76,14 @@ export default function middleware(request: NextRequest, event: unknown) {
       return NextResponse.next();
     }
 
-  // For protected routes, check authentication
-  // If not authenticated, auth.protect() will throw and should be caught by Clerk
-  // to redirect to sign-in. Note: this relies on Clerk's default behavior.
+    // For protected routes, check authentication
+    // If not authenticated, auth.protect() will throw and should be caught by Clerk
+    // to redirect to sign-in. Note: this relies on Clerk's default behavior.
     if (isProtectedRoute(request) && !isPublicRoute(request)) {
-    // auth.protect() will redirect or throw if user is not authenticated
-    // It's async and will handle the redirect internally
+      // auth.protect() will redirect or throw if user is not authenticated
+      // It's async and will handle the redirect internally
       await (auth as { protect: () => Promise<void> }).protect();
-  }
+    }
 
     // Skip i18n middleware to avoid potential rewrites causing 404s
 

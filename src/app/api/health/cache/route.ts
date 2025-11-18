@@ -1,6 +1,6 @@
 /**
  * Cache Health Check Endpoint
- * 
+ *
  * Provides comprehensive health information about the Redis cache system
  * for monitoring and debugging purposes.
  */
@@ -13,134 +13,148 @@ import { redisManager } from '@/lib/cache/redis-client';
 import { logger } from '@/lib/utils/logger';
 import { env } from '@/config/env';
 
-export const GET = withRateLimitUnauthenticated(async (_request: NextRequest, context) => {
-  try {
-    // Get Redis health
-    const redisHealth = await redisManager.healthCheck();
-    
-    // Get cache health information
-    const cacheHealth = await CacheHealthMonitor.getHealthInfo();
-    
-    // Get cache statistics
-    const stats = cache.getStats();
-    
-    // Get cache configuration
-    const config = {
-      enabled: env.CACHE_ENABLED,
-      defaultTTL: env.CACHE_DEFAULT_TTL,
-      sessionTTL: env.CACHE_SESSION_TTL,
-      messageTTL: env.CACHE_MESSAGE_TTL,
-    };
+export const GET = withRateLimitUnauthenticated(
+  async (_request: NextRequest, context) => {
+    try {
+      // Get Redis health
+      const redisHealth = await redisManager.healthCheck();
 
-    const healthInfo = {
-      redis: {
-        connected: redisHealth.connected,
-        ready: redisHealth.ready,
-        healthy: redisHealth.healthy,
-        error: redisHealth.error,
-      },
-      cache: {
-        enabled: config.enabled,
+      // Get cache health information
+      const cacheHealth = await CacheHealthMonitor.getHealthInfo();
+
+      // Get cache statistics
+      const stats = cache.getStats();
+
+      // Get cache configuration
+      const config = {
+        enabled: env.CACHE_ENABLED,
+        defaultTTL: env.CACHE_DEFAULT_TTL,
+        sessionTTL: env.CACHE_SESSION_TTL,
+        messageTTL: env.CACHE_MESSAGE_TTL,
+      };
+
+      const healthInfo = {
+        redis: {
+          connected: redisHealth.connected,
+          ready: redisHealth.ready,
+          healthy: redisHealth.healthy,
+          error: redisHealth.error,
+        },
+        cache: {
+          enabled: config.enabled,
+          totalKeys: cacheHealth.totalKeys,
+          stats: stats instanceof Map ? Object.fromEntries(stats) : stats,
+          types: cacheHealth.cacheTypes,
+        },
+        configuration: config,
+        timestamp: new Date().toISOString(),
+      };
+
+      // Determine overall health status
+      const isHealthy = redisHealth.healthy && config.enabled;
+
+      logger.info('Cache health check completed', {
+        operation: 'cache_health_check',
+        healthy: isHealthy,
+        redisConnected: redisHealth.connected,
         totalKeys: cacheHealth.totalKeys,
-        stats: stats instanceof Map ? Object.fromEntries(stats) : stats,
-        types: cacheHealth.cacheTypes,
-      },
-      configuration: config,
-      timestamp: new Date().toISOString(),
-    };
+        requestId: context.requestId,
+      });
 
-    // Determine overall health status
-    const isHealthy = redisHealth.healthy && config.enabled;
+      return createSuccessResponse(healthInfo, { requestId: context.requestId });
+    } catch (error) {
+      logger.error(
+        'Cache health check failed',
+        {
+          operation: 'cache_health_check',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          requestId: context.requestId,
+        },
+        error instanceof Error ? error : new Error('Cache health check failed')
+      );
 
-    logger.info('Cache health check completed', {
-      operation: 'cache_health_check',
-      healthy: isHealthy,
-      redisConnected: redisHealth.connected,
-      totalKeys: cacheHealth.totalKeys,
-      requestId: context.requestId
-    });
-
-    return createSuccessResponse(healthInfo, { requestId: context.requestId });
-  } catch (error) {
-    logger.error('Cache health check failed', {
-      operation: 'cache_health_check',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      requestId: context.requestId
-    }, error instanceof Error ? error : new Error('Cache health check failed'));
-
-    return createErrorResponse(
-      'Cache health check failed',
-      500,
-      {
+      return createErrorResponse('Cache health check failed', 500, {
         code: 'CACHE_HEALTH_ERROR',
         details: error instanceof Error ? error.message : 'Unknown error',
-        requestId: context.requestId
-      }
-    );
-  }
-}, { bucket: 'api' });
+        requestId: context.requestId,
+      });
+    }
+  },
+  { bucket: 'api' }
+);
 
 import { z } from 'zod';
 const cacheActionSchema = z.object({ action: z.enum(['clear_stats', 'warm_up', 'get_stats']) });
 
-export const POST = withRateLimitUnauthenticated(async (request: NextRequest, context) => {
-  try {
-    const body = await request.json();
-    const parsed = cacheActionSchema.safeParse(body);
-    if (!parsed.success) {
-      return createErrorResponse('Invalid action', 400, { requestId: context.requestId, code: 'INVALID_ACTION' });
-    }
-    const { action } = parsed.data;
-
-    switch (action) {
-      case 'clear_stats':
-        cache.resetStats();
-        logger.info('Cache statistics cleared', {
-          operation: 'cache_clear_stats',
-          requestId: context.requestId
+export const POST = withRateLimitUnauthenticated(
+  async (request: NextRequest, context) => {
+    try {
+      const body = await request.json();
+      const parsed = cacheActionSchema.safeParse(body);
+      if (!parsed.success) {
+        return createErrorResponse('Invalid action', 400, {
+          requestId: context.requestId,
+          code: 'INVALID_ACTION',
         });
-        return createSuccessResponse({ message: 'Cache statistics cleared' }, { requestId: context.requestId });
+      }
+      const { action } = parsed.data;
 
-      case 'warm_up':
-        // This would typically warm up specific caches
-        logger.info('Cache warm-up requested', {
-          operation: 'cache_warmup',
-          requestId: context.requestId
-        });
-        return createSuccessResponse({ message: 'Cache warm-up initiated' }, { requestId: context.requestId });
+      switch (action) {
+        case 'clear_stats':
+          cache.resetStats();
+          logger.info('Cache statistics cleared', {
+            operation: 'cache_clear_stats',
+            requestId: context.requestId,
+          });
+          return createSuccessResponse(
+            { message: 'Cache statistics cleared' },
+            { requestId: context.requestId }
+          );
 
-      case 'get_stats':
-        const stats = cache.getStats();
-        return createSuccessResponse({ 
-          stats: stats instanceof Map ? Object.fromEntries(stats) : stats 
-        }, { requestId: context.requestId });
+        case 'warm_up':
+          // This would typically warm up specific caches
+          logger.info('Cache warm-up requested', {
+            operation: 'cache_warmup',
+            requestId: context.requestId,
+          });
+          return createSuccessResponse(
+            { message: 'Cache warm-up initiated' },
+            { requestId: context.requestId }
+          );
 
-      default:
-        return createErrorResponse(
-          'Invalid action',
-          400,
-          {
+        case 'get_stats':
+          const stats = cache.getStats();
+          return createSuccessResponse(
+            {
+              stats: stats instanceof Map ? Object.fromEntries(stats) : stats,
+            },
+            { requestId: context.requestId }
+          );
+
+        default:
+          return createErrorResponse('Invalid action', 400, {
             code: 'INVALID_ACTION',
             details: `Unknown action: ${action}`,
-            requestId: context.requestId
-          }
-        );
-    }
-  } catch (error) {
-    logger.error('Cache management action failed', {
-      operation: 'cache_management',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      requestId: context.requestId
-    }, error instanceof Error ? error : new Error('Cache management failed'));
+            requestId: context.requestId,
+          });
+      }
+    } catch (error) {
+      logger.error(
+        'Cache management action failed',
+        {
+          operation: 'cache_management',
+          error: error instanceof Error ? error.message : 'Unknown error',
+          requestId: context.requestId,
+        },
+        error instanceof Error ? error : new Error('Cache management failed')
+      );
 
-    return createErrorResponse(
-      'Cache management action failed',
-      500,
-      {
+      return createErrorResponse('Cache management action failed', 500, {
         code: 'CACHE_MANAGEMENT_ERROR',
         details: error instanceof Error ? error.message : 'Unknown error',
-        requestId: context.requestId
-      }
-    );
-  }
-}, { bucket: 'api' });
+        requestId: context.requestId,
+      });
+    }
+  },
+  { bucket: 'api' }
+);

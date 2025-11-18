@@ -1,4 +1,4 @@
-import React, { createRef } from 'react';
+import { createRef } from 'react';
 import { screen, fireEvent } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import { ChatComposer } from '../../../src/features/chat/components/chat-composer';

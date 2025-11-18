@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
 import { cn } from '@/lib/utils';
-import {useTranslations} from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { Slider } from '@/components/ui/slider';
 
 export type SliderType = 'credibility' | 'confidence' | 'intensity' | 'generic';
@@ -45,7 +44,7 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
   max: customMax,
   scaleLabels: customLabels,
   className,
-  labelSize = 'sm'
+  labelSize = 'sm',
 }) => {
   const t = useTranslations('cbt');
   // Default configurations for different slider types
@@ -56,17 +55,17 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
       labels: {
         left: t('slider.credLeft'),
         center: t('slider.credCenter'),
-        right: t('slider.credRight')
-      }
+        right: t('slider.credRight'),
+      },
     },
     confidence: {
       min: 1,
       max: 10,
       labels: {
         left: t('slider.confLeft'),
-        center: t('slider.confCenter'), 
-        right: t('slider.confRight')
-      }
+        center: t('slider.confCenter'),
+        right: t('slider.confRight'),
+      },
     },
     intensity: {
       min: 1,
@@ -74,8 +73,8 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
       labels: {
         left: t('slider.intLeft'),
         center: t('slider.intCenter'),
-        right: t('slider.intRight')
-      }
+        right: t('slider.intRight'),
+      },
     },
     generic: {
       min: 0,
@@ -83,9 +82,9 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
       labels: {
         left: '0',
         center: '5',
-        right: '10'
-      }
-    }
+        right: '10',
+      },
+    },
   };
 
   const config = typeConfigs[type];
@@ -101,13 +100,11 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
   const labelClassName = labelSize === 'xs' ? 'text-sm' : 'text-sm';
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn('space-y-2', className)}>
       {/* Label and Value Display */}
-      <div className="flex justify-between items-center">
-        <label className={cn("font-semibold text-foreground", labelClassName)}>
-          {label}
-        </label>
-        <span className={cn("text-muted-foreground font-mono", labelClassName)}>
+      <div className="flex items-center justify-between">
+        <label className={cn('text-foreground font-semibold', labelClassName)}>{label}</label>
+        <span className={cn('text-muted-foreground font-mono', labelClassName)}>
           {clampedValue}/{maxValue}
         </span>
       </div>
@@ -128,11 +125,9 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
       />
 
       {/* Scale Labels */}
-      <div className="flex justify-between text-sm text-muted-foreground">
+      <div className="text-muted-foreground flex justify-between text-sm">
         <span>{scaleLabels.left}</span>
-        {scaleLabels.center && (
-          <span className="hidden sm:inline">{scaleLabels.center}</span>
-        )}
+        {scaleLabels.center && <span className="hidden sm:inline">{scaleLabels.center}</span>}
         <span>{scaleLabels.right}</span>
       </div>
     </div>

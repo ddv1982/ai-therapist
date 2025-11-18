@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import dynamic from 'next/dynamic';
 import {
   Sheet,
@@ -8,29 +7,39 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from '@/components/ui/sheet';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { setCurrentStep, updateDraft, completeCBTEntry } from '@/store/slices/cbt-slice';
 const SituationPrompt = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/situation-prompt').then((mod) => ({ default: mod.SituationPrompt }))
+  import('@/features/therapy/cbt/chat-components/situation-prompt').then((mod) => ({
+    default: mod.SituationPrompt,
+  }))
 );
 
 const EmotionScale = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/emotion-scale').then((mod) => ({ default: mod.EmotionScale }))
+  import('@/features/therapy/cbt/chat-components/emotion-scale').then((mod) => ({
+    default: mod.EmotionScale,
+  }))
 );
 
 const ThoughtRecord = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/thought-record').then((mod) => ({ default: mod.ThoughtRecord }))
+  import('@/features/therapy/cbt/chat-components/thought-record').then((mod) => ({
+    default: mod.ThoughtRecord,
+  }))
 );
 
 const FinalEmotionReflection = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/final-emotion-reflection').then((mod) => ({ default: mod.FinalEmotionReflection }))
+  import('@/features/therapy/cbt/chat-components/final-emotion-reflection').then((mod) => ({
+    default: mod.FinalEmotionReflection,
+  }))
 );
 
 const ActionPlan = dynamic(() =>
-  import('@/features/therapy/cbt/chat-components/action-plan').then((mod) => ({ default: mod.ActionPlan }))
+  import('@/features/therapy/cbt/chat-components/action-plan').then((mod) => ({
+    default: mod.ActionPlan,
+  }))
 );
-import { Progress } from "@/components/ui/progress";
+import { Progress } from '@/components/ui/progress';
 import { Brain } from 'lucide-react';
 import { logger } from '@/lib/utils/logger';
 
@@ -49,11 +58,11 @@ const CBT_STEPS = [
 
 export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
   const dispatch = useAppDispatch();
-  const currentDraft = useAppSelector(state => state.cbt?.currentDraft);
-  const currentStep = useAppSelector(state => state.cbt?.currentStep || 1);
+  const currentDraft = useAppSelector((state) => state.cbt?.currentDraft);
+  const currentStep = useAppSelector((state) => state.cbt?.currentStep || 1);
 
   const progressPercentage = (currentStep / CBT_STEPS.length) * 100;
-  const currentStepData = CBT_STEPS.find(step => step.id === currentStep);
+  const currentStepData = CBT_STEPS.find((step) => step.id === currentStep);
 
   const handleSituationComplete = (data: import('@/store/slices/cbt-slice').SituationData) => {
     dispatch(updateDraft({ situation: data.situation }));
@@ -70,16 +79,16 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
       { emotion: 'anxiety', intensity: data.anxiety },
       { emotion: 'shame', intensity: data.shame },
       { emotion: 'guilt', intensity: data.guilt },
-      ...(data.other ? [{ emotion: data.other, intensity: data.otherIntensity || 0 }] : [])
-    ].filter(emotion => emotion.intensity > 0); // Only include emotions with intensity > 0
-    
+      ...(data.other ? [{ emotion: data.other, intensity: data.otherIntensity || 0 }] : []),
+    ].filter((emotion) => emotion.intensity > 0); // Only include emotions with intensity > 0
+
     dispatch(updateDraft({ emotions }));
     dispatch(setCurrentStep(3));
   };
 
   const handleThoughtComplete = (data: import('@/store/slices/cbt-slice').ThoughtData[]) => {
     // Convert ThoughtData array to string array for CBT schema
-    const thoughts = data.map(thought => thought.thought);
+    const thoughts = data.map((thought) => thought.thought);
     dispatch(updateDraft({ thoughts }));
     dispatch(setCurrentStep(4));
   };
@@ -96,20 +105,20 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
       const actionPlan = {
         actions: [data.newBehaviors],
         timeframe: 'As planned',
-        resources: []
+        resources: [],
       };
-      
+
       const completeEntry = {
         ...currentDraft.data,
         actionPlan,
       };
-      
+
       // Validate all required fields are present and have correct types
       if (
-        completeEntry.situation && 
-        completeEntry.emotions && 
+        completeEntry.situation &&
+        completeEntry.emotions &&
         completeEntry.thoughts &&
-        Array.isArray(completeEntry.emotions) && 
+        Array.isArray(completeEntry.emotions) &&
         Array.isArray(completeEntry.thoughts)
       ) {
         // Type assertion is safe here because we've validated all required fields
@@ -124,7 +133,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
     logger.therapeuticOperation('cbt_send_to_chat', {
       component: 'MobileCBTSheet',
       step: currentStep,
-      hasDraft: !!currentDraft
+      hasDraft: !!currentDraft,
     });
   };
 
@@ -140,23 +149,23 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
           <SituationPrompt
             onComplete={handleSituationComplete}
             onNavigateStep={(step) => {
-              const idx = CBT_STEPS.findIndex(s => s.component === step);
+              const idx = CBT_STEPS.findIndex((s) => s.component === step);
               if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
             }}
           />
         );
-      
+
       case 'emotions':
         return (
           <EmotionScale
             onComplete={handleEmotionComplete}
             onNavigateStep={(step) => {
-              const idx = CBT_STEPS.findIndex(s => s.component === step);
+              const idx = CBT_STEPS.findIndex((s) => s.component === step);
               if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
             }}
           />
         );
-      
+
       case 'thoughts':
         return (
           <ThoughtRecord
@@ -164,19 +173,19 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
             stepNumber={stepNumber}
             totalSteps={totalSteps}
             onNavigateStep={(step) => {
-              const idx = CBT_STEPS.findIndex(s => s.component === step);
+              const idx = CBT_STEPS.findIndex((s) => s.component === step);
               if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
             }}
           />
         );
-      
+
       case 'final-emotions':
         return (
           <FinalEmotionReflection
             onComplete={handleFinalEmotionsComplete}
             onSendToChat={handleSendToChat}
             onNavigateStep={(step) => {
-              const idx = CBT_STEPS.findIndex(s => s.component === step);
+              const idx = CBT_STEPS.findIndex((s) => s.component === step);
               if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
             }}
           />
@@ -189,12 +198,12 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
             stepNumber={stepNumber}
             totalSteps={totalSteps}
             onNavigateStep={(step) => {
-              const idx = CBT_STEPS.findIndex(s => s.component === step);
+              const idx = CBT_STEPS.findIndex((s) => s.component === step);
               if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
             }}
           />
         );
-      
+
       default:
         return null;
     }
@@ -206,43 +215,36 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent 
-        side="bottom" 
-        className="h-[90vh] overflow-y-auto cbt-compact"
-      >
+      <SheetContent side="bottom" className="cbt-compact h-[90vh] overflow-y-auto">
         <SheetHeader className="space-y-4 pb-6">
           <div className="flex items-center gap-2">
-            <Brain className="h-5 w-5 text-primary" />
+            <Brain className="text-primary h-5 w-5" />
             <SheetTitle>CBT Diary Session</SheetTitle>
           </div>
-          <SheetDescription>
-            Work through your thoughts and emotions step by step
-          </SheetDescription>
-          
+          <SheetDescription>Work through your thoughts and emotions step by step</SheetDescription>
+
           {/* Progress Indicator */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
                 Step {currentStep} of {CBT_STEPS.length}: {currentStepData?.name}
               </span>
-              <span className="text-primary font-semibold">
-                {Math.round(progressPercentage)}%
-              </span>
+              <span className="text-primary font-semibold">{Math.round(progressPercentage)}%</span>
             </div>
             <Progress value={progressPercentage} className="w-full" />
           </div>
-          
+
           {/* Step Navigation */}
           <div className="flex justify-between text-sm">
             {CBT_STEPS.map((step) => (
               <div
                 key={step.id}
-                className={`flex-1 text-center py-2 px-1 rounded-sm transition-colors ${
+                className={`flex-1 rounded-sm px-1 py-2 text-center transition-colors ${
                   step.id === currentStep
                     ? 'bg-primary/10 text-primary font-semibold'
                     : step.id < currentStep
-                    ? 'text-muted-foreground bg-muted/30'
-                    : 'text-muted-foreground/60'
+                      ? 'text-muted-foreground bg-muted/30'
+                      : 'text-muted-foreground/60'
                 }`}
               >
                 {step.name}
@@ -252,9 +254,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
         </SheetHeader>
 
         {/* Current Step Content */}
-        <div className="flex-1 pb-safe">
-          {renderCurrentStep()}
-        </div>
+        <div className="pb-safe flex-1">{renderCurrentStep()}</div>
       </SheetContent>
     </Sheet>
   );

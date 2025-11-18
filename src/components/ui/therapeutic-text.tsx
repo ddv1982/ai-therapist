@@ -1,12 +1,11 @@
 /**
  * Therapeutic Text Component
- * 
+ *
  * A wrapper component that applies enhanced typography and layout
  * for therapeutic content including better text wrapping, list formatting,
  * and readability improvements.
  */
 
-import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface TherapeuticTextProps {
@@ -15,23 +14,19 @@ interface TherapeuticTextProps {
   variant?: 'default' | 'technique' | 'collaborative' | 'exposure';
 }
 
-export function TherapeuticText({ 
-  children, 
+export function TherapeuticText({
+  children,
   className,
-  variant = 'default' 
+  variant = 'default',
 }: TherapeuticTextProps) {
   const variantClasses = {
     default: 'therapeutic-content',
     technique: 'therapeutic-content therapeutic-technique',
     collaborative: 'therapeutic-content collaborative-content',
-    exposure: 'therapeutic-content exposure-technique'
+    exposure: 'therapeutic-content exposure-technique',
   };
 
-  return (
-    <div className={cn(variantClasses[variant], className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn(variantClasses[variant], className)}>{children}</div>;
 }
 
 /**
@@ -44,17 +39,11 @@ interface TherapeuticTermProps {
   className?: string;
 }
 
-export function TherapeuticTerm({ 
-  term, 
-  definition, 
-  className 
-}: TherapeuticTermProps) {
+export function TherapeuticTerm({ term, definition, className }: TherapeuticTermProps) {
   return (
     <div className={cn('therapeutic-term', className)}>
       <span className="technique-name">{term}</span>
-      {definition && (
-        <div className="therapeutic-definition">{definition}</div>
-      )}
+      {definition && <div className="therapeutic-definition">{definition}</div>}
     </div>
   );
 }

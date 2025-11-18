@@ -13,9 +13,9 @@ describe('logger browser gating', () => {
     // In browser gating, any apiEndpoint logs are suppressed entirely
     expect(errSpy).not.toHaveBeenCalled();
     expect(logSpy).not.toHaveBeenCalled();
-    errSpy.mockRestore(); infoSpy.mockRestore(); logSpy.mockRestore();
+    errSpy.mockRestore();
+    infoSpy.mockRestore();
+    logSpy.mockRestore();
     (global as any).window = origWindow;
   });
 });
-
-

@@ -50,5 +50,3 @@ export function useErrorReporter() {
     reportClientError({ message: error.message, stack: error.stack, componentStack });
   };
 }
-
-

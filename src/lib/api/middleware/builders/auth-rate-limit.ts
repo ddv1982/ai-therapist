@@ -12,19 +12,27 @@ import { setResponseHeaders } from '@/lib/api/middleware/request-utils';
 import type { RequestContext, AuthenticatedRequestContext } from '@/lib/api/middleware/factory';
 import { env } from '@/config/env';
 
-export function buildAuthAndRateLimit(
-  deps: {
-    toRequestContext: (raw: unknown, fallbackId?: string) => RequestContext;
-    createRequestLogger: (req: NextRequest) => unknown;
-    validateApiAuth: (req: NextRequest) => Promise<{ isValid: boolean; error?: string }>;
-    getClientIPFromRequest: (req: NextRequest) => string;
-    getRateLimiter: () => { checkRateLimit: (ip: string, bucket?: string) => Promise<{ allowed: boolean; retryAfter?: number }> };
-    getSingleUserInfo: (req: NextRequest) => ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo>;
-    recordEndpointError?: (method?: string, url?: string) => void;
-    recordEndpointSuccess?: (method?: string, url?: string) => void;
-    createAuthenticationErrorResponse: (message: string, requestId: string) => NextResponse<ApiResponse>;
-  }
-) {
+export function buildAuthAndRateLimit(deps: {
+  toRequestContext: (raw: unknown, fallbackId?: string) => RequestContext;
+  createRequestLogger: (req: NextRequest) => unknown;
+  validateApiAuth: (req: NextRequest) => Promise<{ isValid: boolean; error?: string }>;
+  getClientIPFromRequest: (req: NextRequest) => string;
+  getRateLimiter: () => {
+    checkRateLimit: (
+      ip: string,
+      bucket?: string
+    ) => Promise<{ allowed: boolean; retryAfter?: number }>;
+  };
+  getSingleUserInfo: (
+    req: NextRequest
+  ) => ReturnType<typeof import('@/lib/auth/user-session').getSingleUserInfo>;
+  recordEndpointError?: (method?: string, url?: string) => void;
+  recordEndpointSuccess?: (method?: string, url?: string) => void;
+  createAuthenticationErrorResponse: (
+    message: string,
+    requestId: string
+  ) => NextResponse<ApiResponse>;
+}) {
   // Per-instance counters for streaming rate limits
   const streamingCounters: Map<string, { count: number; resetTime: number }> = new Map();
   const inflightCounters: Map<string, { count: number; lastUpdated: number }> = new Map();
@@ -100,7 +108,10 @@ export function buildAuthAndRateLimit(
       try {
         const authResult = await deps.validateApiAuth(request);
         if (!authResult.isValid) {
-          const unauthorized = deps.createAuthenticationErrorResponse(authResult.error || 'Authentication required', requestContext.requestId) as NextResponse<ApiResponse<T>>;
+          const unauthorized = deps.createAuthenticationErrorResponse(
+            authResult.error || 'Authentication required',
+            requestContext.requestId
+          ) as NextResponse<ApiResponse<T>>;
           const durationMs = Math.round(performance.now() - startHighRes);
           setResponseHeaders(unauthorized, requestContext.requestId, durationMs);
           return unauthorized;
@@ -134,14 +145,20 @@ export function buildAuthAndRateLimit(
         }
 
         const userInfo = deps.getSingleUserInfo(request);
-        const authenticatedContext: AuthenticatedRequestContext = { ...requestContext, userInfo } as AuthenticatedRequestContext;
+        const authenticatedContext: AuthenticatedRequestContext = {
+          ...requestContext,
+          userInfo,
+        } as AuthenticatedRequestContext;
         const res = await handler(request, authenticatedContext, routeParams?.params);
         const durationMs = Math.round(performance.now() - startHighRes);
         setResponseHeaders(res, authenticatedContext.requestId, durationMs);
         return res;
       } catch (error) {
         const err = error instanceof Error ? error : new Error('Unknown error');
-        const resp = NextResponse.json({ success: false, error: { message: err.message } }, { status: 500 }) as NextResponse<ApiResponse<T>>;
+        const resp = NextResponse.json(
+          { success: false, error: { message: err.message } },
+          { status: 500 }
+        ) as NextResponse<ApiResponse<T>>;
         const durationMs = Math.round(performance.now() - startHighRes);
         setResponseHeaders(resp, requestContext.requestId, durationMs);
         return resp;
@@ -178,10 +195,15 @@ export function buildAuthAndRateLimit(
         if (!rateLimitDisabled && env.NODE_ENV !== 'development') {
           const inflightEarly = inflightCounters.get(clientIPForEarly)?.count ?? 0;
           if (inflightEarly >= maxConcurrentEarly) {
-            const earlyTooMany = new Response('Too many concurrent requests. Please wait.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' } });
+            const earlyTooMany = new Response('Too many concurrent requests. Please wait.', {
+              status: 429,
+              headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' },
+            });
             const durationMs = Math.round(performance.now() - startHighRes);
             setResponseHeaders(earlyTooMany, baseContext.requestId || 'unknown', durationMs);
-            try { deps.recordEndpointError?.(baseContext.method, baseContext.url); } catch {}
+            try {
+              deps.recordEndpointError?.(baseContext.method, baseContext.url);
+            } catch {}
             return earlyTooMany;
           }
         }
@@ -202,11 +224,18 @@ export function buildAuthAndRateLimit(
           const limiter = deps.getRateLimiter();
           const globalResult = await limiter.checkRateLimit(clientIP, 'chat');
           if (!globalResult.allowed) {
-            const retryAfter = String(globalResult.retryAfter || Math.ceil(env.CHAT_WINDOW_MS / 1000));
-            const limited = new Response('Rate limit exceeded. Please try again later.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': retryAfter } });
+            const retryAfter = String(
+              globalResult.retryAfter || Math.ceil(env.CHAT_WINDOW_MS / 1000)
+            );
+            const limited = new Response('Rate limit exceeded. Please try again later.', {
+              status: 429,
+              headers: { 'Content-Type': 'text/plain', 'Retry-After': retryAfter },
+            });
             const durationMs = Math.round(performance.now() - startHighRes);
             setResponseHeaders(limited, baseContext.requestId || 'unknown', durationMs);
-            try { deps.recordEndpointError?.(baseContext.method, baseContext.url); } catch {}
+            try {
+              deps.recordEndpointError?.(baseContext.method, baseContext.url);
+            } catch {}
             return limited;
           }
         }
@@ -221,10 +250,15 @@ export function buildAuthAndRateLimit(
             streamingCounters.set(clientIP, { count: 1, resetTime: now + windowMs });
           } else if (entry.count >= maxRequests) {
             const retryAfter = Math.max(1, Math.ceil((entry.resetTime - now) / 1000));
-            const streamingLimited = new Response('Rate limit exceeded. Please try again later.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': String(retryAfter) } });
+            const streamingLimited = new Response('Rate limit exceeded. Please try again later.', {
+              status: 429,
+              headers: { 'Content-Type': 'text/plain', 'Retry-After': String(retryAfter) },
+            });
             const durationMs = Math.round(performance.now() - startHighRes);
             setResponseHeaders(streamingLimited, baseContext.requestId || 'unknown', durationMs);
-            try { deps.recordEndpointError?.(baseContext.method, baseContext.url); } catch {}
+            try {
+              deps.recordEndpointError?.(baseContext.method, baseContext.url);
+            } catch {}
             return streamingLimited;
           } else {
             entry.count++;
@@ -232,10 +266,15 @@ export function buildAuthAndRateLimit(
 
           const currentInflight = inflightCounters.get(clientIP)?.count ?? 0;
           if (currentInflight >= maxConcurrent) {
-            const tooMany = new Response('Too many concurrent requests. Please wait.', { status: 429, headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' } });
+            const tooMany = new Response('Too many concurrent requests. Please wait.', {
+              status: 429,
+              headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' },
+            });
             const durationMs = Math.round(performance.now() - startHighRes);
             setResponseHeaders(tooMany, baseContext.requestId || 'unknown', durationMs);
-            try { deps.recordEndpointError?.(baseContext.method, baseContext.url); } catch {}
+            try {
+              deps.recordEndpointError?.(baseContext.method, baseContext.url);
+            } catch {}
             return tooMany;
           }
           inflightCounters.set(clientIP, { count: currentInflight + 1, lastUpdated: now });
@@ -253,7 +292,9 @@ export function buildAuthAndRateLimit(
         const response = await handler(request, authenticatedContext, routeParams?.params);
         const durationMs = Math.round(performance.now() - startHighRes);
         setResponseHeaders(response, authenticatedContext.requestId, durationMs);
-        try { deps.recordEndpointSuccess?.(authenticatedContext.method, authenticatedContext.url); } catch {}
+        try {
+          deps.recordEndpointSuccess?.(authenticatedContext.method, authenticatedContext.url);
+        } catch {}
         return response;
       } catch (error) {
         const err = error instanceof Error ? error : new Error('Unknown error');
@@ -263,7 +304,9 @@ export function buildAuthAndRateLimit(
         );
         const durationMs = Math.round(performance.now() - startHighRes);
         setResponseHeaders(resp, baseContext.requestId || 'unknown', durationMs);
-        try { deps.recordEndpointError?.(baseContext.method, baseContext.url); } catch {}
+        try {
+          deps.recordEndpointError?.(baseContext.method, baseContext.url);
+        } catch {}
         return resp;
       } finally {
         if (!rateLimitDisabled && didIncrement) {

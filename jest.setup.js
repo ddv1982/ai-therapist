@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom';
 
 // Polyfill getComputedStyle to avoid jsdom "Not implemented" when a pseudo-element argument is provided
 if (typeof window !== 'undefined' && typeof window.getComputedStyle === 'function') {
@@ -29,7 +29,9 @@ jest.mock('@hookform/resolvers/zod', () => {
     zodResolver: (schema, _schemaOptions, resolverOptions) => {
       return async (values, _ctx, options) => {
         try {
-          const parsed = await (schema.parseAsync ? schema.parseAsync(values) : schema.parse(values));
+          const parsed = await (schema.parseAsync
+            ? schema.parseAsync(values)
+            : schema.parse(values));
           if (options && options.shouldUseNativeValidation) {
             // no-op in tests
           }
@@ -38,7 +40,9 @@ jest.mock('@hookform/resolvers/zod', () => {
           const issues = (e && (e.issues || e.errors)) || [];
           const errors = {};
           for (const issue of issues) {
-            const path = Array.isArray(issue.path) ? issue.path.join('.') : String(issue.path || '');
+            const path = Array.isArray(issue.path)
+              ? issue.path.join('.')
+              : String(issue.path || '');
             if (!errors[path]) errors[path] = { message: issue.message, type: issue.code };
           }
           return { values: {}, errors };
@@ -58,15 +62,15 @@ jest.mock('next/navigation', () => ({
       back: jest.fn(),
       forward: jest.fn(),
       refresh: jest.fn(),
-    }
+    };
   },
   useSearchParams() {
-    return new URLSearchParams()
+    return new URLSearchParams();
   },
   usePathname() {
-    return ''
+    return '';
   },
-}))
+}));
 
 // Mock AI SDK
 jest.mock('ai', () => ({
@@ -74,7 +78,7 @@ jest.mock('ai', () => ({
     toTextStreamResponse: jest.fn(() => new Response('test response')),
   })),
   convertToModelMessages: jest.fn((messages) => messages),
-}))
+}));
 
 // Polyfill web streams for Node test environment
 const { TransformStream, ReadableStream, WritableStream } = require('web-streams-polyfill');
@@ -92,7 +96,7 @@ if (!global.WritableStream) {
 jest.mock('@ai-sdk/groq', () => ({
   groq: jest.fn((modelId) => ({ modelId })),
   createGroq: jest.fn(() => (modelId) => ({ modelId })),
-}))
+}));
 
 // Mock AI SDK React
 jest.mock('@ai-sdk/react', () => ({
@@ -103,7 +107,7 @@ jest.mock('@ai-sdk/react', () => ({
     handleSubmit: jest.fn(),
     isLoading: false,
   })),
-}))
+}));
 
 // ReactMarkdown and remark-gfm no longer used - removed from dependencies
 // Mock Streamdown to avoid ESM transform issues and keep tests fast
@@ -121,7 +125,7 @@ jest.mock('streamdown', () => {
     const elements = [];
     for (const block of blocks) {
       const lines = block.split(/\n/);
-      if (lines.every(l => l.trim().startsWith('- '))) {
+      if (lines.every((l) => l.trim().startsWith('- '))) {
         elements.push(
           React.createElement(
             'ul',
@@ -130,7 +134,9 @@ jest.mock('streamdown', () => {
           )
         );
       } else {
-        elements.push(React.createElement('p', { key: `p-${elements.length}` }, block.replace(/\n/g, ' ')));
+        elements.push(
+          React.createElement('p', { key: `p-${elements.length}` }, block.replace(/\n/g, ' '))
+        );
       }
     }
     return React.createElement('div', { className }, elements);
@@ -169,11 +175,11 @@ Object.defineProperty(global, 'crypto', {
       importKey: jest.fn(),
       encrypt: jest.fn(),
       decrypt: jest.fn(),
-    }
+    },
   },
   writable: true,
   configurable: true,
-})
+});
 
 // Allow crypto to be temporarily overridden in tests
 global.mockCrypto = (mockImplementation) => {
@@ -181,8 +187,8 @@ global.mockCrypto = (mockImplementation) => {
     value: mockImplementation,
     writable: true,
     configurable: true,
-  })
-}
+  });
+};
 
 global.restoreCrypto = () => {
   Object.defineProperty(global, 'crypto', {
@@ -213,17 +219,19 @@ global.restoreCrypto = () => {
         importKey: jest.fn(),
         encrypt: jest.fn(),
         decrypt: jest.fn(),
-      }
+      },
     },
     writable: true,
     configurable: true,
-  })
-}
+  });
+};
 
 // Mock environment variables
-process.env.ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'test-encryption-key-32-chars-long-for-testing';
+process.env.ENCRYPTION_KEY =
+  process.env.ENCRYPTION_KEY || 'test-encryption-key-32-chars-long-for-testing';
 process.env.CSRF_SECRET = process.env.CSRF_SECRET || 'test-csrf-secret-for-testing';
-process.env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || 'test-nextauth-secret-32-characters-long!!!!';
+process.env.NEXTAUTH_SECRET =
+  process.env.NEXTAUTH_SECRET || 'test-nextauth-secret-32-characters-long!!!!';
 process.env.NEXTAUTH_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 process.env.NODE_ENV = 'test';
 // Ensure rate limiting is enabled by default in tests (individual suites may override)
@@ -252,9 +260,15 @@ jest.mock('next/server', () => ({
     headers: new Headers(init?.headers || {}),
     cookies: {
       get: (key) => {
-        const cookieHeader = (init?.headers && (init.headers['cookie'] || init.headers['Cookie'])) || '';
+        const cookieHeader =
+          (init?.headers && (init.headers['cookie'] || init.headers['Cookie'])) || '';
         if (!cookieHeader) return undefined;
-        const map = new Map(String(cookieHeader).split(/;\s*/).filter(Boolean).map((p) => p.split('=')));
+        const map = new Map(
+          String(cookieHeader)
+            .split(/;\s*/)
+            .filter(Boolean)
+            .map((p) => p.split('='))
+        );
         const value = map.get(key);
         return value ? { name: key, value } : undefined;
       },
@@ -290,9 +304,12 @@ jest.mock('next/server', () => ({
       };
     },
     next: () => ({ type: 'next', cookies: { set: jest.fn(), delete: jest.fn() } }),
-    redirect: (_url, _status) => ({ type: 'redirect', cookies: { set: jest.fn(), delete: jest.fn() } }),
+    redirect: (_url, _status) => ({
+      type: 'redirect',
+      cookies: { set: jest.fn(), delete: jest.fn() },
+    }),
   },
-}))
+}));
 
 // Mock standard Request/Response for compatibility
 global.Request = class MockRequest {
@@ -301,11 +318,11 @@ global.Request = class MockRequest {
     this.method = options.method || 'GET';
     this.headers = new Map(Object.entries(options.headers || {}));
   }
-  
+
   get url() {
     return this._url;
   }
-  
+
   get(name) {
     return this.headers.get(name);
   }
@@ -317,7 +334,7 @@ global.Response = class MockResponse {
     this.status = init.status || 200;
     this.headers = new Map(Object.entries(init.headers || {}));
   }
-  
+
   static json(data, init) {
     return new MockResponse(JSON.stringify(data), init);
   }
@@ -366,7 +383,7 @@ global.console = {
   ...console,
   warn: jest.fn(),
   error: jest.fn(),
-}
+};
 
 // Polyfill ResizeObserver for components that rely on it (e.g., Radix UI)
 if (typeof global.ResizeObserver === 'undefined') {
