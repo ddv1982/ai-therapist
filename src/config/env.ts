@@ -1,6 +1,24 @@
 import { z } from 'zod';
 import { envDefaults } from '@/config/env.defaults';
 
+// Custom boolean coercion for environment variables
+// z.coerce.boolean() doesn't work correctly for string 'false' (it becomes true)
+const coerceBoolean = (defaultValue: boolean) =>
+  z
+    .union([z.string(), z.boolean(), z.number()])
+    .optional()
+    .transform((value) => {
+      if (value === undefined || value === null || value === '') {
+        return defaultValue;
+      }
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'number') return value !== 0;
+      const normalised = value.trim().toLowerCase();
+      if (normalised === 'true' || normalised === '1' || normalised === 'yes') return true;
+      if (normalised === 'false' || normalised === '0' || normalised === 'no') return false;
+      return defaultValue;
+    });
+
 const serverEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default(envDefaults.NODE_ENV),
   PORT: z.coerce.number().int().positive().default(envDefaults.PORT),
@@ -25,8 +43,8 @@ const serverEnvSchema = z.object({
   RATE_LIMIT_BLOCK_MS: z.coerce.number().int().nonnegative().default(envDefaults.RATE_LIMIT_BLOCK_MS),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().nonnegative().default(envDefaults.RATE_LIMIT_WINDOW_MS),
   RATE_LIMIT_MAX_REQS: z.coerce.number().int().positive().default(envDefaults.RATE_LIMIT_MAX_REQS),
-  RATE_LIMIT_DISABLED: z.coerce.boolean().default(envDefaults.RATE_LIMIT_DISABLED),
-  RATE_LIMIT_USE_REDIS: z.coerce.boolean().default(envDefaults.RATE_LIMIT_USE_REDIS),
+  RATE_LIMIT_DISABLED: coerceBoolean(envDefaults.RATE_LIMIT_DISABLED),
+  RATE_LIMIT_USE_REDIS: coerceBoolean(envDefaults.RATE_LIMIT_USE_REDIS),
 
   CHAT_WINDOW_MS: z.coerce.number().int().nonnegative().default(envDefaults.CHAT_WINDOW_MS),
   CHAT_MAX_REQS: z.coerce.number().int().positive().default(envDefaults.CHAT_MAX_REQS),
@@ -38,26 +56,26 @@ const serverEnvSchema = z.object({
   API_WINDOW_MS: z.coerce.number().int().nonnegative().default(envDefaults.API_WINDOW_MS),
   API_MAX_REQS: z.coerce.number().int().positive().default(envDefaults.API_MAX_REQS),
 
-  CACHE_ENABLED: z.coerce.boolean().default(envDefaults.CACHE_ENABLED),
+  CACHE_ENABLED: coerceBoolean(envDefaults.CACHE_ENABLED),
   CACHE_DEFAULT_TTL: z.coerce.number().int().nonnegative().default(envDefaults.CACHE_DEFAULT_TTL),
   CACHE_SESSION_TTL: z.coerce.number().int().nonnegative().default(envDefaults.CACHE_SESSION_TTL),
   CACHE_MESSAGE_TTL: z.coerce.number().int().nonnegative().default(envDefaults.CACHE_MESSAGE_TTL),
-  MESSAGES_CACHE_ENABLED: z.coerce.boolean().default(envDefaults.MESSAGES_CACHE_ENABLED),
+  MESSAGES_CACHE_ENABLED: coerceBoolean(envDefaults.MESSAGES_CACHE_ENABLED),
 
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default(envDefaults.LOG_LEVEL as 'error' | 'warn' | 'info' | 'debug'),
 
-  AI_TELEMETRY_ENABLED: z.coerce.boolean().default(envDefaults.AI_TELEMETRY_ENABLED),
-  AI_TELEMETRY_RECORD_INPUTS: z.coerce.boolean().default(envDefaults.AI_TELEMETRY_RECORD_INPUTS),
-  AI_TELEMETRY_RECORD_OUTPUTS: z.coerce.boolean().default(envDefaults.AI_TELEMETRY_RECORD_OUTPUTS),
+  AI_TELEMETRY_ENABLED: coerceBoolean(envDefaults.AI_TELEMETRY_ENABLED),
+  AI_TELEMETRY_RECORD_INPUTS: coerceBoolean(envDefaults.AI_TELEMETRY_RECORD_INPUTS),
+  AI_TELEMETRY_RECORD_OUTPUTS: coerceBoolean(envDefaults.AI_TELEMETRY_RECORD_OUTPUTS),
   AI_TELEMETRY_FUNCTION_ID: z.string().optional(),
   AI_TELEMETRY_APPLICATION: z.string().optional(),
 
-  ENABLE_METRICS_ENDPOINT: z.coerce.boolean().default(envDefaults.ENABLE_METRICS_ENDPOINT),
-  BYPASS_AUTH: z.coerce.boolean().default(envDefaults.BYPASS_AUTH),
+  ENABLE_METRICS_ENDPOINT: coerceBoolean(envDefaults.ENABLE_METRICS_ENDPOINT),
+  BYPASS_AUTH: coerceBoolean(envDefaults.BYPASS_AUTH),
 
   NEXT_PUBLIC_CONVEX_URL: z.string().url().optional().or(z.literal('')),
-  NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP: z.coerce.boolean().default(envDefaults.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP),
-  NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO: z.coerce.boolean().default(envDefaults.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO),
+  NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP: coerceBoolean(envDefaults.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP),
+  NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO: coerceBoolean(envDefaults.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

@@ -1,16 +1,11 @@
 import 'server-only';
 import type { AppLocale } from '@/i18n/config';
-export type MemoryContext = {
-  sessionTitle: string;
-  sessionDate: string;
-  reportDate: string;
-  summary: string;
-  content: string;
-};
-
+import type { MemoryContext } from './prompts';
+export type { MemoryContext };
 import {
   THERAPY_SYSTEM_PROMPT_EN,
   REPORT_PROMPT_EN,
+  REPORT_PROMPT_NL,
   WEB_SEARCH_EN,
   MEMORY_SECTION_EN,
   THERAPY_SYSTEM_PROMPT_NL,
@@ -61,6 +56,18 @@ export function buildMemoryEnhancedPrompt(
   locale: AppLocale = 'en'
 ): string {
   return buildTherapySystemPrompt(locale, { memory: memoryContext });
+}
+
+// Public API functions
+export function getTherapySystemPrompt(
+  locale: AppLocale,
+  opts?: { memory?: MemoryContext[]; webSearch?: boolean }
+): string {
+  return buildTherapySystemPrompt(locale, opts);
+}
+
+export function getReportPrompt(locale: AppLocale): string {
+  return locale === 'nl' ? REPORT_PROMPT_NL : asText(REPORT_PROMPT_EN);
 }
 
 const ANALYSIS_EXTRACTION_PROMPT_BUFFER = Buffer.from(`

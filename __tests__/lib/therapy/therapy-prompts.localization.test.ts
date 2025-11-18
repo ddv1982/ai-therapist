@@ -1,5 +1,5 @@
 import { buildTherapySystemPrompt, type MemoryContext } from '@/lib/therapy/therapy-prompts';
-import { getReportPrompt, getTherapySystemPrompt } from '@/lib/therapy/prompts';
+import { getReportPrompt, getTherapySystemPrompt } from '@/lib/therapy/therapy-prompts';
 
 describe('buildTherapySystemPrompt localization', () => {
   const sampleMemory: MemoryContext[] = [

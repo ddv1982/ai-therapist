@@ -4,7 +4,7 @@ import {
   type ReportMessage,
 } from '@/lib/api/groq-client';
 import { ANALYSIS_EXTRACTION_PROMPT_TEXT } from '@/lib/therapy/therapy-prompts';
-import { getReportPrompt } from '@/lib/therapy/prompts';
+import { getReportPrompt } from '@/lib/therapy/therapy-prompts';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import { logger, devLog } from '@/lib/utils/logger';
 import {

@@ -1,8 +1,6 @@
 import 'server-only';
-import type { AppLocale } from '@/i18n/config';
-import type { MemoryContext } from './therapy-prompts';
 
-type LocalMemoryContext = {
+export type MemoryContext = {
   sessionTitle: string;
   sessionDate: string;
   reportDate: string;
@@ -437,32 +435,5 @@ Gebruik dit om voort te bouwen op eerdere inzichten, doelen en voortgang, zonder
 // HELPER FUNCTIONS
 // ========================================
 
-type PromptOptions = { memory?: LocalMemoryContext[]; webSearch?: boolean } | undefined;
-
-function mapMemoryContext(memory?: MemoryContext[]): LocalMemoryContext[] | undefined {
-  if (!memory) return undefined;
-  return memory.map((entry) => ({
-    sessionTitle: entry.sessionTitle,
-    sessionDate: entry.sessionDate,
-    reportDate: entry.reportDate,
-    summary: entry.summary,
-    content: entry.content,
-  }));
-}
-
-// Import from parent for compatibility
-import { buildTherapySystemPrompt, REPORT_GENERATION_PROMPT } from './therapy-prompts';
-
-export function getTherapySystemPrompt(
-  locale: AppLocale,
-  opts?: { memory?: MemoryContext[]; webSearch?: boolean }
-): string {
-  const mapped: PromptOptions = opts
-    ? { memory: mapMemoryContext(opts.memory), webSearch: opts.webSearch }
-    : undefined;
-  return buildTherapySystemPrompt(locale, mapped as PromptOptions);
-}
-
-export function getReportPrompt(locale: AppLocale): string {
-  return locale === 'nl' ? REPORT_PROMPT_NL : REPORT_GENERATION_PROMPT;
-}
+// Note: getTherapySystemPrompt and getReportPrompt are in therapy-prompts.ts
+// Import them from @/lib/therapy (index) or @/lib/therapy/therapy-prompts

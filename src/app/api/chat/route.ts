@@ -3,7 +3,7 @@ import { convertToModelMessages } from 'ai';
 import type { UIMessage } from 'ai';
 import { languageModels, ModelID } from '@/ai/providers';
 import { groq } from '@ai-sdk/groq';
-import { getTherapySystemPrompt } from '@/lib/therapy/prompts';
+import { getTherapySystemPrompt } from '@/lib/therapy/therapy-prompts';
 import { streamChatCompletion } from '@/lib/chat/streaming';
 import { normalizeChatRequest, buildForwardedMessages } from '@/lib/chat/chat-request';
 import { selectModelAndTools } from '@/lib/chat/model-selector';

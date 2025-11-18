@@ -1,5 +1,5 @@
 import type { TelemetrySettings } from 'ai';
-import { env } from '@/config/env';
+import { getServerEnv } from '@/config/env';
 import { publicEnv } from '@/config/env.public';
 
 export interface TelemetryToggle {
@@ -10,19 +10,24 @@ export interface TelemetryToggle {
   functionId?: string;
 }
 
-const telemetryEnv = {
-  enabled: env.AI_TELEMETRY_ENABLED,
-  recordInputs: env.AI_TELEMETRY_RECORD_INPUTS,
-  recordOutputs: env.AI_TELEMETRY_RECORD_OUTPUTS,
-  functionId: sanitizeString(env.AI_TELEMETRY_FUNCTION_ID),
-  application: sanitizeString(env.AI_TELEMETRY_APPLICATION),
-};
+function getTelemetryEnv() {
+  const env = getServerEnv();
+  return {
+    enabled: env.AI_TELEMETRY_ENABLED,
+    recordInputs: env.AI_TELEMETRY_RECORD_INPUTS,
+    recordOutputs: env.AI_TELEMETRY_RECORD_OUTPUTS,
+    functionId: sanitizeString(env.AI_TELEMETRY_FUNCTION_ID),
+    application: sanitizeString(env.AI_TELEMETRY_APPLICATION),
+  };
+}
 
 export function getTelemetrySettings(
   toggle?: TelemetryToggle | boolean
 ): TelemetrySettings | undefined {
   const resolvedToggle: TelemetryToggle | undefined =
     typeof toggle === 'boolean' ? { enabled: toggle } : toggle;
+
+  const telemetryEnv = getTelemetryEnv();
 
   const enabled = resolvedToggle?.enabled ?? telemetryEnv.enabled;
   if (!enabled) {
@@ -33,7 +38,7 @@ export function getTelemetrySettings(
   const recordOutputs = resolvedToggle?.recordOutputs ?? telemetryEnv.recordOutputs;
   const functionId = resolvedToggle?.functionId ?? telemetryEnv.functionId;
 
-  const metadata = buildTelemetryMetadata(resolvedToggle?.metadata);
+  const metadata = buildTelemetryMetadata(resolvedToggle?.metadata, telemetryEnv);
 
   return {
     isEnabled: true,
@@ -45,11 +50,12 @@ export function getTelemetrySettings(
 }
 
 function buildTelemetryMetadata(
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  telemetryEnv?: ReturnType<typeof getTelemetryEnv>
 ): Record<string, string> | undefined {
   const base: Record<string, string> = {};
 
-  if (telemetryEnv.application) {
+  if (telemetryEnv?.application) {
     base.application = telemetryEnv.application;
   }
 

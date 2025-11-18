@@ -1,4 +1,4 @@
-import { getTherapySystemPrompt, getReportPrompt } from '@/lib/therapy/prompts';
+import { getTherapySystemPrompt, getReportPrompt } from '@/lib/therapy/therapy-prompts';
 
 describe('therapy prompts index', () => {
   describe('getTherapySystemPrompt', () => {
