@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { ObsessionsCompulsionsData } from '@/types/therapy';
+import { ObsessionsCompulsionsData } from '@/types';
 import { parseObsessionsCompulsionsFromMarkdown } from './format-obsessions-compulsions';
 
 export type ObsessionsExportFormat = 'json' | 'markdown' | 'text';

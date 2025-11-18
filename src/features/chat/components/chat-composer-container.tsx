@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { ChatComposer } from './chat-composer';
-import { useSendMessageMutation } from '@/store/slices/chat-api';
+import { useSendMessageMutation } from '@/lib/queries/chat';
 import { useToast } from '@/components/ui/toast';
 import { logger } from '@/lib/utils/logger';
 import { useTranslations } from 'next-intl';
@@ -14,7 +14,7 @@ interface ChatComposerContainerProps {
 
 export function ChatComposerContainer({ sessionId, isMobile }: ChatComposerContainerProps) {
   const [input, setInput] = useState('');
-  const [sendMessage, { isLoading }] = useSendMessageMutation();
+  const mutation = useSendMessageMutation();
   const inputContainerRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { showToast } = useToast();
@@ -25,11 +25,11 @@ export function ChatComposerContainer({ sessionId, isMobile }: ChatComposerConta
     if (!input.trim()) return;
 
     try {
-      await sendMessage({
+      await mutation.mutateAsync({
         sessionId,
         role: 'user',
         content: input.trim(),
-      }).unwrap();
+      });
       setInput('');
     } catch (err) {
       showToast({ type: 'error', title: t('sendFailedTitle'), message: t('sendFailedBody') });
@@ -51,7 +51,7 @@ export function ChatComposerContainer({ sessionId, isMobile }: ChatComposerConta
   return (
     <ChatComposer
       input={input}
-      isLoading={isLoading}
+      isLoading={mutation.isPending}
       isMobile={isMobile}
       onChange={setInput}
       onKeyDown={(e) => {

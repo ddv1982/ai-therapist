@@ -1,4 +1,4 @@
-import { isLocalhost, isPrivateNetworkAccess } from '@/lib/utils/utils';
+import { isLocalhost, isPrivateNetworkAccess } from '@/lib/utils/helpers';
 
 describe('utils/utils branch coverage', () => {
   it('isLocalhost handles empty and special hosts', () => {

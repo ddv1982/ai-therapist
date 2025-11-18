@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/utils/logger';
-import type { RequestContext } from '@/lib/api/middleware/factory';
+import type { RequestContext } from '@/lib/api/middleware';
 
 // Safely reads a header value from a Headers object or a plain object (case-insensitive)
 export function readHeaderValue(

@@ -1,5 +1,5 @@
-import { generateCBTSummary } from '@/lib/therapy/cbt-data-parser/summary';
-import type { CBTStructuredAssessment } from '@/types/therapy';
+import { generateCBTSummary } from '@/lib/therapy/parsers';
+import type { CBTStructuredAssessment } from '@/types/domains/therapy';
 
 describe('cbt-data-parser summary', () => {
   describe('generateCBTSummary', () => {

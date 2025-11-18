@@ -8,7 +8,7 @@ import type {
   SchemaModesData,
   ActionPlanData,
   CBTStepType,
-} from '@/types/therapy';
+} from '@/types';
 
 export type CBTStepId = Exclude<CBTStepType, 'complete'>;
 

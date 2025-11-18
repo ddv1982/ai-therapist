@@ -1,4 +1,4 @@
-import { ObsessionsCompulsionsData, ObsessionData, CompulsionData } from '@/types/therapy';
+import { ObsessionsCompulsionsData, ObsessionData, CompulsionData } from '@/types';
 import { logger } from '@/lib/utils/logger';
 
 function generateStableId(prefix: string, seed: string): string {

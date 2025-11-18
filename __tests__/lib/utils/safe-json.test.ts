@@ -1,4 +1,4 @@
-import { safeParse, safeParseFromMatch } from '@/lib/utils/safe-json';
+import { safeParse, safeParseFromMatch } from '@/lib/utils/helpers';
 
 describe('utils/safe-json', () => {
   it('safeParse returns ok=false on invalid JSON and ok=true on valid', () => {

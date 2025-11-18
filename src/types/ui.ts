@@ -5,7 +5,7 @@
 
 import { ReactNode } from 'react';
 import { ModelConfig, Message, Session } from './index';
-import type { CBTFormData } from './therapy';
+import type { CBTFormData } from './domains/therapy';
 
 // ============================================================================
 // COMMON PROP PATTERNS

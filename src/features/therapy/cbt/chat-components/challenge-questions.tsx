@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { HelpCircle, Plus, Minus } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { CBTStepType, ChallengeQuestionsData } from '@/types/therapy';
+import type { CBTStepType, ChallengeQuestionsData } from '@/types';
 // Removed CBTFormValidationError import - validation errors not displayed
 import { useTranslations } from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';

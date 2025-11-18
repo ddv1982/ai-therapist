@@ -10,7 +10,7 @@ import {
   createNotFoundErrorResponse,
 } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
-import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
+import { enhancedErrorHandlers } from '@/lib/utils/errors';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexSession, ConvexSessionWithMessagesAndReports } from '@/types/convex';
 

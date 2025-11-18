@@ -6,7 +6,7 @@ import {
   generateSessionTitle,
   isLocalhost,
   isPrivateNetworkAccess,
-} from '@/lib/utils/utils';
+} from '@/lib/utils/helpers';
 
 describe('utils', () => {
   describe('cn', () => {

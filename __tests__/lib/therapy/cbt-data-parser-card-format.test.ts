@@ -1,4 +1,4 @@
-import { parseAllCBTData, hasCBTData } from '@/lib/therapy/cbt-data-parser';
+import { parseAllCBTData, hasCBTData } from '@/lib/therapy/parsers';
 
 describe('cbt-data-parser card format', () => {
   it('parses unified card format from HTML comment JSON', () => {

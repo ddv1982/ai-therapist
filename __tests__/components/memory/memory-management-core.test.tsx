@@ -108,7 +108,7 @@ jest.mock('lucide-react', () => ({
 }));
 
 // Mock utils
-jest.mock('@/lib/utils/utils', () => ({
+jest.mock('@/lib/utils/helpers', () => ({
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }));
 

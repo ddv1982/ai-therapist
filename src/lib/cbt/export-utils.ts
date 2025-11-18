@@ -1,4 +1,4 @@
-import { CBTFormData, type SchemaReflectionData } from '@/types/therapy';
+import { CBTFormData, type SchemaReflectionData } from '@/types';
 
 // Export format types
 export type CBTExportFormat = 'json' | 'markdown' | 'text';

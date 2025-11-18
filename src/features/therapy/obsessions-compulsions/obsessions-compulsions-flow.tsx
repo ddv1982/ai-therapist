@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { List, Trash2, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { ObsessionsCompulsionsData } from '@/types/therapy';
+import type { ObsessionsCompulsionsData } from '@/types';
 import { useObsessionsFlow } from './components/use-obsessions-flow';
 import { ObsessionBuilder } from './components/obsession-builder';
 import { FeedList } from './components/feed-list';

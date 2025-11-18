@@ -1,4 +1,4 @@
-import type { components } from '@/types/api/sessions';
+import type { Session } from '@/types';
 
 export interface UiSession {
   id: string;
@@ -8,7 +8,7 @@ export interface UiSession {
   _count?: { messages: number };
 }
 
-export function mapApiSessionToUiSession(s: components['schemas']['Session']): UiSession {
+export function mapApiSessionToUiSession(s: Session): UiSession {
   const messageCount =
     (s as { _count?: { messages?: number } })._count?.messages ??
     (s as { messageCount?: number }).messageCount;

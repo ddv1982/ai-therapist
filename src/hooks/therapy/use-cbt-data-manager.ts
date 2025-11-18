@@ -1,28 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import { logger } from '@/lib/utils/logger';
-import { createSelector } from '@reduxjs/toolkit';
-import { type RootState } from '@/store';
-import {
-  createDraft,
-  updateDraft,
-  setCurrentStep,
-  saveDraft,
-  loadDraft,
-  deleteDraft,
-  completeCBTEntry,
-  setSubmitting,
-  clearValidationErrors,
-  resetCurrentDraft,
-  startCBTSession,
-  applyCBTEvent,
-  clearCBTSession,
-  type CBTFormData,
-  type CBTDraft,
-  cbtFormSchema,
-} from '@/store/slices/cbt-slice';
+import { useCBT, type CBTDraft } from '@/contexts/cbt-context';
+import { cbtFormSchema } from '@/features/therapy/cbt/form-schema';
+import type { CBTFormData } from '@/features/therapy/cbt/form-schema';
 import {
   type CBTStepPayloadMap,
   type CBTFlowState,
@@ -42,7 +24,7 @@ import type {
   SchemaMode,
   ActionPlanData,
   CBTFormValidationError,
-} from '@/types/therapy';
+} from '@/types';
 import type { CBTFormInput } from '@/features/therapy/cbt/cbt-form-schema';
 import { useChatUI } from '@/contexts/chat-ui-context';
 import { useCBTChatBridge, type SendStepOptions } from '@/lib/therapy/use-cbt-chat-bridge';
@@ -129,8 +111,7 @@ const asActionPlanData = (input: unknown): ActionPlanData => {
   };
 };
 
-const selectCBTCurrentDraft = (state: RootState) => state.cbt?.currentDraft;
-const selectCBTFlowState = (state: RootState) => state.cbt?.flow;
+// Removed Redux selectors - now using CBT context directly
 
 interface LegacySessionData {
   sessionId: string | null;
@@ -185,22 +166,7 @@ const mapFlowToLegacySession = (flow?: CBTFlowState | null): LegacySessionData =
   };
 };
 
-const selectCBTSessionData = createSelector([selectCBTFlowState], mapFlowToLegacySession);
-
-const selectCBTValidationState = createSelector(
-  [
-    (state: RootState) => state.cbt?.validationErrors,
-    (state: RootState) => state.cbt?.isSubmitting,
-    (state: RootState) => state.cbt?.currentStep,
-  ],
-  (validationErrors, isSubmitting, currentStep) => ({
-    validationErrors,
-    isSubmitting,
-    currentStep,
-  })
-);
-
-const selectCBTSavedDrafts = (state: RootState) => state.cbt?.savedDrafts;
+// Removed Redux selectors - now using CBT context directly
 
 interface UseCBTDataManagerOptions {
   sessionId?: string;
@@ -211,8 +177,8 @@ interface UseCBTDataManagerOptions {
 
 interface UseCBTDataManagerReturn {
   currentDraft: CBTDraft | null;
-  sessionData: ReturnType<typeof selectCBTSessionData>;
-  validationState: ReturnType<typeof selectCBTValidationState>;
+  sessionData: any; // TODO: Replace with React Query
+  validationState: any; // TODO: Replace with React Query
   savedDrafts: CBTDraft[];
 
   draftActions: {
@@ -318,8 +284,8 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     enableChatIntegration = true,
   } = options;
 
-  const dispatch = useDispatch();
-  const flowState = useSelector(selectCBTFlowState);
+  const cbt = useCBT();
+  const { flow: flowState } = cbt;
   const hasStartedSessionRef = useRef(false);
   const ensureActiveSession = useCallback(() => {
     if (flowState?.status && flowState.status !== 'idle') {
@@ -329,28 +295,35 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     if (hasStartedSessionRef.current) return;
     hasStartedSessionRef.current = true;
     const existingId = flowState?.sessionId;
-    dispatch(startCBTSession({ sessionId: existingId ?? `cbt-${generateUUID()}` }));
-  }, [dispatch, flowState?.status, flowState?.sessionId]);
+    cbt.startCBTSession({ sessionId: existingId ?? `cbt-${generateUUID()}` });
+  }, [cbt, flowState?.status, flowState?.sessionId]);
   const flowUpdate = useCallback(
     <K extends CBTStepId>(stepId: K, payload: CBTStepPayloadMap[K]) => {
       ensureActiveSession();
-      dispatch(applyCBTEvent({ type: 'UPDATE_STEP', stepId, payload }));
+      cbt.applyCBTEvent({ type: 'UPDATE_STEP', stepId, payload });
     },
-    [dispatch, ensureActiveSession]
+    [cbt, ensureActiveSession]
   );
   const flowClear = useCallback(
     (stepId: CBTStepId) => {
       ensureActiveSession();
-      dispatch(applyCBTEvent({ type: 'CLEAR_STEP', stepId }));
+      cbt.applyCBTEvent({ type: 'CLEAR_STEP', stepId });
     },
-    [dispatch, ensureActiveSession]
+    [cbt, ensureActiveSession]
   );
 
-  const currentDraft = useSelector(selectCBTCurrentDraft);
-  const sessionData = useSelector(selectCBTSessionData);
-  const validationState = useSelector(selectCBTValidationState);
-  const savedDrafts = useSelector(selectCBTSavedDrafts);
-  const lastAutoSave = useSelector((state: RootState) => state.cbt?.lastAutoSave);
+  const currentDraft = cbt.currentDraft;
+  const sessionData = useMemo(() => mapFlowToLegacySession(flowState), [flowState]);
+  const validationState = useMemo(
+    () => ({
+      validationErrors: cbt.validationErrors,
+      isSubmitting: cbt.isSubmitting,
+      currentStep: cbt.currentStep,
+    }),
+    [cbt.validationErrors, cbt.isSubmitting, cbt.currentStep]
+  );
+  const savedDrafts = cbt.savedDrafts;
+  const lastAutoSave = cbt.lastAutoSave;
 
   const autoSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const uiSavingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -404,7 +377,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     }
 
     autoSaveTimeout.current = setTimeout(() => {
-      dispatch(saveDraft());
+      cbt.saveDraft();
     }, autoSaveDelay);
 
     return () => {
@@ -413,7 +386,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         autoSaveTimeout.current = null;
       }
     };
-  }, [currentDraft, autoSaveDelay, dispatch]);
+  }, [currentDraft, autoSaveDelay, cbt]);
 
   // UI-saving indicator: whenever a draft/save occurs, briefly show "saving" then "saved"
   useEffect(() => {
@@ -434,9 +407,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
 
   useEffect(() => {
     if (sessionId && sessionId !== sessionData?.sessionId) {
-      dispatch(startCBTSession({ sessionId }));
+      cbt.startCBTSession({ sessionId });
     }
-  }, [sessionId, sessionData?.sessionId, dispatch]);
+  }, [sessionId, sessionData?.sessionId, cbt]);
 
   useEffect(() => {
     const migrationKey = 'cbt-migration-completed';
@@ -461,10 +434,10 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       }
 
       const draftId = `cbt-draft-${generateUUID()}`;
-      dispatch(createDraft({ id: draftId }));
+      cbt.createDraft({ id: draftId });
 
       if (!sessionData?.sessionId) {
-        dispatch(startCBTSession({ sessionId: `cbt-${generateUUID()}` }));
+        cbt.startCBTSession({ sessionId: `cbt-${generateUUID()}` });
       }
 
       if (draft.situation) {
@@ -542,51 +515,51 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       });
       localStorage.setItem(migrationKey, 'true');
     }
-  }, [dispatch, sessionData, flowUpdate]);
+  }, [cbt, sessionData, flowUpdate]);
 
   const draftActions = useMemo(
     () => ({
       create: (id?: string) => {
         const draftId = id || `cbt-draft-${generateUUID()}`;
-        dispatch(createDraft({ id: draftId }));
+        cbt.createDraft({ id: draftId });
       },
 
       update: (data: Partial<CBTFormData>) => {
-        dispatch(updateDraft(data));
+        cbt.updateDraft(data);
       },
 
       save: () => {
-        dispatch(saveDraft());
+        cbt.saveDraft();
       },
 
       load: (id: string) => {
-        dispatch(loadDraft(id));
+        cbt.loadDraft(id);
       },
 
       delete: (id: string) => {
-        dispatch(deleteDraft(id));
+        cbt.deleteDraft(id);
       },
 
       reset: () => {
-        dispatch(resetCurrentDraft());
+        cbt.resetCurrentDraft();
       },
 
       complete: (data: CBTFormData) => {
-        dispatch(completeCBTEntry(data));
+        cbt.completeCBTEntry(data);
       },
     }),
-    [dispatch]
+    [cbt]
   );
 
   const sessionActions = useMemo(
     () => ({
       start: (sessionId?: string) => {
         const id = sessionId || currentSessionId || `session-${generateUUID()}`;
-        dispatch(startCBTSession({ sessionId: id }));
+        cbt.startCBTSession({ sessionId: id });
       },
 
       clear: () => {
-        dispatch(clearCBTSession());
+        cbt.clearCBTSession();
       },
 
       updateSituation: (data: SituationData) => {
@@ -601,7 +574,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
         flowClear('emotions');
       },
     }),
-    [dispatch, currentSessionId, flowUpdate, flowClear]
+    [cbt, currentSessionId, flowUpdate, flowClear]
   );
 
   const thoughtActions = useMemo(
@@ -747,26 +720,26 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     return {
       currentStep,
       setCurrentStep: (step: number) => {
-        dispatch(setCurrentStep(step));
+        cbt.setCurrentStep(step);
       },
       canGoNext: currentStep < maxSteps,
       canGoPrevious: currentStep > 1,
       goNext: () => {
         if (currentStep < maxSteps) {
-          dispatch(setCurrentStep(currentStep + 1));
+          cbt.setCurrentStep(currentStep + 1);
           return true;
         }
         return false;
       },
       goPrevious: () => {
         if (currentStep > 1) {
-          dispatch(setCurrentStep(currentStep - 1));
+          cbt.setCurrentStep(currentStep - 1);
           return true;
         }
         return false;
       },
     };
-  }, [validationState?.currentStep, dispatch]);
+  }, [validationState?.currentStep, cbt]);
 
   const validation = useMemo(() => {
     const validateForm = (): CBTFormValidationError[] => {
@@ -787,9 +760,9 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
       validateForm,
       isFormValid: Object.keys(validationState?.validationErrors || {}).length === 0,
       errors: validationState?.validationErrors || {},
-      clearErrors: () => dispatch(clearValidationErrors()),
+      clearErrors: () => cbt.clearValidationErrors(),
     };
-  }, [currentDraft, validationState?.validationErrors, enableValidation, dispatch]);
+  }, [currentDraft, validationState?.validationErrors, enableValidation, cbt]);
 
   const status = useMemo(() => {
     const completedSteps = sessionData
@@ -899,37 +872,40 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
 }
 
 export function useUnifiedCBTSelector<T>(
-  selector: (state: RootState) => T,
-  equalityFn?: (left: T, right: T) => boolean
+  selector: (cbt: ReturnType<typeof useCBT>) => T,
+  _equalityFn?: (left: T, right: T) => boolean
 ): T {
-  return useSelector(selector, equalityFn);
+  const cbt = useCBT();
+  const result = selector(cbt);
+  // Note: equalityFn is not used in this simplified version
+  return result;
 }
 
 export function useUnifiedCBTActions() {
-  const dispatch = useDispatch();
+  const cbt = useCBT();
   const updateStep = useCallback(
     <K extends CBTStepId>(stepId: K, payload: CBTStepPayloadMap[K]) => {
-      dispatch(applyCBTEvent({ type: 'UPDATE_STEP', stepId, payload }));
+      cbt.applyCBTEvent({ type: 'UPDATE_STEP', stepId, payload });
     },
-    [dispatch]
+    [cbt]
   );
 
   return useMemo(
     () => ({
-      createDraft: (id: string) => dispatch(createDraft({ id })),
-      updateDraft: (data: Partial<CBTFormData>) => dispatch(updateDraft(data)),
-      saveDraft: () => dispatch(saveDraft()),
-      deleteDraft: (id: string) => dispatch(deleteDraft(id)),
-      startSession: (sessionId: string) => dispatch(startCBTSession({ sessionId })),
-      clearSession: () => dispatch(clearCBTSession()),
+      createDraft: (id: string) => cbt.createDraft({ id }),
+      updateDraft: (data: Partial<CBTFormData>) => cbt.updateDraft(data),
+      saveDraft: () => cbt.saveDraft(),
+      deleteDraft: (id: string) => cbt.deleteDraft(id),
+      startSession: (sessionId: string) => cbt.startCBTSession({ sessionId }),
+      clearSession: () => cbt.clearCBTSession(),
       updateSituation: (data: SituationData) => updateStep('situation', data),
       updateEmotions: (data: EmotionData) => updateStep('emotions', data),
       addThought: (data: ThoughtData) => updateStep('thoughts', [data]),
       addCoreBelief: (data: CoreBeliefData) => updateStep('core-belief', data),
-      setCurrentStep: (step: number) => dispatch(setCurrentStep(step)),
-      setSubmitting: (isSubmitting: boolean) => dispatch(setSubmitting(isSubmitting)),
+      setCurrentStep: (step: number) => cbt.setCurrentStep(step),
+      setSubmitting: (isSubmitting: boolean) => cbt.setSubmitting(isSubmitting),
     }),
-    [dispatch, updateStep]
+    [cbt, updateStep]
   );
 }
 

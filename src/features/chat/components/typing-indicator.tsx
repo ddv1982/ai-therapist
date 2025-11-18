@@ -1,6 +1,6 @@
 'use client';
 
-import type { TypingIndicatorProps } from '@/types/chat';
+import type { TypingIndicatorProps } from '@/types';
 
 export function TypingIndicator({ isVisible }: TypingIndicatorProps) {
   if (!isVisible) return null;

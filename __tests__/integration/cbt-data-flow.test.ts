@@ -5,7 +5,7 @@
  * report generation to display components.
  */
 
-import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/cbt-data-parser';
+import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/parsers';
 
 describe('CBT Data Flow Integration', () => {
   describe('Card Format Data Flow', () => {

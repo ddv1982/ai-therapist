@@ -2,7 +2,7 @@ import {
   extractEmotionData,
   extractChallengeData,
   parseCBTFromMarkdown,
-} from '@/lib/therapy/cbt-data-parser/extractors/markdown';
+} from '@/lib/therapy/parsers';
 
 describe('cbt markdown extractors', () => {
   it('parses rich CBT markdown content into structured data', () => {

@@ -3,7 +3,7 @@ import {
   shouldLogError,
   handleClientError,
   withErrorHandling,
-} from '@/lib/utils/error-utils';
+} from '@/lib/utils/errors';
 
 describe('error-utils edge branches', () => {
   it('classifyError maps by keywords and defaults to system', () => {

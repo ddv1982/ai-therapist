@@ -9,7 +9,7 @@ import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { Lightbulb, Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { CBTStepType, RationalThoughtsData } from '@/types/therapy';
+import type { CBTStepType, RationalThoughtsData } from '@/types/domains/therapy';
 // Removed CBTFormValidationError import - validation errors not displayed
 import { useTranslations } from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';

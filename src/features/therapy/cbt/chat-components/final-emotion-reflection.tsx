@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { TherapySlider } from '@/components/ui/therapy-slider';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { EmotionData, ActionPlanData, CBTStepType } from '@/types/therapy';
+import type { EmotionData, ActionPlanData, CBTStepType } from '@/types';
 import { useTranslations } from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
 

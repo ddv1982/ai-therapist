@@ -7,7 +7,7 @@ import { TherapySlider } from '@/components/ui/therapy-slider';
 import { CBTStepWrapper } from '@/components/ui/cbt-step-wrapper';
 import { Target } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-import type { CBTStepType, CoreBeliefData } from '@/types/therapy';
+import type { CBTStepType, CoreBeliefData } from '@/types';
 // Removed chat bridge imports - individual data no longer sent during session
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';

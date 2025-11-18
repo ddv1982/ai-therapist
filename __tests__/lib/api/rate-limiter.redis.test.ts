@@ -1,35 +1,30 @@
-import type { RedisClientType } from '@/lib/cache/redis-client';
+import type Redis from 'ioredis';
 
 const originalEnv = { ...process.env };
 
 function mockRedisExecute(count: number, ttl: number) {
   const fakeTx = {
     incr: jest.fn(),
-    pTTL: jest.fn(),
-    exec: jest.fn().mockResolvedValue([count, ttl]),
+    pttl: jest.fn(),
+    exec: jest.fn().mockResolvedValue([
+      [null, count],
+      [null, ttl],
+    ]),
   };
 
   const fakeClient = {
     multi: jest.fn(() => fakeTx),
-    pExpire: jest.fn(),
-  } as unknown as RedisClientType<
-    Record<string, never>,
-    Record<string, never>,
-    Record<string, never>
-  >;
+    pexpire: jest.fn(),
+    status: 'ready',
+  } as unknown as Redis;
 
-  const executeCommand = jest.fn(
-    async (command: (client: typeof fakeClient) => Promise<unknown>, fallback?: unknown) => {
-      const result = await command(fakeClient);
-      return (result as unknown) ?? fallback ?? null;
-    }
-  );
+  const getRedisClient = jest.fn(() => fakeClient);
 
-  jest.doMock('@/lib/cache/redis-client', () => ({
-    redisManager: { executeCommand },
+  jest.doMock('@/lib/cache/redis', () => ({
+    getRedisClient,
   }));
 
-  return { executeCommand, fakeTx, fakeClient };
+  return { getRedisClient, fakeTx, fakeClient };
 }
 
 describe('Redis rate limiter TTL handling', () => {
@@ -45,14 +40,14 @@ describe('Redis rate limiter TTL handling', () => {
     process.env.API_MAX_REQS = '5';
     process.env.API_WINDOW_MS = '60000';
 
-    const { executeCommand } = mockRedisExecute(6, -1);
+    const { getRedisClient } = mockRedisExecute(6, -1);
 
     const { getRateLimiter } = await import('@/lib/api/rate-limiter');
     const limiter = getRateLimiter();
 
     const result = await limiter.checkRateLimit('1.2.3.4', 'api');
 
-    expect(executeCommand).toHaveBeenCalled();
+    expect(getRedisClient).toHaveBeenCalled();
     expect(result.allowed).toBe(false);
     expect(result.retryAfter).toBe(60);
   });
@@ -63,14 +58,14 @@ describe('Redis rate limiter TTL handling', () => {
     process.env.API_MAX_REQS = '5';
     process.env.API_WINDOW_MS = '30000';
 
-    const { executeCommand } = mockRedisExecute(10, 0);
+    const { getRedisClient } = mockRedisExecute(10, 0);
 
     const { getRateLimiter } = await import('@/lib/api/rate-limiter');
     const limiter = getRateLimiter();
 
     const result = await limiter.checkRateLimit('9.9.9.9', 'api');
 
-    expect(executeCommand).toHaveBeenCalled();
+    expect(getRedisClient).toHaveBeenCalled();
     expect(result.allowed).toBe(false);
     expect(result.retryAfter).toBe(30);
   });

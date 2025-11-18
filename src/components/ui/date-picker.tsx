@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 
-import { cn } from '@/lib/utils/utils';
+import { cn } from '@/lib/utils/helpers';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { useTranslations } from 'next-intl';

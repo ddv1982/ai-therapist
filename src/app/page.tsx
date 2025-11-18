@@ -21,11 +21,9 @@ const MemoryManagementModal = dynamic(() =>
 );
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { useInputFooterHeight } from '@/hooks/use-input-footer-height';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { selectChatSettings } from '@/store/selectors';
-import { updateSettings } from '@/store/slices/chat-slice';
+import { useChatSettings } from '@/contexts/chat-settings-context';
 import { useChatController } from '@/hooks';
-import { ObsessionsCompulsionsData } from '@/types/therapy';
+import { ObsessionsCompulsionsData } from '@/types';
 import { LOCAL_MODEL_ID, DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { useToast } from '@/components/ui/toast';
 import { logger } from '@/lib/utils/logger';
@@ -35,8 +33,7 @@ import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
 
 function ChatPageContent() {
   const router = useRouter();
-  const dispatch = useAppDispatch();
-  const settings = useAppSelector(selectChatSettings);
+  const { settings, updateSettings } = useChatSettings();
   const t = useTranslations('chat');
   const toastT = useTranslations('toast');
 
@@ -163,35 +160,29 @@ function ChatPageContent() {
 
   const handleWebSearchToggle = () => {
     const newWebSearchEnabled = !settings.webSearchEnabled;
-    dispatch(
-      updateSettings({
-        webSearchEnabled: newWebSearchEnabled,
-        ...(newWebSearchEnabled ? { model: DEFAULT_MODEL_ID } : {}),
-      })
-    );
+    updateSettings({
+      webSearchEnabled: newWebSearchEnabled,
+      ...(newWebSearchEnabled ? { model: DEFAULT_MODEL_ID } : {}),
+    });
   };
 
   const handleSmartModelToggle = () => {
     const nextModel =
       settings.model === ANALYTICAL_MODEL_ID ? DEFAULT_MODEL_ID : ANALYTICAL_MODEL_ID;
-    dispatch(
-      updateSettings({
-        model: nextModel,
-        ...(nextModel === ANALYTICAL_MODEL_ID ? { webSearchEnabled: false } : {}),
-      })
-    );
+    updateSettings({
+      model: nextModel,
+      ...(nextModel === ANALYTICAL_MODEL_ID ? { webSearchEnabled: false } : {}),
+    });
   };
 
   const handleLocalModelToggle = async () => {
     const isLocal = settings.model === LOCAL_MODEL_ID;
 
     if (isLocal) {
-      dispatch(
-        updateSettings({
-          model: DEFAULT_MODEL_ID,
-          webSearchEnabled: false,
-        })
-      );
+      updateSettings({
+        model: DEFAULT_MODEL_ID,
+        webSearchEnabled: false,
+      });
       return;
     }
 
@@ -216,12 +207,10 @@ function ChatPageContent() {
         | undefined;
 
       if (health?.ok) {
-        dispatch(
-          updateSettings({
-            model: LOCAL_MODEL_ID,
-            webSearchEnabled: false,
-          })
-        );
+        updateSettings({
+          model: LOCAL_MODEL_ID,
+          webSearchEnabled: false,
+        });
         showToast({
           type: 'success',
           title: toastT('localModelReadyTitle'),

@@ -14,7 +14,7 @@ import {
   type CBTFlowState,
   type CBTStepId,
 } from '@/features/therapy/cbt/flow';
-import type { EmotionData } from '@/types/therapy';
+import type { EmotionData } from '@/types';
 
 export interface SendStepOptions {
   onlyIfExists?: boolean;

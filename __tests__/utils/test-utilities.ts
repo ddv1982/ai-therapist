@@ -34,13 +34,7 @@ declare global {
   }
 }
 import { jest } from '@jest/globals';
-import { Provider } from 'react-redux';
-import { configureStore, combineReducers } from '@reduxjs/toolkit';
-import chatSlice from '@/store/slices/chat-slice';
-import sessionsSlice from '@/store/slices/sessions-slice';
-import cbtSlice from '@/store/slices/cbt-slice';
 import type { AuthValidationResult } from '@/lib/api/api-auth';
-import type { RootState } from '@/store';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 
 // =============================================================================
@@ -97,7 +91,7 @@ export class MockFactory {
    */
   static createUtilsMock() {
     return {
-      ...(jest.requireActual('@/lib/utils/utils') as Record<string, unknown>),
+      ...(jest.requireActual('@/lib/utils/helpers') as Record<string, unknown>),
       generateSecureRandomString: jest.fn(
         (length: number) => 'mock-secure-' + 'x'.repeat(Math.max(0, length - 12))
       ),
@@ -528,19 +522,12 @@ Would you like to explore what specifically concerns you about this presentation
  */
 export class ComponentTestUtils {
   /**
-   * Create Redux test store with all slices
+   * Create test store - Redux removed, use React Query instead
+   * @deprecated Redux has been removed. Use React Query providers instead.
    */
-  static createTestStore(preloadedState?: any) {
-    const rootReducer = combineReducers({
-      chat: chatSlice,
-      sessions: sessionsSlice,
-      cbt: cbtSlice,
-    });
-
-    return configureStore({
-      reducer: rootReducer,
-      preloadedState,
-    });
+  static createTestStore(_preloadedState?: any) {
+    // Redux removed - this is kept for backwards compatibility but does nothing
+    return null;
   }
 
   /**
@@ -580,7 +567,8 @@ export class ComponentTestUtils {
   }
 
   /**
-   * Enhanced render function with Redux Provider and other common providers
+   * Enhanced render function with common providers (Redux removed)
+   * @deprecated Redux removed. Use renderWithCBT or plain render with React Query providers.
    */
   static renderWithProviders(
     ui: ReactElement,
@@ -595,19 +583,11 @@ export class ComponentTestUtils {
     const {
       withToastProvider = false,
       withThemeProvider = false,
-      withReduxProvider = true, // Default to true since most components need it
-      initialState,
-      store = ComponentTestUtils.createTestStore(initialState),
       ...renderOptions
     } = options;
 
     function AllProviders({ children }: { children: ReactNode }) {
       let content = children;
-
-      // Add Redux Provider first (innermost)
-      if (withReduxProvider) {
-        content = React.createElement(Provider as any, { store }, content);
-      }
 
       if (withToastProvider) {
         const ToastProvider = ({ children }: { children?: ReactNode }) =>
@@ -629,13 +609,11 @@ export class ComponentTestUtils {
 
   /**
    * Simplified render function specifically for Redux components
+   * @deprecated Redux removed. Use renderWithCBT or plain render with React Query providers.
    */
-  static renderWithRedux(ui: ReactElement, initialState?: any): RenderResult {
-    const store = ComponentTestUtils.createTestStore(initialState);
-    const TestWrapper = ({ children }: { children?: ReactNode }) =>
-      React.createElement(Provider as any, { store }, children as any);
-
-    return render(ui, { wrapper: TestWrapper });
+  static renderWithRedux(ui: ReactElement, _initialState?: any): RenderResult {
+    // Redux removed - just render without provider
+    return render(ui);
   }
 
   /**
@@ -1000,7 +978,7 @@ export class TestSetupUtils {
       this.setupTestEnvironment();
 
       if (mocks.utils) {
-        jest.mock('@/lib/utils/utils', () => MockFactory.createUtilsMock());
+        jest.mock('@/lib/utils/helpers', () => MockFactory.createUtilsMock());
       }
 
       if (mocks.auth) {
@@ -1026,15 +1004,17 @@ export class TestSetupUtils {
   }
 }
 
-export function createMockCBTStore(
-  overrides: Partial<RootState> = {}
-): ReturnType<typeof ComponentTestUtils.createTestStore> {
-  return ComponentTestUtils.createTestStore(overrides);
+/**
+ * @deprecated Redux removed. Create mock stores are no longer needed.
+ */
+export function createMockCBTStore(_overrides: any = {}) {
+  return null;
 }
 
-export function renderWithCBT(ui: ReactElement, options: { state?: Partial<RootState> } = {}) {
-  const store = ComponentTestUtils.createTestStore(options.state);
-
+/**
+ * Render with CBT context (Redux removed, using ChatUIProvider only)
+ */
+export function renderWithCBT(ui: ReactElement, _options: { state?: any } = {}) {
   const bridge: ChatUIBridge = {
     addMessageToChat: async () => ({ success: true }),
     currentSessionId: 'test-session',
@@ -1042,11 +1022,7 @@ export function renderWithCBT(ui: ReactElement, options: { state?: Partial<RootS
   };
 
   const wrapper = ({ children }: { children: ReactNode }) =>
-    React.createElement(
-      Provider as any,
-      { store },
-      React.createElement(ChatUIProvider as any, { bridge }, children)
-    );
+    React.createElement(ChatUIProvider as any, { bridge }, children);
 
   return render(ui, { wrapper });
 }

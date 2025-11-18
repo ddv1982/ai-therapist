@@ -1,5 +1,5 @@
 import { formatEmotionsForExport, exportAsMarkdown, exportAsText } from '@/lib/cbt/export-utils';
-import { createInitialCBTFormData } from '@/types/therapy';
+import { createInitialCBTFormData } from '@/types/domains/therapy';
 
 describe('export-utils edge cases', () => {
   it('formatEmotionsForExport returns empty for all-zero emotions', () => {

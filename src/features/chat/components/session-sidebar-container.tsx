@@ -3,13 +3,11 @@
 import { useEffect } from 'react';
 import { SessionSidebar } from './session-sidebar';
 import {
-  useFetchSessionsQuery,
+  useSessionsQuery,
   useDeleteSessionMutation,
-  useGetCurrentSessionQuery,
-  SessionData,
-} from '@/store/slices/sessions-api';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setCurrentSession as setCurrentSessionAction } from '@/store/slices/sessions-slice';
+  useCurrentSessionQuery,
+} from '@/lib/queries/sessions';
+import { useSession } from '@/contexts/session-context';
 import { useToast } from '@/components/ui/toast';
 import { logger } from '@/lib/utils/logger';
 import { useSelectSession } from '@/hooks';
@@ -27,15 +25,16 @@ export function SessionSidebarContainer({
   children?: React.ReactNode;
 }) {
   // i18n available if needed in future; unused here as we defer creation
-  const dispatch = useAppDispatch();
+  const { currentSessionId, setCurrentSession } = useSession();
   // Normalize SessionData to match SessionSidebarProps expectations
-  const { data: apiSessions = [] } = useFetchSessionsQuery() as unknown as { data: SessionData[] };
+  const { data: apiSessions = [] } = useSessionsQuery();
   const sessions = apiSessions.map((s) => ({
     ...s,
-    createdAt: new Date(s.createdAt),
-    updatedAt: new Date(s.updatedAt),
-    startedAt: new Date(s.createdAt),
-    status: 'active',
+    userId: 'default-user-id', // Add default userId for Session type compatibility
+    createdAt: s.createdAt,
+    updatedAt: s.updatedAt,
+    startedAt: s.createdAt, // Keep as string for Session type compatibility
+    status: 'active' as const,
     _count: {
       messages:
         (s as unknown as { _count?: { messages?: number } })._count?.messages ??
@@ -43,37 +42,36 @@ export function SessionSidebarContainer({
         0,
     },
   }));
-  const [deleteSession] = useDeleteSessionMutation();
-  const { data: currentServerSession, refetch: refetchCurrent } = useGetCurrentSessionQuery();
-  const currentSessionId = useAppSelector((state) => state.sessions.currentSessionId);
+  const deleteSessionMutation = useDeleteSessionMutation();
+  const { data: currentServerSession, refetch: refetchCurrent } = useCurrentSessionQuery();
   const { selectSession } = useSelectSession();
   const { showToast } = useToast();
   const t = useTranslations('toast');
 
   // Hydrate from server on mount
   useEffect(() => {
-    if (currentServerSession?.id) {
-      dispatch(setCurrentSessionAction(currentServerSession.id));
+    if (currentServerSession?.id && currentServerSession.id !== currentSessionId) {
+      setCurrentSession(currentServerSession.id);
     }
-  }, [currentServerSession?.id, dispatch]);
+  }, [currentServerSession?.id, currentSessionId, setCurrentSession]);
 
   // Title resolution not needed here since we defer session creation until send
 
   const handleStartNewSession = async () => {
     // Do not create a DB session yet; clear selection and let first send create it
-    dispatch(setCurrentSessionAction(null));
+    setCurrentSession(null);
   };
 
   const handleDeleteSession = async (sessionId: string) => {
     try {
-      await deleteSession(sessionId).unwrap();
+      await deleteSessionMutation.mutateAsync(sessionId);
       if (currentSessionId === sessionId) {
-        dispatch(setCurrentSessionAction(null));
+        setCurrentSession(null);
         try {
           const refreshed = await refetchCurrent();
           const nextId = (refreshed?.data as { id?: string } | undefined)?.id ?? null;
           if (nextId) {
-            dispatch(setCurrentSessionAction(nextId));
+            setCurrentSession(nextId);
           }
         } catch {}
       }
@@ -101,12 +99,12 @@ export function SessionSidebarContainer({
       setShowSidebar={setShowSidebar}
       sessions={sessions}
       currentSession={currentSessionId}
-      setCurrentSession={(id) => dispatch(setCurrentSessionAction(id))}
+      setCurrentSession={setCurrentSession}
       loadMessages={handleLoadMessages}
       deleteSession={handleDeleteSession}
       startNewSession={handleStartNewSession}
       isMobile={isMobile}
-      onSessionSelect={(id) => dispatch(setCurrentSessionAction(id))}
+      onSessionSelect={setCurrentSession}
       onSessionDelete={handleDeleteSession}
       onNewSession={handleStartNewSession}
     >

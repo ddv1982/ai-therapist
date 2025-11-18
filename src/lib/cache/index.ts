@@ -7,7 +7,7 @@
 
 // Core caching utilities
 export { cacheManager, cache } from './cache-utils';
-export { redisManager } from './redis-client';
+export * as redis from './redis';
 
 // Decorators and higher-order functions
 export {
@@ -42,5 +42,3 @@ export {
 export type { CacheOptions, CacheStats, CacheKeyOptions } from './cache-utils';
 
 export type { CacheDecoratorOptions } from './cache-decorators';
-
-export type { RedisConfig, RedisClientType } from './redis-client';

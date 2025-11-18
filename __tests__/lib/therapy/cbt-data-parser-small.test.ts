@@ -11,7 +11,7 @@ import {
   parseAllCBTData,
   hasCBTData,
   generateCBTSummary,
-} from '@/lib/therapy/cbt-data-parser';
+} from '@/lib/therapy/parsers';
 
 describe('cbt-data-parser small unit tests', () => {
   const sample =

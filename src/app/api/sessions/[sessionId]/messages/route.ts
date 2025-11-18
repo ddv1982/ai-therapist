@@ -14,7 +14,7 @@ import { logger } from '@/lib/utils/logger';
 import { MessageCache } from '@/lib/cache';
 import { env } from '@/config/env';
 import type { MessageData as CacheMessageData } from '@/lib/cache/api-cache';
-import { enhancedErrorHandlers } from '@/lib/utils/error-utils';
+import { enhancedErrorHandlers } from '@/lib/utils/errors';
 import type { ConvexMessage, ConvexSessionBundle } from '@/types/convex';
 
 const metadataSchema = z.record(z.string(), z.unknown());

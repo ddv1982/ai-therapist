@@ -8,8 +8,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setCurrentStep, updateDraft, completeCBTEntry } from '@/store/slices/cbt-slice';
+import { useCBT } from '@/contexts/cbt-context';
 const SituationPrompt = dynamic(() =>
   import('@/features/therapy/cbt/chat-components/situation-prompt').then((mod) => ({
     default: mod.SituationPrompt,
@@ -57,19 +56,20 @@ const CBT_STEPS = [
 ];
 
 export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
-  const dispatch = useAppDispatch();
-  const currentDraft = useAppSelector((state) => state.cbt?.currentDraft);
-  const currentStep = useAppSelector((state) => state.cbt?.currentStep || 1);
+  const cbt = useCBT();
+  const currentDraft = cbt.currentDraft;
+  const currentStep = cbt.currentStep || 1;
 
   const progressPercentage = (currentStep / CBT_STEPS.length) * 100;
   const currentStepData = CBT_STEPS.find((step) => step.id === currentStep);
 
-  const handleSituationComplete = (data: import('@/store/slices/cbt-slice').SituationData) => {
-    dispatch(updateDraft({ situation: data.situation }));
-    dispatch(setCurrentStep(2));
+  const handleSituationComplete = (data: import('@/types/domains/therapy').SituationData) => {
+    // Use CBT context to update draft
+    cbt.updateDraft({ situation: data.situation });
+    cbt.setCurrentStep(2);
   };
 
-  const handleEmotionComplete = (data: import('@/store/slices/cbt-slice').EmotionData) => {
+  const handleEmotionComplete = (data: import('@/types/domains/therapy').EmotionData) => {
     // Convert EmotionData to CBT schema format
     const emotions = [
       { emotion: 'fear', intensity: data.fear },
@@ -82,24 +82,24 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
       ...(data.other ? [{ emotion: data.other, intensity: data.otherIntensity || 0 }] : []),
     ].filter((emotion) => emotion.intensity > 0); // Only include emotions with intensity > 0
 
-    dispatch(updateDraft({ emotions }));
-    dispatch(setCurrentStep(3));
+    cbt.updateDraft({ emotions });
+    cbt.setCurrentStep(3);
   };
 
-  const handleThoughtComplete = (data: import('@/store/slices/cbt-slice').ThoughtData[]) => {
+  const handleThoughtComplete = (data: import('@/types/domains/therapy').ThoughtData[]) => {
     // Convert ThoughtData array to string array for CBT schema
     const thoughts = data.map((thought) => thought.thought);
-    dispatch(updateDraft({ thoughts }));
-    dispatch(setCurrentStep(4));
+    cbt.updateDraft({ thoughts });
+    cbt.setCurrentStep(4);
   };
 
   const handleFinalEmotionsComplete = () => {
     // In mobile flow, store final emotions in draft or session slice if needed; advance to actions
     // Here we only advance steps. ActionPlan will persist as part of session actions.
-    dispatch(setCurrentStep(5));
+    cbt.setCurrentStep(5);
   };
 
-  const handleActionComplete = (data: import('@/store/slices/cbt-slice').ActionPlanData) => {
+  const handleActionComplete = (data: import('@/types/domains/therapy').ActionPlanData) => {
     if (currentDraft) {
       // Convert ActionPlanData to CBT schema structure
       const actionPlan = {
@@ -122,7 +122,8 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
         Array.isArray(completeEntry.thoughts)
       ) {
         // Type assertion is safe here because we've validated all required fields
-        dispatch(completeCBTEntry(completeEntry as import('@/store/slices/cbt-slice').CBTFormData));
+        // Using the correct CBTFormData type from form-schema
+        cbt.completeCBTEntry(completeEntry as unknown as import('@/features/therapy/cbt/form-schema').CBTFormData);
         onOpenChange(false);
       }
     }
@@ -150,7 +151,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
             onComplete={handleSituationComplete}
             onNavigateStep={(step) => {
               const idx = CBT_STEPS.findIndex((s) => s.component === step);
-              if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
+              if (idx >= 0) cbt.setCurrentStep(CBT_STEPS[idx].id);
             }}
           />
         );
@@ -161,7 +162,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
             onComplete={handleEmotionComplete}
             onNavigateStep={(step) => {
               const idx = CBT_STEPS.findIndex((s) => s.component === step);
-              if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
+              if (idx >= 0) cbt.setCurrentStep(CBT_STEPS[idx].id);
             }}
           />
         );
@@ -174,7 +175,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
             totalSteps={totalSteps}
             onNavigateStep={(step) => {
               const idx = CBT_STEPS.findIndex((s) => s.component === step);
-              if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
+              if (idx >= 0) cbt.setCurrentStep(CBT_STEPS[idx].id);
             }}
           />
         );
@@ -186,7 +187,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
             onSendToChat={handleSendToChat}
             onNavigateStep={(step) => {
               const idx = CBT_STEPS.findIndex((s) => s.component === step);
-              if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
+              if (idx >= 0) cbt.setCurrentStep(CBT_STEPS[idx].id);
             }}
           />
         );
@@ -199,7 +200,7 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
             totalSteps={totalSteps}
             onNavigateStep={(step) => {
               const idx = CBT_STEPS.findIndex((s) => s.component === step);
-              if (idx >= 0) dispatch(setCurrentStep(CBT_STEPS[idx].id));
+              if (idx >= 0) cbt.setCurrentStep(CBT_STEPS[idx].id);
             }}
           />
         );

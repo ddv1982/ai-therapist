@@ -49,7 +49,7 @@ import { logger } from '@/lib/utils/logger';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import { CBT_STEP_CONFIG } from '@/features/therapy/cbt/flow';
 import { CBT_STEPS, getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
-import type { CBTStepType, CBTFormValidationError } from '@/types/therapy';
+import type { CBTStepType, CBTFormValidationError } from '@/types';
 
 // =============================================================================
 // TYPES & INTERFACES

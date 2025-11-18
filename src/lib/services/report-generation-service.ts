@@ -14,11 +14,11 @@ import {
 import {
   validateTherapeuticContext,
   calculateContextualConfidence,
-} from '@/lib/therapy/context-validator';
-import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/cbt-data-parser';
+} from '@/lib/therapy/validators';
+import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/parsers';
 import { generateFallbackAnalysis as generateFallbackAnalysisExternal } from '@/lib/reports/fallback-analysis';
 import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
-import type { CBTStructuredAssessment } from '@/types/therapy';
+import type { CBTStructuredAssessment } from '@/types';
 
 interface ParsedAnalysis {
   sessionOverview?: {
