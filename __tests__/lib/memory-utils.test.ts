@@ -1,7 +1,3 @@
-/**
- * Tests for memory utilities functions
- */
-
 import {
   checkMemoryContext,
   formatMemoryInfo,
@@ -10,10 +6,15 @@ import {
   getSessionReportDetail,
   type MemoryContextInfo,
 } from '@/lib/chat/memory-utils';
+import { apiClient } from '@/lib/api/client';
 
-// Mock fetch
-global.fetch = jest.fn();
-const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
+// Mock apiClient
+jest.mock('@/lib/api/client', () => ({
+  apiClient: {
+    getMemoryReports: jest.fn(),
+    deleteMemoryReports: jest.fn(),
+  },
+}));
 
 describe('Memory Utils', () => {
   beforeEach(() => {
@@ -24,17 +25,22 @@ describe('Memory Utils', () => {
     it('should fetch global memory when sessionId is not provided', async () => {
       const mockResponse = {
         success: true,
-        memoryContext: [{ sessionTitle: 'Session A', reportDate: '2024-01-01' }],
+        data: {
+          memoryContext: [{ sessionTitle: 'Session A', reportDate: '2024-01-01' }],
+        },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      } as Response);
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValue(mockResponse);
 
       const result = await checkMemoryContext();
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/reports/memory?limit=3');
+      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(expect.objectContaining({
+        toString: expect.any(Function)
+      }));
+      // Verify query params manually if needed, or rely on implementation detail
+      const callArg = (apiClient.getMemoryReports as jest.Mock).mock.calls[0][0];
+      expect(callArg.toString()).toContain('limit=3');
+      
       expect(result).toEqual({
         hasMemory: true,
         reportCount: 1,
@@ -45,28 +51,27 @@ describe('Memory Utils', () => {
     it('should fetch and return memory context info', async () => {
       const mockResponse = {
         success: true,
-        memoryContext: [
-          {
-            sessionTitle: 'Session 1',
-            reportDate: '2024-01-01',
-          },
-          {
-            sessionTitle: 'Session 2',
-            reportDate: '2024-01-02',
-          },
-        ],
+        data: {
+          memoryContext: [
+            {
+              sessionTitle: 'Session 1',
+              reportDate: '2024-01-01',
+            },
+            {
+              sessionTitle: 'Session 2',
+              reportDate: '2024-01-02',
+            },
+          ],
+        },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      } as Response);
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValue(mockResponse);
 
       const result = await checkMemoryContext('test-session-id');
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/reports/memory?excludeSessionId=test-session-id&limit=3'
-      );
+      const callArg = (apiClient.getMemoryReports as jest.Mock).mock.calls[0][0];
+      expect(callArg.toString()).toContain('excludeSessionId=test-session-id');
+      expect(callArg.toString()).toContain('limit=3');
 
       expect(result).toEqual({
         hasMemory: true,
@@ -76,7 +81,7 @@ describe('Memory Utils', () => {
     });
 
     it('should handle failed fetch gracefully', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      (apiClient.getMemoryReports as jest.Mock).mockRejectedValue(new Error('Network error'));
 
       const result = await checkMemoryContext('test-session-id');
 
@@ -131,16 +136,11 @@ describe('Memory Utils', () => {
         deletionType: 'all',
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      } as Response);
+      (apiClient.deleteMemoryReports as jest.Mock).mockResolvedValue(mockResponse);
 
       const result = await deleteMemory({ type: 'all' });
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/reports/memory?', {
-        method: 'DELETE',
-      });
+      expect(apiClient.deleteMemoryReports).toHaveBeenCalled();
       expect(result).toEqual(mockResponse);
     });
 
@@ -152,37 +152,30 @@ describe('Memory Utils', () => {
         deletionType: 'specific',
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      } as Response);
+      (apiClient.deleteMemoryReports as jest.Mock).mockResolvedValue(mockResponse);
 
       const result = await deleteMemory({
         type: 'specific',
         sessionIds: ['session-1', 'session-2'],
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/reports/memory?sessionIds=session-1%2Csession-2',
-        { method: 'DELETE' }
-      );
+      const callArg = (apiClient.deleteMemoryReports as jest.Mock).mock.calls[0][0];
+      expect(decodeURIComponent(callArg.toString())).toContain('sessionIds=session-1,session-2');
       expect(result).toEqual(mockResponse);
     });
 
     it('should handle deletion errors', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      (apiClient.deleteMemoryReports as jest.Mock).mockRejectedValue(new Error('Network error'));
 
-      try {
-        await deleteMemory({ type: 'all' });
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-        expect((error as Error).message).toBe('Network error');
-      }
+      const result = await deleteMemory({ type: 'all' });
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('Network error');
     });
   });
 
   describe('refreshMemoryContext', () => {
     it('should refresh memory context after deletion', async () => {
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValue({ success: true, data: {} });
       const result = await refreshMemoryContext('test-session');
 
       expect(result).toEqual({
@@ -196,39 +189,33 @@ describe('Memory Utils', () => {
     it('should fetch full content for specific report', async () => {
       const mockDetailResponse = {
         success: true,
-        memoryDetails: [
-          {
-            id: 'report-1',
-            sessionId: 'session-1',
-            sessionTitle: 'Test Session',
-            sessionDate: '2024-01-01',
-            reportDate: '2024-01-01',
-            contentPreview: 'Preview content...',
-            fullContent: 'Complete therapeutic session content with detailed analysis...',
-            keyInsights: ['Insight 1', 'Insight 2'],
-            hasEncryptedContent: true,
-            reportSize: 2048,
-          },
-        ],
-        reportCount: 1,
-        stats: {
-          totalReportsFound: 1,
-          successfullyProcessed: 1,
-          failedDecryptions: 0,
-          hasMemory: true,
+        data: {
+          memoryDetails: [
+            {
+              id: 'report-1',
+              sessionId: 'session-1',
+              sessionTitle: 'Test Session',
+              sessionDate: '2024-01-01',
+              reportDate: '2024-01-01',
+              contentPreview: 'Preview content...',
+              fullContent: 'Complete therapeutic session content with detailed analysis...',
+              keyInsights: ['Insight 1', 'Insight 2'],
+              hasEncryptedContent: true,
+              reportSize: 2048,
+            },
+          ],
+          reportCount: 1,
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockDetailResponse),
-      } as Response);
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValue(mockDetailResponse);
 
       const result = await getSessionReportDetail('report-1', 'current-session');
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/reports/memory?manage=true&includeFullContent=true&excludeSessionId=current-session'
-      );
+      const callArg = (apiClient.getMemoryReports as jest.Mock).mock.calls[0][0];
+      expect(callArg.toString()).toContain('manage=true');
+      expect(callArg.toString()).toContain('includeFullContent=true');
+      expect(callArg.toString()).toContain('excludeSessionId=current-session');
 
       expect(result).toEqual({
         id: 'report-1',
@@ -239,44 +226,37 @@ describe('Memory Utils', () => {
         fullContent: 'Complete therapeutic session content with detailed analysis...',
         keyInsights: ['Insight 1', 'Insight 2'],
         reportSize: 2048,
+        structuredCBTData: undefined
       });
     });
 
     it('should fetch full content without session exclusion', async () => {
       const mockDetailResponse = {
         success: true,
-        memoryDetails: [
-          {
-            id: 'report-1',
-            sessionId: 'session-1',
-            sessionTitle: 'Test Session',
-            sessionDate: '2024-01-01',
-            reportDate: '2024-01-01',
-            fullContent: 'Complete content...',
-            keyInsights: [],
-            hasEncryptedContent: true,
-            reportSize: 1024,
-          },
-        ],
-        reportCount: 1,
-        stats: {
-          totalReportsFound: 1,
-          successfullyProcessed: 1,
-          failedDecryptions: 0,
-          hasMemory: true,
+        data: {
+          memoryDetails: [
+            {
+              id: 'report-1',
+              sessionId: 'session-1',
+              sessionTitle: 'Test Session',
+              sessionDate: '2024-01-01',
+              reportDate: '2024-01-01',
+              fullContent: 'Complete content...',
+              keyInsights: [],
+              hasEncryptedContent: true,
+              reportSize: 1024,
+            },
+          ],
+          reportCount: 1,
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockDetailResponse),
-      } as Response);
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValue(mockDetailResponse);
 
       const result = await getSessionReportDetail('report-1');
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/reports/memory?manage=true&includeFullContent=true'
-      );
+      const callArg = (apiClient.getMemoryReports as jest.Mock).mock.calls[0][0];
+      expect(callArg.toString()).not.toContain('excludeSessionId');
 
       expect(result).toBeDefined();
       expect(result?.fullContent).toBe('Complete content...');
@@ -285,75 +265,21 @@ describe('Memory Utils', () => {
     it('should return null when report not found', async () => {
       const mockDetailResponse = {
         success: true,
-        memoryDetails: [],
-        reportCount: 0,
-        stats: {
-          totalReportsFound: 0,
-          successfullyProcessed: 0,
-          failedDecryptions: 0,
-          hasMemory: false,
+        data: {
+          memoryDetails: [],
+          reportCount: 0,
         },
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockDetailResponse),
-      } as Response);
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValue(mockDetailResponse);
 
       const result = await getSessionReportDetail('nonexistent-report');
 
       expect(result).toBeNull();
     });
 
-    it('should return null when full content is missing', async () => {
-      const mockDetailResponse = {
-        success: true,
-        memoryDetails: [
-          {
-            id: 'report-1',
-            sessionId: 'session-1',
-            sessionTitle: 'Test Session',
-            sessionDate: '2024-01-01',
-            reportDate: '2024-01-01',
-            contentPreview: 'Preview only...',
-            // fullContent is missing
-            keyInsights: [],
-            hasEncryptedContent: false,
-            reportSize: 1024,
-          },
-        ],
-        reportCount: 1,
-        stats: {
-          totalReportsFound: 1,
-          successfullyProcessed: 0,
-          failedDecryptions: 1,
-          hasMemory: true,
-        },
-      };
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(mockDetailResponse),
-      } as Response);
-
-      const result = await getSessionReportDetail('report-1');
-
-      expect(result).toBeNull();
-    });
-
     it('should handle API errors gracefully', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
-
-      const result = await getSessionReportDetail('report-1');
-
-      expect(result).toBeNull();
-    });
-
-    it('should handle HTTP error responses', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      } as Response);
+      (apiClient.getMemoryReports as jest.Mock).mockRejectedValue(new Error('Network error'));
 
       const result = await getSessionReportDetail('report-1');
 

@@ -3,6 +3,8 @@
  */
 
 import { logger } from '@/lib/utils/logger';
+import { apiClient } from '@/lib/api/client';
+import { apiClient } from '@/lib/api/client';
 
 export interface MemoryContextInfo {
   hasMemory: boolean;
@@ -60,32 +62,32 @@ export interface MemoryDeletionResponse {
  */
 export async function checkMemoryContext(sessionId?: string): Promise<MemoryContextInfo> {
   try {
-    const url = sessionId
-      ? `/api/reports/memory?excludeSessionId=${sessionId}&limit=3`
-      : `/api/reports/memory?limit=3`;
-    const response = await fetch(url);
+    const params = new URLSearchParams();
+    if (sessionId) {
+      params.set('excludeSessionId', sessionId);
+    }
+    params.set('limit', '3');
 
-    if (response.ok) {
-      const raw = await response.json();
-      // Support both standardized ApiResponse<T> and legacy plain responses
-      const data =
-        raw && typeof raw === 'object' && 'data' in raw
-          ? (raw as { data: { memoryContext?: Array<{ reportDate: string }> } }).data
-          : raw;
-      const memoryList =
-        (data && (data as { memoryContext?: Array<{ reportDate: string }> }).memoryContext) || [];
-      if (Array.isArray(memoryList) && memoryList.length > 0) {
-        const sortedMemory = memoryList.sort(
-          (a: { reportDate: string }, b: { reportDate: string }) =>
-            new Date(b.reportDate).getTime() - new Date(a.reportDate).getTime()
-        );
+    const raw = await apiClient.getMemoryReports<unknown>(params);
 
-        return {
-          hasMemory: true,
-          reportCount: memoryList.length,
-          lastReportDate: sortedMemory[0]?.reportDate,
-        };
-      }
+    // Support both standardized ApiResponse<T> and legacy plain responses
+    const data =
+      raw && typeof raw === 'object' && 'data' in raw
+        ? (raw as { data: { memoryContext?: Array<{ reportDate: string }> } }).data
+        : raw;
+    const memoryList =
+      (data && (data as { memoryContext?: Array<{ reportDate: string }> }).memoryContext) || [];
+    if (Array.isArray(memoryList) && memoryList.length > 0) {
+      const sortedMemory = memoryList.sort(
+        (a: { reportDate: string }, b: { reportDate: string }) =>
+          new Date(b.reportDate).getTime() - new Date(a.reportDate).getTime()
+      );
+
+      return {
+        hasMemory: true,
+        reportCount: memoryList.length,
+        lastReportDate: sortedMemory[0]?.reportDate,
+      };
     }
   } catch (error) {
     logger.warn('Failed to check memory context', {
@@ -129,43 +131,33 @@ export async function getMemoryManagementData(
   }
 
   try {
-    const response = await fetch(`/api/reports/memory?${params.toString()}`);
+    const raw = await apiClient.getMemoryReports<unknown>(params);
 
-    if (response.ok) {
-      const raw = await response.json();
-      const payload =
-        raw && typeof raw === 'object' && 'data' in raw
-          ? (raw as { success?: boolean; data: MemoryManagementResponse }).data
-          : raw;
-      const success =
-        raw && typeof raw === 'object' && 'success' in raw
-          ? Boolean((raw as { success: boolean }).success)
-          : true;
-      return { success, ...(payload as Omit<MemoryManagementResponse, 'success'>) };
-    } else {
+    const payload =
+      raw && typeof raw === 'object' && 'data' in raw
+        ? (raw as { success?: boolean; data: MemoryManagementResponse }).data
+        : raw;
+    const success =
+      raw && typeof raw === 'object' && 'success' in raw
+        ? Boolean((raw as { success: boolean }).success)
+        : true;
+    return { success, ...(payload as Omit<MemoryManagementResponse, 'success'>) };
+  } catch (error) {
+    const status = (error as { status?: number })?.status;
+
+    if (status) {
       logger.error('Failed to fetch memory management data', {
         operation: 'getMemoryManagementData',
-        status: response.status,
+        status: status,
         sessionId: sessionId ? '[FILTERED_SESSION_ID]' : 'none',
       });
-      return {
-        success: false,
-        memoryDetails: [],
-        reportCount: 0,
-        stats: {
-          totalReportsFound: 0,
-          successfullyProcessed: 0,
-          failedDecryptions: 0,
-          hasMemory: false,
-        },
-      };
+    } else {
+      logger.error('Error fetching memory management data', {
+        operation: 'getMemoryManagementData',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        sessionId: sessionId ? '[FILTERED_SESSION_ID]' : 'none',
+      });
     }
-  } catch (error) {
-    logger.error('Error fetching memory management data', {
-      operation: 'getMemoryManagementData',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      sessionId: sessionId ? '[FILTERED_SESSION_ID]' : 'none',
-    });
     return {
       success: false,
       memoryDetails: [],
@@ -203,31 +195,35 @@ export async function deleteMemory(options: {
       params.set('sessionIds', options.sessionIds.join(','));
     }
 
-    const url = `/api/reports/memory?${params.toString()}`;
+    const data = await apiClient.deleteMemoryReports<MemoryDeletionResponse>(params);
+    return data;
+  } catch (error) {
+    const status = (error as { status?: number })?.status;
+    const body = (error as { body?: { error?: unknown } })?.body;
 
-    const response = await fetch(url, {
-      method: 'DELETE',
-    });
+    if (status) {
+      const rawError = body?.error;
+      let errorMsg = 'Unknown error';
+      if (typeof rawError === 'string') {
+        errorMsg = rawError;
+      } else if (rawError && typeof rawError === 'object') {
+        errorMsg = (rawError as { message?: string }).message || JSON.stringify(rawError);
+      }
 
-    if (response.ok) {
-      const data = await response.json();
-      return data;
-    } else {
-      const errorData = await response.json().catch(() => ({}));
       logger.error('Failed to delete memory', {
         operation: 'deleteMemory',
-        status: response.status,
+        status: status,
         deletionType: options.type,
-        error: errorData.error || 'Unknown error',
+        error: errorMsg,
       });
       return {
         success: false,
         deletedCount: 0,
-        message: `Failed to delete memory: ${errorData.error || 'Unknown error'}`,
+        message: `Failed to delete memory: ${errorMsg}`,
         deletionType: options.type,
       };
     }
-  } catch (error) {
+
     logger.error('Error deleting memory', {
       operation: 'deleteMemory',
       deletionType: options.type,
@@ -263,96 +259,97 @@ export async function getSessionReportDetail(
   });
 
   try {
-    const response = await fetch(`/api/reports/memory?${params.toString()}`);
+    const raw = await apiClient.getMemoryReports<unknown>(params);
 
     logger.reportOperation('Session report API response received', reportId, {
-      status: response.status,
+      status: 200,
     });
 
-    if (response.ok) {
-      const raw = await response.json();
-      const data =
-        raw && typeof raw === 'object' && 'data' in raw
-          ? (raw as { data: { memoryDetails?: MemoryDetailInfo[]; reportCount?: number } }).data
-          : raw;
-      logger.reportOperation('Session report data processed', reportId, {
-        success:
-          raw && typeof raw === 'object' && 'success' in raw
-            ? (raw as { success: boolean }).success
-              ? 'true'
-              : 'false'
-            : 'true',
-        memoryDetailsCount:
-          (data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails?.length || 0,
-        hasMemoryDetails: !!(data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails
+    const data =
+      raw && typeof raw === 'object' && 'data' in raw
+        ? (raw as { data: { memoryDetails?: MemoryDetailInfo[]; reportCount?: number } }).data
+        : raw;
+    logger.reportOperation('Session report data processed', reportId, {
+      success:
+        raw && typeof raw === 'object' && 'success' in raw
+          ? (raw as { success: boolean }).success
+            ? 'true'
+            : 'false'
+          : 'true',
+      memoryDetailsCount:
+        (data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails?.length || 0,
+      hasMemoryDetails: !!(data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails
+        ? 'true'
+        : 'false',
+    });
+
+    if ((data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails) {
+      // Find the specific report
+      const report = (data as { memoryDetails: MemoryDetailInfo[] }).memoryDetails.find(
+        (r: MemoryDetailInfo) => r.id === reportId
+      );
+      logger.reportOperation('Session report located', reportId, {
+        reportFound: !!report ? 'true' : 'false',
+        hasFullContent: !!(report as MemoryDetailInfo)?.fullContent ? 'true' : 'false',
+        hasStructuredCBTData: !!(report as MemoryDetailInfo)?.structuredCBTData
           ? 'true'
           : 'false',
+        reportKeyCount: report ? Object.keys(report).length : 0,
       });
 
-      if ((data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails) {
-        // Find the specific report
-        const report = (data as { memoryDetails: MemoryDetailInfo[] }).memoryDetails.find(
-          (r: MemoryDetailInfo) => r.id === reportId
-        );
-        logger.reportOperation('Session report located', reportId, {
-          reportFound: !!report ? 'true' : 'false',
-          hasFullContent: !!(report as MemoryDetailInfo)?.fullContent ? 'true' : 'false',
-          hasStructuredCBTData: !!(report as MemoryDetailInfo)?.structuredCBTData
-            ? 'true'
-            : 'false',
-          reportKeyCount: report ? Object.keys(report).length : 0,
+      if (report && report.fullContent) {
+        const result: SessionReportDetail = {
+          id: report.id,
+          sessionId: report.sessionId,
+          sessionTitle: report.sessionTitle,
+          sessionDate: report.sessionDate,
+          reportDate: report.reportDate,
+          fullContent: report.fullContent,
+          keyInsights: report.keyInsights,
+          reportSize: report.reportSize,
+          structuredCBTData: (report as MemoryDetailInfo).structuredCBTData, // CRITICAL: Include structured CBT data
+        };
+
+        logger.reportOperation('Session report detail prepared for return', reportId, {
+          hasStructuredCBTData: !!result.structuredCBTData ? 'true' : 'false',
+          structuredCBTDataType: typeof result.structuredCBTData,
+          structuredCBTDataKeyCount:
+            result.structuredCBTData && typeof result.structuredCBTData === 'object'
+              ? Object.keys(result.structuredCBTData as Record<string, unknown>).length
+              : 0,
         });
 
-        if (report && report.fullContent) {
-          const result: SessionReportDetail = {
-            id: report.id,
-            sessionId: report.sessionId,
-            sessionTitle: report.sessionTitle,
-            sessionDate: report.sessionDate,
-            reportDate: report.reportDate,
-            fullContent: report.fullContent,
-            keyInsights: report.keyInsights,
-            reportSize: report.reportSize,
-            structuredCBTData: (report as MemoryDetailInfo).structuredCBTData, // CRITICAL: Include structured CBT data
-          };
-
-          logger.reportOperation('Session report detail prepared for return', reportId, {
-            hasStructuredCBTData: !!result.structuredCBTData ? 'true' : 'false',
-            structuredCBTDataType: typeof result.structuredCBTData,
-            structuredCBTDataKeyCount:
-              result.structuredCBTData && typeof result.structuredCBTData === 'object'
-                ? Object.keys(result.structuredCBTData as Record<string, unknown>).length
-                : 0,
-          });
-
-          return result;
-        } else {
-          logger.warn('Session report found but missing fullContent', {
-            operation: 'getSessionReportDetail',
-            reportId: '[FILTERED_REPORT_ID]',
-            hasReport: !!report,
-            hasFullContent: !!(report as MemoryDetailInfo)?.fullContent,
-          });
-        }
+        return result;
       } else {
-        logger.warn('Session report API response unsuccessful or no memoryDetails', {
+        logger.warn('Session report found but missing fullContent', {
           operation: 'getSessionReportDetail',
-          success: data.success,
-          hasMemoryDetails: !!data.memoryDetails,
+          reportId: '[FILTERED_REPORT_ID]',
+          hasReport: !!report,
+          hasFullContent: !!(report as MemoryDetailInfo)?.fullContent,
         });
       }
     } else {
-      logger.error('Session report API response not ok', {
+      logger.warn('Session report API response unsuccessful or no memoryDetails', {
         operation: 'getSessionReportDetail',
-        status: response.status,
-        statusText: response.statusText,
+        success: (data as { success?: boolean })?.success,
+        hasMemoryDetails: !!(data as { memoryDetails?: unknown })?.memoryDetails,
       });
     }
   } catch (error) {
-    logger.error('Error fetching session report detail', {
-      operation: 'getSessionReportDetail',
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
+    const status = (error as { status?: number })?.status;
+
+    if (status) {
+      logger.error('Session report API response not ok', {
+        operation: 'getSessionReportDetail',
+        status: status,
+        statusText: (error as Error).message,
+      });
+    } else {
+      logger.error('Error fetching session report detail', {
+        operation: 'getSessionReportDetail',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   }
 
   return null;

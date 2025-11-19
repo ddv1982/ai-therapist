@@ -144,13 +144,42 @@ describe('Sessions Queries', () => {
 
   describe('Hooks', () => {
     it('useSessionsQuery should fetch and transform sessions', async () => {
-        const mockSessions = [{ id: '1', title: 'Session 1', createdAt: '2023-01-01', updatedAt: '2023-01-01', messageCount: 5 }];
-        (apiClient.listSessions as jest.Mock).mockResolvedValue({ success: true, data: mockSessions });
+        // The hook calls apiClient.listSessions, which returns a PaginatedResponse or similar
+        // But the transformer expects specific structure (Session object) to map to SessionData
+        // So the mock should return what the API would return
+        
+        const mockApiResponse = {
+            success: true,
+            data: {
+                items: [
+                    { 
+                        id: '1', 
+                        title: 'Session 1', 
+                        createdAt: '2023-01-01', 
+                        updatedAt: '2023-01-01', 
+                        _count: { messages: 5 } 
+                    }
+                ],
+                meta: { total: 1 }
+            }
+        };
+        
+        const expectedSessionData = [
+            { 
+                id: '1', 
+                title: 'Session 1', 
+                createdAt: '2023-01-01', 
+                updatedAt: '2023-01-01', 
+                messageCount: 5 
+            }
+        ];
+
+        (apiClient.listSessions as jest.Mock).mockResolvedValue(mockApiResponse);
 
         const { result } = renderHook(() => useSessionsQuery(), { wrapper });
 
         await waitFor(() => expect(result.current.isSuccess).toBe(true));
-        expect(result.current.data).toEqual(mockSessions);
+        expect(result.current.data).toEqual(expectedSessionData);
         expect(apiClient.listSessions).toHaveBeenCalled();
     });
 
