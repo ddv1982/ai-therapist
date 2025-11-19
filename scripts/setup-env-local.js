@@ -58,7 +58,6 @@ CACHE_SESSION_TTL="1800"
 CACHE_MESSAGE_TTL="900"
 
 # Development-only options
-BYPASS_AUTH=true
 RATE_LIMIT_DISABLED=true
 `;
 

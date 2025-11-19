@@ -1,5 +1,7 @@
 import { query, mutation } from './_generated/server';
 import { v } from 'convex/values';
+import { QUERY_LIMITS, PAGINATION_DEFAULTS } from './constants';
+import type { Doc } from './_generated/dataModel';
 
 export const listBySession = query({
   args: {
@@ -7,28 +9,54 @@ export const listBySession = query({
     limit: v.optional(v.number()),
     offset: v.optional(v.number()),
   },
-  handler: async (ctx, { sessionId, limit = 50, offset = 0 }) => {
-    const limit_clamped = Math.min(limit, 200); // Max 200 messages per request (messages can be long)
-    const offset_clamped = Math.max(offset, 0);
+  handler: async (ctx, { sessionId, limit = QUERY_LIMITS.DEFAULT_LIMIT, offset = 0 }) => {
+    const limit_clamped = Math.min(limit, QUERY_LIMITS.MAX_MESSAGES_PER_REQUEST);
+    const offset_clamped = Math.max(offset, PAGINATION_DEFAULTS.MIN_OFFSET);
 
-    const all = await ctx.db
+    // PERFORMANCE FIX: Use pagination instead of fetching all and slicing
+    // Unfortunately Convex doesn't have native skip/limit, so we iterate and collect manually
+    const results: Doc<'messages'>[] = [];
+    let index = 0;
+    
+    for await (const message of ctx.db
       .query('messages')
       .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
-      .order('asc')
-      .collect();
+      .order('asc')) {
+      
+      // Skip items until we reach the offset
+      if (index < offset_clamped) {
+        index++;
+        continue;
+      }
+      
+      results.push(message);
+      
+      // Stop once we have enough items
+      if (results.length >= limit_clamped) {
+        break;
+      }
+      
+      index++;
+    }
 
-    return all.slice(offset_clamped, offset_clamped + limit_clamped);
+    return results;
   },
 });
 
 export const countBySession = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    const messages = await ctx.db
+    // PERFORMANCE FIX: Count without collecting all records
+    // Unfortunately Convex doesn't have a native count(), so we iterate and count
+    let count = 0;
+    for await (const message of ctx.db
       .query('messages')
-      .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
-      .collect();
-    return messages.length;
+      .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))) {
+      // Just counting, not using the message data
+      void message;
+      count++;
+    }
+    return count;
   },
 });
 
@@ -46,7 +74,6 @@ export const create = mutation({
     if (!session) throw new Error('Session not found');
     const now = Date.now();
     const id = await ctx.db.insert('messages', {
-      legacyId: undefined,
       sessionId,
       role,
       content,
@@ -86,16 +113,23 @@ export const remove = mutation({
   args: { messageId: v.id('messages') },
   handler: async (ctx, { messageId }) => {
     const message = await ctx.db.get(messageId);
-    if (!message) return { ok: true };
+    // CONSISTENCY: Silently succeed if message doesn't exist (idempotent delete)
+    if (!message) {
+      return { ok: true, deleted: false };
+    }
+    
     const session = await ctx.db.get(message.sessionId);
     await ctx.db.delete(messageId);
+    
+    // Update session message count if session still exists
     if (session) {
       await ctx.db.patch(session._id, {
         messageCount: Math.max(0, (session.messageCount ?? 0) - 1),
         updatedAt: Date.now(),
       });
     }
-    return { ok: true };
+    
+    return { ok: true, deleted: true };
   },
 });
 

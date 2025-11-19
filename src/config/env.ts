@@ -71,7 +71,6 @@ const serverEnvSchema = z.object({
   AI_TELEMETRY_APPLICATION: z.string().optional(),
 
   ENABLE_METRICS_ENDPOINT: coerceBoolean(envDefaults.ENABLE_METRICS_ENDPOINT),
-  BYPASS_AUTH: coerceBoolean(envDefaults.BYPASS_AUTH),
 
   NEXT_PUBLIC_CONVEX_URL: z.string().url().optional().or(z.literal('')),
   NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP: coerceBoolean(envDefaults.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP),

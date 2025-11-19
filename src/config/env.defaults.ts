@@ -2,9 +2,6 @@ export const envDefaults = {
   NODE_ENV: 'development' as const,
   PORT: 4000,
 
-  // Auth
-  BYPASS_AUTH: false,
-
   // API rate limiting
   RATE_LIMIT_BLOCK_MS: 5 * 60 * 1000,
   RATE_LIMIT_WINDOW_MS: 5 * 60 * 1000,

@@ -10,19 +10,14 @@ export default defineSchema({
     email: v.string(),
     name: v.optional(v.string()),
 
-    // Legacy migration support
-    legacyId: v.optional(v.string()),
-
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index('email', ['email'])
-    .index('by_clerkId', ['clerkId']) // Primary lookup by Clerk ID
-    .index('by_legacyId', ['legacyId']), // Legacy migration support
+    .index('by_clerkId', ['clerkId']), // Primary lookup by Clerk ID
 
   sessions: defineTable({
-    legacyId: v.optional(v.string()),
     userId: v.id('users'),
     title: v.string(),
     messageCount: v.number(),
@@ -34,7 +29,6 @@ export default defineSchema({
   }).index('by_user_created', ['userId', 'createdAt']),
 
   messages: defineTable({
-    legacyId: v.optional(v.string()),
     sessionId: v.id('sessions'),
     role: v.string(),
     content: v.string(),
@@ -45,7 +39,6 @@ export default defineSchema({
   }).index('by_session_time', ['sessionId', 'timestamp']),
 
   sessionReports: defineTable({
-    legacyId: v.optional(v.string()),
     sessionId: v.id('sessions'),
     reportContent: v.string(),
     keyPoints: v.any(),
@@ -61,5 +54,7 @@ export default defineSchema({
     analysisConfidence: v.optional(v.number()),
     analysisVersion: v.optional(v.string()),
     createdAt: v.number(),
-  }).index('by_session', ['sessionId']),
+  })
+    .index('by_session', ['sessionId'])
+    .index('by_session_created', ['sessionId', 'createdAt']), // PERFORMANCE: For sorted queries by session
 });

@@ -99,5 +99,12 @@ export default [
       'import/no-anonymous-default-export': 'off',
     },
   },
+  {
+    files: ['convex/**/*.ts'],
+    rules: {
+      // Convex doesn't allow hyphens in filenames (only alphanumeric, underscores, periods)
+      'unicorn/filename-case': 'off',
+    },
+  },
   prettierConfig,
 ];

@@ -1,6 +1,6 @@
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
 import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
-import type { ConvexMessage, ConvexUser, ConvexSession } from '@/types/convex';
+import type { ConvexMessage } from '@/types/convex';
 
 export interface StoredMessage {
   id: string;
@@ -44,19 +44,18 @@ export async function appendMessage(
   });
 }
 
+/**
+ * Ensure a session exists
+ * @deprecated This function is deprecated - sessions should be created through
+ * authenticated endpoints with a valid Clerk user. Keeping for backwards compatibility
+ * but will throw in production environments without proper authentication.
+ */
 export async function ensureSession(sessionId?: string): Promise<string> {
   if (sessionId) return sessionId;
-  const client = getConvexHttpClient();
-  const user = await client.mutation(anyApi.users.getOrCreate, {
-    legacyId: 'therapeutic-ai-user',
-    email: 'user@therapeutic-ai.local',
-    name: 'Therapeutic AI User',
-  });
-  const convexUser = user as ConvexUser;
-  const created = await client.mutation(anyApi.sessions.create, {
-    userId: convexUser._id,
-    title: 'New Session',
-  });
-  const convexSession = created as ConvexSession;
-  return String(convexSession._id);
+  
+  // This path should not be reached in production
+  throw new Error(
+    'Cannot create session without authentication. ' +
+    'Sessions must be created through authenticated endpoints with a valid Clerk user.'
+  );
 }

@@ -34,7 +34,6 @@ function buildSessionDoc(overrides: Partial<SessionDoc> = {}): SessionDoc {
   return {
     _id: 'session_1' as Id<'sessions'>,
     _creationTime: Date.now(),
-    legacyId: 'legacy-session',
     userId: 'user_1' as Id<'users'>,
     title: 'Session Title',
     messageCount: 2,
@@ -54,7 +53,6 @@ function buildUserDoc(): Doc<'users'> {
     clerkId: 'clerk_test_user',
     email: 'user@example.com',
     name: 'User',
-    legacyId: 'legacy-user',
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -68,7 +66,6 @@ function buildBundle(overrides: Partial<SessionBundle> = {}): SessionBundle {
       {
         _id: 'message_1' as Id<'messages'>,
         _creationTime: Date.now(),
-        legacyId: 'legacy-message',
         sessionId: session._id,
         role: 'user',
         content: 'Hello',
@@ -82,7 +79,6 @@ function buildBundle(overrides: Partial<SessionBundle> = {}): SessionBundle {
       {
         _id: 'report_1' as Id<'sessionReports'>,
         _creationTime: Date.now(),
-        legacyId: 'legacy-report',
         sessionId: session._id,
         reportContent: 'Report content',
         keyPoints: [],

@@ -1,5 +1,7 @@
 # AI Therapist Application - Data Model & Entity Relationship Diagram
 
+> **⚠️ IMPORTANT (2025-11-19)**: Legacy migration fields (`legacyId`) have been removed from all tables after database audit confirmed 0% legacy data usage. Historical references to `legacyId` in this document are kept for context but no longer apply to the current schema. See `convex/README-LEGACY.md` for details.
+
 ## Table of Contents
 
 1. [Overview](#overview)
@@ -1233,7 +1235,6 @@ MemoryManagementService.deleteMemory(clerkId, sessionIds, limit, excludeSessionI
 
 - `withAuth` - Automatically validates auth and populates `context.userInfo` with clerkId
 - `withApiMiddleware` - No auth validation (use for public endpoints only)
-- `BYPASS_AUTH` env var - Development mode that returns mock user (dev-user) when true
 
 **Example Flow**:
 
@@ -1260,7 +1261,6 @@ This multi-layer approach ensures:
 - ✅ Complete data isolation between users
 - ✅ No unauthorized access to other users' therapeutic data
 - ✅ Consistent security model across all endpoints
-- ✅ Development flexibility with BYPASS_AUTH mode
 
 ---
 
@@ -1460,13 +1460,7 @@ export const update = mutation({
 
 ### Legacy ID Fields
 
-All tables include optional `legacyId` fields for migration from previous systems:
-
-```typescript
-interface WithLegacyId {
-  legacyId?: string; // Previous system's ID
-}
-```
+**Note**: As of 2025-11-19, legacy migration fields (`legacyId`) have been removed from the schema after confirming no legacy data exists in the database. For historical reference, see `convex/README-LEGACY.md`.
 
 **Migration Pattern**:
 
@@ -1555,7 +1549,7 @@ All API endpoints return standardized error responses:
 
 - Missing Clerk authentication token
 - Invalid or expired token
-- BYPASS_AUTH=false and no valid session
+- No valid user session
 
 **3. Authorization Errors → 403**
 
