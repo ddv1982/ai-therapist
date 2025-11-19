@@ -25,7 +25,7 @@ use_ref_docs: true
 # MCP Tools Configuration
 # MCP (Model Context Protocol) servers extend droid capabilities
 # NOTE: MCP servers are configured per-user via Factory CLI, not here!
-#
+# 
 # To add MCP servers (Linear, Exa, Ref, etc.):
 #   1. Start Factory: droid
 #   2. Add server: /mcp add --type http <name> <url> -H "Authorization: Bearer <key>"
@@ -39,7 +39,7 @@ use_ref_docs: true
 # - Ref: Documentation (ref___ref_search_documentation, ref___ref_read_url)
 #
 # MCP servers are OPTIONAL - Droidz works without them using helper scripts
-mcp_tools_enabled: true # Enable MCP support in Factory
+mcp_tools_enabled: true  # Enable MCP support in Factory
 
 # Linear Project Tracking
 # Used by orchestrator to know which project's tickets to fetch
@@ -54,40 +54,38 @@ mcp_tools_enabled: true # Enable MCP support in Factory
 # "Use droidz-orchestrator to build [your idea]"
 # Droidz will create a new Linear project and populate this field automatically!
 linear:
-  project_name: '' # Name of your Linear project (leave empty for new projects)
+  project_name: ""  # Name of your Linear project (leave empty for new projects)
 
 # Runtime Configuration
 # Choose which JavaScript runtime to use for orchestrator scripts
 runtime:
-  package_manager: 'bun' # Options: "bun" (recommended), "npm", "pnpm", "yarn"
+  package_manager: "bun"  # Options: "bun" (recommended), "npm", "pnpm", "yarn"
   # Bun is 3-10x faster than npm/node and is the recommended choice
   # Install Bun: curl -fsSL https://bun.sh/install | bash
 
 # Parallel execution settings (CORE FEATURE - DO NOT DISABLE)
 # This is what makes Droidz 3-5x faster than sequential AI development
 parallel:
-  enabled: true # REQUIRED: Keep this true to enable parallel workers
-  max_concurrent_tasks:
-    5 # DEFAULT: 5 workers (Range: 2-10)
-    # Increase to 8-10 for large features with many independent tasks
-    # Decrease to 2-3 only if tasks are tightly coupled
+  enabled: true  # REQUIRED: Keep this true to enable parallel workers
+  max_concurrent_tasks: 5  # DEFAULT: 5 workers (Range: 2-10)
+                          # Increase to 8-10 for large features with many independent tasks
+                          # Decrease to 2-3 only if tasks are tightly coupled
 
 # Git workspace configuration
 workspace:
-  base_dir: '.runs' # Directory for isolated workspaces
-  branch_pattern: 'feature/{issueKey}-{slug}' # Branch naming pattern
-  mode:
-    worktree # RECOMMENDED: worktree (enables true parallel execution)
-    # worktree = isolated git working trees (fastest, safest)
-    # clone = full repo copies (slower, more disk space)
-    # branch = shadow copies (no git isolation, use as last resort)
-    # ALWAYS use 'worktree' unless git worktrees are not supported
+  base_dir: ".runs"  # Directory for isolated workspaces
+  branch_pattern: "feature/{issueKey}-{slug}"  # Branch naming pattern
+  mode: worktree  # RECOMMENDED: worktree (enables true parallel execution)
+              # worktree = isolated git working trees (fastest, safest)
+              # clone = full repo copies (slower, more disk space)
+              # branch = shadow copies (no git isolation, use as last resort)
+              # ALWAYS use 'worktree' unless git worktrees are not supported
 
 # Safety guardrails
 guardrails:
-  tests_required: true # Require tests to pass before PRs
-  secret_scan: true # Scan for secrets before commits
-  lint_on_change: false # Run linter on changed files
+  tests_required: true  # Require tests to pass before PRs
+  secret_scan: true  # Scan for secrets before commits
+  lint_on_change: false  # Run linter on changed files
 
 # Standards enforcement
 standards:
