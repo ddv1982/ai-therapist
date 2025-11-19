@@ -4,7 +4,6 @@
 
 import { logger } from '@/lib/utils/logger';
 import { apiClient } from '@/lib/api/client';
-import { apiClient } from '@/lib/api/client';
 
 export interface MemoryContextInfo {
   hasMemory: boolean;
