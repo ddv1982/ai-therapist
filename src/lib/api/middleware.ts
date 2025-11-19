@@ -129,7 +129,7 @@ export function withAuth<T = unknown>(
       userInfo = getSingleUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
         clerkId?: string;
       };
-    } catch (e) {
+    } catch {
       userInfo = createFallbackUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
         clerkId?: string;
       };

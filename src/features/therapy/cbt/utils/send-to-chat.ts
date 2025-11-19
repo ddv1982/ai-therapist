@@ -51,8 +51,8 @@ export async function sendToChat({
   const summaryCard = buildSessionSummaryCard(flowState);
   const now = Date.now();
 
-  const reportMessages = [
-    { role: 'user' as const, content: summaryCard, timestamp: new Date(now).toISOString() },
+  const reportMessages: Array<{ role: 'user' | 'assistant'; content: string; timestamp: string }> = [
+    { role: 'user', content: summaryCard, timestamp: new Date(now).toISOString() },
     ...contextualMessages,
   ];
 
@@ -63,7 +63,7 @@ export async function sendToChat({
 
   const reportResponse = await apiClient.generateReportDetailed({
     sessionId,
-    messages: reportMessages as any[], // TODO: Fix type
+    messages: reportMessages,
     model,
   });
 

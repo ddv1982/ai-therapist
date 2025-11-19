@@ -305,7 +305,8 @@ export const EARLY_MALADAPTIVE_SCHEMAS = {
     name: 'Dependence/Incompetence',
     domain: 'Impaired Autonomy and Performance',
   },
-  VULNERABILITY: {
+  // Note: Clinical schema from Schema Therapy, not a security vulnerability
+  VULNERABILITY_TO_HARM: {
     id: 'vulnerability',
     name: 'Vulnerability to Harm',
     domain: 'Impaired Autonomy and Performance',
