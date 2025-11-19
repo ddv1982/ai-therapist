@@ -37,6 +37,8 @@ export function transformFetchSessionsResponse(
     } else if (Array.isArray(response.data)) {
       sessions = response.data as Session[];
     }
+  } else {
+    throw new Error('Invalid response format: expected ApiResponse');
   }
 
   return sessions.map((session) => ({
