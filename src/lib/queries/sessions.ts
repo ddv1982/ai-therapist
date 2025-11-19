@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ApiResponse } from '@/lib/api/api-response';
 import { isApiResponse } from '@/lib/api/api-response';
 
+import { apiClient } from '@/lib/api/client';
+
 export interface SessionData {
   id: string;
   title: string;
@@ -93,27 +95,6 @@ export function transformSetCurrentSessionResponse(
   return { success: false };
 }
 
-// Helper to add X-Request-Id header
-const fetchWithHeaders = async (url: string, options?: RequestInit) => {
-  const headers = new Headers(options?.headers);
-  headers.set('Content-Type', 'application/json');
-  if (!headers.has('X-Request-Id')) {
-    const rid = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-    headers.set('X-Request-Id', rid);
-  }
-
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  return response.json();
-};
-
 // Query keys factory
 export const sessionKeys = {
   all: ['sessions'] as const,
@@ -128,7 +109,7 @@ export function useSessionsQuery() {
   return useQuery({
     queryKey: sessionKeys.list(),
     queryFn: async () => {
-      const response = await fetchWithHeaders('/api/sessions');
+      const response = await apiClient.listSessions();
       return transformFetchSessionsResponse(response);
     },
   });
@@ -139,7 +120,7 @@ export function useCurrentSessionQuery() {
   return useQuery({
     queryKey: sessionKeys.current(),
     queryFn: async () => {
-      const response = await fetchWithHeaders('/api/sessions/current');
+      const response = await apiClient.getCurrentSession();
       return transformGetCurrentSessionResponse(response);
     },
   });
@@ -151,10 +132,7 @@ export function useCreateSessionMutation() {
 
   return useMutation({
     mutationFn: async (body: CreateSessionRequest) => {
-      const response = await fetchWithHeaders('/api/sessions', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
+      const response = await apiClient.createSession(body);
       return transformCreateSessionResponse(response);
     },
     onSuccess: () => {
@@ -169,9 +147,7 @@ export function useDeleteSessionMutation() {
 
   return useMutation({
     mutationFn: async (sessionId: string) => {
-      const response = await fetchWithHeaders(`/api/sessions/${sessionId}`, {
-        method: 'DELETE',
-      });
+      const response = await apiClient.deleteSession(sessionId);
       return transformDeleteSessionResponse(response);
     },
     onSuccess: (_result, sessionId) => {
@@ -187,10 +163,7 @@ export function useSetCurrentSessionMutation() {
 
   return useMutation({
     mutationFn: async (sessionId: string) => {
-      const response = await fetchWithHeaders('/api/sessions/current', {
-        method: 'POST',
-        body: JSON.stringify({ sessionId }),
-      });
+      const response = await apiClient.setCurrentSession(sessionId);
       return transformSetCurrentSessionResponse(response);
     },
     onSuccess: () => {
