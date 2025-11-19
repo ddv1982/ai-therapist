@@ -40,11 +40,17 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma
+# prisma (legacy - not used, using Convex instead)
 /prisma/*.db
 /prisma/*.db-journal
 /prisma/migrations/
 /prisma/prisma/
+
+# database files (prevent accidental commits)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
 
 # Build artifacts and test reports
 src/lib/.next/
