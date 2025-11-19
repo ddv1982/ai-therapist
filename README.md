@@ -43,7 +43,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **HIPAA-Compliant Logging** - No sensitive data exposure
 
 ### ⚡ Performance & Resilience
-- **Redis Caching** - High-performance caching layer
+- **In-Memory Caching** - Fast local caching layer
 - **Circuit Breaker Pattern** - Automatic failover for external services
 - **Request Deduplication** - Prevents duplicate operations
 - **Storage Management** - Automatic quota monitoring and cleanup
@@ -53,7 +53,6 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ### Prerequisites
 - Node.js 24+
-- Redis (for caching - auto-installed via scripts if needed)
 - Convex (backend - runs locally during development)
 
 ### Installation
@@ -91,16 +90,13 @@ A modern therapeutic AI application providing compassionate mental health suppor
   GROQ_API_KEY=your_groq_api_key_here
   ENCRYPTION_KEY=your_32_character_encryption_key_here
 
-  # Redis Configuration
-  REDIS_URL="redis://localhost:6379"
-  CACHE_ENABLED="true"
-
   # Local-only opts
   RATE_LIMIT_DISABLED=true
+  CACHE_ENABLED=true
   EOF
    ```
 
-5. **Initialize Redis and Convex**
+5. **Initialize Convex**
    ```bash
    npm run encryption:setup # Generate encryption keys
    npm run convex:dev       # Runs backend (keep in separate terminal)
@@ -130,7 +126,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - `npm run convex:dev` - Start local Convex backend
 - `npm run convex:deploy` - Deploy Convex backend to production
 
-### Redis Caching
+### Encryption
 - `npm run encryption:setup` - Setup encryption configuration
 - `npm run encryption:generate` - Generate new encryption keys
 

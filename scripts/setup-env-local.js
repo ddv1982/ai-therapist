@@ -44,18 +44,12 @@ NEXTAUTH_SECRET=""
 NEXT_PUBLIC_CONVEX_URL=""
 CONVEX_URL=""
 
-# Redis Configuration
-REDIS_URL="redis://localhost:6379"
-REDIS_HOST="localhost"
-REDIS_PORT="6379"
-REDIS_PASSWORD=""
-REDIS_DB="0"
-
-# Cache Configuration
+# Cache Configuration (in-memory)
 CACHE_ENABLED="true"
 CACHE_DEFAULT_TTL="300"
 CACHE_SESSION_TTL="1800"
 CACHE_MESSAGE_TTL="900"
+MESSAGES_CACHE_ENABLED="true"
 
 # Development-only options
 RATE_LIMIT_DISABLED=true

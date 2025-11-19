@@ -44,7 +44,6 @@ erDiagram
         string clerkId UK "Clerk Auth ID"
         string email UK "User email"
         string name "Optional display name"
-        string legacyId UK "Migration support"
         number createdAt "Epoch milliseconds"
         number updatedAt "Epoch milliseconds"
     }
@@ -57,7 +56,6 @@ erDiagram
         number startedAt "Epoch milliseconds"
         number endedAt "Epoch ms or null"
         string status "active or completed"
-        string legacyId "Migration support"
         number createdAt "Epoch milliseconds"
         number updatedAt "Epoch milliseconds"
     }
@@ -70,7 +68,6 @@ erDiagram
         string modelUsed "AI model identifier"
         any metadata "Additional data"
         number timestamp "Message time"
-        string legacyId "Migration support"
         number createdAt "Epoch milliseconds"
     }
 
@@ -90,7 +87,6 @@ erDiagram
         any recommendations "Action recommendations"
         number analysisConfidence "0-100"
         string analysisVersion "Parser version"
-        string legacyId "Migration support"
         number createdAt "Epoch milliseconds"
     }
 ```
@@ -107,7 +103,6 @@ erDiagram
 | clerkId   | string      | REQUIRED, INDEXED | Clerk authentication ID            |
 | email     | string      | REQUIRED, INDEXED | User email address                 |
 | name      | string?     | OPTIONAL          | Display name                       |
-| legacyId  | string?     | OPTIONAL, INDEXED | Legacy system migration support    |
 | createdAt | number      | REQUIRED          | Creation timestamp (epoch ms)      |
 | updatedAt | number      | REQUIRED          | Last update timestamp (epoch ms)   |
 
@@ -115,7 +110,6 @@ erDiagram
 
 - `email`: For email lookups
 - `by_clerkId`: Primary authentication lookup
-- `by_legacyId`: Legacy migration support
 
 **Relationships**:
 
@@ -136,7 +130,6 @@ erDiagram
 | startedAt    | number         | REQUIRED    | Session start time (epoch ms)        |
 | endedAt      | number \| null | NULLABLE    | Session end time or null if active   |
 | status       | string         | REQUIRED    | 'active' or 'completed'              |
-| legacyId     | string?        | OPTIONAL    | Legacy migration support             |
 | createdAt    | number         | REQUIRED    | Creation timestamp (epoch ms)        |
 | updatedAt    | number         | REQUIRED    | Last update timestamp (epoch ms)     |
 
@@ -171,7 +164,6 @@ erDiagram
 | modelUsed | string?        | OPTIONAL    | AI model identifier (for assistant messages) |
 | metadata  | any?           | OPTIONAL    | Additional structured data                   |
 | timestamp | number         | REQUIRED    | Message creation time (epoch ms)             |
-| legacyId  | string?        | OPTIONAL    | Legacy migration support                     |
 | createdAt | number         | REQUIRED    | Database creation timestamp (epoch ms)       |
 
 **Indexes**:
@@ -211,7 +203,6 @@ erDiagram
 | recommendations       | any?                 | OPTIONAL    | Structured recommendations             |
 | analysisConfidence    | number?              | OPTIONAL    | Confidence score (0-100)               |
 | analysisVersion       | string?              | OPTIONAL    | Parser/analyzer version                |
-| legacyId              | string?              | OPTIONAL    | Legacy migration support               |
 | createdAt             | number               | REQUIRED    | Report generation timestamp (epoch ms) |
 
 **Indexes**:

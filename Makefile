@@ -66,7 +66,7 @@ help: ## Show help
 
 # ----- Single intelligent entrypoints -----
 
-setup: $(STAMP_NODE) env redis-up encryption-ok $(API_TYPES) playwright ## Intelligent setup + start dev (Convex + Next, stops on Ctrl+C)
+setup: $(STAMP_NODE) env encryption-ok $(API_TYPES) playwright ## Intelligent setup + start dev (Convex + Next, stops on Ctrl+C)
 	@/bin/sh -c '\
 		set -e; \
 		echo "🔧 Ensuring Next.js is not already running..."; $(MAKE) -s next-stop >/dev/null 2>&1 || true; \
@@ -98,7 +98,7 @@ dev: ## Start dev (Convex + Next; Ctrl+C cleanly stops both)
 		npm run dev; \
 	'
 
-start: redis-up encryption-ok ## Start prod server (ensure convex:dev is running)
+start: encryption-ok ## Start prod server (ensure convex:dev is running)
 	@npm run start
 
 build: install ## Build for production
@@ -109,15 +109,13 @@ next-build: ## Always run the Next.js build
 
 # ----- Setup building blocks -----
 
-bootstrap: env install redis encryption api-types playwright ## One-time full setup
+bootstrap: env install encryption api-types playwright ## One-time full setup
 	@echo "✅ Setup complete"
 
 install: $(STAMP_NODE) ## Install node dependencies
 
 env: ## Ensure .env.local exists/up-to-date
 	@npm run env:init
-
-redis: redis-up ## Ensure Redis installed and running
 
 encryption: encryption-ok ## Ensure encryption is set up/valid
 
@@ -129,7 +127,6 @@ playwright: ## Ensure Playwright browsers are installed
 doctor: ## Quick health diagnostics
 	@echo "Node: $$(node -v)"
 	@echo "NPM:  $$(npm -v)"
-	@printf "Redis: "; (redis-cli ping >/dev/null 2>&1 && echo "PONG") || echo "not running"
 	@test -f $(ENV_FILE) && echo "Env: $(ENV_FILE) present" || echo "Env: MISSING"
 	@npm run -s encryption:validate >/dev/null 2>&1 && echo "Encryption: OK" || echo "Encryption: not set"
 	@test -f $(API_TYPES) && echo "API types: present" || echo "API types: MISSING"
@@ -176,22 +173,6 @@ qa-smoke: ## Lint, type-check, and run unit/integration tests
 
 qa-full: ## Full QA: smoke + coverage + E2E
 	@npm run qa:full
-
-# ----- Redis helpers -----
-
-redis-up: ## Ensure Redis installed and running (installs/starts if missing)
-	@printf "🔎 Checking Redis... "
-	@if redis-cli ping >/dev/null 2>&1; then \
-		echo "✅ running"; \
-	else \
-		echo "⚠️  not running"; \
-		echo "   ⬇️  Installing/starting Redis..."; \
-		(npm run redis:setup || npm run redis:start || true) >/dev/null 2>&1; \
-		if redis-cli ping >/dev/null 2>&1; then echo "   ✅ Redis ready"; else echo "   ❌ Redis not ready"; fi; \
-	fi
-
-redis-stop: ## Stop Redis
-	npm run redis:stop || true
 
 # ----- Authorization (TOTP) helpers -----
 

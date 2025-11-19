@@ -34,17 +34,10 @@ const serverEnvSchema = z.object({
   OLLAMA_BASE_URL: z.string().default(envDefaults.OLLAMA_BASE_URL),
   OLLAMA_MODEL_ID: z.string().default(envDefaults.OLLAMA_MODEL_ID),
 
-  REDIS_URL: z.string().url().optional().or(z.literal('')),
-  REDIS_HOST: z.string().optional(),
-  REDIS_PORT: z.coerce.number().int().nonnegative().default(envDefaults.REDIS_PORT),
-  REDIS_PASSWORD: z.string().optional(),
-  REDIS_DB: z.coerce.number().int().nonnegative().default(envDefaults.REDIS_DB),
-
   RATE_LIMIT_BLOCK_MS: z.coerce.number().int().nonnegative().default(envDefaults.RATE_LIMIT_BLOCK_MS),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().nonnegative().default(envDefaults.RATE_LIMIT_WINDOW_MS),
   RATE_LIMIT_MAX_REQS: z.coerce.number().int().positive().default(envDefaults.RATE_LIMIT_MAX_REQS),
   RATE_LIMIT_DISABLED: coerceBoolean(envDefaults.RATE_LIMIT_DISABLED),
-  RATE_LIMIT_USE_REDIS: coerceBoolean(envDefaults.RATE_LIMIT_USE_REDIS),
 
   CHAT_WINDOW_MS: z.coerce.number().int().nonnegative().default(envDefaults.CHAT_WINDOW_MS),
   CHAT_MAX_REQS: z.coerce.number().int().positive().default(envDefaults.CHAT_MAX_REQS),
