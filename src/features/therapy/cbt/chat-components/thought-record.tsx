@@ -69,7 +69,7 @@ export function ThoughtRecord({
 
     // Always recompute highlight from store values to persist selection when navigating
     const prompts = (t.raw('thoughts.prompts') as string[]) || [];
-    const rehydratedSelections = thoughtsData.map((item: any) =>
+    const rehydratedSelections = thoughtsData.map((item: ThoughtData) =>
       prompts.includes(item.thought) ? item.thought : ''
     );
     setSelectedPrompts(rehydratedSelections);
@@ -84,7 +84,7 @@ export function ThoughtRecord({
       const equalLength = prevThoughts.length === thoughtsData.length;
       const isSame =
         equalLength &&
-        thoughtsData.every((nextThought: any, index: number) => {
+        thoughtsData.every((nextThought: ThoughtData, index: number) => {
           const current = prevThoughts[index];
           return (
             current &&
@@ -98,7 +98,7 @@ export function ThoughtRecord({
       }
 
       setErrors(new Array(thoughtsData.length).fill(''));
-      return thoughtsData.map((thought: any, index: number) => ({
+      return thoughtsData.map((thought: ThoughtData, index: number) => ({
         thought: thought.thought,
         credibility:
           typeof thought.credibility === 'number'

@@ -44,7 +44,7 @@ import {
 
 // Removed Redux selectors - now using CBT context directly
 
-export interface LegacySessionData {
+export interface CBTSessionView {
   sessionId: string | null;
   situation: SituationData | null;
   emotions: EmotionData | null;
@@ -58,7 +58,7 @@ export interface LegacySessionData {
   lastModified: string | null;
 }
 
-const EMPTY_SESSION: LegacySessionData = {
+const EMPTY_SESSION: CBTSessionView = {
   sessionId: null,
   situation: null,
   emotions: null,
@@ -72,7 +72,7 @@ const EMPTY_SESSION: LegacySessionData = {
   lastModified: null,
 };
 
-const mapFlowToLegacySession = (flow?: CBTFlowState | null): LegacySessionData => {
+const mapFlowToSessionView = (flow?: CBTFlowState | null): CBTSessionView => {
   if (!flow) return EMPTY_SESSION;
   const context = flow.context;
   const legacySchemaModes =
@@ -114,7 +114,7 @@ export interface ValidationState {
 
 export interface UseCBTDataManagerReturn {
   currentDraft: CBTDraft | null;
-  sessionData: LegacySessionData;
+  sessionData: CBTSessionView;
   validationState: ValidationState;
   savedDrafts: CBTDraft[];
 
@@ -250,7 +250,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   );
 
   const currentDraft = cbt.currentDraft;
-  const sessionData = useMemo(() => mapFlowToLegacySession(flowState), [flowState]);
+  const sessionData = useMemo(() => mapFlowToSessionView(flowState), [flowState]);
   const validationState: ValidationState = useMemo(
     () => ({
       validationErrors: cbt.validationErrors,
