@@ -1,7 +1,7 @@
 /**
  * Cache Health Check Endpoint
  *
- * Provides comprehensive health information about the Redis cache system
+ * Provides comprehensive health information about the cache system
  * for monitoring and debugging purposes.
  */
 
@@ -9,16 +9,12 @@ import { NextRequest } from 'next/server';
 import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { CacheHealthMonitor, cache } from '@/lib/cache';
-import * as redis from '@/lib/cache/redis';
 import { logger } from '@/lib/utils/logger';
 import { env } from '@/config/env';
 
 export const GET = withRateLimitUnauthenticated(
   async (_request: NextRequest, context) => {
     try {
-      // Get Redis health
-      const redisHealth = await redis.healthCheck();
-
       // Get cache health information
       const cacheHealth = await CacheHealthMonitor.getHealthInfo();
 
@@ -34,12 +30,6 @@ export const GET = withRateLimitUnauthenticated(
       };
 
       const healthInfo = {
-        redis: {
-          connected: redisHealth.connected,
-          ready: redisHealth.ready,
-          healthy: redisHealth.healthy,
-          error: redisHealth.error,
-        },
         cache: {
           enabled: config.enabled,
           totalKeys: cacheHealth.totalKeys,
@@ -51,12 +41,11 @@ export const GET = withRateLimitUnauthenticated(
       };
 
       // Determine overall health status
-      const isHealthy = redisHealth.healthy && config.enabled;
+      const isHealthy = config.enabled;
 
       logger.info('Cache health check completed', {
         operation: 'cache_health_check',
         healthy: isHealthy,
-        redisConnected: redisHealth.connected,
         totalKeys: cacheHealth.totalKeys,
         requestId: context.requestId,
       });

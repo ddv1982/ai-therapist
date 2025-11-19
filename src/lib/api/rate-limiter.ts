@@ -5,7 +5,6 @@
 
 import { createHash } from 'crypto';
 import { logger } from '@/lib/utils/logger';
-import { getRedisClient } from '@/lib/cache/redis';
 import { env } from '@/config/env';
 import { getPublicEnv } from '@/config/env.public';
 
@@ -19,91 +18,6 @@ interface RateLimitConfig {
   windowMs: number;
   maxAttempts: number;
   blockDuration: number;
-}
-
-class RedisRateLimiter {
-  private prefix = 'rate_limit';
-
-  private getKey(ip: string, bucket: string): string {
-    const hashedIp = this.hashIp(ip);
-    return `${this.prefix}:${bucket}:${hashedIp}`;
-  }
-
-  private hashIp(ip: string): string {
-    if (!ip) return 'anonymous';
-    try {
-      return createHash('sha256').update(ip).digest('hex');
-    } catch {
-      return 'anonymous';
-    }
-  }
-
-  async checkRateLimit(
-    ip: string,
-    bucketName: 'default' | 'api' | 'chat' = 'default'
-  ): Promise<{ allowed: boolean; retryAfter?: number }> {
-    const config = this.getConfigForBucket(bucketName);
-    const key = this.getKey(ip, bucketName);
-
-    try {
-      const client = getRedisClient();
-      if (!client) {
-        return { allowed: true };
-      }
-
-      const tx = client.multi();
-      tx.incr(key);
-      tx.pttl(key);
-      const execResult = await tx.exec();
-      
-      const count = Number(execResult?.[0]?.[1] ?? 0);
-      let ttl = Number(execResult?.[1]?.[1]);
-      
-      if (!Number.isFinite(ttl) || ttl <= 0) {
-        ttl = config.windowMs;
-      }
-
-      if (count === 1) {
-        await client.pexpire(key, config.windowMs);
-      }
-
-      if (count > config.maxAttempts) {
-        return { allowed: false, retryAfter: Math.max(1, Math.ceil(ttl / 1000)) };
-      }
-
-      return { allowed: true };
-    } catch (error) {
-      logger.error('Redis rate limit check failed', {
-        operation: 'rate_limit_check',
-        bucket: bucketName,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      return { allowed: true };
-    }
-  }
-
-  private getConfigForBucket(name: string): RateLimitConfig {
-    const blockMs = env.RATE_LIMIT_BLOCK_MS;
-    if (name === 'chat') {
-      return {
-        windowMs: env.CHAT_WINDOW_MS,
-        maxAttempts: env.CHAT_MAX_REQS,
-        blockDuration: blockMs,
-      };
-    }
-    if (name === 'api') {
-      return {
-        windowMs: env.API_WINDOW_MS,
-        maxAttempts: env.API_MAX_REQS,
-        blockDuration: blockMs,
-      };
-    }
-    return {
-      windowMs: env.RATE_LIMIT_WINDOW_MS,
-      maxAttempts: env.RATE_LIMIT_MAX_REQS,
-      blockDuration: blockMs,
-    };
-  }
 }
 
 class NetworkRateLimiter {
@@ -418,15 +332,11 @@ class NetworkRateLimiter {
 }
 
 // Singleton instance
-let rateLimiter: NetworkRateLimiter | RedisRateLimiter | null = null;
+let rateLimiter: NetworkRateLimiter | null = null;
 
-export function getRateLimiter(): NetworkRateLimiter | RedisRateLimiter {
+export function getRateLimiter(): NetworkRateLimiter {
   if (!rateLimiter) {
-    if (env.RATE_LIMIT_USE_REDIS) {
-      rateLimiter = new RedisRateLimiter();
-    } else {
-      rateLimiter = new NetworkRateLimiter();
-    }
+    rateLimiter = new NetworkRateLimiter();
   }
   return rateLimiter;
 }
