@@ -1,34 +1,33 @@
 import { checkMemoryContext, deleteMemory, getSessionReportDetail } from '@/lib/chat/memory-utils';
+import { apiClient } from '@/lib/api/client';
+
+// Mock apiClient
+jest.mock('@/lib/api/client', () => ({
+  apiClient: {
+    getMemoryReports: jest.fn(),
+    deleteMemoryReports: jest.fn(),
+  },
+}));
 
 describe('memory-utils more edges', () => {
-  const originalFetch = global.fetch;
   beforeEach(() => {
-    global.fetch = jest.fn();
-  });
-  afterEach(() => {
-    global.fetch = originalFetch as any;
+    jest.clearAllMocks();
   });
 
   it('checkMemoryContext supports wrapped ApiResponse shape', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        success: true,
-        data: { memoryContext: [{ reportDate: '2024-02-02' }, { reportDate: '2024-02-01' }] },
-      }),
-    } as Response);
+    (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      data: { memoryContext: [{ reportDate: '2024-02-02' }, { reportDate: '2024-02-01' }] },
+    });
     const res = await checkMemoryContext();
     expect(res).toEqual({ hasMemory: true, reportCount: 2, lastReportDate: '2024-02-02' });
   });
 
   it('deleteMemory returns normalized failure with non-JSON body', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
+    (apiClient.deleteMemoryReports as jest.Mock).mockRejectedValueOnce({
       status: 500,
-      json: async () => {
-        throw new Error('bad json');
-      },
-    } as any);
+      body: { error: 'bad json' }
+    });
     const res = await deleteMemory({ type: 'all' });
     expect(res.success).toBe(false);
     expect(res.deletedCount).toBe(0);
@@ -36,16 +35,16 @@ describe('memory-utils more edges', () => {
   });
 
   it('getSessionReportDetail logs ok but returns null when memoryDetails missing', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true, data: { reportCount: 1 } }),
-    } as Response);
+    (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+      success: true,
+      data: { reportCount: 1 }
+    });
     const res = await getSessionReportDetail('r1');
     expect(res).toBeNull();
   });
 
   it('checkMemoryContext returns empty when HTTP not ok', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: false } as any);
+    (apiClient.getMemoryReports as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
     const res = await checkMemoryContext('s1');
     expect(res).toEqual({ hasMemory: false, reportCount: 0 });
   });

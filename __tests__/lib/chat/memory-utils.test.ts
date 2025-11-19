@@ -1,6 +1,12 @@
 import { checkMemoryContext, getMemoryManagementData, deleteMemory } from '@/lib/chat/memory-utils';
+import { apiClient } from '@/lib/api/client';
 
-global.fetch = jest.fn();
+jest.mock('@/lib/api/client', () => ({
+  apiClient: {
+    getMemoryReports: jest.fn(),
+    deleteMemoryReports: jest.fn(),
+  },
+}));
 
 describe('memory-utils', () => {
   beforeEach(() => {
@@ -9,13 +15,10 @@ describe('memory-utils', () => {
 
   describe('checkMemoryContext', () => {
     it('returns memory info when reports exist', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          data: {
-            memoryContext: [{ reportDate: '2023-12-01' }, { reportDate: '2023-11-15' }],
-          },
-        }),
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        data: {
+          memoryContext: [{ reportDate: '2023-12-01' }, { reportDate: '2023-11-15' }],
+        },
       });
 
       const result = await checkMemoryContext();
@@ -26,23 +29,20 @@ describe('memory-utils', () => {
     });
 
     it('excludes session ID when provided', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ data: { memoryContext: [] } }),
-      });
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({ data: { memoryContext: [] } });
 
       await checkMemoryContext('session123');
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/reports/memory?excludeSessionId=session123&limit=3'
+      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(
+        expect.any(URLSearchParams)
       );
+      const params = (apiClient.getMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
+      expect(params.get('excludeSessionId')).toBe('session123');
+      expect(params.get('limit')).toBe('3');
     });
 
     it('returns no memory when empty array', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ data: { memoryContext: [] } }),
-      });
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({ data: { memoryContext: [] } });
 
       const result = await checkMemoryContext();
 
@@ -52,11 +52,8 @@ describe('memory-utils', () => {
     });
 
     it('handles legacy plain response format', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          memoryContext: [{ reportDate: '2023-11-01' }],
-        }),
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        memoryContext: [{ reportDate: '2023-11-01' }],
       });
 
       const result = await checkMemoryContext();
@@ -66,10 +63,9 @@ describe('memory-utils', () => {
     });
 
     it('returns no memory on fetch error', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      });
+      const error = new Error('Server error') as any;
+      error.status = 500;
+      (apiClient.getMemoryReports as jest.Mock).mockRejectedValueOnce(error);
 
       const result = await checkMemoryContext();
 
@@ -78,7 +74,7 @@ describe('memory-utils', () => {
     });
 
     it('handles network errors gracefully', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+      (apiClient.getMemoryReports as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
       const result = await checkMemoryContext();
 
@@ -87,17 +83,14 @@ describe('memory-utils', () => {
     });
 
     it('sorts reports by date descending', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          data: {
-            memoryContext: [
-              { reportDate: '2023-10-15' },
-              { reportDate: '2023-12-01' },
-              { reportDate: '2023-11-10' },
-            ],
-          },
-        }),
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        data: {
+          memoryContext: [
+            { reportDate: '2023-10-15' },
+            { reportDate: '2023-12-01' },
+            { reportDate: '2023-11-10' },
+          ],
+        },
       });
 
       const result = await checkMemoryContext();
@@ -106,10 +99,7 @@ describe('memory-utils', () => {
     });
 
     it('handles null memoryContext', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ data: { memoryContext: null } }),
-      });
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({ data: { memoryContext: null } });
 
       const result = await checkMemoryContext();
 
@@ -119,50 +109,51 @@ describe('memory-utils', () => {
 
   describe('getMemoryManagementData', () => {
     it('fetches memory management data with defaults', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          data: {
-            memoryDetails: [],
-            reportCount: 0,
-            stats: {
-              hasMemory: false,
-              totalReportsFound: 0,
-              successfullyProcessed: 0,
-              failedDecryptions: 0,
-            },
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        data: {
+          memoryDetails: [],
+          reportCount: 0,
+          stats: {
+            hasMemory: false,
+            totalReportsFound: 0,
+            successfullyProcessed: 0,
+            failedDecryptions: 0,
           },
-        }),
+        },
       });
 
       const result = await getMemoryManagementData();
 
       expect(result.success).toBe(true);
-      expect(global.fetch).toHaveBeenCalledWith('/api/reports/memory?manage=true');
+      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(
+        expect.any(URLSearchParams)
+      );
+      const params = (apiClient.getMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
+      expect(params.get('manage')).toBe('true');
     });
 
     it('uses sessionId when provided', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          data: {
-            memoryDetails: [],
-            reportCount: 0,
-            stats: {
-              hasMemory: false,
-              totalReportsFound: 0,
-              successfullyProcessed: 0,
-              failedDecryptions: 0,
-            },
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        data: {
+          memoryDetails: [],
+          reportCount: 0,
+          stats: {
+            hasMemory: false,
+            totalReportsFound: 0,
+            successfullyProcessed: 0,
+            failedDecryptions: 0,
           },
-        }),
+        },
       });
 
       await getMemoryManagementData('session123');
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/reports/memory?manage=true&excludeSessionId=session123'
+      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(
+        expect.any(URLSearchParams)
       );
+      const params = (apiClient.getMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
+      expect(params.get('manage')).toBe('true');
+      expect(params.get('excludeSessionId')).toBe('session123');
     });
 
     it('returns memory details on success', async () => {
@@ -189,10 +180,7 @@ describe('memory-utils', () => {
         },
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ data: mockData }),
-      });
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({ data: mockData });
 
       const result = await getMemoryManagementData();
 
@@ -202,11 +190,10 @@ describe('memory-utils', () => {
     });
 
     it('returns failure on fetch error', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        json: async () => ({ error: { message: 'Server error' } }),
-      });
+      const error = new Error('Server error') as any;
+      error.status = 500;
+      error.body = { error: { message: 'Server error' } };
+      (apiClient.getMemoryReports as jest.Mock).mockRejectedValueOnce(error);
 
       const result = await getMemoryManagementData();
 
@@ -215,7 +202,7 @@ describe('memory-utils', () => {
     });
 
     it('handles network errors', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+      (apiClient.getMemoryReports as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
       const result = await getMemoryManagementData();
 
@@ -226,55 +213,48 @@ describe('memory-utils', () => {
 
   describe('deleteMemory', () => {
     it('deletes specific sessions', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          deletedCount: 2,
-          message: 'Deleted',
-          deletionType: 'specific',
-        }),
+      (apiClient.deleteMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
+        deletedCount: 2,
+        message: 'Deleted',
+        deletionType: 'specific',
       });
 
       const result = await deleteMemory({ type: 'specific', sessionIds: ['s1', 's2'] });
 
       expect(result.success).toBe(true);
       expect(result.deletedCount).toBe(2);
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/reports/memory?sessionIds=s1%2Cs2',
-        expect.objectContaining({ method: 'DELETE' })
+      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(
+        expect.any(URLSearchParams)
       );
+      const params = (apiClient.deleteMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
+      expect(params.get('sessionIds')).toBe('s1,s2');
     });
 
     it('deletes recent N reports', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          deletedCount: 3,
-          message: 'Deleted',
-          deletionType: 'recent',
-        }),
+      (apiClient.deleteMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
+        deletedCount: 3,
+        message: 'Deleted',
+        deletionType: 'recent',
       });
 
       const result = await deleteMemory({ type: 'recent', limit: 3 });
 
       expect(result.success).toBe(true);
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/reports/memory?limit=3',
-        expect.objectContaining({ method: 'DELETE' })
+      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(
+        expect.any(URLSearchParams)
       );
+      const params = (apiClient.deleteMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
+      expect(params.get('limit')).toBe('3');
     });
 
     it('excludes current session when specified', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          deletedCount: 1,
-          message: 'Deleted',
-          deletionType: 'all-except-current',
-        }),
+      (apiClient.deleteMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
+        deletedCount: 1,
+        message: 'Deleted',
+        deletionType: 'all-except-current',
       });
 
       const result = await deleteMemory({
@@ -284,38 +264,34 @@ describe('memory-utils', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/reports/memory?excludeSessionId=current123',
-        expect.objectContaining({ method: 'DELETE' })
+      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(
+        expect.any(URLSearchParams)
       );
+      const params = (apiClient.deleteMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
+      expect(params.get('excludeSessionId')).toBe('current123');
     });
 
     it('deletes all memory when type is all', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          deletedCount: 10,
-          message: 'All deleted',
-          deletionType: 'all',
-        }),
+      (apiClient.deleteMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
+        deletedCount: 10,
+        message: 'All deleted',
+        deletionType: 'all',
       });
 
       const result = await deleteMemory({ type: 'all' });
 
       expect(result.success).toBe(true);
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/reports/memory?',
-        expect.objectContaining({ method: 'DELETE' })
+      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(
+        expect.any(URLSearchParams)
       );
     });
 
     it('returns failure on DELETE error', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        status: 403,
-        json: async () => ({ error: { message: 'Forbidden' } }),
-      });
+      const error = new Error('Forbidden') as any;
+      error.status = 403;
+      error.body = { error: { message: 'Forbidden' } };
+      (apiClient.deleteMemoryReports as jest.Mock).mockRejectedValueOnce(error);
 
       const result = await deleteMemory({ type: 'recent', limit: 1 });
 
@@ -324,7 +300,7 @@ describe('memory-utils', () => {
     });
 
     it('handles network errors during deletion', async () => {
-      (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+      (apiClient.deleteMemoryReports as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
       const result = await deleteMemory({ type: 'specific', sessionIds: ['s1'] });
 

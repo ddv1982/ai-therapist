@@ -233,6 +233,17 @@ export class ApiClient {
     });
   }
 
+  // Memory Management
+  async getMemoryReports<T>(params?: string | URLSearchParams): Promise<T> {
+    const qs = params ? (typeof params === 'string' ? params : params.toString()) : '';
+    return this.request<T>(`/api/reports/memory${qs ? `?${qs}` : ''}`);
+  }
+
+  async deleteMemoryReports<T>(params?: string | URLSearchParams): Promise<T> {
+    const qs = params ? (typeof params === 'string' ? params : params.toString()) : '';
+    return this.request<T>(`/api/reports/memory${qs ? `?${qs}` : ''}`, { method: 'DELETE' });
+  }
+
   // Current session
   async getCurrentSession(): Promise<
     ApiResponse<{

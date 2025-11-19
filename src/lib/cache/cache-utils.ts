@@ -1,5 +1,5 @@
 /**
- * Redis Caching Utilities and Decorators
+ * In-Memory Caching Utilities and Decorators
  *
  * Provides high-level caching utilities with automatic serialization,
  * TTL management, and cache invalidation strategies for the AI Therapist application.
@@ -13,7 +13,6 @@
  * - Performance monitoring
  */
 
-import * as redis from './redis';
 import { logger } from '@/lib/utils/logger';
 
 export interface CacheOptions {
@@ -40,10 +39,34 @@ export interface CacheKeyOptions {
   version?: string;
 }
 
+interface CacheItem {
+  value: string;
+  expires: number;
+}
+
 class CacheManager {
   private stats: Map<string, CacheStats> = new Map();
+  private storage: Map<string, CacheItem> = new Map();
   private defaultTTL = 300; // 5 minutes
-  private maxKeyLength = 250; // Redis key length limit
+  private maxKeyLength = 250; 
+  private cleanupInterval: NodeJS.Timeout;
+
+  constructor() {
+    // Periodic cleanup of expired items
+    this.cleanupInterval = setInterval(() => this.cleanup(), 60 * 1000);
+    if (typeof this.cleanupInterval.unref === 'function') {
+      this.cleanupInterval.unref();
+    }
+  }
+
+  private cleanup() {
+    const now = Date.now();
+    for (const [key, item] of this.storage.entries()) {
+      if (item.expires < now) {
+        this.storage.delete(key);
+      }
+    }
+  }
 
   /**
    * Generate cache key with proper namespacing
@@ -166,9 +189,11 @@ class CacheManager {
     const cacheKey = this.generateKey(key, options, cacheOptions.prefix);
 
     try {
-      const result = await redis.get(cacheKey);
+      const item = this.storage.get(cacheKey);
+      const now = Date.now();
 
-      if (result === null) {
+      if (!item || item.expires < now) {
+        if (item) this.storage.delete(cacheKey);
         this.updateStats(key, false);
         return (cacheOptions.fallback as T) || null;
       }
@@ -176,10 +201,10 @@ class CacheManager {
       this.updateStats(key, true);
 
       if (cacheOptions.serialize !== false) {
-        return this.deserialize<T>(result);
+        return this.deserialize<T>(item.value);
       }
 
-      return result as T;
+      return item.value as unknown as T;
     } catch (error) {
       this.updateStats(key, false, true);
       logger.error('Cache get failed', {
@@ -187,14 +212,6 @@ class CacheManager {
         key: cacheKey,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-
-      // Fallback to in-memory cache
-      const memoryCache = (globalThis as { __memoryCache?: Record<string, unknown> }).__memoryCache;
-      const memoryValue = memoryCache?.[cacheKey];
-      if (memoryValue !== undefined) {
-        return memoryValue as T;
-      }
-
       return (cacheOptions.fallback as T) || null;
     }
   }
@@ -220,32 +237,25 @@ class CacheManager {
         value = String(data);
       }
 
-      const result = await redis.setEx(cacheKey, ttl, value);
+      this.storage.set(cacheKey, {
+        value,
+        expires: Date.now() + ttl * 1000,
+      });
 
-      if (result === 'OK') {
-        logger.debug('Cache set successful', {
-          operation: 'cache_set',
-          key: cacheKey,
-          ttl,
-        });
-      }
+      logger.debug('Cache set successful', {
+        operation: 'cache_set',
+        key: cacheKey,
+        ttl,
+      });
 
-      return result === 'OK';
+      return true;
     } catch (error) {
       logger.error('Cache set failed', {
         operation: 'cache_set',
         key: cacheKey,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-
-      // Fallback to in-memory cache
-      const globalWithCache = globalThis as { __memoryCache?: Record<string, unknown> };
-      if (!globalWithCache.__memoryCache) {
-        globalWithCache.__memoryCache = {};
-      }
-      globalWithCache.__memoryCache[cacheKey] = data;
-
-      return true;
+      return false;
     }
   }
 
@@ -260,15 +270,15 @@ class CacheManager {
     const cacheKey = this.generateKey(key, options, cacheOptions.prefix);
 
     try {
-      const result = await redis.del(cacheKey);
+      const result = this.storage.delete(cacheKey);
 
       logger.debug('Cache delete successful', {
         operation: 'cache_delete',
         key: cacheKey,
-        deleted: result > 0,
+        deleted: result,
       });
 
-      return result > 0;
+      return result;
     } catch (error) {
       logger.error('Cache delete failed', {
         operation: 'cache_delete',
@@ -288,19 +298,8 @@ class CacheManager {
     cacheOptions: CacheOptions = {}
   ): Promise<boolean> {
     const cacheKey = this.generateKey(key, options, cacheOptions.prefix);
-
-    try {
-      const result = await redis.exists(cacheKey);
-
-      return result === 1;
-    } catch (error) {
-      logger.error('Cache exists check failed', {
-        operation: 'cache_exists',
-        key: cacheKey,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      return false;
-    }
+    const item = this.storage.get(cacheKey);
+    return !!item && item.expires > Date.now();
   }
 
   /**
@@ -336,24 +335,19 @@ class CacheManager {
     cacheOptions: CacheOptions = {}
   ): Promise<number> {
     const searchPattern = this.generateKey(pattern, options, cacheOptions.prefix);
+    
+    // Convert glob pattern to regex
+    // Simple conversion: * -> .*
+    const regex = new RegExp('^' + searchPattern.replace(/\*/g, '.*') + '$');
 
     try {
-      let cursor = '0';
       let totalDeleted = 0;
-      
-      do {
-        const scanResult = await redis.scan(cursor, {
-          MATCH: searchPattern,
-          COUNT: 100,
-        });
-        cursor = scanResult.cursor;
-        const keys = scanResult.keys;
-        
-        if (keys.length > 0) {
-          const deleted = await redis.del(...keys);
-          totalDeleted += deleted;
+      for (const key of this.storage.keys()) {
+        if (regex.test(key)) {
+          this.storage.delete(key);
+          totalDeleted++;
         }
-      } while (cursor !== '0');
+      }
 
       logger.info('Cache pattern invalidation successful', {
         operation: 'cache_invalidate_pattern',
@@ -381,19 +375,16 @@ class CacheManager {
     cacheOptions: CacheOptions = {}
   ): Promise<number> {
     const searchPattern = this.generateKey(pattern, options, cacheOptions.prefix);
+    const regex = new RegExp('^' + searchPattern.replace(/\*/g, '.*') + '$');
 
     try {
-      let cursor = '0';
       let totalCount = 0;
-      
-      do {
-        const scanResult = await redis.scan(cursor, {
-          MATCH: searchPattern,
-          COUNT: 100,
-        });
-        cursor = scanResult.cursor;
-        totalCount += scanResult.keys.length;
-      } while (cursor !== '0');
+      const now = Date.now();
+      for (const [key, item] of this.storage.entries()) {
+        if (regex.test(key) && item.expires > now) {
+          totalCount++;
+        }
+      }
 
       return totalCount;
     } catch (error) {
@@ -450,22 +441,10 @@ class CacheManager {
     stats: Map<string, CacheStats>;
     totalKeys: number;
   }> {
-    const redisHealth = await redis.healthCheck();
-
-    let totalKeys = 0;
-    try {
-      totalKeys = await redis.dbSize();
-    } catch (error) {
-      logger.warn('Failed to get Redis key count', {
-        operation: 'cache_health',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-    }
-
     return {
-      redis: redisHealth.healthy,
+      redis: false,
       stats: new Map(this.stats),
-      totalKeys,
+      totalKeys: this.storage.size,
     };
   }
 
@@ -519,4 +498,4 @@ export const cache = {
   health: () => cacheManager.getHealthInfo(),
 };
 
-// All types are already exported through their interface declarations above
+export type { CacheDecoratorOptions } from './cache-decorators';

@@ -33,87 +33,18 @@ import { buildMarkdownSummary } from '@/features/therapy/cbt/flow/summary';
 import { generateUUID } from '@/lib/utils';
 import { type CBTStepId } from '@/features/therapy/cbt/flow';
 
-// Narrowing helpers to avoid any-casts during legacy migration/adapters
-const asEmotionData = (e: unknown): EmotionData => {
-  const src = (e ?? {}) as Partial<Record<string, unknown>>;
-  return {
-    fear: Number(src.fear ?? 0),
-    anger: Number(src.anger ?? 0),
-    sadness: Number(src.sadness ?? 0),
-    joy: Number(src.joy ?? 0),
-    anxiety: Number(src.anxiety ?? 0),
-    shame: Number(src.shame ?? 0),
-    guilt: Number(src.guilt ?? 0),
-    other: typeof src.other === 'string' ? src.other : '',
-    otherIntensity: Number(src.otherIntensity ?? 0),
-  };
-};
-
-const asThoughtDataArray = (arr: unknown): ThoughtData[] => {
-  if (!Array.isArray(arr)) return [];
-  return arr
-    .map((t) => {
-      if (t && typeof t === 'object') {
-        const o = t as Record<string, unknown>;
-        const text = String(o.thought ?? o.text ?? o.content ?? '');
-        const credibility = Number(o.credibility ?? 5);
-        return { thought: text, credibility };
-      }
-      return { thought: String(t ?? ''), credibility: 5 };
-    })
-    .filter((t) => t.thought.length > 0);
-};
-
-const asCoreBeliefData = (input: unknown): CoreBeliefData => {
-  const src = (input ?? {}) as Partial<Record<string, unknown>>;
-  return {
-    coreBeliefText: String(src.coreBeliefText ?? ''),
-    coreBeliefCredibility: Number(src.coreBeliefCredibility ?? 5),
-  };
-};
-
-const asChallengeQuestionsArray = (arr: unknown): ChallengeQuestionData[] => {
-  if (!Array.isArray(arr)) return [];
-  return arr
-    .map((q) => {
-      if (q && typeof q === 'object') {
-        const o = q as Record<string, unknown>;
-        const question = String(o.question ?? o.q ?? o.prompt ?? '');
-        const answer = String(o.answer ?? o.a ?? o.response ?? '');
-        return { question, answer };
-      }
-      return { question: String(q ?? ''), answer: '' };
-    })
-    .filter((q) => q.question.length > 0);
-};
-
-const asRationalThoughtsArray = (arr: unknown): RationalThoughtData[] => {
-  if (!Array.isArray(arr)) return [];
-  return arr
-    .map((t) => {
-      if (t && typeof t === 'object') {
-        const o = t as Record<string, unknown>;
-        const thought = String(o.thought ?? o.text ?? o.content ?? '');
-        const confidence = Number(o.confidence ?? 5);
-        return { thought, confidence };
-      }
-      return { thought: String(t ?? ''), confidence: 5 };
-    })
-    .filter((t) => t.thought.length > 0);
-};
-
-const asActionPlanData = (input: unknown): ActionPlanData => {
-  const src = (input ?? {}) as Partial<Record<string, unknown>>;
-  return {
-    finalEmotions: asEmotionData(src.finalEmotions ?? {}),
-    originalThoughtCredibility: Number(src.originalThoughtCredibility ?? 5),
-    newBehaviors: String(src.newBehaviors ?? ''),
-  };
-};
+import {
+  asEmotionData,
+  asThoughtDataArray,
+  asCoreBeliefData,
+  asChallengeQuestionsArray,
+  asRationalThoughtsArray,
+  asActionPlanData,
+} from '@/lib/therapy/transformers/cbt-transformers';
 
 // Removed Redux selectors - now using CBT context directly
 
-interface LegacySessionData {
+export interface CBTSessionView {
   sessionId: string | null;
   situation: SituationData | null;
   emotions: EmotionData | null;
@@ -127,7 +58,7 @@ interface LegacySessionData {
   lastModified: string | null;
 }
 
-const EMPTY_SESSION: LegacySessionData = {
+const EMPTY_SESSION: CBTSessionView = {
   sessionId: null,
   situation: null,
   emotions: null,
@@ -141,7 +72,7 @@ const EMPTY_SESSION: LegacySessionData = {
   lastModified: null,
 };
 
-const mapFlowToLegacySession = (flow?: CBTFlowState | null): LegacySessionData => {
+const mapFlowToSessionView = (flow?: CBTFlowState | null): CBTSessionView => {
   if (!flow) return EMPTY_SESSION;
   const context = flow.context;
   const legacySchemaModes =
@@ -175,10 +106,16 @@ interface UseCBTDataManagerOptions {
   enableChatIntegration?: boolean;
 }
 
-interface UseCBTDataManagerReturn {
+export interface ValidationState {
+  validationErrors: Record<string, string>;
+  isSubmitting: boolean;
+  currentStep: number;
+}
+
+export interface UseCBTDataManagerReturn {
   currentDraft: CBTDraft | null;
-  sessionData: any; // TODO: Replace with React Query
-  validationState: any; // TODO: Replace with React Query
+  sessionData: CBTSessionView;
+  validationState: ValidationState;
   savedDrafts: CBTDraft[];
 
   draftActions: {
@@ -313,8 +250,8 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   );
 
   const currentDraft = cbt.currentDraft;
-  const sessionData = useMemo(() => mapFlowToLegacySession(flowState), [flowState]);
-  const validationState = useMemo(
+  const sessionData = useMemo(() => mapFlowToSessionView(flowState), [flowState]);
+  const validationState: ValidationState = useMemo(
     () => ({
       validationErrors: cbt.validationErrors,
       isSubmitting: cbt.isSubmitting,
@@ -871,43 +808,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   };
 }
 
-export function useUnifiedCBTSelector<T>(
-  selector: (cbt: ReturnType<typeof useCBT>) => T,
-  _equalityFn?: (left: T, right: T) => boolean
-): T {
-  const cbt = useCBT();
-  const result = selector(cbt);
-  // Note: equalityFn is not used in this simplified version
-  return result;
-}
 
-export function useUnifiedCBTActions() {
-  const cbt = useCBT();
-  const updateStep = useCallback(
-    <K extends CBTStepId>(stepId: K, payload: CBTStepPayloadMap[K]) => {
-      cbt.applyCBTEvent({ type: 'UPDATE_STEP', stepId, payload });
-    },
-    [cbt]
-  );
-
-  return useMemo(
-    () => ({
-      createDraft: (id: string) => cbt.createDraft({ id }),
-      updateDraft: (data: Partial<CBTFormData>) => cbt.updateDraft(data),
-      saveDraft: () => cbt.saveDraft(),
-      deleteDraft: (id: string) => cbt.deleteDraft(id),
-      startSession: (sessionId: string) => cbt.startCBTSession({ sessionId }),
-      clearSession: () => cbt.clearCBTSession(),
-      updateSituation: (data: SituationData) => updateStep('situation', data),
-      updateEmotions: (data: EmotionData) => updateStep('emotions', data),
-      addThought: (data: ThoughtData) => updateStep('thoughts', [data]),
-      addCoreBelief: (data: CoreBeliefData) => updateStep('core-belief', data),
-      setCurrentStep: (step: number) => cbt.setCurrentStep(step),
-      setSubmitting: (isSubmitting: boolean) => cbt.setSubmitting(isSubmitting),
-    }),
-    [cbt, updateStep]
-  );
-}
 
 export const useUnifiedCBT = useCBTDataManager;
 export type UseUnifiedCBTOptions = UseCBTDataManagerOptions;

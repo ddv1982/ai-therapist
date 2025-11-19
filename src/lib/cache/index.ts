@@ -7,7 +7,7 @@
 
 // Core caching utilities
 export { cacheManager, cache } from './cache-utils';
-export * as redis from './redis';
+
 
 // Decorators and higher-order functions
 export {

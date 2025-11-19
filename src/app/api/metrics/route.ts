@@ -4,7 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { withApiMiddleware } from '@/lib/api/api-middleware';
+import { withAuth } from '@/lib/api/middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import {
   getMetricsLastN,
@@ -22,7 +22,7 @@ import {
  * - endpoint: Filter by endpoint name
  * - format: Response format (metrics, stats, health, snapshot)
  */
-export const GET = withApiMiddleware(async (req: NextRequest, context) => {
+export const GET = withAuth(async (req: NextRequest, context) => {
   try {
     const url = new URL(req.url);
     const queryType = url.searchParams.get('type') as MetricType | null;

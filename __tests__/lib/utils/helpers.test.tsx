@@ -29,7 +29,6 @@ import {
   generateUUID, // Add this
 } from '@/lib/utils/helpers';
 import { logger } from '@/lib/utils/logger';
-import { waitFor, render, screen } from '@testing-library/react';
 
 // Mock logger
 jest.mock('@/lib/utils/logger', () => ({
@@ -322,7 +321,6 @@ describe('helpers utils', () => {
        
        jest.advanceTimersByTime(60 * 1000);
        
-       const stats = getDeduplicationStats();
        // 'expired' should be gone. 'fresh' might be gone if 60s passed?
        // 'fresh' ttl 10s. 60s passed. Both gone.
        

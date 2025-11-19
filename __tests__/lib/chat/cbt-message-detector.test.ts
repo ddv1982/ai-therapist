@@ -10,14 +10,6 @@ import {
 
 describe('CBT Message Detector', () => {
   describe('Headers', () => {
-    const headers = [
-      '🌟 CBT Diary Entry',
-      'CBT Diary Entry with',
-      '# 🌟 CBT Diary',
-      '# 🌟 CBT Diary Entry',
-      'CBT Diary Entry' // Minimal partial match if handled? Regex says "CBT\s+Diary\s+Entry\s+with" or "🌟\s*CBT\s+Diary\s+Entry" or "#\s*🌟\s*CBT\s+Diary"
-    ];
-
     it.each([
         '🌟 CBT Diary Entry',
         '# 🌟 CBT Diary',
@@ -56,7 +48,7 @@ describe('CBT Message Detector', () => {
       // Actually hasCBTSections is strict >= 3.
       
       // Let's test that 3 distinct sections trigger the flag.
-      const msg = `${section}\n\n## 📍 Situation Context\n\n## 🧠 Automatic Thoughts`; 
+      // const msg = `${section}\n\n## 📍 Situation Context\n\n## 🧠 Automatic Thoughts`; 
       // Note: if section is one of those appended, regex might match same one twice if we aren't careful about unique checks in implementation? 
       // Implementation uses reduce on patterns list. So duplicates in content don't matter, it checks if EACH pattern exists.
       
@@ -265,9 +257,6 @@ describe('CBT Message Detector', () => {
   describe('Helper Functions', () => {
       describe('isCBTDiaryMessage', () => {
           it('returns true when confidence is above threshold', () => {
-             const msg = '🌟 CBT Diary Entry'; // Has header (+0.25) which is below default 0.7
-             // Wait, header alone is 0.25. Need more for 0.7.
-             // Premium indicators bonus might help.
              // Header + Sections + UserRatings + Quantified + SchemaReflection
              
              const strongMsg = `
