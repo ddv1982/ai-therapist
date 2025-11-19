@@ -1,8 +1,9 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ApiResponse } from '@/lib/api/api-response';
+import type { ApiResponse, PaginatedResponse } from '@/lib/api/api-response';
 import { isApiResponse } from '@/lib/api/api-response';
+import type { Session } from '@/types';
 
 import { apiClient } from '@/lib/api/client';
 
@@ -23,27 +24,47 @@ type CreateSessionResponse = SessionData;
 
 // Exported pure transform helpers for testing and reuse
 export function transformFetchSessionsResponse(
-  response: ApiResponse<SessionData[]> | SessionData[]
+  response: ApiResponse<PaginatedResponse<Session>>
 ): SessionData[] {
-  if (isApiResponse<SessionData[]>(response) && Array.isArray(response.data)) {
-    return (response as { data: SessionData[] }).data;
+  let sessions: Session[] = [];
+
+  if (isApiResponse(response)) {
+    if (!response.success) {
+      throw new Error(response.error?.message || 'Failed to fetch sessions');
+    }
+    if (response.data && 'items' in response.data && Array.isArray(response.data.items)) {
+      sessions = response.data.items;
+    } else if (Array.isArray(response.data)) {
+      sessions = response.data as Session[];
+    }
   }
-  if (Array.isArray(response as unknown as SessionData[])) {
-    return response as unknown as SessionData[];
-  }
-  throw new Error(
-    (response as { error?: { message?: string } })?.error?.message || 'Failed to fetch sessions'
-  );
+
+  return sessions.map((session) => ({
+    id: session.id,
+    title: session.title,
+    createdAt: session.createdAt ?? new Date().toISOString(),
+    updatedAt: session.updatedAt ?? new Date().toISOString(),
+    messageCount: session._count?.messages ?? 0,
+  }));
 }
 
 export function transformCreateSessionResponse(
-  response: ApiResponse<CreateSessionResponse> | CreateSessionResponse
+  response: ApiResponse<Session>
 ): CreateSessionResponse {
-  if (isApiResponse<CreateSessionResponse>(response) && response.data) {
-    return response.data;
-  }
-  if ((response as unknown as CreateSessionResponse)?.id) {
-    return response as unknown as CreateSessionResponse;
+  if (isApiResponse(response)) {
+    if (!response.success) {
+      throw new Error(response.error?.message || 'Failed to create session');
+    }
+    if (response.data) {
+      const session = response.data;
+      return {
+        id: session.id,
+        title: session.title,
+        createdAt: session.createdAt ?? new Date().toISOString(),
+        updatedAt: session.updatedAt ?? new Date().toISOString(),
+        messageCount: session._count?.messages ?? 0,
+      };
+    }
   }
   throw new Error(
     (response as { error?: { message?: string } })?.error?.message || 'Failed to create session'

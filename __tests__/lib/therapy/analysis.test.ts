@@ -94,7 +94,6 @@ describe('Therapy Analysis Utilities', () => {
       });
 
       it('should detect moderate reflection', () => {
-        const text = 'I notice patterns. It reminds me of childhood.';
         // matches: "I notice patterns" (1), "childhood" (maybe "childhood.*patterns" or "childhood.*when" etc)
         // Let's look at patterns: /childhood.*patterns/i, /I notice.*patterns/i
         // "I notice patterns" -> match.

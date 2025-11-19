@@ -7,7 +7,6 @@ import {
   withAuthAndRateLimit,
   withAuthStreaming,
   withAuthAndRateLimitStreaming,
-  type AuthenticatedRequestContext,
 } from '@/lib/api/middleware';
 import { z } from 'zod';
 import { validateApiAuth } from '@/lib/api/api-auth';
@@ -15,7 +14,6 @@ import { getSingleUserInfo } from '@/lib/auth/user-session';
 import { getRateLimiter } from '@/lib/api/rate-limiter';
 import { logger } from '@/lib/utils/logger';
 import * as metrics from '@/lib/metrics/metrics';
-import { env } from '@/config/env';
 
 // Robust local mocks for Next.js server objects
 jest.mock('next/server', () => {

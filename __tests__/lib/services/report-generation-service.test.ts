@@ -64,7 +64,7 @@ describe('ReportGenerationService', () => {
     jest.clearAllMocks();
     (getConvexHttpClient as jest.Mock).mockReturnValue(mockConvexClient);
     (encryptSessionReportContent as jest.Mock).mockImplementation((text) => `encrypted-${text}`);
-    (encryptEnhancedAnalysisData as jest.Mock).mockImplementation((data) => ({
+    (encryptEnhancedAnalysisData as jest.Mock).mockImplementation((_data) => ({
       cognitiveDistortions: 'encrypted-distortions',
       schemaAnalysis: 'encrypted-schema',
       therapeuticFrameworks: 'encrypted-frameworks',
@@ -147,7 +147,7 @@ describe('ReportGenerationService', () => {
             keyPoints: ['Fallback point'],
         });
 
-        const result = await service.generateReport(mockSessionId, mockMessages, 'en');
+        await service.generateReport(mockSessionId, mockMessages, 'en');
 
         expect(generateFallbackAnalysisExternal).toHaveBeenCalledWith('Generated Report Content');
         expect(mockMutation).toHaveBeenCalled();

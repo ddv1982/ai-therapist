@@ -281,9 +281,8 @@ describe('useMetadataQueue', () => {
     });
 
     // Start first flush
-    let flushPromise1: Promise<void>;
     act(() => {
-      flushPromise1 = result.current.flushPendingMetadata('msg-busy');
+      void result.current.flushPendingMetadata('msg-busy');
     });
 
     // Try second flush immediately
