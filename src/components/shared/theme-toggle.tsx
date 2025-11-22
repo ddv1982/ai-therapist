@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/lib/theme-context';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const sunVariants = {
     initial: { rotate: -90, scale: 0, opacity: 0 },
@@ -20,6 +26,25 @@ export function ThemeToggle() {
     animate: { rotate: 0, scale: 1, opacity: 1 },
     exit: { rotate: -90, scale: 0, opacity: 0 },
   };
+
+  // Prevent hydration mismatch by only rendering after mount
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className={
+          therapeuticInteractive.iconButtonMedium + ' group relative items-center justify-center'
+        }
+        disabled
+      >
+        <div className="relative z-10 flex h-6 w-6 items-center justify-center">
+          <Sun className="text-primary h-6 w-6" />
+        </div>
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    );
+  }
 
   return (
     <Button
