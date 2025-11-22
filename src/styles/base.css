@@ -5,53 +5,25 @@
   --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'SF Mono', 'Consolas', 'Monaco', monospace;
   --radius: 0.75rem; /* 12px */
-}
-
-/* ============================================
-   TYPOGRAPHY HIERARCHY - SF Pro-inspired
-   ============================================ */
-
-/* Headings - semibold weight for emphasis */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
-  letter-spacing: -0.011em; /* Tighter tracking for large text */
-}
-
-/* Body text - regular weight */
-p, li, td {
-  font-weight: 400;
-  letter-spacing: 0em;
-}
-
-/* Labels, UI elements - slightly wider tracking */
-label, .label, button, .button {
-  font-weight: 600;
-  letter-spacing: 0.011em;
-}
-
-/* Small text - semibold for legibility */
-.text-sm, .text-xs {
-  font-weight: 600;
-  letter-spacing: 0.011em;
 
   /* ============================================
      COLORS - Light Theme (OKLCH)
      ============================================ */
-  /* 60% - Neutral backgrounds */
-  --background: oklch(0.99 0 0);
-  --card: oklch(0.99 0 0);
-  --popover: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.01 247);
-  --muted: oklch(0.95 0.005 250);
+  /* 60% - Neutral backgrounds (warm cream tint) */
+  --background: oklch(0.97 0.01 40);
+  --card: oklch(0.98 0.01 40);
+  --popover: oklch(0.99 0.01 40);
+  --secondary: oklch(0.94 0.012 35);
+  --muted: oklch(0.92 0.01 40);
 
-  /* 30% - Text and UI elements */
-  --foreground: oklch(0.15 0.01 250);
-  --card-foreground: oklch(0.15 0.01 250);
-  --popover-foreground: oklch(0.15 0.01 250);
-  --secondary-foreground: oklch(0.45 0.01 250);
-  --muted-foreground: oklch(0.55 0.01 250);
-  --border: oklch(0.88 0.005 250);
-  --input: oklch(0.88 0.005 250);
+  /* 30% - Text and UI elements (enhanced contrast) */
+  --foreground: oklch(0.12 0.01 250);
+  --card-foreground: oklch(0.12 0.01 250);
+  --popover-foreground: oklch(0.12 0.01 250);
+  --secondary-foreground: oklch(0.40 0.01 250);
+  --muted-foreground: oklch(0.50 0.01 250);
+  --border: oklch(0.85 0.01 40);
+  --input: oklch(0.85 0.01 40);
 
   /* 10% - Accent colors (CTAs) */
   --primary: oklch(0.55 0.18 240);
@@ -65,8 +37,8 @@ label, .label, button, .button {
   /* ============================================
      GLASSMORPHISM - Apple Frosted Glass
      ============================================ */
-  --glass-white: oklch(0.99 0 0 / 0.7);
-  --glass-border: oklch(0.99 0 0 / 0.18);
+  --glass-white: oklch(0.97 0.01 40 / 0.6);
+  --glass-border: oklch(0.88 0.015 40 / 0.25);
 
   /* ============================================
      SHADOWS - Apple-style (very subtle)
@@ -101,6 +73,34 @@ label, .label, button, .button {
      ============================================ */
   --sidebar-background: oklch(0.98 0.01 247);
   --modal-backdrop: oklch(0.25 0.02 258 / 0.8);
+}
+
+/* ============================================
+   TYPOGRAPHY HIERARCHY - SF Pro-inspired
+   ============================================ */
+
+/* Headings - semibold weight for emphasis */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.011em; /* Tighter tracking for large text */
+}
+
+/* Body text - regular weight */
+p, li, td {
+  font-weight: 400;
+  letter-spacing: 0em;
+}
+
+/* Labels, UI elements - slightly wider tracking */
+label, .label, button, .button {
+  font-weight: 600;
+  letter-spacing: 0.011em;
+}
+
+/* Small text - semibold for legibility */
+.text-sm, .text-xs {
+  font-weight: 600;
+  letter-spacing: 0.011em;
 }
 
 .dark {
@@ -168,6 +168,27 @@ label, .label, button, .button {
      ============================================ */
   --sidebar-background: oklch(0.13 0.02 258);
   --modal-backdrop: oklch(0.05 0.01 258 / 0.9);
+}
+
+/* ============================================
+   LIGHT MODE ENHANCEMENTS
+   Enhanced shadows and glassmorphism for clear depth hierarchy
+   ============================================ */
+@media (prefers-color-scheme: light) {
+  :root {
+    /* Enhanced shadows for light mode visibility (2-3x darker) */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.16);
+    --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.18);
+    --shadow-xl: 0 20px 40px -8px rgba(0, 0, 0, 0.20);
+    --shadow-primary: 0 8px 16px -4px oklch(0.55 0.18 240 / 0.25);
+    --shadow-accent: 0 8px 16px -4px oklch(0.60 0.14 150 / 0.25);
+  }
+
+  /* Enhanced glassmorphism for light mode */
+  .backdrop-blur-glass {
+    backdrop-filter: blur(20px) brightness(0.98) saturate(140%);
+  }
 }
 
 /* Base styles without @layer (Tailwind v4 approach) */
