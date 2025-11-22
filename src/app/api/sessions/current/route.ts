@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import { getAuthenticatedConvexClient, anyApi } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 import { withAuth, withValidation } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
@@ -9,15 +9,15 @@ import type { ConvexUser, ConvexSession } from '@/types/convex';
 export const GET = withAuth(async (_request, context) => {
   try {
     logger.debug('Fetching current active session', context);
+    const convex = getAuthenticatedConvexClient(context.jwtToken);
 
     // Use Clerk ID as the primary user identity
     const clerkId = (context.userInfo as { clerkId?: string }).clerkId ?? '';
 
     // Find the most recent active session with messages
-    const client = getConvexHttpClient();
-    const user = (await client.query(anyApi.users.getByClerkId, { clerkId })) as ConvexUser | null;
+    const user = (await convex.query(anyApi.users.getByClerkId, { clerkId })) as ConvexUser | null;
     const sessions = user
-      ? ((await client.query(anyApi.sessions.listByUser, { userId: user._id })) as ConvexSession[])
+      ? ((await convex.query(anyApi.sessions.listByUser, { userId: user._id })) as ConvexSession[])
       : [];
     const currentSession = Array.isArray(sessions)
       ? sessions
@@ -64,10 +64,10 @@ export const POST = withValidation(
     try {
       logger.debug('Setting current active session', context);
       const { sessionId } = validated;
+      const convex = getAuthenticatedConvexClient(context.jwtToken);
 
       // Update the session's updatedAt to mark it as current
-      const client = getConvexHttpClient();
-      const session = (await client.mutation(anyApi.sessions.update, {
+      const session = (await convex.mutation(anyApi.sessions.update, {
         sessionId,
         status: 'active',
       })) as ConvexSession;

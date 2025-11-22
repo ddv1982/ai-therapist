@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Brain } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
@@ -22,6 +23,7 @@ import { apiClient } from '@/lib/api/client';
 //
 import { useCbtDiaryFlow } from '@/features/therapy/cbt/hooks/use-cbt-diary-flow';
 import { sendToChat } from '@/features/therapy/cbt/utils/send-to-chat';
+import { sessionKeys } from '@/lib/queries/sessions';
 
 // Using MessageData from the message system
 // Type alias not required locally
@@ -33,6 +35,7 @@ function CBTDiaryPageContent() {
   const t = useTranslations('cbt');
   const toastT = useTranslations('toast');
   const { selectSession } = useSelectSession();
+  const queryClient = useQueryClient();
 
   // Get session ID from CBT context
   const reduxSessionId = cbt.flow?.sessionId ?? null;
@@ -198,6 +201,7 @@ function CBTDiaryPageContent() {
       });
 
       await selectSession(sessionId);
+      await queryClient.invalidateQueries({ queryKey: sessionKeys.list() });
       cbt.startCBTSession({ sessionId });
 
       // Clear CBT session since it's complete - use unified CBT action

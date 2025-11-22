@@ -1,5 +1,6 @@
+import type { ConvexHttpClient } from 'convex/browser';
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import { anyApi } from '@/lib/convex/http-client';
 import type { ConvexMessage } from '@/types/convex';
 
 export interface StoredMessage {
@@ -10,8 +11,10 @@ export interface StoredMessage {
   modelUsed?: string | null;
 }
 
-export async function getSessionMessages(sessionId: string): Promise<StoredMessage[]> {
-  const client = getConvexHttpClient();
+export async function getSessionMessages(
+  sessionId: string,
+  client: ConvexHttpClient
+): Promise<StoredMessage[]> {
   const rows = await client.query(anyApi.messages.listBySession, { sessionId });
   const convexMessages = Array.isArray(rows) ? (rows as ConvexMessage[]) : [];
   const ordered = convexMessages.sort((a, b) => a.timestamp - b.timestamp);
@@ -31,10 +34,10 @@ export async function appendMessage(
   sessionId: string,
   role: StoredMessage['role'],
   content: string,
+  client: ConvexHttpClient,
   modelUsed?: string
 ) {
   const encrypted = encryptMessage({ role, content, timestamp: new Date() });
-  const client = getConvexHttpClient();
   await client.mutation(anyApi.messages.create, {
     sessionId,
     role: encrypted.role,

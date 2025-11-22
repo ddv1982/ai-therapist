@@ -1,13 +1,18 @@
 import { query, mutation, internalMutation } from './_generated/server';
+import type { QueryCtx, MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { QUERY_LIMITS, PAGINATION_DEFAULTS } from './constants';
 import type { Doc } from './_generated/dataModel';
 
 export const listByUser = query({
   args: { userId: v.id('users'), limit: v.optional(v.number()), offset: v.optional(v.number()) },
-  handler: async (ctx, { userId, limit = PAGINATION_DEFAULTS.DEFAULT_OFFSET, offset = 0 }) => {
-    const limit_clamped = Math.min(limit, QUERY_LIMITS.MAX_SESSIONS_PER_REQUEST);
-    const offset_clamped = Math.max(offset, PAGINATION_DEFAULTS.MIN_OFFSET);
+  handler: async (ctx, { userId, limit, offset }) => {
+    const user = await requireUser(ctx);
+    if (user._id !== userId) {
+      throw new Error('Session access denied');
+    }
+    const limitValue = Math.min(limit ?? QUERY_LIMITS.DEFAULT_LIMIT, QUERY_LIMITS.MAX_SESSIONS_PER_REQUEST);
+    const offsetValue = Math.max(offset ?? PAGINATION_DEFAULTS.DEFAULT_OFFSET, PAGINATION_DEFAULTS.MIN_OFFSET);
 
     // PERFORMANCE FIX: Use pagination instead of fetching all and slicing
     // Unfortunately Convex doesn't have native skip/limit, so we iterate and collect manually
@@ -20,7 +25,7 @@ export const listByUser = query({
       .order('desc')) {
       
       // Skip items until we reach the offset
-      if (index < offset_clamped) {
+      if (index < offsetValue) {
         index++;
         continue;
       }
@@ -28,7 +33,7 @@ export const listByUser = query({
       results.push(session);
       
       // Stop once we have enough items
-      if (results.length >= limit_clamped) {
+      if (results.length >= limitValue) {
         break;
       }
       
@@ -42,6 +47,10 @@ export const listByUser = query({
 export const countByUser = query({
   args: { userId: v.id('users') },
   handler: async (ctx, { userId }) => {
+    const user = await requireUser(ctx);
+    if (user._id !== userId) {
+      throw new Error('Session access denied');
+    }
     // PERFORMANCE FIX: Count without collecting all records
     // Unfortunately Convex doesn't have a native count(), so we iterate and count
     let count = 0;
@@ -59,8 +68,7 @@ export const countByUser = query({
 export const getWithMessagesAndReports = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    const session = await ctx.db.get(sessionId);
-    if (!session) return null;
+    const { session } = await requireSessionOwnership(ctx, sessionId);
     const messages = await ctx.db
       .query('messages')
       .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
@@ -80,6 +88,10 @@ export const create = mutation({
     title: v.string(),
   },
   handler: async (ctx, { userId, title }) => {
+    const user = await requireUser(ctx);
+    if (user._id !== userId) {
+      throw new Error('Session access denied');
+    }
     const now = Date.now();
     const sessionId = await ctx.db.insert('sessions', {
       userId,
@@ -103,8 +115,7 @@ export const update = mutation({
     endedAt: v.optional(v.union(v.number(), v.null())),
   },
   handler: async (ctx, { sessionId, title, status, endedAt }) => {
-    const session = await ctx.db.get(sessionId);
-    if (!session) throw new Error('Session not found');
+    await requireSessionOwnership(ctx, sessionId);
     const patch: Record<string, unknown> = { updatedAt: Date.now() };
     if (typeof title !== 'undefined') patch.title = title;
     if (typeof status !== 'undefined') patch.status = status;
@@ -117,11 +128,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    const session = await ctx.db.get(sessionId);
-    if (!session) {
-      // CONSISTENCY: Silently succeed if session doesn't exist (idempotent delete)
-      return { ok: true, deleted: false };
-    }
+    await requireSessionOwnership(ctx, sessionId);
     
     const msgs = await ctx.db
       .query('messages')
@@ -161,6 +168,33 @@ export const _incrementMessageCount = internalMutation({
 export const get = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    return await ctx.db.get(sessionId);
+    const { session } = await requireSessionOwnership(ctx, sessionId);
+    return session;
   },
 });
+
+type AnyCtx = QueryCtx | MutationCtx;
+
+async function requireUser(ctx: AnyCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+    .unique();
+  if (!user) {
+    throw new Error('Unauthorized: User record not found');
+  }
+  return user;
+}
+
+async function requireSessionOwnership(ctx: AnyCtx, sessionId: Doc<'sessions'>['_id']) {
+  const user = await requireUser(ctx);
+  const session = await ctx.db.get(sessionId);
+  if (!session || session.userId !== user._id) {
+    throw new Error('Session not found or access denied');
+  }
+  return { user, session };
+}

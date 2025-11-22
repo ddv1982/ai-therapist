@@ -5,6 +5,7 @@
  * Encapsulates all session queries and mutations from the frontend.
  */
 
+import type { ConvexHttpClient } from 'convex/browser';
 import { getConvexHttpClient, api, anyApi } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 import type {
@@ -39,7 +40,8 @@ export interface PaginatedResult<T> {
 export async function verifySessionOwnership(
   sessionId: string,
   clerkId: string,
-  options: VerifySessionOptions = {}
+  options: VerifySessionOptions = {},
+  client?: ConvexHttpClient
 ): Promise<SessionOwnershipResult> {
   try {
     // Validate session ID format before querying
@@ -47,13 +49,13 @@ export async function verifySessionOwnership(
       return { valid: false };
     }
 
-    const client = getConvexHttpClient();
-    const bundle = await client.query(api.sessions.getWithMessagesAndReports, {
+    const convex = client ?? getConvexHttpClient();
+    const bundle = await convex.query(api.sessions.getWithMessagesAndReports, {
       sessionId: assertSessionId(sessionId),
     });
     if (!bundle) return { valid: false };
 
-    const user = await client.query(api.users.getByClerkId, { clerkId });
+    const user = await convex.query(api.users.getByClerkId, { clerkId });
     const userDoc = user ? assertUserDoc(user) : null;
     if (!userDoc || bundle.session.userId !== userDoc._id) {
       return { valid: false };
@@ -94,10 +96,11 @@ export async function verifySessionOwnership(
  */
 export async function getUserSessions(
   clerkId: string,
-  options: PaginationOptions = {}
+  options: PaginationOptions = {},
+  client?: ConvexHttpClient
 ): Promise<PaginatedResult<SessionDoc>> {
-  const client = getConvexHttpClient();
-  const user = await client.query(api.users.getByClerkId, { clerkId });
+  const convex = client ?? getConvexHttpClient();
+  const user = await convex.query(api.users.getByClerkId, { clerkId });
   const userDoc = user ? assertUserDoc(user) : null;
   if (!userDoc)
     return {
@@ -114,8 +117,8 @@ export async function getUserSessions(
   const offset = options.offset ?? 0;
 
   const [sessions, total] = await Promise.all([
-    client.query(anyApi.sessions.listByUser, { userId: userDoc._id, limit, offset }),
-    client.query(api.sessions.countByUser, { userId: userDoc._id }),
+    convex.query(anyApi.sessions.listByUser, { userId: userDoc._id, limit, offset }),
+    convex.query(api.sessions.countByUser, { userId: userDoc._id }),
   ]);
 
   const items = assertSessionArray(sessions);
@@ -137,7 +140,8 @@ export async function getUserSessions(
  */
 export async function getSessionWithMessages(
   sessionId: string,
-  clerkId: string
+  clerkId: string,
+  client?: ConvexHttpClient
 ): Promise<SessionWithMessages | null> {
   try {
     // Validate session ID format before querying
@@ -145,12 +149,12 @@ export async function getSessionWithMessages(
       return null;
     }
 
-    const client = getConvexHttpClient();
-    const user = await client.query(api.users.getByClerkId, { clerkId });
+    const convex = client ?? getConvexHttpClient();
+    const user = await convex.query(api.users.getByClerkId, { clerkId });
     const userDoc = user ? assertUserDoc(user) : null;
     if (!userDoc) return null;
 
-    const bundle = await client.query(api.sessions.getWithMessagesAndReports, {
+    const bundle = await convex.query(api.sessions.getWithMessagesAndReports, {
       sessionId: assertSessionId(sessionId),
     });
     if (!bundle) return null;

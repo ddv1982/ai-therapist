@@ -128,24 +128,30 @@ export const sessionKeys = {
 };
 
 // Fetch all sessions
-export function useSessionsQuery() {
+type QueryOptions = {
+  enabled?: boolean;
+};
+
+export function useSessionsQuery(options?: QueryOptions) {
   return useQuery({
     queryKey: sessionKeys.list(),
     queryFn: async () => {
       const response = await apiClient.listSessions();
       return transformFetchSessionsResponse(response);
     },
+    enabled: options?.enabled ?? true,
   });
 }
 
 // Get current session
-export function useCurrentSessionQuery() {
+export function useCurrentSessionQuery(options?: QueryOptions) {
   return useQuery({
     queryKey: sessionKeys.current(),
     queryFn: async () => {
       const response = await apiClient.getCurrentSession();
       return transformGetCurrentSessionResponse(response);
     },
+    enabled: options?.enabled ?? true,
   });
 }
 

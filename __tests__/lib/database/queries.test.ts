@@ -7,10 +7,20 @@ jest.mock('@/lib/convex/http-client', () => ({
     sessions: {
       getWithMessagesAndReports: 'sessions.getWithMessagesAndReports',
       listByUser: 'sessions.listByUser',
+      countByUser: 'sessions.countByUser',
     },
     users: {
       getByClerkId: 'users.getByClerkId',
       ensureByClerkId: 'users.ensureByClerkId',
+    },
+  },
+  anyApi: {
+    sessions: {
+      listByUser: 'sessions.listByUser',
+      countByUser: 'sessions.countByUser',
+    },
+    users: {
+      getByClerkId: 'users.getByClerkId',
     },
   },
 }));

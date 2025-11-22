@@ -1,4 +1,3 @@
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import { withRateLimitUnauthenticated } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { getCircuitBreakerStatus } from '@/lib/utils/errors';
@@ -42,9 +41,25 @@ interface HealthCheckResponse {
 async function checkDatabaseHealthExtended(): Promise<HealthCheck> {
   const start = Date.now();
   try {
-    const client = getConvexHttpClient();
-    // Ping by running a cheap query
-    await client.query(anyApi.users.getByClerkId, { clerkId: 'health-check-probe' });
+    const convexUrl = env.CONVEX_URL ?? env.NEXT_PUBLIC_CONVEX_URL;
+    if (!convexUrl) {
+      return {
+        service: 'database',
+        status: 'degraded',
+        responseTime: Date.now() - start,
+        error: 'Convex URL not configured',
+      };
+    }
+    const base = convexUrl.split('?')[0];
+    const res = await fetch(base, { method: 'GET' });
+    if (!res.ok && res.status < 500) {
+      return {
+        service: 'database',
+        status: 'degraded',
+        responseTime: Date.now() - start,
+        error: `Unexpected response: ${res.status}`,
+      };
+    }
     const responseTime = Date.now() - start;
 
     return {

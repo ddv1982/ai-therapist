@@ -7,6 +7,7 @@ import {
   type ApiResponse,
 } from '@/lib/api/api-response';
 import { MemoryManagementService } from '@/lib/services/memory-management-service';
+import { getAuthenticatedConvexClient } from '@/lib/convex/http-client';
 
 type MemoryContextEntry = {
   sessionTitle: string;
@@ -85,7 +86,8 @@ export const GET = withAuth<MemoryData | MemoryManageData>(
       const manage = searchParams.get('manage') === 'true';
       const includeFullContent = searchParams.get('includeFullContent') === 'true';
 
-      const service = new MemoryManagementService();
+      const convex = getAuthenticatedConvexClient(context.jwtToken);
+      const service = new MemoryManagementService(convex);
 
       if (manage) {
         // Management mode - return detailed report information
@@ -142,7 +144,8 @@ export const DELETE = withAuth<DeleteResponseData>(
       const sessionIdsParam = searchParams.get('sessionIds');
       const sessionIds = sessionIdsParam ? sessionIdsParam.split(',') : undefined;
 
-      const service = new MemoryManagementService();
+      const convex = getAuthenticatedConvexClient(context.jwtToken);
+      const service = new MemoryManagementService(convex);
       const result = await service.deleteMemory(clerkId, sessionIds, limit, excludeSessionId);
 
       return createSuccessResponse<DeleteResponseData>(result, { requestId: context.requestId });

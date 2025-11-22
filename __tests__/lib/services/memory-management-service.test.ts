@@ -4,10 +4,6 @@ import { MemoryManagementService } from '@/lib/services/memory-management-servic
 const mockQuery = jest.fn();
 const mockMutation = jest.fn();
 jest.mock('@/lib/convex/http-client', () => ({
-  getConvexHttpClient: () => ({
-    query: mockQuery,
-    mutation: mockMutation,
-  }),
   anyApi: {
     reports: {
       listRecent: 'reports.listRecent',
@@ -34,10 +30,11 @@ jest.mock('@/lib/chat/message-encryption', () => ({
 
 describe('MemoryManagementService', () => {
   let service: MemoryManagementService;
+  const mockClient = { query: mockQuery, mutation: mockMutation } as const;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new MemoryManagementService();
+    service = new MemoryManagementService(mockClient as any);
   });
 
   describe('getMemoryContext', () => {

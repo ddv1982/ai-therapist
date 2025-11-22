@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import { getAuthenticatedConvexClient, anyApi } from '@/lib/convex/http-client';
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
 import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership } from '@/lib/repositories/session-repository';
@@ -39,10 +39,13 @@ export const POST = withValidationAndParams(
   async (request, context, validatedData, params) => {
     try {
       const { sessionId } = (await params) as { sessionId: string };
+      const convex = getAuthenticatedConvexClient(context.jwtToken);
 
       const { valid } = await verifySessionOwnership(
         sessionId,
-        (context.userInfo as { clerkId?: string }).clerkId ?? ''
+        (context.userInfo as { clerkId?: string }).clerkId ?? '',
+        {},
+        convex
       );
       if (!valid) {
         return createNotFoundErrorResponse('Session', context.requestId);
@@ -57,8 +60,7 @@ export const POST = withValidationAndParams(
       const sanitizedMetadata = validatedData.metadata
         ? JSON.parse(JSON.stringify(validatedData.metadata))
         : undefined;
-      const client = getConvexHttpClient();
-      const message = (await client.mutation(anyApi.messages.create, {
+      const message = (await convex.mutation(anyApi.messages.create, {
         sessionId,
         role: encrypted.role,
         content: encrypted.content,
@@ -67,7 +69,7 @@ export const POST = withValidationAndParams(
         timestamp: encrypted.timestamp.getTime(),
       })) as ConvexMessage;
       // Fetch updated session to get messageCount
-      const bundleAfter = (await client.query(anyApi.sessions.getWithMessagesAndReports, {
+      const bundleAfter = (await convex.query(anyApi.sessions.getWithMessagesAndReports, {
         sessionId,
       })) as ConvexSessionBundle;
       const messageCount = bundleAfter?.session?.messageCount ?? 0;
@@ -75,7 +77,7 @@ export const POST = withValidationAndParams(
       // Title generation logic (based on user message count)
       if (validatedData.role === 'user') {
         // Count only user messages
-        const allForCount = (await client.query(anyApi.messages.listBySession, {
+        const allForCount = (await convex.query(anyApi.messages.listBySession, {
           sessionId,
         })) as ConvexMessage[];
         const userMessageCount = Array.isArray(allForCount)
@@ -90,7 +92,7 @@ export const POST = withValidationAndParams(
           const { getApiRequestLocale } = await import('@/i18n/request');
 
           // Fetch first few user messages for context
-          const allMsgs = (await client.query(anyApi.messages.listBySession, {
+          const allMsgs = (await convex.query(anyApi.messages.listBySession, {
             sessionId,
           })) as ConvexMessage[];
           const firstMessages = allMsgs
@@ -107,7 +109,7 @@ export const POST = withValidationAndParams(
           const locale = getApiRequestLocale(request);
           const title = await generateChatTitle(combinedContent, locale);
 
-          await client.mutation(anyApi.sessions.update, { sessionId, title });
+          await convex.mutation(anyApi.sessions.update, { sessionId, title });
         } else {
           // Just increment message count
           // already incremented in messages.create
@@ -158,10 +160,13 @@ export const POST = withValidationAndParams(
 export const GET = withAuth(async (request: NextRequest, context, params) => {
   try {
     const { sessionId } = (await params) as { sessionId: string };
+    const convex = getAuthenticatedConvexClient(context.jwtToken);
 
     const { valid } = await verifySessionOwnership(
       sessionId,
-      (context.userInfo as { clerkId?: string }).clerkId ?? ''
+      (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      {},
+      convex
     );
     if (!valid) {
       return createNotFoundErrorResponse('Session', context.requestId);
@@ -172,8 +177,7 @@ export const GET = withAuth(async (request: NextRequest, context, params) => {
     const page = parsed.success ? (parsed.data.page ?? 1) : 1;
     const limit = parsed.success ? (parsed.data.limit ?? 50) : 50;
 
-    const client = getConvexHttpClient();
-    const all = (await client.query(anyApi.messages.listBySession, {
+    const all = (await convex.query(anyApi.messages.listBySession, {
       sessionId,
     })) as ConvexMessage[];
     const total = Array.isArray(all) ? all.length : 0;

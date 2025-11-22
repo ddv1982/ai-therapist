@@ -1,4 +1,5 @@
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import type { ConvexHttpClient } from 'convex/browser';
+import { anyApi } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 import { decryptSessionReportContent } from '@/lib/chat/message-encryption';
 import type { ConvexSessionReport, ConvexSession, ConvexUser } from '@/types/convex';
@@ -55,6 +56,7 @@ interface DeleteMemoryData {
 }
 
 export class MemoryManagementService {
+  constructor(private readonly client: ConvexHttpClient) {}
   /**
    * Creates a therapeutic summary from structured session report data
    */
@@ -128,7 +130,7 @@ export class MemoryManagementService {
       excludeSessionId,
     });
 
-    const client = getConvexHttpClient();
+    const client = this.client;
 
     // Get user from Clerk ID
     const user = await client.query(anyApi.users.getByClerkId, { clerkId });
@@ -241,7 +243,7 @@ export class MemoryManagementService {
   ): Promise<MemoryManageData> {
     logger.info('Memory management request received');
 
-    const client = getConvexHttpClient();
+    const client = this.client;
 
     // Get user from Clerk ID
     const user = await client.query(anyApi.users.getByClerkId, { clerkId });
@@ -390,7 +392,7 @@ export class MemoryManagementService {
   ): Promise<DeleteMemoryData> {
     logger.info('Memory deletion request received');
 
-    const client = getConvexHttpClient();
+    const client = this.client;
     const user = await client.query(anyApi.users.getByClerkId, { clerkId });
     const convexUser = user as ConvexUser | null;
 

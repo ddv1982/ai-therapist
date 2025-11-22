@@ -8,7 +8,6 @@ const mutationMock = jest.fn(async (_fn: unknown, args: any) => {
 });
 
 jest.mock('@/lib/convex/http-client', () => ({
-  getConvexHttpClient: () => ({ mutation: mutationMock }),
   anyApi: { messages: { create: 'messages.create' } },
 }));
 
@@ -25,6 +24,8 @@ describe('AssistantResponseCollector', () => {
     return { value, truncated: add.length < addition.length };
   };
 
+  const mockConvexClient = { mutation: mutationMock } as const;
+
   it('appends chunks with limit and marks truncation', async () => {
     const { AssistantResponseCollector } = await import('@/lib/chat/assistant-response-collector');
     const c = new AssistantResponseCollector(
@@ -33,7 +34,8 @@ describe('AssistantResponseCollector', () => {
       'm1',
       'rid',
       5,
-      concatWithLimit
+      concatWithLimit,
+      mockConvexClient as any
     );
     expect(c.append('Hello')).toBe(false);
     expect(c.append(' World')).toBe(true); // truncated
@@ -48,7 +50,8 @@ describe('AssistantResponseCollector', () => {
       'm1',
       'rid',
       100,
-      concatWithLimit
+      concatWithLimit,
+      mockConvexClient as any
     );
     c.append('Hello');
     await c.persist();
@@ -67,7 +70,8 @@ describe('AssistantResponseCollector', () => {
       'm',
       'rid',
       50,
-      concatWithLimit
+      concatWithLimit,
+      mockConvexClient as any
     );
     c1.append('x');
     await c1.persist();
@@ -77,7 +81,8 @@ describe('AssistantResponseCollector', () => {
       'm',
       'rid',
       50,
-      concatWithLimit
+      concatWithLimit,
+      mockConvexClient as any
     );
     c2.append('y');
     await c2.persist();

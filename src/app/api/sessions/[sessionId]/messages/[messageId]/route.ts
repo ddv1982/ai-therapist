@@ -5,7 +5,7 @@ import { createNotFoundErrorResponse, createSuccessResponse } from '@/lib/api/ap
 import { decryptMessage } from '@/lib/chat/message-encryption';
 import { MessageCache } from '@/lib/cache';
 import { enhancedErrorHandlers } from '@/lib/utils/errors';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import { getAuthenticatedConvexClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexMessage } from '@/types/convex';
 
 const patchBodySchema = z.object({
@@ -18,17 +18,19 @@ export const PATCH = withValidationAndParams(
   async (_request, context, validatedData, params) => {
     try {
       const { sessionId, messageId } = (await params) as { sessionId: string; messageId: string };
+      const convex = getAuthenticatedConvexClient(context.jwtToken);
 
       const { valid } = await verifySessionOwnership(
         sessionId,
-        (context.userInfo as { clerkId?: string }).clerkId ?? ''
+        (context.userInfo as { clerkId?: string }).clerkId ?? '',
+        {},
+        convex
       );
       if (!valid) {
         return createNotFoundErrorResponse('Session', context.requestId);
       }
 
-      const client = getConvexHttpClient();
-      const existing = (await client.query(anyApi.messages.getById, {
+      const existing = (await convex.query(anyApi.messages.getById, {
         messageId,
       })) as ConvexMessage | null;
 
@@ -53,7 +55,7 @@ export const PATCH = withValidationAndParams(
         };
       })();
 
-      const updated = (await client.mutation(anyApi.messages.update, {
+      const updated = (await convex.mutation(anyApi.messages.update, {
         messageId,
         metadata: nextMetadata,
       })) as ConvexMessage;

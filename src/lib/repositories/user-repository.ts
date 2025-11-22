@@ -5,6 +5,7 @@
  * Encapsulates all user queries and mutations from the frontend.
  */
 
+import type { ConvexHttpClient } from 'convex/browser';
 import { getSingleUserInfo } from '@/lib/auth/user-session';
 import { getConvexHttpClient, api } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
@@ -13,11 +14,12 @@ import { logger } from '@/lib/utils/logger';
  * Ensure a user exists in the database, creating if necessary
  */
 export async function ensureUserExists(
-  userInfo: ReturnType<typeof getSingleUserInfo>
+  userInfo: ReturnType<typeof getSingleUserInfo>,
+  client?: ConvexHttpClient
 ): Promise<boolean> {
   try {
-    const client = getConvexHttpClient();
-    await client.mutation(api.users.ensureByClerkId, {
+    const convex = client ?? getConvexHttpClient();
+    await convex.mutation(api.users.ensureByClerkId, {
       clerkId: (userInfo as unknown as { clerkId?: string }).clerkId ?? '',
       email: userInfo.email,
       name: userInfo.name,

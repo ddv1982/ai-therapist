@@ -11,7 +11,7 @@ import {
 } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import { enhancedErrorHandlers } from '@/lib/utils/errors';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import { getAuthenticatedConvexClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexSession, ConvexSessionWithMessagesAndReports } from '@/types/convex';
 
 interface SessionUpdateData {
@@ -27,11 +27,14 @@ export const PATCH = withValidationAndParams(
     try {
       const { sessionId } = (await params) as { sessionId: string };
       const { status, endedAt, title } = validatedData;
+      const convex = getAuthenticatedConvexClient(context.jwtToken);
 
       // Verify session belongs to this user
       const { valid } = await verifySessionOwnership(
         sessionId,
-        (context.userInfo as { clerkId?: string }).clerkId ?? ''
+        (context.userInfo as { clerkId?: string }).clerkId ?? '',
+        {},
+        convex
       );
       if (!valid) {
         return createNotFoundErrorResponse('Session', context.requestId);
@@ -45,8 +48,7 @@ export const PATCH = withValidationAndParams(
       if (endedAt !== undefined) updateData.endedAt = endedAt ? new Date(endedAt) : null;
       if (title !== undefined) updateData.title = title;
 
-      const client = getConvexHttpClient();
-      const updated = await client.mutation(anyApi.sessions.update, {
+      const updated = await convex.mutation(anyApi.sessions.update, {
         sessionId,
         status: updateData.status,
         endedAt: updateData.endedAt ? updateData.endedAt.getTime() : null,
@@ -81,6 +83,7 @@ export const PATCH = withValidationAndParams(
 export const GET = withAuth(async (_request, context, params) => {
   try {
     const { sessionId } = (await params) as { sessionId: string };
+    const convex = getAuthenticatedConvexClient(context.jwtToken);
 
     // Validate session ID format
     if (!sessionId || sessionId.length === 0) {
@@ -89,7 +92,8 @@ export const GET = withAuth(async (_request, context, params) => {
 
     const session = await getSessionWithMessages(
       sessionId,
-      (context.userInfo as { clerkId?: string }).clerkId ?? ''
+      (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      convex
     );
 
     if (!session) {
@@ -154,6 +158,7 @@ export const GET = withAuth(async (_request, context, params) => {
 export const DELETE = withAuth(async (_request, context, params) => {
   try {
     const { sessionId } = (await params) as { sessionId: string };
+    const convex = getAuthenticatedConvexClient(context.jwtToken);
 
     // Validate session ID format
     if (!sessionId || sessionId.length === 0) {
@@ -163,14 +168,15 @@ export const DELETE = withAuth(async (_request, context, params) => {
     // Verify session belongs to this user before deleting
     const { valid } = await verifySessionOwnership(
       sessionId,
-      (context.userInfo as { clerkId?: string }).clerkId ?? ''
+      (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      {},
+      convex
     );
     if (!valid) {
       return createNotFoundErrorResponse('Session', context.requestId);
     }
 
-    const client = getConvexHttpClient();
-    await client.mutation(anyApi.sessions.remove, { sessionId });
+    await convex.mutation(anyApi.sessions.remove, { sessionId });
 
     logger.info('Session deleted successfully', {
       requestId: context.requestId,

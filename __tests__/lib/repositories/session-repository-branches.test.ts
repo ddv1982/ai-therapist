@@ -17,6 +17,15 @@ jest.mock('@/lib/convex/http-client', () => ({
       getByClerkId: 'users.getByClerkId',
     },
   },
+  anyApi: {
+    sessions: {
+      listByUser: 'sessions.listByUser',
+      countByUser: 'sessions.countByUser',
+    },
+    users: {
+      getByClerkId: 'users.getByClerkId',
+    },
+  },
 }));
 
 describe('session-repository - branch coverage', () => {

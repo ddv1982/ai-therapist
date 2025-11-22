@@ -31,4 +31,11 @@ export function getConvexHttpClientWithAuth(token: string): ConvexHttpClient {
   return client;
 }
 
+export function getAuthenticatedConvexClient(token?: string): ConvexHttpClient {
+  if (!token || typeof token !== 'string') {
+    throw new Error('Convex authentication token is missing from the request context');
+  }
+  return getConvexHttpClientWithAuth(token);
+}
+
 export { api, anyApi };

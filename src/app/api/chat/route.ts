@@ -13,7 +13,8 @@ import { createErrorResponse } from '@/lib/api/api-response';
 import { env } from '@/config/env';
 import { ChatError, MessageValidationError, getChatErrorResponse } from '@/lib/errors/chat-errors';
 
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import type { ConvexHttpClient } from 'convex/browser';
+import { getAuthenticatedConvexClient, anyApi } from '@/lib/convex/http-client';
 import { verifySessionOwnership } from '@/lib/repositories/session-repository';
 import { recordModelUsage } from '@/lib/metrics/metrics';
 import {
@@ -41,6 +42,7 @@ type SessionOwnership = SessionOwnershipResult;
 
 export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, context) => {
   try {
+    const convex = getAuthenticatedConvexClient(context.jwtToken);
     // Validate Content-Type header
     const contentType = req.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
@@ -109,11 +111,12 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     const providedSessionId = normalized.data.sessionId;
     const ownership = await resolveSessionOwnership(
       providedSessionId,
-      (context.userInfo as unknown as { clerkId?: string }).clerkId ?? context.userInfo.userId
+      (context.userInfo as unknown as { clerkId?: string }).clerkId ?? context.userInfo.userId,
+      convex
     );
     const history =
       providedSessionId && ownership.valid
-        ? await loadSessionHistory(providedSessionId, ownership)
+        ? await loadSessionHistory(providedSessionId, ownership, convex)
         : [];
     // Prefer forwarding original payload messages (with ids) when available; otherwise build from normalized
     const payloadMessages = Array.isArray(raw?.messages) ? raw.messages : null;
@@ -170,7 +173,8 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       modelId,
       context.requestId,
       MAX_ASSISTANT_RESPONSE_CHARS,
-      appendWithLimitUtil
+      appendWithLimitUtil,
+      convex
     );
     const streamResult = await streamResultPromise;
 
@@ -269,14 +273,19 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
   }
 });
 
-async function resolveSessionOwnership(sessionId: string | undefined, userId: string) {
+async function resolveSessionOwnership(
+  sessionId: string | undefined,
+  userId: string,
+  client: ConvexHttpClient
+) {
   if (!sessionId) return { valid: false } as SessionOwnership;
-  return verifySessionOwnership(sessionId, userId, { includeMessages: true });
+  return verifySessionOwnership(sessionId, userId, { includeMessages: true }, client);
 }
 
 async function loadSessionHistory(
   sessionId: string,
-  ownership: SessionOwnership
+  ownership: SessionOwnership,
+  client: ConvexHttpClient
 ): Promise<ApiChatMessage[]> {
   const HISTORY_LIMIT = 30;
   const sessionWithMessages: SessionWithMessages | undefined =
@@ -287,7 +296,6 @@ async function loadSessionHistory(
   const sessionMessagesRaw =
     sessionWithMessages?.messages ??
     (await (async () => {
-      const client = getConvexHttpClient();
       const all = (await client.query(anyApi.messages.listBySession, {
         sessionId,
       })) as ConvexMessage[];

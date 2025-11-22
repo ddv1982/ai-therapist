@@ -31,8 +31,7 @@ jest.mock('@/lib/convex/http-client', () => {
     mutation: jest.fn().mockResolvedValue({ ok: true }),
   };
   return {
-    getConvexHttpClient: () => mockClient,
-    getConvexHttpClientWithAuth: () => mockClient,
+    getAuthenticatedConvexClient: () => mockClient,
     anyApi: { sessions: { remove: {} } },
   };
 });

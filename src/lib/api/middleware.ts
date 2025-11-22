@@ -207,6 +207,7 @@ export function withAuthStreaming(
         url: baseContext.url,
         userAgent: baseContext.userAgent,
         userInfo: mergedUserInfo,
+        jwtToken: authResult.jwtToken,
       } as const;
       const res = await handler(request, authenticatedContext, routeParams.params);
       const durationMs = Math.round(performance.now() - startHighRes);
@@ -408,6 +409,7 @@ export function withAuthAndRateLimit<T = unknown>(
       const authenticatedContext: AuthenticatedRequestContext = {
         ...requestContext,
         userInfo,
+        jwtToken: authResult.jwtToken,
       } as AuthenticatedRequestContext;
       const res = await handler(request, authenticatedContext, routeParams?.params);
       const durationMs = Math.round(performance.now() - startHighRes);
@@ -605,6 +607,7 @@ export function withAuthAndRateLimitStreaming(
         url: baseContext.url,
         userAgent: baseContext.userAgent,
         userInfo: mergedUserInfo,
+        jwtToken: authResult.jwtToken,
       } as const;
       const response = await handler(request, authenticatedContext, routeParams?.params);
       const durationMs = Math.round(performance.now() - startHighRes);

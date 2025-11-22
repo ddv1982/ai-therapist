@@ -9,6 +9,8 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Webhook Synchronization**: Automatic user sync from Clerk to Convex via webhooks
 - **Enhanced Security**: Enterprise-grade authentication infrastructure
 - **Message Encryption Preserved**: AES-256-GCM encryption protects therapeutic data
+- **Server-Only Convex Access**: Middleware now issues Clerk JWTs to API routes which in turn call Convex via an authenticated HTTP client; direct browser access to Convex is disabled.
+- **Convex Authorization Guards**: Every Convex query and mutation now verifies `ctx.auth` ownership so data cannot be enumerated with forged parameters.
 
 ### 🛠️ Developer Experience
 - **Next.js 16**: Latest version with Turbopack for 2-3× faster builds
@@ -41,6 +43,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Cross-Device Sessions** - Seamless access across devices
 - **Database Transactions** - Race condition prevention with ACID compliance
 - **HIPAA-Compliant Logging** - No sensitive data exposure
+- **Convex Hardening** - Convex functions run server-side only and validate ownership via Clerk-issued JWTs.
 
 ### ⚡ Performance & Resilience
 - **In-Memory Caching** - Fast local caching layer
@@ -188,6 +191,7 @@ Key variables required in `.env.local`:
 - **Managed Identity** - Secure handling of user credentials
 - **Multi-Factor Authentication** - Supported via Clerk
 - **Session Management** - Secure, persistent sessions
+- **Middleware Enforcement** - Next.js middleware enables CSRF protection and injects Clerk JWTs so every API route and streaming endpoint is authenticated before reaching Convex.
 
 ### Data Protection
 - **Field-level Encryption** - Sensitive data encrypted at rest

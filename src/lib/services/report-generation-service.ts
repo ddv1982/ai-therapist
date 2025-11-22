@@ -5,7 +5,8 @@ import {
 } from '@/lib/api/groq-client';
 import { ANALYSIS_EXTRACTION_PROMPT_TEXT } from '@/lib/therapy/therapy-prompts';
 import { getReportPrompt } from '@/lib/therapy/therapy-prompts';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import type { ConvexHttpClient } from 'convex/browser';
+import { anyApi } from '@/lib/convex/http-client';
 import { logger, devLog } from '@/lib/utils/logger';
 import {
   encryptSessionReportContent,
@@ -31,7 +32,7 @@ interface ReportGenerationResult {
 export class ReportGenerationService {
   private reportModel: string;
 
-  constructor(reportModel: string) {
+  constructor(reportModel: string, private readonly convexClient: ConvexHttpClient) {
     this.reportModel = reportModel;
   }
 
@@ -232,8 +233,7 @@ export class ReportGenerationService {
 
     const encryptedAnalysisData = encryptEnhancedAnalysisData(enhancedAnalysisData);
 
-    const client = getConvexHttpClient();
-    await client.mutation(anyApi.reports.create, {
+    await this.convexClient.mutation(anyApi.reports.create, {
       sessionId,
       reportContent: encryptedReportContent,
       keyPoints: parsedAnalysis.keyPoints || [],

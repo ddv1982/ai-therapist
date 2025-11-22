@@ -1,4 +1,5 @@
 import { query, mutation } from './_generated/server';
+import type { QueryCtx, MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { QUERY_LIMITS, PAGINATION_DEFAULTS } from './constants';
 import type { Doc } from './_generated/dataModel';
@@ -10,6 +11,7 @@ export const listBySession = query({
     offset: v.optional(v.number()),
   },
   handler: async (ctx, { sessionId, limit = QUERY_LIMITS.DEFAULT_LIMIT, offset = 0 }) => {
+    await assertSessionOwnership(ctx, sessionId);
     const limit_clamped = Math.min(limit, QUERY_LIMITS.MAX_MESSAGES_PER_REQUEST);
     const offset_clamped = Math.max(offset, PAGINATION_DEFAULTS.MIN_OFFSET);
 
@@ -46,6 +48,7 @@ export const listBySession = query({
 export const countBySession = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
+    await assertSessionOwnership(ctx, sessionId);
     // PERFORMANCE FIX: Count without collecting all records
     // Unfortunately Convex doesn't have a native count(), so we iterate and count
     let count = 0;
@@ -70,8 +73,7 @@ export const create = mutation({
     timestamp: v.optional(v.number()),
   },
   handler: async (ctx, { sessionId, role, content, modelUsed, metadata, timestamp }) => {
-    const session = await ctx.db.get(sessionId);
-    if (!session) throw new Error('Session not found');
+    const { session } = await assertSessionOwnership(ctx, sessionId);
     const now = Date.now();
     const id = await ctx.db.insert('messages', {
       sessionId,
@@ -100,6 +102,7 @@ export const update = mutation({
   handler: async (ctx, { messageId, content, metadata, modelUsed }) => {
     const message = await ctx.db.get(messageId);
     if (!message) throw new Error('Message not found');
+    await assertSessionOwnership(ctx, message.sessionId);
     const patch: Record<string, unknown> = {};
     if (typeof content !== 'undefined') patch.content = content;
     if (typeof metadata !== 'undefined') patch.metadata = metadata;
@@ -117,6 +120,8 @@ export const remove = mutation({
     if (!message) {
       return { ok: true, deleted: false };
     }
+
+    await assertSessionOwnership(ctx, message.sessionId);
     
     const session = await ctx.db.get(message.sessionId);
     await ctx.db.delete(messageId);
@@ -136,6 +141,35 @@ export const remove = mutation({
 export const getById = query({
   args: { messageId: v.id('messages') },
   handler: async (ctx, { messageId }) => {
-    return await ctx.db.get(messageId);
+    const message = await ctx.db.get(messageId);
+    if (!message) return null;
+    await assertSessionOwnership(ctx, message.sessionId);
+    return message;
   },
 });
+
+type AnyCtx = QueryCtx | MutationCtx;
+
+async function requireUser(ctx: AnyCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+    .unique();
+  if (!user) {
+    throw new Error('Unauthorized: User record not found');
+  }
+  return user;
+}
+
+async function assertSessionOwnership(ctx: AnyCtx, sessionId: Doc<'sessions'>['_id']) {
+  const user = await requireUser(ctx);
+  const session = await ctx.db.get(sessionId);
+  if (!session || session.userId !== user._id) {
+    throw new Error('Session not found or access denied');
+  }
+  return { user, session };
+}

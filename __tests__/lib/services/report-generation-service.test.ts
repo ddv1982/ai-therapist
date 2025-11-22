@@ -3,7 +3,6 @@ import {
   generateSessionReport,
   extractStructuredAnalysis,
 } from '@/lib/api/groq-client';
-import { getConvexHttpClient } from '@/lib/convex/http-client';
 import {
   encryptSessionReportContent,
   encryptEnhancedAnalysisData,
@@ -25,7 +24,6 @@ jest.mock('@/lib/therapy/therapy-prompts', () => ({
   getReportPrompt: jest.fn(),
 }));
 jest.mock('@/lib/convex/http-client', () => ({
-  getConvexHttpClient: jest.fn(),
   anyApi: {
     reports: {
       create: 'reports:create',
@@ -57,11 +55,10 @@ describe('ReportGenerationService', () => {
   const mockMutation = jest.fn();
   const mockConvexClient = {
     mutation: mockMutation,
-  };
+  } as const;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (getConvexHttpClient as jest.Mock).mockReturnValue(mockConvexClient);
     (encryptSessionReportContent as jest.Mock).mockImplementation((text) => `encrypted-${text}`);
     (encryptEnhancedAnalysisData as jest.Mock).mockImplementation((_data) => ({
       cognitiveDistortions: 'encrypted-distortions',
@@ -80,7 +77,7 @@ describe('ReportGenerationService', () => {
       },
     });
     
-    service = new ReportGenerationService(mockModel);
+    service = new ReportGenerationService(mockModel, mockConvexClient as any);
   });
 
   describe('generateReport', () => {

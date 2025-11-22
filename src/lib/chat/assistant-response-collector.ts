@@ -1,6 +1,7 @@
 import { encryptMessage } from '@/lib/chat/message-encryption';
 import { logger } from '@/lib/utils/logger';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import type { ConvexHttpClient } from 'convex/browser';
+import { anyApi } from '@/lib/convex/http-client';
 import type { SessionOwnershipResult } from '@/types/database';
 
 type SessionOwnership = SessionOwnershipResult;
@@ -20,7 +21,8 @@ export class AssistantResponseCollector {
       current: string,
       addition: string,
       maxChars: number
-    ) => { value: string; truncated: boolean }
+    ) => { value: string; truncated: boolean },
+    private readonly convexClient: ConvexHttpClient
   ) {
     this.currentModelId = modelId;
   }
@@ -50,8 +52,7 @@ export class AssistantResponseCollector {
       timestamp: new Date(),
     });
     try {
-      const client = getConvexHttpClient();
-      await client.mutation(anyApi.messages.create, {
+      await this.convexClient.mutation(anyApi.messages.create, {
         sessionId: this.sessionId,
         role: encrypted.role,
         content: encrypted.content,

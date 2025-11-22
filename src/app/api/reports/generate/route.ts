@@ -7,9 +7,11 @@ import { withAuth, type AuthenticatedRequestContext } from '@/lib/api/api-middle
 import { createErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
 import { ReportGenerationService } from '@/lib/services/report-generation-service';
 import { verifySessionOwnership } from '@/lib/repositories/session-repository';
+import { getAuthenticatedConvexClient } from '@/lib/convex/http-client';
 
 export const POST = withAuth(async (request: NextRequest, context: AuthenticatedRequestContext) => {
   try {
+    const convex = getAuthenticatedConvexClient(context.jwtToken);
     // Always use analytical model for detailed session reports
     const { REPORT_MODEL_ID } = await import('@/features/chat/config');
 
@@ -38,7 +40,7 @@ export const POST = withAuth(async (request: NextRequest, context: Authenticated
     // Verify session ownership before generating report
     const userInfo = context.userInfo as { userId: string; clerkId?: string };
     const clerkId = userInfo.clerkId || userInfo.userId;
-    const hasAccess = await verifySessionOwnership(sessionId, clerkId);
+    const hasAccess = await verifySessionOwnership(sessionId, clerkId, {}, convex);
 
     if (!hasAccess) {
       logger.warn('Unauthorized report generation attempt', {
@@ -61,7 +63,7 @@ export const POST = withAuth(async (request: NextRequest, context: Authenticated
         const locale = getApiRequestLocale(request);
 
         // Use service layer to generate report
-        const service = new ReportGenerationService(REPORT_MODEL_ID);
+        const service = new ReportGenerationService(REPORT_MODEL_ID, convex);
         const result = await service.generateReport(sessionId, messages as ReportMessage[], locale);
 
         return createSuccessResponse(result, { requestId: context.requestId });

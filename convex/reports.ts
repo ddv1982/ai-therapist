@@ -1,10 +1,13 @@
 import { query, mutation } from './_generated/server';
+import type { QueryCtx, MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { QUERY_LIMITS } from './constants';
+import type { Doc } from './_generated/dataModel';
 
 export const listBySession = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
+    await requireSessionOwnership(ctx, sessionId);
     return await ctx.db
       .query('sessionReports')
       .withIndex('by_session', (q) => q.eq('sessionId', sessionId))
@@ -30,6 +33,7 @@ export const create = mutation({
     analysisVersion: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireSessionOwnership(ctx, args.sessionId);
     const now = Date.now();
     const id = await ctx.db.insert('sessionReports', {
       ...args,
@@ -46,6 +50,7 @@ export const removeMany = mutation({
     for (const id of ids) {
       const report = await ctx.db.get(id);
       if (report) {
+        await requireSessionOwnership(ctx, report.sessionId);
         await ctx.db.delete(id);
         deletedCount++;
       }
@@ -61,6 +66,10 @@ export const listRecent = query({
     excludeSessionId: v.optional(v.id('sessions')),
   },
   handler: async (ctx, { userId, limit, excludeSessionId }) => {
+    const user = await requireUser(ctx);
+    if (user._id !== userId) {
+      throw new Error('Reports access denied');
+    }
     // PERFORMANCE FIX: Use indexed queries instead of full table scan
     // Get user's sessions (indexed query - efficient)
     const userSessions = await ctx.db
@@ -93,3 +102,29 @@ export const listRecent = query({
       .slice(0, limit_clamped);
   },
 });
+
+type AnyCtx = QueryCtx | MutationCtx;
+
+async function requireUser(ctx: AnyCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+    .unique();
+  if (!user) {
+    throw new Error('Unauthorized: User record not found');
+  }
+  return user;
+}
+
+async function requireSessionOwnership(ctx: AnyCtx, sessionId: Doc<'sessions'>['_id']) {
+  const user = await requireUser(ctx);
+  const session = await ctx.db.get(sessionId);
+  if (!session || session.userId !== user._id) {
+    throw new Error('Session not found or access denied');
+  }
+  return { user, session };
+}

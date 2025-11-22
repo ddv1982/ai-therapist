@@ -6,7 +6,7 @@ import { getUserSessions } from '@/lib/repositories/session-repository';
 import { createSuccessResponse } from '@/lib/api/api-response';
 import { deduplicateRequest } from '@/lib/utils/helpers';
 import { SessionCache } from '@/lib/cache';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import { getAuthenticatedConvexClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexSession, ConvexUser } from '@/types/convex';
 
 export const POST = withValidation(
@@ -14,19 +14,19 @@ export const POST = withValidation(
   async (_request, context, validatedData) => {
     try {
       const { title } = validatedData;
+      const convex = getAuthenticatedConvexClient(context.jwtToken);
 
       // Deduplicate session creation to prevent double-clicks creating multiple sessions
       const session = (await deduplicateRequest(
         (context.userInfo as { clerkId?: string }).clerkId ?? '',
         'create_session',
         async () => {
-          const client = getConvexHttpClient();
-          const user = (await client.mutation(anyApi.users.ensureByClerkId, {
+          const user = (await convex.mutation(anyApi.users.ensureByClerkId, {
             clerkId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
             email: context.userInfo.email,
             name: context.userInfo.name,
           })) as ConvexUser;
-          return (await client.mutation(anyApi.sessions.create, {
+          return (await convex.mutation(anyApi.sessions.create, {
             userId: user._id,
             title,
           })) as ConvexSession;
@@ -72,6 +72,7 @@ export const POST = withValidation(
 export const GET = withAuth(async (request, context) => {
   try {
     logger.debug('Fetching sessions', context);
+    const convex = getAuthenticatedConvexClient(context.jwtToken);
 
     // Extract pagination parameters from query string
     const url = new URL(request.url);
@@ -82,10 +83,14 @@ export const GET = withAuth(async (request, context) => {
       ? parseInt(url.searchParams.get('offset')!, 10)
       : undefined;
 
-    const result = await getUserSessions((context.userInfo as { clerkId?: string }).clerkId ?? '', {
-      limit,
-      offset,
-    });
+    const result = await getUserSessions(
+      (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      {
+        limit,
+        offset,
+      },
+      convex
+    );
     const mapped = (Array.isArray(result.items) ? result.items : []).map((s: ConvexSession) => ({
       id: s._id,
       userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
