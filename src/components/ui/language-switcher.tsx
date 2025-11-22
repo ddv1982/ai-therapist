@@ -30,13 +30,13 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
 
   return (
     <div
-      className={`inline-flex items-center gap-1 rounded-full bg-gray-200 p-1 dark:bg-gray-700 ${className ?? ''}`}
+      className={`inline-flex items-center gap-1 rounded-full bg-muted/60 p-1 shadow-apple-xs backdrop-blur-sm ${className ?? ''}`}
       role="group"
       aria-label="Language toggle"
     >
       <button
         type="button"
-        className={`rounded-full px-2 py-1 text-sm transition-colors ${locale === 'en' ? 'bg-white text-gray-900 dark:text-gray-900' : 'text-gray-700 dark:text-gray-200'}`}
+        className={`rounded-full px-2 py-1 text-sm font-semibold transition-all duration-200 ${locale === 'en' ? 'bg-background text-foreground shadow-apple-sm' : 'text-muted-foreground hover:text-foreground hover:bg-background/40'}`}
         aria-pressed={locale === 'en'}
         aria-label="Switch language to English"
         onClick={() => selectLocale('en')}
@@ -45,7 +45,7 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
       </button>
       <button
         type="button"
-        className={`rounded-full px-2 py-1 text-sm transition-colors ${locale === 'nl' ? 'bg-white text-gray-900 dark:text-gray-900' : 'text-gray-700 dark:text-gray-200'}`}
+        className={`rounded-full px-2 py-1 text-sm font-semibold transition-all duration-200 ${locale === 'nl' ? 'bg-background text-foreground shadow-apple-sm' : 'text-muted-foreground hover:text-foreground hover:bg-background/40'}`}
         aria-pressed={locale === 'nl'}
         aria-label="Switch language to Nederlands"
         onClick={() => selectLocale('nl')}

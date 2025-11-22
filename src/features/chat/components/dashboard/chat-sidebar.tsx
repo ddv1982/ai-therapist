@@ -167,10 +167,10 @@ export function ChatSidebar(props: ChatSidebarProps) {
           <div className="flex items-center justify-end gap-3">
             <button
               onClick={onToggleSmartModel}
-              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:outline-none ${
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:outline-none ${
                 smartModelActive
-                  ? 'bg-violet-600 text-white'
-                  : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+                  ? 'bg-violet-600 text-white shadow-apple-md'
+                  : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted shadow-apple-xs backdrop-blur-sm'
               }`}
               aria-pressed={smartModelActive}
               aria-label={
@@ -188,10 +188,10 @@ export function ChatSidebar(props: ChatSidebarProps) {
             </button>
             <button
               onClick={onToggleWebSearch}
-              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${
                 webSearchEnabled
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+                  ? 'bg-blue-600 text-white shadow-apple-md'
+                  : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted shadow-apple-xs backdrop-blur-sm'
               }`}
               aria-pressed={webSearchEnabled}
               aria-label={
@@ -210,10 +210,10 @@ export function ChatSidebar(props: ChatSidebarProps) {
             <div className="group relative">
               <button
                 onClick={onToggleLocalModel}
-                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:outline-none ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:outline-none ${
                   localModelActive
                     ? 'bg-violet-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.65)]'
-                    : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200'
+                    : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted shadow-apple-xs backdrop-blur-sm'
                 }`}
                 aria-pressed={localModelActive}
                 aria-label={
