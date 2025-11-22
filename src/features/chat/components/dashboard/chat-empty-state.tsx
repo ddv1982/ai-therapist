@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getMoonPhase, type MoonPhaseName } from '@/lib/astronomy/moon';
 import { RealisticMoon } from './realistic-moon';
 
@@ -10,6 +10,12 @@ interface ChatEmptyStateProps {
 }
 
 export function ChatEmptyState({ isMobile, translate }: ChatEmptyStateProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Calculate moon phase once on mount
   const moonPhase = useMemo(() => getMoonPhase(new Date()), []);
 
@@ -40,6 +46,20 @@ export function ChatEmptyState({ isMobile, translate }: ChatEmptyStateProps) {
     };
     return translate(quoteKeyMap[name] || 'moon.quote.new');
   };
+
+  // Prevent hydration mismatch by only rendering moon after client mount
+  if (!mounted) {
+    return (
+      <div className={`flex items-center justify-center ${isMobile ? 'py-8' : 'py-16'}`}>
+        <div className={`max-w-xl text-center ${isMobile ? 'px-6 py-8' : 'px-12 py-12'} bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] rounded-2xl shadow-apple-xl`}>
+          <div className={`${isMobile ? 'mb-6' : 'mb-8'} flex flex-col items-center justify-center`}>
+            {/* Placeholder during SSR */}
+            <div className={`${isMobile ? 'w-[180px] h-[180px]' : 'w-[240px] h-[240px]'} mb-4`} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex items-center justify-center ${isMobile ? 'py-8' : 'py-16'}`}>
