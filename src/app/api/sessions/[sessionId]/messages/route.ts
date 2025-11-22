@@ -75,7 +75,7 @@ export const POST = withValidationAndParams(
       // Title generation logic (based on user message count)
       if (validatedData.role === 'user') {
         // Count only user messages
-        const allForCount = (await client.query(anyApi.messages.listBySessionInternal, {
+        const allForCount = (await client.query(anyApi.messages.listBySession, {
           sessionId,
         })) as ConvexMessage[];
         const userMessageCount = Array.isArray(allForCount)
@@ -90,7 +90,7 @@ export const POST = withValidationAndParams(
           const { getApiRequestLocale } = await import('@/i18n/request');
 
           // Fetch first few user messages for context
-          const allMsgs = (await client.query(anyApi.messages.listBySessionInternal, {
+          const allMsgs = (await client.query(anyApi.messages.listBySession, {
             sessionId,
           })) as ConvexMessage[];
           const firstMessages = allMsgs
@@ -173,7 +173,7 @@ export const GET = withAuth(async (request: NextRequest, context, params) => {
     const limit = parsed.success ? (parsed.data.limit ?? 50) : 50;
 
     const client = getConvexHttpClient();
-    const all = (await client.query(anyApi.messages.listBySessionInternal, {
+    const all = (await client.query(anyApi.messages.listBySession, {
       sessionId,
     })) as ConvexMessage[];
     const total = Array.isArray(all) ? all.length : 0;

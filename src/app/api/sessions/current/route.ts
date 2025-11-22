@@ -17,7 +17,7 @@ export const GET = withAuth(async (_request, context) => {
     const client = getConvexHttpClient();
     const user = (await client.query(anyApi.users.getByClerkId, { clerkId })) as ConvexUser | null;
     const sessions = user
-      ? ((await client.query(anyApi.sessions.listByUserInternal, { userId: user._id })) as ConvexSession[])
+      ? ((await client.query(anyApi.sessions.listByUser, { userId: user._id })) as ConvexSession[])
       : [];
     const currentSession = Array.isArray(sessions)
       ? sessions

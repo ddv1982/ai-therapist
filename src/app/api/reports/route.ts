@@ -16,7 +16,7 @@ export const GET = withAuth(async (_request: NextRequest, context) => {
       clerkId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
     })) as ConvexUser | null;
     const sessions = user
-      ? ((await client.query(anyApi.sessions.listByUserInternal, { userId: user._id })) as ConvexSession[])
+      ? ((await client.query(anyApi.sessions.listByUser, { userId: user._id })) as ConvexSession[])
       : [];
     const sessionMap = new Map<string, ConvexSession>(
       (Array.isArray(sessions) ? sessions : []).map((s) => [s._id, s])
@@ -24,7 +24,7 @@ export const GET = withAuth(async (_request: NextRequest, context) => {
     // Collect all reports for user's sessions
     const reports: Array<ConvexSessionReport & { session?: ConvexSession }> = [];
     for (const s of Array.isArray(sessions) ? sessions : []) {
-      const rs = (await client.query(anyApi.reports.listBySessionInternal, {
+      const rs = (await client.query(anyApi.reports.listBySession, {
         sessionId: s._id,
       })) as ConvexSessionReport[];
       for (const r of rs) {
