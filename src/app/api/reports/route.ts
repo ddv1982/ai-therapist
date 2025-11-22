@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import { getConvexHttpClientWithAuth, anyApi } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 import { withAuth } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
@@ -9,7 +9,7 @@ import type { ConvexUser, ConvexSession, ConvexSessionReport } from '@/types/con
 
 export const GET = withAuth(async (_request: NextRequest, context) => {
   try {
-    const client = getConvexHttpClient();
+    const client = getConvexHttpClientWithAuth(context.jwtToken || '');
     // Fetch all sessions for mapping
     // Note: We don't have a direct list-all; fetch reports then fetch sessions by id
     const user = (await client.query(anyApi.users.getByClerkId, {

@@ -31,11 +31,13 @@ export interface RequestContext {
   url?: string;
   userAgent?: string;
   userInfo?: ReturnType<typeof getSingleUserInfo>;
+  jwtToken?: string;
   [key: string]: unknown;
 }
 
 export interface AuthenticatedRequestContext extends RequestContext {
   userInfo: ReturnType<typeof getSingleUserInfo>;
+  jwtToken?: string;
 }
 
 function createFallbackUserInfo(
@@ -142,6 +144,7 @@ export function withAuth<T = unknown>(
     const authenticatedContext: AuthenticatedRequestContext = {
       ...(baseContext as RequestContext),
       userInfo: mergedUserInfo,
+      jwtToken: authResult.jwtToken,
     } as AuthenticatedRequestContext;
     logger.info('Authenticated request', {
       ...baseContext,

@@ -13,7 +13,7 @@ import { createErrorResponse } from '@/lib/api/api-response';
 import { env } from '@/config/env';
 import { ChatError, MessageValidationError, getChatErrorResponse } from '@/lib/errors/chat-errors';
 
-import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
+import { getConvexHttpClientWithAuth, anyApi } from '@/lib/convex/http-client';
 import { verifySessionOwnership } from '@/lib/repositories/session-repository';
 import { recordModelUsage } from '@/lib/metrics/metrics';
 import {
@@ -113,7 +113,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     );
     const history =
       providedSessionId && ownership.valid
-        ? await loadSessionHistory(providedSessionId, ownership)
+        ? await loadSessionHistory(providedSessionId, ownership, context.jwtToken)
         : [];
     // Prefer forwarding original payload messages (with ids) when available; otherwise build from normalized
     const payloadMessages = Array.isArray(raw?.messages) ? raw.messages : null;
@@ -276,7 +276,8 @@ async function resolveSessionOwnership(sessionId: string | undefined, userId: st
 
 async function loadSessionHistory(
   sessionId: string,
-  ownership: SessionOwnership
+  ownership: SessionOwnership,
+  jwtToken?: string
 ): Promise<ApiChatMessage[]> {
   const HISTORY_LIMIT = 30;
   const sessionWithMessages: SessionWithMessages | undefined =
@@ -287,7 +288,7 @@ async function loadSessionHistory(
   const sessionMessagesRaw =
     sessionWithMessages?.messages ??
     (await (async () => {
-      const client = getConvexHttpClient();
+      const client = getConvexHttpClientWithAuth(jwtToken || '');
       const all = (await client.query(anyApi.messages.listBySessionInternal, {
         sessionId,
       })) as ConvexMessage[];
