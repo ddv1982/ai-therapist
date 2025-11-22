@@ -1,8 +1,53 @@
-import { query, mutation } from './_generated/server';
+import { query, mutation, internalQuery } from './_generated/server';
 import { v } from 'convex/values';
 import { QUERY_LIMITS } from './constants';
+import type { QueryCtx, MutationCtx } from './_generated/server';
 
+/**
+ * Helper to get authenticated user
+ */
+async function getAuthenticatedUser(ctx: QueryCtx | MutationCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+    .unique();
+
+  if (!user) {
+    throw new Error('Unauthorized: User not found');
+  }
+
+  return user;
+}
+
+/**
+ * PUBLIC: List reports (client-side with auth)
+ */
 export const listBySession = query({
+  args: { sessionId: v.id('sessions') },
+  handler: async (ctx, { sessionId }) => {
+    // Verify auth and ownership
+    const user = await getAuthenticatedUser(ctx);
+    const session = await ctx.db.get(sessionId);
+    if (!session || session.userId !== user._id) {
+      throw new Error('Forbidden: Access denied');
+    }
+
+    return await ctx.db
+      .query('sessionReports')
+      .withIndex('by_session', (q) => q.eq('sessionId', sessionId))
+      .collect();
+  },
+});
+
+/**
+ * INTERNAL: List reports (API routes - already authenticated)
+ */
+export const listBySessionInternal = internalQuery({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
     return await ctx.db

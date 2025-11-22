@@ -1,8 +1,56 @@
-import { query, mutation } from './_generated/server';
+import { query, mutation, internalQuery } from './_generated/server';
 import { v } from 'convex/values';
 import { QUERY_LIMITS, PAGINATION_DEFAULTS } from './constants';
-import type { Doc } from './_generated/dataModel';
+import type { Doc, Id } from './_generated/dataModel';
+import type { QueryCtx, MutationCtx } from './_generated/server';
 
+/**
+ * Helper to get authenticated user
+ */
+async function getAuthenticatedUser(ctx: QueryCtx | MutationCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+    .unique();
+
+  if (!user) {
+    throw new Error('Unauthorized: User not found');
+  }
+
+  return user;
+}
+
+/**
+ * Helper to verify message ownership via session
+ * @unused - Reserved for future use in mutations
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function verifyMessageOwnership(
+  ctx: QueryCtx | MutationCtx,
+  messageId: Id<'messages'>,
+  userId: Id<'users'>
+) {
+  const message = await ctx.db.get(messageId);
+  if (!message) {
+    throw new Error('Message not found');
+  }
+
+  const session = await ctx.db.get(message.sessionId);
+  if (!session || session.userId !== userId) {
+    throw new Error('Forbidden: Access denied');
+  }
+
+  return message;
+}
+
+/**
+ * PUBLIC: List messages (client-side with auth)
+ */
 export const listBySession = query({
   args: {
     sessionId: v.id('sessions'),
@@ -10,6 +58,13 @@ export const listBySession = query({
     offset: v.optional(v.number()),
   },
   handler: async (ctx, { sessionId, limit = QUERY_LIMITS.DEFAULT_LIMIT, offset = 0 }) => {
+    // Verify auth and ownership
+    const user = await getAuthenticatedUser(ctx);
+    const session = await ctx.db.get(sessionId);
+    if (!session || session.userId !== user._id) {
+      throw new Error('Forbidden: Access denied');
+    }
+
     const limit_clamped = Math.min(limit, QUERY_LIMITS.MAX_MESSAGES_PER_REQUEST);
     const offset_clamped = Math.max(offset, PAGINATION_DEFAULTS.MIN_OFFSET);
 
@@ -32,6 +87,45 @@ export const listBySession = query({
       results.push(message);
       
       // Stop once we have enough items
+      if (results.length >= limit_clamped) {
+        break;
+      }
+      
+      index++;
+    }
+
+    return results;
+  },
+});
+
+/**
+ * INTERNAL: List messages (API routes - already authenticated)
+ */
+export const listBySessionInternal = internalQuery({
+  args: {
+    sessionId: v.id('sessions'),
+    limit: v.optional(v.number()),
+    offset: v.optional(v.number()),
+  },
+  handler: async (ctx, { sessionId, limit = QUERY_LIMITS.DEFAULT_LIMIT, offset = 0 }) => {
+    const limit_clamped = Math.min(limit, QUERY_LIMITS.MAX_MESSAGES_PER_REQUEST);
+    const offset_clamped = Math.max(offset, PAGINATION_DEFAULTS.MIN_OFFSET);
+
+    const results: Doc<'messages'>[] = [];
+    let index = 0;
+    
+    for await (const message of ctx.db
+      .query('messages')
+      .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
+      .order('asc')) {
+      
+      if (index < offset_clamped) {
+        index++;
+        continue;
+      }
+      
+      results.push(message);
+      
       if (results.length >= limit_clamped) {
         break;
       }
