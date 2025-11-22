@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LanguageToggle } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
-import { therapeuticInteractive } from '@/lib/ui/design-tokens';
+
 import type { ChatSessionSummary } from '@/hooks/use-chat-controller';
-import { Plus, MessageSquare, Trash2, X, Sparkles, Brain, Globe, EyeOff } from 'lucide-react';
+import { Plus, MessageSquare, Trash2, Sparkles, Brain, Globe, EyeOff } from 'lucide-react';
 
 interface ChatSidebarProps {
   open: boolean;
@@ -90,15 +90,6 @@ export function ChatSidebar(props: ChatSidebarProps) {
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                aria-label="Close sidebar"
-                className={therapeuticInteractive.iconButtonSmall}
-              >
-                <X className="relative z-10 h-4 w-4" />
-              </Button>
             </div>
           </div>
           <Button

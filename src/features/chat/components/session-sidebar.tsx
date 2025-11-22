@@ -1,11 +1,10 @@
 'use client';
 
-import { useCallback, memo } from 'react';
+import { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, MessageSquare, Trash2, X, Heart, Sparkles } from 'lucide-react';
+import { Plus, MessageSquare, Trash2, Heart, Sparkles } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
-import { therapeuticInteractive } from '@/lib/ui/design-tokens';
 import { SessionSidebarProps } from '@/types/ui';
 
 // Using centralized props interface from types/component-props.ts
@@ -58,14 +57,6 @@ export const SessionSidebar = memo(function SessionSidebar({
             </div>
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={useCallback(() => setShowSidebar(false), [setShowSidebar])}
-                className={therapeuticInteractive.iconButtonSmall}
-              >
-                <X className="relative z-10 h-4 w-4" />
-              </Button>
             </div>
           </div>
           <Button

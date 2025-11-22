@@ -1,0 +1,263 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`ChatEmptyState matches snapshot for desktop 1`] = `
+<div>
+  <div
+    class="flex items-center justify-center py-16"
+  >
+    <div
+      class="animate-fade-in max-w-xl text-center px-6"
+    >
+      <div
+        class="mb-8 flex flex-col items-center justify-center"
+      >
+        <div
+          class="relative mb-4"
+          style="width: 240px; height: 240px;"
+        >
+          <div
+            class="absolute inset-0 rounded-full bg-primary/20 blur-2xl"
+          />
+          <div
+            class="absolute inset-0 rounded-full bg-accent/10 blur-xl"
+          />
+          <svg
+            class="relative z-10"
+            fill="none"
+            height="240"
+            viewBox="0 0 200 200"
+            width="240"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <pattern
+                height="40"
+                id="craters"
+                patternUnits="userSpaceOnUse"
+                width="40"
+                x="0"
+                y="0"
+              >
+                <circle
+                  class="text-black/5"
+                  cx="20"
+                  cy="20"
+                  fill="currentColor"
+                  r="8"
+                />
+                <circle
+                  class="text-black/5"
+                  cx="10"
+                  cy="10"
+                  fill="currentColor"
+                  r="2"
+                />
+                <circle
+                  class="text-black/5"
+                  cx="30"
+                  cy="35"
+                  fill="currentColor"
+                  r="4"
+                />
+                <circle
+                  class="text-black/5"
+                  cx="5"
+                  cy="30"
+                  fill="currentColor"
+                  r="3"
+                />
+              </pattern>
+              <radialgradient
+                cx="50%"
+                cy="50%"
+                id="moon-sphere"
+                r="50%"
+              >
+                <stop
+                  class="text-slate-200 dark:text-slate-100"
+                  offset="70%"
+                  stop-color="currentColor"
+                />
+                <stop
+                  class="text-slate-300 dark:text-slate-400"
+                  offset="100%"
+                  stop-color="currentColor"
+                />
+              </radialgradient>
+            </defs>
+            <circle
+              class="fill-slate-800 dark:fill-slate-900"
+              cx="100"
+              cy="100"
+              r="100"
+            />
+            <path
+              d="M 100 0 
+              A 100 100 0 0 1 100 200
+              A 99.39637250346415 100 0 0 0 100 0"
+              fill="url(#moon-sphere)"
+            />
+            <path
+              class="mix-blend-multiply opacity-30"
+              d="M 100 0 
+              A 100 100 0 0 1 100 200
+              A 99.39637250346415 100 0 0 0 100 0"
+              fill="url(#craters)"
+            />
+          </svg>
+        </div>
+        <span
+          class="text-xs font-medium tracking-widest uppercase text-muted-foreground/70"
+        >
+          New Moon
+           • 
+          0
+          % 
+          Illum.
+        </span>
+      </div>
+      <h2
+        class="gradient-text mb-3 text-3xl tracking-tight"
+      >
+        Welcome to Your Therapeutic Space
+      </h2>
+      <p
+        class="text-muted-foreground mx-auto max-w-md text-base leading-relaxed"
+      >
+        A safe space for healing and growth
+      </p>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`ChatEmptyState matches snapshot for mobile 1`] = `
+<div>
+  <div
+    class="flex items-center justify-center py-8"
+  >
+    <div
+      class="animate-fade-in max-w-xl text-center px-4"
+    >
+      <div
+        class="mb-6 flex flex-col items-center justify-center"
+      >
+        <div
+          class="relative mb-4"
+          style="width: 180px; height: 180px;"
+        >
+          <div
+            class="absolute inset-0 rounded-full bg-primary/20 blur-2xl"
+          />
+          <div
+            class="absolute inset-0 rounded-full bg-accent/10 blur-xl"
+          />
+          <svg
+            class="relative z-10"
+            fill="none"
+            height="180"
+            viewBox="0 0 200 200"
+            width="180"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <pattern
+                height="40"
+                id="craters"
+                patternUnits="userSpaceOnUse"
+                width="40"
+                x="0"
+                y="0"
+              >
+                <circle
+                  class="text-black/5"
+                  cx="20"
+                  cy="20"
+                  fill="currentColor"
+                  r="8"
+                />
+                <circle
+                  class="text-black/5"
+                  cx="10"
+                  cy="10"
+                  fill="currentColor"
+                  r="2"
+                />
+                <circle
+                  class="text-black/5"
+                  cx="30"
+                  cy="35"
+                  fill="currentColor"
+                  r="4"
+                />
+                <circle
+                  class="text-black/5"
+                  cx="5"
+                  cy="30"
+                  fill="currentColor"
+                  r="3"
+                />
+              </pattern>
+              <radialgradient
+                cx="50%"
+                cy="50%"
+                id="moon-sphere"
+                r="50%"
+              >
+                <stop
+                  class="text-slate-200 dark:text-slate-100"
+                  offset="70%"
+                  stop-color="currentColor"
+                />
+                <stop
+                  class="text-slate-300 dark:text-slate-400"
+                  offset="100%"
+                  stop-color="currentColor"
+                />
+              </radialgradient>
+            </defs>
+            <circle
+              class="fill-slate-800 dark:fill-slate-900"
+              cx="100"
+              cy="100"
+              r="100"
+            />
+            <path
+              d="M 100 0 
+              A 100 100 0 0 1 100 200
+              A 99.39637250346415 100 0 0 0 100 0"
+              fill="url(#moon-sphere)"
+            />
+            <path
+              class="mix-blend-multiply opacity-30"
+              d="M 100 0 
+              A 100 100 0 0 1 100 200
+              A 99.39637250346415 100 0 0 0 100 0"
+              fill="url(#craters)"
+            />
+          </svg>
+        </div>
+        <span
+          class="text-xs font-medium tracking-widest uppercase text-muted-foreground/70"
+        >
+          New Moon
+           • 
+          0
+          % 
+          Illum.
+        </span>
+      </div>
+      <h2
+        class="gradient-text mb-3 text-3xl tracking-tight"
+      >
+        Welcome to Your Therapeutic Space
+      </h2>
+      <p
+        class="text-muted-foreground mx-auto max-w-md text-base leading-relaxed"
+      >
+        A safe space for healing and growth
+      </p>
+    </div>
+  </div>
+</div>
+`;

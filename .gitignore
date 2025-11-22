@@ -78,3 +78,15 @@ config.yml
 AGENTS.md.template
 SKILLS.md
 SKILLS_SUMMARY.md
+
+# Droidz worktrees
+.runs/
+
+# Dependency artifacts
+node_modules/
+
+bun.lockb
+
+# Droidz v3.0
+.factory/specs/active/
+.factory/validation/.validation-cache/
