@@ -35,12 +35,12 @@ export const SessionSidebar = memo(function SessionSidebar({
       {/* Sidebar */}
       <aside
         id="chat-sidebar"
-        className={`${showSidebar ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${showSidebar ? 'fixed md:relative' : ''} ${showSidebar ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} bg-sidebar bg-sidebar-gradient bg-card/80 dark:bg-card/80 border-border/50 animate-slide-in flex flex-col overflow-hidden border-r shadow-xl backdrop-blur-md transition-all duration-500 ease-in-out`}
+        className={`${showSidebar ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${showSidebar ? 'fixed md:relative' : ''} ${showSidebar ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} bg-sidebar bg-sidebar-gradient bg-card/70 dark:bg-card/60 animate-slide-in flex flex-col overflow-hidden shadow-apple-lg backdrop-blur-glass backdrop-saturate-glass transition-all duration-500 ease-in-out`}
         role="navigation"
         aria-label="Chat sessions"
         aria-hidden={!showSidebar}
       >
-        <div className="border-border/30 border-b p-6">
+        <div className="p-6 shadow-[0_1px_0_rgba(0,0,0,0.06)] dark:shadow-[0_1px_0_rgba(255,255,255,0.06)]">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="from-primary to-accent flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg">
@@ -76,10 +76,10 @@ export const SessionSidebar = memo(function SessionSidebar({
             sessions.map((session, index) => (
               <Card
                 key={session.id}
-                className={`group animate-fade-in mb-3 cursor-pointer p-4 transition-all duration-300 hover:shadow-lg ${
+                className={`group animate-fade-in mb-3 cursor-pointer p-4 transition-all duration-300 ${
                   currentSession === session.id
-                    ? 'ring-primary/50 bg-primary/5 border-primary/30 shadow-md ring-2'
-                    : 'hover:border-primary/20 bg-card/50 hover:bg-card/70'
+                    ? 'shadow-apple-lg bg-primary/8 dark:bg-primary/12'
+                    : 'shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 bg-card/50 hover:bg-card/70'
                 }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -103,15 +103,15 @@ export const SessionSidebar = memo(function SessionSidebar({
                     <MessageSquare className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="mb-1 truncate text-base font-semibold">{session.title}</h3>
+                    <h3 className="mb-1 truncate text-base font-semibold tracking-normal">{session.title}</h3>
                     <div className="flex items-center gap-2">
-                      <p className="text-muted-foreground truncate text-sm">
+                      <p className="text-muted-foreground truncate text-sm tracking-wide">
                         {session._count?.messages
                           ? `${session._count.messages} messages`
                           : 'No messages yet'}
                       </p>
                       <div className="bg-muted-foreground/30 h-1 w-1 rounded-full"></div>
-                      <p className="text-muted-foreground text-sm">
+                      <p className="text-muted-foreground text-sm tracking-wide">
                         {session.startedAt ? new Date(session.startedAt).toLocaleDateString() : 'Unknown date'}
                       </p>
                     </div>

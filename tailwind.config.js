@@ -104,8 +104,9 @@ const config = {
         relaxed: '1.5',
       },
       letterSpacing: {
-        tight: '-0.02em',
-        normal: '0',
+        tight: '-0.011em',   // Large headings (Apple SF Pro spec)
+        normal: '0em',        // Body text
+        wide: '0.011em',      // Labels/UI elements
       },
 
       /* ========================================
@@ -139,13 +140,25 @@ const config = {
       },
 
       /* ========================================
+         INTERACTION STATES (Subtle backgrounds)
+         ======================================== */
+      backgroundColor: {
+        'hover-subtle': 'rgba(0, 0, 0, 0.04)',
+        'hover-subtle-dark': 'rgba(255, 255, 255, 0.08)',
+        'active-subtle': 'rgba(0, 0, 0, 0.08)',
+        'active-subtle-dark': 'rgba(255, 255, 255, 0.12)',
+      },
+
+      /* ========================================
          SHADOWS (Apple-style subtle shadows)
          ======================================== */
       boxShadow: {
+        'apple-xs': '0 1px 2px rgba(0, 0, 0, 0.06)',
         'apple-sm': 'var(--shadow-sm)',
         'apple-md': 'var(--shadow-md)',
         'apple-lg': 'var(--shadow-lg)',
         'apple-xl': 'var(--shadow-xl)',
+        'apple-2xl': '0 24px 32px rgba(0, 0, 0, 0.16)',
         'apple-primary': 'var(--shadow-primary)',
         'apple-accent': 'var(--shadow-accent)',
       },

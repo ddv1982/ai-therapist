@@ -5,7 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/index';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-semibold transition-all duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.96]',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-semibold transition-all duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.96]',
   {
     variants: {
       variant: {
@@ -14,17 +14,17 @@ const buttonVariants = cva(
           'bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-apple-primary hover:shadow-apple-accent hover:from-primary/90 hover:to-accent/90 transition-all duration-fast ease-out-smooth',
         // 30% - Secondary actions (neutral with accent hover)
         secondary:
-          'bg-background text-foreground border border-border hover:bg-accent hover:text-accent-foreground shadow-apple-sm hover:shadow-apple-md transition-all duration-fast ease-out-smooth',
+          'bg-background text-foreground border border-border shadow-apple-xs hover:shadow-apple-sm hover:bg-accent hover:text-accent-foreground transition-all duration-fast ease-out-smooth',
         // 60% - Ghost/minimal (neutral backgrounds)
-        ghost: 'hover:bg-muted hover:text-foreground transition-colors duration-fast',
+        ghost: 'shadow-apple-xs hover:shadow-apple-sm hover:bg-muted hover:text-foreground transition-all duration-fast',
         // Glass variant - Apple frosted glass effect
         glass:
           'bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] text-foreground shadow-apple-md hover:shadow-apple-lg hover:bg-[var(--glass-white)]/90 transition-all duration-base ease-out-smooth',
         // Special cases
         destructive:
-          'bg-destructive text-destructive-foreground shadow-apple-sm hover:shadow-apple-md hover:bg-destructive/90 transition-all duration-fast ease-out-smooth',
+          'bg-destructive text-destructive-foreground shadow-apple-xs hover:shadow-apple-sm hover:bg-destructive/90 transition-all duration-fast ease-out-smooth',
         outline:
-          'border border-input bg-background shadow-apple-sm hover:bg-accent hover:text-accent-foreground hover:shadow-apple-md transition-all duration-fast ease-out-smooth',
+          'border border-input bg-background shadow-apple-xs hover:shadow-apple-sm hover:bg-accent hover:text-accent-foreground transition-all duration-fast ease-out-smooth',
         link: 'text-primary underline-offset-4 hover:underline transition-colors duration-fast',
       },
       size: {

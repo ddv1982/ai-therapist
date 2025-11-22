@@ -1,10 +1,38 @@
 :root {
   /* ============================================
-     TYPOGRAPHY - Apple System Font Stack
+     TYPOGRAPHY - Apple System Font Stack (SF Pro-inspired)
      ============================================ */
   --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'SF Mono', 'Consolas', 'Monaco', monospace;
   --radius: 0.75rem; /* 12px */
+}
+
+/* ============================================
+   TYPOGRAPHY HIERARCHY - SF Pro-inspired
+   ============================================ */
+
+/* Headings - semibold weight for emphasis */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.011em; /* Tighter tracking for large text */
+}
+
+/* Body text - regular weight */
+p, li, td {
+  font-weight: 400;
+  letter-spacing: 0em;
+}
+
+/* Labels, UI elements - slightly wider tracking */
+label, .label, button, .button {
+  font-weight: 600;
+  letter-spacing: 0.011em;
+}
+
+/* Small text - semibold for legibility */
+.text-sm, .text-xs {
+  font-weight: 600;
+  letter-spacing: 0.011em;
 
   /* ============================================
      COLORS - Light Theme (OKLCH)
@@ -173,6 +201,34 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+}
+
+/* ============================================
+   TYPOGRAPHY HIERARCHY (Apple SF Pro-inspired)
+   ============================================ */
+
+/* Headings - semibold for emphasis with tight tracking */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.011em;
+}
+
+/* Body text - regular weight */
+p, li, td {
+  font-weight: 400;
+  letter-spacing: 0em;
+}
+
+/* Labels and UI elements - semibold with wider tracking for legibility */
+label, .label, button, .button {
+  font-weight: 600;
+  letter-spacing: 0.011em;
+}
+
+/* Small text - semibold for better legibility at smaller sizes */
+.text-sm, .text-xs {
+  font-weight: 600;
+  letter-spacing: 0.011em;
 }
 
 /* Reduced motion support (accessibility) */

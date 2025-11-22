@@ -44,7 +44,7 @@ export const ChatComposer = memo(function ChatComposer({
   return (
     <div
       ref={inputContainerRef}
-      className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} border-border/30 bg-card/50 relative flex-shrink-0 border-t backdrop-blur-md`}
+      className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} bg-card/50 relative flex-shrink-0 shadow-[0_-1px_0_rgba(0,0,0,0.06)] dark:shadow-[0_-1px_0_rgba(255,255,255,0.06)] backdrop-blur-md`}
       role="form"
       aria-label="Chat composer"
     >
@@ -67,7 +67,7 @@ export const ChatComposer = memo(function ChatComposer({
                 }
               }, [isMobile, textareaRef])}
               placeholder={!isLoading && input.trim().length === 0 ? t('input.placeholder') : ''}
-              className="border-border/50 bg-background/80 placeholder:text-muted-foreground/70 focus:ring-primary/30 focus:border-primary/60 max-h-[120px] min-h-[52px] touch-manipulation resize-none rounded-xl px-3 py-3 text-base backdrop-blur-sm transition-all duration-300 focus:ring-2 sm:max-h-[200px] sm:min-h-[80px] sm:rounded-2xl sm:px-6 sm:py-4 tap-transparent"
+              className="bg-background/80 placeholder:text-muted-foreground/70 max-h-[120px] min-h-[52px] touch-manipulation resize-none rounded-xl px-3 py-3 text-base backdrop-blur-sm transition-all duration-300 shadow-apple-xs focus:shadow-apple-md focus:shadow-primary/20 focus:outline-none sm:max-h-[200px] sm:min-h-[80px] sm:rounded-2xl sm:px-6 sm:py-4 tap-transparent"
               disabled={false}
               style={{
                 fontSize: isMobile ? '16px' : undefined,

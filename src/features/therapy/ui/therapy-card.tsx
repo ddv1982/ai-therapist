@@ -4,16 +4,16 @@ import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-const therapyCardVariants = cva('therapy-card transition-all duration-200 hover:shadow-md', {
+const therapyCardVariants = cva('therapy-card transition-all duration-200', {
   variants: {
     variant: {
-      default: 'border-border bg-card',
-      primary: 'border-primary/20 bg-primary/5 hover:border-primary/30',
-      accent: 'border-accent/20 bg-accent/5 hover:border-accent/30',
-      success: 'border-green-500/20 bg-green-50 dark:bg-green-950/20 hover:border-green-500/30',
-      warning: 'border-yellow-500/20 bg-yellow-50 dark:bg-yellow-950/20 hover:border-yellow-500/30',
-      destructive: 'border-destructive/20 bg-destructive/5 hover:border-destructive/30',
-      muted: 'border-muted bg-muted/50 hover:bg-muted/70',
+      default: 'bg-card shadow-apple-sm hover:shadow-apple-md',
+      primary: 'bg-primary/5 shadow-apple-sm hover:shadow-apple-md',
+      accent: 'bg-accent/5 shadow-apple-sm hover:shadow-apple-md',
+      success: 'bg-green-50 dark:bg-green-950/20 shadow-apple-sm hover:shadow-apple-md',
+      warning: 'bg-yellow-50 dark:bg-yellow-950/20 shadow-apple-sm hover:shadow-apple-md',
+      destructive: 'bg-destructive/5 shadow-apple-sm hover:shadow-apple-md',
+      muted: 'bg-muted/50 hover:bg-muted/70 shadow-apple-sm hover:shadow-apple-md',
     },
     size: {
       default: 'p-4',
@@ -23,9 +23,9 @@ const therapyCardVariants = cva('therapy-card transition-all duration-200 hover:
     },
     elevation: {
       none: 'shadow-none',
-      sm: 'shadow-sm',
-      md: 'shadow-md',
-      lg: 'shadow-lg',
+      sm: 'shadow-apple-sm hover:shadow-apple-md',
+      md: 'shadow-apple-md hover:shadow-apple-lg',
+      lg: 'shadow-apple-lg hover:shadow-apple-xl',
     },
   },
   defaultVariants: {

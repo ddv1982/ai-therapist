@@ -52,7 +52,7 @@ export function ChatHeader({
 
   return (
     <div
-      className={`${isMobile ? 'p-3' : 'p-6'} border-border/30 bg-card/50 relative flex-shrink-0 border-b backdrop-blur-md`}
+      className={`${isMobile ? 'p-3' : 'p-6'} bg-card/50 relative flex-shrink-0 shadow-[0_1px_0_rgba(0,0,0,0.06)] dark:shadow-[0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md`}
     >
       <div className="flex items-center justify-between">
         <div className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'}`}>
