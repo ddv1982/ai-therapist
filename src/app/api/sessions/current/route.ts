@@ -47,9 +47,11 @@ export const GET = withAuth(async (_request, context) => {
     });
 
     return createSuccessResponse({ currentSession: sessionInfo }, { requestId: context.requestId });
-  } catch {
+  } catch (error) {
+    logger.apiError('Failed to fetch current session', error as Error, context);
     return createErrorResponse('Failed to fetch current session', 500, {
       requestId: context.requestId,
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
