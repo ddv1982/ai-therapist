@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { getConvexHttpClientWithAuth, anyApi } from '@/lib/convex/http-client';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
 import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership } from '@/lib/repositories/session-repository';
@@ -57,7 +57,7 @@ export const POST = withValidationAndParams(
       const sanitizedMetadata = validatedData.metadata
         ? JSON.parse(JSON.stringify(validatedData.metadata))
         : undefined;
-      const client = getConvexHttpClientWithAuth(context.jwtToken || '');
+      const client = getConvexHttpClient();
       const message = (await client.mutation(anyApi.messages.create, {
         sessionId,
         role: encrypted.role,
@@ -172,7 +172,7 @@ export const GET = withAuth(async (request: NextRequest, context, params) => {
     const page = parsed.success ? (parsed.data.page ?? 1) : 1;
     const limit = parsed.success ? (parsed.data.limit ?? 50) : 50;
 
-    const client = getConvexHttpClientWithAuth(context.jwtToken || '');
+    const client = getConvexHttpClient();
     const all = (await client.query(anyApi.messages.listBySessionInternal, {
       sessionId,
     })) as ConvexMessage[];

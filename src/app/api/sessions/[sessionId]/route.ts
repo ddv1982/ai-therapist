@@ -11,7 +11,7 @@ import {
 } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import { enhancedErrorHandlers } from '@/lib/utils/errors';
-import { getConvexHttpClientWithAuth, anyApi } from '@/lib/convex/http-client';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexSession, ConvexSessionWithMessagesAndReports } from '@/types/convex';
 
 interface SessionUpdateData {
@@ -45,7 +45,7 @@ export const PATCH = withValidationAndParams(
       if (endedAt !== undefined) updateData.endedAt = endedAt ? new Date(endedAt) : null;
       if (title !== undefined) updateData.title = title;
 
-      const client = getConvexHttpClientWithAuth(context.jwtToken || '');
+      const client = getConvexHttpClient();
       const updated = await client.mutation(anyApi.sessions.update, {
         sessionId,
         status: updateData.status,
@@ -169,7 +169,7 @@ export const DELETE = withAuth(async (_request, context, params) => {
       return createNotFoundErrorResponse('Session', context.requestId);
     }
 
-    const client = getConvexHttpClientWithAuth(context.jwtToken || '');
+    const client = getConvexHttpClient();
     await client.mutation(anyApi.sessions.remove, { sessionId });
 
     logger.info('Session deleted successfully', {

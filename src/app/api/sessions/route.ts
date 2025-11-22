@@ -6,7 +6,7 @@ import { getUserSessions } from '@/lib/repositories/session-repository';
 import { createSuccessResponse } from '@/lib/api/api-response';
 import { deduplicateRequest } from '@/lib/utils/helpers';
 import { SessionCache } from '@/lib/cache';
-import { getConvexHttpClientWithAuth, anyApi } from '@/lib/convex/http-client';
+import { getConvexHttpClient, anyApi } from '@/lib/convex/http-client';
 import type { ConvexSession, ConvexUser } from '@/types/convex';
 
 export const POST = withValidation(
@@ -20,7 +20,7 @@ export const POST = withValidation(
         (context.userInfo as { clerkId?: string }).clerkId ?? '',
         'create_session',
         async () => {
-          const client = getConvexHttpClientWithAuth(context.jwtToken || '');
+          const client = getConvexHttpClient();
           const user = (await client.mutation(anyApi.users.ensureByClerkId, {
             clerkId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
             email: context.userInfo.email,
