@@ -114,7 +114,7 @@ export async function getUserSessions(
   const offset = options.offset ?? 0;
 
   const [sessions, total] = await Promise.all([
-    client.query(anyApi.sessions.listByUserInternal, { userId: userDoc._id, limit, offset }),
+    client.query(anyApi.sessions.listByUser, { userId: userDoc._id, limit, offset }),
     client.query(api.sessions.countByUser, { userId: userDoc._id }),
   ]);
 

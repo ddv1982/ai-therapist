@@ -1,64 +1,11 @@
-import { query, mutation, internalQuery, internalMutation } from './_generated/server';
+import { query, mutation, internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 import { QUERY_LIMITS, PAGINATION_DEFAULTS } from './constants';
-import type { Doc, Id } from './_generated/dataModel';
-import type { QueryCtx, MutationCtx } from './_generated/server';
+import type { Doc } from './_generated/dataModel';
 
-/**
- * Helper to get authenticated user from Clerk JWT
- * Used by public functions (client-side calls)
- */
-async function getAuthenticatedUser(ctx: QueryCtx | MutationCtx) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error('Unauthorized: Authentication required');
-  }
-
-  const user = await ctx.db
-    .query('users')
-    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
-    .unique();
-
-  if (!user) {
-    throw new Error('Unauthorized: User not found');
-  }
-
-  return user;
-}
-
-/**
- * Helper to verify session ownership
- */
-async function verifySessionOwnership(
-  ctx: QueryCtx | MutationCtx,
-  sessionId: Id<'sessions'>,
-  userId: Id<'users'>
-) {
-  const session = await ctx.db.get(sessionId);
-  
-  if (!session) {
-    throw new Error('Session not found');
-  }
-
-  if (session.userId !== userId) {
-    throw new Error('Forbidden: Access denied');
-  }
-
-  return session;
-}
-
-/**
- * PUBLIC: List user's sessions (client-side with auth)
- */
 export const listByUser = query({
   args: { userId: v.id('users'), limit: v.optional(v.number()), offset: v.optional(v.number()) },
   handler: async (ctx, { userId, limit = PAGINATION_DEFAULTS.DEFAULT_OFFSET, offset = 0 }) => {
-    // Verify authentication and ownership
-    const authenticatedUser = await getAuthenticatedUser(ctx);
-    if (authenticatedUser._id !== userId) {
-      throw new Error('Forbidden: Access denied');
-    }
-
     const limit_clamped = Math.min(limit, QUERY_LIMITS.MAX_SESSIONS_PER_REQUEST);
     const offset_clamped = Math.max(offset, PAGINATION_DEFAULTS.MIN_OFFSET);
 
@@ -92,41 +39,6 @@ export const listByUser = query({
   },
 });
 
-/**
- * INTERNAL: List user's sessions (API routes - already authenticated)
- */
-export const listByUserInternal = internalQuery({
-  args: { userId: v.id('users'), limit: v.optional(v.number()), offset: v.optional(v.number()) },
-  handler: async (ctx, { userId, limit = PAGINATION_DEFAULTS.DEFAULT_OFFSET, offset = 0 }) => {
-    const limit_clamped = Math.min(limit, QUERY_LIMITS.MAX_SESSIONS_PER_REQUEST);
-    const offset_clamped = Math.max(offset, PAGINATION_DEFAULTS.MIN_OFFSET);
-
-    const results: Doc<'sessions'>[] = [];
-    let index = 0;
-    
-    for await (const session of ctx.db
-      .query('sessions')
-      .withIndex('by_user_created', (q) => q.eq('userId', userId))
-      .order('desc')) {
-      
-      if (index < offset_clamped) {
-        index++;
-        continue;
-      }
-      
-      results.push(session);
-      
-      if (results.length >= limit_clamped) {
-        break;
-      }
-      
-      index++;
-    }
-
-    return results;
-  },
-});
-
 export const countByUser = query({
   args: { userId: v.id('users') },
   handler: async (ctx, { userId }) => {
@@ -147,9 +59,8 @@ export const countByUser = query({
 export const getWithMessagesAndReports = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    // Verify authentication and ownership
-    const authenticatedUser = await getAuthenticatedUser(ctx);
-    const session = await verifySessionOwnership(ctx, sessionId, authenticatedUser._id);
+    const session = await ctx.db.get(sessionId);
+    if (!session) return null;
     const messages = await ctx.db
       .query('messages')
       .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
@@ -250,8 +161,6 @@ export const _incrementMessageCount = internalMutation({
 export const get = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    // Verify authentication and ownership
-    const authenticatedUser = await getAuthenticatedUser(ctx);
-    return await verifySessionOwnership(ctx, sessionId, authenticatedUser._id);
+    return await ctx.db.get(sessionId);
   },
 });

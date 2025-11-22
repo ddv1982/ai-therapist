@@ -398,12 +398,12 @@ export class MemoryManagementService {
       throw new Error('User not found');
     }
 
-    const sessions = await client.query(anyApi.sessions.listByUserInternal, { userId: convexUser._id });
+    const sessions = await client.query(anyApi.sessions.listByUser, { userId: convexUser._id });
     const convexSessions = Array.isArray(sessions) ? (sessions as ConvexSession[]) : [];
     const allReports: ConvexSessionReport[] = [];
 
     for (const s of convexSessions) {
-      const rs = await client.query(anyApi.reports.listBySessionInternal, { sessionId: s._id });
+      const rs = await client.query(anyApi.reports.listBySession, { sessionId: s._id });
       const sessionReports = Array.isArray(rs) ? (rs as ConvexSessionReport[]) : [];
       for (const r of sessionReports) allReports.push(r);
     }

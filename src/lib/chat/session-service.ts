@@ -12,7 +12,7 @@ export interface StoredMessage {
 
 export async function getSessionMessages(sessionId: string): Promise<StoredMessage[]> {
   const client = getConvexHttpClient();
-  const rows = await client.query(anyApi.messages.listBySessionInternal, { sessionId });
+  const rows = await client.query(anyApi.messages.listBySession, { sessionId });
   const convexMessages = Array.isArray(rows) ? (rows as ConvexMessage[]) : [];
   const ordered = convexMessages.sort((a, b) => a.timestamp - b.timestamp);
   const decrypted = safeDecryptMessages(
