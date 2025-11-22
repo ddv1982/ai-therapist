@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { AuthGuard } from '@/features/auth/components/auth-guard';
 import { Button } from '@/components/ui/button';
 import { ArrowDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -264,13 +263,12 @@ function ChatPageContent() {
 
   return (
     <ChatUIProvider bridge={chatUIBridge}>
-      <AuthGuard>
-        <div
-          className="gradient-bg-app flex bg-app-subtle"
-          role="application"
-          aria-label={t('app.aria')}
-          style={appContainerStyle}
-        >
+      <div
+        className="gradient-bg-app flex bg-app-subtle"
+        role="application"
+        aria-label={t('app.aria')}
+        style={appContainerStyle}
+      >
           <ChatSidebar
             open={showSidebar}
             sessions={sessions}
@@ -392,7 +390,6 @@ function ChatPageContent() {
             onMemoryUpdated={setMemoryContext}
           />
         </div>
-      </AuthGuard>
     </ChatUIProvider>
   );
 }
