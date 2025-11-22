@@ -1,8 +1,9 @@
-import { generateText, convertToModelMessages, streamText } from 'ai';
+import { generateText, generateObject, convertToModelMessages, streamText } from 'ai';
 import type { UIMessage } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import { languageModels, type ModelID } from '@/ai/providers';
 import { supportsWebSearch } from '@/ai/model-metadata';
+import { parsedAnalysisSchema, type ParsedAnalysis } from '@/lib/therapy/analysis-schema';
 
 // Simplified message type for report generation (only needs role and content)
 export interface ReportMessage {
@@ -34,22 +35,27 @@ export const generateSessionReport = async (
   return result.text;
 };
 
+/**
+ * Extract structured analysis using generateObject for type-safe outputs
+ * Replaces manual JSON parsing with Zod schema validation
+ */
 export const extractStructuredAnalysis = async (
   reportContent: string,
   systemPrompt: string,
   selectedModel: string = ANALYTICAL_MODEL_ID
-) => {
+): Promise<ParsedAnalysis> => {
   const userPrompt = `Please extract structured analysis data from the following therapeutic report:\n\n${reportContent}`;
 
-  const result = await generateText({
+  const result = await generateObject({
     model: languageModels[selectedModel as keyof typeof languageModels],
+    schema: parsedAnalysisSchema,
     system: systemPrompt,
     prompt: userPrompt,
-    temperature: 0.1, // Lower temperature for more consistent JSON output
-    topP: 0.8,
+    temperature: 0.1, // Lower temperature for more consistent outputs
+    mode: 'json', // Use JSON mode for better compatibility
   });
 
-  return result.text;
+  return result.object;
 };
 
 // Browser search function using direct Groq integration

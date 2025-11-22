@@ -16,46 +16,9 @@ import {
   calculateContextualConfidence,
 } from '@/lib/therapy/validators';
 import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/parsers';
-import { generateFallbackAnalysis as generateFallbackAnalysisExternal } from '@/lib/reports/fallback-analysis';
 import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
 import type { CBTStructuredAssessment } from '@/types';
-
-interface ParsedAnalysis {
-  sessionOverview?: {
-    themes?: string[];
-    emotionalTone?: string;
-    engagement?: string;
-  };
-  cognitiveDistortions?: unknown[];
-  schemaAnalysis?: {
-    activeModes?: unknown[];
-    triggeredSchemas?: unknown[];
-    behavioralPatterns?: string[];
-    predominantMode?: string | null;
-    copingStrategies?: { adaptive: string[]; maladaptive: string[] };
-    therapeuticRecommendations?: string[];
-  };
-  therapeuticFrameworks?: unknown[];
-  recommendations?: unknown[];
-  keyPoints?: unknown;
-  therapeuticInsights?: unknown;
-  patternsIdentified?: unknown;
-  actionItems?: unknown;
-  moodAssessment?: string;
-  progressNotes?: string;
-  analysisConfidence?: number;
-  userDataIntegration?: {
-    userRatingsUsed?: boolean;
-    userAssessmentCount?: number;
-    userInsightsPrioritized?: boolean;
-  };
-  contentTierMetadata?: {
-    tier?: string;
-    analysisScope?: string;
-    userDataReliability?: number;
-    dataSource?: string;
-  };
-}
+import type { ParsedAnalysis } from '@/lib/therapy/analysis-schema';
 
 interface ReportGenerationResult {
   reportContent: string;
@@ -73,45 +36,9 @@ export class ReportGenerationService {
   }
 
   /**
-   * Generates fallback analysis when JSON parsing fails
+   * Note: Manual JSON parsing has been removed in favor of generateObject()
+   * which uses Zod schemas for type-safe structured outputs from the AI SDK
    */
-  private generateFallbackAnalysis(reportContent: string): ParsedAnalysis {
-    return generateFallbackAnalysisExternal(reportContent) as unknown as ParsedAnalysis;
-  }
-
-  /**
-   * Cleans and parses AI-generated JSON analysis data
-   */
-  private parseAnalysisData(analysisData: string): ParsedAnalysis {
-    let cleanedData = analysisData.trim();
-
-    // Remove markdown code blocks
-    cleanedData = cleanedData.replace(/```json\s*/g, '');
-    cleanedData = cleanedData.replace(/```\s*/g, '');
-    cleanedData = cleanedData.replace(/\s*```$/g, '');
-
-    // Remove common AI response prefixes/suffixes
-    cleanedData = cleanedData.replace(/^Here's the structured analysis.*?:\s*/i, '');
-    cleanedData = cleanedData.replace(/^Based on.*?:\s*/i, '');
-    cleanedData = cleanedData.replace(/^The structured.*?:\s*/i, '');
-
-    // Find JSON object boundaries
-    const jsonStart = cleanedData.indexOf('{');
-    const jsonEnd = cleanedData.lastIndexOf('}');
-
-    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-      cleanedData = cleanedData.substring(jsonStart, jsonEnd + 1);
-    }
-
-    // Remove trailing commas before closing brackets/braces
-    cleanedData = cleanedData.replace(/,(\s*[}\]])/g, '$1');
-
-    devLog(`Attempting to parse cleaned JSON data (${cleanedData.length} chars)`);
-    const parsed = JSON.parse(cleanedData) as ParsedAnalysis;
-    devLog('Successfully parsed structured analysis data');
-
-    return parsed;
-  }
 
   /**
    * Applies contextual validation to cognitive distortions
@@ -126,13 +53,9 @@ export class ReportGenerationService {
     const fullConversationContent = messages.map((m) => m.content).join(' ');
     const contextValidation = validateTherapeuticContext(fullConversationContent);
 
-    analysis.cognitiveDistortions = (
-      analysis.cognitiveDistortions as Array<{
-        contextAwareConfidence?: number;
-        falsePositiveRisk?: string;
-        name?: string;
-      }>
-    )
+    const originalCount = analysis.cognitiveDistortions.length;
+
+    analysis.cognitiveDistortions = analysis.cognitiveDistortions
       .map((distortion) => {
         if (typeof distortion.contextAwareConfidence === 'number') {
           const enhancedConfidence = calculateContextualConfidence(
@@ -140,7 +63,10 @@ export class ReportGenerationService {
             contextValidation,
             false
           );
-          distortion.contextAwareConfidence = enhancedConfidence;
+          return {
+            ...distortion,
+            contextAwareConfidence: enhancedConfidence,
+          };
         }
         return distortion;
       })
@@ -157,7 +83,8 @@ export class ReportGenerationService {
       });
 
     logger.info('Contextual validation applied to cognitive distortions', {
-      originalCount: analysis.cognitiveDistortions.length,
+      originalCount,
+      filteredCount: analysis.cognitiveDistortions.length,
       contextType: contextValidation.contextualAnalysis.contextType,
       emotionalIntensity: contextValidation.contextualAnalysis.emotionalIntensity,
       therapeuticRelevance: contextValidation.contextualAnalysis.therapeuticRelevance,
@@ -241,54 +168,42 @@ export class ReportGenerationService {
 
   /**
    * Extracts and processes structured analysis from AI report
+   * Now uses generateObject() with Zod schemas for type-safe outputs
    */
   private async processStructuredAnalysis(
     completion: string,
     messages: ReportMessage[],
     _hasCBTContent: boolean
   ): Promise<ParsedAnalysis> {
-    devLog('Extracting structured analysis data...');
-    const analysisData = await extractStructuredAnalysis(
-      completion,
-      ANALYSIS_EXTRACTION_PROMPT_TEXT,
-      this.reportModel
-    );
+    devLog('Extracting structured analysis data using generateObject...');
+    
+    try {
+      const parsedAnalysis = await extractStructuredAnalysis(
+        completion,
+        ANALYSIS_EXTRACTION_PROMPT_TEXT,
+        this.reportModel
+      );
 
-    let parsedAnalysis: ParsedAnalysis = {};
+      // Apply contextual validation to cognitive distortions
+      this.applyContextualValidation(parsedAnalysis, messages);
 
-    if (analysisData) {
-      try {
-        parsedAnalysis = this.parseAnalysisData(analysisData);
-        this.applyContextualValidation(parsedAnalysis, messages);
-      } catch (error) {
-        logger.error('JSON parsing failed for structured analysis', {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          rawDataLength: analysisData?.length || 0,
-          rawDataSample: analysisData?.substring(0, 200) || 'No data',
-          hasMarkdownBlocks: analysisData?.includes('```') || false,
-          hasJsonStart: analysisData?.includes('{') || false,
-          hasJsonEnd: analysisData?.includes('}') || false,
-          modelUsed: this.reportModel,
-        });
+      logger.info('Structured analysis extracted successfully', {
+        modelUsed: this.reportModel,
+        hasCognitiveDistortions: !!parsedAnalysis.cognitiveDistortions?.length,
+        hasSchemaAnalysis: !!parsedAnalysis.schemaAnalysis,
+        analysisConfidence: parsedAnalysis.analysisConfidence,
+      });
 
-        devLog('Attempting fallback content analysis...');
-        try {
-          parsedAnalysis = this.generateFallbackAnalysis(completion);
-          devLog('Successfully generated fallback analysis from human-readable content');
+      return parsedAnalysis;
+    } catch (error) {
+      logger.error('Failed to extract structured analysis', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        modelUsed: this.reportModel,
+      });
 
-          logger.info('Fallback analysis generated successfully', {
-            fallbackStrategy: 'human_readable_content_analysis',
-            extractedInsights: Object.keys(parsedAnalysis).length,
-          });
-        } catch (fallbackError) {
-          logger.error('Fallback analysis also failed', {
-            fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown error',
-          });
-        }
-      }
+      // Return empty analysis on failure - generateObject already handles retries
+      return {};
     }
-
-    return parsedAnalysis;
   }
 
   /**

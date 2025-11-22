@@ -13,9 +13,9 @@ import {
   calculateContextualConfidence,
 } from '@/lib/therapy/validators';
 import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/parsers';
-import { generateFallbackAnalysis as generateFallbackAnalysisExternal } from '@/lib/reports/fallback-analysis';
 import { supportsWebSearch, getModelDisplayName } from '@/ai/model-metadata';
 import { getReportPrompt } from '@/lib/therapy/therapy-prompts';
+import type { ParsedAnalysis } from '@/lib/therapy/analysis-schema';
 
 // Mocks
 jest.mock('@/lib/api/groq-client');
@@ -43,7 +43,6 @@ jest.mock('@/lib/utils/logger', () => ({
 jest.mock('@/lib/chat/message-encryption');
 jest.mock('@/lib/therapy/validators');
 jest.mock('@/lib/therapy/parsers');
-jest.mock('@/lib/reports/fallback-analysis');
 jest.mock('@/ai/model-metadata');
 
 describe('ReportGenerationService', () => {
@@ -88,11 +87,11 @@ describe('ReportGenerationService', () => {
     it('should generate a report successfully without CBT data', async () => {
       (hasCBTData as jest.Mock).mockReturnValue(false);
       (generateSessionReport as jest.Mock).mockResolvedValue('Generated Report Content');
-      (extractStructuredAnalysis as jest.Mock).mockResolvedValue(JSON.stringify({
+      (extractStructuredAnalysis as jest.Mock).mockResolvedValue({
         sessionOverview: { themes: ['sadness'] },
         cognitiveDistortions: [],
         keyPoints: ['Point 1'],
-      }));
+      } as ParsedAnalysis);
       
       const result = await service.generateReport(mockSessionId, mockMessages, 'en');
       
@@ -121,10 +120,10 @@ describe('ReportGenerationService', () => {
       });
       (generateCBTSummary as jest.Mock).mockReturnValue('CBT Summary');
       (generateSessionReport as jest.Mock).mockResolvedValue('Generated Report Content');
-      (extractStructuredAnalysis as jest.Mock).mockResolvedValue(JSON.stringify({
+      (extractStructuredAnalysis as jest.Mock).mockResolvedValue({
         therapeuticInsights: {},
         keyPoints: [],
-      }));
+      } as ParsedAnalysis);
 
       const result = await service.generateReport(mockSessionId, mockMessages, 'en');
 
@@ -137,20 +136,17 @@ describe('ReportGenerationService', () => {
       expect(result.cbtDataSource).toBe('parsed');
     });
 
-    it('should handle analysis extraction failure with fallback', async () => {
+    it('should handle analysis extraction failure gracefully', async () => {
         (hasCBTData as jest.Mock).mockReturnValue(false);
         (generateSessionReport as jest.Mock).mockResolvedValue('Generated Report Content');
-        // Mock extraction to return invalid JSON or fail
-        (extractStructuredAnalysis as jest.Mock).mockResolvedValue('Invalid JSON');
-        
-        (generateFallbackAnalysisExternal as jest.Mock).mockReturnValue({
-            keyPoints: ['Fallback point'],
-        });
+        // Mock extraction to throw an error (generateObject internal error)
+        (extractStructuredAnalysis as jest.Mock).mockRejectedValue(new Error('AI SDK error'));
 
-        await service.generateReport(mockSessionId, mockMessages, 'en');
+        const result = await service.generateReport(mockSessionId, mockMessages, 'en');
 
-        expect(generateFallbackAnalysisExternal).toHaveBeenCalledWith('Generated Report Content');
+        // Should still save report with empty analysis
         expect(mockMutation).toHaveBeenCalled();
+        expect(result.reportContent).toBe('Generated Report Content');
     });
 
     it('should throw error if report generation fails', async () => {
@@ -163,7 +159,7 @@ describe('ReportGenerationService', () => {
     it('should handle database save failure gracefully', async () => {
         (hasCBTData as jest.Mock).mockReturnValue(false);
         (generateSessionReport as jest.Mock).mockResolvedValue('Generated Report Content');
-        (extractStructuredAnalysis as jest.Mock).mockResolvedValue('{}');
+        (extractStructuredAnalysis as jest.Mock).mockResolvedValue({} as ParsedAnalysis);
         
         mockMutation.mockRejectedValue(new Error('DB Error'));
         
@@ -177,12 +173,12 @@ describe('ReportGenerationService', () => {
         (hasCBTData as jest.Mock).mockReturnValue(false);
         (generateSessionReport as jest.Mock).mockResolvedValue('Generated Report Content');
         
-        const mockAnalysis = {
+        const mockAnalysis: ParsedAnalysis = {
             cognitiveDistortions: [
                 { name: 'All-or-nothing', contextAwareConfidence: 50, falsePositiveRisk: 'high' }
             ]
         };
-        (extractStructuredAnalysis as jest.Mock).mockResolvedValue(JSON.stringify(mockAnalysis));
+        (extractStructuredAnalysis as jest.Mock).mockResolvedValue(mockAnalysis);
         
         (validateTherapeuticContext as jest.Mock).mockReturnValue({
             contextualAnalysis: { contextType: 'general', emotionalIntensity: 5, therapeuticRelevance: 8 }

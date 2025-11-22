@@ -35,8 +35,8 @@
     "audit:names": "node scripts/naming-audit.mjs"
   },
   "dependencies": {
-    "@ai-sdk/groq": "^2.0.24",
-    "@ai-sdk/react": "^2.0.79",
+    "@ai-sdk/groq": "^2.0.31",
+    "@ai-sdk/react": "^2.0.99",
     "@clerk/nextjs": "^6.34.0",
     "@clerk/themes": "^2.4.29",
     "@hookform/resolvers": "^5.2.2",
@@ -60,7 +60,7 @@
     "@types/speakeasy": "^2.0.10",
     "@types/ua-parser-js": "^0.7.39",
     "@types/uuid": "^10.0.0",
-    "ai": "^5.0.79",
+    "ai": "^5.0.99",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cmdk": "^1.1.1",
