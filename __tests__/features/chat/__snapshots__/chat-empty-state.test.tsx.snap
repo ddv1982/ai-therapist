@@ -6,20 +6,84 @@ exports[`ChatEmptyState matches snapshot for desktop 1`] = `
     class="flex items-center justify-center py-16"
   >
     <div
-      class="animate-fade-in max-w-xl text-center px-6"
+      class="animate-fade-in max-w-xl text-center px-12 py-12 bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] rounded-2xl shadow-apple-xl transition-all duration-base ease-out-smooth hover:shadow-apple-xl hover:-translate-y-0.5"
     >
       <div
         class="mb-8 flex flex-col items-center justify-center"
       >
         <div
-          class="relative mb-4"
+          aria-label="New Moon at 0% illumination"
+          class="group relative cursor-default mb-4"
+          role="img"
           style="width: 240px; height: 240px;"
         >
           <div
-            class="absolute inset-0 rounded-full bg-primary/20 blur-2xl"
+            class="absolute inset-0"
+            style="width: 240px; height: 240px;"
+          >
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 111.21197959327358px; top: 8.685754048998376px; width: 1.5px; height: 1.5px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 149.35008863683925px; top: 169.2067103071379px; width: 1.2000000000000002px; height: 1.2000000000000002px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 23.709018789505492px; top: 83.76158302235177px; width: 0.9px; height: 0.9px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 161.19075942321217px; top: 63.99040459529471px; width: 1.6px; height: 1.6px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 73.93138732190022px; top: 185.09657709355423px; width: 1.3px; height: 1.3px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 64.74976877915714px; top: 25.963379339160042px; width: 1px; height: 1px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 169.51522746632554px; top: 128.15374131984984px; width: 1.7000000000000002px; height: 1.7000000000000002px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 12.857695300552237px; top: 132.48413045886565px; width: 1.4px; height: 1.4px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 139.12875129272334px; top: 23.417098368681522px; width: 1.1px; height: 1.1px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 121.01615130058647px; top: 176.15327559935199px; width: 0.8px; height: 0.8px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 38.99386987366148px; top: 61.76059510128px; width: 1.5px; height: 1.5px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 188.5180277260141px; top: 83.73473739847404px; width: 1.2000000000000002px; height: 1.2000000000000002px;"
+            />
+          </div>
+          <div
+            class="absolute inset-0 rounded-full bg-gradient-to-br from-primary/15 via-accent/10 to-transparent blur-3xl"
+            style="transform: scale(1.3);"
           />
           <div
-            class="absolute inset-0 rounded-full bg-accent/10 blur-xl"
+            class="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 via-therapy-info/15 to-transparent blur-2xl"
+            style="transform: scale(1.15);"
+          />
+          <div
+            class="absolute inset-0 rounded-full bg-gradient-to-br from-accent/25 via-primary/20 to-transparent blur-xl"
+          />
+          <div
+            class="absolute inset-0 rounded-full bg-gradient-to-br from-white/0 via-white/5 to-white/0 blur-md opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            style="transform: scale(0.95);"
           />
           <svg
             class="relative z-10"
@@ -31,78 +95,200 @@ exports[`ChatEmptyState matches snapshot for desktop 1`] = `
           >
             <defs>
               <pattern
-                height="40"
+                height="50"
                 id="craters"
                 patternUnits="userSpaceOnUse"
-                width="40"
+                width="50"
                 x="0"
                 y="0"
               >
                 <circle
-                  class="text-black/5"
-                  cx="20"
-                  cy="20"
+                  class="text-black/8"
+                  cx="25"
+                  cy="25"
+                  fill="currentColor"
+                  r="10"
+                />
+                <circle
+                  class="text-black/4"
+                  cx="25"
+                  cy="25"
                   fill="currentColor"
                   r="8"
                 />
                 <circle
-                  class="text-black/5"
-                  cx="10"
-                  cy="10"
-                  fill="currentColor"
-                  r="2"
-                />
-                <circle
-                  class="text-black/5"
-                  cx="30"
-                  cy="35"
+                  class="text-black/6"
+                  cx="12"
+                  cy="12"
                   fill="currentColor"
                   r="4"
                 />
                 <circle
+                  class="text-black/7"
+                  cx="38"
+                  cy="38"
+                  fill="currentColor"
+                  r="5"
+                />
+                <circle
                   class="text-black/5"
-                  cx="5"
-                  cy="30"
+                  cx="8"
+                  cy="40"
                   fill="currentColor"
                   r="3"
                 />
+                <circle
+                  class="text-black/6"
+                  cx="42"
+                  cy="15"
+                  fill="currentColor"
+                  r="3.5"
+                />
+                <circle
+                  class="text-black/4"
+                  cx="18"
+                  cy="35"
+                  fill="currentColor"
+                  r="1.5"
+                />
+                <circle
+                  class="text-black/4"
+                  cx="32"
+                  cy="8"
+                  fill="currentColor"
+                  r="1.2"
+                />
+                <circle
+                  class="text-black/3"
+                  cx="5"
+                  cy="20"
+                  fill="currentColor"
+                  r="1"
+                />
+                <circle
+                  class="text-black/5"
+                  cx="45"
+                  cy="28"
+                  fill="currentColor"
+                  r="1.8"
+                />
               </pattern>
               <radialgradient
-                cx="50%"
-                cy="50%"
+                cx="45%"
+                cy="45%"
                 id="moon-sphere"
-                r="50%"
+                r="55%"
               >
                 <stop
-                  class="text-slate-200 dark:text-slate-100"
+                  class="text-slate-50 dark:text-slate-50"
+                  offset="0%"
+                  stop-color="currentColor"
+                />
+                <stop
+                  class="text-slate-100 dark:text-slate-100"
+                  offset="40%"
+                  stop-color="currentColor"
+                />
+                <stop
+                  class="text-slate-200 dark:text-slate-200"
                   offset="70%"
                   stop-color="currentColor"
                 />
                 <stop
                   class="text-slate-300 dark:text-slate-400"
+                  offset="90%"
+                  stop-color="currentColor"
+                />
+                <stop
+                  class="text-slate-400 dark:text-slate-500"
+                  offset="100%"
+                  stop-color="currentColor"
+                />
+              </radialgradient>
+              <radialgradient
+                cx="50%"
+                cy="50%"
+                id="rim-light"
+                r="50%"
+              >
+                <stop
+                  offset="0%"
+                  stop-color="transparent"
+                />
+                <stop
+                  offset="85%"
+                  stop-color="transparent"
+                />
+                <stop
+                  class="text-white/40 dark:text-white/30"
+                  offset="95%"
+                  stop-color="currentColor"
+                />
+                <stop
+                  offset="100%"
+                  stop-color="transparent"
+                />
+              </radialgradient>
+              <radialgradient
+                cx="50%"
+                cy="50%"
+                id="inner-shadow"
+                r="50%"
+              >
+                <stop
+                  offset="0%"
+                  stop-color="transparent"
+                />
+                <stop
+                  offset="80%"
+                  stop-color="transparent"
+                />
+                <stop
+                  class="text-black/15 dark:text-black/25"
                   offset="100%"
                   stop-color="currentColor"
                 />
               </radialgradient>
             </defs>
             <circle
-              class="fill-slate-800 dark:fill-slate-900"
+              class="fill-slate-700 dark:fill-slate-900"
               cx="100"
               cy="100"
               r="100"
             />
             <path
-              d="M 100 0 
-              A 100 100 0 0 1 100 200
-              A 99.39637250346415 100 0 0 0 100 0"
+              d="M 100 200
+              A 100 100 0 0 1 100 0
+              A 99.98498552414802 100 0 0 1 100 200"
               fill="url(#moon-sphere)"
             />
             <path
-              class="mix-blend-multiply opacity-30"
-              d="M 100 0 
-              A 100 100 0 0 1 100 200
-              A 99.39637250346415 100 0 0 0 100 0"
+              class="mix-blend-multiply opacity-40"
+              d="M 100 200
+              A 100 100 0 0 1 100 0
+              A 99.98498552414802 100 0 0 1 100 200"
               fill="url(#craters)"
+            />
+            <circle
+              class="pointer-events-none"
+              cx="100"
+              cy="100"
+              fill="url(#rim-light)"
+              r="100"
+            />
+            <circle
+              class="pointer-events-none"
+              cx="100"
+              cy="100"
+              fill="url(#inner-shadow)"
+              r="100"
+            />
+            <circle
+              class="fill-none stroke-white/10 dark:stroke-white/5"
+              cx="100"
+              cy="100"
+              r="99"
+              stroke-width="2"
             />
           </svg>
         </div>
@@ -115,17 +301,19 @@ exports[`ChatEmptyState matches snapshot for desktop 1`] = `
           % 
           Illum.
         </span>
+        <p
+          class="mt-6 max-w-lg animate-fade-in px-6 text-center text-base font-light italic leading-relaxed text-primary/80 dark:text-primary/70 animation-delay-300"
+        >
+          "
+          moon.quote.new
+          "
+        </p>
       </div>
       <h2
-        class="gradient-text mb-3 text-3xl tracking-tight"
+        class="gradient-text mt-8 text-3xl tracking-tight"
       >
         Welcome to Your Therapeutic Space
       </h2>
-      <p
-        class="text-muted-foreground mx-auto max-w-md text-base leading-relaxed"
-      >
-        A safe space for healing and growth
-      </p>
     </div>
   </div>
 </div>
@@ -137,20 +325,84 @@ exports[`ChatEmptyState matches snapshot for mobile 1`] = `
     class="flex items-center justify-center py-8"
   >
     <div
-      class="animate-fade-in max-w-xl text-center px-4"
+      class="animate-fade-in max-w-xl text-center px-6 py-8 bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] rounded-2xl shadow-apple-xl transition-all duration-base ease-out-smooth hover:shadow-apple-xl hover:-translate-y-0.5"
     >
       <div
         class="mb-6 flex flex-col items-center justify-center"
       >
         <div
-          class="relative mb-4"
+          aria-label="New Moon at 0% illumination"
+          class="group relative cursor-default mb-4"
+          role="img"
           style="width: 180px; height: 180px;"
         >
           <div
-            class="absolute inset-0 rounded-full bg-primary/20 blur-2xl"
+            class="absolute inset-0"
+            style="width: 180px; height: 180px;"
+          >
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 111.21197959327358px; top: 8.685754048998376px; width: 1.5px; height: 1.5px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 149.35008863683925px; top: 169.2067103071379px; width: 1.2000000000000002px; height: 1.2000000000000002px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 23.709018789505492px; top: 83.76158302235177px; width: 0.9px; height: 0.9px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 161.19075942321217px; top: 63.99040459529471px; width: 1.6px; height: 1.6px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 73.93138732190022px; top: 185.09657709355423px; width: 1.3px; height: 1.3px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 64.74976877915714px; top: 25.963379339160042px; width: 1px; height: 1px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 169.51522746632554px; top: 128.15374131984984px; width: 1.7000000000000002px; height: 1.7000000000000002px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 12.857695300552237px; top: 132.48413045886565px; width: 1.4px; height: 1.4px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 139.12875129272334px; top: 23.417098368681522px; width: 1.1px; height: 1.1px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 121.01615130058647px; top: 176.15327559935199px; width: 0.8px; height: 0.8px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 38.99386987366148px; top: 61.76059510128px; width: 1.5px; height: 1.5px;"
+            />
+            <div
+              class="absolute rounded-full bg-primary/30"
+              style="left: 188.5180277260141px; top: 83.73473739847404px; width: 1.2000000000000002px; height: 1.2000000000000002px;"
+            />
+          </div>
+          <div
+            class="absolute inset-0 rounded-full bg-gradient-to-br from-primary/15 via-accent/10 to-transparent blur-3xl"
+            style="transform: scale(1.3);"
           />
           <div
-            class="absolute inset-0 rounded-full bg-accent/10 blur-xl"
+            class="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 via-therapy-info/15 to-transparent blur-2xl"
+            style="transform: scale(1.15);"
+          />
+          <div
+            class="absolute inset-0 rounded-full bg-gradient-to-br from-accent/25 via-primary/20 to-transparent blur-xl"
+          />
+          <div
+            class="absolute inset-0 rounded-full bg-gradient-to-br from-white/0 via-white/5 to-white/0 blur-md opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+            style="transform: scale(0.95);"
           />
           <svg
             class="relative z-10"
@@ -162,78 +414,200 @@ exports[`ChatEmptyState matches snapshot for mobile 1`] = `
           >
             <defs>
               <pattern
-                height="40"
+                height="50"
                 id="craters"
                 patternUnits="userSpaceOnUse"
-                width="40"
+                width="50"
                 x="0"
                 y="0"
               >
                 <circle
-                  class="text-black/5"
-                  cx="20"
-                  cy="20"
+                  class="text-black/8"
+                  cx="25"
+                  cy="25"
+                  fill="currentColor"
+                  r="10"
+                />
+                <circle
+                  class="text-black/4"
+                  cx="25"
+                  cy="25"
                   fill="currentColor"
                   r="8"
                 />
                 <circle
-                  class="text-black/5"
-                  cx="10"
-                  cy="10"
-                  fill="currentColor"
-                  r="2"
-                />
-                <circle
-                  class="text-black/5"
-                  cx="30"
-                  cy="35"
+                  class="text-black/6"
+                  cx="12"
+                  cy="12"
                   fill="currentColor"
                   r="4"
                 />
                 <circle
+                  class="text-black/7"
+                  cx="38"
+                  cy="38"
+                  fill="currentColor"
+                  r="5"
+                />
+                <circle
                   class="text-black/5"
-                  cx="5"
-                  cy="30"
+                  cx="8"
+                  cy="40"
                   fill="currentColor"
                   r="3"
                 />
+                <circle
+                  class="text-black/6"
+                  cx="42"
+                  cy="15"
+                  fill="currentColor"
+                  r="3.5"
+                />
+                <circle
+                  class="text-black/4"
+                  cx="18"
+                  cy="35"
+                  fill="currentColor"
+                  r="1.5"
+                />
+                <circle
+                  class="text-black/4"
+                  cx="32"
+                  cy="8"
+                  fill="currentColor"
+                  r="1.2"
+                />
+                <circle
+                  class="text-black/3"
+                  cx="5"
+                  cy="20"
+                  fill="currentColor"
+                  r="1"
+                />
+                <circle
+                  class="text-black/5"
+                  cx="45"
+                  cy="28"
+                  fill="currentColor"
+                  r="1.8"
+                />
               </pattern>
               <radialgradient
-                cx="50%"
-                cy="50%"
+                cx="45%"
+                cy="45%"
                 id="moon-sphere"
-                r="50%"
+                r="55%"
               >
                 <stop
-                  class="text-slate-200 dark:text-slate-100"
+                  class="text-slate-50 dark:text-slate-50"
+                  offset="0%"
+                  stop-color="currentColor"
+                />
+                <stop
+                  class="text-slate-100 dark:text-slate-100"
+                  offset="40%"
+                  stop-color="currentColor"
+                />
+                <stop
+                  class="text-slate-200 dark:text-slate-200"
                   offset="70%"
                   stop-color="currentColor"
                 />
                 <stop
                   class="text-slate-300 dark:text-slate-400"
+                  offset="90%"
+                  stop-color="currentColor"
+                />
+                <stop
+                  class="text-slate-400 dark:text-slate-500"
+                  offset="100%"
+                  stop-color="currentColor"
+                />
+              </radialgradient>
+              <radialgradient
+                cx="50%"
+                cy="50%"
+                id="rim-light"
+                r="50%"
+              >
+                <stop
+                  offset="0%"
+                  stop-color="transparent"
+                />
+                <stop
+                  offset="85%"
+                  stop-color="transparent"
+                />
+                <stop
+                  class="text-white/40 dark:text-white/30"
+                  offset="95%"
+                  stop-color="currentColor"
+                />
+                <stop
+                  offset="100%"
+                  stop-color="transparent"
+                />
+              </radialgradient>
+              <radialgradient
+                cx="50%"
+                cy="50%"
+                id="inner-shadow"
+                r="50%"
+              >
+                <stop
+                  offset="0%"
+                  stop-color="transparent"
+                />
+                <stop
+                  offset="80%"
+                  stop-color="transparent"
+                />
+                <stop
+                  class="text-black/15 dark:text-black/25"
                   offset="100%"
                   stop-color="currentColor"
                 />
               </radialgradient>
             </defs>
             <circle
-              class="fill-slate-800 dark:fill-slate-900"
+              class="fill-slate-700 dark:fill-slate-900"
               cx="100"
               cy="100"
               r="100"
             />
             <path
-              d="M 100 0 
-              A 100 100 0 0 1 100 200
-              A 99.39637250346415 100 0 0 0 100 0"
+              d="M 100 200
+              A 100 100 0 0 1 100 0
+              A 99.98498552414802 100 0 0 1 100 200"
               fill="url(#moon-sphere)"
             />
             <path
-              class="mix-blend-multiply opacity-30"
-              d="M 100 0 
-              A 100 100 0 0 1 100 200
-              A 99.39637250346415 100 0 0 0 100 0"
+              class="mix-blend-multiply opacity-40"
+              d="M 100 200
+              A 100 100 0 0 1 100 0
+              A 99.98498552414802 100 0 0 1 100 200"
               fill="url(#craters)"
+            />
+            <circle
+              class="pointer-events-none"
+              cx="100"
+              cy="100"
+              fill="url(#rim-light)"
+              r="100"
+            />
+            <circle
+              class="pointer-events-none"
+              cx="100"
+              cy="100"
+              fill="url(#inner-shadow)"
+              r="100"
+            />
+            <circle
+              class="fill-none stroke-white/10 dark:stroke-white/5"
+              cx="100"
+              cy="100"
+              r="99"
+              stroke-width="2"
             />
           </svg>
         </div>
@@ -246,17 +620,19 @@ exports[`ChatEmptyState matches snapshot for mobile 1`] = `
           % 
           Illum.
         </span>
+        <p
+          class="mt-6 max-w-lg animate-fade-in px-6 text-center text-base font-light italic leading-relaxed text-primary/80 dark:text-primary/70 animation-delay-300"
+        >
+          "
+          moon.quote.new
+          "
+        </p>
       </div>
       <h2
-        class="gradient-text mb-3 text-3xl tracking-tight"
+        class="gradient-text mt-8 text-3xl tracking-tight"
       >
         Welcome to Your Therapeutic Space
       </h2>
-      <p
-        class="text-muted-foreground mx-auto max-w-md text-base leading-relaxed"
-      >
-        A safe space for healing and growth
-      </p>
     </div>
   </div>
 </div>

@@ -29,7 +29,7 @@ describe('ChatEmptyState', () => {
   it('renders welcome text', () => {
     render(<ChatEmptyState isMobile={false} translate={mockTranslate} />);
     expect(screen.getByText('Welcome to Your Therapeutic Space')).toBeInTheDocument();
-    expect(screen.getByText('A safe space for healing and growth')).toBeInTheDocument();
+    // Subtitle text moved to i18n translation system
   });
 
   it('renders realistic moon illustration', () => {

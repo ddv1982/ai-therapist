@@ -27,7 +27,7 @@ exports[`DraftPanel renders with draft found 1`] = `
         </div>
         <button
           aria-label="Delete draft"
-          class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-semibold transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-muted hover:text-foreground h-12 w-12"
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-semibold duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.96] shadow-apple-xs hover:shadow-apple-sm hover:bg-muted hover:text-foreground transition-all duration-fast h-12 w-12"
           title="Delete draft"
         >
           <div
@@ -51,7 +51,7 @@ exports[`DraftPanel renders with draft found 1`] = `
       class="flex flex-col justify-center gap-3 sm:flex-row"
     >
       <button
-        class="inline-flex items-center whitespace-nowrap text-base font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 py-2 group h-12 justify-center gap-3 rounded-xl px-6 shadow-lg transition-all duration-200 hover:shadow-xl"
+        class="inline-flex items-center whitespace-nowrap text-base font-semibold duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.96] bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-apple-primary hover:shadow-apple-accent hover:from-primary/90 hover:to-accent/90 duration-fast ease-out-smooth py-2 group h-12 justify-center gap-3 rounded-xl px-6 shadow-lg transition-all duration-200 hover:shadow-xl"
       >
         <div
           class="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-colors group-hover:bg-white/30"
@@ -72,7 +72,7 @@ exports[`DraftPanel renders with draft found 1`] = `
         />
       </button>
       <button
-        class="inline-flex items-center gap-2 whitespace-nowrap text-base transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border-input bg-background shadow-sm py-2 hover:bg-accent hover:text-accent-foreground h-12 justify-center rounded-xl border-2 px-6 font-semibold"
+        class="inline-flex items-center gap-2 whitespace-nowrap text-base duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.96] border-input bg-background shadow-apple-xs hover:shadow-apple-sm transition-all duration-fast ease-out-smooth py-2 hover:bg-accent hover:text-accent-foreground h-12 justify-center rounded-xl border-2 px-6 font-semibold"
       >
         Start New Session
       </button>
@@ -87,7 +87,7 @@ exports[`DraftPanel renders without draft (begin button) 1`] = `
     class="flex justify-center"
   >
     <button
-      class="inline-flex items-center whitespace-nowrap text-base font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:from-primary/90 hover:to-accent/90 active:from-primary/80 active:to-accent/80 py-2 group h-12 justify-center gap-3 rounded-xl px-8 shadow-lg transition-all duration-200 hover:shadow-xl"
+      class="inline-flex items-center whitespace-nowrap text-base font-semibold duration-fast focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.96] bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-apple-primary hover:shadow-apple-accent hover:from-primary/90 hover:to-accent/90 duration-fast ease-out-smooth py-2 group h-12 justify-center gap-3 rounded-xl px-8 shadow-lg transition-all duration-200 hover:shadow-xl"
     >
       <div
         class="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-colors group-hover:bg-white/30"

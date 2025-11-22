@@ -17,6 +17,7 @@ jest.mock('@/lib/api/api-middleware', () => {
         email: 't@example.com',
         name: 'T',
       },
+      jwtToken: 'mock_jwt_token',
     };
     const params = routeParams?.params ?? Promise.resolve({});
     return handler(req, ctx, params);
@@ -26,10 +27,12 @@ jest.mock('@/lib/api/api-middleware', () => {
 
 // Mock Convex HTTP client and session repository utilities
 jest.mock('@/lib/convex/http-client', () => {
+  const mockClient = {
+    mutation: jest.fn().mockResolvedValue({ ok: true }),
+  };
   return {
-    getConvexHttpClient: () => ({
-      mutation: jest.fn().mockResolvedValue({ ok: true }),
-    }),
+    getConvexHttpClient: () => mockClient,
+    getConvexHttpClientWithAuth: () => mockClient,
     anyApi: { sessions: { remove: {} } },
   };
 });
