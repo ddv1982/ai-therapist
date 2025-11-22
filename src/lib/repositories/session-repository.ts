@@ -5,7 +5,7 @@
  * Encapsulates all session queries and mutations from the frontend.
  */
 
-import { getConvexHttpClient, api } from '@/lib/convex/http-client';
+import { getConvexHttpClient, api, anyApi } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 import type {
   SessionBundle,
@@ -114,7 +114,7 @@ export async function getUserSessions(
   const offset = options.offset ?? 0;
 
   const [sessions, total] = await Promise.all([
-    client.query(api.sessions.listByUser, { userId: userDoc._id, limit, offset }),
+    client.query(anyApi.sessions.listByUserInternal, { userId: userDoc._id, limit, offset }),
     client.query(api.sessions.countByUser, { userId: userDoc._id }),
   ]);
 
