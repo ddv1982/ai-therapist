@@ -43,7 +43,8 @@ export function ChatEmptyState({ isMobile, translate }: ChatEmptyStateProps) {
 
   return (
     <div className={`flex items-center justify-center ${isMobile ? 'py-8' : 'py-16'}`}>
-      <div className={`animate-fade-in max-w-xl text-center ${isMobile ? 'px-4' : 'px-6'}`}>
+      {/* Apple-style frosted glass card */}
+      <div className={`animate-fade-in max-w-xl text-center ${isMobile ? 'px-6 py-8' : 'px-12 py-12'} bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] rounded-2xl shadow-apple-xl transition-all duration-base ease-out-smooth hover:shadow-apple-xl hover:-translate-y-0.5`}>
         {/* Realistic Moon Illustration */}
         <div className={`${isMobile ? 'mb-6' : 'mb-8'} flex flex-col items-center justify-center`}>
           <RealisticMoon 

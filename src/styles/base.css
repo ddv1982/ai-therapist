@@ -1,42 +1,65 @@
 :root {
-  /* Light theme variables in OKLCH format for better accessibility */
+  /* ============================================
+     TYPOGRAPHY - Apple System Font Stack
+     ============================================ */
+  --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  --radius: 0.75rem; /* 12px */
+
+  /* ============================================
+     COLORS - Light Theme (OKLCH)
+     ============================================ */
   /* 60% - Neutral backgrounds */
-  --background: oklch(1 0 0);
-  --card: oklch(1 0 0);
-  --popover: oklch(1 0 0);
+  --background: oklch(0.99 0 0);
+  --card: oklch(0.99 0 0);
+  --popover: oklch(0.99 0 0);
   --secondary: oklch(0.96 0.01 247);
-  --muted: oklch(0.96 0.01 247);
+  --muted: oklch(0.95 0.005 250);
 
-  /* 30% - Complementary text and UI */
-  --foreground: oklch(0.145 0.045 258);
-  --card-foreground: oklch(0.145 0.045 258);
-  --popover-foreground: oklch(0.145 0.045 258);
-  --secondary-foreground: oklch(0.25 0.02 258);
-  --muted-foreground: oklch(0.5 0.01 258);
-  --border: oklch(0.91 0.01 247);
-  --input: oklch(0.91 0.01 247);
+  /* 30% - Text and UI elements */
+  --foreground: oklch(0.15 0.01 250);
+  --card-foreground: oklch(0.15 0.01 250);
+  --popover-foreground: oklch(0.15 0.01 250);
+  --secondary-foreground: oklch(0.45 0.01 250);
+  --muted-foreground: oklch(0.55 0.01 250);
+  --border: oklch(0.88 0.005 250);
+  --input: oklch(0.88 0.005 250);
 
-  /* 10% - Accent colors for CTAs and highlights */
-  --primary: oklch(0.6 0.19 237);
-  --primary-foreground: oklch(0.98 0.01 247);
-  --accent: oklch(0.55 0.15 152);
-  --accent-foreground: oklch(0.98 0.01 247);
-  --destructive: oklch(0.62 0.24 25);
-  --destructive-foreground: oklch(0.98 0.01 247);
-  --ring: oklch(0.6 0.19 237);
-  --radius: 0.75rem;
+  /* 10% - Accent colors (CTAs) */
+  --primary: oklch(0.55 0.18 240);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.60 0.14 150);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.58 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --ring: oklch(0.55 0.18 240);
 
-  /* Simplified gradients using OKLCH */
-  --gradient-primary: linear-gradient(135deg, oklch(0.6 0.19 237) 0%, oklch(0.65 0.18 245) 100%);
-  --gradient-accent: linear-gradient(135deg, oklch(0.55 0.15 152) 0%, oklch(0.6 0.15 162) 100%);
-  --gradient-muted: linear-gradient(135deg, oklch(0.96 0.01 247) 0%, oklch(0.91 0.01 247) 100%);
+  /* ============================================
+     GLASSMORPHISM - Apple Frosted Glass
+     ============================================ */
+  --glass-white: oklch(0.99 0 0 / 0.7);
+  --glass-border: oklch(0.99 0 0 / 0.18);
 
-  /* Reduced therapeutic colors (following 10% accent rule) */
+  /* ============================================
+     SHADOWS - Apple-style (very subtle)
+     ============================================ */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.10);
+  --shadow-xl: 0 20px 40px -8px rgba(0, 0, 0, 0.12);
+  --shadow-primary: 0 8px 16px -4px oklch(0.55 0.18 240 / 0.2);
+  --shadow-accent: 0 8px 16px -4px oklch(0.60 0.14 150 / 0.2);
+
+  /* ============================================
+     THERAPY COLORS
+     ============================================ */
   --therapy-success: oklch(0.65 0.15 142);
   --therapy-warning: oklch(0.75 0.15 85);
   --therapy-info: oklch(0.7 0.15 237);
 
-  /* Emotion color variables (light) */
+  /* ============================================
+     EMOTION COLORS (for therapeutic features)
+     ============================================ */
   --emotion-fear: oklch(0.7 0.12 200);
   --emotion-anger: oklch(0.62 0.24 25);
   --emotion-sadness: oklch(0.6 0.12 255);
@@ -45,40 +68,34 @@
   --emotion-shame: oklch(0.7 0.16 350);
   --emotion-guilt: oklch(0.65 0.14 285);
 
-  /* Component-specific variables */
+  /* ============================================
+     COMPONENT-SPECIFIC
+     ============================================ */
   --sidebar-background: oklch(0.98 0.01 247);
   --modal-backdrop: oklch(0.25 0.02 258 / 0.8);
-
-  /* Shadows using 8pt grid system */
-  --shadow-sm: 0 2px 4px 0 oklch(0.145 0.045 258 / 5%);
-  --shadow-md: 0 8px 16px -4px oklch(0.145 0.045 258 / 10%);
-  --shadow-lg: 0 16px 24px -8px oklch(0.145 0.045 258 / 10%);
-  --shadow-xl: 0 24px 32px -8px oklch(0.145 0.045 258 / 10%);
-
-  /* Typography variables (simplified) */
-  --line-height-relaxed: 1.6;
-  --line-height-normal: 1.5;
 }
 
 .dark {
-  /* Dark theme variables in OKLCH format */
-  /* 60% - Dark neutral backgrounds */
-  --background: oklch(0.13 0.02 258);
-  --card: oklch(0.13 0.02 258);
-  --popover: oklch(0.13 0.02 258);
+  /* ============================================
+     COLORS - Dark Theme (Apple-inspired)
+     ============================================ */
+  /* 60% - Dark backgrounds (true black Apple style) */
+  --background: oklch(0.12 0.01 250);
+  --card: oklch(0.14 0.01 250);
+  --popover: oklch(0.14 0.01 250);
   --secondary: oklch(0.2 0.015 258);
-  --muted: oklch(0.2 0.015 258);
+  --muted: oklch(0.18 0.01 250);
 
   /* 30% - Light text and UI for contrast */
-  --foreground: oklch(0.98 0.01 247);
-  --card-foreground: oklch(0.98 0.01 247);
-  --popover-foreground: oklch(0.98 0.01 247);
-  --secondary-foreground: oklch(0.98 0.01 247);
-  --muted-foreground: oklch(0.7 0.01 258);
-  --border: oklch(0.2 0.015 258);
-  --input: oklch(0.2 0.015 258);
+  --foreground: oklch(0.98 0.005 250);
+  --card-foreground: oklch(0.98 0.005 250);
+  --popover-foreground: oklch(0.98 0.005 250);
+  --secondary-foreground: oklch(0.70 0.01 250);
+  --muted-foreground: oklch(0.55 0.01 250);
+  --border: oklch(0.22 0.01 250);
+  --input: oklch(0.22 0.01 250);
 
-  /* 10% - Accent colors for dark mode */
+  /* 10% - Accent colors */
   --primary: oklch(0.7 0.15 237);
   --primary-foreground: oklch(0.13 0.02 258);
   --accent: oklch(0.65 0.12 152);
@@ -87,17 +104,29 @@
   --destructive-foreground: oklch(0.98 0.01 247);
   --ring: oklch(0.7 0.15 237);
 
-  /* Simplified dark gradients */
-  --gradient-primary: linear-gradient(135deg, oklch(0.7 0.15 237) 0%, oklch(0.75 0.14 245) 100%);
-  --gradient-accent: linear-gradient(135deg, oklch(0.65 0.12 152) 0%, oklch(0.7 0.12 162) 100%);
-  --gradient-muted: linear-gradient(135deg, oklch(0.2 0.015 258) 0%, oklch(0.22 0.015 258) 100%);
+  /* ============================================
+     GLASSMORPHISM - Dark Mode
+     ============================================ */
+  --glass-white: oklch(0.15 0.01 250 / 0.7);
+  --glass-border: oklch(0.99 0 0 / 0.1);
 
-  /* Reduced dark therapeutic colors */
+  /* ============================================
+     SHADOWS - Dark Mode (more prominent)
+     ============================================ */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 40px -8px rgba(0, 0, 0, 0.6);
+  --shadow-primary: 0 8px 16px -4px oklch(0.7 0.15 237 / 0.3);
+  --shadow-accent: 0 8px 16px -4px oklch(0.65 0.12 152 / 0.3);
+
+  /* ============================================
+     THERAPY & EMOTION COLORS - Dark Mode
+     ============================================ */
   --therapy-success: oklch(0.7 0.12 142);
   --therapy-warning: oklch(0.8 0.12 85);
   --therapy-info: oklch(0.75 0.12 237);
 
-  /* Emotion color variables (dark) */
   --emotion-fear: oklch(0.7 0.12 200);
   --emotion-anger: oklch(0.7 0.2 25);
   --emotion-sadness: oklch(0.7 0.12 255);
@@ -106,15 +135,11 @@
   --emotion-shame: oklch(0.78 0.16 350);
   --emotion-guilt: oklch(0.7 0.14 285);
 
-  /* Dark component variables */
+  /* ============================================
+     COMPONENT-SPECIFIC - Dark Mode
+     ============================================ */
   --sidebar-background: oklch(0.13 0.02 258);
   --modal-backdrop: oklch(0.05 0.01 258 / 0.9);
-
-  /* Dark shadows using 8pt grid */
-  --shadow-sm: 0 2px 4px 0 oklch(0.05 0.01 258 / 30%);
-  --shadow-md: 0 8px 16px -4px oklch(0.05 0.01 258 / 30%);
-  --shadow-lg: 0 16px 24px -8px oklch(0.05 0.01 258 / 30%);
-  --shadow-xl: 0 24px 32px -8px oklch(0.05 0.01 258 / 30%);
 }
 
 /* Base styles without @layer (Tailwind v4 approach) */
@@ -130,17 +155,32 @@ html[data-scroll-behavior='smooth'] {
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-system);
   font-feature-settings:
     'rlig' 1,
-    'calt' 1;
+    'calt' 1,
+    'ss01' 1,
+    'ss02' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
+    background-color var(--duration-base) var(--ease-smooth),
+    color var(--duration-base) var(--ease-smooth);
   height: 100%;
   width: 100%;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
+}
+
+/* Reduced motion support (accessibility) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

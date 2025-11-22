@@ -258,10 +258,6 @@ function ChatPageContent() {
       minHeight: viewportHeight,
       maxHeight: viewportHeight,
       overflow: 'hidden',
-      backgroundImage: `
-      radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
-      radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.05) 0%, transparent 50%)
-    `,
     }),
     [viewportHeight]
   );
@@ -270,7 +266,7 @@ function ChatPageContent() {
     <ChatUIProvider bridge={chatUIBridge}>
       <AuthGuard>
         <div
-          className="gradient-bg-app flex"
+          className="gradient-bg-app flex bg-app-subtle"
           role="application"
           aria-label={t('app.aria')}
           style={appContainerStyle}
@@ -362,9 +358,9 @@ function ChatPageContent() {
                       scrollToBottom();
                       setTimeout(() => textareaRef.current?.focus(), 50);
                     }}
-                    variant="secondary"
+                    variant="glass"
                     size="sm"
-                    className="bg-background/90 pointer-events-auto gap-2 rounded-full border px-3 py-1 shadow-md backdrop-blur"
+                    className="pointer-events-auto gap-2 rounded-full px-3 py-1"
                     aria-label={t('main.jumpToLatest')}
                   >
                     <ArrowDown className="h-4 w-4" />

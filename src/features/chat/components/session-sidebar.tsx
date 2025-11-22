@@ -35,17 +35,10 @@ export const SessionSidebar = memo(function SessionSidebar({
       {/* Sidebar */}
       <aside
         id="chat-sidebar"
-        className={`${showSidebar ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${showSidebar ? 'fixed md:relative' : ''} ${showSidebar ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} bg-card/80 dark:bg-card/80 border-border/50 animate-slide-in flex flex-col overflow-hidden border-r shadow-xl backdrop-blur-md transition-all duration-500 ease-in-out`}
+        className={`${showSidebar ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${showSidebar ? 'fixed md:relative' : ''} ${showSidebar ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} bg-sidebar bg-sidebar-gradient bg-card/80 dark:bg-card/80 border-border/50 animate-slide-in flex flex-col overflow-hidden border-r shadow-xl backdrop-blur-md transition-all duration-500 ease-in-out`}
         role="navigation"
         aria-label="Chat sessions"
         aria-hidden={!showSidebar}
-        style={{
-          background: 'var(--sidebar-background)',
-          backgroundImage: `
-            linear-gradient(180deg, transparent 0%, hsl(var(--accent) / 0.03) 100%),
-            radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 50%)
-          `,
-        }}
       >
         <div className="border-border/30 border-b p-6">
           <div className="mb-6 flex items-center justify-between">

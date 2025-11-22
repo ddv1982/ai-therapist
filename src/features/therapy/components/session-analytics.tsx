@@ -66,7 +66,7 @@ export function SessionAnalytics({
                 <YAxis stroke="oklch(var(--muted-foreground))" />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'oklch(var(--background))',
+                    backgroundColor: 'transparent',
                     border: '1px solid oklch(var(--border))',
                     borderRadius: '8px',
                   }}
@@ -125,7 +125,7 @@ export function MessageDistribution({
                 <YAxis stroke="oklch(var(--muted-foreground))" />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'oklch(var(--background))',
+                    backgroundColor: 'transparent',
                     border: '1px solid oklch(var(--border))',
                     borderRadius: '8px',
                   }}
@@ -174,7 +174,7 @@ export function ProgressTrend({
                 <YAxis stroke="oklch(var(--muted-foreground))" />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'oklch(var(--background))',
+                    backgroundColor: 'transparent',
                     border: '1px solid oklch(var(--border))',
                     borderRadius: '8px',
                   }}

@@ -64,17 +64,10 @@ export function ChatSidebar(props: ChatSidebarProps) {
 
       <aside
         id="chat-sidebar"
-        className={sidebarClasses}
+        className={`${sidebarClasses} bg-sidebar bg-sidebar-gradient`}
         role="navigation"
         aria-label={translate('sidebar.aria')}
         aria-hidden={!open}
-        style={{
-          background: 'var(--sidebar-background)',
-          backgroundImage: `
-            linear-gradient(180deg, transparent 0%, hsl(var(--accent) / 0.03) 100%),
-            radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 50%)
-          `,
-        }}
       >
         <div className="border-border/30 border-b p-6">
           <div className="mb-6 flex items-center justify-between">
@@ -96,7 +89,8 @@ export function ChatSidebar(props: ChatSidebarProps) {
             onClick={() => {
               void onStartNewSession();
             }}
-            className="group h-12 w-full justify-start gap-3 rounded-xl transition-all duration-200"
+            variant="default"
+            className="group h-12 w-full justify-start gap-3 rounded-xl"
           >
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition-colors group-hover:bg-white/30">
               <Plus className="h-4 w-4" />
@@ -119,10 +113,11 @@ export function ChatSidebar(props: ChatSidebarProps) {
               return (
                 <Card
                   key={session.id}
-                  className={`group mb-3 cursor-pointer p-4 transition-all duration-300 hover:shadow-lg ${
+                  variant="glass"
+                  className={`group mb-3 cursor-pointer p-4 transition-all duration-base ease-out-smooth active:scale-[0.98] ${
                     isActive
-                      ? 'ring-primary/50 bg-primary/5 dark:bg-primary/5 border-primary/30 shadow-md ring-2'
-                      : 'hover:border-primary/20 dark:bg-card/50 dark:hover:bg-card/70 bg-white/50 hover:bg-white/80'
+                      ? 'ring-primary/50 bg-primary/5 dark:bg-primary/5 border-primary/30 shadow-apple-lg ring-2'
+                      : 'hover:border-primary/20 hover:shadow-apple-md hover:-translate-y-0.5'
                   }`}
                 >
                   <div

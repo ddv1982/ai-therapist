@@ -61,8 +61,7 @@ export function ChatHeader({
             size="sm"
             onTouchStart={onToggleSidebar}
             onClick={onToggleSidebar}
-            className={getIconButtonSize('large')}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className={`${getIconButtonSize('large')} tap-transparent`}
             aria-label={t('main.toggleSidebar')}
             aria-expanded={showSidebar}
             aria-controls="chat-sidebar"
@@ -88,9 +87,8 @@ export function ChatHeader({
               size="sm"
               onClick={onGenerateReport}
               // Avoid disabled to keep spinner fully opaque; block clicks via pointer-events
-              className={`${getIconButtonSize('large')} ${isGeneratingReport ? 'pointer-events-none' : ''} text-foreground`}
+              className={`${getIconButtonSize('large')} ${isGeneratingReport ? 'pointer-events-none' : ''} text-foreground tap-transparent`}
               aria-disabled={isGeneratingReport}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
               title={t('main.generateReport')}
             >
               {isGeneratingReport ? (
@@ -105,8 +103,7 @@ export function ChatHeader({
               variant="secondary"
               size="sm"
               onClick={onStopGenerating}
-              className={getIconButtonSize('large')}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              className={`${getIconButtonSize('large')} tap-transparent`}
               title={t('main.stopGenerating')}
             >
               <X className="relative z-10 h-4 w-4" />
@@ -116,8 +113,7 @@ export function ChatHeader({
             variant="ghost"
             size="sm"
             onClick={onOpenCBTDiary}
-            className={getIconButtonSize('large')}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className={`${getIconButtonSize('large')} tap-transparent`}
             title={isMobile ? t('main.cbtMobile') : t('main.cbtOpen')}
           >
             <Brain className="relative z-10 h-4 w-4" />
@@ -126,8 +122,7 @@ export function ChatHeader({
             variant="ghost"
             size="sm"
             onClick={onCreateObsessionsTable}
-            className={getIconButtonSize('large')}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className={`${getIconButtonSize('large')} tap-transparent`}
             title={t('main.obsessionsTooltip')}
           >
             <List className="relative z-10 h-4 w-4" />
