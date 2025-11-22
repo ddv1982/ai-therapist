@@ -30,8 +30,8 @@ export async function validateApiAuth(request?: NextRequest): Promise<AuthValida
       };
     }
 
-    // Get JWT token for Convex
-    const token = await authObj.getToken();
+    // Get JWT token for Convex - must specify template name
+    const token = await authObj.getToken({ template: 'convex' });
 
     return {
       isValid: true,
