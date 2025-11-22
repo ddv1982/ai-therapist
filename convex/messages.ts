@@ -27,9 +27,7 @@ async function getAuthenticatedUser(ctx: QueryCtx | MutationCtx) {
 
 /**
  * Helper to verify message ownership via session
- * @unused - Reserved for future use in mutations
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function verifyMessageOwnership(
   ctx: QueryCtx | MutationCtx,
   messageId: Id<'messages'>,
@@ -230,6 +228,8 @@ export const remove = mutation({
 export const getById = query({
   args: { messageId: v.id('messages') },
   handler: async (ctx, { messageId }) => {
-    return await ctx.db.get(messageId);
+    // Verify authentication and ownership
+    const authenticatedUser = await getAuthenticatedUser(ctx);
+    return await verifyMessageOwnership(ctx, messageId, authenticatedUser._id);
   },
 });

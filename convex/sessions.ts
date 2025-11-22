@@ -28,9 +28,7 @@ async function getAuthenticatedUser(ctx: QueryCtx | MutationCtx) {
 
 /**
  * Helper to verify session ownership
- * @unused - Reserved for future use in mutations
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function verifySessionOwnership(
   ctx: QueryCtx | MutationCtx,
   sessionId: Id<'sessions'>,
@@ -149,8 +147,9 @@ export const countByUser = query({
 export const getWithMessagesAndReports = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    const session = await ctx.db.get(sessionId);
-    if (!session) return null;
+    // Verify authentication and ownership
+    const authenticatedUser = await getAuthenticatedUser(ctx);
+    const session = await verifySessionOwnership(ctx, sessionId, authenticatedUser._id);
     const messages = await ctx.db
       .query('messages')
       .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
@@ -251,6 +250,8 @@ export const _incrementMessageCount = internalMutation({
 export const get = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    return await ctx.db.get(sessionId);
+    // Verify authentication and ownership
+    const authenticatedUser = await getAuthenticatedUser(ctx);
+    return await verifySessionOwnership(ctx, sessionId, authenticatedUser._id);
   },
 });
