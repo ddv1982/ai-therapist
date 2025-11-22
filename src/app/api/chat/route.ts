@@ -288,7 +288,7 @@ async function loadSessionHistory(
     sessionWithMessages?.messages ??
     (await (async () => {
       const client = getConvexHttpClient();
-      const all = (await client.query(anyApi.messages.listBySession, {
+      const all = (await client.query(anyApi.messages.listBySessionInternal, {
         sessionId,
       })) as ConvexMessage[];
       return Array.isArray(all) ? all : [];

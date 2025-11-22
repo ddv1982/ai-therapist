@@ -19,10 +19,13 @@ export const getCurrentUser = query({
 
 /**
  * Get user by Clerk ID
+ * Note: This is public because API routes need to look up users
+ * The API routes themselves handle authentication
  */
 export const getByClerkId = query({
   args: { clerkId: v.string() },
   handler: async (ctx, { clerkId }) => {
+    // No auth check - this is used by API routes that handle their own auth
     return await ctx.db
       .query('users')
       .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
