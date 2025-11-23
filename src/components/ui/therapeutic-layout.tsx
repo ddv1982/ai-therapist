@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, memo } from 'react';
 import { cn } from '@/lib/utils';
 
 // Unified interface for all layout patterns
@@ -73,7 +73,7 @@ export interface TherapeuticLayoutProps {
  * - Animation and stagger effects
  * - Consistent spacing and padding
  */
-export function TherapeuticLayout({
+const TherapeuticLayoutComponent = function TherapeuticLayout({
   children,
   layout = 'stack',
   spacing = 'md',
@@ -254,7 +254,10 @@ export function TherapeuticLayout({
       <div className={cn('w-full', className)}>{children}</div>
     </div>
   );
-}
+};
+
+// Memoized export - only re-render when layout props change
+export const TherapeuticLayout = memo(TherapeuticLayoutComponent);
 
 // Specialized layout components for common patterns
 export function TherapeuticSection({

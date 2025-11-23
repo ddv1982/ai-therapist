@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, memo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -99,7 +99,7 @@ export interface TherapeuticModalProps {
  * - Mobile optimization
  * - Consistent therapeutic styling
  */
-export function TherapeuticModal({
+const TherapeuticModalComponent = function TherapeuticModal({
   trigger,
   open,
   onOpenChange,
@@ -312,7 +312,10 @@ export function TherapeuticModal({
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+// Memoized export - only re-render when modal state/content changes
+export const TherapeuticModal = memo(TherapeuticModalComponent);
 
 // Pre-configured modal presets for common therapeutic use cases
 export const therapeuticModalPresets = {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useState, ReactNode, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -71,7 +71,7 @@ export interface TherapeuticBaseCardProps {
  * - Mobile optimization
  * - CBT-specific styling and features
  */
-export function TherapeuticBaseCard({
+const TherapeuticBaseCardComponent = function TherapeuticBaseCard({
   title,
   subtitle,
   content,
@@ -334,7 +334,10 @@ export function TherapeuticBaseCard({
       )}
     </Card>
   );
-}
+};
+
+// Memoized export - only re-render when card props change
+export const TherapeuticBaseCard = memo(TherapeuticBaseCardComponent);
 
 // Pre-configured card variants for common therapeutic use cases
 export const therapeuticCardPresets = {

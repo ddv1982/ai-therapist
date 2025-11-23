@@ -2,6 +2,7 @@
  * Message Content Component - Handles content processing and display
  */
 
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/ui/design-system/message';
 import { Markdown } from '@/components/ui/markdown';
@@ -30,7 +31,7 @@ function detectCBTSessionReport(content: string): boolean {
   return cbtIndicators.some((pattern) => new RegExp(pattern, 'is').test(content));
 }
 
-export function MessageContent({ content, role, messageId, className }: MessageContentProps) {
+const MessageContentComponent = function MessageContent({ content, role, messageId, className }: MessageContentProps) {
   // Check if this is a CBT session report message
   const isCBTReport = role === 'assistant' && detectCBTSessionReport(content);
 
@@ -49,4 +50,14 @@ export function MessageContent({ content, role, messageId, className }: MessageC
       <Markdown isUser={role === 'user'}>{content}</Markdown>
     </div>
   );
-}
+};
+
+// Memoized export - only re-render when content or role changes
+export const MessageContent = memo(MessageContentComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.content === nextProps.content &&
+    prevProps.role === nextProps.role &&
+    prevProps.messageId === nextProps.messageId &&
+    prevProps.className === nextProps.className
+  );
+});

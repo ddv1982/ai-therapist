@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, memo } from 'react';
 import {
   Download,
   FileText,
@@ -33,7 +33,7 @@ interface MessageActionsProps {
   className?: string;
 }
 
-export function MessageActions({
+const MessageActionsComponent = function MessageActions({
   messageId: _messageId,
   messageContent,
   messageRole,
@@ -317,4 +317,14 @@ export function MessageActions({
       </div>
     </div>
   );
-}
+};
+
+// Memoized export - only re-render when message content/role changes
+export const MessageActions = memo(MessageActionsComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.messageId === nextProps.messageId &&
+    prevProps.messageContent === nextProps.messageContent &&
+    prevProps.messageRole === nextProps.messageRole &&
+    prevProps.className === nextProps.className
+  );
+});

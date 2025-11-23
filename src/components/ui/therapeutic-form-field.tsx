@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, ReactNode } from 'react';
+import { useState, useCallback, ReactNode, memo } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -97,7 +97,7 @@ export interface TherapeuticFormFieldProps {
  * - Mobile optimization
  * - Therapeutic styling variants
  */
-export function TherapeuticFormField({
+const TherapeuticFormFieldComponent = function TherapeuticFormField({
   label,
   description,
   placeholder,
@@ -506,7 +506,10 @@ export function TherapeuticFormField({
       {displayError && <p className="text-destructive text-sm">{displayError}</p>}
     </div>
   );
-}
+};
+
+// Memoized export - only re-render when props actually change
+export const TherapeuticFormField = memo(TherapeuticFormFieldComponent);
 
 // Helper function for intensity labels
 function getIntensityLabel(value: number, t?: (key: string) => string): string {

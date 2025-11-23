@@ -2,6 +2,7 @@
  * Message Timestamp Component - Displays formatted timestamp
  */
 
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { buildMessageClasses, type MessageRole } from '@/lib/ui/design-system/message';
 
@@ -11,7 +12,7 @@ interface MessageTimestampProps {
   className?: string;
 }
 
-export function MessageTimestamp({ timestamp, role, className }: MessageTimestampProps) {
+const MessageTimestampComponent = function MessageTimestamp({ timestamp, role, className }: MessageTimestampProps) {
   const timestampClasses = buildMessageClasses(role, 'timestamp');
 
   const formattedTime = timestamp.toLocaleTimeString([], {
@@ -26,4 +27,13 @@ export function MessageTimestamp({ timestamp, role, className }: MessageTimestam
       </div>
     </div>
   );
-}
+};
+
+// Memoized export - only re-render when timestamp changes
+export const MessageTimestamp = memo(MessageTimestampComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.timestamp.getTime() === nextProps.timestamp.getTime() &&
+    prevProps.role === nextProps.role &&
+    prevProps.className === nextProps.className
+  );
+});
