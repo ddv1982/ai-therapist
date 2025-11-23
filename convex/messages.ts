@@ -50,19 +50,12 @@ export const listBySession = query({
   },
 });
 
-/** Count messages in a session. */
+/** Count messages in a session. Returns cached count for O(1) performance. */
 export const countBySession = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    await assertSessionOwnership(ctx, sessionId);
-    let count = 0;
-    for await (const message of ctx.db
-      .query('messages')
-      .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))) {
-      void message;
-      count++;
-    }
-    return count;
+    const { session } = await assertSessionOwnership(ctx, sessionId);
+    return session.messageCount ?? 0;
   },
 });
 

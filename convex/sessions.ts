@@ -51,6 +51,7 @@ export const listByUser = query({
   },
 });
 
+/** Count sessions for a user. Returns cached count for O(1) performance. */
 export const countByUser = query({
   args: { userId: v.id('users') },
   handler: async (ctx, { userId }) => {
@@ -58,14 +59,7 @@ export const countByUser = query({
     if (user._id !== userId) {
       throw new Error('Session access denied');
     }
-    let count = 0;
-    for await (const session of ctx.db
-      .query('sessions')
-      .withIndex('by_user_created', (q) => q.eq('userId', userId))) {
-      void session;
-      count++;
-    }
-    return count;
+    return user.sessionCount ?? 0;
   },
 });
 
@@ -107,6 +101,13 @@ export const create = mutation({
       createdAt: now,
       updatedAt: now,
     });
+    
+    // Update user's cached session count
+    await ctx.db.patch(user._id, {
+      sessionCount: (user.sessionCount ?? 0) + 1,
+      updatedAt: now,
+    });
+    
     return await ctx.db.get(sessionId);
   },
 });
@@ -132,7 +133,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    await requireSessionOwnership(ctx, sessionId);
+    const { user } = await requireSessionOwnership(ctx, sessionId);
     
     const msgs = await ctx.db
       .query('messages')
@@ -152,6 +153,12 @@ export const remove = mutation({
     
     await ctx.db.delete(sessionId);
     
+    // Update user's cached session count
+    await ctx.db.patch(user._id, {
+      sessionCount: Math.max(0, (user.sessionCount ?? 1) - 1),
+      updatedAt: Date.now(),
+    });
+    
     return { ok: true, deleted: true };
   },
 });
@@ -166,6 +173,32 @@ export const _incrementMessageCount = internalMutation({
       messageCount: Math.max(0, (s.messageCount ?? 0) + delta),
       updatedAt: Date.now(),
     });
+  },
+});
+
+/**
+ * Migration: Initialize sessionCount for existing users.
+ * Run this once after deploying the schema change.
+ */
+export const _initializeSessionCounts = internalMutation({
+  handler: async (ctx) => {
+    const users = await ctx.db.query('users').collect();
+    
+    for (const user of users) {
+      if (user.sessionCount !== undefined) continue; // Already initialized
+      
+      // Count sessions for this user
+      const sessions = await ctx.db
+        .query('sessions')
+        .withIndex('by_user_created', (q) => q.eq('userId', user._id))
+        .collect();
+      
+      await ctx.db.patch(user._id, {
+        sessionCount: sessions.length,
+      });
+    }
+    
+    return { usersUpdated: users.filter(u => u.sessionCount === undefined).length };
   },
 });
 

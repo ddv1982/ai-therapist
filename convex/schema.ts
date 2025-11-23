@@ -11,6 +11,9 @@ export default defineSchema({
     name: v.optional(v.string()),
     currentSessionId: v.optional(v.id('sessions')),
 
+    // Cached counts for O(1) performance
+    sessionCount: v.optional(v.number()),
+
     // Timestamps
     createdAt: v.number(),
     updatedAt: v.number(),
