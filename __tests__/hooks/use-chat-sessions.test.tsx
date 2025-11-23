@@ -132,4 +132,29 @@ describe('useChatSessions', () => {
     expect(clearMessages).toHaveBeenCalled();
     expect(refetchSessionsMock).toHaveBeenCalled();
   });
+
+  it('automatically loads messages when session context changes externally', async () => {
+    const { rerender } = renderHook(() =>
+      useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle })
+    );
+
+    loadMessages.mockClear();
+    clearMessages.mockClear();
+
+    await act(async () => {
+      sessionContextState.currentSessionId = 'external-session';
+      rerender(() => useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle }));
+    });
+
+    expect(loadMessages).toHaveBeenCalledWith('external-session');
+
+    loadMessages.mockClear();
+
+    await act(async () => {
+      sessionContextState.currentSessionId = null;
+      rerender(() => useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle }));
+    });
+
+    expect(clearMessages).toHaveBeenCalled();
+  });
 });

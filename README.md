@@ -12,6 +12,11 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Server-Only Convex Access**: Middleware now issues Clerk JWTs to API routes which in turn call Convex via an authenticated HTTP client; direct browser access to Convex is disabled.
 - **Convex Authorization Guards**: Every Convex query and mutation now verifies `ctx.auth` ownership so data cannot be enumerated with forged parameters.
 
+### 🔁 AI SDK Session Orchestration
+- **Server-Managed Session Pointer**: Active session state is owned by `SessionAI` (`@ai-sdk/rsc createAI`) and hydrated during SSR, eliminating `localStorage` for session tracking.
+- **Convex Persistence Hooks**: `onSetAIState` / `onGetUIState` keep the Convex `currentSessionId` field synchronized through Clerk-authenticated Convex mutations.
+- **Streaming Feedback**: Session switching uses AI SDK streamable values so the sidebar/command palette shows real-time status during validation/persistence.
+
 ### 🛠️ Developer Experience
 - **Next.js 16**: Latest version with Turbopack for 2-3× faster builds
 - **React Query**: Replaced Redux with TanStack Query for efficient server state management
@@ -44,6 +49,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Database Transactions** - Race condition prevention with ACID compliance
 - **HIPAA-Compliant Logging** - No sensitive data exposure
 - **Convex Hardening** - Convex functions run server-side only and validate ownership via Clerk-issued JWTs.
+- **AI SDK Session State** - Session selection is hydrated server-side through AI SDK actions, ensuring the active pointer cannot be tampered with in the browser.
 
 ### ⚡ Performance & Resilience
 - **In-Memory Caching** - Fast local caching layer
@@ -160,6 +166,7 @@ The repository includes a `Makefile` for common tasks.
 - Client streaming uses `@ai-sdk/react` `useChat` to `/api/chat`.
 - Server streaming uses AI SDK 5 `streamText` with Groq models.
 - Reports use AI SDK 5 `generateText`.
+- Session context/state uses `@ai-sdk/rsc` (`SessionAI`) for hydration and server-authoritative selection.
 - Model definition source of truth: `src/ai/providers.ts`.
 
 ### Smart Model Selection

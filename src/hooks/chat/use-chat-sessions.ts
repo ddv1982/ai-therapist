@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef, useEffect } from 'react';
 import { useSelectSession } from '@/hooks/use-select-session';
 import { useAuthReady } from '@/hooks/auth/use-auth-ready';
 import {
@@ -31,6 +31,7 @@ export function useChatSessions(options: UseChatSessionsOptions) {
 
   const { mutateAsync: createSessionRequest } = useCreateSessionMutation();
   const { mutateAsync: deleteSessionRequest } = useDeleteSessionMutation();
+  const lastLoadedSessionIdRef = useRef<string | null>(null);
 
   const sessions: UiSession[] = useMemo(() => {
     return (apiSessions ?? []).map((session: SessionData) => ({
@@ -105,6 +106,24 @@ export function useChatSessions(options: UseChatSessionsOptions) {
     [deleteSessionRequest, currentSessionId, clearCurrentSession, loadSessions]
   );
 
+  useEffect(() => {
+    if (!currentSessionId) {
+      if (lastLoadedSessionIdRef.current === null) return;
+      lastLoadedSessionIdRef.current = null;
+      clearMessages();
+      return;
+    }
+
+    if (lastLoadedSessionIdRef.current === currentSessionId) return;
+    lastLoadedSessionIdRef.current = currentSessionId;
+
+    void loadMessages(currentSessionId).catch(() => {
+      if (lastLoadedSessionIdRef.current === currentSessionId) {
+        lastLoadedSessionIdRef.current = null;
+      }
+    });
+  }, [currentSessionId, clearMessages, loadMessages]);
+
   return {
     sessions,
     currentSession: currentSessionId,
@@ -114,4 +133,22 @@ export function useChatSessions(options: UseChatSessionsOptions) {
     deleteSession,
     setCurrentSessionAndLoad,
   } as const;
+
+  useEffect(() => {
+    if (!currentSessionId) {
+      if (lastLoadedSessionIdRef.current === null) return;
+      lastLoadedSessionIdRef.current = null;
+      clearMessages();
+      return;
+    }
+
+    if (lastLoadedSessionIdRef.current === currentSessionId) return;
+    lastLoadedSessionIdRef.current = currentSessionId;
+
+    void loadMessages(currentSessionId).catch(() => {
+      if (lastLoadedSessionIdRef.current === currentSessionId) {
+        lastLoadedSessionIdRef.current = null;
+      }
+    });
+  }, [currentSessionId, clearMessages, loadMessages]);
 }
