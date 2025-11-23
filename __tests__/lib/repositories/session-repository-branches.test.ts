@@ -131,7 +131,7 @@ describe('session-repository - branch coverage', () => {
       expect(result.pagination.hasMore).toBe(false);
     });
 
-    it('uses default pagination when not provided', async () => {
+    it('returns all sessions for user', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user123' })
         .mockResolvedValueOnce([{ _id: 'session1', userId: 'user123' }])
@@ -139,33 +139,25 @@ describe('session-repository - branch coverage', () => {
 
       const result = await getUserSessions('clerk123');
 
-      expect(result.pagination.limit).toBe(50);
+      expect(result.pagination.limit).toBe(1); // Returns actual count
       expect(result.pagination.offset).toBe(0);
+      expect(result.pagination.hasMore).toBe(false);
     });
 
-    it('caps limit at 100', async () => {
-      mockQuery
-        .mockResolvedValueOnce({ _id: 'user123' })
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce(0);
-
-      const result = await getUserSessions('clerk123', { limit: 500 });
-
-      expect(result.pagination.limit).toBe(100);
-    });
-
-    it('sets hasMore to true when more items exist', async () => {
+    it('returns pagination metadata correctly', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user123' })
         .mockResolvedValueOnce([
           { _id: 'session1', userId: 'user123' },
           { _id: 'session2', userId: 'user123' },
         ])
-        .mockResolvedValueOnce(5);
+        .mockResolvedValueOnce(2);
 
-      const result = await getUserSessions('clerk123', { limit: 2, offset: 0 });
+      const result = await getUserSessions('clerk123');
 
-      expect(result.pagination.hasMore).toBe(true);
+      expect(result.pagination.limit).toBe(2);
+      expect(result.pagination.total).toBe(2);
+      expect(result.pagination.hasMore).toBe(false);
     });
 
     it('sets hasMore to false when at end', async () => {
@@ -179,7 +171,7 @@ describe('session-repository - branch coverage', () => {
       expect(result.pagination.hasMore).toBe(false);
     });
 
-    it('handles custom offset', async () => {
+    it('ignores custom offset (not supported in all-sessions query)', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user123' })
         .mockResolvedValueOnce([{ _id: 'session2', userId: 'user123' }])
@@ -187,7 +179,7 @@ describe('session-repository - branch coverage', () => {
 
       const result = await getUserSessions('clerk123', { offset: 10 });
 
-      expect(result.pagination.offset).toBe(10);
+      expect(result.pagination.offset).toBe(0); // Always returns from beginning
     });
   });
 

@@ -92,7 +92,7 @@ export async function verifySessionOwnership(
 }
 
 /**
- * Get paginated list of sessions for a user
+ * Get all sessions for a user
  */
 export async function getUserSessions(
   clerkId: string,
@@ -113,24 +113,20 @@ export async function getUserSessions(
       },
     };
 
-  const limit = Math.min(options.limit ?? 50, 100);
-  const offset = options.offset ?? 0;
-
   const [sessions, total] = await Promise.all([
-    convex.query(anyApi.sessions.listByUser, { userId: userDoc._id, limit, offset }),
+    convex.query(anyApi.sessions.listByUser, { userId: userDoc._id }),
     convex.query(api.sessions.countByUser, { userId: userDoc._id }),
   ]);
 
   const items = assertSessionArray(sessions);
-  const hasMore = offset + items.length < total;
 
   return {
     items,
     pagination: {
-      limit,
-      offset,
+      limit: items.length,
+      offset: 0,
       total,
-      hasMore,
+      hasMore: false,
     },
   };
 }

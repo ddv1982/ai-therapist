@@ -199,7 +199,7 @@ describe('database queries type safety', () => {
     expect(result.items).toHaveLength(1);
     expect(result.items[0]._id).toBe(session._id);
     expect(result.pagination).toEqual({
-      limit: 50,
+      limit: 1, // Returns actual item count
       offset: 0,
       total: 1,
       hasMore: false,

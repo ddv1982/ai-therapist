@@ -11,6 +11,51 @@ export interface StoredMessage {
   modelUsed?: string | null;
 }
 
+export interface PaginatedMessagesResult {
+  messages: StoredMessage[];
+  continueCursor: string;
+  isDone: boolean;
+}
+
+/**
+ * Get messages with cursor-based pagination. Recommended for infinite scroll.
+ */
+export async function getSessionMessagesPaginated(
+  sessionId: string,
+  client: ConvexHttpClient,
+  numItems?: number,
+  cursor?: string
+): Promise<PaginatedMessagesResult> {
+  const result = await client.query(anyApi.messages.listBySessionPaginated, {
+    sessionId,
+    numItems,
+    cursor,
+  });
+
+  const convexMessages = Array.isArray(result.page) ? (result.page as ConvexMessage[]) : [];
+  const ordered = convexMessages.sort((a, b) => a.timestamp - b.timestamp);
+  const decrypted = safeDecryptMessages(
+    ordered.map((r) => ({ role: r.role, content: r.content, timestamp: new Date(r.timestamp) }))
+  );
+
+  const messages = ordered.map((r, i) => ({
+    id: String(r._id),
+    role: r.role as StoredMessage['role'],
+    content: decrypted[i]?.content ?? '',
+    createdAt: new Date(r.createdAt),
+    modelUsed: r.modelUsed ?? undefined,
+  }));
+
+  return {
+    messages,
+    continueCursor: result.continueCursor,
+    isDone: result.isDone,
+  };
+}
+
+/**
+ * Get all messages for a session. Use sparingly - prefer paginated version for large sessions.
+ */
 export async function getSessionMessages(
   sessionId: string,
   client: ConvexHttpClient
@@ -45,20 +90,4 @@ export async function appendMessage(
     timestamp: encrypted.timestamp.getTime(),
     modelUsed,
   });
-}
-
-/**
- * Ensure a session exists
- * @deprecated This function is deprecated - sessions should be created through
- * authenticated endpoints with a valid Clerk user. Keeping for backwards compatibility
- * but will throw in production environments without proper authentication.
- */
-export async function ensureSession(sessionId?: string): Promise<string> {
-  if (sessionId) return sessionId;
-  
-  // This path should not be reached in production
-  throw new Error(
-    'Cannot create session without authentication. ' +
-    'Sessions must be created through authenticated endpoints with a valid Clerk user.'
-  );
 }

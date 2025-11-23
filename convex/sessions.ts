@@ -1,25 +1,53 @@
 import { query, mutation, internalMutation } from './_generated/server';
 import type { QueryCtx, MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
-import { QUERY_LIMITS, PAGINATION_DEFAULTS } from './constants';
+import { QUERY_LIMITS } from './constants';
 import type { Doc } from './_generated/dataModel';
 
-export const listByUser = query({
-  args: { userId: v.id('users'), limit: v.optional(v.number()), offset: v.optional(v.number()) },
-  handler: async (ctx, { userId, limit, offset }) => {
+/** Paginated query for user sessions. Returns newest first. */
+export const listByUserPaginated = query({
+  args: {
+    userId: v.id('users'),
+    numItems: v.optional(v.number()),
+    cursor: v.optional(v.string()),
+  },
+  handler: async (ctx, { userId, numItems, cursor }) => {
     const user = await requireUser(ctx);
     if (user._id !== userId) {
       throw new Error('Session access denied');
     }
-    const limitValue = Math.min(limit ?? QUERY_LIMITS.DEFAULT_LIMIT, QUERY_LIMITS.MAX_SESSIONS_PER_REQUEST);
-    const offsetValue = Math.max(offset ?? PAGINATION_DEFAULTS.DEFAULT_OFFSET, PAGINATION_DEFAULTS.MIN_OFFSET);
-    const takeCount = Math.max(limitValue + offsetValue, 0);
-    const orderedQuery = ctx.db
+    const numItems_clamped = Math.min(numItems ?? QUERY_LIMITS.DEFAULT_LIMIT, QUERY_LIMITS.MAX_SESSIONS_PER_REQUEST);
+    
+    const result = await ctx.db
       .query('sessions')
       .withIndex('by_user_created', (q) => q.eq('userId', userId))
-      .order('desc');
-    const window = await orderedQuery.take(takeCount);
-    return window.slice(offsetValue, offsetValue + limitValue);
+      .order('desc')
+      .paginate({
+        numItems: numItems_clamped,
+        cursor: cursor || null,
+      });
+
+    return {
+      page: result.page,
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
+/** Get all sessions for a user. Use sparingly - prefer paginated query. */
+export const listByUser = query({
+  args: { userId: v.id('users') },
+  handler: async (ctx, { userId }) => {
+    const user = await requireUser(ctx);
+    if (user._id !== userId) {
+      throw new Error('Session access denied');
+    }
+    return await ctx.db
+      .query('sessions')
+      .withIndex('by_user_created', (q) => q.eq('userId', userId))
+      .order('desc')
+      .collect();
   },
 });
 
@@ -30,13 +58,10 @@ export const countByUser = query({
     if (user._id !== userId) {
       throw new Error('Session access denied');
     }
-    // PERFORMANCE FIX: Count without collecting all records
-    // Unfortunately Convex doesn't have a native count(), so we iterate and count
     let count = 0;
     for await (const session of ctx.db
       .query('sessions')
       .withIndex('by_user_created', (q) => q.eq('userId', userId))) {
-      // Just counting, not using the session data
       void session;
       count++;
     }
