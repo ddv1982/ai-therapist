@@ -48,7 +48,7 @@ export function ChatSidebar(props: ChatSidebarProps) {
 
   const sidebarClasses = useMemo(
     () =>
-      `${open ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${open ? 'fixed md:relative' : ''} ${open ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} transition-all duration-500 ease-in-out overflow-hidden bg-card/70 dark:bg-card/60 backdrop-blur-glass backdrop-saturate-glass shadow-apple-lg flex flex-col animate-slide-in`,
+      `${open ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${open ? 'fixed md:relative' : ''} ${open ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} h-screen transition-all duration-500 ease-in-out overflow-hidden bg-card/70 dark:bg-card/60 backdrop-blur-glass backdrop-saturate-glass shadow-apple-lg flex flex-col animate-slide-in`,
     [open]
   );
 
@@ -117,7 +117,7 @@ export function ChatSidebar(props: ChatSidebarProps) {
                   className={`group mb-3 cursor-pointer p-4 transition-all duration-base ease-out-smooth active:scale-[0.98] ${
                     isActive
                       ? 'shadow-apple-lg bg-primary/8 dark:bg-primary/12'
-                      : 'shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5'
+                      : 'shadow-apple-sm hover:shadow-apple-md'
                   }`}
                 >
                   <div

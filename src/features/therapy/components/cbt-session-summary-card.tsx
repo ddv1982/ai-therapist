@@ -67,7 +67,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
   };
 
   return (
-    <Card className={cn('bg-card border border-primary/10 text-foreground shadow-lg', className)}>
+    <Card className={cn('bg-card text-foreground shadow-apple-sm', className)}>
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
           <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full dark:bg-primary/20">

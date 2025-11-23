@@ -29,7 +29,7 @@ export const messageVariants = {
     avatar: 'bg-purple-600 shadow-lg',
     contentWrapper: 'text-left',
     bubble:
-      'bg-card/95 backdrop-blur-sm border border-border/20 text-foreground rounded-tl-2xl rounded-tr-2xl rounded-br-2xl rounded-bl-md shadow-md max-w-none md:max-w-[min(85%,_45rem)] md:mr-auto',
+      'bg-card/95 backdrop-blur-sm text-foreground rounded-tl-2xl rounded-tr-2xl rounded-br-2xl rounded-bl-md shadow-md max-w-none md:max-w-[min(85%,_45rem)] md:mr-auto',
     timestamp: 'text-muted-foreground text-left',
   },
 } as const;
