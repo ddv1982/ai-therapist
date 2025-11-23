@@ -10,7 +10,7 @@ export const messageBase = {
     'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-sm',
   contentWrapper: 'flex-1 min-w-0',
   bubble:
-    'p-2 rounded-2xl shadow-sm break-words selectable-text transition-all duration-200 hover:shadow-md',
+    'p-4 rounded-2xl shadow-sm break-words selectable-text transition-all duration-200 hover:shadow-md',
   timestamp: 'text-sm mt-2 px-1 opacity-70',
 } as const;
 
