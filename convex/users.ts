@@ -1,4 +1,5 @@
 import { query, mutation, internalMutation } from './_generated/server';
+import type { MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 
 /**
@@ -55,6 +56,27 @@ export const ensureByClerkId = mutation({
       updatedAt: now,
     });
     return await ctx.db.get(id);
+  },
+});
+
+export const setCurrentSession = mutation({
+  args: { sessionId: v.union(v.id('sessions'), v.null()) },
+  handler: async (ctx, { sessionId }) => {
+    const user = await requireAuthenticatedUser(ctx);
+
+    if (sessionId) {
+      const session = await ctx.db.get(sessionId);
+      if (!session || session.userId !== user._id) {
+        throw new Error('Session not found or access denied');
+      }
+    }
+
+    await ctx.db.patch(user._id, {
+      currentSessionId: sessionId ?? undefined,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true, sessionId: sessionId ?? null } as const;
   },
 });
 
@@ -143,3 +165,18 @@ export const internal = {
     },
   }),
 };
+
+async function requireAuthenticatedUser(ctx: MutationCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error('Unauthorized: Authentication required');
+  }
+  const user = await ctx.db
+    .query('users')
+    .withIndex('by_clerkId', (q) => q.eq('clerkId', identity.subject))
+    .unique();
+  if (!user) {
+    throw new Error('Unauthorized: User record not found');
+  }
+  return user;
+}

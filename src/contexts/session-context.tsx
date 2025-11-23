@@ -1,7 +1,8 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { useCurrentSessionQuery, useSetCurrentSessionMutation } from '@/lib/queries/sessions';
+import { readStreamableValue, useActions, useSyncUIState, useUIState, type StreamableValue } from '@ai-sdk/rsc';
+import type { SessionAIType, SessionSelectionStatus } from '@/app/ai/session-ai';
 
 interface SessionContextValue {
   currentSessionId: string | null;
@@ -11,53 +12,86 @@ interface SessionContextValue {
   setCreatingSession: (val: boolean) => void;
   isDeletingSession: string | null;
   setDeletingSession: (val: string | null) => void;
+  selectionStatus: SessionSelectionStatus;
 }
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [uiState, setUiState] = useUIState<SessionAIType>();
+  const actions = useActions<SessionAIType>() as SessionAIActions;
+  const selectSessionAction = actions.selectSession;
+  const syncUiState = useSyncUIState();
+  const currentSessionId = uiState?.currentSessionId ?? null;
   const [isCreatingSession, setCreatingSession] = useState(false);
   const [isDeletingSession, setDeletingSession] = useState<string | null>(null);
-  const [hasHydrated, setHasHydrated] = useState(false);
+  const [selectionStatus, setSelectionStatus] = useState<SessionSelectionStatus>({
+    phase: 'idle',
+    sessionId: currentSessionId,
+  });
 
-  const { data: currentServerSession } = useCurrentSessionQuery();
-  const { mutateAsync: setCurrentOnServer } = useSetCurrentSessionMutation();
-
-  // Sync with server on mount only once
   useEffect(() => {
-    if (!hasHydrated && currentServerSession?.id) {
-      setCurrentSessionId(currentServerSession.id);
-      setHasHydrated(true);
-    }
-  }, [currentServerSession?.id, hasHydrated]);
+    setSelectionStatus((prev) =>
+      prev.phase === 'idle'
+        ? { ...prev, sessionId: currentSessionId }
+        : prev
+    );
+  }, [currentSessionId]);
+
+  const setCurrentSession = useCallback(
+    (sessionId: string | null) => {
+      setUiState({ currentSessionId: sessionId });
+    },
+    [setUiState]
+  );
 
   const selectSession = useCallback(
     async (sessionId: string | null) => {
-      setCurrentSessionId(sessionId);
-      if (sessionId) {
-        try {
-          await setCurrentOnServer(sessionId);
-        } catch {
-          // Silently ignore server sync errors
+      setCurrentSession(sessionId);
+      try {
+        setSelectionStatus({
+          phase: 'validating',
+          sessionId,
+          message: sessionId ? 'Validating session' : 'Clearing session',
+        });
+        const stream = await selectSessionAction(sessionId ?? null);
+        if (stream) {
+          for await (const update of readStreamableValue(stream)) {
+            if (update) {
+              setSelectionStatus(update);
+            }
+          }
         }
+        setSelectionStatus({ phase: 'idle', sessionId: sessionId ?? null });
+      } catch {
+        await syncUiState();
+        setSelectionStatus({
+          phase: 'idle',
+          sessionId: currentSessionId,
+          message: 'Selection failed',
+        });
       }
     },
-    [setCurrentOnServer]
+    [currentSessionId, selectSessionAction, setCurrentSession, syncUiState]
   );
 
   const value: SessionContextValue = {
     currentSessionId,
-    setCurrentSession: setCurrentSessionId,
+    setCurrentSession,
     selectSession,
     isCreatingSession,
     setCreatingSession,
     isDeletingSession,
     setDeletingSession,
+    selectionStatus,
   };
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
+
+type SessionAIActions = {
+  selectSession: (sessionId: string | null) => Promise<StreamableValue<SessionSelectionStatus> | undefined>;
+};
 
 export function useSession() {
   const context = useContext(SessionContext);

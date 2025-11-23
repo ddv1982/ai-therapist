@@ -34,6 +34,6 @@ describe('ApiClient branches', () => {
       headers: { get: () => 'application/json' },
       json: async () => ({ error: { message: 'auth', details: 'nope' } }),
     });
-    await expect(client.getCurrentSession()).rejects.toMatchObject({ status: 401 });
+    await expect(client.listSessions()).rejects.toMatchObject({ status: 401 });
   });
 });

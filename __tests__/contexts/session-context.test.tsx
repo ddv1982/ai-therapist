@@ -1,30 +1,40 @@
-import { render } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { SessionProvider, useSession } from '@/contexts/session-context';
-import * as sessionsQueries from '@/lib/queries/sessions';
 
-// Mock the queries
-jest.mock('@/lib/queries/sessions', () => ({
-  useCurrentSessionQuery: jest.fn(),
-  useSetCurrentSessionMutation: jest.fn(),
-}));
+let uiState: { currentSessionId: string | null } = { currentSessionId: null };
+const setUiStateMock = jest.fn((nextState: any) => {
+  if (typeof nextState === 'function') {
+    uiState = nextState(uiState);
+  } else {
+    uiState = nextState;
+  }
+});
+const selectSessionActionMock = jest.fn().mockResolvedValue(undefined);
+const syncUiStateMock = jest.fn().mockResolvedValue(undefined);
+
+jest.mock(
+  '@ai-sdk/rsc',
+  () => ({
+    useUIState: () => [uiState, setUiStateMock],
+    useActions: () => ({
+      selectSession: selectSessionActionMock,
+    }),
+    useSyncUIState: () => syncUiStateMock,
+    readStreamableValue: jest.fn(),
+  }),
+  { virtual: true }
+);
 
 describe('SessionProvider', () => {
-  it('maintains stable selectSession reference when mutation hook returns new object but stable mutateAsync', () => {
-    const mutateAsync = jest.fn();
-    const useSetCurrentSessionMutationMock = sessionsQueries.useSetCurrentSessionMutation as jest.Mock;
+  beforeEach(() => {
+    uiState = { currentSessionId: null };
+    setUiStateMock.mockClear();
+    selectSessionActionMock.mockClear().mockResolvedValue(undefined);
+    syncUiStateMock.mockClear().mockResolvedValue(undefined);
+  });
 
-    // 1. Setup initial mock
-    useSetCurrentSessionMutationMock.mockReturnValue({
-      mutateAsync,
-      status: 'idle',
-    });
-
-    (sessionsQueries.useCurrentSessionQuery as jest.Mock).mockReturnValue({
-      data: null,
-    });
-
-    let capturedSelectSession1: any;
-    let capturedSelectSession2: any;
+  it('exposes stable selectSession reference and updates AI state', async () => {
+    let capturedSelectSession: ((val: string | null) => Promise<void>) | undefined;
 
     function TestComponent({ capture }: { capture: (val: any) => void }) {
       const { selectSession } = useSession();
@@ -32,35 +42,44 @@ describe('SessionProvider', () => {
       return null;
     }
 
-    // 2. Initial Render
-    const { rerender } = render(
+    render(
       <SessionProvider>
-        <TestComponent capture={(val) => (capturedSelectSession1 = val)} />
+        <TestComponent capture={(val) => (capturedSelectSession = val)} />
       </SessionProvider>
     );
 
-    // 3. Change mock to return NEW object with STABLE mutateAsync
-    // This simulates what happens when React Query state changes (e.g. isPending flips)
-    // but the mutation function itself remains referentially stable.
-    useSetCurrentSessionMutationMock.mockReturnValue({
-      mutateAsync, // Same reference
-      status: 'pending', // Different status implies a new object reference from the hook
+    expect(typeof capturedSelectSession).toBe('function');
+
+    await act(async () => {
+      await capturedSelectSession?.('abc');
     });
 
-    // 4. Rerender SessionProvider
-    // This forces SessionProvider to re-execute, calling the mock again
-    rerender(
+    expect(setUiStateMock).toHaveBeenCalledWith({ currentSessionId: 'abc' });
+    expect(selectSessionActionMock).toHaveBeenCalledWith('abc');
+  });
+
+  it('falls back to hydration when selectSession action fails', async () => {
+    selectSessionActionMock.mockRejectedValueOnce(new Error('network'));
+
+    let capturedSelectSession: ((val: string | null) => Promise<void>) | undefined;
+
+    function TestComponent() {
+      const { selectSession } = useSession();
+      capturedSelectSession = selectSession;
+      return null;
+    }
+
+    render(
       <SessionProvider>
-        <TestComponent capture={(val) => (capturedSelectSession2 = val)} />
+        <TestComponent />
       </SessionProvider>
     );
 
-    // 5. Assertions
-    expect(capturedSelectSession1).toBeDefined();
-    expect(capturedSelectSession2).toBeDefined();
-    
-    // If selectSession is not memoized correctly or depends on the unstable hook result object
-    // instead of just mutateAsync, this equality check will fail.
-    expect(capturedSelectSession2).toBe(capturedSelectSession1);
+    await act(async () => {
+      await capturedSelectSession?.('xyz');
+    });
+
+    expect(selectSessionActionMock).toHaveBeenCalledWith('xyz');
+    expect(syncUiStateMock).toHaveBeenCalled();
   });
 });

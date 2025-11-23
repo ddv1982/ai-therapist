@@ -8,6 +8,7 @@ export interface ConvexUser {
   legacyId?: string;
   email: string;
   name?: string;
+  currentSessionId?: string | null;
   createdAt: number;
   updatedAt: number;
 }

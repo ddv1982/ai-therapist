@@ -14,16 +14,35 @@ export const GET = withAuth(async (_request, context) => {
     // Use Clerk ID as the primary user identity
     const clerkId = (context.userInfo as { clerkId?: string }).clerkId ?? '';
 
-    // Find the most recent active session with messages
+    // Find the user and honor persisted currentSessionId pointer if present
     const user = (await convex.query(anyApi.users.getByClerkId, { clerkId })) as ConvexUser | null;
-    const sessions = user
-      ? ((await convex.query(anyApi.sessions.listByUser, { userId: user._id })) as ConvexSession[])
-      : [];
-    const currentSession = Array.isArray(sessions)
-      ? sessions
-          .filter((s) => s.status === 'active')
-          .sort((a, b) => b.updatedAt - a.updatedAt || b.createdAt - a.createdAt)[0]
-      : null;
+
+    let currentSession: ConvexSession | null = null;
+    if (user?.currentSessionId) {
+      try {
+        currentSession = (await convex.query(anyApi.sessions.get, {
+          sessionId: user.currentSessionId,
+        })) as ConvexSession;
+      } catch (err) {
+        logger.warn('Stale current session pointer detected', {
+          ...context,
+          sessionId: user.currentSessionId,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        await convex.mutation(anyApi.users.setCurrentSession, { sessionId: null });
+      }
+    }
+
+    if (!currentSession && user) {
+      const sessions = (await convex.query(anyApi.sessions.listByUser, {
+        userId: user._id,
+      })) as ConvexSession[];
+      currentSession = Array.isArray(sessions)
+        ? sessions
+            .filter((s) => s.status === 'active')
+            .sort((a, b) => b.updatedAt - a.updatedAt || b.createdAt - a.createdAt)[0] ?? null
+        : null;
+    }
 
     if (!currentSession) {
       logger.info('No active session found', context);
@@ -72,6 +91,8 @@ export const POST = withValidation(
         status: 'active',
       })) as ConvexSession;
 
+
+      await convex.mutation(anyApi.users.setCurrentSession, { sessionId });
       logger.info('Current session updated', {
         ...context,
         sessionId: session._id,
@@ -91,3 +112,18 @@ export const POST = withValidation(
     }
   }
 );
+
+export const DELETE = withAuth(async (_request, context) => {
+  try {
+    logger.debug('Clearing current session pointer', context);
+    const convex = getAuthenticatedConvexClient(context.jwtToken);
+    await convex.mutation(anyApi.users.setCurrentSession, { sessionId: null });
+    return createSuccessResponse({ success: true }, { requestId: context.requestId });
+  } catch (error) {
+    logger.apiError('Failed to clear current session', error as Error, context);
+    return createErrorResponse('Failed to clear current session', 500, {
+      requestId: context.requestId,
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});

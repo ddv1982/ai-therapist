@@ -3,9 +3,10 @@ import { useChatSessions } from '@/hooks/chat/use-chat-sessions';
 
 const selectSessionMock = jest.fn();
 const mockSessionsQuery = jest.fn();
-const mockCurrentSessionQuery = jest.fn();
 const mockCreateSessionMutation = jest.fn();
 const mockDeleteSessionMutation = jest.fn();
+const setCurrentSessionMock = jest.fn();
+const sessionContextState: { currentSessionId: string | null } = { currentSessionId: null };
 
 jest.mock('@/hooks/use-select-session', () => ({
   useSelectSession: () => ({ selectSession: selectSessionMock }),
@@ -17,9 +18,16 @@ jest.mock('@/hooks/auth/use-auth-ready', () => ({
 
 jest.mock('@/lib/queries/sessions', () => ({
   useSessionsQuery: (...args: unknown[]) => mockSessionsQuery(...args),
-  useCurrentSessionQuery: (...args: unknown[]) => mockCurrentSessionQuery(...args),
   useCreateSessionMutation: () => ({ mutateAsync: mockCreateSessionMutation }),
   useDeleteSessionMutation: () => ({ mutateAsync: mockDeleteSessionMutation }),
+}));
+
+jest.mock('@/contexts/session-context', () => ({
+  useSession: () => ({
+    currentSessionId: sessionContextState.currentSessionId,
+    setCurrentSession: setCurrentSessionMock,
+    selectionStatus: { phase: 'idle', sessionId: sessionContextState.currentSessionId },
+  }),
 }));
 
 describe('useChatSessions', () => {
@@ -27,21 +35,21 @@ describe('useChatSessions', () => {
   const clearMessages = jest.fn();
   const resolveDefaultTitle = jest.fn(() => 'New Chat');
   let refetchSessionsMock: jest.Mock;
-  let refetchCurrentSessionMock: jest.Mock;
 
   beforeEach(() => {
     mockSessionsQuery.mockReset();
-    mockCurrentSessionQuery.mockReset();
     refetchSessionsMock = jest.fn().mockResolvedValue(undefined);
-    refetchCurrentSessionMock = jest.fn().mockResolvedValue(undefined);
     mockSessionsQuery.mockReturnValue({ data: [], refetch: refetchSessionsMock });
-    mockCurrentSessionQuery.mockReturnValue({ data: null, refetch: refetchCurrentSessionMock });
     loadMessages.mockClear();
     loadMessages.mockResolvedValue(undefined);
     clearMessages.mockClear();
     resolveDefaultTitle.mockClear();
     resolveDefaultTitle.mockReturnValue('New Chat');
     selectSessionMock.mockClear();
+    setCurrentSessionMock.mockReset();
+    setCurrentSessionMock.mockImplementation((sessionId: string | null) => {
+      sessionContextState.currentSessionId = sessionId;
+    });
     mockCreateSessionMutation.mockReset();
     mockDeleteSessionMutation.mockReset();
     mockCreateSessionMutation.mockResolvedValue({
@@ -52,6 +60,7 @@ describe('useChatSessions', () => {
       messageCount: 0,
     });
     mockDeleteSessionMutation.mockResolvedValue({ success: true });
+    sessionContextState.currentSessionId = null;
   });
 
   it('creates a session when ensuring an active session', async () => {
@@ -70,6 +79,7 @@ describe('useChatSessions', () => {
     expect(resolveDefaultTitle).toHaveBeenCalled();
     expect(mockCreateSessionMutation).toHaveBeenCalledWith({ title: 'New Chat' });
     expect(selectSessionMock).toHaveBeenCalledWith('generated');
+    expect(setCurrentSessionMock).toHaveBeenCalledWith('generated');
     expect(loadMessages).toHaveBeenCalledWith('generated');
     expect(refetchSessionsMock).toHaveBeenCalled();
   });
@@ -92,18 +102,21 @@ describe('useChatSessions', () => {
     });
 
     expect(selectSessionMock).toHaveBeenCalledWith(null);
+    expect(setCurrentSessionMock).toHaveBeenCalledWith(null);
     expect(clearMessages).toHaveBeenCalled();
     expect(refetchSessionsMock).toHaveBeenCalled();
   });
 
   it('deletes the current session and refreshes sessions', async () => {
-    const { result } = renderHook(() =>
+    const { result, rerender } = renderHook(() =>
       useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle })
     );
 
     await act(async () => {
       await result.current.setCurrentSessionAndLoad('generated');
     });
+    sessionContextState.currentSessionId = 'generated';
+    rerender();
 
     selectSessionMock.mockClear();
     clearMessages.mockClear();
@@ -115,6 +128,7 @@ describe('useChatSessions', () => {
 
     expect(mockDeleteSessionMutation).toHaveBeenCalledWith('generated');
     expect(selectSessionMock).toHaveBeenCalledWith(null);
+    expect(setCurrentSessionMock).toHaveBeenCalledWith(null);
     expect(clearMessages).toHaveBeenCalled();
     expect(refetchSessionsMock).toHaveBeenCalled();
   });

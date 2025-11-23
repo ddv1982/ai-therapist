@@ -6,6 +6,7 @@ jest.mock('@/lib/api/client', () => ({
     createSession: jest.fn(),
     generateReportDetailed: jest.fn(),
     postMessage: jest.fn(),
+    deleteSession: jest.fn(),
   },
 }));
 
@@ -110,6 +111,7 @@ describe('sendToChat', () => {
       reportContent: 'analysis',
     });
     (apiClient.postMessage as jest.Mock).mockResolvedValue({ success: true });
+    (apiClient.deleteSession as jest.Mock).mockResolvedValue({ success: true });
   });
 
   afterEach(() => {
@@ -158,5 +160,7 @@ describe('sendToChat', () => {
         contextualMessages: [],
       })
     ).rejects.toThrow('Failed to generate session report');
+
+    expect(apiClient.deleteSession).toHaveBeenCalledWith('session-123');
   });
 });

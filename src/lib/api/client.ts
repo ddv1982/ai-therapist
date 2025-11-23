@@ -244,44 +244,6 @@ export class ApiClient {
     return this.request<T>(`/api/reports/memory${qs ? `?${qs}` : ''}`, { method: 'DELETE' });
   }
 
-  // Current session
-  async getCurrentSession(): Promise<
-    ApiResponse<{
-      currentSession: {
-        id: string;
-        title: string;
-        startedAt: string;
-        updatedAt: string;
-        status: string;
-        messageCount: number;
-      } | null;
-    }>
-  > {
-    return this.request<
-      ApiResponse<{
-        currentSession: {
-          id: string;
-          title: string;
-          startedAt: string;
-          updatedAt: string;
-          status: string;
-          messageCount: number;
-        } | null;
-      }>
-    >('/api/sessions/current');
-  }
-
-  async setCurrentSession(
-    sessionId: string
-  ): Promise<ApiResponse<{ success: boolean; session: Session }>> {
-    return this.request<
-      ApiResponse<{ success: boolean; session: Session }>
-    >('/api/sessions/current', {
-      method: 'POST',
-      body: JSON.stringify({ sessionId }),
-    });
-  }
-
   // Single session
   async getSessionById(
     sessionId: string

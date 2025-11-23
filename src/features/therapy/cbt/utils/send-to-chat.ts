@@ -50,35 +50,55 @@ export async function sendToChat({
 }: SendToChatParams): Promise<SendToChatResult> {
   const summaryCard = buildSessionSummaryCard(flowState);
   const now = Date.now();
+  let sessionId: string | null = null;
 
   const reportMessages: Array<{ role: 'user' | 'assistant'; content: string; timestamp: string }> = [
     { role: 'user', content: summaryCard, timestamp: new Date(now).toISOString() },
     ...contextualMessages,
   ];
 
-  const createdSession = mapApiResponse<any>(
-    await apiClient.createSession({ title })
-  ) as SessionData;
-  const sessionId = createdSession.id;
+  try {
+    const createdSession = mapApiResponse<any>(
+      await apiClient.createSession({ title })
+    ) as SessionData;
+    sessionId = createdSession.id;
 
-  const reportResponse = await apiClient.generateReportDetailed({
-    sessionId,
-    messages: reportMessages,
-    model,
-  });
+    const reportResponse = await apiClient.generateReportDetailed({
+      sessionId,
+      messages: reportMessages,
+      model,
+    });
 
-  const reportContent = extractReportContentFlexible(reportResponse);
+    const reportContent = extractReportContentFlexible(reportResponse);
 
-  await apiClient.postMessage(sessionId, { role: 'user', content: summaryCard });
+    await apiClient.postMessage(sessionId, { role: 'user', content: summaryCard });
 
-  const prefixedReportContent = `📊 **Session Report**\n\n${reportContent}`;
-  await apiClient.postMessage(sessionId, {
-    role: 'assistant',
-    content: prefixedReportContent,
-    modelUsed: model,
-  });
+    const prefixedReportContent = `📊 **Session Report**\n\n${reportContent}`;
+    await apiClient.postMessage(sessionId, {
+      role: 'assistant',
+      content: prefixedReportContent,
+      modelUsed: model,
+    });
 
-  logger.info('CBT session exported to chat', { sessionId, title });
+    logger.info('CBT session exported to chat', { sessionId, title });
 
-  return { sessionId };
+    return { sessionId };
+  } catch (error) {
+    if (sessionId) {
+      try {
+        await apiClient.deleteSession(sessionId);
+        logger.warn('Rolled back incomplete CBT session after failure', {
+          sessionId,
+          title,
+        });
+      } catch (cleanupError) {
+        logger.error(
+          'Failed to clean up CBT session after error',
+          { sessionId, title },
+          cleanupError instanceof Error ? cleanupError : new Error(String(cleanupError))
+        );
+      }
+    }
+    throw error;
+  }
 }

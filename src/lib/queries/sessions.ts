@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ApiResponse, PaginatedResponse } from '@/lib/api/api-response';
 import { isApiResponse } from '@/lib/api/api-response';
 import type { Session } from '@/types';
-
 import { apiClient } from '@/lib/api/client';
 
 export interface SessionData {
@@ -87,43 +86,11 @@ export function transformDeleteSessionResponse(
   );
 }
 
-export function transformGetCurrentSessionResponse(
-  response: ApiResponse<
-    { currentSession: { id: string } | null } | { currentSession?: { id: string } | null }
-  >
-): { id: string } | null {
-  if (
-    isApiResponse<{ currentSession: { id: string } | null }>(response) &&
-    (response.data as { currentSession?: { id: string } | null } | undefined)
-  ) {
-    return (response.data as { currentSession?: { id: string } | null }).currentSession ?? null;
-  }
-  if ((response as { currentSession?: { id: string } | null })?.currentSession !== undefined) {
-    return (response as { currentSession?: { id: string } | null }).currentSession ?? null;
-  }
-  return null;
-}
-
-export function transformSetCurrentSessionResponse(
-  response: ApiResponse<
-    { success: boolean } | { session?: unknown } | { data?: { success?: boolean } }
-  >
-): { success: boolean } {
-  if (isApiResponse(response) && response.success) {
-    return { success: true };
-  }
-  if ((response as { data?: { success?: boolean } }).data?.success) {
-    return { success: true };
-  }
-  return { success: false };
-}
-
 // Query keys factory
 export const sessionKeys = {
   all: ['sessions'] as const,
   lists: () => [...sessionKeys.all, 'list'] as const,
   list: () => [...sessionKeys.lists()] as const,
-  current: () => [...sessionKeys.all, 'current'] as const,
   detail: (id: string) => [...sessionKeys.all, 'detail', id] as const,
 };
 
@@ -138,18 +105,6 @@ export function useSessionsQuery(options?: QueryOptions) {
     queryFn: async () => {
       const response = await apiClient.listSessions();
       return transformFetchSessionsResponse(response);
-    },
-    enabled: options?.enabled ?? true,
-  });
-}
-
-// Get current session
-export function useCurrentSessionQuery(options?: QueryOptions) {
-  return useQuery({
-    queryKey: sessionKeys.current(),
-    queryFn: async () => {
-      const response = await apiClient.getCurrentSession();
-      return transformGetCurrentSessionResponse(response);
     },
     enabled: options?.enabled ?? true,
   });
@@ -186,17 +141,3 @@ export function useDeleteSessionMutation() {
   });
 }
 
-// Set current session mutation
-export function useSetCurrentSessionMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (sessionId: string) => {
-      const response = await apiClient.setCurrentSession(sessionId);
-      return transformSetCurrentSessionResponse(response);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: sessionKeys.current() });
-    },
-  });
-}

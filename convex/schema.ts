@@ -9,6 +9,7 @@ export default defineSchema({
     // User profile
     email: v.string(),
     name: v.optional(v.string()),
+    currentSessionId: v.optional(v.id('sessions')),
 
     // Timestamps
     createdAt: v.number(),

@@ -14,7 +14,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useSession } from '@/contexts/session-context';
 import { useChatSettings } from '@/contexts/chat-settings-context';
 import { useSessionsQuery, SessionData } from '@/lib/queries/sessions';
-import { MessageSquare, Brain, Plus, Settings, Moon, Search, Clock } from 'lucide-react';
+import { MessageSquare, Brain, Plus, Settings, Moon, Search, Clock, Loader2 } from 'lucide-react';
 // import { v4 as uuidv4 } from 'uuid'; // Unused
 import { useTranslations } from 'next-intl';
 import { useSelectSession } from '@/hooks';
@@ -29,7 +29,7 @@ export function CommandPalette({ onCBTOpen, onSettingsOpen, onThemeToggle }: Com
   const t = useTranslations('ui');
   const [open, setOpen] = useState(false);
   const router = useRouter();
-  const { currentSessionId, setCurrentSession } = useSession();
+  const { currentSessionId, setCurrentSession, selectionStatus } = useSession();
   const { clearMessages } = useChatSettings();
 
   const { data: sessions = [] } = useSessionsQuery();
@@ -57,8 +57,9 @@ export function CommandPalette({ onCBTOpen, onSettingsOpen, onThemeToggle }: Com
   };
 
   const createNewSession = () => {
-    // Do not create a DB session yet; just clear state
-    setCurrentSession(null);
+    selectSession(null).catch(() => {
+      setCurrentSession(null);
+    });
     clearMessages();
   };
 
@@ -113,27 +114,40 @@ export function CommandPalette({ onCBTOpen, onSettingsOpen, onThemeToggle }: Com
               {/* Recent Sessions */}
               {sessions.length > 0 && (
                 <CommandGroup heading={t('command.recent')}>
-                  {sessions.slice(0, 6).map((session: SessionData) => (
-                    <CommandItem
-                      key={session.id}
-                      onSelect={() => handleSelect(() => switchToSession(session.id))}
-                    >
-                      <MessageSquare className="mr-2 h-4 w-4" />
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate">{session.title}</div>
-                        <div className="text-muted-foreground text-sm">
-                          {(session as unknown as { _count?: { messages?: number } })._count
-                            ?.messages ??
-                            (session as unknown as { messageCount?: number }).messageCount ??
-                            0}{' '}
-                          {t('command.messages')}
+                  {sessions.slice(0, 6).map((session: SessionData) => {
+                    const isActive = currentSessionId === session.id;
+                    const isSwitching =
+                      selectionStatus.sessionId === session.id &&
+                      selectionStatus.phase !== 'idle' &&
+                      selectionStatus.phase !== 'complete';
+                    return (
+                      <CommandItem
+                        key={session.id}
+                        onSelect={() => handleSelect(() => switchToSession(session.id))}
+                      >
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate">{session.title}</div>
+                          <div className="text-muted-foreground text-sm">
+                            {(session as unknown as { _count?: { messages?: number } })._count
+                              ?.messages ??
+                              (session as unknown as { messageCount?: number }).messageCount ??
+                              0}{' '}
+                            {t('command.messages')}
+                          </div>
+                          {isSwitching && (
+                            <div className="text-primary flex items-center gap-1 text-xs">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              {selectionStatus.message ?? 'Switching…'}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      {currentSessionId === session.id && (
-                        <div className="bg-primary ml-auto h-2 w-2 rounded-full" />
-                      )}
-                    </CommandItem>
-                  ))}
+                        {isActive && !isSwitching && (
+                          <div className="bg-primary ml-auto h-2 w-2 rounded-full" />
+                        )}
+                      </CommandItem>
+                    );
+                  })}
                 </CommandGroup>
               )}
 

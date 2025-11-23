@@ -6,6 +6,7 @@
 import { ReactNode } from 'react';
 import { ModelConfig, Message, Session } from './index';
 import type { CBTFormData } from './domains/therapy';
+import type { SessionSelectionStatus } from '@/app/ai/session-ai';
 
 // ============================================================================
 // COMMON PROP PATTERNS
@@ -344,10 +345,11 @@ export interface ChatInterfaceProps
  * Complete session sidebar props
  */
 export interface SessionSidebarProps extends SidebarProps, SessionListProps {
-  setCurrentSession: (sessionId: string) => void;
+  setCurrentSession: (sessionId: string | null) => void;
   loadMessages: (sessionId: string) => void;
   deleteSession: (sessionId: string) => void;
   startNewSession: () => void;
+  selectionStatus?: SessionSelectionStatus;
 }
 
 /**

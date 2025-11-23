@@ -13,34 +13,13 @@ export const listByUser = query({
     }
     const limitValue = Math.min(limit ?? QUERY_LIMITS.DEFAULT_LIMIT, QUERY_LIMITS.MAX_SESSIONS_PER_REQUEST);
     const offsetValue = Math.max(offset ?? PAGINATION_DEFAULTS.DEFAULT_OFFSET, PAGINATION_DEFAULTS.MIN_OFFSET);
-
-    // PERFORMANCE FIX: Use pagination instead of fetching all and slicing
-    // Unfortunately Convex doesn't have native skip/limit, so we iterate and collect manually
-    const results: Doc<'sessions'>[] = [];
-    let index = 0;
-    
-    for await (const session of ctx.db
+    const takeCount = Math.max(limitValue + offsetValue, 0);
+    const orderedQuery = ctx.db
       .query('sessions')
       .withIndex('by_user_created', (q) => q.eq('userId', userId))
-      .order('desc')) {
-      
-      // Skip items until we reach the offset
-      if (index < offsetValue) {
-        index++;
-        continue;
-      }
-      
-      results.push(session);
-      
-      // Stop once we have enough items
-      if (results.length >= limitValue) {
-        break;
-      }
-      
-      index++;
-    }
-
-    return results;
+      .order('desc');
+    const window = await orderedQuery.take(takeCount);
+    return window.slice(offsetValue, offsetValue + limitValue);
   },
 });
 

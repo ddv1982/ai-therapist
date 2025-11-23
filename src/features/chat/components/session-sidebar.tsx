@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, MessageSquare, Trash2, Heart, Sparkles } from 'lucide-react';
+import { Plus, MessageSquare, Trash2, Heart, Sparkles, Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { SessionSidebarProps } from '@/types/ui';
 
@@ -20,6 +20,7 @@ export const SessionSidebar = memo(function SessionSidebar({
   deleteSession,
   startNewSession,
   isMobile,
+  selectionStatus,
   children,
 }: SessionSidebarProps) {
   return (
@@ -73,7 +74,12 @@ export const SessionSidebar = memo(function SessionSidebar({
               <p className="text-muted-foreground/70 text-sm">Start a conversation to begin</p>
             </div>
           ) : (
-            sessions.map((session, index) => (
+            sessions.map((session, index) => {
+              const isSwitching =
+                selectionStatus?.sessionId === session.id &&
+                selectionStatus.phase !== 'idle' &&
+                selectionStatus.phase !== 'complete';
+              return (
               <Card
                 key={session.id}
                 className={`group animate-fade-in mb-3 cursor-pointer p-4 transition-all duration-300 ${
@@ -84,12 +90,25 @@ export const SessionSidebar = memo(function SessionSidebar({
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div
-                  className="flex items-start gap-3"
+                  role="button"
+                  tabIndex={0}
+                  aria-current={currentSession === session.id ? 'true' : undefined}
+                  className="focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none flex items-start gap-3 rounded-lg"
                   onClick={() => {
                     setCurrentSession(session.id);
                     loadMessages(session.id);
                     if (isMobile) {
                       setShowSidebar(false);
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setCurrentSession(session.id);
+                      loadMessages(session.id);
+                      if (isMobile) {
+                        setShowSidebar(false);
+                      }
                     }
                   }}
                 >
@@ -115,6 +134,12 @@ export const SessionSidebar = memo(function SessionSidebar({
                         {session.startedAt ? new Date(session.startedAt).toLocaleDateString() : 'Unknown date'}
                       </p>
                     </div>
+                      {isSwitching && (
+                        <p className="text-primary flex items-center gap-2 pt-2 text-xs">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          {selectionStatus?.message ?? 'Switching session…'}
+                        </p>
+                      )}
                   </div>
                   <Button
                     variant="ghost"
@@ -129,7 +154,8 @@ export const SessionSidebar = memo(function SessionSidebar({
                   </Button>
                 </div>
               </Card>
-            ))
+              );
+            })
           )}
         </div>
 

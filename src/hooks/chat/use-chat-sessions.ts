@@ -1,16 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useSelectSession } from '@/hooks/use-select-session';
 import { useAuthReady } from '@/hooks/auth/use-auth-ready';
 import {
   useSessionsQuery,
   useCreateSessionMutation,
   useDeleteSessionMutation,
-  useCurrentSessionQuery,
   type SessionData,
 } from '@/lib/queries/sessions';
 import type { UiSession } from '@/lib/chat/session-mapper';
+import { useSession } from '@/contexts/session-context';
 
 interface UseChatSessionsOptions {
   loadMessages: (sessionId: string) => Promise<void>;
@@ -21,19 +21,13 @@ interface UseChatSessionsOptions {
 export function useChatSessions(options: UseChatSessionsOptions) {
   const { loadMessages, clearMessages, resolveDefaultTitle } = options;
   const { selectSession } = useSelectSession();
-  const [currentSession, setCurrentSession] = useState<string | null>(null);
+  const { currentSessionId, setCurrentSession } = useSession();
   const authReady = useAuthReady();
-  const hydratedSessionRef = useRef<string | null | undefined>(undefined);
 
   const {
     data: apiSessions = [],
     refetch: refetchSessions,
   } = useSessionsQuery({ enabled: authReady });
-
-  const {
-    data: currentSessionRecord,
-    refetch: refetchCurrentSession,
-  } = useCurrentSessionQuery({ enabled: authReady });
 
   const { mutateAsync: createSessionRequest } = useCreateSessionMutation();
   const { mutateAsync: deleteSessionRequest } = useDeleteSessionMutation();
@@ -53,17 +47,10 @@ export function useChatSessions(options: UseChatSessionsOptions) {
 
   const persistSessionSelection = useCallback(
     async (sessionId: string | null) => {
-      await selectSession(sessionId);
       setCurrentSession(sessionId);
-      if (typeof window !== 'undefined') {
-        if (sessionId) {
-          window.localStorage.setItem('currentSessionId', sessionId);
-        } else {
-          window.localStorage.removeItem('currentSessionId');
-        }
-      }
+      await selectSession(sessionId);
     },
-    [selectSession]
+    [selectSession, setCurrentSession]
   );
 
   const setCurrentSessionAndLoad = useCallback(
@@ -84,14 +71,8 @@ export function useChatSessions(options: UseChatSessionsOptions) {
     await refetchSessions();
   }, [authReady, refetchSessions]);
 
-  const hydrateCurrentSession = useCallback(async () => {
-    if (!authReady) return;
-    hydratedSessionRef.current = undefined;
-    await refetchCurrentSession();
-  }, [authReady, refetchCurrentSession]);
-
   const ensureActiveSession = useCallback(async () => {
-    if (currentSession) return currentSession;
+    if (currentSessionId) return currentSessionId;
     try {
       const title = resolveDefaultTitle();
       const created = await createSessionRequest({ title });
@@ -102,7 +83,7 @@ export function useChatSessions(options: UseChatSessionsOptions) {
     } catch (error) {
       throw error instanceof Error ? error : new Error(String(error));
     }
-  }, [currentSession, resolveDefaultTitle, createSessionRequest, setCurrentSessionAndLoad, loadSessions]);
+  }, [currentSessionId, resolveDefaultTitle, createSessionRequest, setCurrentSessionAndLoad, loadSessions]);
 
   const startNewSession = useCallback(async () => {
     await clearCurrentSession();
@@ -113,7 +94,7 @@ export function useChatSessions(options: UseChatSessionsOptions) {
     async (sessionId: string) => {
       try {
         await deleteSessionRequest(sessionId);
-        if (currentSession === sessionId) {
+        if (currentSessionId === sessionId) {
           await clearCurrentSession();
         }
         await loadSessions();
@@ -121,37 +102,16 @@ export function useChatSessions(options: UseChatSessionsOptions) {
         // ignore errors for deletion to keep UI responsive
       }
     },
-    [deleteSessionRequest, currentSession, clearCurrentSession, loadSessions]
+    [deleteSessionRequest, currentSessionId, clearCurrentSession, loadSessions]
   );
-
-  useEffect(() => {
-    if (!authReady) return;
-    if (currentSessionRecord === undefined) return;
-
-    const nextId = currentSessionRecord?.id ?? null;
-    if (hydratedSessionRef.current === nextId) return;
-    hydratedSessionRef.current = nextId;
-
-    if (nextId) {
-      void setCurrentSessionAndLoad(nextId);
-    } else {
-      void clearCurrentSession();
-    }
-  }, [
-    authReady,
-    currentSessionRecord,
-    setCurrentSessionAndLoad,
-    clearCurrentSession,
-  ]);
 
   return {
     sessions,
-    currentSession,
+    currentSession: currentSessionId,
     loadSessions,
     ensureActiveSession,
     startNewSession,
     deleteSession,
     setCurrentSessionAndLoad,
-    hydrateCurrentSession,
   } as const;
 }

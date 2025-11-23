@@ -20,7 +20,7 @@ export function SessionSidebarContainer({
   children?: React.ReactNode;
 }) {
   // i18n available if needed in future; unused here as we defer creation
-  const { currentSessionId, setCurrentSession } = useSession();
+  const { currentSessionId, setCurrentSession, selectionStatus } = useSession();
   // Normalize SessionData to match SessionSidebarProps expectations
   const { data: apiSessions = [] } = useSessionsQuery();
   const sessions = apiSessions.map((s) => ({
@@ -47,15 +47,23 @@ export function SessionSidebarContainer({
   // Title resolution not needed here since we defer session creation until send
 
   const handleStartNewSession = async () => {
-    // Do not create a DB session yet; clear selection and let first send create it
-    setCurrentSession(null);
+    try {
+      await selectSession(null);
+    } catch (err) {
+      logger.error(
+        'Failed to clear current session selection',
+        { component: 'SessionSidebarContainer' },
+        err as Error
+      );
+      setCurrentSession(null);
+    }
   };
 
   const handleDeleteSession = async (sessionId: string) => {
     try {
       await deleteSessionMutation.mutateAsync(sessionId);
       if (currentSessionId === sessionId) {
-        setCurrentSession(null);
+        await selectSession(null);
       }
     } catch (err) {
       showToast({
@@ -86,6 +94,7 @@ export function SessionSidebarContainer({
       deleteSession={handleDeleteSession}
       startNewSession={handleStartNewSession}
       isMobile={isMobile}
+      selectionStatus={selectionStatus}
       onSessionSelect={setCurrentSession}
       onSessionDelete={handleDeleteSession}
       onNewSession={handleStartNewSession}

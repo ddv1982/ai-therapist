@@ -298,18 +298,6 @@ describe('ApiClient', () => {
         expect(calls[0][0]).toBe('/api/api/sessions/sess-456');
       });
 
-      it('getCurrentSession calls GET /api/sessions/current', async () => {
-        await client.getCurrentSession();
-        const calls = (global.fetch as jest.Mock).mock.calls;
-        expect(calls[0][0]).toBe('/api/api/sessions/current');
-      });
-
-      it('setCurrentSession calls POST /api/sessions/current', async () => {
-        await client.setCurrentSession('sess-789');
-        const calls = (global.fetch as jest.Mock).mock.calls;
-        expect(calls[0][0]).toBe('/api/api/sessions/current');
-        expect(calls[0][1].method).toBe('POST');
-      });
     });
 
     describe('Messages', () => {

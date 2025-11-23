@@ -6,6 +6,7 @@ import { getLocale } from 'next-intl/server';
 import { cookies } from 'next/headers';
 import { locales, defaultLocale, type AppLocale } from '@/i18n/config';
 import { RootProviders } from '@/app/providers';
+import { SessionAIProvider } from '@/app/ai/session-ai';
 import { getMessagesForLocale } from '@/i18n/messages-loader';
 
 const inter = Inter({
@@ -102,9 +103,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body className="bg-background font-sans antialiased">
-        <NextIntlClientProvider locale={resolvedLocale} messages={messages}>
-          <RootProviders>{children}</RootProviders>
-        </NextIntlClientProvider>
+        <SessionAIProvider>
+          <NextIntlClientProvider locale={resolvedLocale} messages={messages}>
+            <RootProviders>{children}</RootProviders>
+          </NextIntlClientProvider>
+        </SessionAIProvider>
       </body>
     </html>
   );

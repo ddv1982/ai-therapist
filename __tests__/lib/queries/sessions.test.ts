@@ -4,13 +4,9 @@ import {
   useSessionsQuery,
   useCreateSessionMutation,
   useDeleteSessionMutation,
-  useSetCurrentSessionMutation,
-  useCurrentSessionQuery,
   transformFetchSessionsResponse,
   transformCreateSessionResponse,
   transformDeleteSessionResponse,
-  transformGetCurrentSessionResponse,
-  transformSetCurrentSessionResponse,
 } from '@/lib/queries/sessions';
 import { apiClient } from '@/lib/api/client';
 import React from 'react';
@@ -19,10 +15,8 @@ import React from 'react';
 jest.mock('@/lib/api/client', () => ({
   apiClient: {
     listSessions: jest.fn(),
-    getCurrentSession: jest.fn(),
     createSession: jest.fn(),
     deleteSession: jest.fn(),
-    setCurrentSession: jest.fn(),
   },
 }));
 
@@ -104,42 +98,6 @@ describe('Sessions Queries', () => {
         });
     });
 
-    describe('transformGetCurrentSessionResponse', () => {
-        it('should transform ApiResponse correctly', () => {
-            const mockSession = { id: '1' };
-            const response = { success: true, data: { currentSession: mockSession } };
-            expect(transformGetCurrentSessionResponse(response as any)).toEqual(mockSession);
-        });
-
-        it('should transform raw response correctly', () => {
-             const mockSession = { id: '1' };
-             const response = { currentSession: mockSession };
-             expect(transformGetCurrentSessionResponse(response as any)).toEqual(mockSession);
-        });
-
-        it('should return null if no session', () => {
-             const response = { success: true, data: { currentSession: null } };
-             expect(transformGetCurrentSessionResponse(response as any)).toBeNull();
-        });
-
-        it('should return null if empty object', () => {
-             expect(transformGetCurrentSessionResponse({} as any)).toBeNull();
-        });
-    });
-
-    describe('transformSetCurrentSessionResponse', () => {
-        it('should return success true if response success', () => {
-            expect(transformSetCurrentSessionResponse({ success: true } as any)).toEqual({ success: true });
-        });
-        
-        it('should return success true if data has success', () => {
-             expect(transformSetCurrentSessionResponse({ data: { success: true } } as any)).toEqual({ success: true });
-        });
-
-        it('should return success false otherwise', () => {
-            expect(transformSetCurrentSessionResponse({} as any)).toEqual({ success: false });
-        });
-    });
   });
 
   describe('Hooks', () => {
@@ -207,25 +165,5 @@ describe('Sessions Queries', () => {
         expect(apiClient.deleteSession).toHaveBeenCalledWith('1');
     });
 
-     it('useCurrentSessionQuery should fetch current session', async () => {
-        const mockSession = { id: '1' };
-        (apiClient.getCurrentSession as jest.Mock).mockResolvedValue({ success: true, data: { currentSession: mockSession } });
-
-        const { result } = renderHook(() => useCurrentSessionQuery(), { wrapper });
-
-        await waitFor(() => expect(result.current.isSuccess).toBe(true));
-        expect(result.current.data).toEqual(mockSession);
-    });
-
-    it('useSetCurrentSessionMutation should set current session', async () => {
-        (apiClient.setCurrentSession as jest.Mock).mockResolvedValue({ success: true });
-
-        const { result } = renderHook(() => useSetCurrentSessionMutation(), { wrapper });
-
-        result.current.mutate('1');
-
-        await waitFor(() => expect(result.current.isSuccess).toBe(true));
-        expect(apiClient.setCurrentSession).toHaveBeenCalledWith('1');
-    });
   });
 });

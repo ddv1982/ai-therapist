@@ -19,11 +19,11 @@ import { useCBT } from '@/contexts/cbt-context';
 import { useChatMessages } from '@/hooks/use-chat-messages';
 import { useSelectSession } from '@/hooks';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
-import { apiClient } from '@/lib/api/client';
 //
 import { useCbtDiaryFlow } from '@/features/therapy/cbt/hooks/use-cbt-diary-flow';
 import { sendToChat } from '@/features/therapy/cbt/utils/send-to-chat';
 import { sessionKeys } from '@/lib/queries/sessions';
+import { useSession } from '@/contexts/session-context';
 
 // Using MessageData from the message system
 // Type alias not required locally
@@ -377,39 +377,17 @@ function CBTDiaryPageContent() {
 // Main export with ChatUIProvider wrapper
 export default function CBTDiaryPage() {
   const { addMessageToChat } = useChatMessages();
-  const [currentSession, setCurrentSession] = useState<string | null>(null);
+  const { currentSessionId } = useSession();
+  const [currentSession, setCurrentSession] = useState<string | null>(currentSessionId ?? null);
 
   // Session management for CBT diary (do not auto-create sessions)
   const ensureSession = useCallback(async (): Promise<string | null> => {
-    try {
-      // Try to get current session first
-      const current = await apiClient.getCurrentSession();
-      const currentSessionData: { currentSession?: { id: string } } =
-        current && (current as { success?: boolean }).success
-          ? (current as { data: { currentSession?: { id: string } } }).data
-          : (current as { currentSession?: { id: string } } | null) || {};
-      if (currentSessionData?.currentSession) {
-        const sessionId = currentSessionData.currentSession.id;
-        setCurrentSession(sessionId);
-        return sessionId;
-      }
-    } catch (error) {
-      logger.error(
-        'Failed to ensure session for CBT diary',
-        {
-          component: 'CBTDiaryPage',
-          operation: 'ensureSession',
-        },
-        error instanceof Error ? error : new Error(String(error))
-      );
-    }
-    return null;
-  }, []);
+    return currentSessionId ?? null;
+  }, [currentSessionId]);
 
-  // Initialize session when component mounts
   useEffect(() => {
-    ensureSession();
-  }, [ensureSession]);
+    setCurrentSession(currentSessionId ?? null);
+  }, [currentSessionId]);
 
   // Create the chat UI bridge for CBT components
   const chatUIBridge: ChatUIBridge = {
