@@ -117,7 +117,7 @@ describe('Translation Validation', () => {
     
     it('messages are non-empty strings', () => {
       const enKeys = flattenKeys(enMessages);
-      const nlKeys = flattenKeys(nlMessages);
+      flattenKeys(nlMessages); // Validate nl structure
       
       // Sample check on first 10 keys
       const sampleKeys = enKeys.slice(0, 10);

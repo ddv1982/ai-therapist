@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { UIMessage } from 'ai';
 import { useChat } from '@ai-sdk/react';
-import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
+import { ANALYTICAL_MODEL_ID, DEFAULT_MODEL_ID } from '@/features/chat/config';
+import { MODEL_IDS } from '@/ai/model-metadata';
 import { logger } from '@/lib/utils/logger';
 import type { MessageData } from '@/features/chat/messages/message';
 import type { useChatTransport } from '../use-chat-transport';
@@ -115,6 +116,12 @@ export function useChatStreaming(params: UseChatStreamingParams) {
       sessionIdRef.current = sessionId;
       setIsLoading(true);
 
+      // Validate model before sending to API
+      const requestedModel = optionsRef.current?.model;
+      const validModels = Object.values(MODEL_IDS);
+      const isValidModel = requestedModel && validModels.includes(requestedModel as typeof validModels[number]);
+      const safeModel = isValidModel ? requestedModel : DEFAULT_MODEL_ID;
+
       try {
         await sendAiMessage(
           {
@@ -125,7 +132,7 @@ export function useChatStreaming(params: UseChatStreamingParams) {
             body: {
               sessionId,
               webSearchEnabled: optionsRef.current?.webSearchEnabled ?? false,
-              selectedModel: optionsRef.current?.model,
+              selectedModel: safeModel,
               state: {},
             },
           }

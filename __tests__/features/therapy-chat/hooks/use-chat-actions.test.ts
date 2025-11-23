@@ -6,6 +6,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useChatActions, type UseChatActionsParams } from '@/features/therapy-chat/hooks/use-chat-actions';
 import { createRef } from 'react';
 import type { ChatState } from '@/features/therapy-chat/hooks/use-chat-state';
+import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 
 // Mock the import
 jest.mock('@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions', () => ({
@@ -45,7 +46,7 @@ describe('useChatActions', () => {
     createObsessionsCompulsionsTable: jest.fn().mockResolvedValue({ success: true }),
     scrollToBottom: jest.fn(),
     updateSettings: jest.fn(),
-    settings: { model: 'gpt-4o', webSearchEnabled: false },
+    settings: { model: DEFAULT_MODEL_ID, webSearchEnabled: false },
     router: { push: jest.fn() },
     showToast: jest.fn(),
     toastT: jest.fn((key) => key),
@@ -194,9 +195,9 @@ describe('useChatActions', () => {
     });
   });
 
-  it('should toggle web search', () => {
+  it('should toggle web search on and switch to analytical model', () => {
     const updateSettings = jest.fn();
-    const params = createMockParams({ updateSettings, settings: { model: 'gpt-4o', webSearchEnabled: false } });
+    const params = createMockParams({ updateSettings, settings: { model: DEFAULT_MODEL_ID, webSearchEnabled: false } });
     const { result } = renderHook(() => useChatActions(params));
 
     act(() => {
@@ -205,13 +206,28 @@ describe('useChatActions', () => {
 
     expect(updateSettings).toHaveBeenCalledWith({
       webSearchEnabled: true,
-      model: 'gpt-4o',
+      model: ANALYTICAL_MODEL_ID,
+    });
+  });
+
+  it('should toggle web search off and reset to default model', () => {
+    const updateSettings = jest.fn();
+    const params = createMockParams({ updateSettings, settings: { model: ANALYTICAL_MODEL_ID, webSearchEnabled: true } });
+    const { result } = renderHook(() => useChatActions(params));
+
+    act(() => {
+      result.current.handleWebSearchToggle();
+    });
+
+    expect(updateSettings).toHaveBeenCalledWith({
+      webSearchEnabled: false,
+      model: DEFAULT_MODEL_ID,
     });
   });
 
   it('should toggle smart model', () => {
     const updateSettings = jest.fn();
-    const params = createMockParams({ updateSettings, settings: { model: 'gpt-4o', webSearchEnabled: false } });
+    const params = createMockParams({ updateSettings, settings: { model: DEFAULT_MODEL_ID, webSearchEnabled: false } });
     const { result } = renderHook(() => useChatActions(params));
 
     act(() => {
@@ -219,7 +235,7 @@ describe('useChatActions', () => {
     });
 
     expect(updateSettings).toHaveBeenCalledWith({
-      model: 'claude-3-7-sonnet',
+      model: ANALYTICAL_MODEL_ID,
       webSearchEnabled: false,
     });
   });

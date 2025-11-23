@@ -13,6 +13,7 @@
 import { useCallback } from 'react';
 import type { ObsessionsCompulsionsData } from '@/types';
 import type { ChatState } from '@/features/therapy-chat/hooks/use-chat-state';
+import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID, LOCAL_MODEL_ID } from '@/features/chat/config';
 
 /**
  * Interface for all chat action handlers.
@@ -181,24 +182,24 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
     const newWebSearchEnabled = !settings.webSearchEnabled;
     updateSettings({
       webSearchEnabled: newWebSearchEnabled,
-      ...(newWebSearchEnabled ? { model: 'gpt-4o' } : {}),
+      model: newWebSearchEnabled ? ANALYTICAL_MODEL_ID : DEFAULT_MODEL_ID,
     });
   }, [settings.webSearchEnabled, updateSettings]);
 
   const handleSmartModelToggle = useCallback(() => {
-    const nextModel = settings.model === 'claude-3-7-sonnet' ? 'gpt-4o' : 'claude-3-7-sonnet';
+    const nextModel = settings.model === ANALYTICAL_MODEL_ID ? DEFAULT_MODEL_ID : ANALYTICAL_MODEL_ID;
     updateSettings({
       model: nextModel,
-      ...(nextModel === 'claude-3-7-sonnet' ? { webSearchEnabled: false } : {}),
+      webSearchEnabled: false,
     });
   }, [settings.model, updateSettings]);
 
   const handleLocalModelToggle = useCallback(async () => {
-    const isLocal = settings.model === 'llama3.2';
+    const isLocal = settings.model === LOCAL_MODEL_ID;
 
     if (isLocal) {
       updateSettings({
-        model: 'gpt-4o',
+        model: DEFAULT_MODEL_ID,
         webSearchEnabled: false,
       });
       return;
@@ -226,7 +227,7 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
 
       if (health?.ok) {
         updateSettings({
-          model: 'llama3.2',
+          model: LOCAL_MODEL_ID,
           webSearchEnabled: false,
         });
         showToast({

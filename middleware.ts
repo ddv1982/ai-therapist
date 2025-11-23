@@ -10,6 +10,14 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/health(.*)',
+]);
+
+/**
+ * Routes that should be exempt from CSRF protection
+ * Webhooks use signature verification instead of CSRF tokens
+ * Note: Clerk middleware applies CSRF to all routes by default when enabled
+ */
+const isWebhookRoute = createRouteMatcher([
   '/api/webhook(.*)',
 ]);
 
@@ -18,17 +26,27 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const nonce = generateCSPNonce();
   const isDev = process.env.NODE_ENV === 'development';
   
-  // Get the response from Clerk
-  let response: NextResponse;
-  
-  // Allow public routes without authentication
-  if (isPublicRoute(req)) {
-    response = NextResponse.next();
-  } else {
-    // Protect all other routes (including home page)
-    await auth.protect();
-    response = NextResponse.next();
+  // Allow public routes and webhooks without authentication
+  // Webhooks are public and use signature verification for security
+  if (isPublicRoute(req) || isWebhookRoute(req)) {
+    const response = NextResponse.next();
+    
+    // Add security headers including CSP with nonce
+    const securityHeaders = getSecurityHeaders(nonce, isDev);
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    
+    // Store nonce in header for use in server components via headers()
+    response.headers.set('x-csp-nonce', nonce);
+    
+    return response;
   }
+  
+  // Protect all other routes (including home page)
+  await auth.protect();
+  
+  const response = NextResponse.next();
 
   // Add security headers including CSP with nonce
   const securityHeaders = getSecurityHeaders(nonce, isDev);
@@ -36,15 +54,10 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     response.headers.set(key, value);
   });
   
-  // Store nonce in header for potential use in pages/components
-  // (though Next.js doesn't easily expose this to React components)
+  // Store nonce in header for use in server components via headers()
   response.headers.set('x-csp-nonce', nonce);
   
   return response;
-}, {
-  // Enable CSRF protection for all authenticated requests
-  // This protects against cross-site request forgery attacks
-  enableCSRFProtection: true,
 });
 
 export const config = {

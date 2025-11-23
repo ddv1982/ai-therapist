@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
 import { DEFAULT_MODEL_ID } from '@/features/chat/config';
 
 interface ChatSettings {
@@ -26,41 +26,18 @@ interface ChatContextValue extends ChatState {
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
 
-const STORAGE_KEY = 'chat-settings';
-
 export function ChatSettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<ChatSettings>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          return JSON.parse(stored) as ChatSettings;
-        }
-      } catch {
-        // Ignore localStorage errors
-      }
-    }
-    return {
-      model: DEFAULT_MODEL_ID,
-      webSearchEnabled: false,
-    };
+  // Simple React state - no localStorage persistence
+  // Settings reset on page refresh (simpler and more predictable)
+  const [settings, setSettings] = useState<ChatSettings>({
+    model: DEFAULT_MODEL_ID,
+    webSearchEnabled: false,
   });
 
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentInput, setCurrentInputState] = useState('');
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
   const [error, setErrorState] = useState<string | null>(null);
-
-  // Persist settings to localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-      } catch {
-        // Ignore localStorage errors
-      }
-    }
-  }, [settings]);
 
   const updateSettings = useCallback((updates: Partial<ChatSettings>) => {
     setSettings((prev) => ({ ...prev, ...updates }));
