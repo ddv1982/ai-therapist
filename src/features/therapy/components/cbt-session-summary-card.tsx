@@ -70,15 +70,15 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
     <Card className={cn('bg-card text-foreground shadow-apple-sm', className)}>
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
-          <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full dark:bg-primary/20">
+          <div className="bg-primary/10 dark:bg-primary/20 flex h-12 w-12 items-center justify-center rounded-full">
             <Brain className="text-primary h-6 w-6" />
           </div>
           <div className="flex-1">
-            <CardTitle className="text-xl font-semibold text-foreground">
+            <CardTitle className="text-foreground text-xl font-semibold">
               {t('summary.title', { date: data.date })}
             </CardTitle>
             {data.completedSteps && data.completedSteps.length > 0 && (
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-sm">
                 {t('summary.completedSteps', { count: data.completedSteps.length })}
               </p>
             )}
@@ -93,7 +93,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
             <div className="text-foreground">
               <h4 className="font-semibold">{t('summary.situation')}</h4>
             </div>
-            <p className="break-words text-foreground">{data.situation}</p>
+            <p className="text-foreground break-words">{data.situation}</p>
           </div>
         )}
 
@@ -108,7 +108,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                 <Badge
                   key={index}
                   variant="secondary"
-                  className="bg-primary/10 px-2 py-0.5 text-primary dark:bg-primary/20 dark:text-primary-foreground"
+                  className="bg-primary/15 text-primary dark:bg-primary/25 dark:text-white px-2 py-0.5 font-bold border border-primary/30 dark:border-primary/40"
                 >
                   {translateEmotion(emotion.emotion)}: {emotion.rating}/10
                 </Badge>
@@ -123,18 +123,16 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
             <div className="text-foreground">
               <h4 className="font-semibold">{t('summary.automaticThoughts')}</h4>
             </div>
-            <div className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-muted/60 dark:divide-slate-700 dark:border-slate-700 dark:bg-muted/20">
+            <div className="bg-muted/60 dark:bg-muted/20 divide-y divide-slate-200 rounded-md border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
               {data.automaticThoughts.slice(0, 3).map((thought, index) => (
                 <div
                   key={index}
                   className="flex items-start justify-between gap-3 px-3 py-2 text-sm"
                 >
-                  <div className="break-words text-foreground">
-                    &ldquo;{thought.thought}&rdquo;
-                  </div>
+                  <div className="text-foreground break-words">&ldquo;{thought.thought}&rdquo;</div>
                   <Badge
                     variant="secondary"
-                    className="ml-2 bg-secondary/60 text-sm text-foreground"
+                    className="bg-secondary/60 text-foreground ml-2 text-sm"
                   >
                     {thought.credibility}/10
                   </Badge>
@@ -142,7 +140,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
               ))}
               {data.automaticThoughts.length > 3 && (
                 <div className="px-3 py-2">
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-muted-foreground text-sm italic">
                     {t('summary.moreThoughts', { count: data.automaticThoughts.length - 3 })}
                   </p>
                 </div>
@@ -158,10 +156,8 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
               <h4 className="font-semibold">{t('summary.coreBelief')}</h4>
             </div>
             <div>
-              <p className="break-words text-foreground">
-                &ldquo;{data.coreBelief.belief}&rdquo;
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="text-foreground break-words">&ldquo;{data.coreBelief.belief}&rdquo;</p>
+              <p className="text-muted-foreground mt-1 text-sm">
                 {t('summary.credibility')}: {data.coreBelief.credibility}/10
               </p>
             </div>
@@ -174,15 +170,13 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
             <div className="text-foreground">
               <h4 className="font-semibold">{t('summary.rationalThoughts')}</h4>
             </div>
-            <div className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-muted/60 dark:divide-slate-700 dark:border-slate-700 dark:bg-muted/20">
+            <div className="bg-muted/60 dark:bg-muted/20 divide-y divide-slate-200 rounded-md border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
               {data.rationalThoughts.slice(0, 2).map((thought, index) => (
                 <div
                   key={index}
                   className="flex items-start justify-between gap-3 px-3 py-2 text-sm"
                 >
-                  <div className="break-words text-foreground">
-                    &ldquo;{thought.thought}&rdquo;
-                  </div>
+                  <div className="text-foreground break-words">&ldquo;{thought.thought}&rdquo;</div>
                   <Badge
                     variant="outline"
                     className="ml-2 border-green-300 text-sm text-green-700 dark:border-green-600 dark:text-green-300"
@@ -193,7 +187,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
               ))}
               {data.rationalThoughts.length > 2 && (
                 <div className="px-3 py-2">
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-muted-foreground text-sm italic">
                     {t('summary.moreRationalThoughts', { count: data.rationalThoughts.length - 2 })}
                   </p>
                 </div>
@@ -208,7 +202,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
             <div className="text-foreground">
               <h4 className="font-semibold">{t('summary.activeSchemaModes')}</h4>
             </div>
-            <div className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-muted/60 dark:divide-slate-700 dark:border-slate-700 dark:bg-muted/20">
+            <div className="bg-muted/60 dark:bg-muted/20 divide-y divide-slate-200 rounded-md border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
               {data.schemaModes.slice(0, 3).map((mode, index) => (
                 <div
                   key={index}
@@ -227,7 +221,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
               ))}
               {data.schemaModes.length > 3 && (
                 <div className="px-3 py-2">
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-muted-foreground text-sm italic">
                     {t('summary.moreModes', { count: data.schemaModes.length - 3 })}
                   </p>
                 </div>
@@ -247,21 +241,21 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
               <div className="space-y-3">
                 {data.newBehaviors && data.newBehaviors.length > 0 && (
                   <div>
-                    <p className="mb-1 text-sm font-semibold text-foreground">
+                    <p className="text-foreground mb-1 text-sm font-semibold">
                       {t('summary.newBehaviors')}
                     </p>
-                    <div className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-muted/60 dark:divide-slate-700 dark:border-slate-700 dark:bg-muted/20">
+                    <div className="bg-muted/60 dark:bg-muted/20 divide-y divide-slate-200 rounded-md border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
                       {data.newBehaviors.slice(0, 3).map((behavior, index) => (
                         <div
                           key={index}
-                          className="flex items-center justify-between gap-3 px-3 py-2 text-sm text-foreground"
+                          className="text-foreground flex items-center justify-between gap-3 px-3 py-2 text-sm"
                         >
                           <span className="truncate">{behavior}</span>
                         </div>
                       ))}
                       {data.newBehaviors.length > 3 && (
                         <div className="px-3 py-2">
-                          <p className="text-[11px] text-muted-foreground italic">
+                          <p className="text-muted-foreground text-[11px] italic">
                             {t('summary.moreStrategies', { count: data.newBehaviors.length - 3 })}
                           </p>
                         </div>
@@ -272,7 +266,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
                 {data.finalEmotions && data.finalEmotions.length > 0 && (
                   <div>
-                    <p className="mb-2 text-sm font-semibold text-foreground">
+                    <p className="text-foreground mb-2 text-sm font-semibold">
                       {t('summary.emotionalProgress')}
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -280,7 +274,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                         <Badge
                           key={index}
                           variant="outline"
-                          className="border-primary/30 px-2 py-0.5 text-sm text-foreground"
+                          className="border-primary/30 text-foreground px-2 py-0.5 text-sm"
                         >
                           {translateEmotion(emotion.emotion)}: {emotion.rating}/10
                         </Badge>
@@ -295,7 +289,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
         {/* Session Completion Note */}
         <div className="border-t border-slate-200 pt-3 dark:border-slate-700">
-          <p className="text-sm leading-relaxed text-muted-foreground italic">
+          <p className="text-muted-foreground text-sm leading-relaxed italic">
             {t('summary.completionNote', { date: data.date })}
           </p>
         </div>
