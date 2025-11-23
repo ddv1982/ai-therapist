@@ -42,6 +42,16 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
   const t = useTranslations('ui');
+
+  // Note: Radix UI Dialog already implements WCAG 2.1 AA compliant focus management:
+  // - Automatic focus trap when modal opens
+  // - Focus returns to trigger element on close
+  // - Escape key closes the dialog
+  // - Tab/Shift+Tab cycles through focusable elements within the modal
+  //
+  // Our useFocusTrap hook provides additional customization and explicit
+  // focus management for complex scenarios, but Radix handles the basics.
+
   return (
     <DialogPortal>
       <DialogOverlay />

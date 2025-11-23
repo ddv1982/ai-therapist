@@ -14,3 +14,6 @@ export { useChatTransport } from './use-chat-transport';
 export { useSelectSession } from './use-select-session';
 export { useChatSessions } from './chat/use-chat-sessions';
 export { useChatViewport } from './chat/use-chat-viewport';
+
+// Accessibility hooks (WCAG 2.1 AA compliance)
+export { useFocusTrap, useFocusReturn } from './use-focus-trap';

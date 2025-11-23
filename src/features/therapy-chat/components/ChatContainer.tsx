@@ -1,0 +1,116 @@
+/**
+ * Chat Container Component
+ *
+ * Renders the messages list, handles loading states, and manages scrolling.
+ * Extracted from ChatPageContent to reduce complexity.
+ */
+
+'use client';
+
+import { Button } from '@/components/ui/button';
+import { ArrowDown } from 'lucide-react';
+import { SystemBanner } from '@/features/chat/components/system-banner';
+import { ChatEmptyState } from '@/features/chat/components/dashboard/chat-empty-state';
+import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
+import type { ChatState } from '../hooks/useChatState';
+import type { ObsessionsCompulsionsData } from '@/types';
+import { formatMemoryInfo } from '@/lib/chat/memory-utils';
+
+export interface ChatContainerProps {
+  chatState: ChatState;
+  onObsessionsCompulsionsComplete: (data: ObsessionsCompulsionsData) => Promise<void>;
+  onUpdateMessageMetadata: (
+    sessionId: string,
+    messageId: string,
+    metadata: Record<string, unknown>,
+    options?: { mergeStrategy?: 'merge' | 'replace' }
+  ) => Promise<{ success: boolean; error?: string }>;
+  onManageMemory: () => void;
+  onScrollToBottom: () => void;
+  translate: (key: string) => string;
+}
+
+/**
+ * Component that renders the chat messages container.
+ * Includes system banner, messages list, empty state, and scroll-to-bottom button.
+ */
+export function ChatContainer({
+  chatState,
+  onObsessionsCompulsionsComplete,
+  onUpdateMessageMetadata,
+  onManageMemory,
+  onScrollToBottom,
+  translate,
+}: ChatContainerProps) {
+  const {
+    messages,
+    isLoading,
+    isMobile,
+    currentSession,
+    memoryContext,
+    isNearBottom,
+    messagesContainerRef,
+    textareaRef,
+  } = chatState;
+
+  return (
+    <div
+      ref={messagesContainerRef}
+      className={`custom-scrollbar relative flex-1 overflow-y-auto ${isMobile ? (messages.length === 0 ? 'prevent-bounce p-2 pb-0' : 'prevent-bounce p-3 pb-0') : 'p-3 sm:p-6'}`}
+      style={{
+        minHeight: 0,
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+        scrollPaddingBottom: isMobile
+          ? `calc(var(--input-h, 0px) + env(safe-area-inset-bottom) + 12px)`
+          : undefined,
+      }}
+      role="log"
+      aria-label={translate('main.messagesAria')}
+      aria-live="polite"
+      aria-atomic="false"
+      aria-relevant="additions text"
+      aria-busy={Boolean(isLoading)}
+    >
+      <SystemBanner
+        hasMemory={memoryContext.hasMemory}
+        messageCount={messages.length}
+        isMobile={isMobile}
+        onManageMemory={onManageMemory}
+        formatText={formatMemoryInfo}
+        contextInfo={memoryContext}
+      />
+
+      {messages.length === 0 ? (
+        <ChatEmptyState isMobile={isMobile} translate={translate} />
+      ) : (
+        <VirtualizedMessageList
+          messages={messages}
+          isStreaming={isLoading}
+          isMobile={isMobile}
+          sessionId={currentSession ?? undefined}
+          onObsessionsCompulsionsComplete={onObsessionsCompulsionsComplete}
+          onUpdateMessageMetadata={onUpdateMessageMetadata}
+        />
+      )}
+
+      <div className="pointer-events-none sticky bottom-3 flex justify-center">
+        {!isNearBottom && (
+          <Button
+            onClick={() => {
+              onScrollToBottom();
+              setTimeout(() => textareaRef.current?.focus(), 50);
+            }}
+            variant="glass"
+            size="sm"
+            className="pointer-events-auto gap-2 rounded-full px-3 py-1"
+            aria-label={translate('main.jumpToLatest')}
+          >
+            <ArrowDown className="h-4 w-4" />
+            {translate('main.latest')}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}

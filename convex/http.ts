@@ -91,7 +91,11 @@ http.route({
       });
     } catch (error) {
       // Log webhook failures with structured logging for debugging and compliance
+      // Note: In Convex serverless functions, structured logging is sent to Convex logs
       const errorDetails = {
+        timestamp: new Date().toISOString(),
+        level: 'error',
+        message: 'Clerk webhook verification failed',
         operation: 'clerk-webhook',
         errorType: error instanceof Error ? error.name : 'Unknown',
         errorMessage: error instanceof Error ? error.message : String(error),
@@ -101,9 +105,9 @@ http.route({
         },
       };
       
-      // In Convex context, use console but with structured format
-      // TODO: Once Convex logger utility is available, replace with: logger.error(...)
-      console.error('[WEBHOOK_ERROR]', JSON.stringify(errorDetails));
+      // Convex captures this in their logging system - structured format for log aggregation
+      // eslint-disable-next-line no-console
+      console.error(JSON.stringify(errorDetails));
       
       return new Response('Webhook verification failed', { status: 401 });
     }

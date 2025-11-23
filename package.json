@@ -32,7 +32,10 @@
     "test:e2e:headed": "playwright test --headed",
     "qa:smoke": "npm run api:types && npm run lint && tsc --noEmit && npm test",
     "qa:full": "CI=1 npm run qa:smoke && CI=1 npm run test:coverage && npx playwright install --with-deps || true && CI=1 npm run test:e2e && node scripts/print-coverage-summary.mjs",
-    "audit:names": "node scripts/naming-audit.mjs"
+    "audit:names": "node scripts/naming-audit.mjs",
+    "analyze": "ANALYZE=true npm run build",
+    "analyze:server": "ANALYZE=true BUNDLE_ANALYZE=server npm run build",
+    "analyze:browser": "ANALYZE=true BUNDLE_ANALYZE=browser npm run build"
   },
   "dependencies": {
     "@ai-sdk/groq": "^2.0.31",
@@ -90,11 +93,13 @@
     "tailwindcss-animate": "^1.0.7",
     "ua-parser-js": "^2.0.4",
     "uuid": "^12.0.0",
+    "web-vitals": "^5.1.0",
     "yaml": "^2.8.1",
     "zod": "^4.0.17"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@next/bundle-analyzer": "^16.0.3",
     "@playwright/test": "^1.56.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",

@@ -11,6 +11,7 @@ import { ToastProvider } from '@/components/ui/toast';
 import { Toaster } from '@/components/ui/sonner';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { publicEnv } from '@/config/env.public';
+import { WebVitalsReporter } from '@/components/monitoring/web-vitals-reporter';
 
 interface RootProvidersProps {
   children: ReactNode;
@@ -32,6 +33,7 @@ export function RootProviders({ children }: RootProvidersProps) {
               <CBTProvider>
                 <ToastProvider>
                   <Toaster />
+                  <WebVitalsReporter />
                   <ErrorBoundary>{children}</ErrorBoundary>
                 </ToastProvider>
               </CBTProvider>

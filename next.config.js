@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 import createNextIntlPlugin from 'next-intl/plugin';
+import bundleAnalyzer from '@next/bundle-analyzer';
+
 const withNextIntl = createNextIntlPlugin({
   requestConfig: './i18n/request.ts',
   locales: ['en', 'nl'],
@@ -12,6 +14,11 @@ const withNextIntl = createNextIntlPlugin({
     httpOnly: false,
   },
 });
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 import path from 'path';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -76,4 +83,5 @@ const nextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+// Apply plugins in order: bundle analyzer first, then intl
+export default withNextIntl(withBundleAnalyzer(nextConfig));

@@ -278,6 +278,8 @@ class Logger {
     const formattedLog = this.formatLog(entry);
 
     // In development, use console methods for better readability
+    // Logger implementation is the only place where console.* is allowed
+    /* eslint-disable no-console */
     if (this.isDevelopment) {
       switch (level) {
         case LogLevel.ERROR:
@@ -305,6 +307,7 @@ class Logger {
       // In production, everything goes to console.log for log aggregation services
       console.log(formattedLog);
     }
+    /* eslint-enable no-console */
   }
 
   /**
@@ -462,6 +465,7 @@ export const logger = new Logger();
  */
 export function devLog(...args: unknown[]): void {
   if (isDevelopment) {
+    // eslint-disable-next-line no-console
     console.log(...args);
   }
 }

@@ -58,6 +58,9 @@ export default [
       'react-perf/jsx-no-new-object-as-prop': 'off',
       'react-perf/jsx-no-new-function-as-prop': 'off',
       'react-perf/jsx-no-new-array-as-prop': 'off',
+      // Enforce structured logging - use logger instead of console
+      // Allow specific console.* calls only with eslint-disable-next-line
+      'no-console': 'error',
     },
   },
   {
@@ -82,6 +85,8 @@ export default [
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-require-imports': 'off',
       '@typescript-eslint/no-namespace': 'off',
+      // Tests can use console
+      'no-console': 'off',
     },
   },
   {
@@ -97,6 +102,8 @@ export default [
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       'import/no-anonymous-default-export': 'off',
+      // Scripts can use console
+      'no-console': 'off',
     },
   },
   {
