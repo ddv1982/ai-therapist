@@ -104,12 +104,12 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
       const dialog = screen.getByRole('dialog');
       
       await waitFor(() => {
-        expect(dialog).toContainElement(document.activeElement);
+        expect(dialog).toContainElement(document.activeElement as HTMLElement);
       });
 
       // Tab through elements
       await user.tab();
-      expect(dialog).toContainElement(document.activeElement);
+      expect(dialog).toContainElement(document.activeElement as HTMLElement);
     });
   });
 
@@ -169,10 +169,10 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
       
       // Just verify focus stays within dialog during navigation
       await user.tab();
-      expect(dialog).toContainElement(document.activeElement);
+      expect(dialog).toContainElement(document.activeElement as HTMLElement);
       
       await user.tab();
-      expect(dialog).toContainElement(document.activeElement);
+      expect(dialog).toContainElement(document.activeElement as HTMLElement);
     });
   });
 
@@ -301,7 +301,7 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
 
-      const nestedButton = screen.getByText('Nested Button');
+      const nestedButton = screen.getByText('Nested Button') as HTMLElement;
       
       // Can manually focus nested elements
       nestedButton.focus();

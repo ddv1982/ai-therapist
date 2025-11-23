@@ -3,7 +3,7 @@
  */
 
 import { renderHook } from '@testing-library/react';
-import { useChatState, type UseChatStateParams } from '@/features/therapy-chat/hooks/useChatState';
+import { useChatState, type UseChatStateParams } from '@/features/therapy-chat/hooks/use-chat-state';
 import { createRef } from 'react';
 
 describe('useChatState', () => {

@@ -589,5 +589,9 @@
   "obsessions.export.title": "Obsessies & Compulsies Gegevens Exporteren",
   "obsessions.export.format": "Exporteren als {format}",
   "obsessions.export.success": "Gegevens succesvol geëxporteerd",
-  "obsessions.export.error": "Fout bij exporteren van gegevens"
+  "obsessions.export.error": "Fout bij exporteren van gegevens",
+
+  "accessibility.skipLinksLabel": "Navigatie links overslaan",
+  "accessibility.skipToMainContent": "Spring naar hoofdinhoud",
+  "accessibility.skipToNavigation": "Spring naar navigatie"
 }

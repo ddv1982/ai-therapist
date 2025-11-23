@@ -3,13 +3,15 @@
  *
  * Renders the input area, send button, and related controls.
  * Extracted from ChatPageContent to reduce complexity.
+ * Optimized with React.memo to prevent unnecessary re-renders.
  */
 
 'use client';
 
+import { memo } from 'react';
 import { ChatComposer } from '@/features/chat/components/chat-composer';
-import type { ChatState } from '../hooks/useChatState';
-import type { ChatActions } from '../hooks/useChatActions';
+import type { ChatState } from '@/features/therapy-chat/hooks/use-chat-state';
+import type { ChatActions } from '@/features/therapy-chat/hooks/use-chat-actions';
 
 export interface ChatControlsProps {
   chatState: ChatState;
@@ -23,8 +25,9 @@ export interface ChatControlsProps {
 /**
  * Component that renders the chat input controls.
  * Includes the input area, send button, and stop button.
+ * Wrapped with React.memo to prevent unnecessary re-renders.
  */
-export function ChatControls({
+export const ChatControls = memo(function ChatControls({
   chatState,
   chatActions,
   onStop,
@@ -45,4 +48,4 @@ export function ChatControls({
       textareaRef={textareaRef}
     />
   );
-}
+});

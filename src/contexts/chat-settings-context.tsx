@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo } from 'react';
 import { DEFAULT_MODEL_ID } from '@/features/chat/config';
 
 interface ChatSettings {
@@ -90,7 +90,8 @@ export function ChatSettingsProvider({ children }: { children: ReactNode }) {
     setStreamingMessageId(null);
   }, []);
 
-  const value: ChatContextValue = {
+  // Memoize the context value to prevent unnecessary re-renders
+  const value: ChatContextValue = useMemo(() => ({
     settings,
     isStreaming,
     currentInput,
@@ -101,7 +102,18 @@ export function ChatSettingsProvider({ children }: { children: ReactNode }) {
     setCurrentInput,
     clearMessages,
     setError,
-  };
+  }), [
+    settings,
+    isStreaming,
+    currentInput,
+    streamingMessageId,
+    error,
+    updateSettings,
+    setStreaming,
+    setCurrentInput,
+    clearMessages,
+    setError,
+  ]);
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }

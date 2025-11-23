@@ -12,6 +12,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { publicEnv } from '@/config/env.public';
 import { WebVitalsReporter } from '@/components/monitoring/web-vitals-reporter';
+import { SkipLinks } from '@/components/layout/skip-links';
 
 interface RootProvidersProps {
   children: ReactNode;
@@ -32,6 +33,7 @@ export function RootProviders({ children }: RootProvidersProps) {
             <ChatSettingsProvider>
               <CBTProvider>
                 <ToastProvider>
+                  <SkipLinks />
                   <Toaster />
                   <WebVitalsReporter />
                   <ErrorBoundary>{children}</ErrorBoundary>

@@ -4,9 +4,9 @@
 
 import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
-import { ChatControls } from '@/features/therapy-chat/components/ChatControls';
-import type { ChatState } from '@/features/therapy-chat/hooks/useChatState';
-import type { ChatActions } from '@/features/therapy-chat/hooks/useChatActions';
+import { ChatControls } from '@/features/therapy-chat/components/chat-controls';
+import type { ChatState } from '@/features/therapy-chat/hooks/use-chat-state';
+import type { ChatActions } from '@/features/therapy-chat/hooks/use-chat-actions';
 
 // Mock the ChatComposer component
 jest.mock('@/features/chat/components/chat-composer', () => ({

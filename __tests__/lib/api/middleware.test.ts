@@ -385,5 +385,155 @@ describe('Middleware Tests', () => {
        expect(res.status).toBe(500);
     });
   });
+
+  describe('Error Handling Scenarios', () => {
+    it('should handle invalid request data in withValidation (non-POST/PUT)', async () => {
+      // Test validation with invalid request that can't be parsed
+      const schema = z.object({ name: z.string() });
+      const getReq = createMockRequest('http://localhost:3000/api/test?invalid=[', {
+        method: 'GET',
+      });
+
+      const wrapped = withValidation(schema, mockHandler);
+      const res = await wrapped(getReq, { params: Promise.resolve({}) });
+
+      // Should fail validation due to invalid query params
+      expect(res.status).toBe(400);
+    });
+
+    it('should handle auth with clerkId in authResult', async () => {
+      (validateApiAuth as jest.Mock).mockResolvedValue({
+        isValid: true,
+        userId: 'clerk-user-123',
+      });
+
+      const capturingHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+      const wrapped = withAuth(capturingHandler);
+      await wrapped(req, { params: Promise.resolve({}) });
+
+      expect(capturingHandler).toHaveBeenCalled();
+      const context = capturingHandler.mock.calls[0][1];
+      expect(context.userInfo.clerkId).toBe('clerk-user-123');
+    });
+
+    it('should detect mobile user agent in fallback user info', async () => {
+      const mobileReq = createMockRequest('http://localhost:3000/api/test', {
+        headers: { 'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0) Mobile/15A372' },
+      });
+
+      (getSingleUserInfo as jest.Mock).mockImplementation(() => {
+        throw new Error('No session');
+      });
+
+      const capturingHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+      const wrapped = withAuth(capturingHandler);
+      await wrapped(mobileReq, { params: Promise.resolve({}) });
+
+      const context = capturingHandler.mock.calls[0][1];
+      expect(context.userInfo.currentDevice).toBe('Mobile');
+    });
+
+    it('should detect tablet user agent in fallback user info', async () => {
+      const tabletReq = createMockRequest('http://localhost:3000/api/test', {
+        headers: { 'user-agent': 'Mozilla/5.0 (iPad; CPU OS 14_0) iPad' },
+      });
+
+      (getSingleUserInfo as jest.Mock).mockImplementation(() => {
+        throw new Error('No session');
+      });
+
+      const capturingHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+      const wrapped = withAuth(capturingHandler);
+      await wrapped(tabletReq, { params: Promise.resolve({}) });
+
+      const context = capturingHandler.mock.calls[0][1];
+      expect(context.userInfo.currentDevice).toBe('Tablet');
+    });
+
+    it('should detect computer user agent in fallback user info', async () => {
+      const computerReq = createMockRequest('http://localhost:3000/api/test', {
+        headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      });
+
+      (getSingleUserInfo as jest.Mock).mockImplementation(() => {
+        throw new Error('No session');
+      });
+
+      const capturingHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+      const wrapped = withAuth(capturingHandler);
+      await wrapped(computerReq, { params: Promise.resolve({}) });
+
+      const context = capturingHandler.mock.calls[0][1];
+      expect(context.userInfo.currentDevice).toBe('Computer');
+    });
+
+    it('should handle metrics recording failures gracefully', async () => {
+      // Mock metrics to throw errors
+      (metrics.recordEndpointSuccess as jest.Mock).mockImplementation(() => {
+        throw new Error('Metrics error');
+      });
+      (metrics.recordEndpointLatency as jest.Mock).mockImplementation(() => {
+        throw new Error('Metrics error');
+      });
+
+      const wrapped = withApiMiddleware(mockHandler);
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+
+      // Should still succeed despite metrics errors
+      expect(res.status).toBe(200);
+    });
+
+    it('should handle rate limiter with retryAfter', async () => {
+      (getRateLimiter as jest.Mock).mockReturnValue({
+        checkRateLimit: jest.fn().mockResolvedValue({
+          allowed: false,
+          retryAfter: 30,
+        }),
+      });
+
+      const wrapped = withRateLimitUnauthenticated(mockHandler);
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+
+      expect(res.status).toBe(429);
+      expect(res.headers.get('Retry-After')).toBe('30');
+    });
+
+    it('should handle non-Error exceptions in withApiMiddleware', async () => {
+      mockHandler.mockRejectedValue('String error');
+      
+      const wrapped = withApiMiddleware(mockHandler);
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+
+      expect(res.status).toBe(500);
+      const body = await res.json();
+      expect(body.error.message).toBe('Internal server error');
+    });
+
+    it('should log validation errors properly', async () => {
+      const schema = z.object({ name: z.string() });
+      const postReq = createMockRequest('http://localhost:3000/api/test', {
+        method: 'POST',
+      });
+      (postReq.json as jest.Mock).mockResolvedValue({ name: 123 });
+
+      const wrapped = withValidation(schema, mockHandler);
+      await wrapped(postReq, { params: Promise.resolve({}) });
+
+      expect(logger.validationError).toHaveBeenCalled();
+    });
+
+    it('should handle validation with PUT method', async () => {
+      const schema = z.object({ name: z.string() });
+      const putReq = createMockRequest('http://localhost:3000/api/test', {
+        method: 'PUT',
+      });
+      (putReq.json as jest.Mock).mockResolvedValue({ name: 'Valid' });
+
+      const wrapped = withValidation(schema, mockHandler);
+      await wrapped(putReq, { params: Promise.resolve({}) });
+
+      expect(mockHandler).toHaveBeenCalled();
+    });
+  });
 });
 

@@ -1,6 +1,11 @@
 /**
- * Consolidated helper utilities
- * Includes: classnames, formatters, dates, JSON parsing, storage, deduplication, and performance utils
+ * Consolidated Helper Utilities
+ *
+ * A comprehensive collection of utility functions for common operations
+ * including classnames, formatters, dates, JSON parsing, storage, deduplication,
+ * and performance optimizations.
+ *
+ * @module helpers
  */
 
 import React, { lazy, ComponentType, LazyExoticComponent } from 'react';
@@ -13,6 +18,29 @@ import { isDevelopment } from '@/config/env.public';
 // CLASSNAMES AND FORMATTERS
 // ============================================================================
 
+/**
+ * Combines and merges Tailwind CSS class names intelligently.
+ * 
+ * Uses clsx for conditional classes and tailwind-merge to resolve
+ * conflicting Tailwind utilities, ensuring the last class takes precedence.
+ *
+ * @param {...ClassValue} inputs - Class names, objects, or arrays to merge
+ * @returns {string} Merged and deduplicated class string
+ *
+ * @example
+ * ```tsx
+ * // Basic usage
+ * cn('px-4', 'py-2', 'bg-blue-500')
+ * // => 'px-4 py-2 bg-blue-500'
+ *
+ * // Conditional classes
+ * cn('btn', isActive && 'btn-active', isDisabled && 'btn-disabled')
+ *
+ * // Overriding Tailwind classes (last wins)
+ * cn('px-4 py-2', 'px-6')
+ * // => 'py-2 px-6'
+ * ```
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

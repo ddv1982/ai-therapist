@@ -1,35 +1,49 @@
 /**
  * Chat Actions Hook
  *
- * Consolidates all action handlers for the chat interface.
- * Extracts actions from ChatPageContent to reduce complexity.
+ * Consolidates all action handlers for the therapy chat interface.
+ * Provides optimized, memoized callbacks for user interactions including
+ * input handling, navigation, settings management, and therapy-specific actions.
+ *
+ * @module useChatActions
  */
 
 'use client';
 
 import { useCallback } from 'react';
 import type { ObsessionsCompulsionsData } from '@/types';
-import type { ChatState } from './useChatState';
+import type { ChatState } from '@/features/therapy-chat/hooks/use-chat-state';
 
+/**
+ * Interface for all chat action handlers.
+ * Each action is memoized with useCallback for performance optimization.
+ *
+ * @interface ChatActions
+ */
 export interface ChatActions {
-  // Input handlers
+  /** Updates the input field value as user types */
   handleInputChange: (value: string) => void;
+  /** Handles keyboard shortcuts (e.g., Enter to send, Shift+Enter for newline) */
   handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  /** Handles form submission (send button click) */
   handleFormSubmit: (e: React.FormEvent) => void;
 
-  // Navigation
+  /** Opens the CBT diary modal for thought tracking */
   openCBTDiary: () => void;
 
-  // Obsessions/Compulsions
+  /** Handles completion of obsessions/compulsions data entry */
   handleObsessionsCompulsionsComplete: (data: ObsessionsCompulsionsData) => Promise<void>;
+  /** Creates a new obsessions/compulsions tracking table */
   handleCreateObsessionsTable: () => Promise<void>;
 
-  // Settings toggles
+  /** Toggles web search feature on/off */
   handleWebSearchToggle: () => void;
+  /** Toggles between standard and analytical AI model */
   handleSmartModelToggle: () => void;
+  /** Switches to/from local AI model */
   handleLocalModelToggle: () => Promise<void>;
 
-  // Scroll actions
+  /** Scrolls messages container to bottom */
   scrollToBottom: () => void;
 }
 

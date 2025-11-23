@@ -3,9 +3,9 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { useChatActions, type UseChatActionsParams } from '@/features/therapy-chat/hooks/useChatActions';
+import { useChatActions, type UseChatActionsParams } from '@/features/therapy-chat/hooks/use-chat-actions';
 import { createRef } from 'react';
-import type { ChatState } from '@/features/therapy-chat/hooks/useChatState';
+import type { ChatState } from '@/features/therapy-chat/hooks/use-chat-state';
 
 // Mock the import
 jest.mock('@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions', () => ({

@@ -1,3 +1,12 @@
+/**
+ * Chat Header Component
+ *
+ * Renders the top navigation bar with model selector, action buttons, and user menu.
+ * Uses ChatHeaderContext to access state and avoid prop drilling.
+ *
+ * @module ChatHeader
+ */
+
 'use client';
 
 import { useMemo } from 'react';
@@ -6,36 +15,38 @@ import { Button } from '@/components/ui/button';
 import { FileText, Menu, X, Brain, List } from 'lucide-react';
 import { getIconButtonSize } from '@/lib/ui/design-tokens';
 import { useTranslations } from 'next-intl';
+import { useChatHeader } from '@/features/chat/context/chat-header-context';
 
-interface ChatHeaderProps {
-  showSidebar: boolean;
-  onToggleSidebar: () => void;
-  hasActiveSession: boolean;
-  hasMessages: boolean;
-  isGeneratingReport: boolean;
-  isLoading: boolean;
-  isMobile: boolean;
-  onGenerateReport: () => void;
-  onStopGenerating: () => void;
-  onOpenCBTDiary: () => void;
-  onCreateObsessionsTable: () => void;
-  modelLabel: string;
-}
-
-export function ChatHeader({
-  showSidebar,
-  onToggleSidebar,
-  hasActiveSession,
-  hasMessages,
-  isGeneratingReport,
-  isLoading,
-  isMobile,
-  onGenerateReport,
-  onStopGenerating,
-  onOpenCBTDiary,
-  onCreateObsessionsTable,
-  modelLabel,
-}: ChatHeaderProps) {
+/**
+ * Main chat header component.
+ * Displays navigation controls, AI model info, action buttons, and user menu.
+ * Now uses context for cleaner state access.
+ *
+ * @component
+ * @returns {JSX.Element} The chat header with all controls
+ *
+ * @example
+ * ```tsx
+ * <ChatHeaderProvider value={headerState}>
+ *   <ChatHeader />
+ * </ChatHeaderProvider>
+ * ```
+ */
+export function ChatHeader() {
+  const {
+    showSidebar,
+    onToggleSidebar,
+    hasActiveSession,
+    hasMessages,
+    isGeneratingReport,
+    isLoading,
+    isMobile,
+    onGenerateReport,
+    onStopGenerating,
+    onOpenCBTDiary,
+    onCreateObsessionsTable,
+    modelLabel,
+  } = useChatHeader();
   const t = useTranslations('chat');
   const UserMenu = useMemo(
     () =>

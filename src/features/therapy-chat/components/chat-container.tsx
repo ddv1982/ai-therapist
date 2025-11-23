@@ -3,16 +3,18 @@
  *
  * Renders the messages list, handles loading states, and manages scrolling.
  * Extracted from ChatPageContent to reduce complexity.
+ * Optimized with React.memo and useMemo for better performance.
  */
 
 'use client';
 
+import { memo, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowDown } from 'lucide-react';
 import { SystemBanner } from '@/features/chat/components/system-banner';
 import { ChatEmptyState } from '@/features/chat/components/dashboard/chat-empty-state';
 import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
-import type { ChatState } from '../hooks/useChatState';
+import type { ChatState } from '@/features/therapy-chat/hooks/use-chat-state';
 import type { ObsessionsCompulsionsData } from '@/types';
 import { formatMemoryInfo } from '@/lib/chat/memory-utils';
 
@@ -33,8 +35,9 @@ export interface ChatContainerProps {
 /**
  * Component that renders the chat messages container.
  * Includes system banner, messages list, empty state, and scroll-to-bottom button.
+ * Wrapped with React.memo to prevent unnecessary re-renders.
  */
-export function ChatContainer({
+export const ChatContainer = memo(function ChatContainer({
   chatState,
   onObsessionsCompulsionsComplete,
   onUpdateMessageMetadata,
@@ -53,18 +56,36 @@ export function ChatContainer({
     textareaRef,
   } = chatState;
 
+  // Memoize container className computation
+  const containerClassName = useMemo(() => {
+    const baseClasses = 'custom-scrollbar relative flex-1 overflow-y-auto';
+    const mobileClasses = isMobile 
+      ? (messages.length === 0 ? 'prevent-bounce p-2 pb-0' : 'prevent-bounce p-3 pb-0')
+      : 'p-3 sm:p-6';
+    return `${baseClasses} ${mobileClasses}`;
+  }, [isMobile, messages.length]);
+
+  // Memoize container style
+  const containerStyle = useMemo(() => ({
+    minHeight: 0,
+    WebkitOverflowScrolling: 'touch' as const,
+    overscrollBehavior: 'contain' as const,
+    scrollPaddingBottom: isMobile
+      ? `calc(var(--input-h, 0px) + env(safe-area-inset-bottom) + 12px)`
+      : undefined,
+  }), [isMobile]);
+
+  // Memoize scroll button click handler
+  const handleScrollButtonClick = useCallback(() => {
+    onScrollToBottom();
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  }, [onScrollToBottom, textareaRef]);
+
   return (
     <div
       ref={messagesContainerRef}
-      className={`custom-scrollbar relative flex-1 overflow-y-auto ${isMobile ? (messages.length === 0 ? 'prevent-bounce p-2 pb-0' : 'prevent-bounce p-3 pb-0') : 'p-3 sm:p-6'}`}
-      style={{
-        minHeight: 0,
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'contain',
-        scrollPaddingBottom: isMobile
-          ? `calc(var(--input-h, 0px) + env(safe-area-inset-bottom) + 12px)`
-          : undefined,
-      }}
+      className={containerClassName}
+      style={containerStyle}
       role="log"
       aria-label={translate('main.messagesAria')}
       aria-live="polite"
@@ -97,10 +118,7 @@ export function ChatContainer({
       <div className="pointer-events-none sticky bottom-3 flex justify-center">
         {!isNearBottom && (
           <Button
-            onClick={() => {
-              onScrollToBottom();
-              setTimeout(() => textareaRef.current?.focus(), 50);
-            }}
+            onClick={handleScrollButtonClick}
             variant="glass"
             size="sm"
             className="pointer-events-auto gap-2 rounded-full px-3 py-1"
@@ -113,4 +131,4 @@ export function ChatContainer({
       </div>
     </div>
   );
-}
+});

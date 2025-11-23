@@ -3,7 +3,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { useChatModals } from '@/features/therapy-chat/hooks/useChatModals';
+import { useChatModals } from '@/features/therapy-chat/hooks/use-chat-modals';
 
 describe('useChatModals', () => {
   it('should initialize with memory modal closed', () => {

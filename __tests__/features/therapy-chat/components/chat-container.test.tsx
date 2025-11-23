@@ -4,8 +4,8 @@
 
 import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
-import { ChatContainer } from '@/features/therapy-chat/components/ChatContainer';
-import type { ChatState } from '@/features/therapy-chat/hooks/useChatState';
+import { ChatContainer } from '@/features/therapy-chat/components/chat-container';
+import type { ChatState } from '@/features/therapy-chat/hooks/use-chat-state';
 
 // Mock the child components
 jest.mock('@/features/chat/components/system-banner', () => ({

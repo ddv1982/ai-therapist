@@ -1,9 +1,43 @@
+/**
+ * Convex Messages Module
+ *
+ * Provides queries and mutations for managing therapy session messages.
+ * Includes optimized pagination, ownership verification, and metadata management.
+ *
+ * @module convex/messages
+ */
+
 import { query, mutation } from './_generated/server';
 import type { QueryCtx, MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { QUERY_LIMITS, PAGINATION_DEFAULTS } from './constants';
 import type { Doc } from './_generated/dataModel';
 
+/**
+ * Lists messages for a specific therapy session with pagination support.
+ * 
+ * Fetches messages in chronological order with configurable limit and offset.
+ * Automatically verifies session ownership before returning data. Uses manual
+ * pagination since Convex doesn't provide native skip/limit operations.
+ *
+ * @query
+ * @param {Object} args - Query arguments
+ * @param {Id<'sessions'>} args.sessionId - The session to fetch messages from
+ * @param {number} [args.limit] - Maximum number of messages to return (default: QUERY_LIMITS.DEFAULT_LIMIT)
+ * @param {number} [args.offset=0] - Number of messages to skip for pagination
+ * @returns {Promise<Doc<'messages'>[]>} Array of message documents in chronological order
+ * @throws {Error} If user doesn't own the specified session
+ *
+ * @example
+ * ```typescript
+ * // Fetch first 50 messages
+ * const messages = await api.messages.listBySession({
+ *   sessionId: 'session123',
+ *   limit: 50,
+ *   offset: 0
+ * });
+ * ```
+ */
 export const listBySession = query({
   args: {
     sessionId: v.id('sessions'),
@@ -45,6 +79,26 @@ export const listBySession = query({
   },
 });
 
+/**
+ * Counts the total number of messages in a therapy session.
+ * 
+ * Efficiently counts messages without loading full message data into memory.
+ * Verifies session ownership before counting.
+ *
+ * @query
+ * @param {Object} args - Query arguments
+ * @param {Id<'sessions'>} args.sessionId - The session to count messages for
+ * @returns {Promise<number>} Total number of messages in the session
+ * @throws {Error} If user doesn't own the specified session
+ *
+ * @example
+ * ```typescript
+ * const count = await api.messages.countBySession({
+ *   sessionId: 'session123'
+ * });
+ * console.log(`Session has ${count} messages`);
+ * ```
+ */
 export const countBySession = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
@@ -63,6 +117,34 @@ export const countBySession = query({
   },
 });
 
+/**
+ * Creates a new message in a therapy session.
+ * 
+ * Inserts a new message with the specified content and metadata, then updates
+ * the session's message count and last updated timestamp. Verifies session
+ * ownership before creating the message.
+ *
+ * @mutation
+ * @param {Object} args - Mutation arguments
+ * @param {Id<'sessions'>} args.sessionId - The session to add the message to
+ * @param {string} args.role - Message role ('user' or 'assistant')
+ * @param {string} args.content - The message text content
+ * @param {string} [args.modelUsed] - ID of the AI model that generated the message
+ * @param {any} [args.metadata] - Additional metadata (e.g., tokens, latency, sources)
+ * @param {number} [args.timestamp] - Custom timestamp (defaults to current time)
+ * @returns {Promise<Doc<'messages'> | null>} The created message document
+ * @throws {Error} If user doesn't own the specified session
+ *
+ * @example
+ * ```typescript
+ * const message = await api.messages.create({
+ *   sessionId: 'session123',
+ *   role: 'user',
+ *   content: 'I have been feeling anxious lately',
+ *   metadata: { sentiment: 0.3 }
+ * });
+ * ```
+ */
 export const create = mutation({
   args: {
     sessionId: v.id('sessions'),

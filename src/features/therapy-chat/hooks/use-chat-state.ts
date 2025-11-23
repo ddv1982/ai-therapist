@@ -2,7 +2,10 @@
  * Chat State Hook
  *
  * Consolidates all state management for the chat interface.
- * Extracts state from ChatPageContent to reduce complexity.
+ * Reduces complexity by aggregating chat-related state from multiple sources
+ * into a single, memoized object for efficient prop passing.
+ *
+ * @module useChatState
  */
 
 'use client';
@@ -12,31 +15,45 @@ import type { MessageData } from '@/features/chat/messages/message';
 import type { UiSession } from '@/lib/chat/session-mapper';
 import type { MemoryContextInfo } from '@/lib/chat/memory-utils';
 
+/**
+ * Consolidated chat state interface.
+ * Contains all state needed by chat UI components.
+ *
+ * @interface ChatState
+ */
 export interface ChatState {
-  // Message state
+  /** Array of all messages in the current session */
   messages: MessageData[];
+  /** Whether AI is currently generating a response */
   isLoading: boolean;
+  /** Whether a therapy report is being generated */
   isGeneratingReport: boolean;
 
-  // Session state
+  /** All available chat sessions */
   sessions: UiSession[];
+  /** Currently active session ID */
   currentSession: string | null;
 
-  // Input state
+  /** Current value of the message input field */
   input: string;
 
-  // UI state
+  /** Whether running on mobile device */
   isMobile: boolean;
+  /** CSS height value for viewport */
   viewportHeight: string;
+  /** Whether the sidebar is visible */
   showSidebar: boolean;
+  /** Whether user is scrolled near bottom */
   isNearBottom: boolean;
 
-  // Memory context
+  /** Memory context for the current session */
   memoryContext: MemoryContextInfo;
 
-  // Refs
+  /** Ref to the input textarea element */
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  /** Ref to the messages scrollable container */
   messagesContainerRef: React.RefObject<HTMLDivElement | null>;
+  /** Ref to the input container for height measurements */
   inputContainerRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -58,8 +75,29 @@ export interface UseChatStateParams {
 }
 
 /**
- * Hook to consolidate chat state into a single object.
- * This reduces prop drilling and makes state management clearer.
+ * Consolidates multiple chat state parameters into a single, memoized state object.
+ * 
+ * This hook aggregates chat state from various sources (controller, UI state, refs)
+ * into a unified ChatState object, improving performance through memoization and
+ * reducing prop drilling by providing a single state object to child components.
+ *
+ * @param {UseChatStateParams} params - All individual state parameters to consolidate
+ * @returns {ChatState} Memoized chat state object containing all consolidated state
+ *
+ * @example
+ * ```tsx
+ * const chatState = useChatState({
+ *   messages: controller.messages,
+ *   sessions: controller.sessions,
+ *   currentSession: controller.currentSession,
+ *   input: controller.input,
+ *   isLoading: controller.isLoading,
+ *   // ... other params
+ * });
+ *
+ * // Pass consolidated state to child components
+ * <ChatContainer chatState={chatState} />
+ * ```
  */
 export function useChatState(params: UseChatStateParams): ChatState {
   const chatState = useMemo<ChatState>(

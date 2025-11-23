@@ -587,5 +587,9 @@
   "obsessions.export.title": "Export Obsessions & Compulsions Data",
   "obsessions.export.format": "Export as {format}",
   "obsessions.export.success": "Data exported successfully",
-  "obsessions.export.error": "Failed to export data"
+  "obsessions.export.error": "Failed to export data",
+
+  "accessibility.skipLinksLabel": "Skip navigation links",
+  "accessibility.skipToMainContent": "Skip to main content",
+  "accessibility.skipToNavigation": "Skip to navigation"
 }

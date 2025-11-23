@@ -11,6 +11,7 @@ jest.mock('lucide-react', () => ({
 }));
 
 import { ChatHeader } from '@/features/chat/components/chat-header';
+import { ChatHeaderProvider } from '@/features/chat/context/chat-header-context';
 import enMessages from '@/i18n/messages/en.json';
 
 function renderWithIntl(ui: React.ReactNode) {
@@ -24,20 +25,24 @@ function renderWithIntl(ui: React.ReactNode) {
 describe('ChatHeader', () => {
   test('renders new conversation title when no active session', () => {
     renderWithIntl(
-      <ChatHeader
-        showSidebar={false}
-        onToggleSidebar={() => {}}
-        hasActiveSession={false}
-        hasMessages={false}
-        isGeneratingReport={false}
-        isLoading={false}
-        isMobile={false}
-        onGenerateReport={() => {}}
-        onStopGenerating={() => {}}
-        onOpenCBTDiary={() => {}}
-        onCreateObsessionsTable={() => {}}
-        modelLabel="GPT-OSS 20B"
-      />
+      <ChatHeaderProvider
+        value={{
+          showSidebar: false,
+          onToggleSidebar: () => {},
+          hasActiveSession: false,
+          hasMessages: false,
+          isGeneratingReport: false,
+          isLoading: false,
+          isMobile: false,
+          onGenerateReport: () => {},
+          onStopGenerating: () => {},
+          onOpenCBTDiary: () => {},
+          onCreateObsessionsTable: () => {},
+          modelLabel: 'GPT-OSS 20B',
+        }}
+      >
+        <ChatHeader />
+      </ChatHeaderProvider>
     );
 
     expect(screen.getByText('New Conversation')).toBeInTheDocument();
@@ -46,20 +51,24 @@ describe('ChatHeader', () => {
   test('invokes toggle sidebar on button click', () => {
     const onToggle = jest.fn();
     renderWithIntl(
-      <ChatHeader
-        showSidebar={false}
-        onToggleSidebar={onToggle}
-        hasActiveSession={false}
-        hasMessages={false}
-        isGeneratingReport={false}
-        isLoading={false}
-        isMobile={false}
-        onGenerateReport={() => {}}
-        onStopGenerating={() => {}}
-        onOpenCBTDiary={() => {}}
-        onCreateObsessionsTable={() => {}}
-        modelLabel="GPT-OSS 20B"
-      />
+      <ChatHeaderProvider
+        value={{
+          showSidebar: false,
+          onToggleSidebar: onToggle,
+          hasActiveSession: false,
+          hasMessages: false,
+          isGeneratingReport: false,
+          isLoading: false,
+          isMobile: false,
+          onGenerateReport: () => {},
+          onStopGenerating: () => {},
+          onOpenCBTDiary: () => {},
+          onCreateObsessionsTable: () => {},
+          modelLabel: 'GPT-OSS 20B',
+        }}
+      >
+        <ChatHeader />
+      </ChatHeaderProvider>
     );
 
     const btn = screen.getByLabelText('Toggle session sidebar');

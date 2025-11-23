@@ -5,11 +5,16 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MobileDebugInfo } from '@/components/layout/mobile-debug-info';
+import { ModalSkeleton } from '@/components/ui/loading-fallback';
 
-const MemoryManagementModal = dynamic(() =>
-  import('@/features/therapy/memory/memory-management-modal').then((mod) => ({
-    default: mod.MemoryManagementModal,
-  }))
+const MemoryManagementModal = dynamic(
+  () =>
+    import('@/features/therapy/memory/memory-management-modal').then((mod) => ({
+      default: mod.MemoryManagementModal,
+    })),
+  {
+    loading: () => <ModalSkeleton />,
+  }
 );
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { useInputFooterHeight } from '@/hooks/use-input-footer-height';
@@ -19,12 +24,13 @@ import { LOCAL_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { useToast } from '@/components/ui/toast';
 import { ChatSidebar } from '@/features/chat/components/dashboard/chat-sidebar';
 import { ChatHeader } from '@/features/chat/components/chat-header';
+import { ChatHeaderProvider } from '@/features/chat/context/chat-header-context';
 import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
-import { useChatState } from '@/features/therapy-chat/hooks/useChatState';
-import { useChatActions } from '@/features/therapy-chat/hooks/useChatActions';
-import { useChatModals } from '@/features/therapy-chat/hooks/useChatModals';
-import { ChatContainer } from '@/features/therapy-chat/components/ChatContainer';
-import { ChatControls } from '@/features/therapy-chat/components/ChatControls';
+import { useChatState } from '@/features/therapy-chat/hooks/use-chat-state';
+import { useChatActions } from '@/features/therapy-chat/hooks/use-chat-actions';
+import { useChatModals } from '@/features/therapy-chat/hooks/use-chat-modals';
+import { ChatContainer } from '@/features/therapy-chat/components/chat-container';
+import { ChatControls } from '@/features/therapy-chat/components/chat-controls';
 
 function ChatPageContent() {
   const router = useRouter();
@@ -79,19 +85,52 @@ function ChatPageContent() {
 
   const { modals, actions: modalActions } = useChatModals();
 
-  const chatUIBridge: ChatUIBridge = {
-    addMessageToChat: async (message) => {
-      return await controller.addMessageToChat({
-        content: message.content,
-        role: message.role,
-        sessionId: message.sessionId,
-        modelUsed: message.modelUsed,
-        source: message.source,
-      });
-    },
-    currentSessionId: controller.currentSession,
-    isLoading: controller.isLoading,
-  };
+  const chatUIBridge: ChatUIBridge = useMemo(
+    () => ({
+      addMessageToChat: async (message) => {
+        return await controller.addMessageToChat({
+          content: message.content,
+          role: message.role,
+          sessionId: message.sessionId,
+          modelUsed: message.modelUsed,
+          source: message.source,
+        });
+      },
+      currentSessionId: controller.currentSession,
+      isLoading: controller.isLoading,
+    }),
+    [controller]
+  );
+
+  const chatHeaderState = useMemo(
+    () => ({
+      showSidebar: chatState.showSidebar,
+      onToggleSidebar: () => controller.setShowSidebar(!chatState.showSidebar),
+      hasActiveSession: Boolean(chatState.currentSession),
+      hasMessages: chatState.messages.length > 0,
+      isGeneratingReport: chatState.isGeneratingReport,
+      isLoading: chatState.isLoading,
+      isMobile: chatState.isMobile,
+      onGenerateReport: controller.generateReport,
+      onStopGenerating: controller.stopGenerating,
+      onOpenCBTDiary: chatActions.openCBTDiary,
+      onCreateObsessionsTable: () => {
+        void chatActions.handleCreateObsessionsTable();
+      },
+      modelLabel,
+    }),
+    [
+      chatState.showSidebar,
+      chatState.currentSession,
+      chatState.messages.length,
+      chatState.isGeneratingReport,
+      chatState.isLoading,
+      chatState.isMobile,
+      controller,
+      chatActions,
+      modelLabel,
+    ]
+  );
 
   const appContainerStyle = useMemo<React.CSSProperties>(
     () => ({
@@ -111,47 +150,37 @@ function ChatPageContent() {
         aria-label={t('app.aria')}
         style={appContainerStyle}
       >
-        <ChatSidebar
-          open={chatState.showSidebar}
-          sessions={chatState.sessions}
-          currentSessionId={chatState.currentSession}
-          isMobile={chatState.isMobile}
-          onClose={() => controller.setShowSidebar(false)}
-          onStartNewSession={controller.startNewSession}
-          onSelectSession={controller.setCurrentSessionAndSync}
-          onDeleteSession={controller.deleteSession}
-          onToggleSmartModel={chatActions.handleSmartModelToggle}
-          onToggleWebSearch={chatActions.handleWebSearchToggle}
-          onToggleLocalModel={() => {
-            void chatActions.handleLocalModelToggle();
-          }}
-          webSearchEnabled={settings.webSearchEnabled}
-          smartModelActive={!settings.webSearchEnabled && settings.model === ANALYTICAL_MODEL_ID}
-          localModelActive={!settings.webSearchEnabled && settings.model === LOCAL_MODEL_ID}
-          translate={t}
-        />
+        <div id="navigation">
+          <ChatSidebar
+            open={chatState.showSidebar}
+            sessions={chatState.sessions}
+            currentSessionId={chatState.currentSession}
+            isMobile={chatState.isMobile}
+            onClose={() => controller.setShowSidebar(false)}
+            onStartNewSession={controller.startNewSession}
+            onSelectSession={controller.setCurrentSessionAndSync}
+            onDeleteSession={controller.deleteSession}
+            onToggleSmartModel={chatActions.handleSmartModelToggle}
+            onToggleWebSearch={chatActions.handleWebSearchToggle}
+            onToggleLocalModel={() => {
+              void chatActions.handleLocalModelToggle();
+            }}
+            webSearchEnabled={settings.webSearchEnabled}
+            smartModelActive={!settings.webSearchEnabled && settings.model === ANALYTICAL_MODEL_ID}
+            localModelActive={!settings.webSearchEnabled && settings.model === LOCAL_MODEL_ID}
+            translate={t}
+          />
+        </div>
 
         <main
+          id="main-content"
           className="relative flex min-h-0 flex-1 flex-col"
           role="main"
           aria-label={t('main.aria')}
         >
-          <ChatHeader
-            showSidebar={chatState.showSidebar}
-            onToggleSidebar={() => controller.setShowSidebar(!chatState.showSidebar)}
-            hasActiveSession={Boolean(chatState.currentSession)}
-            hasMessages={chatState.messages.length > 0}
-            isGeneratingReport={chatState.isGeneratingReport}
-            isLoading={chatState.isLoading}
-            isMobile={chatState.isMobile}
-            onGenerateReport={controller.generateReport}
-            onStopGenerating={controller.stopGenerating}
-            onOpenCBTDiary={chatActions.openCBTDiary}
-            onCreateObsessionsTable={() => {
-              void chatActions.handleCreateObsessionsTable();
-            }}
-            modelLabel={modelLabel}
-          />
+          <ChatHeaderProvider value={chatHeaderState}>
+            <ChatHeader />
+          </ChatHeaderProvider>
 
           <ChatContainer
             chatState={chatState}

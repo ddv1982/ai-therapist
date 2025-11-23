@@ -10,15 +10,18 @@
  * - Browser-native crypto.getRandomValues()
  * - IndexedDB for secure key storage
  * - Session-based key management
+ * - Rate limiting to prevent abuse
  *
  * Security:
  * - Cryptographically secure random number generation
  * - Industry-standard encryption algorithms
  * - Proper salt and IV generation
  * - Memory-safe key handling
+ * - 100 operations per minute rate limit
  */
 
 import { logger } from '@/lib/utils/logger';
+import { cryptoRateLimiter } from './rate-limiter';
 
 // Encryption constants (matching server-side parameters)
 const ALGORITHM = 'AES-GCM';
@@ -28,9 +31,24 @@ const SALT_LENGTH = 16; // 128 bits
 const ITERATIONS = 100000; // Same as server PBKDF2 iterations
 
 /**
- * Client-side encryption error class
+ * Custom error class for client-side encryption operations.
+ * Extends Error with an optional cause property for error chaining.
+ *
+ * @class ClientCryptoError
+ * @extends Error
+ *
+ * @example
+ * ```typescript
+ * throw new ClientCryptoError('Encryption failed', originalError);
+ * ```
  */
 export class ClientCryptoError extends Error {
+  /**
+   * Creates a new ClientCryptoError.
+   *
+   * @param {string} message - Human-readable error description
+   * @param {Error} [cause] - Optional underlying error that triggered this error
+   */
   constructor(
     message: string,
     public cause?: Error
@@ -41,7 +59,20 @@ export class ClientCryptoError extends Error {
 }
 
 /**
- * Generate cryptographically secure random bytes
+ * Generates cryptographically secure random bytes using the Web Crypto API.
+ * Used for generating salts, initialization vectors (IVs), and session keys.
+ *
+ * @param {number} length - Number of random bytes to generate
+ * @returns {Uint8Array} Array of cryptographically secure random bytes
+ * @throws {ClientCryptoError} If Web Crypto API is not available in the environment
+ *
+ * @example
+ * ```typescript
+ * const salt = getRandomBytes(16); // 128 bits for PBKDF2
+ * const iv = getRandomBytes(12);   // 96 bits for AES-GCM
+ * ```
+ *
+ * @internal
  */
 function getRandomBytes(length: number): Uint8Array {
   if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
@@ -143,13 +174,64 @@ async function getMasterKey(): Promise<ArrayBuffer> {
 }
 
 /**
- * Encrypt sensitive data for client-side storage
+ * Get user identifier for rate limiting
+ * Uses session ID or 'anonymous' for unauthenticated users
+ */
+function getUserIdentifier(): string {
+  // Try to get user ID from Clerk session if available
+  if (typeof window !== 'undefined') {
+    try {
+      // Check for Clerk user ID in the document
+      const clerkUserId = (window as any).__clerk_user_id;
+      if (clerkUserId) {
+        return clerkUserId;
+      }
+    } catch {
+      // Ignore errors
+    }
+  }
+
+  // Fall back to session-based identifier
+  let sessionId = sessionStorage.getItem('therapeutic-session-id');
+  if (!sessionId) {
+    sessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    sessionStorage.setItem('therapeutic-session-id', sessionId);
+  }
+  return sessionId;
+}
+
+/**
+ * Encrypts sensitive data for secure client-side storage using AES-256-GCM.
+ * 
+ * This function applies rate limiting (100 operations per minute) to prevent abuse
+ * and uses the same encryption standards as server-side operations. The encrypted
+ * data includes salt and IV for proper key derivation and secure decryption.
+ *
+ * @param {string} plaintext - The plain text data to encrypt
+ * @returns {Promise<string>} Base64-encoded encrypted data containing salt + IV + ciphertext
+ * @throws {ClientCryptoError} If Web Crypto API is unavailable or encryption fails
+ * @throws {Error} If rate limit is exceeded (100 ops/min per user)
+ *
+ * @example
+ * ```typescript
+ * const encrypted = await encryptClientData(JSON.stringify({ 
+ *   draft: 'My therapy notes' 
+ * }));
+ * // Store encrypted data in localStorage or IndexedDB
+ * localStorage.setItem('draft', encrypted);
+ * ```
+ *
+ * @see {@link decryptClientData} for decryption
  */
 export async function encryptClientData(plaintext: string): Promise<string> {
   try {
     if (typeof crypto === 'undefined' || !crypto.subtle) {
       throw new ClientCryptoError('Web Crypto API not available');
     }
+
+    // Apply rate limiting
+    const userId = getUserIdentifier();
+    cryptoRateLimiter.checkLimit(userId);
 
     // Get master key and generate salt/IV
     const masterKey = await getMasterKey();
@@ -179,6 +261,11 @@ export async function encryptClientData(plaintext: string): Promise<string> {
     // Return as base64
     return arrayBufferToBase64(combined.buffer as ArrayBuffer);
   } catch (error) {
+    // If it's a rate limit error, re-throw it as-is
+    if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
+      throw error;
+    }
+    
     throw new ClientCryptoError(
       'Failed to encrypt client data',
       error instanceof Error ? error : new Error(String(error))
@@ -187,13 +274,39 @@ export async function encryptClientData(plaintext: string): Promise<string> {
 }
 
 /**
- * Decrypt sensitive data from client-side storage
+ * Decrypts sensitive data from secure client-side storage.
+ * 
+ * This function reverses the encryption performed by encryptClientData,
+ * extracting the salt and IV from the encrypted payload and using them
+ * to derive the correct decryption key. Rate limiting is applied to
+ * prevent brute-force attacks.
+ *
+ * @param {string} encryptedData - Base64-encoded encrypted data (salt + IV + ciphertext)
+ * @returns {Promise<string>} The decrypted plain text data
+ * @throws {ClientCryptoError} If Web Crypto API is unavailable or decryption fails
+ * @throws {Error} If rate limit is exceeded (100 ops/min per user)
+ *
+ * @example
+ * ```typescript
+ * const encrypted = localStorage.getItem('draft');
+ * if (encrypted) {
+ *   const decrypted = await decryptClientData(encrypted);
+ *   const data = JSON.parse(decrypted);
+ *   console.log(data.draft);
+ * }
+ * ```
+ *
+ * @see {@link encryptClientData} for encryption
  */
 export async function decryptClientData(encryptedData: string): Promise<string> {
   try {
     if (typeof crypto === 'undefined' || !crypto.subtle) {
       throw new ClientCryptoError('Web Crypto API not available');
     }
+
+    // Apply rate limiting
+    const userId = getUserIdentifier();
+    cryptoRateLimiter.checkLimit(userId);
 
     // Decode from base64
     const combined = new Uint8Array(base64ToArrayBuffer(encryptedData));
@@ -220,6 +333,11 @@ export async function decryptClientData(encryptedData: string): Promise<string> 
     // Convert back to string
     return arrayBufferToString(decryptedData);
   } catch (cryptoError) {
+    // If it's a rate limit error, re-throw it as-is
+    if (cryptoError instanceof Error && cryptoError.message.includes('Rate limit exceeded')) {
+      throw cryptoError;
+    }
+    
     throw new ClientCryptoError(
       'Failed to decrypt client data',
       cryptoError instanceof Error ? cryptoError : new Error(String(cryptoError))
@@ -244,6 +362,11 @@ export function isClientCryptoAvailable(): boolean {
 export function clearClientCryptoSession(): void {
   try {
     sessionStorage.removeItem('therapeutic-session-key');
+    sessionStorage.removeItem('therapeutic-session-id');
+    
+    // Also reset rate limiter for this user
+    const userId = getUserIdentifier();
+    cryptoRateLimiter.reset(userId);
   } catch (error) {
     logger.warn('Failed to clear crypto session', {
       operation: 'clearCryptoSession',
@@ -260,11 +383,30 @@ export function getClientCryptoStatus(): {
   hasSessionKey: boolean;
   algorithm: string;
   keyLength: number;
+  rateLimit: {
+    limit: number;
+    usage: { count: number; resetAt: number; limit: number } | null;
+  };
 } {
+  const userId = getUserIdentifier();
+  const usage = cryptoRateLimiter.getUsage(userId);
+  
   return {
     available: isClientCryptoAvailable(),
     hasSessionKey: sessionStorage.getItem('therapeutic-session-key') !== null,
     algorithm: ALGORITHM,
     keyLength: KEY_LENGTH,
+    rateLimit: {
+      limit: 100,
+      usage,
+    },
   };
+}
+
+/**
+ * Reset rate limit for current user (for testing purposes)
+ */
+export function resetRateLimit(): void {
+  const userId = getUserIdentifier();
+  cryptoRateLimiter.reset(userId);
 }

@@ -59,7 +59,7 @@ export default function ReportsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <h4 className="mb-2 text-base font-semibold">{t('example.section1')}</h4>
+                <h3 className="mb-2 text-base font-semibold">{t('example.section1')}</h3>
                 <ul className="text-muted-foreground space-y-1 text-sm">
                   <li>• {t('example.section1i1')}</li>
                   <li>• {t('example.section1i2')}</li>
@@ -68,7 +68,7 @@ export default function ReportsPage() {
               </div>
 
               <div>
-                <h4 className="mb-2 text-base font-semibold">{t('example.section2')}</h4>
+                <h3 className="mb-2 text-base font-semibold">{t('example.section2')}</h3>
                 <ul className="text-muted-foreground space-y-1 text-sm">
                   <li>• {t('example.section2i1')}</li>
                   <li>• {t('example.section2i2')}</li>
@@ -77,7 +77,7 @@ export default function ReportsPage() {
               </div>
 
               <div>
-                <h4 className="mb-2 text-base font-semibold">{t('example.section3')}</h4>
+                <h3 className="mb-2 text-base font-semibold">{t('example.section3')}</h3>
                 <ul className="text-muted-foreground space-y-1 text-sm">
                   <li>• {t('example.section3i1')}</li>
                   <li>• {t('example.section3i2')}</li>
