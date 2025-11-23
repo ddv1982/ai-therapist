@@ -1,5 +1,5 @@
 import 'server-only';
-import type { AppLocale } from '@/i18n/config';
+import type { Locale } from '@/i18n/routing';
 import type { MemoryContext } from './prompts';
 export type { MemoryContext };
 import {
@@ -24,7 +24,7 @@ const EN_MEMORY_ANCHOR = 'Remember: Your primary role is to listen deeply';
 
 type PromptOptions = { memory?: MemoryContext[]; webSearch?: boolean } | undefined;
 
-export function buildTherapySystemPrompt(locale: AppLocale = 'en', opts?: PromptOptions): string {
+export function buildTherapySystemPrompt(locale: Locale = 'en', opts?: PromptOptions): string {
   const memory = opts?.memory ?? [];
   const includeWebSearch = Boolean(opts?.webSearch);
 
@@ -53,20 +53,20 @@ export function buildTherapySystemPrompt(locale: AppLocale = 'en', opts?: Prompt
 
 export function buildMemoryEnhancedPrompt(
   memoryContext: MemoryContext[] = [],
-  locale: AppLocale = 'en'
+  locale: Locale = 'en'
 ): string {
   return buildTherapySystemPrompt(locale, { memory: memoryContext });
 }
 
 // Public API functions
 export function getTherapySystemPrompt(
-  locale: AppLocale,
+  locale: Locale,
   opts?: { memory?: MemoryContext[]; webSearch?: boolean }
 ): string {
   return buildTherapySystemPrompt(locale, opts);
 }
 
-export function getReportPrompt(locale: AppLocale): string {
+export function getReportPrompt(locale: Locale): string {
   return locale === 'nl' ? REPORT_PROMPT_NL : asText(REPORT_PROMPT_EN);
 }
 

@@ -2,12 +2,11 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale } from 'next-intl/server';
+import { getLocale, getMessages } from 'next-intl/server';
 import { cookies } from 'next/headers';
-import { locales, defaultLocale, type AppLocale } from '@/i18n/config';
+import { routing, type Locale } from '@/i18n/routing';
 import { RootProviders } from '@/app/providers';
 import { SessionAIProvider } from '@/app/ai/session-ai';
-import { getMessagesForLocale } from '@/i18n/messages-loader';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -48,7 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   if (!pk || !convexUrlEnv) {
     return (
       <html
-        lang={defaultLocale}
+        lang={routing.defaultLocale}
         className={inter.variable}
         data-scroll-behavior="smooth"
         suppressHydrationWarning
@@ -77,12 +76,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Prefer the cookie locale when present; fall back to next-intl detection
   const cookieLocale = (await cookies()).get('NEXT_LOCALE')?.value;
   const detected = await getLocale();
-  const resolvedLocale: AppLocale = (locales as readonly string[]).includes(cookieLocale ?? '')
-    ? (cookieLocale as AppLocale)
-    : ((detected as AppLocale) ?? defaultLocale);
+  const resolvedLocale: Locale = routing.locales.includes(cookieLocale as Locale)
+    ? (cookieLocale as Locale)
+    : routing.locales.includes(detected as Locale)
+      ? (detected as Locale)
+      : routing.defaultLocale;
 
-  // Load nested messages for the resolved locale (static imports for bundler compatibility)
-  const messages = await getMessagesForLocale(resolvedLocale);
+  // Load messages for the resolved locale
+  const messages = await getMessages({ locale: resolvedLocale });
   return (
     <html
       lang={resolvedLocale}

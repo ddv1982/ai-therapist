@@ -2,26 +2,26 @@
 
 import { useLocale } from 'next-intl';
 import { usePathname } from 'next/navigation';
-import { locales, type AppLocale } from '@/i18n/config';
+import { routing, type Locale } from '@/i18n/routing';
 
 type LanguageToggleProps = {
   className?: string;
 };
 
 export function LanguageToggle({ className }: LanguageToggleProps) {
-  const locale = useLocale() as AppLocale;
+  const locale = useLocale() as Locale;
   const pathname = usePathname();
 
-  function setLocaleCookie(next: AppLocale) {
+  function setLocaleCookie(next: Locale) {
     document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=31536000; samesite=lax`;
   }
 
-  function selectLocale(next: AppLocale) {
+  function selectLocale(next: Locale) {
     if (next === locale) return;
     setLocaleCookie(next);
     const segments = pathname.split('/');
     const first = segments[1] ?? '';
-    const withoutLocale = (locales as readonly string[]).includes(first)
+    const withoutLocale = routing.locales.includes(first as Locale)
       ? `/${segments.slice(2).join('/')}`
       : pathname;
     const dest = withoutLocale === '' ? '/' : withoutLocale;

@@ -7,11 +7,11 @@
 
 import { generateText } from 'ai';
 import { defaultModel, languageModels } from '@/ai/providers';
-import type { AppLocale } from '@/i18n/config';
+import type { Locale } from '@/i18n/routing';
 
 export async function generateChatTitle(
   firstMessage: string,
-  locale: AppLocale = 'en'
+  locale: Locale = 'en'
 ): Promise<string> {
   try {
     const prompt =

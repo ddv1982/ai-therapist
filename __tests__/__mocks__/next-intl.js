@@ -55,9 +55,20 @@ function NextIntlClientProvider({ children }) {
   return children;
 }
 
-const nextIntlMock = { useTranslations, useFormatter, NextIntlClientProvider };
+// Mock for defineRouting from next-intl/routing
+function defineRouting(config) {
+  return config;
+}
+
+const nextIntlMock = { 
+  useTranslations, 
+  useFormatter, 
+  NextIntlClientProvider,
+  defineRouting,
+};
 
 module.exports = nextIntlMock;
 module.exports.useTranslations = useTranslations;
 module.exports.useFormatter = useFormatter;
 module.exports.NextIntlClientProvider = NextIntlClientProvider;
+module.exports.defineRouting = defineRouting;

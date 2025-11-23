@@ -1,16 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
-// i18n middleware plugin available but unused to prevent rewrites in dev
-// import createMiddleware from 'next-intl/middleware';
-// import { locales, defaultLocale } from '@/i18n/config';
-
-// Note: i18n middleware disabled in Clerk-less fallback and in main flow to avoid rewrites
-// const _handleI18n = createMiddleware({
-//   locales,
-//   defaultLocale,
-//   localePrefix: 'never',
-//   localeDetection: true
-// });
 
 /**
  * Define which routes are protected (require Clerk authentication)
