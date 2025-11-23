@@ -26,6 +26,7 @@ interface CBTSessionSummaryCardProps {
 
 export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCardProps) {
   const t = useTranslations('cbt');
+  const translate = useTranslations();
 
   const hasContent =
     data.situation ||
@@ -51,6 +52,18 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
       guilt: 'emotions.labels.guilt',
     };
     return map[key] ? t(map[key]) : name;
+  };
+
+  const translateSchemaModeLabel = (value?: string): string => {
+    if (!value) return '';
+    if (value.startsWith('schema.mode.')) {
+      try {
+        return translate(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
   };
 
   return (
@@ -201,7 +214,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                   key={index}
                   className="flex items-start justify-between gap-3 px-3 py-2 text-sm"
                 >
-                  <div className="text-foreground">{mode.name}</div>
+                  <div className="text-foreground">{translateSchemaModeLabel(mode.name)}</div>
                   {mode.intensity && (
                     <Badge
                       variant="outline"
