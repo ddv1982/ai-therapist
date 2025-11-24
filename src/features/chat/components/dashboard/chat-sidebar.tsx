@@ -72,9 +72,7 @@ export function ChatSidebar(props: ChatSidebarProps) {
         <div className="p-6 shadow-[0_1px_0_rgba(0,0,0,0.06)] dark:shadow-[0_1px_0_rgba(255,255,255,0.06)]">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-primary flex h-12 w-12 items-center justify-center rounded-xl shadow-lg">
-                <Brain className="text-primary-foreground h-6 w-6" />
-              </div>
+              <Brain className="gradient-text h-6 w-6" />
               <div>
                 <h2 className="gradient-text text-xl font-semibold tracking-tight">
                   {translate('sidebar.brandName')}
