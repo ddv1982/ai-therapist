@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { TherapeuticLayout, TherapeuticLayoutProps } from '@/components/ui/therapeutic-layout';
+import { TherapeuticLayout, TherapeuticLayoutProps } from '@/components/ui/therapeutic-layouts';
 
 interface CBTFlowLayoutProps extends Omit<TherapeuticLayoutProps, 'layout' | 'variant'> {
   currentStep?: number;
