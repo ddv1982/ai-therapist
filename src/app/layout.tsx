@@ -27,6 +27,10 @@ export const metadata: Metadata = {
     title: 'AI Therapist',
   },
   icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32' },
+    ],
     apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
   },
 };
