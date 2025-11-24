@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import { type Ref } from 'react';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 
 import { cn } from '@/lib/utils/helpers';
@@ -9,25 +9,24 @@ const Popover = PopoverPrimitive.Root;
 
 const PopoverTrigger = PopoverPrimitive.Trigger;
 
-const PopoverContent = React.forwardRef<
-  React.ElementRef<typeof PopoverPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> & {
-    avoidCollisions?: boolean;
-    collisionPadding?: number | Partial<Record<'top' | 'bottom' | 'left' | 'right', number>>;
-  }
->(
-  (
-    {
-      className,
-      align = 'center',
-      side = 'bottom',
-      sideOffset = 4,
-      avoidCollisions = true,
-      collisionPadding = 8,
-      ...props
-    },
-    ref
-  ) => (
+interface PopoverContentProps
+  extends React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> {
+  ref?: Ref<React.ElementRef<typeof PopoverPrimitive.Content>>;
+  avoidCollisions?: boolean;
+  collisionPadding?: number | Partial<Record<'top' | 'bottom' | 'left' | 'right', number>>;
+}
+
+function PopoverContent({
+  className,
+  align = 'center',
+  side = 'bottom',
+  sideOffset = 4,
+  avoidCollisions = true,
+  collisionPadding = 8,
+  ref,
+  ...props
+}: PopoverContentProps) {
+  return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         ref={ref}
@@ -44,8 +43,7 @@ const PopoverContent = React.forwardRef<
         {...props}
       />
     </PopoverPrimitive.Portal>
-  )
-);
-PopoverContent.displayName = PopoverPrimitive.Content.displayName;
+  );
+}
 
 export { Popover, PopoverTrigger, PopoverContent };

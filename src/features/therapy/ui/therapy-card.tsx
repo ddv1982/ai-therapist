@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { type Ref } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
@@ -46,27 +46,25 @@ interface TherapyCardProps
   icon?: React.ReactNode;
   action?: React.ReactNode;
   children?: React.ReactNode;
+  ref?: Ref<HTMLDivElement>;
 }
 
-const TherapyCard = React.forwardRef<HTMLDivElement, TherapyCardProps>(
-  (
-    {
-      className,
-      variant,
-      size,
-      elevation,
-      title,
-      subtitle,
-      description,
-      badge,
-      badgeVariant = 'therapy',
-      icon,
-      action,
-      children,
-      ...props
-    },
-    ref
-  ) => {
+function TherapyCard({
+  className,
+  variant,
+  size,
+  elevation,
+  title,
+  subtitle,
+  description,
+  badge,
+  badgeVariant = 'therapy',
+  icon,
+  action,
+  children,
+  ref,
+  ...props
+}: TherapyCardProps) {
     return (
       <Card
         ref={ref}
@@ -112,31 +110,24 @@ const TherapyCard = React.forwardRef<HTMLDivElement, TherapyCardProps>(
         {children && <div className="therapy-card-content">{children}</div>}
       </Card>
     );
-  }
-);
-
-TherapyCard.displayName = 'TherapyCard';
+}
 
 // Specialized variants for common therapy use cases
-const InsightCard = React.forwardRef<HTMLDivElement, Omit<TherapyCardProps, 'variant'>>(
-  (props, ref) => <TherapyCard ref={ref} variant="accent" badgeVariant="info" {...props} />
-);
-InsightCard.displayName = 'InsightCard';
+function InsightCard({ ref, ...props }: Omit<TherapyCardProps, 'variant'>) {
+  return <TherapyCard ref={ref} variant="accent" badgeVariant="info" {...props} />;
+}
 
-const ProgressCard = React.forwardRef<HTMLDivElement, Omit<TherapyCardProps, 'variant'>>(
-  (props, ref) => <TherapyCard ref={ref} variant="success" badgeVariant="success" {...props} />
-);
-ProgressCard.displayName = 'ProgressCard';
+function ProgressCard({ ref, ...props }: Omit<TherapyCardProps, 'variant'>) {
+  return <TherapyCard ref={ref} variant="success" badgeVariant="success" {...props} />;
+}
 
-const ConcernCard = React.forwardRef<HTMLDivElement, Omit<TherapyCardProps, 'variant'>>(
-  (props, ref) => <TherapyCard ref={ref} variant="warning" badgeVariant="warning" {...props} />
-);
-ConcernCard.displayName = 'ConcernCard';
+function ConcernCard({ ref, ...props }: Omit<TherapyCardProps, 'variant'>) {
+  return <TherapyCard ref={ref} variant="warning" badgeVariant="warning" {...props} />;
+}
 
-const ActionCard = React.forwardRef<HTMLDivElement, Omit<TherapyCardProps, 'variant'>>(
-  (props, ref) => <TherapyCard ref={ref} variant="primary" badgeVariant="therapy" {...props} />
-);
-ActionCard.displayName = 'ActionCard';
+function ActionCard({ ref, ...props }: Omit<TherapyCardProps, 'variant'>) {
+  return <TherapyCard ref={ref} variant="primary" badgeVariant="therapy" {...props} />;
+}
 
 export {
   TherapyCard,

@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, ReactNode } from 'react';
+import { type Ref, type ReactNode } from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
@@ -79,6 +79,7 @@ export interface TherapeuticButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof therapeuticButtonVariants> {
   asChild?: boolean;
+  ref?: Ref<HTMLButtonElement>;
 
   // Visual enhancements
   icon?: ReactNode;
@@ -121,37 +122,34 @@ export interface TherapeuticButtonProps
  * - Enhanced accessibility
  * - Therapeutic visual feedback
  */
-const TherapeuticButton = forwardRef<HTMLButtonElement, TherapeuticButtonProps>(
-  (
-    {
-      className,
-      variant,
-      size,
-      animation,
-      asChild = false,
-      icon,
-      rightIcon,
-      loading = false,
-      loadingText = 'Loading...',
-      shimmerEffect = false,
-      gradientAnimation = false,
-      therapeuticFeedback = false,
-      progress,
-      badge,
-      mobileOptimized = false,
-      preventZoom = false,
-      glowEffect = false,
-      customGradient,
-      animationDelay = 0,
-      tooltipText,
-      ariaExpanded,
-      children,
-      style,
-      disabled,
-      ...props
-    },
-    ref
-  ) => {
+function TherapeuticButton({
+  className,
+  variant,
+  size,
+  animation,
+  asChild = false,
+  ref,
+  icon,
+  rightIcon,
+  loading = false,
+  loadingText = 'Loading...',
+  shimmerEffect = false,
+  gradientAnimation = false,
+  therapeuticFeedback = false,
+  progress,
+  badge,
+  mobileOptimized = false,
+  preventZoom = false,
+  glowEffect = false,
+  customGradient,
+  animationDelay = 0,
+  tooltipText,
+  ariaExpanded,
+  children,
+  style,
+  disabled,
+  ...props
+}: TherapeuticButtonProps) {
     const Comp = asChild ? Slot : 'button';
 
     // Auto-apply mobile variant if mobile optimized
@@ -231,10 +229,7 @@ const TherapeuticButton = forwardRef<HTMLButtonElement, TherapeuticButtonProps>(
         )}
       </Comp>
     );
-  }
-);
-
-TherapeuticButton.displayName = 'TherapeuticButton';
+}
 
 // Pre-configured button presets for common therapeutic use cases
 export const therapeuticButtonPresets = {

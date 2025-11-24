@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { type Ref } from 'react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -22,22 +22,20 @@ interface ProgressIndicatorProps {
   showDescription?: boolean;
   className?: string;
   onStepClick?: (stepId: string) => void;
+  ref?: Ref<HTMLDivElement>;
 }
 
-const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProps>(
-  (
-    {
-      steps,
-      orientation = 'horizontal',
-      size = 'md',
-      showLabels = true,
-      showDescription = false,
-      className,
-      onStepClick,
-      ...props
-    },
-    ref
-  ) => {
+function ProgressIndicator({
+  steps,
+  orientation = 'horizontal',
+  size = 'md',
+  showLabels = true,
+  showDescription = false,
+  className,
+  onStepClick,
+  ref,
+  ...props
+}: ProgressIndicatorProps) {
     const isVertical = orientation === 'vertical';
     const sizeClasses = {
       sm: { step: 'w-6 h-6', text: 'text-sm', spacing: 'gap-2' },
@@ -190,9 +188,6 @@ const ProgressIndicator = React.forwardRef<HTMLDivElement, ProgressIndicatorProp
         </div>
       </div>
     );
-  }
-);
-
-ProgressIndicator.displayName = 'ProgressIndicator';
+}
 
 export { ProgressIndicator, type ProgressStep, type ProgressIndicatorProps };

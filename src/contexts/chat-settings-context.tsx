@@ -92,7 +92,7 @@ export function ChatSettingsProvider({ children }: { children: ReactNode }) {
     setError,
   ]);
 
-  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
+  return <ChatContext value={value}>{children}</ChatContext>;
 }
 
 export function useChatSettings() {

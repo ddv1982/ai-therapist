@@ -49,7 +49,7 @@ interface ChatUIProviderProps {
  * Provider component that makes the chat UI bridge available to child components
  */
 export function ChatUIProvider({ children, bridge }: ChatUIProviderProps) {
-  return <ChatUIContext.Provider value={bridge}>{children}</ChatUIContext.Provider>;
+  return <ChatUIContext value={bridge}>{children}</ChatUIContext>;
 }
 
 /**

@@ -38,6 +38,7 @@ import { TherapeuticTextInput } from '@/components/ui/therapeutic-forms/inputs/t
 import { TherapeuticTextArea } from '@/components/ui/therapeutic-forms/inputs/therapeutic-text-area';
 import { TherapeuticSlider, type SliderVariant } from '@/components/ui/therapeutic-forms/inputs/therapeutic-slider';
 import { EmotionScaleInput, type Emotion } from '@/components/ui/therapeutic-forms/specialized/emotion-scale-input';
+import { logger } from '@/lib/utils/logger';
 import { ArrayFieldInput, type ArrayItem } from '@/components/ui/therapeutic-forms/specialized/array-field-input';
 import type { FieldVariant, FieldSize } from '@/components/ui/therapeutic-forms/base/therapeutic-field-wrapper';
 import type { FormFieldValue, ValidationFunction } from '@/components/ui/therapeutic-forms/base/use-therapeutic-field';
@@ -234,7 +235,11 @@ export function TherapeuticFormField(props: TherapeuticFormFieldProps) {
       return <div className={className}>{props.customField || props.children}</div>;
 
     default:
-      console.warn(`Unknown TherapeuticFormField type: ${type}`);
+      logger.warn('Unknown TherapeuticFormField type', {
+        component: 'TherapeuticFormField',
+        type,
+        message: 'Please use one of the supported field types or migrate to specific components',
+      });
       return null;
   }
 }

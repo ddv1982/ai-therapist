@@ -97,9 +97,9 @@ export function ChatHeaderProvider({ children, value }: ChatHeaderProviderProps)
   ]);
 
   return (
-    <ChatHeaderContext.Provider value={memoizedValue}>
+    <ChatHeaderContext value={memoizedValue}>
       {children}
-    </ChatHeaderContext.Provider>
+    </ChatHeaderContext>
   );
 }
 

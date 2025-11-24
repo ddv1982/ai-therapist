@@ -256,7 +256,7 @@ export function CBTProvider({ children }: { children: ReactNode }) {
     clearCBTSession,
   };
 
-  return <CBTContext.Provider value={value}>{children}</CBTContext.Provider>;
+  return <CBTContext value={value}>{children}</CBTContext>;
 }
 
 export function useCBT() {

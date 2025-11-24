@@ -28,24 +28,28 @@ export function generateCSPNonce(): string {
 
 /**
  * Get Content Security Policy header value
- * @param _nonce - Cryptographic nonce (unused - kept for backwards compatibility)
+ * @param nonce - Cryptographic nonce for inline scripts/styles
  * @param isDev - Whether running in development mode
  * @returns CSP header value string
  */
-export function getCSPHeader(_nonce: string, isDev: boolean): string {
+export function getCSPHeader(nonce: string, isDev: boolean): string {
   const baseDirectives: Record<string, string[]> = {
     'default-src': ["'self'"],
     
-    // Script sources - allow unsafe-eval/inline in dev for hot reload
-    // Production: Use unsafe-inline because Next.js injects inline scripts without nonce
-    // Note: Nonce would be more secure but is incompatible with Next.js production builds
+    // Script sources
+    // Development: Allow unsafe-eval for hot reload, unsafe-inline for convenience
+    // Production: Use nonce-based CSP with unsafe-inline as fallback
+    // Note: Browsers that support nonces (CSP Level 2+) ignore unsafe-inline when nonce is present
     'script-src': isDev 
       ? ["'self'", "'unsafe-eval'", "'unsafe-inline'", 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://challenges.cloudflare.com', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com']
-      : ["'self'", "'unsafe-inline'", 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://challenges.cloudflare.com', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com'],
+      : ["'self'", `'nonce-${nonce}'`, "'unsafe-inline'", 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://challenges.cloudflare.com', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com'],
     
-    // Style sources - allow unsafe-inline in both modes for Tailwind and external styles
-    // Note: nonce-based styles are complex with Tailwind, so we keep unsafe-inline
-    'style-src': ["'self'", "'unsafe-inline'", 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com'],
+    // Style sources
+    // Nonce-based with unsafe-inline fallback for older browsers
+    // unsafe-inline is still needed for some third-party styles (Clerk, reCAPTCHA)
+    'style-src': isDev
+      ? ["'self'", "'unsafe-inline'", 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com']
+      : ["'self'", `'nonce-${nonce}'`, "'unsafe-inline'", 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com'],
     
     // Font sources
     'font-src': ["'self'", 'data:', 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://fonts.gstatic.com'],

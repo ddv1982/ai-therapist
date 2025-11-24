@@ -92,6 +92,18 @@ describe('CSP Nonce Generation', () => {
         expect(csp).toContain(`'nonce-${nonce}'`);
       });
 
+      it('includes nonce in style-src', () => {
+        const nonce = 'test-nonce-123';
+        const csp = getCSPHeader(nonce, false);
+        
+        // Extract style-src directive
+        const styleSrcMatch = csp.match(/style-src ([^;]+)/);
+        expect(styleSrcMatch).toBeTruthy();
+        
+        const styleSrc = styleSrcMatch![1];
+        expect(styleSrc).toContain(`'nonce-${nonce}'`);
+      });
+
       it('does not include WebSocket', () => {
         const nonce = 'test-nonce-123';
         const csp = getCSPHeader(nonce, false);
@@ -213,15 +225,24 @@ describe('CSP Nonce Generation', () => {
   });
 
   describe('Security requirements', () => {
-    it('production CSP does not allow inline scripts', () => {
-      const csp = getCSPHeader('test', false);
+    it('production CSP uses nonce-based security with fallback', () => {
+      const nonce = 'test-nonce-123';
+      const csp = getCSPHeader(nonce, false);
       
-      // Should not have unsafe-inline in script-src (after 'script-src' and before next ';')
+      // Extract script-src directive (after 'script-src' and before next ';')
       const scriptSrcMatch = csp.match(/script-src ([^;]+)/);
       expect(scriptSrcMatch).toBeTruthy();
       
       const scriptSrc = scriptSrcMatch![1];
-      expect(scriptSrc).not.toContain("'unsafe-inline'");
+      
+      // Should include nonce for modern browsers (CSP Level 2+)
+      expect(scriptSrc).toContain(`'nonce-${nonce}'`);
+      
+      // Should include unsafe-inline as fallback for older browsers
+      // Modern browsers that support nonces will ignore unsafe-inline (CSP spec behavior)
+      expect(scriptSrc).toContain("'unsafe-inline'");
+      
+      // Should NOT include unsafe-eval in production
       expect(scriptSrc).not.toContain("'unsafe-eval'");
     });
 

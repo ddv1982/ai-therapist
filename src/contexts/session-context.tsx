@@ -86,7 +86,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     selectionStatus,
   };
 
-  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
+  return <SessionContext value={value}>{children}</SessionContext>;
 }
 
 type SessionAIActions = {

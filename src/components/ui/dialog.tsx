@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import { type Ref } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -15,32 +15,35 @@ const DialogPortal = DialogPrimitive.Portal;
 
 const DialogClose = DialogPrimitive.Close;
 
-const DialogOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    className={cn(
-      // Apple-style backdrop with glassmorphism
-      'fixed inset-0 z-50',
-      'bg-black/40',
-      'backdrop-blur-[12px] backdrop-saturate-[120%]',
-      // Smooth fade animations
-      'data-[state=open]:animate-in data-[state=closed]:animate-out',
-      'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-      'transition-all duration-base ease-smooth',
-      className
-    )}
-    {...props}
-  />
-));
-DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
+interface DialogOverlayProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> {
+  ref?: Ref<React.ElementRef<typeof DialogPrimitive.Overlay>>;
+}
 
-const DialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => {
+function DialogOverlay({ className, ref, ...props }: DialogOverlayProps) {
+  return (
+    <DialogPrimitive.Overlay
+      ref={ref}
+      className={cn(
+        // Apple-style backdrop with glassmorphism
+        'fixed inset-0 z-50',
+        'bg-black/40',
+        'backdrop-blur-[12px] backdrop-saturate-[120%]',
+        // Smooth fade animations
+        'data-[state=open]:animate-in data-[state=closed]:animate-out',
+        'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+        'transition-all duration-base ease-smooth',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+  ref?: Ref<React.ElementRef<typeof DialogPrimitive.Content>>;
+}
+
+function DialogContent({ className, children, ref, ...props }: DialogContentProps) {
   const t = useTranslations('ui');
 
   // Note: Radix UI Dialog already implements WCAG 2.1 AA compliant focus management:
@@ -84,8 +87,7 @@ const DialogContent = React.forwardRef<
       </DialogPrimitive.Content>
     </DialogPortal>
   );
-});
-DialogContent.displayName = DialogPrimitive.Content.displayName;
+}
 
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn('flex flex-col space-y-2 text-center sm:text-left', className)} {...props} />
@@ -100,29 +102,34 @@ const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 );
 DialogFooter.displayName = 'DialogFooter';
 
-const DialogTitle = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn('text-xl leading-none font-semibold tracking-tight', className)}
-    {...props}
-  />
-));
-DialogTitle.displayName = DialogPrimitive.Title.displayName;
+interface DialogTitleProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title> {
+  ref?: Ref<React.ElementRef<typeof DialogPrimitive.Title>>;
+}
 
-const DialogDescription = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description
-    ref={ref}
-    className={cn('text-muted-foreground text-sm', className)}
-    {...props}
-  />
-));
-DialogDescription.displayName = DialogPrimitive.Description.displayName;
+function DialogTitle({ className, ref, ...props }: DialogTitleProps) {
+  return (
+    <DialogPrimitive.Title
+      ref={ref}
+      className={cn('text-xl leading-none font-semibold tracking-tight', className)}
+      {...props}
+    />
+  );
+}
+
+interface DialogDescriptionProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description> {
+  ref?: Ref<React.ElementRef<typeof DialogPrimitive.Description>>;
+}
+
+function DialogDescription({ className, ref, ...props }: DialogDescriptionProps) {
+  return (
+    <DialogPrimitive.Description
+      ref={ref}
+      className={cn('text-muted-foreground text-sm', className)}
+      {...props}
+    />
+  );
+}
 
 export {
   Dialog,

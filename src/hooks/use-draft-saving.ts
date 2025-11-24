@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { logger } from '@/lib/utils/logger';
 
 export interface UseDraftSavingOptions<T> {
   /**
@@ -111,7 +112,11 @@ export function useDraftSaving<T = unknown>(
       await onSaveRef.current(value);
       setLastSaved(new Date());
     } catch (error) {
-      console.error('Draft save failed:', error);
+      logger.error('Draft save failed', {
+        hook: 'useDraftSaving',
+        operation: 'saveNow',
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     } finally {
       setIsSaving(false);
@@ -134,7 +139,11 @@ export function useDraftSaving<T = unknown>(
           await onSaveRef.current(value);
           setLastSaved(new Date());
         } catch (error) {
-          console.error('Draft save failed:', error);
+          logger.error('Draft save failed', {
+            hook: 'useDraftSaving',
+            operation: 'saveDraft',
+            error: error instanceof Error ? error.message : String(error),
+          });
         } finally {
           setIsSaving(false);
         }

@@ -40,7 +40,7 @@ export function CardRoot({
   children,
   variant = 'default',
   size = 'md',
-  collapsible = false,
+  collapsible: _collapsible = false,
   defaultExpanded = true,
   onToggle,
   onAction,
@@ -65,7 +65,7 @@ export function CardRoot({
   const animationStyle = animationDelay > 0 ? { animationDelay: `${animationDelay}ms` } : undefined;
 
   return (
-    <CardContext.Provider value={contextValue}>
+    <CardContext value={contextValue}>
       <Card
         className={cn(
           cardVariants[variant],
@@ -96,6 +96,6 @@ export function CardRoot({
           />
         )}
       </Card>
-    </CardContext.Provider>
+    </CardContext>
   );
 }

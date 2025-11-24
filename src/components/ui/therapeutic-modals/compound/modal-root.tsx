@@ -71,7 +71,7 @@ const ModalRootComponent = function ModalRoot({
   // Sheet implementation for mobile
   if (useSheet) {
     return (
-      <ModalContext.Provider value={contextValue}>
+      <ModalContext value={contextValue}>
         <Sheet open={open} onOpenChange={handleOpenChange} {...props}>
           {trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
           <SheetContent
@@ -87,13 +87,13 @@ const ModalRootComponent = function ModalRoot({
             {children}
           </SheetContent>
         </Sheet>
-      </ModalContext.Provider>
+      </ModalContext>
     );
   }
 
   // Dialog implementation for desktop
   return (
-    <ModalContext.Provider value={contextValue}>
+    <ModalContext value={contextValue}>
       <Dialog open={open} onOpenChange={handleOpenChange} {...props}>
         {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
         <DialogContent
@@ -112,7 +112,7 @@ const ModalRootComponent = function ModalRoot({
           {children}
         </DialogContent>
       </Dialog>
-    </ModalContext.Provider>
+    </ModalContext>
   );
 };
 
