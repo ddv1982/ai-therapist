@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
-import { cookies } from 'next/headers';
+import { headers } from 'next/headers';
 import { routing, type Locale } from '@/i18n/routing';
 import { RootProviders } from '@/app/providers';
 import { SessionAIProvider } from '@/app/ai/session-ai';
@@ -12,9 +12,9 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
-  preload: false,
+  preload: true,  // Preload font for faster render
   fallback: ['system-ui', 'arial'],
-  adjustFontFallback: false,
+  adjustFontFallback: true,  // Show fallback while loading
 });
 export const metadata: Metadata = {
   title: 'Therapist AI - Compassionate AI Therapy Support',
@@ -74,8 +74,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     );
   }
   // Prefer the cookie locale when present; fall back to next-intl detection
-  const cookieLocale = (await cookies()).get('NEXT_LOCALE')?.value;
+  // Read from header (set in middleware) instead of cookies() - much faster!
+  const headerStore = await headers();
+  const cookieLocale = headerStore.get('x-locale');
   const detected = await getLocale();
+  
   const resolvedLocale: Locale = routing.locales.includes(cookieLocale as Locale)
     ? (cookieLocale as Locale)
     : routing.locales.includes(detected as Locale)

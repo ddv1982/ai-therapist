@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useOptimistic } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -53,6 +53,23 @@ export function ThoughtRecord({
     // Return Redux data if it has content, otherwise default
     return thoughtsData && thoughtsData.length > 0 ? thoughtsData : defaultThoughts;
   });
+
+  // React 19: useOptimistic for instant UI feedback on add/remove
+  type ThoughtAction =
+    | { type: 'add'; thought: ThoughtData }
+    | { type: 'remove'; index: number };
+
+  const [optimisticThoughts, updateOptimisticThoughts] = useOptimistic(
+    thoughts,
+    (state, action: ThoughtAction) => {
+      if (action.type === 'add') {
+        return [...state, action.thought];
+      } else if (action.type === 'remove') {
+        return state.filter((_, i) => i !== action.index);
+      }
+      return state;
+    }
+  );
 
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>(() =>
     new Array(thoughts.length).fill('')
@@ -187,18 +204,28 @@ export function ThoughtRecord({
 
   const addThought = useCallback(() => {
     if (thoughts.length < 5) {
-      setThoughts((prev) => [...prev, { thought: '', credibility: 5 }]);
+      const newThought: ThoughtData = { thought: '', credibility: 5 };
+      
+      // Optimistic update: Show immediately in UI
+      updateOptimisticThoughts({ type: 'add', thought: newThought });
+      
+      // Actual state update
+      setThoughts((prev) => [...prev, newThought]);
       setSelectedPrompts((prev) => [...prev, '']);
       setErrors((prev) => [...prev, '']);
       // Focus newly added thought
       setFocusedThoughtIndex(thoughts.length);
       skipNextRehydrateRef.current = true;
     }
-  }, [thoughts.length]);
+  }, [thoughts.length, updateOptimisticThoughts]);
 
   const removeThought = useCallback(
     (index: number) => {
       if (thoughts.length > 1) {
+        // Optimistic update: Remove immediately in UI
+        updateOptimisticThoughts({ type: 'remove', index });
+        
+        // Actual state update
         setThoughts((prev) => prev.filter((_, i) => i !== index));
         setSelectedPrompts((prev) => prev.filter((_, i) => i !== index));
         setErrors((prev) => prev.filter((_, i) => i !== index));
@@ -210,7 +237,7 @@ export function ThoughtRecord({
         skipNextRehydrateRef.current = true;
       }
     },
-    [thoughts.length]
+    [thoughts.length, updateOptimisticThoughts]
   );
 
   const validateThoughts = useCallback(() => {
@@ -302,9 +329,9 @@ export function ThoughtRecord({
           </div>
         </div>
 
-        {/* Thought Entries */}
+        {/* Thought Entries - Use optimistic state for instant feedback */}
         <div className="space-y-4">
-          {thoughts.map((thought, index) => (
+          {optimisticThoughts.map((thought, index) => (
             <Card
               key={index}
               className="bg-muted/30 border-border/30 w-full max-w-full overflow-hidden border p-4"
@@ -359,7 +386,7 @@ export function ThoughtRecord({
         </div>
 
         {/* Add Another Thought - Separated with proper spacing */}
-        {thoughts.length < 5 && (
+        {optimisticThoughts.length < 5 && (
           <div className="border-border/30 border-t pt-2">
             <Button
               variant="outline"

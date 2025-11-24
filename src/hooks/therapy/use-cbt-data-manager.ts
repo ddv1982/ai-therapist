@@ -32,6 +32,7 @@ import { buildSessionSummaryCard } from '@/features/therapy/cbt/flow/cards';
 import { buildMarkdownSummary } from '@/features/therapy/cbt/flow/summary';
 import { generateUUID } from '@/lib/utils';
 import { type CBTStepId } from '@/features/therapy/cbt/flow';
+import { useDraftSaving } from '@/hooks/use-draft-saving';
 
 import {
   asEmotionData,
@@ -211,6 +212,7 @@ export interface UseCBTDataManagerReturn {
   };
 
   debouncedAutoSave: (data: Partial<CBTFormInput>) => void;
+  saveFormData: (data: Partial<CBTFormInput>) => void;
 }
 
 export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCBTDataManagerReturn {
@@ -262,68 +264,54 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   const savedDrafts = cbt.savedDrafts;
   const lastAutoSave = cbt.lastAutoSave;
 
-  const autoSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const uiSavingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isSavingUI, setIsSavingUI] = useState<boolean>(false);
 
-  const debouncedAutoSave = useCallback(
-    (data: Partial<CBTFormInput>) => {
-      if (autoSaveTimeout.current) {
-        clearTimeout(autoSaveTimeout.current);
+  const { currentSessionId } = useChatUI();
+  const chatBridge = useCBTChatBridge();
+
+  // Use the reusable draft saving hook for form data
+  const { saveDraft: saveFormData } = useDraftSaving({
+    onSave: (data: Partial<CBTFormInput>) => {
+      if (data?.situation) {
+        flowUpdate('situation', {
+          situation: data.situation,
+          date: data.date || new Date().toISOString().split('T')[0],
+        });
       }
 
-      const effectiveDelay =
-        typeof autoSaveDelay === 'number' && autoSaveDelay > 0 ? autoSaveDelay : 600;
-
-      autoSaveTimeout.current = setTimeout(() => {
-        if (data?.situation) {
-          flowUpdate('situation', {
-            situation: data.situation,
-            date: data.date || new Date().toISOString().split('T')[0],
-          });
-        }
-
-        if (data?.initialEmotions) {
-          const emotions = asEmotionData(data.initialEmotions);
-          flowUpdate('emotions', emotions);
-        }
-      }, effectiveDelay);
+      if (data?.initialEmotions) {
+        const emotions = asEmotionData(data.initialEmotions);
+        flowUpdate('emotions', emotions);
+      }
     },
-    [flowUpdate, autoSaveDelay]
-  );
+    debounceMs: autoSaveDelay,
+    enabled: autoSaveDelay > 0,
+  });
 
+  // Use the reusable draft saving hook for draft persistence
+  const { saveDraft: saveDraftToPersistence } = useDraftSaving({
+    onSave: () => {
+      cbt.saveDraft();
+    },
+    debounceMs: autoSaveDelay,
+    enabled: autoSaveDelay > 0 && currentDraft !== null,
+  });
+
+  // Auto-save draft when it changes
+  useEffect(() => {
+    if (!currentDraft || autoSaveDelay <= 0) return;
+    saveDraftToPersistence(currentDraft);
+  }, [currentDraft, autoSaveDelay, saveDraftToPersistence]);
+
+  // Cleanup UI saving timeout on unmount
   useEffect(() => {
     return () => {
-      if (autoSaveTimeout.current) {
-        clearTimeout(autoSaveTimeout.current);
-      }
       if (uiSavingTimeout.current) {
         clearTimeout(uiSavingTimeout.current);
       }
     };
   }, []);
-
-  const { currentSessionId } = useChatUI();
-  const chatBridge = useCBTChatBridge();
-
-  useEffect(() => {
-    if (!currentDraft || autoSaveDelay <= 0) return;
-
-    if (autoSaveTimeout.current) {
-      clearTimeout(autoSaveTimeout.current);
-    }
-
-    autoSaveTimeout.current = setTimeout(() => {
-      cbt.saveDraft();
-    }, autoSaveDelay);
-
-    return () => {
-      if (autoSaveTimeout.current) {
-        clearTimeout(autoSaveTimeout.current);
-        autoSaveTimeout.current = null;
-      }
-    };
-  }, [currentDraft, autoSaveDelay, cbt]);
 
   // UI-saving indicator: whenever a draft/save occurs, briefly show "saving" then "saved"
   useEffect(() => {
@@ -803,8 +791,10 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     // Export Utilities
     utilities,
 
-    // Debounced auto-save function
-    debouncedAutoSave,
+    // Debounced auto-save function (legacy - prefer saveFormData)
+    debouncedAutoSave: saveFormData,
+    // New reusable draft saving function
+    saveFormData,
   };
 }
 

@@ -40,6 +40,12 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     // Store nonce in header for use in server components via headers()
     response.headers.set('x-csp-nonce', nonce);
     
+    // Cache locale from cookie in header (faster than re-reading in layout)
+    const localeCookie = req.cookies.get('NEXT_LOCALE')?.value;
+    if (localeCookie) {
+      response.headers.set('x-locale', localeCookie);
+    }
+    
     return response;
   }
   
@@ -56,6 +62,12 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   
   // Store nonce in header for use in server components via headers()
   response.headers.set('x-csp-nonce', nonce);
+  
+  // Cache locale from cookie in header (faster than re-reading in layout)
+  const localeCookie = req.cookies.get('NEXT_LOCALE')?.value;
+  if (localeCookie) {
+    response.headers.set('x-locale', localeCookie);
+  }
   
   return response;
 });

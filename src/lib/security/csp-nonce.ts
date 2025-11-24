@@ -28,18 +28,20 @@ export function generateCSPNonce(): string {
 
 /**
  * Get Content Security Policy header value
- * @param nonce - Cryptographic nonce for this request
+ * @param _nonce - Cryptographic nonce (unused - kept for backwards compatibility)
  * @param isDev - Whether running in development mode
  * @returns CSP header value string
  */
-export function getCSPHeader(nonce: string, isDev: boolean): string {
+export function getCSPHeader(_nonce: string, isDev: boolean): string {
   const baseDirectives: Record<string, string[]> = {
     'default-src': ["'self'"],
     
     // Script sources - allow unsafe-eval/inline in dev for hot reload
+    // Production: Use unsafe-inline because Next.js injects inline scripts without nonce
+    // Note: Nonce would be more secure but is incompatible with Next.js production builds
     'script-src': isDev 
       ? ["'self'", "'unsafe-eval'", "'unsafe-inline'", 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://challenges.cloudflare.com', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com']
-      : ["'self'", `'nonce-${nonce}'`, 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://challenges.cloudflare.com', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com'],
+      : ["'self'", "'unsafe-inline'", 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://challenges.cloudflare.com', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com'],
     
     // Style sources - allow unsafe-inline in both modes for Tailwind and external styles
     // Note: nonce-based styles are complex with Tailwind, so we keep unsafe-inline
@@ -59,8 +61,8 @@ export function getCSPHeader(nonce: string, isDev: boolean): string {
     
     // Connect sources - API endpoints
     'connect-src': isDev
-      ? ["'self'", 'https://api.groq.com', 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://convex.cloud', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com', 'ws:']
-      : ["'self'", 'https://api.groq.com', 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://convex.cloud', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com'],
+      ? ["'self'", 'https://api.groq.com', 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://clerk-telemetry.com', 'https://convex.cloud', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com', 'ws:']
+      : ["'self'", 'https://api.groq.com', 'https://*.clerk.accounts.dev', 'https://*.clerk.com', 'https://clerk-telemetry.com', 'https://convex.cloud', 'https://recaptcha.net', 'https://www.recaptcha.net', 'https://www.gstatic.com'],
   };
   
   return Object.entries(baseDirectives)

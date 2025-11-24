@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useDraftSaving } from '@/hooks/use-draft-saving';
 
 export type FormFieldValue = string | number | Array<unknown> | Record<string, unknown>;
 export type ValidationFunction = (value: FormFieldValue) => string | null;
@@ -24,8 +25,16 @@ export function useTherapeuticField({
   error,
   isValid,
 }: UseTherapeuticFieldOptions) {
-  const [draftTimeout, setDraftTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+
+  // Use the reusable draft saving hook
+  const { saveDraft } = useDraftSaving({
+    onSave: (value: FormFieldValue) => {
+      onDraftSave?.(value);
+    },
+    debounceMs: draftSaveDelay,
+    enabled: Boolean(onDraftSave),
+  });
 
   // Handle value changes with validation and draft saving
   const handleChange = useCallback(
@@ -38,20 +47,12 @@ export function useTherapeuticField({
         setLocalError(validationError);
       }
 
-      // Handle draft saving with debounce
-      if (onDraftSave && draftSaveDelay > 0) {
-        if (draftTimeout) {
-          clearTimeout(draftTimeout);
-        }
-
-        const timeout = setTimeout(() => {
-          onDraftSave(newValue);
-        }, draftSaveDelay);
-
-        setDraftTimeout(timeout);
+      // Save draft using the reusable hook
+      if (onDraftSave) {
+        saveDraft(newValue);
       }
     },
-    [onChange, validate, onDraftSave, draftSaveDelay, draftTimeout]
+    [onChange, validate, onDraftSave, saveDraft]
   );
 
   const displayError = error || localError;

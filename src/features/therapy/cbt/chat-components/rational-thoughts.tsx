@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useOptimistic } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -55,6 +55,23 @@ export function RationalThoughts({
       ? { rationalThoughts: rationalThoughtsData }
       : defaultThoughtsData;
   });
+
+  // React 19: useOptimistic for instant UI feedback on add/remove
+  type RationalThoughtAction =
+    | { type: 'add'; thought: { thought: string; confidence: number } }
+    | { type: 'remove'; index: number };
+
+  const [optimisticThoughts, updateOptimisticThoughts] = useOptimistic(
+    thoughtsData.rationalThoughts,
+    (state, action: RationalThoughtAction) => {
+      if (action.type === 'add') {
+        return [...state, action.thought];
+      } else if (action.type === 'remove') {
+        return state.filter((_, i) => i !== action.index);
+      }
+      return state;
+    }
+  );
 
   const [selectedPrompts, setSelectedPrompts] = useState<string[]>(() =>
     new Array(thoughtsData.rationalThoughts.length).fill('')
@@ -132,19 +149,29 @@ export function RationalThoughts({
 
   const addThought = useCallback(() => {
     if (thoughtsData.rationalThoughts.length < 5) {
+      const newThought = { thought: '', confidence: 5 };
+
+      // Optimistic update: Show immediately in UI
+      updateOptimisticThoughts({ type: 'add', thought: newThought });
+
+      // Actual state update
       setThoughtsData((prev) => ({
         ...prev,
-        rationalThoughts: [...prev.rationalThoughts, { thought: '', confidence: 5 }],
+        rationalThoughts: [...prev.rationalThoughts, newThought],
       }));
       setSelectedPrompts((prev) => [...prev, '']);
       setFocusedIndex(thoughtsData.rationalThoughts.length);
       skipNextRehydrateRef.current = true;
     }
-  }, [thoughtsData.rationalThoughts.length]);
+  }, [thoughtsData.rationalThoughts.length, updateOptimisticThoughts]);
 
   const removeThought = useCallback(
     (index: number) => {
       if (thoughtsData.rationalThoughts.length > 1) {
+        // Optimistic update: Remove immediately in UI
+        updateOptimisticThoughts({ type: 'remove', index });
+
+        // Actual state update
         setThoughtsData((prev) => ({
           ...prev,
           rationalThoughts: prev.rationalThoughts.filter((_, i) => i !== index),
@@ -158,7 +185,7 @@ export function RationalThoughts({
         skipNextRehydrateRef.current = true;
       }
     },
-    [thoughtsData.rationalThoughts.length]
+    [thoughtsData.rationalThoughts.length, updateOptimisticThoughts]
   );
 
   const handlePromptSelect = useCallback(
@@ -271,16 +298,16 @@ export function RationalThoughts({
           </div>
         </div>
 
-        {/* Rational Thoughts */}
+        {/* Rational Thoughts - Use optimistic state for instant feedback */}
         <div className="space-y-4">
-          {thoughtsData.rationalThoughts.map((thoughtData, index) => (
+          {optimisticThoughts.map((thoughtData, index) => (
             <Card key={index} className="bg-muted/30 border-border/30 border p-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className={therapeuticTypography.label}>
                     {t('rational.thought', { index: index + 1 })}
                   </h4>
-                  {thoughtsData.rationalThoughts.length > 1 && (
+                  {optimisticThoughts.length > 1 && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -323,7 +350,7 @@ export function RationalThoughts({
         </div>
 
         {/* Add Thought */}
-        {thoughtsData.rationalThoughts.length < 5 && (
+        {optimisticThoughts.length < 5 && (
           <Button
             variant="outline"
             onClick={addThought}

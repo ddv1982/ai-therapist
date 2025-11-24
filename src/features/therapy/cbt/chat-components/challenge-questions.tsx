@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useOptimistic } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -77,6 +77,23 @@ export function ChallengeQuestions({
     return defaultQuestionsData;
   });
 
+  // React 19: useOptimistic for instant UI feedback on add/remove
+  type QuestionAction =
+    | { type: 'add'; question: { question: string; answer: string } }
+    | { type: 'remove'; index: number };
+
+  const [optimisticQuestions, updateOptimisticQuestions] = useOptimistic(
+    questionsData.challengeQuestions,
+    (state, action: QuestionAction) => {
+      if (action.type === 'add') {
+        return [...state, action.question];
+      } else if (action.type === 'remove') {
+        return state.filter((_, i) => i !== action.index);
+      }
+      return state;
+    }
+  );
+
   // Auto-save to unified CBT state when questions change
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -105,30 +122,37 @@ export function ChallengeQuestions({
           !questionsData.challengeQuestions.some((existing) => existing.question === question)
       );
 
+      const newQuestion = {
+        question:
+          unusedQuestions[0] || translateQuestion('challenge.defaultQuestions.fallback'),
+        answer: '',
+      };
+
+      // Optimistic update: Show immediately in UI
+      updateOptimisticQuestions({ type: 'add', question: newQuestion });
+
+      // Actual state update
       setQuestionsData((prev) => ({
         ...prev,
-        challengeQuestions: [
-          ...prev.challengeQuestions,
-          {
-            question:
-              unusedQuestions[0] || translateQuestion('challenge.defaultQuestions.fallback'),
-            answer: '',
-          },
-        ],
+        challengeQuestions: [...prev.challengeQuestions, newQuestion],
       }));
     }
-  }, [questionsData.challengeQuestions, translateQuestion]);
+  }, [questionsData.challengeQuestions, translateQuestion, updateOptimisticQuestions]);
 
   const removeQuestion = useCallback(
     (index: number) => {
       if (questionsData.challengeQuestions.length > 1) {
+        // Optimistic update: Remove immediately in UI
+        updateOptimisticQuestions({ type: 'remove', index });
+
+        // Actual state update
         setQuestionsData((prev) => ({
           ...prev,
           challengeQuestions: prev.challengeQuestions.filter((_, i) => i !== index),
         }));
       }
     },
-    [questionsData.challengeQuestions.length]
+    [questionsData.challengeQuestions.length, updateOptimisticQuestions]
   );
 
   const handleSubmit = useCallback(() => {
@@ -170,16 +194,16 @@ export function ChallengeQuestions({
       onNavigateStep={onNavigateStep}
     >
       <div className="space-y-6">
-        {/* Questions */}
+        {/* Questions - Use optimistic state for instant feedback */}
         <div className="space-y-4">
-          {questionsData.challengeQuestions.map((questionData, index) => (
+          {optimisticQuestions.map((questionData, index) => (
             <Card key={index} className="bg-muted/30 border-border/30 border p-4">
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <h4 className={cn('flex-1', therapeuticTypography.label)}>
                     {questionData.question}
                   </h4>
-                  {questionsData.challengeQuestions.length > 1 && (
+                  {optimisticQuestions.length > 1 && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -208,7 +232,7 @@ export function ChallengeQuestions({
         </div>
 
         {/* Add Question */}
-        {questionsData.challengeQuestions.length < 6 && (
+        {optimisticQuestions.length < 6 && (
           <Button
             variant="outline"
             onClick={addQuestion}
