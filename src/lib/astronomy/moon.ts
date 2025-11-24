@@ -44,8 +44,8 @@ export interface MoonPhaseData {
 const LUNAR_MONTH = 29.53058867; // Synodic month in days
 
 /**
- * Calculates the current moon phase for a given date using improved algorithm
- * Accounts for moon's elliptical orbit for better accuracy
+ * Calculates the current moon phase for a given date using Meeus' accurate algorithm
+ * Implements Jean Meeus' Astronomical Algorithms (Chapter 48) with perturbations
  */
 export function getMoonPhase(date: Date = new Date()): MoonPhaseData {
   const julian = getJulianDate(date);
@@ -53,30 +53,46 @@ export function getMoonPhase(date: Date = new Date()): MoonPhaseData {
   // Calculate time in Julian centuries from J2000.0
   const T = (julian - 2451545.0) / 36525.0;
   
-  // Calculate mean elongation of the Moon (D) using Meeus' polynomial
-  // This is the geocentric angular separation between the Sun and Moon
+  // Calculate mean elongation of the Moon (D) - Meeus formula 47.2
   const D = 297.8501921 + 445267.1114034 * T - 0.0018819 * T * T + T * T * T / 545868.0 - T * T * T * T / 113065000.0;
+  
+  // Calculate Sun's mean anomaly (M) - Meeus formula 47.3
+  const M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T * T + T * T * T / 24490000.0;
+  
+  // Calculate Moon's mean anomaly (Mp) - Meeus formula 47.4
+  const Mp = 134.9633964 + 477198.8675055 * T + 0.0087414 * T * T + T * T * T / 69699.0 - T * T * T * T / 14712000.0;
   
   // Normalize to 0-360 degrees
   const DNorm = ((D % 360) + 360) % 360;
+  const MNorm = ((M % 360) + 360) % 360;
+  const MpNorm = ((Mp % 360) + 360) % 360;
   
-  // Convert to 0-1 fraction (phase)
+  // Convert to radians
+  const toRad = Math.PI / 180;
+  const MRad = MNorm * toRad;
+  const MpRad = MpNorm * toRad;
+  const DRad = DNorm * toRad;
+  
+  // Calculate phase angle (i) using Meeus formula 48.4
+  // This accounts for perturbations from orbital eccentricities
+  const iDeg = 180 - DNorm 
+    - 6.289 * Math.sin(MpRad)
+    + 2.1 * Math.sin(MRad)
+    - 1.274 * Math.sin(2 * DRad - MpRad)
+    - 0.658 * Math.sin(2 * DRad)
+    - 0.214 * Math.sin(2 * MpRad)
+    - 0.11 * Math.sin(DRad);
+  
+  const iNorm = ((iDeg % 360) + 360) % 360;
+  const iRad = iNorm * toRad;
+  
+  // Calculate illuminated fraction using phase angle
+  // Formula: k = (1 + cos(i)) / 2
+  const illumination = (1 + Math.cos(iRad)) / 2;
+  
+  // Convert elongation to phase fraction (0-1) for phase naming
   const fraction = DNorm / 360;
   const age = fraction * LUNAR_MONTH;
-  
-  // Calculate illumination from elongation using Meeus' formula
-  // Elongation (D) is the geocentric angle between Sun and Moon
-  // At New Moon: D ≈ 0°, illumination = 0%
-  // At Full Moon: D ≈ 180°, illumination = 100%
-  const elongationRad = DNorm * Math.PI / 180;
-  
-  // Standard illumination formula based on elongation
-  // This is more accurate than simple phase fraction
-  const illumination = (1 - Math.cos(elongationRad)) / 2;
-  
-  // Note: We use elongation (D) rather than phase fraction for higher accuracy
-  // This accounts for the Moon's actual position relative to the Sun
-  // Eccentricity effects are already included in the elongation calculation
   
   // Clamp to 0-1 range
   const clampedIllumination = Math.max(0, Math.min(1, illumination));
