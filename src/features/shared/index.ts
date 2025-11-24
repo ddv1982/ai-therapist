@@ -1,9 +1,6 @@
 // Shared feature utilities and components
 // Common functionality used across multiple features
 
-// Theme utilities
-export { ThemeToggle } from '@/components/shared/theme-toggle';
-
 // Error handling
 export {
   ErrorBoundary as ChatErrorBoundary,

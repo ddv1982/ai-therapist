@@ -241,27 +241,27 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
             <stop
               offset="0%"
               stopColor="currentColor"
-              className="text-slate-50 dark:text-slate-50"
+              className="text-slate-50"
             />
             <stop
               offset="40%"
               stopColor="currentColor"
-              className="text-slate-100 dark:text-slate-100"
+              className="text-slate-100"
             />
             <stop
               offset="70%"
               stopColor="currentColor"
-              className="text-slate-200 dark:text-slate-200"
+              className="text-slate-200"
             />
             <stop
               offset="90%"
               stopColor="currentColor"
-              className="text-slate-300 dark:text-slate-400"
+              className="text-slate-400"
             />
             <stop
               offset="100%"
               stopColor="currentColor"
-              className="text-slate-400 dark:text-slate-500"
+              className="text-slate-500"
             />
           </radialGradient>
 
@@ -272,7 +272,7 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
             <stop
               offset="95%"
               stopColor="currentColor"
-              className="text-white/40 dark:text-white/30"
+              className="text-white/30"
             />
             <stop offset="100%" stopColor="transparent" />
           </radialGradient>
@@ -284,13 +284,13 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
             <stop
               offset="100%"
               stopColor="currentColor"
-              className="text-black/15 dark:text-black/25"
+              className="text-black/25"
             />
           </radialGradient>
         </defs>
 
         {/* 1. Dark Moon Base (Shadow side) - enhanced darkness */}
-        <circle cx="100" cy="100" r="100" className="fill-slate-700 dark:fill-slate-900" />
+        <circle cx="100" cy="100" r="100" className="fill-slate-900" />
 
         {/* 2. Lit Portion - Enhanced 3D sphere gradient */}
         <path d={litPath} fill="url(#moon-sphere)" />
@@ -315,7 +315,7 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
           cx="100"
           cy="100"
           r="99"
-          className="fill-none stroke-white/10 dark:stroke-white/5"
+          className="fill-none stroke-white/5"
           strokeWidth="2"
         />
       </motion.svg>

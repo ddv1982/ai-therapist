@@ -63,7 +63,7 @@ export function ChatHeader() {
 
   return (
     <div
-      className={`${isMobile ? 'p-3' : 'p-6'} bg-card/50 relative flex-shrink-0 shadow-[0_1px_0_rgba(0,0,0,0.06)] dark:shadow-[0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md`}
+      className={`${isMobile ? 'p-3' : 'p-6'} bg-card/50 relative flex-shrink-0 shadow-[0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md`}
     >
       <div className="flex items-center justify-between">
         <div className={`flex items-center ${isMobile ? 'gap-3' : 'gap-4'}`}>
@@ -86,7 +86,7 @@ export function ChatHeader() {
             <span className="text-muted-foreground text-xs tracking-wide uppercase">
               {t('main.modelChipLabel')}
             </span>
-            <span className="bg-muted/80 dark:bg-muted/40 text-foreground rounded-full px-2 py-1 text-sm font-medium">
+            <span className="bg-muted/40 text-foreground rounded-full px-2 py-1 text-sm font-medium">
               {modelLabel}
             </span>
           </div>
@@ -103,7 +103,7 @@ export function ChatHeader() {
               title={t('main.generateReport')}
             >
               {isGeneratingReport ? (
-                <div className="relative z-10 h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent opacity-100 dark:border-white" />
+                <div className="relative z-10 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent opacity-100" />
               ) : (
                 <FileText className="text-foreground relative z-10 h-4 w-4" />
               )}

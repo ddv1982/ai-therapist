@@ -4,7 +4,6 @@ import { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, MessageSquare, Trash2, Heart, Sparkles, Loader2 } from 'lucide-react';
-import { ThemeToggle } from '@/components/shared/theme-toggle';
 import { SessionSidebarProps } from '@/types/ui';
 
 // Using centralized props interface from types/component-props.ts
@@ -36,21 +35,18 @@ export const SessionSidebar = memo(function SessionSidebar({
       {/* Sidebar */}
       <aside
         id="chat-sidebar"
-        className={`${showSidebar ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${showSidebar ? 'fixed md:relative' : ''} ${showSidebar ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} bg-sidebar bg-sidebar-gradient bg-card/70 dark:bg-card/60 animate-slide-in flex flex-col overflow-hidden shadow-apple-lg backdrop-blur-glass backdrop-saturate-glass transition-all duration-500 ease-in-out`}
+        className={`${showSidebar ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${showSidebar ? 'fixed md:relative' : ''} ${showSidebar ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} bg-sidebar bg-sidebar-gradient bg-card/60 animate-slide-in shadow-apple-lg backdrop-blur-glass backdrop-saturate-glass flex flex-col overflow-hidden transition-all duration-500 ease-in-out`}
         role="navigation"
         aria-label="Chat sessions"
         aria-hidden={!showSidebar}
       >
-        <div className="p-6 shadow-[0_1px_0_rgba(0,0,0,0.06)] dark:shadow-[0_1px_0_rgba(255,255,255,0.06)]">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="p-6 shadow-[0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="mb-6 flex items-center">
             <div className="flex items-center gap-3">
-              <div className="from-primary to-accent flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg">
+              <div className="from-primary to-accent flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br shadow-lg">
                 <Heart className="h-6 w-6 text-white" />
               </div>
               <h2 className="gradient-text mb-4 text-3xl tracking-tight">Therapeutic AI</h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
             </div>
           </div>
           <Button
@@ -80,80 +76,84 @@ export const SessionSidebar = memo(function SessionSidebar({
                 selectionStatus.phase !== 'idle' &&
                 selectionStatus.phase !== 'complete';
               return (
-              <Card
-                key={session.id}
-                className={`group animate-fade-in mb-3 cursor-pointer p-4 transition-all duration-300 ${
-                  currentSession === session.id
-                    ? 'shadow-apple-lg bg-primary/8 dark:bg-primary/12'
-                    : 'shadow-apple-sm hover:shadow-apple-md hover:-translate-y-0.5 bg-card/50 hover:bg-card/70'
-                }`}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div
-                  role="button"
-                  tabIndex={0}
-                  aria-current={currentSession === session.id ? 'true' : undefined}
-                  className="focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none flex items-start gap-3 rounded-lg"
-                  onClick={() => {
-                    setCurrentSession(session.id);
-                    loadMessages(session.id);
-                    if (isMobile) {
-                      setShowSidebar(false);
-                    }
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
+                <Card
+                  key={session.id}
+                  className={`group animate-fade-in mb-3 cursor-pointer p-4 transition-all duration-300 ${
+                    currentSession === session.id
+                      ? 'shadow-apple-lg bg-primary/12'
+                      : 'shadow-apple-sm hover:shadow-apple-md bg-card/50 hover:bg-card/70 hover:-translate-y-0.5'
+                  }`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    aria-current={currentSession === session.id ? 'true' : undefined}
+                    className="focus-visible:ring-ring flex items-start gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                    onClick={() => {
                       setCurrentSession(session.id);
                       loadMessages(session.id);
                       if (isMobile) {
                         setShowSidebar(false);
                       }
-                    }
-                  }}
-                >
-                  <div
-                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
-                      currentSession === session.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary'
-                    }`}
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setCurrentSession(session.id);
+                        loadMessages(session.id);
+                        if (isMobile) {
+                          setShowSidebar(false);
+                        }
+                      }
+                    }}
                   >
-                    <MessageSquare className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="mb-1 truncate text-base font-semibold tracking-normal">{session.title}</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-muted-foreground truncate text-sm tracking-wide">
-                        {session._count?.messages
-                          ? `${session._count.messages} messages`
-                          : 'No messages yet'}
-                      </p>
-                      <div className="bg-muted-foreground/30 h-1 w-1 rounded-full"></div>
-                      <p className="text-muted-foreground text-sm tracking-wide">
-                        {session.startedAt ? new Date(session.startedAt).toLocaleDateString() : 'Unknown date'}
-                      </p>
+                    <div
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                        currentSession === session.id
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary'
+                      }`}
+                    >
+                      <MessageSquare className="h-4 w-4" />
                     </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="mb-1 truncate text-base font-semibold tracking-normal">
+                        {session.title}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <p className="text-muted-foreground truncate text-sm tracking-wide">
+                          {session._count?.messages
+                            ? `${session._count.messages} messages`
+                            : 'No messages yet'}
+                        </p>
+                        <div className="bg-muted-foreground/30 h-1 w-1 rounded-full"></div>
+                        <p className="text-muted-foreground text-sm tracking-wide">
+                          {session.startedAt
+                            ? new Date(session.startedAt).toLocaleDateString()
+                            : 'Unknown date'}
+                        </p>
+                      </div>
                       {isSwitching && (
                         <p className="text-primary flex items-center gap-2 pt-2 text-xs">
                           <Loader2 className="h-3 w-3 animate-spin" />
                           {selectionStatus?.message ?? 'Switching session…'}
                         </p>
                       )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-destructive/10 hover:text-destructive relative h-8 w-8 overflow-hidden rounded-lg p-1 opacity-0 transition-all duration-200 group-hover:opacity-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSession(session.id);
+                      }}
+                    >
+                      <Trash2 className="relative z-10 h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:bg-destructive/10 hover:text-destructive relative h-8 w-8 overflow-hidden rounded-lg p-1 opacity-0 transition-all duration-200 group-hover:opacity-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteSession(session.id);
-                    }}
-                  >
-                    <Trash2 className="relative z-10 h-4 w-4" />
-                  </Button>
-                </div>
-              </Card>
+                </Card>
               );
             })
           )}

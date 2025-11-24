@@ -38,7 +38,7 @@ export function TherapeuticFieldLabel({
             className={cn(
               'flex items-center gap-1 rounded px-2 py-1 text-sm transition-all duration-300',
               isDraftSaved
-                ? 'scale-100 bg-green-50 text-green-600 opacity-100 dark:bg-green-900/20 dark:text-green-400'
+                ? 'scale-100 bg-green-900/20 text-green-400 opacity-100'
                 : 'scale-95 opacity-0'
             )}
           >

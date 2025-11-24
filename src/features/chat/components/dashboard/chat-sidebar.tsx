@@ -4,7 +4,6 @@ import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LanguageToggle } from '@/components/ui/language-switcher';
-import { ThemeToggle } from '@/components/shared/theme-toggle';
 
 import type { ChatSessionSummary } from '@/hooks/use-chat-controller';
 import { Plus, MessageSquare, Trash2, Sparkles, Brain, Globe, EyeOff } from 'lucide-react';
@@ -48,7 +47,7 @@ export function ChatSidebar(props: ChatSidebarProps) {
 
   const sidebarClasses = useMemo(
     () =>
-      `${open ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${open ? 'fixed md:relative' : ''} ${open ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} h-screen transition-all duration-500 ease-in-out overflow-hidden bg-card/70 dark:bg-card/60 backdrop-blur-glass backdrop-saturate-glass shadow-apple-lg flex flex-col animate-slide-in`,
+      `${open ? 'w-80 sm:w-88 md:w-88' : 'w-0'} ${open ? 'fixed md:relative' : ''} ${open ? 'inset-y-0 left-0 z-50 md:z-auto' : ''} h-screen transition-all duration-500 ease-in-out overflow-hidden bg-card/60 backdrop-blur-glass backdrop-saturate-glass shadow-apple-lg flex flex-col animate-slide-in`,
     [open]
   );
 
@@ -69,8 +68,8 @@ export function ChatSidebar(props: ChatSidebarProps) {
         aria-label={translate('sidebar.aria')}
         aria-hidden={!open}
       >
-        <div className="p-6 shadow-[0_1px_0_rgba(0,0,0,0.06)] dark:shadow-[0_1px_0_rgba(255,255,255,0.06)]">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="p-6 shadow-[0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="mb-6 flex items-center">
             <div className="flex items-center gap-3">
               <Brain className="gradient-text h-6 w-6" />
               <div>
@@ -78,9 +77,6 @@ export function ChatSidebar(props: ChatSidebarProps) {
                   {translate('sidebar.brandName')}
                 </h2>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <ThemeToggle />
             </div>
           </div>
           <Button
@@ -112,9 +108,9 @@ export function ChatSidebar(props: ChatSidebarProps) {
                 <Card
                   key={session.id}
                   variant="glass"
-                  className={`group mb-3 cursor-pointer p-4 transition-all duration-base ease-out-smooth active:scale-[0.98] ${
+                  className={`group duration-base ease-out-smooth mb-3 cursor-pointer p-4 transition-all active:scale-[0.98] ${
                     isActive
-                      ? 'shadow-apple-lg bg-primary/8 dark:bg-primary/12'
+                      ? 'shadow-apple-lg bg-primary/12'
                       : 'shadow-apple-sm hover:shadow-apple-md'
                   }`}
                 >
@@ -128,7 +124,7 @@ export function ChatSidebar(props: ChatSidebarProps) {
                     }}
                   >
                     <div
-                      className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition-colors ${
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
                         isActive
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted hover:bg-primary/10 text-muted-foreground hover:text-primary'
@@ -137,7 +133,9 @@ export function ChatSidebar(props: ChatSidebarProps) {
                       <MessageSquare className="h-4 w-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="mb-1 line-clamp-2 text-base font-semibold tracking-normal">{session.title}</h3>
+                      <h3 className="mb-1 line-clamp-2 text-base font-semibold tracking-normal">
+                        {session.title}
+                      </h3>
                       <p className="text-muted-foreground text-sm tracking-wide">
                         {startedAt ? startedAt.toLocaleString() : ''}
                       </p>
@@ -167,7 +165,7 @@ export function ChatSidebar(props: ChatSidebarProps) {
               onClick={onToggleSmartModel}
               className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:outline-none ${
                 smartModelActive
-                  ? 'bg-violet-600 text-white shadow-apple-md'
+                  ? 'shadow-apple-md bg-violet-600 text-white'
                   : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted shadow-apple-xs backdrop-blur-sm'
               }`}
               aria-pressed={smartModelActive}
@@ -188,7 +186,7 @@ export function ChatSidebar(props: ChatSidebarProps) {
               onClick={onToggleWebSearch}
               className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${
                 webSearchEnabled
-                  ? 'bg-blue-600 text-white shadow-apple-md'
+                  ? 'shadow-apple-md bg-blue-600 text-white'
                   : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted shadow-apple-xs backdrop-blur-sm'
               }`}
               aria-pressed={webSearchEnabled}

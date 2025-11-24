@@ -7,105 +7,7 @@
   --radius: 0.75rem; /* 12px */
 
   /* ============================================
-     COLORS - Light Theme (OKLCH)
-     ============================================ */
-  /* 60% - Neutral backgrounds (warm cream tint) */
-  --background: oklch(0.97 0.01 40);
-  --card: oklch(0.98 0.01 40);
-  --popover: oklch(0.99 0.01 40);
-  --secondary: oklch(0.94 0.012 35);
-  --muted: oklch(0.92 0.01 40);
-
-  /* 30% - Text and UI elements (enhanced contrast) */
-  --foreground: oklch(0.12 0.01 250);
-  --card-foreground: oklch(0.12 0.01 250);
-  --popover-foreground: oklch(0.12 0.01 250);
-  --secondary-foreground: oklch(0.40 0.01 250);
-  --muted-foreground: oklch(0.50 0.01 250);
-  --border: oklch(0.85 0.01 40);
-  --input: oklch(0.85 0.01 40);
-
-  /* 10% - Accent colors (CTAs) */
-  --primary: oklch(0.55 0.18 240);
-  --primary-foreground: oklch(0.99 0 0);
-  --accent: oklch(0.60 0.14 150);
-  --accent-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.58 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --ring: oklch(0.55 0.18 240);
-
-  /* ============================================
-     GLASSMORPHISM - Apple Frosted Glass
-     ============================================ */
-  --glass-white: oklch(0.97 0.01 40 / 0.6);
-  --glass-border: oklch(0.88 0.015 40 / 0.25);
-
-  /* ============================================
-     SHADOWS - Apple-style (very subtle)
-     ============================================ */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.10);
-  --shadow-xl: 0 20px 40px -8px rgba(0, 0, 0, 0.12);
-  --shadow-primary: 0 8px 16px -4px oklch(0.55 0.18 240 / 0.2);
-  --shadow-accent: 0 8px 16px -4px oklch(0.60 0.14 150 / 0.2);
-
-  /* ============================================
-     THERAPY COLORS
-     ============================================ */
-  --therapy-success: oklch(0.65 0.15 142);
-  --therapy-warning: oklch(0.75 0.15 85);
-  --therapy-info: oklch(0.7 0.15 237);
-
-  /* ============================================
-     EMOTION COLORS (for therapeutic features)
-     ============================================ */
-  --emotion-fear: oklch(0.7 0.12 200);
-  --emotion-anger: oklch(0.62 0.24 25);
-  --emotion-sadness: oklch(0.6 0.12 255);
-  --emotion-joy: oklch(0.85 0.15 95);
-  --emotion-anxiety: oklch(0.75 0.14 80);
-  --emotion-shame: oklch(0.7 0.16 350);
-  --emotion-guilt: oklch(0.65 0.14 285);
-
-  /* ============================================
-     COMPONENT-SPECIFIC
-     ============================================ */
-  --sidebar-background: oklch(0.98 0.01 247);
-  --modal-backdrop: oklch(0.25 0.02 258 / 0.8);
-}
-
-/* ============================================
-   TYPOGRAPHY HIERARCHY - SF Pro-inspired
-   ============================================ */
-
-/* Headings - semibold weight for emphasis */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
-  letter-spacing: -0.011em; /* Tighter tracking for large text */
-}
-
-/* Body text - regular weight */
-p, li, td {
-  font-weight: 400;
-  letter-spacing: 0em;
-}
-
-/* Labels, UI elements - slightly wider tracking */
-label, .label, button, .button {
-  font-weight: 600;
-  letter-spacing: 0.011em;
-}
-
-/* Small text - semibold for legibility */
-.text-sm, .text-xs {
-  font-weight: 600;
-  letter-spacing: 0.011em;
-}
-
-.dark {
-  /* ============================================
-     COLORS - Dark Theme (Apple-inspired)
+     COLORS - Dark Theme Only (OKLCH)
      ============================================ */
   /* 60% - Dark backgrounds (true black Apple style) */
   --background: oklch(0.12 0.01 250);
@@ -149,12 +51,15 @@ label, .label, button, .button {
   --shadow-accent: 0 8px 16px -4px oklch(0.65 0.12 152 / 0.3);
 
   /* ============================================
-     THERAPY & EMOTION COLORS - Dark Mode
+     THERAPY COLORS
      ============================================ */
   --therapy-success: oklch(0.7 0.12 142);
   --therapy-warning: oklch(0.8 0.12 85);
   --therapy-info: oklch(0.75 0.12 237);
 
+  /* ============================================
+     EMOTION COLORS (for therapeutic features)
+     ============================================ */
   --emotion-fear: oklch(0.7 0.12 200);
   --emotion-anger: oklch(0.7 0.2 25);
   --emotion-sadness: oklch(0.7 0.12 255);
@@ -164,32 +69,13 @@ label, .label, button, .button {
   --emotion-guilt: oklch(0.7 0.14 285);
 
   /* ============================================
-     COMPONENT-SPECIFIC - Dark Mode
+     COMPONENT-SPECIFIC
      ============================================ */
   --sidebar-background: oklch(0.13 0.02 258);
   --modal-backdrop: oklch(0.05 0.01 258 / 0.9);
 }
 
-/* ============================================
-   LIGHT MODE ENHANCEMENTS
-   Enhanced shadows and glassmorphism for clear depth hierarchy
-   ============================================ */
-@media (prefers-color-scheme: light) {
-  :root {
-    /* Enhanced shadows for light mode visibility (2-3x darker) */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.12);
-    --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.16);
-    --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.18);
-    --shadow-xl: 0 20px 40px -8px rgba(0, 0, 0, 0.20);
-    --shadow-primary: 0 8px 16px -4px oklch(0.55 0.18 240 / 0.25);
-    --shadow-accent: 0 8px 16px -4px oklch(0.60 0.14 150 / 0.25);
-  }
 
-  /* Enhanced glassmorphism for light mode */
-  .backdrop-blur-glass {
-    backdrop-filter: blur(20px) brightness(0.98) saturate(140%);
-  }
-}
 
 /* Base styles without @layer (Tailwind v4 approach) */
 * {

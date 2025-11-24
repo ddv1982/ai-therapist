@@ -38,12 +38,12 @@ export function DraftPanel({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300">
+      <div className="rounded-lg border border-blue-800 bg-blue-950/30 p-4 text-blue-300">
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold">📝 Previous Session Found</h3>
             {hasDraft && (
-              <span className="rounded-full bg-green-100 px-2 py-1 text-sm text-green-700 dark:bg-green-900/30 dark:text-green-400">
+              <span className="rounded-full bg-green-900/30 px-2 py-1 text-sm text-green-400">
                 {t('draft.statusSaved')}
               </span>
             )}

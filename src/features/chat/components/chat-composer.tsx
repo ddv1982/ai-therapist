@@ -44,7 +44,7 @@ export const ChatComposer = memo(function ChatComposer({
   return (
     <div
       ref={inputContainerRef}
-      className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} bg-card/50 relative flex-shrink-0 shadow-[0_-1px_0_rgba(0,0,0,0.06)] dark:shadow-[0_-1px_0_rgba(255,255,255,0.06)] backdrop-blur-md`}
+      className={`${isMobile ? 'p-3 pt-2' : 'p-3 sm:p-6'} bg-card/50 relative flex-shrink-0 shadow-[0_-1px_0_rgba(255,255,255,0.06)] backdrop-blur-md`}
       role="form"
       aria-label="Chat composer"
     >

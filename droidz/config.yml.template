@@ -1,0 +1,14 @@
+# Factory AI Configuration Template
+# Copy this file to config.yml and add your settings
+# config.yml is in .gitignore and won't be committed
+
+# Required: Your Factory API key from https://app.factory.ai/settings/api-keys
+factory_api_key: "fk-your-key-here"
+
+# Optional: Autonomy level for droid exec (low, medium, high)
+# Default: medium
+default_autonomy_level: medium
+
+# Optional: Maximum parallel executions
+# Default: 4
+max_parallel_executions: 4

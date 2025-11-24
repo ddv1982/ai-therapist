@@ -45,7 +45,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 ## ✨ Features
 
 ### 🎨 Beautiful Experience
-- **Dual Theme Support** - Elegant dark and light modes
+- **Dark Mode Design** - Optimized dark interface for reduced eye strain and therapeutic use
 - **Mobile Optimized** - Touch-friendly responsive design
 - **Real-time Streaming** - AI responses with smooth animations
 - **Session Management** - Create and switch between therapy sessions
@@ -236,6 +236,16 @@ Key variables required in `.env.local`:
 - **Tailwind CSS v4**
 - **Clerk** Authentication
 - **Zod v4** Schema Validation
+
+### Styling & Theme
+
+The application uses a **dark mode only** design optimized for therapeutic use and reduced eye strain. All colors are defined using the OKLCH color space for perceptual uniformity and better color consistency.
+
+- **Dark-First Design** - Single theme approach simplifies maintenance and provides consistent UX
+- **OKLCH Color Space** - Perceptually uniform colors with predictable lightness
+- **CSS Custom Properties** - Colors centralized in `/src/styles/base.css`
+- **Therapeutic Color Palette** - 8 emotion colors + 3 therapeutic state colors
+- **Accessibility** - All colors meet WCAG AA contrast requirements (4.5:1 minimum)
 
 ### Domain-Driven Structure
 ```

@@ -228,7 +228,7 @@ export function SchemaModes({
         <div
           className={`flex items-center gap-2 rounded-md px-2 py-1 text-xs transition-all duration-200 ${
             isDraftSaved
-              ? 'scale-100 bg-green-50 text-green-700 opacity-100 ring-1 ring-green-600/10 dark:bg-green-900/20 dark:text-green-400 dark:ring-green-500/20'
+              ? 'scale-100 bg-green-900/20 text-green-400 opacity-100 ring-1 ring-green-500/20'
               : 'scale-95 opacity-0'
           }`}
         >

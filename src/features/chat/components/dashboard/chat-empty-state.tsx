@@ -79,7 +79,7 @@ export function ChatEmptyState({ isMobile, translate }: ChatEmptyStateProps) {
           </span>
           
           {/* Spiritual Quote */}
-          <p className="mt-6 max-w-lg animate-fade-in px-6 text-center text-base font-light italic leading-relaxed text-primary/80 dark:text-primary/70 animation-delay-300">
+          <p className="mt-6 max-w-lg animate-fade-in px-6 text-center text-base font-light italic leading-relaxed text-primary/70 animation-delay-300">
             "{getPhaseQuote(moonPhase.name)}"
           </p>
         </div>

@@ -6,7 +6,6 @@ import { QueryProvider } from '@/providers/query-provider';
 import { SessionProvider } from '@/contexts/session-context';
 import { ChatSettingsProvider } from '@/contexts/chat-settings-context';
 import { CBTProvider } from '@/contexts/cbt-context';
-import { ThemeProvider } from '@/components/providers/theme-provider';
 import { ToastProvider } from '@/components/ui/toast';
 import { Toaster } from '@/components/ui/sonner';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
@@ -27,22 +26,20 @@ export function RootProviders({ children }: RootProvidersProps) {
 
   return (
     <ClerkProvider publishableKey={clerkPublishableKey}>
-      <ThemeProvider>
-        <QueryProvider>
-          <SessionProvider>
-            <ChatSettingsProvider>
-              <CBTProvider>
-                <ToastProvider>
-                  <SkipLinks />
-                  <Toaster />
-                  <WebVitalsReporter />
-                  <ErrorBoundary>{children}</ErrorBoundary>
-                </ToastProvider>
-              </CBTProvider>
-            </ChatSettingsProvider>
-          </SessionProvider>
-        </QueryProvider>
-      </ThemeProvider>
+      <QueryProvider>
+        <SessionProvider>
+          <ChatSettingsProvider>
+            <CBTProvider>
+              <ToastProvider>
+                <SkipLinks />
+                <Toaster />
+                <WebVitalsReporter />
+                <ErrorBoundary>{children}</ErrorBoundary>
+              </ToastProvider>
+            </CBTProvider>
+          </ChatSettingsProvider>
+        </SessionProvider>
+      </QueryProvider>
     </ClerkProvider>
   );
 }

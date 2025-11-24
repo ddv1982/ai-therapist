@@ -14,7 +14,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useSession } from '@/contexts/session-context';
 import { useChatSettings } from '@/contexts/chat-settings-context';
 import { useSessionsQuery, SessionData } from '@/lib/queries/sessions';
-import { MessageSquare, Brain, Plus, Settings, Moon, Search, Clock, Loader2 } from 'lucide-react';
+import { MessageSquare, Brain, Plus, Settings, Search, Clock, Loader2 } from 'lucide-react';
 // import { v4 as uuidv4 } from 'uuid'; // Unused
 import { useTranslations } from 'next-intl';
 import { useSelectSession } from '@/hooks';
@@ -22,10 +22,9 @@ import { useSelectSession } from '@/hooks';
 interface CommandPaletteProps {
   onCBTOpen?: () => void;
   onSettingsOpen?: () => void;
-  onThemeToggle?: () => void;
 }
 
-export function CommandPalette({ onCBTOpen, onSettingsOpen, onThemeToggle }: CommandPaletteProps) {
+export function CommandPalette({ onCBTOpen, onSettingsOpen }: CommandPaletteProps) {
   const t = useTranslations('ui');
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -104,10 +103,6 @@ export function CommandPalette({ onCBTOpen, onSettingsOpen, onThemeToggle }: Com
                 <CommandItem onSelect={() => handleSelect(() => onSettingsOpen?.())}>
                   <Settings className="mr-2 h-4 w-4" />
                   {t('command.settings')}
-                </CommandItem>
-                <CommandItem onSelect={() => handleSelect(() => onThemeToggle?.())}>
-                  <Moon className="mr-2 h-4 w-4" />
-                  {t('command.theme')}
                 </CommandItem>
               </CommandGroup>
 
