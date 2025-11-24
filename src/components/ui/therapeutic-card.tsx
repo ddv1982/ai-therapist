@@ -204,7 +204,7 @@ export function TherapeuticCard(props: TherapeuticCardProps) {
 
       {/* Therapeutic gradient overlay for enhanced variant */}
       {variant === 'therapeutic' && (
-        <div className="from-primary/5 to-accent/5 pointer-events-none absolute inset-0 bg-gradient-to-br via-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <div className="from-primary/5 to-accent/5 pointer-events-none absolute inset-0 bg-linear-to-br via-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       )}
     </Card>
   );

@@ -55,9 +55,7 @@ export function ThoughtRecord({
   });
 
   // React 19: useOptimistic for instant UI feedback on add/remove
-  type ThoughtAction =
-    | { type: 'add'; thought: ThoughtData }
-    | { type: 'remove'; index: number };
+  type ThoughtAction = { type: 'add'; thought: ThoughtData } | { type: 'remove'; index: number };
 
   const [optimisticThoughts, updateOptimisticThoughts] = useOptimistic(
     thoughts,
@@ -205,10 +203,10 @@ export function ThoughtRecord({
   const addThought = useCallback(() => {
     if (thoughts.length < 5) {
       const newThought: ThoughtData = { thought: '', credibility: 5 };
-      
+
       // Optimistic update: Show immediately in UI
       updateOptimisticThoughts({ type: 'add', thought: newThought });
-      
+
       // Actual state update
       setThoughts((prev) => [...prev, newThought]);
       setSelectedPrompts((prev) => [...prev, '']);
@@ -224,7 +222,7 @@ export function ThoughtRecord({
       if (thoughts.length > 1) {
         // Optimistic update: Remove immediately in UI
         updateOptimisticThoughts({ type: 'remove', index });
-        
+
         // Actual state update
         setThoughts((prev) => prev.filter((_, i) => i !== index));
         setSelectedPrompts((prev) => prev.filter((_, i) => i !== index));
@@ -367,10 +365,10 @@ export function ThoughtRecord({
                     ref={(el) => {
                       textareaRefs.current[index] = el;
                     }}
-                    className="min-h-[100px] w-full max-w-full resize-none overflow-hidden break-words"
+                    className="min-h-[100px] w-full max-w-full resize-none overflow-hidden wrap-break-word"
                   />
                   {errors[index] && (
-                    <p className="text-destructive text-sm break-words">{errors[index]}</p>
+                    <p className="text-destructive text-sm wrap-break-word">{errors[index]}</p>
                   )}
                 </div>
 

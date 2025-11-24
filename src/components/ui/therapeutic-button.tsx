@@ -150,85 +150,85 @@ function TherapeuticButton({
   disabled,
   ...props
 }: TherapeuticButtonProps) {
-    const Comp = asChild ? Slot : 'button';
+  const Comp = asChild ? Slot : 'button';
 
-    // Auto-apply mobile variant if mobile optimized
-    const finalVariant = mobileOptimized && variant === 'default' ? 'mobile' : variant;
-    const finalSize = mobileOptimized && size === 'default' ? 'mobile-touch' : size;
+  // Auto-apply mobile variant if mobile optimized
+  const finalVariant = mobileOptimized && variant === 'default' ? 'mobile' : variant;
+  const finalSize = mobileOptimized && size === 'default' ? 'mobile-touch' : size;
 
-    // Combine styles with custom properties
-    const combinedStyle = {
-      ...style,
-      ...(animationDelay > 0 && { animationDelay: `${animationDelay}ms` }),
-      ...(customGradient && { background: customGradient }),
-      ...(preventZoom && { fontSize: '16px' }), // Prevent iOS zoom
-    };
+  // Combine styles with custom properties
+  const combinedStyle = {
+    ...style,
+    ...(animationDelay > 0 && { animationDelay: `${animationDelay}ms` }),
+    ...(customGradient && { background: customGradient }),
+    ...(preventZoom && { fontSize: '16px' }), // Prevent iOS zoom
+  };
 
-    return (
-      <Comp
-        ref={ref}
-        disabled={disabled || loading}
-        className={cn(
-          therapeuticButtonVariants({ variant: finalVariant, size: finalSize, animation }),
-          // Additional therapeutic effects
-          shimmerEffect && '',
-          gradientAnimation && 'gradient-animation',
-          glowEffect && 'glow-effect',
-          therapeuticFeedback && 'therapeutic-feedback',
-          loading && 'cursor-not-allowed opacity-70',
-          progress !== undefined && 'progress-button',
-          // Mobile optimizations
-          mobileOptimized && 'mobile-optimized-button',
-          className
-        )}
-        style={combinedStyle}
-        title={tooltipText}
-        aria-expanded={ariaExpanded}
-        {...props}
-      >
-        {/* Progress indicator background */}
-        {progress !== undefined && (
-          <div
-            className="bg-primary/20 absolute inset-0 rounded-md transition-all duration-500"
-            style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
-          />
-        )}
-
-        {/* Loading spinner */}
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-md bg-inherit">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            {loadingText && <span className="ml-2 text-sm">{loadingText}</span>}
-          </div>
-        )}
-
-        {/* Button content */}
+  return (
+    <Comp
+      ref={ref}
+      disabled={disabled || loading}
+      className={cn(
+        therapeuticButtonVariants({ variant: finalVariant, size: finalSize, animation }),
+        // Additional therapeutic effects
+        shimmerEffect && '',
+        gradientAnimation && 'gradient-animation',
+        glowEffect && 'glow-effect',
+        therapeuticFeedback && 'therapeutic-feedback',
+        loading && 'cursor-not-allowed opacity-70',
+        progress !== undefined && 'progress-button',
+        // Mobile optimizations
+        mobileOptimized && 'mobile-optimized-button',
+        className
+      )}
+      style={combinedStyle}
+      title={tooltipText}
+      aria-expanded={ariaExpanded}
+      {...props}
+    >
+      {/* Progress indicator background */}
+      {progress !== undefined && (
         <div
-          className={cn(
-            'relative z-10 flex items-center justify-center gap-2',
-            loading && 'opacity-0'
-          )}
-        >
-          {icon && <span className="flex-shrink-0">{icon}</span>}
-          {children}
-          {rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
+          className="bg-primary/20 absolute inset-0 rounded-md transition-all duration-500"
+          style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
+        />
+      )}
 
-          {/* Badge */}
-          {badge && (
-            <span className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full text-sm">
-              {badge}
-            </span>
-          )}
+      {/* Loading spinner */}
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-md bg-inherit">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          {loadingText && <span className="ml-2 text-sm">{loadingText}</span>}
         </div>
+      )}
 
-        {/* Shimmer effect removed */}
-
-        {/* Therapeutic glow effect */}
-        {glowEffect && (
-          <div className="bg-primary/20 absolute inset-0 -z-10 scale-110 rounded-md opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100" />
+      {/* Button content */}
+      <div
+        className={cn(
+          'relative z-10 flex items-center justify-center gap-2',
+          loading && 'opacity-0'
         )}
-      </Comp>
-    );
+      >
+        {icon && <span className="shrink-0">{icon}</span>}
+        {children}
+        {rightIcon && <span className="shrink-0">{rightIcon}</span>}
+
+        {/* Badge */}
+        {badge && (
+          <span className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full text-sm">
+            {badge}
+          </span>
+        )}
+      </div>
+
+      {/* Shimmer effect removed */}
+
+      {/* Therapeutic glow effect */}
+      {glowEffect && (
+        <div className="bg-primary/20 absolute inset-0 -z-10 scale-110 rounded-md opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-100" />
+      )}
+    </Comp>
+  );
 }
 
 // Pre-configured button presets for common therapeutic use cases

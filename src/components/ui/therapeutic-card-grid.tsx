@@ -151,7 +151,7 @@ export function TherapeuticCardGrid({
           layoutStyles[layout].container,
           'therapeutic-card-grid',
           // Add staggered animation
-          '[&>*]:animate-in [&>*]:fade-in-0 [&>*]:slide-in-from-bottom-4'
+          '*:animate-in [&>*]:fade-in-0 [&>*]:slide-in-from-bottom-4'
         )}
       >
         {data.map((item, index) => (

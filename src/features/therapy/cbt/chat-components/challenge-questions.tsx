@@ -123,8 +123,7 @@ export function ChallengeQuestions({
       );
 
       const newQuestion = {
-        question:
-          unusedQuestions[0] || translateQuestion('challenge.defaultQuestions.fallback'),
+        question: unusedQuestions[0] || translateQuestion('challenge.defaultQuestions.fallback'),
         answer: '',
       };
 
@@ -208,7 +207,7 @@ export function ChallengeQuestions({
                       variant="ghost"
                       size="sm"
                       onClick={() => removeQuestion(index)}
-                      className="hover:bg-destructive/10 hover:text-destructive h-6 w-6 flex-shrink-0 p-0"
+                      className="hover:bg-destructive/10 hover:text-destructive h-6 w-6 shrink-0 p-0"
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
