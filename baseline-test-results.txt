@@ -1,0 +1,3399 @@
+
+> therapist-ai-app@0.1.0 qa:full
+> CI=1 npm run qa:smoke && CI=1 npm run test:coverage && npx playwright install --with-deps || true && CI=1 npm run test:e2e && node scripts/print-coverage-summary.mjs
+
+
+> therapist-ai-app@0.1.0 qa:smoke
+> npm run api:types && npm run lint && tsc --noEmit && npm test
+
+
+> therapist-ai-app@0.1.0 api:types
+> openapi-typescript docs/api.yaml -o src/types/api.generated.ts
+
+✨ openapi-typescript 7.10.1
+🚀 docs/api.yaml → src/types/api.generated.ts [29.6ms]
+
+> therapist-ai-app@0.1.0 lint
+> eslint .
+
+
+> therapist-ai-app@0.1.0 test
+> jest
+
+PASS __tests__/lib/convex/http-client.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/ui/dialog-accessibility.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/queue/metadata-queue.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/errors.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/services/report-generation-service.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/queries/sessions.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/analysis.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/message.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/middleware.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/encryption/rate-limiter.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/memory-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:44.799Z","level":"error","message":"Error deleting memory","context":{"operation":"deleteMemory","deletionType":"all","error":"Network error"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:44.905Z","level":"error","message":"Error fetching session report detail","context":{"operation":"getSessionReportDetail","error":"Network error"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/lib/utils/helpers.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/api/sessions/delete-session.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/memory/session-report-detail-modal.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/rate-limiter.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/context-validator.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/memory/session-report-viewer.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/ui/toast.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/monitoring/performance-metrics.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/chat/chat-empty-state.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/chat/chat-composer.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/queries/reports.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/memory/memory-management-core.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/api-response.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/parsers.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/chat/virtualized-message-list.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/hooks/use-focus-trap.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/services/memory-management-service.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/action-plan-emotion-coloring.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/ui/table-data-extractor.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/response-validator.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.253Z","level":"error","message":"Response validation failed","context":{"content":"[FILTERED_SENSITIVE_DATA]","errors":["Response contains forbidden pattern: DROP\\s+TABLE"],"warnings":[],"suspiciousPatterns":["DROP\\s+TABLE"]}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/lib/therapy/cbt-data-parser/summary.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/ui/toast-aria.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/memory-system.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy-chat/components/chat-controls.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/stream-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy/cbt/thought-record-slider.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/errors/chat-errors.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/transformers/cbt-transformers.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/observability/telemetry.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/content-priority.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/monitoring/web-vitals.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/security/crypto-security.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/repositories/session-repository-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.423Z","level":"error","message":"Database Error: verify session ownership","context":{"sessionId":"[FILTERED_SENSITIVE_DATA]","userId":"clerk123","operation":"verify session ownership","errorType":"Error"},"error":{"name":"Error","message":"Query failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.428Z","level":"error","message":"Database Error: verify session ownership","context":{"sessionId":"[FILTERED_SENSITIVE_DATA]","userId":"clerk123","operation":"verify session ownership","errorType":"Error"},"error":{"name":"Error","message":"User payload missing _id"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.428Z","level":"error","message":"Database Error: verify session ownership","context":{"sessionId":"[FILTERED_SENSITIVE_DATA]","userId":"clerk123","operation":"verify session ownership","errorType":"Error"},"error":{"name":"Error","message":"Messages payload must be an array"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.429Z","level":"error","message":"Database Error: verify session ownership","context":{"sessionId":"[FILTERED_SENSITIVE_DATA]","userId":"clerk123","operation":"verify session ownership","errorType":"Error"},"error":{"name":"Error","message":"Reports payload must be an array"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.429Z","level":"error","message":"Database Error: verify session ownership","context":{"sessionId":"[FILTERED_SENSITIVE_DATA]","userId":"clerk123","operation":"verify session ownership","errorType":"Error"},"error":{"name":"Error","message":"string error"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/lib/chat/memory-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.431Z","level":"error","message":"Failed to fetch memory management data","context":{"operation":"getMemoryManagementData","status":500,"sessionId":"[FILTERED_SENSITIVE_DATA]"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.435Z","level":"error","message":"Error fetching memory management data","context":{"operation":"getMemoryManagementData","error":"Network error","sessionId":"[FILTERED_SENSITIVE_DATA]"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.436Z","level":"error","message":"Failed to delete memory","context":{"operation":"deleteMemory","status":403,"deletionType":"recent","error":"Forbidden"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.436Z","level":"error","message":"Error deleting memory","context":{"operation":"deleteMemory","deletionType":"specific","error":"Network error"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/components/ui/toast-optimized.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/cbt-message-detector.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/metrics/metrics.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/security/csp-nonce.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/model-selector-fallback.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/assistant-response-collector.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/ui/design-system/message.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/auth/crypto-secure.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/cbt-diary-flow.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/chat/system-banner.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/layout/skip-links.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/session-reducer.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/repositories/user-repository.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.597Z","level":"error","message":"Database Error: ensure user exists","context":{"userId":"legacy","operation":"ensure user exists","errorType":"Error"},"error":{"name":"Error","message":"boom"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/components/memory/memory-management-modal.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/message-encryption.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.596Z","level":"error","message":"Failed to decrypt therapeutic message","context":{"operation":"decryptMessage","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.600Z","level":"error","message":"Failed to decrypt therapeutic message","context":{"operation":"decryptMessage","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.602Z","level":"error","message":"Failed to decrypt therapeutic message","context":{"operation":"decryptMessage","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+          at Array.map (<anonymous>)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.602Z","level":"error","message":"Failed to decrypt session report content","context":{"operation":"decryptSessionReportContent","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.610Z","level":"error","message":"Failed to decrypt cognitive distortions data","context":{"operation":"decryptCognitiveDistortions","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.611Z","level":"error","message":"Failed to decrypt cognitive distortions data","context":{"operation":"decryptCognitiveDistortions","error":"Unexpected token 'i', \"invalid-json{\" is not valid JSON"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.611Z","level":"error","message":"Failed to decrypt schema analysis data","context":{"operation":"decryptSchemaAnalysis","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.611Z","level":"error","message":"Failed to decrypt therapeutic frameworks data","context":{"operation":"decryptTherapeuticFrameworks","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.612Z","level":"error","message":"Failed to decrypt therapeutic recommendations data","context":{"operation":"decryptTherapeuticRecommendations","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.620Z","level":"error","message":"Failed to decrypt schema analysis data","context":{"operation":"decryptSchemaAnalysis","error":"Schema decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:45.620Z","level":"error","message":"Failed to decrypt therapeutic recommendations data","context":{"operation":"decryptTherapeuticRecommendations","error":"Recommendations decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/lib/api/api-middleware.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/utils/test-validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/types/cbt-schema-reflection.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/api-client-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/api-middleware-more-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/api/reports/contextual-validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/request.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/chat-request.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/client-error-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy/cbt/flow/engine.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/utils-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/chat/chat-header.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/session-mapper.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/streaming.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/api-auth.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/api/errors/route.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/cbt-message-detector-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy-chat/components/chat-container.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy/cbt/send-to-chat.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/crisis-detection.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/diary-header.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy-chat/hooks/use-chat-actions.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/integration/cbt-data-flow.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/cbt-data-parser-small.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/ui/message-design-system.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/convex/authorization.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/model-selector.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/with-route.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/error-utils-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/cbt-template.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/config/env.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/draft-panel.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy/cbt/flow/config.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/client.behavior.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/cbt-summary.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/safe-json.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/logger.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/cbt-data-parser-card-format.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/auth/crypto-secure-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/cbt/export-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/user-session.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/client.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/prompts/index.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/database/queries.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/therapy-prompts.localization.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/security/nonce.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy-chat/hooks/use-chat-modals.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/memory-utils-more-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:46.197Z","level":"error","message":"Failed to delete memory","context":{"operation":"deleteMemory","status":500,"deletionType":"all","error":"bad json"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/lib/api/client-timeout.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/contexts/session-context.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/i18n/translation-validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      
+      📊 Translation Coverage Report:
+
+      at Object.log (__tests__/i18n/translation-validation.test.ts:156:15)
+
+    console.log
+         English (baseline): 533 keys
+
+      at Object.log (__tests__/i18n/translation-validation.test.ts:157:15)
+
+    console.log
+         Dutch: 533 keys (100% complete)
+
+      at Object.log (__tests__/i18n/translation-validation.test.ts:158:15)
+
+    console.log
+
+
+      at Object.log (__tests__/i18n/translation-validation.test.ts:166:15)
+
+PASS __tests__/lib/chat/chat-request-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/cache/message-cache.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/diary-progress.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/astronomy/moon.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/message-domain-parsers.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/hooks/use-chat-sessions.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/validation-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/chat/chat-a11y-live-region.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/performance-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/cbt/export-utils-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy-chat/hooks/use-chat-state.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/client-more-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/utils-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/request-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/logger-filter-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/logger-browser-gating.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/error-codes.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/api-validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/ui/design-tokens-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/reports/fallback-analysis.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/cbt-markdown-extractor.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/chat/chat-sidebar.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/auth.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/accessibility/heading-hierarchy.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/logger-header-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+
+Test Suites: 139 passed, 139 total
+Tests:       4 skipped, 1529 passed, 1533 total
+Snapshots:   8 passed, 8 total
+Time:        2.902 s, estimated 3 s
+Ran all test suites.
+
+> therapist-ai-app@0.1.0 test:coverage
+> jest --coverage
+
+PASS __tests__/components/ui/dialog-accessibility.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/convex/http-client.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/queue/metadata-queue.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/errors.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/queries/sessions.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/ui/toast.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/memory/session-report-viewer.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/encryption/rate-limiter.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/chat/chat-empty-state.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/helpers.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/memory/memory-management-core.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/chat/chat-sidebar.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/ui/toast-optimized.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/memory/session-report-detail-modal.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/draft-panel.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/memory-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.176Z","level":"error","message":"Error deleting memory","context":{"operation":"deleteMemory","deletionType":"all","error":"Network error"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.287Z","level":"error","message":"Error fetching session report detail","context":{"operation":"getSessionReportDetail","error":"Network error"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/lib/queries/reports.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/message-encryption.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.306Z","level":"error","message":"Failed to decrypt therapeutic message","context":{"operation":"decryptMessage","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.314Z","level":"error","message":"Failed to decrypt therapeutic message","context":{"operation":"decryptMessage","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.315Z","level":"error","message":"Failed to decrypt therapeutic message","context":{"operation":"decryptMessage","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+          at Array.map (<anonymous>)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.316Z","level":"error","message":"Failed to decrypt session report content","context":{"operation":"decryptSessionReportContent","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.318Z","level":"error","message":"Failed to decrypt cognitive distortions data","context":{"operation":"decryptCognitiveDistortions","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.318Z","level":"error","message":"Failed to decrypt cognitive distortions data","context":{"operation":"decryptCognitiveDistortions","error":"Unexpected token 'i', \"invalid-json{\" is not valid JSON"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.319Z","level":"error","message":"Failed to decrypt schema analysis data","context":{"operation":"decryptSchemaAnalysis","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.319Z","level":"error","message":"Failed to decrypt therapeutic frameworks data","context":{"operation":"decryptTherapeuticFrameworks","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.320Z","level":"error","message":"Failed to decrypt therapeutic recommendations data","context":{"operation":"decryptTherapeuticRecommendations","error":"Decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.321Z","level":"error","message":"Failed to decrypt schema analysis data","context":{"operation":"decryptSchemaAnalysis","error":"Schema decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.321Z","level":"error","message":"Failed to decrypt therapeutic recommendations data","context":{"operation":"decryptTherapeuticRecommendations","error":"Recommendations decryption failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/security/crypto-security.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/layout/skip-links.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/cbt-markdown-extractor.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/therapy-prompts.localization.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/rate-limiter.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/memory-utils-more-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:48.361Z","level":"error","message":"Failed to delete memory","context":{"operation":"deleteMemory","status":500,"deletionType":"all","error":"bad json"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/lib/api/client-more-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy-chat/hooks/use-chat-modals.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/streaming.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/ui/toast-aria.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/cbt/export-utils-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/chat/virtualized-message-list.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/hooks/use-focus-trap.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/database/queries.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/message.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy-chat/hooks/use-chat-actions.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/session-reducer.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/content-priority.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/performance-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy/cbt/send-to-chat.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/utils-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/security/nonce.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/cbt-message-detector-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/cbt-message-detector.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/api/reports/contextual-validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/services/report-generation-service.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/memory-system.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/error-codes.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/cbt-diary-flow.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/diary-progress.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/client.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/ui/design-tokens-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/chat/chat-header.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy/cbt/flow/engine.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/api-middleware.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/client-error-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/observability/telemetry.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/chat/chat-composer.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/error-utils-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/api-auth.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/crisis-detection.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/config/env.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/chat-request.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/utils-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy-chat/components/chat-container.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/diary-header.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/cbt-data-parser/summary.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy-chat/hooks/use-chat-state.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/services/memory-management-service.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/api-response.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/parsers.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/chat/chat-a11y-live-region.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/api/errors/route.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/utils/test-validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/hooks/use-chat-sessions.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/logger-filter-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/ui/table-data-extractor.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy/cbt/thought-record-slider.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/memory/memory-management-modal.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/cbt-template.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/action-plan-emotion-coloring.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/prompts/index.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/logger-browser-gating.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/repositories/user-repository.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:49.132Z","level":"error","message":"Database Error: ensure user exists","context":{"userId":"legacy","operation":"ensure user exists","errorType":"Error"},"error":{"name":"Error","message":"boom"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/lib/chat/response-validator.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:49.134Z","level":"error","message":"Response validation failed","context":{"content":"[FILTERED_SENSITIVE_DATA]","errors":["Response contains forbidden pattern: DROP\\s+TABLE"],"warnings":[],"suspiciousPatterns":["DROP\\s+TABLE"]}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/lib/therapy/cbt-summary.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/ui/message-design-system.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/middleware.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/api-middleware-more-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/integration/cbt-data-flow.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/assistant-response-collector.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/context-validator.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/with-route.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/api-validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/types/cbt-schema-reflection.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/logger.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/reports/fallback-analysis.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/components/chat/system-banner.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/memory-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:49.314Z","level":"error","message":"Failed to fetch memory management data","context":{"operation":"getMemoryManagementData","status":500,"sessionId":"[FILTERED_SENSITIVE_DATA]"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:49.315Z","level":"error","message":"Error fetching memory management data","context":{"operation":"getMemoryManagementData","error":"Network error","sessionId":"[FILTERED_SENSITIVE_DATA]"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:49.316Z","level":"error","message":"Failed to delete memory","context":{"operation":"deleteMemory","status":403,"deletionType":"recent","error":"Forbidden"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:49.316Z","level":"error","message":"Error deleting memory","context":{"operation":"deleteMemory","deletionType":"specific","error":"Network error"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/lib/auth/crypto-secure.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/cbt-data-parser-card-format.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/monitoring/web-vitals.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/contexts/session-context.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/repositories/session-repository-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:49.387Z","level":"error","message":"Database Error: verify session ownership","context":{"sessionId":"[FILTERED_SENSITIVE_DATA]","userId":"clerk123","operation":"verify session ownership","errorType":"Error"},"error":{"name":"Error","message":"Query failed"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:49.393Z","level":"error","message":"Database Error: verify session ownership","context":{"sessionId":"[FILTERED_SENSITIVE_DATA]","userId":"clerk123","operation":"verify session ownership","errorType":"Error"},"error":{"name":"Error","message":"User payload missing _id"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:49.393Z","level":"error","message":"Database Error: verify session ownership","context":{"sessionId":"[FILTERED_SENSITIVE_DATA]","userId":"clerk123","operation":"verify session ownership","errorType":"Error"},"error":{"name":"Error","message":"Messages payload must be an array"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:49.394Z","level":"error","message":"Database Error: verify session ownership","context":{"sessionId":"[FILTERED_SENSITIVE_DATA]","userId":"clerk123","operation":"verify session ownership","errorType":"Error"},"error":{"name":"Error","message":"Reports payload must be an array"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+    console.log
+      {"timestamp":"2025-11-25T00:14:49.394Z","level":"error","message":"Database Error: verify session ownership","context":{"sessionId":"[FILTERED_SENSITIVE_DATA]","userId":"clerk123","operation":"verify session ownership","errorType":"Error"},"error":{"name":"Error","message":"string error"}}
+
+      at Logger.log (src/lib/utils/logger.ts:308:15)
+
+PASS __tests__/lib/therapy/analysis.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/transformers/cbt-transformers.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy-chat/components/chat-controls.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/model-selector.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/client-timeout.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/cbt/export-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/cache/message-cache.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/api/sessions/delete-session.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/validation-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/api-client-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/stream-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/errors/chat-errors.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/session-mapper.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/monitoring/performance-metrics.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/security/csp-nonce.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/request.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/i18n/translation-validation.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+    console.log
+      
+      📊 Translation Coverage Report:
+
+      at Object.log (__tests__/i18n/translation-validation.test.ts:156:15)
+
+    console.log
+         English (baseline): 533 keys
+
+      at Object.log (__tests__/i18n/translation-validation.test.ts:157:15)
+
+    console.log
+         Dutch: 533 keys (100% complete)
+
+      at Object.log (__tests__/i18n/translation-validation.test.ts:158:15)
+
+    console.log
+
+
+      at Object.log (__tests__/i18n/translation-validation.test.ts:166:15)
+
+PASS __tests__/lib/chat/model-selector-fallback.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/safe-json.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/astronomy/moon.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/features/therapy/cbt/flow/config.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/user-session.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/ui/design-system/message.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/therapy/cbt-data-parser-small.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/auth/crypto-secure-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/chat-request-edges.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/request-utils.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/convex/authorization.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/chat/message-domain-parsers.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/client.behavior.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/api/auth.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/accessibility/heading-hierarchy.test.tsx
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/utils/logger-header-branches.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+PASS __tests__/lib/metrics/metrics.test.ts
+  ● Console
+
+    console.log
+      🧪 Unified Test Architecture Loaded - 23 optimization patterns active
+
+      at Object.log (__tests__/setup.ts:30:9)
+
+----------------------------------|---------|----------|---------|---------|-------------------------------------------------------------------------------------------------
+File                              | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                                                               
+----------------------------------|---------|----------|---------|---------|-------------------------------------------------------------------------------------------------
+All files                         |   92.91 |    81.93 |   94.99 |   94.66 |                                                                                                 
+ api                              |   86.85 |    73.99 |      87 |   87.74 |                                                                                                 
+  api-auth.ts                     |     100 |       75 |     100 |     100 | 40-45                                                                                           
+  api-middleware.ts               |     100 |      100 |     100 |     100 |                                                                                                 
+  api-response.ts                 |   93.82 |    82.22 |     100 |   96.15 | 190,203,241                                                                                     
+  client.ts                       |   89.13 |    70.45 |   91.66 |   90.58 | 34,48,120-121,238-244                                                                           
+  error-codes.ts                  |    92.3 |      100 |     100 |    92.3 | 71                                                                                              
+  middleware.ts                   |   80.74 |    66.48 |   66.66 |   81.22 | 196,265-266,306-308,440-448,456-460,468-470,475-478,506-508,517-526,570-583,588-597,613-618,641 
+  rate-limiter.ts                 |   90.98 |     86.2 |    91.3 |    92.3 | 40,94,100,125,128,159,218-223,279                                                               
+  request.ts                      |     100 |      100 |     100 |     100 |                                                                                                 
+  validation.ts                   |     100 |      100 |     100 |     100 |                                                                                                 
+ api/middleware                   |   79.54 |    82.92 |   83.33 |      80 |                                                                                                 
+  error-handlers.ts               |      40 |        0 |       0 |   33.33 | 7-20                                                                                            
+  request-utils.ts                |   91.17 |    91.89 |     100 |   93.54 | 20,72                                                                                           
+ astronomy                        |    82.5 |    58.82 |     100 |    90.9 |                                                                                                 
+  moon.ts                         |    82.5 |    58.82 |     100 |    90.9 | 130-132                                                                                         
+ auth                             |   97.53 |    93.65 |     100 |   97.43 |                                                                                                 
+  crypto-secure.ts                |   96.22 |    89.74 |     100 |   96.07 | 88,104                                                                                          
+  user-session.ts                 |     100 |      100 |     100 |     100 |                                                                                                 
+ chat                             |   95.48 |    87.02 |   98.78 |   97.36 |                                                                                                 
+  assistant-response-collector.ts |   91.66 |    72.22 |     100 |   96.87 | 74                                                                                              
+  cbt-message-detector.ts         |   97.82 |    93.33 |     100 |     100 | 265,267-268,337-338,353                                                                         
+  chat-request.ts                 |      90 |    94.44 |     100 |   96.15 | 42                                                                                              
+  memory-utils.ts                 |   97.93 |     80.5 |     100 |   97.91 | 191,341                                                                                         
+  message-domain-parsers.ts       |     100 |      100 |     100 |     100 |                                                                                                 
+  model-selector.ts               |     100 |    94.44 |     100 |     100 | 11                                                                                              
+  response-validator.ts           |   95.12 |    85.29 |     100 |   95.12 | 197,238,311,315                                                                                 
+  session-mapper.ts               |     100 |      100 |     100 |     100 |                                                                                                 
+  session-reducer.ts              |     100 |      100 |     100 |     100 |                                                                                                 
+  stream-utils.ts                 |   89.51 |    83.07 |      90 |   93.69 | 88-89,114,123,157-158,185                                                                       
+  streaming.ts                    |     100 |    93.75 |     100 |     100 | 55                                                                                              
+ chat/queue                       |     100 |    86.84 |     100 |     100 |                                                                                                 
+  metadata-queue.ts               |     100 |    86.84 |     100 |     100 | 78-105,144,166                                                                                  
+ convex                           |   92.85 |      100 |     100 |   96.15 |                                                                                                 
+  http-client.ts                  |   92.85 |      100 |     100 |   96.15 | 41                                                                                              
+ encryption                       |    87.8 |    72.22 |     100 |   89.74 |                                                                                                 
+  rate-limiter.ts                 |    87.8 |    72.22 |     100 |   89.74 | 133-137                                                                                         
+ errors                           |   98.38 |    81.48 |     100 |   98.38 |                                                                                                 
+  chat-errors.ts                  |   98.38 |    81.48 |     100 |   98.38 | 21                                                                                              
+ metrics                          |     100 |    82.14 |     100 |     100 |                                                                                                 
+  metrics.ts                      |     100 |    82.14 |     100 |     100 | 24,59-63                                                                                        
+ monitoring                       |    94.4 |     75.4 |   97.05 |   95.48 |                                                                                                 
+  performance-metrics.ts          |   95.45 |    79.48 |   96.77 |   97.08 | 61,70,294                                                                                       
+  web-vitals.ts                   |    90.9 |    68.18 |     100 |      90 | 68-70,127                                                                                       
+ observability                    |   95.34 |    77.08 |     100 |   97.43 |                                                                                                 
+  telemetry.ts                    |   95.34 |    77.08 |     100 |   97.43 | 95                                                                                              
+ queries                          |   94.73 |    75.55 |     100 |   96.36 |                                                                                                 
+  reports.ts                      |     100 |      100 |     100 |     100 |                                                                                                 
+  sessions.ts                     |   94.11 |    75.55 |     100 |   95.91 | 40,57                                                                                           
+ repositories                     |   88.23 |    83.67 |     100 |   87.62 |                                                                                                 
+  session-repository.ts           |   86.95 |    83.33 |     100 |    86.2 | 145,164-171,181,202,205,208,231,239,249                                                         
+  user-repository.ts              |     100 |     87.5 |     100 |     100 | 41                                                                                              
+ security                         |     100 |      100 |     100 |     100 |                                                                                                 
+  csp-nonce.ts                    |     100 |      100 |     100 |     100 |                                                                                                 
+  nonce.ts                        |     100 |      100 |     100 |     100 |                                                                                                 
+ services                         |   92.71 |    75.29 |   93.75 |   92.43 |                                                                                                 
+  memory-management-service.ts    |   91.19 |    70.64 |    90.9 |   90.72 | 140-141,253-254,317-320,348-350,357-361,423                                                     
+  report-generation-service.ts    |   95.45 |     83.6 |     100 |    95.4 | 72,83,138,146                                                                                   
+ therapy                          |   96.01 |    85.79 |   99.18 |   99.25 |                                                                                                 
+  analysis-schema.ts              |   53.33 |      100 |     100 |     100 |                                                                                                 
+  analysis.ts                     |   93.81 |    89.34 |   97.61 |     100 | 249-250,264,370-373,457-491,578,618,722,738,825-833                                             
+  cbt-template.ts                 |     100 |      100 |     100 |     100 |                                                                                                 
+  parsers.ts                      |   98.23 |    82.33 |     100 |   99.76 | 668                                                                                             
+  prompts.ts                      |     100 |      100 |     100 |     100 |                                                                                                 
+  therapy-prompts.ts              |   94.11 |    85.71 |     100 |     100 | 17-27,42                                                                                        
+  validators.ts                   |   96.96 |    89.18 |     100 |    96.9 | 169,235,258,307-308,320                                                                         
+ therapy/transformers             |     100 |    96.15 |     100 |     100 |                                                                                                 
+  cbt-transformers.ts             |     100 |    96.15 |     100 |     100 | 58,70-73                                                                                        
+ ui                               |   95.29 |    92.59 |     100 |    98.7 |                                                                                                 
+  design-tokens.ts                |      80 |      100 |     100 |     100 |                                                                                                 
+  table-data-extractor.ts         |   98.57 |    92.15 |     100 |    98.5 | 178                                                                                             
+ ui/design-system                 |     100 |      100 |     100 |     100 |                                                                                                 
+  message.ts                      |     100 |      100 |     100 |     100 |                                                                                                 
+ utils                            |   89.12 |    73.92 |   88.34 |   91.41 |                                                                                                 
+  errors.ts                       |   90.32 |    78.57 |    92.3 |   91.32 | 425-429,544-552,610-617,637-641,652-655                                                         
+  helpers.ts                      |   88.75 |    68.42 |   86.44 |   90.74 | 202-210,222,235,258,300-309,324-328,422,563,676-680                                             
+  index.ts                        |     100 |      100 |     100 |     100 |                                                                                                 
+  validation.ts                   |   84.61 |    66.66 |      80 |   96.29 | 68                                                                                              
+----------------------------------|---------|----------|---------|---------|-------------------------------------------------------------------------------------------------
+
+Test Suites: 139 passed, 139 total
+Tests:       4 skipped, 1529 passed, 1533 total
+Snapshots:   8 passed, 8 total
+Time:        2.938 s, estimated 3 s
+Ran all test suites.
+
+> therapist-ai-app@0.1.0 test:e2e
+> playwright test
+
+[WebServer] ✔ Started running a deployment locally at http://127.0.0.1:3210 and saved its name as CONVEX_DEPLOYMENT to .env.local
+[WebServer] Run `npx convex login` at any time to create an account and link this deployment.
+[WebServer] 
+[WebServer] Write your Convex functions in convex/
+[WebServer] Give us feedback at https://convex.dev/community or support@convex.dev
+[WebServer] View the Convex dashboard at http://127.0.0.1:6790/?d=anonymous-ai-therapist
+[WebServer] 
+[WebServer] - Preparing Convex functions...
+[WebServer] 
+[WebServer] ✔ 01:14:52 Convex functions ready! (281.74ms)
+[WebServer] 
+[WebServer] > therapist-ai-app@0.1.0 dev:local
+[WebServer] > next dev --turbo --hostname localhost --port 4000
+[WebServer] 
+[WebServer]    [1m[38;2;173;127;168m▲ Next.js 16.0.3[39m[22m (Turbopack)
+[WebServer]    - Local:         http://localhost:4000
+[WebServer]    - Network:       http://localhost:4000
+[WebServer]    - Environments: .env.local, .env
+[WebServer] 
+[WebServer]  [32m[1m✓[22m[39m Starting...
+[WebServer] [35m[1mAttention[22m[39m: Next.js now collects completely anonymous telemetry regarding usage.
+[WebServer] This information is used to shape Next.js' roadmap and prioritize features.
+[WebServer] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[WebServer] [36mhttps://nextjs.org/telemetry[39m
+[WebServer] 
+[WebServer]  [32m[1m✓[22m[39m Ready in 504ms
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:14:54.148Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_abd5e3fc6a36aa0b3da0336cd3a2f8ba",
+[WebServer]     "overallStatus": "healthy",
+[WebServer]     "healthy": 5,
+[WebServer]     "degraded": 0,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:14:54.151Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_abd5e3fc6a36aa0b3da0336cd3a2f8ba",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 10
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 349ms[2m (compile: 295ms, proxy.ts: 34ms, render: 20ms)[22m
+
+Running 65 tests using 1 worker
+···[WebServer]  POST /api/chat [33m404[39m in 2.2s[2m (compile: 1887ms, proxy.ts: 4ms, render: 266ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 50ms[2m (compile: 3ms, proxy.ts: 5ms, render: 42ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 46ms[2m (compile: 3ms, proxy.ts: 3ms, render: 40ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 45ms[2m (compile: 2ms, proxy.ts: 4ms, render: 39ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 43ms[2m (compile: 2ms, proxy.ts: 2ms, render: 39ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 50ms[2m (compile: 2ms, proxy.ts: 3ms, render: 44ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 44ms[2m (compile: 2ms, proxy.ts: 3ms, render: 39ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 44ms[2m (compile: 2ms, proxy.ts: 3ms, render: 38ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 51ms[2m (compile: 2ms, proxy.ts: 12ms, render: 37ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 41ms[2m (compile: 2ms, proxy.ts: 3ms, render: 35ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 41ms[2m (compile: 2ms, proxy.ts: 3ms, render: 36ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 44ms[2m (compile: 2ms, proxy.ts: 3ms, render: 39ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 44ms[2m (compile: 1895µs, proxy.ts: 3ms, render: 39ms)[22m
+·[WebServer]  GET /api/sessions/test-session/messages [33m404[39m in 41ms[2m (compile: 2ms, proxy.ts: 3ms, render: 36ms)[22m
+·[WebServer]  GET /api/sessions/session-1/messages [33m404[39m in 48ms[2m (compile: 1945µs, proxy.ts: 3ms, render: 43ms)[22m
+[WebServer]  GET /api/sessions/session-2/messages [33m404[39m in 41ms[2m (compile: 1928µs, proxy.ts: 3ms, render: 37ms)[22m
+·[WebServer]  GET /api/sessions/invalid-uuid-format/messages [33m404[39m in 41ms[2m (compile: 2ms, proxy.ts: 3ms, render: 36ms)[22m
+·[WebServer]  GET /api/sessions/test-session/messages?limit=10&offset=0 [33m404[39m in 48ms[2m (compile: 2ms, proxy.ts: 3ms, render: 43ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 42ms[2m (compile: 3ms, proxy.ts: 3ms, render: 37ms)[22m
+·[WebServer]  GET /api/sessions/test-session/messages [33m404[39m in 42ms[2m (compile: 1930µs, proxy.ts: 2ms, render: 38ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 43ms[2m (compile: 2ms, proxy.ts: 4ms, render: 37ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 49ms[2m (compile: 2ms, proxy.ts: 4ms, render: 43ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 118ms[2m (compile: 11ms, proxy.ts: 4ms, render: 103ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 119ms[2m (compile: 4ms, proxy.ts: 4ms, render: 111ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 117ms[2m (compile: 39ms, proxy.ts: 4ms, render: 74ms)[22m
+······[WebServer]  POST /api/chat [33m404[39m in 42ms[2m (compile: 1876µs, proxy.ts: 3ms, render: 37ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 905ms[2m (compile: 67ms, proxy.ts: 9ms, render: 829ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 906ms[2m (compile: 59ms, proxy.ts: 9ms, render: 838ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 906ms[2m (compile: 63ms, proxy.ts: 9ms, render: 834ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 904ms[2m (compile: 89ms, proxy.ts: 11ms, render: 804ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 904ms[2m (compile: 93ms, proxy.ts: 11ms, render: 800ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 903ms[2m (compile: 160ms, proxy.ts: 12ms, render: 731ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 900ms[2m (compile: 186ms, proxy.ts: 12ms, render: 702ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 902ms[2m (compile: 175ms, proxy.ts: 12ms, render: 715ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 898ms[2m (compile: 253ms, proxy.ts: 13ms, render: 632ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 897ms[2m (compile: 291ms, proxy.ts: 20ms, render: 585ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 892ms[2m (compile: 350ms, proxy.ts: 84ms, render: 457ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 896ms[2m (compile: 271ms, proxy.ts: 79ms, render: 547ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 894ms[2m (compile: 308ms, proxy.ts: 82ms, render: 503ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 890ms[2m (compile: 317ms, proxy.ts: 156ms, render: 417ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 887ms[2m (compile: 342ms, proxy.ts: 170ms, render: 375ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 879ms[2m (compile: 370ms, proxy.ts: 174ms, render: 334ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 813ms[2m (compile: 341ms, proxy.ts: 225ms, render: 247ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 809ms[2m (compile: 341ms, proxy.ts: 260ms, render: 208ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 736ms[2m (compile: 335ms, proxy.ts: 230ms, render: 171ms)[22m
+[WebServer]  POST /api/chat [33m404[39m in 820ms[2m (compile: 346ms, proxy.ts: 184ms, render: 289ms)[22m
+·[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:07.089Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_f10a62bc16d13e4ad9e9381f3c913963",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:07.089Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_f10a62bc16d13e4ad9e9381f3c913963",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 2
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 10ms[2m (compile: 1537µs, proxy.ts: 5ms, render: 4ms)[22m
+···[WebServer]  POST /api/chat [33m404[39m in 43ms[2m (compile: 1817µs, proxy.ts: 3ms, render: 38ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 44ms[2m (compile: 1928µs, proxy.ts: 3ms, render: 39ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 71ms[2m (compile: 2ms, proxy.ts: 3ms, render: 65ms)[22m
+·[WebServer]  GET /api/sessions [33m404[39m in 45ms[2m (compile: 1867µs, proxy.ts: 4ms, render: 40ms)[22m
+·[WebServer]  POST /api/sessions [33m404[39m in 46ms[2m (compile: 2ms, proxy.ts: 3ms, render: 41ms)[22m
+·[WebServer]  GET /api/sessions/invalid-id-12345 [33m404[39m in 44ms[2m (compile: 2ms, proxy.ts: 1915µs, render: 40ms)[22m
+·[WebServer]  GET /api/nonexistent-endpoint-xyz [33m404[39m in 45ms[2m (compile: 2ms, proxy.ts: 3ms, render: 39ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 47ms[2m (compile: 3ms, proxy.ts: 3ms, render: 41ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 43ms[2m (compile: 1832µs, proxy.ts: 3ms, render: 38ms)[22m
+·[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.800Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_58c1b3888fe1eb9e3b9119ac0f63705a",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.800Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_58c1b3888fe1eb9e3b9119ac0f63705a",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 1
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 6ms[2m (compile: 852µs, proxy.ts: 3ms, render: 2ms)[22m
+·[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.821Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_ed512457e1f703c5e0d66096075f3895",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.821Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_ed512457e1f703c5e0d66096075f3895",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 5
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 15ms[2m (compile: 3ms, proxy.ts: 6ms, render: 6ms)[22m
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.822Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_21c4ab2d3eea7fc03811623b60d2b616",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.822Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_21c4ab2d3eea7fc03811623b60d2b616",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 5
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 16ms[2m (compile: 4ms, proxy.ts: 6ms, render: 6ms)[22m
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.823Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_a90c1a6d36c3332c8150381aa851ca1e",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.823Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_a90c1a6d36c3332c8150381aa851ca1e",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 4
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 16ms[2m (compile: 5ms, proxy.ts: 6ms, render: 5ms)[22m
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.823Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_074786d95b85721d1e22e768c63ddf8f",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.823Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_074786d95b85721d1e22e768c63ddf8f",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 3
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 16ms[2m (compile: 6ms, proxy.ts: 6ms, render: 4ms)[22m
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.824Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_783e8a4ea86f31a759004426bfaa1d05",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.824Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_783e8a4ea86f31a759004426bfaa1d05",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 5
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 17ms[2m (compile: 5ms, proxy.ts: 6ms, render: 5ms)[22m
+·[WebServer]  GET /api/sessions/test/messages [33m404[39m in 48ms[2m (compile: 1955µs, proxy.ts: 3ms, render: 44ms)[22m
+·[WebServer]  GET /api/reports [33m404[39m in 42ms[2m (compile: 1815µs, proxy.ts: 3ms, render: 38ms)[22m
+·[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.934Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_94c771123968c84325f52b717481e5d1",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:09.934Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_94c771123968c84325f52b717481e5d1",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 1
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 5ms[2m (compile: 763µs, proxy.ts: 3ms, render: 1897µs)[22m
+·[WebServer]  OPTIONS /api/health [32m204[39m in 5ms[2m (compile: 853µs, proxy.ts: 3ms, render: 1213µs)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 42ms[2m (compile: 1757µs, proxy.ts: 3ms, render: 37ms)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 59ms[2m (compile: 1868µs, proxy.ts: 3ms, render: 54ms)[22m
+·[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:10.063Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_8f50acbbe31b836b9753eeb0e7158484",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:10.064Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_8f50acbbe31b836b9753eeb0e7158484",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 1
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 6ms[2m (compile: 825µs, proxy.ts: 3ms, render: 2ms)[22m
+·[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:10.074Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_f1fadd129ba37a763b71150522bc18a9",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:10.074Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_f1fadd129ba37a763b71150522bc18a9",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 1
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 6ms[2m (compile: 863µs, proxy.ts: 3ms, render: 1816µs)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 47ms[2m (compile: 2ms, proxy.ts: 4ms, render: 41ms)[22m
+·[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:10.136Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_4ed3cbb705f8deb362bd7130e28e6819",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:10.136Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_4ed3cbb705f8deb362bd7130e28e6819",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 1
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 6ms[2m (compile: 833µs, proxy.ts: 3ms, render: 1812µs)[22m
+·[WebServer]  POST /api/chat [33m404[39m in 46ms[2m (compile: 1906µs, proxy.ts: 3ms, render: 41ms)[22m
+·××F·××F××F××F·[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:45.353Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "Health check completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_f58a5bde713d4adc7273ae4e429dd6e2",
+[WebServer]     "overallStatus": "degraded",
+[WebServer]     "healthy": 4,
+[WebServer]     "degraded": 1,
+[WebServer]     "unhealthy": 0
+[WebServer]   }
+[WebServer] }
+[WebServer] {
+[WebServer]   "timestamp": "2025-11-25T00:15:45.353Z",
+[WebServer]   "level": "info",
+[WebServer]   "message": "API request completed",
+[WebServer]   "context": {
+[WebServer]     "requestId": "req_f58a5bde713d4adc7273ae4e429dd6e2",
+[WebServer]     "url": "http://localhost:4000/api/health",
+[WebServer]     "method": "GET",
+[WebServer]     "durationMs": 2
+[WebServer]   }
+[WebServer] }
+[WebServer]  GET /api/health [32m200[39m in 8ms[2m (compile: 1076µs, proxy.ts: 3ms, render: 3ms)[22m
+··
+
+  1) [chromium] › e2e/dark-mode.spec.ts:3:3 › Dark Mode Only › app renders in dark mode only ───────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"oklch(0.12"[39m
+    Received string:    [31m""[39m
+
+      17 |     
+      18 |     // Should contain dark mode OKLCH value
+    > 19 |     expect(bgColor).toContain('oklch(0.12');
+         |                     ^
+      20 |     
+      21 |     // Verify foreground (text) is light colored
+      22 |     const fgColor = await page.evaluate(() => {
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:19:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-app-renders-in-dark-mode-only-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-app-renders-in-dark-mode-only-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-app-renders-in-dark-mode-only-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"oklch(0.12"[39m
+    Received string:    [31m""[39m
+
+      17 |     
+      18 |     // Should contain dark mode OKLCH value
+    > 19 |     expect(bgColor).toContain('oklch(0.12');
+         |                     ^
+      20 |     
+      21 |     // Verify foreground (text) is light colored
+      22 |     const fgColor = await page.evaluate(() => {
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:19:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-app-renders-in-dark-mode-only-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-app-renders-in-dark-mode-only-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-app-renders-in-dark-mode-only-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-app-renders-in-dark-mode-only-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/dark-mode-Dark-Mode-Only-app-renders-in-dark-mode-only-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"oklch(0.12"[39m
+    Received string:    [31m""[39m
+
+      17 |     
+      18 |     // Should contain dark mode OKLCH value
+    > 19 |     expect(bgColor).toContain('oklch(0.12');
+         |                     ^
+      20 |     
+      21 |     // Verify foreground (text) is light colored
+      22 |     const fgColor = await page.evaluate(() => {
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:19:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-app-renders-in-dark-mode-only-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-app-renders-in-dark-mode-only-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-app-renders-in-dark-mode-only-chromium-retry2/error-context.md
+
+  2) [chromium] › e2e/dark-mode.spec.ts:42:3 › Dark Mode Only › therapeutic colors render correctly in dark mode 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"oklch"[39m
+    Received string:    [31m""[39m
+
+      53 |         .trim();
+      54 |     });
+    > 55 |     expect(therapySuccess).toContain('oklch');
+         |                            ^
+      56 |     
+      57 |     const therapyWarning = await page.evaluate(() => {
+      58 |       return getComputedStyle(document.documentElement)
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:55:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-t-47b0c-nder-correctly-in-dark-mode-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-t-47b0c-nder-correctly-in-dark-mode-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-t-47b0c-nder-correctly-in-dark-mode-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"oklch"[39m
+    Received string:    [31m""[39m
+
+      53 |         .trim();
+      54 |     });
+    > 55 |     expect(therapySuccess).toContain('oklch');
+         |                            ^
+      56 |     
+      57 |     const therapyWarning = await page.evaluate(() => {
+      58 |       return getComputedStyle(document.documentElement)
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:55:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-t-47b0c-nder-correctly-in-dark-mode-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-t-47b0c-nder-correctly-in-dark-mode-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-t-47b0c-nder-correctly-in-dark-mode-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-t-47b0c-nder-correctly-in-dark-mode-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/dark-mode-Dark-Mode-Only-t-47b0c-nder-correctly-in-dark-mode-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"oklch"[39m
+    Received string:    [31m""[39m
+
+      53 |         .trim();
+      54 |     });
+    > 55 |     expect(therapySuccess).toContain('oklch');
+         |                            ^
+      56 |     
+      57 |     const therapyWarning = await page.evaluate(() => {
+      58 |       return getComputedStyle(document.documentElement)
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:55:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-t-47b0c-nder-correctly-in-dark-mode-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-t-47b0c-nder-correctly-in-dark-mode-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-t-47b0c-nder-correctly-in-dark-mode-chromium-retry2/error-context.md
+
+  3) [chromium] › e2e/dark-mode.spec.ts:62:3 › Dark Mode Only › emotion colors are defined ─────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"oklch"[39m
+    Received string:    [31m""[39m
+
+      86 |           .trim();
+      87 |       }, emotion);
+    > 88 |       expect(color).toContain('oklch');
+         |                     ^
+      89 |     }
+      90 |   });
+      91 |
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:88:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-emotion-colors-are-defined-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-emotion-colors-are-defined-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-emotion-colors-are-defined-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"oklch"[39m
+    Received string:    [31m""[39m
+
+      86 |           .trim();
+      87 |       }, emotion);
+    > 88 |       expect(color).toContain('oklch');
+         |                     ^
+      89 |     }
+      90 |   });
+      91 |
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:88:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-emotion-colors-are-defined-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-emotion-colors-are-defined-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-emotion-colors-are-defined-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-emotion-colors-are-defined-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/dark-mode-Dark-Mode-Only-emotion-colors-are-defined-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"oklch"[39m
+    Received string:    [31m""[39m
+
+      86 |           .trim();
+      87 |       }, emotion);
+    > 88 |       expect(color).toContain('oklch');
+         |                     ^
+      89 |     }
+      90 |   });
+      91 |
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:88:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-emotion-colors-are-defined-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-emotion-colors-are-defined-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-emotion-colors-are-defined-chromium-retry2/error-context.md
+
+  4) [chromium] › e2e/dark-mode.spec.ts:77:3 › Dark Mode Only › no console errors on main pages ────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoHaveLength[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected length: [32m0[39m
+    Received length: [31m1[39m
+    Received array:  [31m[" Note that 'script-src' was not explicitly set, so 'default-src' is used as a fallback."][39m
+
+      120 |     );
+      121 |     
+    > 122 |     expect(criticalErrors).toHaveLength(0);
+          |                            ^
+      123 |   });
+      124 |
+      125 |   test('visual consistency - no .dark class applied', async ({ page }) => {
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:122:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-no-console-errors-on-main-pages-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-no-console-errors-on-main-pages-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-no-console-errors-on-main-pages-chromium/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoHaveLength[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected length: [32m0[39m
+    Received length: [31m1[39m
+    Received array:  [31m[" Note that 'script-src' was not explicitly set, so 'default-src' is used as a fallback."][39m
+
+      120 |     );
+      121 |     
+    > 122 |     expect(criticalErrors).toHaveLength(0);
+          |                            ^
+      123 |   });
+      124 |
+      125 |   test('visual consistency - no .dark class applied', async ({ page }) => {
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:122:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-no-console-errors-on-main-pages-chromium-retry1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-no-console-errors-on-main-pages-chromium-retry1/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-no-console-errors-on-main-pages-chromium-retry1/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-no-console-errors-on-main-pages-chromium-retry1/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/dark-mode-Dark-Mode-Only-no-console-errors-on-main-pages-chromium-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Retry #2 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoHaveLength[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected length: [32m0[39m
+    Received length: [31m1[39m
+    Received array:  [31m[" Note that 'script-src' was not explicitly set, so 'default-src' is used as a fallback."][39m
+
+      120 |     );
+      121 |     
+    > 122 |     expect(criticalErrors).toHaveLength(0);
+          |                            ^
+      123 |   });
+      124 |
+      125 |   test('visual consistency - no .dark class applied', async ({ page }) => {
+        at /Users/vriesd/projects/ai-therapist/e2e/dark-mode.spec.ts:122:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-no-console-errors-on-main-pages-chromium-retry2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/dark-mode-Dark-Mode-Only-no-console-errors-on-main-pages-chromium-retry2/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/dark-mode-Dark-Mode-Only-no-console-errors-on-main-pages-chromium-retry2/error-context.md
+
+  4 failed
+    [chromium] › e2e/dark-mode.spec.ts:3:3 › Dark Mode Only › app renders in dark mode only ────────
+    [chromium] › e2e/dark-mode.spec.ts:42:3 › Dark Mode Only › therapeutic colors render correctly in dark mode 
+    [chromium] › e2e/dark-mode.spec.ts:62:3 › Dark Mode Only › emotion colors are defined ──────────
+    [chromium] › e2e/dark-mode.spec.ts:77:3 › Dark Mode Only › no console errors on main pages ─────
+  61 passed (55.4s)

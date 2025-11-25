@@ -1,0 +1,31 @@
+=== Dependency Cleanup Baseline Metrics ===
+Date: di 25 nov. 2025 01:13:20 CET
+
+=== Before Cleanup ===
+node_modules size: 1,0G
+Total packages (dependencies): 40
+Dependencies count: 57
+DevDependencies count: 33
+Total packages: 90
+
+=== Test Results Baseline ===
+Unit Tests: PASSED (1,528+ tests)
+Coverage: MET THRESHOLDS (≥70%)
+E2E Tests: 61 passed, 4 failed (pre-existing dark mode CSS issues)
+
+=== Analysis Tool Results ===
+Depcheck - Unused dependencies: 14
+Depcheck - Unused devDependencies: 11
+Depcheck - Missing dependencies: 8
+Import analysis - Unique imports found: 1,489
+
+=== Files Generated ===
+- package.json.backup
+- package-lock.json.backup
+- cleanup-metrics.txt
+- depcheck-output.txt
+- depcheck-report.json
+- imports.txt
+- dependency-tree.json
+- npm-check-output.txt
+- baseline-test-results.txt

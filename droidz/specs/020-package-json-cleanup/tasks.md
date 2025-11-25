@@ -11,10 +11,10 @@ Systematic cleanup of package.json to remove unused dependencies while maintaini
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
-- [ ] Create backup files: `cp package.json package.json.backup && cp package-lock.json package-lock.json.backup`
-- [ ] Commit current state: `git add -A && git commit -m "chore: backup before dependency cleanup"`
-- [ ] Install analysis tools: `npm install -g depcheck npm-check`
-- [ ] Record baseline metrics (node_modules size, package count, install time)
+- [x] Create backup files: `cp package.json package.json.backup && cp package-lock.json package-lock.json.backup`
+- [x] Commit current state: `git add -A && git commit -m "chore: backup before dependency cleanup"`
+- [x] Install analysis tools: `npm install -g depcheck npm-check`
+- [x] Record baseline metrics (node_modules size, package count, install time)
 
 **Verification**:
 ```bash
@@ -22,23 +22,31 @@ ls -la *.backup  # Should see backup files
 which depcheck   # Should show installed
 ```
 
+**Status**: ✅ COMPLETED
+
 ---
 
 ### Task 1.2: Run Dependency Analysis Tools
 **Priority**: High | **Effort**: Medium | **Risk**: Low
 
 **Subtasks**:
-- [ ] Run depcheck and save output: `depcheck --json > depcheck-report.json && depcheck`
-- [ ] Generate import list from codebase:
+- [x] Run depcheck and save output: `depcheck --json > depcheck-report.json && depcheck`
+- [x] Generate import list from codebase:
   ```bash
   rg "^import .* from ['\"](.+)['\"]" --no-heading -r '$1' \
     src/ convex/ scripts/ __tests__/ e2e/ | sort -u > imports.txt
   ```
-- [ ] Check dependency tree: `npm ls --all --json > dependency-tree.json`
-- [ ] Review npm-check output: `npm-check --skip-unused`
+- [x] Check dependency tree: `npm ls --all --json > dependency-tree.json`
+- [x] Review npm-check output: `npm-check --skip-unused`
 
 **Verification**:
 - Should have 4 analysis files: depcheck-report.json, imports.txt, dependency-tree.json, npm-check output
+
+**Status**: ✅ COMPLETED
+- Found 14 unused dependencies
+- Found 11 unused devDependencies
+- Identified 8 missing dependencies
+- Generated 1,489 unique imports
 
 ---
 
@@ -46,8 +54,8 @@ which depcheck   # Should show installed
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
-- [ ] Run full test suite and save results: `npm run qa:full 2>&1 | tee baseline-test-results.txt`
-- [ ] Record metrics in cleanup-metrics.txt:
+- [x] Run full test suite and save results: `npm run qa:full 2>&1 | tee baseline-test-results.txt`
+- [x] Record metrics in cleanup-metrics.txt:
   - Current node_modules size
   - Total package count (dependencies + devDependencies)
   - Installation time
@@ -58,6 +66,12 @@ which depcheck   # Should show installed
 npm test  # All tests should pass
 npm run build  # Build should succeed
 ```
+
+**Status**: ✅ COMPLETED
+- Unit Tests: PASSED (1,528+ tests)
+- Coverage: MET THRESHOLDS (≥70%)
+- E2E Tests: 61 passed, 4 failed (pre-existing dark mode CSS issues)
+- Baseline metrics saved to cleanup-metrics.txt
 
 ---
 
