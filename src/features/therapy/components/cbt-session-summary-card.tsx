@@ -1,8 +1,7 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
@@ -76,26 +75,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
         className
       )}
     >
-      <CardHeader className="pb-2 pt-5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Brain className="text-white/70 h-4 w-4" />
-            <CardTitle className="text-white/70 text-xs font-bold uppercase tracking-wide">
-              {t('summary.title', { date: data.date })}
-            </CardTitle>
-          </div>
-          {data.completedSteps && data.completedSteps.length > 0 && (
-            <span 
-              className="text-white text-xs px-2 py-1 rounded-full font-medium"
-              style={{ backgroundColor: 'rgba(0, 50, 70, 0.6)' }}
-            >
-              {data.completedSteps.length} steps
-            </span>
-          )}
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-5 pt-5 pb-5">
         {/* Situation */}
         {data.situation && (
           <div>
@@ -320,12 +300,6 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
           </div>
         )}
 
-        {/* Session Completion Note */}
-        <div className="pt-3">
-          <p className="text-white/60 text-sm leading-relaxed italic">
-            {t('summary.completionNote', { date: data.date })}
-          </p>
-        </div>
       </CardContent>
     </Card>
   );
