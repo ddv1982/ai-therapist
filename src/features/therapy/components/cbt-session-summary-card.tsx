@@ -98,10 +98,10 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
       <CardContent className="space-y-6">
         {/* Situation */}
         {data.situation && (
-          <div className="grid grid-cols-1 items-start gap-x-4 gap-y-2 md:grid-cols-[220px,1fr]">
-            <div className="text-white">
-              <h4 className="font-semibold">{t('summary.situation')}</h4>
-            </div>
+          <div>
+            <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wide mb-2">
+              {t('summary.situation')}
+            </h4>
             <div 
               className="rounded-lg overflow-hidden px-4 py-3"
               style={{ backgroundColor: 'rgba(0, 50, 70, 0.7)' }}
@@ -113,10 +113,10 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
         {/* Initial Emotions */}
         {data.initialEmotions && data.initialEmotions.length > 0 && (
-          <div className="grid grid-cols-1 items-start gap-x-4 gap-y-2 md:grid-cols-[220px,1fr]">
-            <div className="text-white">
-              <h4 className="font-semibold">{t('summary.initialEmotions')}</h4>
-            </div>
+          <div>
+            <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wide mb-2">
+              {t('summary.initialEmotions')}
+            </h4>
             <div className="flex flex-wrap gap-2">
               {data.initialEmotions.map((emotion, index) => (
                 <Badge
@@ -134,10 +134,10 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
         {/* Automatic Thoughts */}
         {data.automaticThoughts && data.automaticThoughts.length > 0 && (
-          <div className="grid grid-cols-1 items-start gap-x-4 gap-y-2 md:grid-cols-[220px,1fr]">
-            <div className="text-white">
-              <h4 className="font-semibold">{t('summary.automaticThoughts')}</h4>
-            </div>
+          <div>
+            <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wide mb-2">
+              {t('summary.automaticThoughts')}
+            </h4>
             <div 
               className="divide-y divide-white/10 rounded-lg overflow-hidden"
               style={{ backgroundColor: 'rgba(0, 50, 70, 0.7)' }}
@@ -170,16 +170,16 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
         {/* Core Belief */}
         {data.coreBelief && (
-          <div className="grid grid-cols-1 items-start gap-x-4 gap-y-2 md:grid-cols-[220px,1fr]">
-            <div className="text-white">
-              <h4 className="font-semibold">{t('summary.coreBelief')}</h4>
-            </div>
+          <div>
+            <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wide mb-2">
+              {t('summary.coreBelief')}
+            </h4>
             <div 
               className="rounded-lg overflow-hidden"
               style={{ backgroundColor: 'rgba(0, 50, 70, 0.7)' }}
             >
               <div className="flex items-start justify-between gap-3 px-4 py-3 text-sm">
-                <p className="text-white break-words">&ldquo;{data.coreBelief.belief}&rdquo;</p>
+                <div className="text-white break-words">&ldquo;{data.coreBelief.belief}&rdquo;</div>
                 <Badge
                   variant="secondary"
                   className="text-white ml-2 text-sm border-0 shrink-0"
@@ -194,10 +194,10 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
         {/* Rational Alternative Thoughts */}
         {data.rationalThoughts && data.rationalThoughts.length > 0 && (
-          <div className="grid grid-cols-1 items-start gap-x-4 gap-y-2 md:grid-cols-[220px,1fr]">
-            <div className="text-white">
-              <h4 className="font-semibold">{t('summary.rationalThoughts')}</h4>
-            </div>
+          <div>
+            <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wide mb-2">
+              {t('summary.rationalThoughts')}
+            </h4>
             <div 
               className="divide-y divide-white/10 rounded-lg overflow-hidden"
               style={{ backgroundColor: 'rgba(0, 60, 50, 0.7)' }}
@@ -230,10 +230,10 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
         {/* Active Schema Modes */}
         {data.schemaModes && data.schemaModes.length > 0 && (
-          <div className="grid grid-cols-1 items-start gap-x-4 gap-y-2 md:grid-cols-[220px,1fr]">
-            <div className="text-white">
-              <h4 className="font-semibold">{t('summary.activeSchemaModes')}</h4>
-            </div>
+          <div>
+            <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wide mb-2">
+              {t('summary.activeSchemaModes')}
+            </h4>
             <div 
               className="divide-y divide-white/10 rounded-lg overflow-hidden"
               style={{ backgroundColor: 'rgba(60, 30, 80, 0.7)' }}
@@ -269,17 +269,12 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
         {/* Action Plan Summary with More Detail */}
         {((data.newBehaviors && data.newBehaviors.length > 0) ||
           (data.finalEmotions && data.finalEmotions.length > 0)) && (
-          <div className="space-y-3 pt-2">
-            <div className="grid grid-cols-1 items-start gap-x-4 gap-y-2 md:grid-cols-[220px,1fr]">
-              <div className="text-white">
-                <h4 className="font-semibold">{t('summary.actionAndNext')}</h4>
-              </div>
-              <div className="space-y-3">
-                {data.newBehaviors && data.newBehaviors.length > 0 && (
-                  <div>
-                    <p className="text-white mb-1 text-sm font-semibold">
-                      {t('summary.newBehaviors')}
-                    </p>
+          <div className="space-y-4">
+            {data.newBehaviors && data.newBehaviors.length > 0 && (
+              <div>
+                <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wide mb-2">
+                  {t('summary.newBehaviors')}
+                </h4>
                     <div 
                       className="divide-y divide-white/10 rounded-lg overflow-hidden"
                       style={{ backgroundColor: 'rgba(0, 50, 70, 0.7)' }}
@@ -299,31 +294,29 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                           </p>
                         </div>
                       )}
-                    </div>
-                  </div>
-                )}
-
-                {data.finalEmotions && data.finalEmotions.length > 0 && (
-                  <div>
-                    <p className="text-white mb-2 text-sm font-semibold">
-                      {t('summary.emotionalProgress')}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {data.finalEmotions.map((emotion, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="text-white px-3 py-1 text-sm border-0"
-                          style={{ backgroundColor: 'rgba(0, 50, 70, 0.8)' }}
-                        >
-                          {translateEmotion(emotion.emotion)}: {emotion.rating}/10
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {data.finalEmotions && data.finalEmotions.length > 0 && (
+              <div>
+                <h4 className="text-white/70 text-xs font-semibold uppercase tracking-wide mb-2">
+                  {t('summary.emotionalProgress')}
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {data.finalEmotions.map((emotion, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="text-white px-3 py-1 text-sm border-0"
+                      style={{ backgroundColor: 'rgba(0, 50, 70, 0.8)' }}
+                    >
+                      {translateEmotion(emotion.emotion)}: {emotion.rating}/10
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
