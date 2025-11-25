@@ -134,11 +134,14 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Clear existing build output
+        run: rm -rf .next && mkdir -p .next
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: nextjs-build
-          path: .
+          path: .next/
 
       - name: Run E2E tests
         run: npm run test:e2e
