@@ -72,8 +72,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
       aria-label={t('summary.ariaLabel', { date: data.date })}
       className={cn(
         'cbt-summary-card w-full',
-        'bg-primary text-white border-0 shadow-md',
-        'rounded-2xl',
+        'bg-primary text-white border-0 rounded-2xl',
         className
       )}
     >
