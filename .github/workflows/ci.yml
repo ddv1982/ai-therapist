@@ -135,9 +135,11 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Clear existing build output
+        if: ${{ !startsWith(env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '', 'pk_test_') }}
         run: rm -rf .next && mkdir -p .next
 
       - name: Download build artifacts
+        if: ${{ !startsWith(env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '', 'pk_test_') }}
         uses: actions/download-artifact@v4
         with:
           name: nextjs-build
@@ -147,7 +149,6 @@ jobs:
         run: npm run test:e2e
         env:
           CI: true
-          PLAYWRIGHT_WEB_COMMAND: npm run start:local
           PLAYWRIGHT_SKIP_CONVEX: 'true'
 
       - name: Upload Playwright report on failure

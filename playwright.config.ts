@@ -1,7 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const convexCommand = process.env.PLAYWRIGHT_CONVEX_COMMAND ?? 'npx convex dev';
-const webCommand = process.env.PLAYWRIGHT_WEB_COMMAND ?? 'npm run dev:local';
+const rawClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
+const usesTestClerkKey = rawClerkKey.startsWith('pk_test_');
+const resolvedWebCommand =
+  process.env.PLAYWRIGHT_WEB_COMMAND ??
+  (usesTestClerkKey ? 'npm run dev:local' : 'npm run start:local');
 const shouldStartConvex = process.env.PLAYWRIGHT_SKIP_CONVEX !== 'true';
 
 const convexServer = {
@@ -16,7 +20,7 @@ const convexServer = {
 
 const nextServer = {
   // Start Next.js server after optional Convex boot completes
-  command: webCommand,
+  command: resolvedWebCommand,
   // Wait for health endpoint to be ready instead of the home page
   url: 'http://localhost:4000/api/health',
   reuseExistingServer: true,
