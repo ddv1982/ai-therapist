@@ -262,7 +262,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                       {data.newBehaviors.slice(0, 3).map((behavior, index) => (
                         <div
                           key={index}
-                          className="text-white flex items-center justify-between gap-3 px-4 py-3 text-sm"
+                          className="text-white flex items-center justify-between gap-3 px-4 py-3"
                         >
                           <span className="truncate">{behavior}</span>
                         </div>
