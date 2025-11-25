@@ -76,21 +76,22 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
         className
       )}
     >
-      <CardHeader className="pb-4 bg-black/10">
-        <div className="flex items-center gap-3">
-          <div className="bg-white/20 flex h-12 w-12 items-center justify-center rounded-full">
-            <Brain className="text-white h-6 w-6" />
-          </div>
-          <div className="flex-1">
-            <CardTitle className="text-white text-xl font-semibold">
+      <CardHeader className="pb-3 pt-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Brain className="text-white/80 h-5 w-5" />
+            <CardTitle className="text-white text-lg font-semibold">
               {t('summary.title', { date: data.date })}
             </CardTitle>
-            {data.completedSteps && data.completedSteps.length > 0 && (
-              <p className="text-white/70 mt-1 text-sm">
-                {t('summary.completedSteps', { count: data.completedSteps.length })}
-              </p>
-            )}
           </div>
+          {data.completedSteps && data.completedSteps.length > 0 && (
+            <span 
+              className="text-white text-xs px-2 py-1 rounded-full"
+              style={{ backgroundColor: 'rgba(0, 50, 70, 0.6)' }}
+            >
+              {data.completedSteps.length} steps
+            </span>
+          )}
         </div>
       </CardHeader>
 
@@ -168,11 +169,20 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
             <div className="text-white">
               <h4 className="font-semibold">{t('summary.coreBelief')}</h4>
             </div>
-            <div>
-              <p className="text-white/90 break-words">&ldquo;{data.coreBelief.belief}&rdquo;</p>
-              <p className="text-white/60 mt-1 text-sm">
-                {t('summary.credibility')}: {data.coreBelief.credibility}/10
-              </p>
+            <div 
+              className="rounded-lg overflow-hidden px-4 py-3"
+              style={{ backgroundColor: 'rgba(0, 50, 70, 0.7)' }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-white break-words text-sm">&ldquo;{data.coreBelief.belief}&rdquo;</p>
+                <Badge
+                  variant="secondary"
+                  className="text-white ml-2 text-sm border-0 shrink-0"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+                >
+                  {data.coreBelief.credibility}/10
+                </Badge>
+              </div>
             </div>
           </div>
         )}
