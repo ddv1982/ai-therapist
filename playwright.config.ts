@@ -2,6 +2,34 @@ import { defineConfig, devices } from '@playwright/test';
 
 const convexCommand = process.env.PLAYWRIGHT_CONVEX_COMMAND ?? 'npx convex dev';
 const webCommand = process.env.PLAYWRIGHT_WEB_COMMAND ?? 'npm run dev:local';
+const shouldStartConvex = process.env.PLAYWRIGHT_SKIP_CONVEX !== 'true';
+
+const convexServer = {
+  // Start Convex backend first - required for API routes that use ConvexHttpClient
+  command: convexCommand,
+  url: 'http://127.0.0.1:3210',
+  reuseExistingServer: true,
+  stdout: 'pipe',
+  stderr: 'pipe',
+  timeout: 30_000,
+} as const;
+
+const nextServer = {
+  // Start Next.js server after optional Convex boot completes
+  command: webCommand,
+  // Wait for health endpoint to be ready instead of the home page
+  url: 'http://localhost:4000/api/health',
+  reuseExistingServer: true,
+  stdout: 'pipe',
+  // Pipe stderr for diagnostics if server fails to start
+  stderr: 'pipe',
+  // Allow a bit more time for Next dev server cold start under CI
+  timeout: 180_000,
+  // Suppress noisy Node deprecation warnings in QA E2E by default; allow opt-in tracing
+  env: {
+    NODE_OPTIONS: `${process.env.NODE_OPTIONS ? process.env.NODE_OPTIONS + ' ' : ''}${process.env.DEPRECATIONS === 'trace' ? '--trace-deprecation' : '--no-deprecation'}`,
+  },
+} as const;
 
 /**
  * @see https://playwright.dev/docs/test-configuration
@@ -57,31 +85,5 @@ export default defineConfig({
       ],
 
   /* Run your local dev server before starting the tests */
-  webServer: [
-    {
-      // Start Convex backend first - required for API routes that use ConvexHttpClient
-      command: convexCommand,
-      url: 'http://127.0.0.1:3210',
-      reuseExistingServer: true,
-      stdout: 'pipe',
-      stderr: 'pipe',
-      timeout: 30_000,
-    },
-    {
-      // Then start Next.js dev server
-      command: webCommand,
-      // Wait for health endpoint to be ready instead of the home page
-      url: 'http://localhost:4000/api/health',
-      reuseExistingServer: true,
-      stdout: 'pipe',
-      // Pipe stderr for diagnostics if server fails to start
-      stderr: 'pipe',
-      // Allow a bit more time for Next dev server cold start under CI
-      timeout: 180_000,
-      // Suppress noisy Node deprecation warnings in QA E2E by default; allow opt-in tracing
-      env: {
-        NODE_OPTIONS: `${process.env.NODE_OPTIONS ? process.env.NODE_OPTIONS + ' ' : ''}${process.env.DEPRECATIONS === 'trace' ? '--trace-deprecation' : '--no-deprecation'}`,
-      },
-    },
-  ],
+  webServer: shouldStartConvex ? [convexServer, nextServer] : [nextServer],
 });
