@@ -68,10 +68,10 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
   return (
     <Card
-      variant="glass"
+      variant="default"
       role="region"
       aria-label={t('summary.ariaLabel', { date: data.date })}
-      className={cn('cbt-summary-card w-full', className)}
+      className={cn('cbt-summary-card w-full border-0', className)}
     >
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
