@@ -1,21 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Two overlapping speech bubbles forming a heart-like shape - representing therapeutic conversation -->
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#22d3ee"/>
+      <stop offset="100%" style="stop-color:#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#06b6d4"/>
       <stop offset="100%" style="stop-color:#0891b2"/>
     </linearGradient>
   </defs>
   
-  <!-- Background rounded square -->
-  <rect width="32" height="32" rx="8" fill="url(#bg)"/>
+  <!-- Left bubble -->
+  <path d="M4 8c0-2.2 1.8-4 4-4h8c2.2 0 4 1.8 4 4v6c0 2.2-1.8 4-4 4h-1l-3 4-1-4H8c-2.2 0-4-1.8-4-4V8z" fill="url(#grad1)"/>
   
-  <!-- Stylized head/mind icon representing mental wellness -->
-  <g fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Head outline -->
-    <path d="M16 6c-4.4 0-8 3.6-8 8 0 2.2.9 4.2 2.3 5.7.5.5.7 1.2.7 1.8v2.5c0 .6.4 1 1 1h8c.6 0 1-.4 1-1v-2.5c0-.7.3-1.3.7-1.8 1.4-1.5 2.3-3.5 2.3-5.7 0-4.4-3.6-8-8-8z"/>
-    <!-- Inner glow/thought - represents calm mind -->
-    <circle cx="16" cy="13" r="2.5" fill="#ffffff" stroke="none" opacity="0.9"/>
-    <!-- Small sparkle/wellness indicator -->
-    <path d="M16 8v1.5M12.5 10l1 1M19.5 10l-1 1" stroke-width="1.5"/>
-  </g>
+  <!-- Right bubble (overlapping) -->
+  <path d="M12 12c0-2.2 1.8-4 4-4h8c2.2 0 4 1.8 4 4v6c0 2.2-1.8 4-4 4h-1l-3 4-1-4h-3c-2.2 0-4-1.8-4-4v-6z" fill="url(#grad2)"/>
+  
+  <!-- Small heart in the overlap area -->
+  <path d="M16 14.5c-.5-1-1.5-1.5-2.5-1.5-1.4 0-2.5 1.1-2.5 2.5 0 2.5 5 5 5 5s5-2.5 5-5c0-1.4-1.1-2.5-2.5-2.5-1 0-2 .5-2.5 1.5z" fill="#ffffff" opacity="0.95"/>
 </svg>
