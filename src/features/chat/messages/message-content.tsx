@@ -31,17 +31,34 @@ function detectCBTSessionReport(content: string): boolean {
   return cbtIndicators.some((pattern) => new RegExp(pattern, 'is').test(content));
 }
 
+// Check if content contains a CBT Summary Card marker (rendered as standalone card)
+function isCBTSummaryCardContent(content: string): boolean {
+  const CBT_CARD_PATTERN = /<!-- CBT_SUMMARY_CARD:/;
+  return CBT_CARD_PATTERN.test(content);
+}
+
 const MessageContentComponent = function MessageContent({ content, role, messageId, className }: MessageContentProps) {
   // Check if this is a CBT session report message
   const isCBTReport = role === 'assistant' && detectCBTSessionReport(content);
+
+  // Check if this contains a CBT Summary Card (should render without bubble wrapper)
+  const isCBTCard = role === 'assistant' && isCBTSummaryCardContent(content);
 
   // Debug logging (development only)
   if (isDevelopment && isCBTReport) {
     logger.secureDevLog('CBT report detected', { component: 'MessageContent', messageId, role });
   }
 
-  // (Previously loaded CBT report data for tables; removed as tables render directly from markdown.)
+  // For CBT Summary Cards: render without bubble wrapper for clean standalone appearance
+  if (isCBTCard) {
+    return (
+      <div className={cn('cbt-card-container w-full max-w-2xl', className)}>
+        <Markdown isUser={false}>{content}</Markdown>
+      </div>
+    );
+  }
 
+  // For regular messages: apply bubble styling with therapeutic content
   const bubbleClasses = buildMessageClasses(role, 'bubble');
   const contentClasses = role === 'user' ? 'message-content-user' : 'message-content-assistant';
 

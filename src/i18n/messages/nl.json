@@ -391,7 +391,8 @@
       "newBehaviors": "Nieuwe gedragingen om te oefenen",
       "moreStrategies": "+{count} extra strategieën",
       "emotionalProgress": "Emotionele vooruitgang",
-      "completionNote": "Deze CBT-sessie is voltooid op {date} en omvatte gestructureerd werk aan situatie-analyse, emoties bijhouden, gedachtenonderzoek, verkenning van kernopvattingen, ontwikkeling van rationele gedachten en actieplanning."
+      "completionNote": "Deze CBT-sessie is voltooid op {date} en omvatte gestructureerd werk aan situatie-analyse, emoties bijhouden, gedachtenonderzoek, verkenning van kernopvattingen, ontwikkeling van rationele gedachten en actieplanning.",
+      "ariaLabel": "CBT-sessie samenvatting voor {date}"
     },
     "footer": {
       "analyzing": "Je CBT-sessie wordt geanalyseerd en voorbereid voor de chat...",

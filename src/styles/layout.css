@@ -161,3 +161,27 @@ nav,
     transform: none;
   }
 }
+
+/* CBT Summary Card Container - standalone appearance in chat */
+.cbt-card-container {
+  margin: 0.5rem 0;
+  animation: cbt-card-enter 0.3s ease-out;
+}
+
+@keyframes cbt-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .cbt-card-container {
+    animation: none;
+  }
+}

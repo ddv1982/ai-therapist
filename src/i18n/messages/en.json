@@ -546,7 +546,8 @@
       "newBehaviors": "New Behaviors to Practice",
       "moreStrategies": "+{count} more strategies",
       "emotionalProgress": "Emotional Progress",
-      "completionNote": "This CBT session was completed on {date} and included comprehensive work on situation analysis, emotion tracking, thought examination, core belief exploration, rational thought development, and action planning."
+      "completionNote": "This CBT session was completed on {date} and included comprehensive work on situation analysis, emotion tracking, thought examination, core belief exploration, rational thought development, and action planning.",
+      "ariaLabel": "CBT Session Summary for {date}"
     },
     "footer": {
       "analyzing": "Analyzing your CBT session and preparing for chat...",
