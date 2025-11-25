@@ -2,7 +2,8 @@
   /* ============================================
      TYPOGRAPHY - Apple System Font Stack (SF Pro-inspired)
      ============================================ */
-  --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-system:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   --font-mono: 'SF Mono', 'Consolas', 'Monaco', monospace;
   --radius: 0.75rem; /* 12px */
 
@@ -20,7 +21,7 @@
   --foreground: oklch(0.98 0.005 250);
   --card-foreground: oklch(0.98 0.005 250);
   --popover-foreground: oklch(0.98 0.005 250);
-  --secondary-foreground: oklch(0.70 0.01 250);
+  --secondary-foreground: oklch(0.7 0.01 250);
   --muted-foreground: oklch(0.55 0.01 250);
   --border: oklch(0.22 0.01 250);
   --input: oklch(0.22 0.01 250);
@@ -75,8 +76,6 @@
   --modal-backdrop: oklch(0.05 0.01 258 / 0.9);
 }
 
-
-
 /* Base styles without @layer (Tailwind v4 approach) */
 * {
   border-color: var(--border);
@@ -115,32 +114,45 @@ body {
    ============================================ */
 
 /* Headings - semibold for emphasis with tight tracking */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   letter-spacing: -0.011em;
 }
 
 /* Body text - regular weight */
-p, li, td {
+p,
+li,
+td {
   font-weight: 400;
   letter-spacing: 0em;
 }
 
 /* Labels and UI elements - semibold with wider tracking for legibility */
-label, .label, button, .button {
+label,
+.label,
+button,
+.button {
   font-weight: 600;
   letter-spacing: 0.011em;
 }
 
 /* Small text - semibold for better legibility at smaller sizes */
-.text-sm, .text-xs {
+.text-sm,
+.text-xs {
   font-weight: 600;
   letter-spacing: 0.011em;
 }
 
 /* Reduced motion support (accessibility) */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

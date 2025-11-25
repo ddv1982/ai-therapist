@@ -21,10 +21,10 @@ export default function DashboardError({ error, reset }: ErrorProps) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+    <div className="bg-background flex min-h-screen items-center justify-center p-4">
       <div className="max-w-md space-y-6 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-          <AlertTriangle className="h-8 w-8 text-destructive" />
+        <div className="bg-destructive/10 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+          <AlertTriangle className="text-destructive h-8 w-8" />
         </div>
         <div className="space-y-2">
           <h2 className="text-xl font-semibold">Something went wrong</h2>

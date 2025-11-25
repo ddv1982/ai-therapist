@@ -3,6 +3,7 @@
 ## Task Assignment
 
 ### Task 11.1: Create GitHub Actions Workflow
+
 - **Description**: Implement CI pipeline for automated testing and building.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -14,6 +15,7 @@
 - **Complexity**: Medium
 
 ### Task 11.2: Add E2E Test Job
+
 - **Description**: Configure Playwright tests in CI pipeline.
 - **Dependencies**: Task 11.1
 - **Acceptance Criteria**:
@@ -24,6 +26,7 @@
 - **Complexity**: Medium
 
 ### Task 11.3: Add Bundle Size Monitoring
+
 - **Description**: Track bundle size changes in PRs.
 - **Dependencies**: Task 11.1
 - **Acceptance Criteria**:
@@ -34,6 +37,7 @@
 - **Complexity**: Small
 
 ### Task 11.4: Create Environment Parity Validator
+
 - **Description**: Script to verify environment variable completeness.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -44,6 +48,7 @@
 - **Complexity**: Small
 
 ### Task 11.5: Consolidate Environment Schema
+
 - **Description**: Create single source of truth for environment configuration.
 - **Dependencies**: Task 11.4
 - **Acceptance Criteria**:
@@ -54,6 +59,7 @@
 - **Complexity**: Medium
 
 ### Task 11.6: Document Deployment Process
+
 - **Description**: Write deployment runbook for production releases.
 - **Dependencies**: Task 11.1
 - **Acceptance Criteria**:
@@ -66,11 +72,13 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: `droidz/specs/022-codebase-improvement-plan/spec.md`
 - requirements: `droidz/specs/022-codebase-improvement-plan/planning/requirements.md`
 - tasks: `droidz/specs/022-codebase-improvement-plan/tasks.md`
 
 Key files to study:
+
 - `package.json` - Available scripts (test, lint, build)
 - `playwright.config.ts` - Playwright configuration
 - `jest.config.js` - Jest configuration

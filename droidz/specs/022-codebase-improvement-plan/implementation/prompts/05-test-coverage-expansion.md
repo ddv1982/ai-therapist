@@ -3,6 +3,7 @@
 ## Task Assignment
 
 ### Task 5.1: Identify Critical Path Coverage Gaps
+
 - **Description**: Analyze coverage reports to identify untested critical paths.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -13,6 +14,7 @@
 - **Complexity**: Small
 
 ### Task 5.2: Add Session Repository Edge Case Tests
+
 - **Description**: Write tests for concurrent updates, partial failures, and boundary conditions.
 - **Dependencies**: Task 5.1
 - **Acceptance Criteria**:
@@ -23,6 +25,7 @@
 - **Complexity**: Medium
 
 ### Task 5.3: Add Service Layer Tests
+
 - **Description**: Increase test coverage for new extracted services.
 - **Dependencies**: Group 3 (services exist)
 - **Acceptance Criteria**:
@@ -33,6 +36,7 @@
 - **Complexity**: Medium
 
 ### Task 5.4: Create Convex Mock Utilities
+
 - **Description**: Build test utilities for mocking Convex queries and mutations.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -43,6 +47,7 @@
 - **Complexity**: Medium
 
 ### Task 5.5: Add Chat Flow Integration Tests
+
 - **Description**: Create integration tests for complete message send/receive cycle.
 - **Dependencies**: Task 5.4
 - **Acceptance Criteria**:
@@ -53,6 +58,7 @@
 - **Complexity**: Large
 
 ### Task 5.6: Add Auth Flow Integration Tests
+
 - **Description**: Test Clerk to Convex user synchronization.
 - **Dependencies**: Task 5.4
 - **Acceptance Criteria**:
@@ -63,6 +69,7 @@
 - **Complexity**: Medium
 
 ### Task 5.7: Expand E2E Test Scenarios
+
 - **Description**: Add Playwright tests for edge cases and error scenarios.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -75,11 +82,13 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: `droidz/specs/022-codebase-improvement-plan/spec.md`
 - requirements: `droidz/specs/022-codebase-improvement-plan/planning/requirements.md`
 - tasks: `droidz/specs/022-codebase-improvement-plan/tasks.md`
 
 Key files to study:
+
 - `__tests__/` - Existing test structure
 - `__tests__/lib/repositories/` - Repository tests
 - `e2e/` - Playwright E2E tests

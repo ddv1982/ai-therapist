@@ -28,7 +28,7 @@ describe('useFocusTrap', () => {
 
   it('should handle when container is not set', () => {
     const { result } = renderHook(() => useFocusTrap(true));
-    
+
     // Should not throw error when container is null
     expect(result.current.current).toBeNull();
   });

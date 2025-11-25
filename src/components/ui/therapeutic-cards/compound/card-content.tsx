@@ -15,11 +15,7 @@ export interface CardContentProps {
  * Card content compound component
  * Wraps content with proper spacing
  */
-export function CardContent({
-  children,
-  contentPadding = 'md',
-  className,
-}: CardContentProps) {
+export function CardContent({ children, contentPadding = 'md', className }: CardContentProps) {
   const { variant, isExpanded } = useCardContext();
 
   const contentPaddingVariants = {

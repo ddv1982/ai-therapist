@@ -2,26 +2,23 @@ import { type Ref } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-const cardVariants = cva(
-  'rounded-lg transition-all duration-base ease-out-smooth',
-  {
-    variants: {
-      variant: {
-        // Default solid card with subtle shadow (borderless)
-        default: 'bg-card text-card-foreground shadow-apple-sm hover:shadow-apple-md',
-        // Glass card with Apple frosted glass effect (border for frosted frame)
-        glass:
-          'bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] text-foreground shadow-apple-md hover:shadow-apple-lg',
-        // Elevated card with hover lift effect (borderless)
-        elevated:
-          'bg-card text-card-foreground shadow-apple-md hover:shadow-apple-lg hover:-translate-y-0.5',
-      },
+const cardVariants = cva('rounded-lg transition-all duration-base ease-out-smooth', {
+  variants: {
+    variant: {
+      // Default solid card with subtle shadow (borderless)
+      default: 'bg-card text-card-foreground shadow-apple-sm hover:shadow-apple-md',
+      // Glass card with Apple frosted glass effect (border for frosted frame)
+      glass:
+        'bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] text-foreground shadow-apple-md hover:shadow-apple-lg',
+      // Elevated card with hover lift effect (borderless)
+      elevated:
+        'bg-card text-card-foreground shadow-apple-md hover:shadow-apple-lg hover:-translate-y-0.5',
     },
-    defaultVariants: {
-      variant: 'default',
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'default',
+  },
+});
 
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,

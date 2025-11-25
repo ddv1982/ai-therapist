@@ -59,21 +59,26 @@ export const ChatContainer = memo(function ChatContainer({
   // Memoize container className computation
   const containerClassName = useMemo(() => {
     const baseClasses = 'custom-scrollbar relative flex-1 overflow-y-auto';
-    const mobileClasses = isMobile 
-      ? (messages.length === 0 ? 'prevent-bounce p-2 pb-0' : 'prevent-bounce p-3 pb-0')
+    const mobileClasses = isMobile
+      ? messages.length === 0
+        ? 'prevent-bounce p-2 pb-0'
+        : 'prevent-bounce p-3 pb-0'
       : 'p-3 sm:p-6';
     return `${baseClasses} ${mobileClasses}`;
   }, [isMobile, messages.length]);
 
   // Memoize container style
-  const containerStyle = useMemo(() => ({
-    minHeight: 0,
-    WebkitOverflowScrolling: 'touch' as const,
-    overscrollBehavior: 'contain' as const,
-    scrollPaddingBottom: isMobile
-      ? `calc(var(--input-h, 0px) + env(safe-area-inset-bottom) + 12px)`
-      : undefined,
-  }), [isMobile]);
+  const containerStyle = useMemo(
+    () => ({
+      minHeight: 0,
+      WebkitOverflowScrolling: 'touch' as const,
+      overscrollBehavior: 'contain' as const,
+      scrollPaddingBottom: isMobile
+        ? `calc(var(--input-h, 0px) + env(safe-area-inset-bottom) + 12px)`
+        : undefined,
+    }),
+    [isMobile]
+  );
 
   // Memoize scroll button click handler
   const handleScrollButtonClick = useCallback(() => {

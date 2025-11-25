@@ -15,8 +15,14 @@ export {
 } from '@/components/ui/therapeutic-forms/base/therapeutic-field-wrapper';
 
 // Input components
-export { TherapeuticTextInput, type TherapeuticTextInputProps } from '@/components/ui/therapeutic-forms/inputs/therapeutic-text-input';
-export { TherapeuticTextArea, type TherapeuticTextAreaProps } from '@/components/ui/therapeutic-forms/inputs/therapeutic-text-area';
+export {
+  TherapeuticTextInput,
+  type TherapeuticTextInputProps,
+} from '@/components/ui/therapeutic-forms/inputs/therapeutic-text-input';
+export {
+  TherapeuticTextArea,
+  type TherapeuticTextAreaProps,
+} from '@/components/ui/therapeutic-forms/inputs/therapeutic-text-area';
 export {
   TherapeuticSlider,
   type TherapeuticSliderProps,
@@ -36,4 +42,7 @@ export {
 } from '@/components/ui/therapeutic-forms/specialized/array-field-input';
 
 // Backward compatible wrapper (maintains old API)
-export { TherapeuticFormField, type TherapeuticFormFieldProps } from '@/components/ui/therapeutic-forms/therapeutic-form-field-new';
+export {
+  TherapeuticFormField,
+  type TherapeuticFormFieldProps,
+} from '@/components/ui/therapeutic-forms/therapeutic-form-field-new';

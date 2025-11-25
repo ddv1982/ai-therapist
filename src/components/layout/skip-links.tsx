@@ -16,20 +16,16 @@ export function SkipLinks() {
   const t = useTranslations('accessibility');
 
   return (
-    <div
-      className="fixed left-4 top-4 z-[9999]"
-      role="navigation"
-      aria-label={t('skipLinksLabel')}
-    >
+    <div className="fixed top-4 left-4 z-[9999]" role="navigation" aria-label={t('skipLinksLabel')}>
       <a
         href="#main-content"
-        className="sr-only rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition-all focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        className="bg-primary text-primary-foreground focus:ring-ring sr-only rounded-md px-4 py-2 text-sm font-semibold shadow-lg transition-all focus:not-sr-only focus:ring-2 focus:ring-offset-2 focus:outline-none"
       >
         {t('skipToMainContent')}
       </a>
       <a
         href="#navigation"
-        className="sr-only ml-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg transition-all focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        className="bg-primary text-primary-foreground focus:ring-ring sr-only ml-2 rounded-md px-4 py-2 text-sm font-semibold shadow-lg transition-all focus:not-sr-only focus:ring-2 focus:ring-offset-2 focus:outline-none"
       >
         {t('skipToNavigation')}
       </a>

@@ -26,7 +26,7 @@ describe('memory-utils more edges', () => {
   it('deleteMemory returns normalized failure with non-JSON body', async () => {
     (apiClient.deleteMemoryReports as jest.Mock).mockRejectedValueOnce({
       status: 500,
-      body: { error: 'bad json' }
+      body: { error: 'bad json' },
     });
     const res = await deleteMemory({ type: 'all' });
     expect(res.success).toBe(false);
@@ -37,7 +37,7 @@ describe('memory-utils more edges', () => {
   it('getSessionReportDetail logs ok but returns null when memoryDetails missing', async () => {
     (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
       success: true,
-      data: { reportCount: 1 }
+      data: { reportCount: 1 },
     });
     const res = await getSessionReportDetail('r1');
     expect(res).toBeNull();

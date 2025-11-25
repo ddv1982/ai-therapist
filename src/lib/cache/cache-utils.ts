@@ -48,7 +48,7 @@ class CacheManager {
   private stats: Map<string, CacheStats> = new Map();
   private storage: Map<string, CacheItem> = new Map();
   private defaultTTL = 300; // 5 minutes
-  private maxKeyLength = 250; 
+  private maxKeyLength = 250;
   private cleanupInterval: NodeJS.Timeout;
 
   constructor() {
@@ -335,7 +335,7 @@ class CacheManager {
     cacheOptions: CacheOptions = {}
   ): Promise<number> {
     const searchPattern = this.generateKey(pattern, options, cacheOptions.prefix);
-    
+
     // Convert glob pattern to regex
     // Simple conversion: * -> .*
     const regex = new RegExp('^' + searchPattern.replace(/\*/g, '.*') + '$');

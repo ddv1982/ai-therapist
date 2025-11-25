@@ -22,7 +22,7 @@ describe('model-selector fallback logic', () => {
     }));
 
     jest.doMock('@/lib/utils/logger', () => ({
-        logger: { warn: jest.fn() },
+      logger: { warn: jest.fn() },
     }));
 
     const { selectModelAndTools } = require('@/lib/chat/model-selector');
@@ -45,7 +45,7 @@ describe('model-selector fallback logic', () => {
 
     // Mock providers: No ghost model anywhere
     jest.doMock('@/ai/providers', () => ({
-      MODELS: ['default-model'], 
+      MODELS: ['default-model'],
       languageModels: {
         'default-model': {},
       },

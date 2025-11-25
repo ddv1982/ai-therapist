@@ -1,6 +1,7 @@
 # Tasks: Dark Mode Only Implementation
 
 ## Overview
+
 Implementation breakdown for removing light mode and establishing dark mode as the permanent theme. Tasks are organized in phases to minimize risk and enable incremental testing.
 
 ---
@@ -8,9 +9,11 @@ Implementation breakdown for removing light mode and establishing dark mode as t
 ## Phase 1: Remove Theme Infrastructure
 
 ### Task 1.1: Remove Theme Provider and Dependencies
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [x] Remove ThemeProvider from `/src/app/providers.tsx`
 - [x] Delete `/src/components/providers/theme-provider.tsx`
 - [x] Delete `/src/lib/theme-context.ts`
@@ -19,12 +22,14 @@ Implementation breakdown for removing light mode and establishing dark mode as t
 - [x] Verify `npm list next-themes` returns empty
 
 **Verification**:
+
 ```bash
 npx tsc --noEmit  # Should compile without errors
 npm run dev       # Should start without warnings
 ```
 
 **Files Changed**:
+
 - `/src/app/providers.tsx` (modified)
 - `/src/components/providers/theme-provider.tsx` (deleted)
 - `/src/lib/theme-context.ts` (deleted)
@@ -33,9 +38,11 @@ npm run dev       # Should start without warnings
 ---
 
 ### Task 1.2: Remove Theme Toggle UI Component
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [x] Delete `/src/components/shared/theme-toggle.tsx`
 - [x] Remove ThemeToggle export from `/src/features/shared/index.ts`
 - [x] Remove ThemeToggle import and usage from `/src/features/chat/components/dashboard/chat-sidebar.tsx`
@@ -43,12 +50,14 @@ npm run dev       # Should start without warnings
 - [x] Search codebase for any other ThemeToggle references: `grep -r "ThemeToggle" src/`
 
 **Verification**:
+
 ```bash
 grep -r "ThemeToggle" src/  # Should return no results
 npm run lint                # Should pass
 ```
 
 **Files Changed**:
+
 - `/src/components/shared/theme-toggle.tsx` (deleted)
 - `/src/features/shared/index.ts` (modified)
 - `/src/features/chat/components/dashboard/chat-sidebar.tsx` (modified)
@@ -57,9 +66,11 @@ npm run lint                # Should pass
 ---
 
 ### Task 1.3: Remove Command Palette Theme Option
+
 **Priority**: Medium | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [x] Open `/src/components/ui/command-palette.tsx`
 - [x] Remove `onThemeToggle?: () => void` from CommandPaletteProps interface
 - [x] Remove theme toggle CommandItem (search for Moon icon)
@@ -67,12 +78,14 @@ npm run lint                # Should pass
 - [x] Update components that pass `onThemeToggle` prop to CommandPalette
 
 **Verification**:
+
 ```bash
 grep -r "onThemeToggle" src/  # Should return no results
 npm run dev                    # Test command palette opens without errors
 ```
 
 **Files Changed**:
+
 - `/src/components/ui/command-palette.tsx` (modified)
 - Any parent components passing `onThemeToggle` (modified)
 
@@ -81,9 +94,11 @@ npm run dev                    # Test command palette opens without errors
 ## Phase 2: CSS Variable Consolidation
 
 ### Task 2.1: Consolidate Dark Mode Variables to :root
+
 **Priority**: High | **Effort**: Medium | **Risk**: Medium
 
 **Subtasks**:
+
 - [x] Open `/src/styles/base.css`
 - [x] Copy all variables from `.dark { ... }` block
 - [x] Replace entire `:root { ... }` block with dark mode variables
@@ -94,6 +109,7 @@ npm run dev                    # Test command palette opens without errors
 - [x] Keep safe area insets in body styles
 
 **Variables to Move** (partial list):
+
 ```css
 /* Backgrounds */
 --background: oklch(0.12 0.01 250);
@@ -129,31 +145,37 @@ npm run dev                    # Test command palette opens without errors
 ```
 
 **Verification**:
+
 ```bash
 npm run dev  # Load app, verify dark colors render
 # Visual check: backgrounds should be dark, text white
 ```
 
 **Files Changed**:
+
 - `/src/styles/base.css` (modified - major restructure)
 
 ---
 
 ### Task 2.2: Verify Tailwind Theme Registration
+
 **Priority**: Medium | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [x] Open `/src/app/globals.css`
 - [x] Verify `@theme` block exists and maps CSS variables
 - [x] Confirm all color names match updated `:root` variables
 - [x] No changes needed unless variable names changed
 
 **Verification**:
+
 ```bash
 npm run build  # Should build without CSS errors
 ```
 
 **Files Changed**:
+
 - `/src/app/globals.css` (likely no changes needed)
 
 ---
@@ -161,27 +183,33 @@ npm run build  # Should build without CSS errors
 ## Phase 3: Component Class Simplification
 
 ### Task 3.1: Identify All Files with dark: Classes
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [x] Run: `grep -r "dark:" src/ --include="*.tsx" --include="*.ts" -l > dark-files.txt`
 - [x] Review list, estimate ~20-30 files
 - [x] Prioritize files by user-facing importance
 
 **Verification**:
+
 ```bash
 wc -l dark-files.txt  # Count how many files to update
 ```
 
 **Output**:
+
 - `dark-files.txt` (list for tracking progress)
 
 ---
 
 ### Task 3.2: Update High Priority Chat Components
+
 **Priority**: High | **Effort**: Medium | **Risk**: Medium
 
 **Components to update**:
+
 1. `/src/features/chat/components/chat-composer.tsx`
 2. `/src/features/chat/components/chat-header.tsx`
 3. `/src/features/chat/components/dashboard/chat-sidebar.tsx`
@@ -189,6 +217,7 @@ wc -l dark-files.txt  # Count how many files to update
 5. `/src/features/chat/components/dashboard/chat-empty-state.tsx`
 
 **For each file**:
+
 - [x] Search for `dark:` pattern
 - [x] Apply transformation rules:
   - `bg-white dark:bg-black` → `bg-black`
@@ -200,6 +229,7 @@ wc -l dark-files.txt  # Count how many files to update
 - [x] Test component renders correctly
 
 **Verification**:
+
 ```bash
 npm run dev
 # Navigate to chat interface
@@ -211,9 +241,11 @@ npm run dev
 ---
 
 ### Task 3.3: Update Medium Priority Therapy Components
+
 **Priority**: Medium | **Effort**: Medium | **Risk**: Low
 
 **Components to update**:
+
 1. `/src/features/therapy/ui/therapy-card.tsx`
 2. `/src/features/therapy/cbt/chat-components/action-plan.tsx`
 3. `/src/features/therapy/cbt/chat-components/schema-modes.tsx`
@@ -221,11 +253,13 @@ npm run dev
 5. `/src/features/therapy/components/cbt-session-summary-card.tsx`
 
 **For each file**:
+
 - [x] Follow same transformation rules as Task 3.2
 - [x] Pay special attention to therapeutic color classes
 - [x] Ensure emotion colors remain distinguishable
 
 **Verification**:
+
 ```bash
 npm run dev
 # Navigate to CBT diary, therapy cards
@@ -238,17 +272,21 @@ npm run dev
 ---
 
 ### Task 3.4: Update Remaining Components
+
 **Priority**: Low | **Effort**: Medium | **Risk**: Low
 
 **Components to update**:
+
 - All remaining files from `dark-files.txt`
 - Includes session controls, moon component, misc UI elements
 
 **For each file**:
+
 - [x] Apply standard transformation rules
 - [x] Test if component is user-facing
 
 **Verification**:
+
 ```bash
 grep -r "dark:" src/ --include="*.tsx" -c
 # Should show significantly reduced count or zero
@@ -259,16 +297,19 @@ grep -r "dark:" src/ --include="*.tsx" -c
 ---
 
 ### Task 3.5: Special Case - Realistic Moon Component
+
 **Priority**: Low | **Effort**: Small | **Risk**: Low
 
 **File**: `/src/features/chat/components/dashboard/realistic-moon.tsx`
 
 **Subtasks**:
+
 - [x] Update SVG element classes with `dark:` variants
 - [x] Example: `fill-slate-700 dark:fill-slate-900` → `fill-slate-900`
 - [x] Test moon renders correctly on dashboard
 
 **Verification**:
+
 ```bash
 npm run dev
 # Navigate to dashboard
@@ -276,6 +317,7 @@ npm run dev
 ```
 
 **Files Changed**:
+
 - `/src/features/chat/components/dashboard/realistic-moon.tsx`
 
 ---
@@ -283,9 +325,11 @@ npm run dev
 ## Phase 4: Testing & Quality Assurance
 
 ### Task 4.1: Update/Remove Unit Tests
+
 **Priority**: Medium | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [x] Search for test files: `find src/ -name "*.test.tsx" -o -name "*.test.ts"`
 - [x] Remove: `__tests__/theme-provider.test.tsx` (if exists - none found)
 - [x] Remove: `__tests__/theme-toggle.test.tsx` (if exists - none found)
@@ -295,19 +339,23 @@ npm run dev
 - [x] Run: `npm test` - Updated 3 snapshots, all tests pass
 
 **Verification**:
+
 ```bash
 npm test  # All tests should pass
 ```
 
 **Files Changed**:
+
 - Various test files (modified or deleted)
 
 ---
 
 ### Task 4.2: E2E Visual Regression Tests
+
 **Priority**: High | **Effort**: Medium | **Risk**: Low
 
 **Subtasks**:
+
 - [x] Create Playwright test for dark mode verification
 - [x] Test all major pages: dashboard, chat, CBT diary, settings
 - [x] Capture screenshots for baseline
@@ -315,23 +363,23 @@ npm test  # All tests should pass
 - [x] Check for console errors
 
 **Example Test** (`e2e/dark-mode.spec.ts`):
+
 ```typescript
 test('app renders in dark mode only', async ({ page }) => {
   await page.goto('/dashboard');
-  
+
   // Verify dark mode CSS variable
   const bgColor = await page.evaluate(() => {
-    return getComputedStyle(document.documentElement)
-      .getPropertyValue('--background');
+    return getComputedStyle(document.documentElement).getPropertyValue('--background');
   });
   expect(bgColor).toContain('oklch(0.12');
-  
+
   // Verify no theme toggle
   const themeToggle = page.locator('button[aria-label*="theme"]');
   await expect(themeToggle).toHaveCount(0);
-  
+
   // Check console for errors
-  page.on('console', msg => {
+  page.on('console', (msg) => {
     if (msg.type() === 'error') {
       throw new Error(`Console error: ${msg.text()}`);
     }
@@ -340,20 +388,24 @@ test('app renders in dark mode only', async ({ page }) => {
 ```
 
 **Verification**:
+
 ```bash
 npm run test:e2e  # Should pass
 ```
 
 **Files Changed**:
+
 - `e2e/dark-mode.spec.ts` (new)
 - Existing E2E tests (updated baselines)
 
 ---
 
 ### Task 4.3: Accessibility Testing
+
 **Priority**: High | **Effort**: Small | **Risk**: Medium
 
 **Subtasks**:
+
 - [x] Run axe-core or similar: `npm run test:e2e -- --grep @a11y`
 - [x] Verify color contrast ratios:
   - Body text: ≥4.5:1 (should be ~17:1) ✅
@@ -364,6 +416,7 @@ npm run test:e2e  # Should pass
 - [x] Check keyboard navigation functional ✅
 
 **Verification Checklist**:
+
 - [x] All contrast ratios meet WCAG AA
 - [x] Screen reader announces elements correctly - Manual verification required
 - [x] Keyboard Tab navigation works
@@ -374,9 +427,11 @@ npm run test:e2e  # Should pass
 ---
 
 ### Task 4.4: Cross-Browser Testing
+
 **Priority**: Medium | **Effort**: Medium | **Risk**: Low
 
 **Browsers to test**:
+
 - [x] Chrome 120+ (primary development browser) - Verified
 - [ ] Safari 17+ (macOS) - Manual verification required
 - [ ] Safari iOS (latest) - Manual verification required
@@ -384,6 +439,7 @@ npm run test:e2e  # Should pass
 - [ ] Edge 120+ - Manual verification required
 
 **Test Checklist per browser**:
+
 1. Load dashboard - verify dark background
 2. Navigate to chat - verify colors correct
 3. Open CBT diary - verify therapeutic colors
@@ -391,15 +447,18 @@ npm run test:e2e  # Should pass
 5. Inspect console - no errors
 
 **Verification**:
+
 - All browsers render consistently in dark mode
 - No console errors in any browser
 
 ---
 
 ### Task 4.5: Performance Verification
+
 **Priority**: Low | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [x] Run: `npm run build` (build succeeds ✅)
 - [x] Compare bundle sizes before/after:
   - next-themes removed (~12-15 KB reduction)
@@ -409,6 +468,7 @@ npm run test:e2e  # Should pass
 - [x] Verify First Load JS improved - Build output shows optimization ✅
 
 **Verification**:
+
 ```bash
 npm run build
 # Check build output for bundle sizes
@@ -427,9 +487,11 @@ npm run build
 ## Phase 5: Finalization & Documentation
 
 ### Task 5.1: Final Code Cleanup
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [x] Run: `grep -r "dark:" src/` - ✅ 0 results
 - [x] Run: `grep -r "useTheme\|next-themes" src/` - ✅ 0 results
 - [x] Run: `npm run lint` - ✅ Passes
@@ -437,6 +499,7 @@ npm run build
 - [x] Clean up any leftover localStorage keys (optional cleanup code) - Not needed
 
 **Optional localStorage cleanup** (add to `providers.tsx` temporarily):
+
 ```typescript
 useEffect(() => {
   if (typeof window !== 'undefined') {
@@ -446,6 +509,7 @@ useEffect(() => {
 ```
 
 **Verification**:
+
 ```bash
 npm run lint          # Pass
 npx tsc --noEmit      # Pass
@@ -455,36 +519,42 @@ grep -r "dark:" src/  # Minimal or zero results
 ---
 
 ### Task 5.2: Update Documentation
+
 **Priority**: Medium | **Effort**: Small | **Risk**: Low
 
 **Files to update**:
+
 - [x] `/README.md` - ✅ Updated to "Dark Mode Design"
 - [x] `/AGENTS.md` - ✅ No theme-related guidelines found
 - [x] Component docs (Storybook, if applicable) - N/A
 - [x] Add note about dark-mode-only decision - ✅ Added "Styling & Theme" section
 
 **Example README Update**:
+
 ```markdown
 ## Styling & Theme
 
-The application uses a **dark mode only** design optimized for 
-therapeutic use and reduced eye strain. All colors are defined 
+The application uses a **dark mode only** design optimized for
+therapeutic use and reduced eye strain. All colors are defined
 using OKLCH color space for perceptual uniformity.
 
-Colors are centralized in `/src/styles/base.css` using CSS 
+Colors are centralized in `/src/styles/base.css` using CSS
 custom properties.
 ```
 
 **Verification**:
+
 - [ ] README accurately reflects dark-only approach
 - [ ] No outdated theme toggle instructions remain
 
 ---
 
 ### Task 5.3: Pre-Deployment Checklist
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Checklist**:
+
 - [x] `npm run build` succeeds without warnings ✅
 - [x] `npm run lint` passes ✅
 - [x] `npx tsc --noEmit` succeeds ✅
@@ -499,6 +569,7 @@ custom properties.
 - [x] Cross-browser testing completed - Chrome verified, others require manual testing
 
 **Sign-off**:
+
 - [x] Code review approved - Ready for review
 - [x] QA testing completed - Automated tests pass
 - [x] Design review approved (visual consistency) - Dark mode consistent throughout
@@ -506,9 +577,11 @@ custom properties.
 ---
 
 ### Task 5.4: Deployment & Monitoring
+
 **Priority**: High | **Effort**: Small | **Risk**: Medium
 
 **Deployment Steps**:
+
 1. [ ] Merge PR to main branch - Ready to deploy
 2. [ ] Deploy to staging environment - If applicable
 3. [ ] QA validation on staging (1-2 hours) - If applicable
@@ -518,6 +591,7 @@ custom properties.
 **Note**: See `DEPLOYMENT.md` for detailed deployment instructions and checklist.
 
 **Monitoring Checklist** (first 24 hours):
+
 - [ ] Error rate in browser console (should not increase)
 - [ ] Page load times (should improve slightly)
 - [ ] User session duration (should remain stable)
@@ -525,12 +599,14 @@ custom properties.
 - [ ] User feedback/complaints (monitor support channels)
 
 **Rollback Trigger Conditions**:
+
 - Critical rendering issues (blank screens, wrong colors)
 - Accessibility violations (WCAG failures)
 - Widespread user complaints (>5% of DAU)
 - Production errors >1% of sessions
 
 **Rollback Command** (if needed):
+
 ```bash
 git revert -m 1 <merge-commit-hash>
 git push origin main
@@ -546,13 +622,16 @@ git push origin main
 **Risk Level**: Medium (mostly visual changes, limited logic changes)
 
 **Critical Path**:
+
 1. Phase 1 (Infrastructure removal) → Phase 2 (CSS consolidation) → Phase 3 (Component updates) → Phase 4 (Testing) → Phase 5 (Deployment)
 
 **Parallel Work Opportunities**:
+
 - Tasks 3.2, 3.3, 3.4 can be parallelized across multiple developers
 - Testing (Phase 4) can begin as soon as Phase 3 is partially complete
 
 **Key Success Metrics**:
+
 - ✅ Zero references to `next-themes` or `useTheme`
 - ✅ All pages render in dark mode
 - ✅ Bundle size reduced by ~20 KB
@@ -564,12 +643,14 @@ git push origin main
 ## Notes
 
 **Important Considerations**:
+
 - Always test in browser after each component update
 - Keep git commits small and focused (one phase per commit)
 - Take screenshots before/after for comparison
 - Document any edge cases or deviations from plan
 
 **If Issues Arise**:
+
 - Rollback to previous commit
 - Isolate problematic component
 - Fix in separate branch

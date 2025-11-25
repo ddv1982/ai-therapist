@@ -37,7 +37,12 @@ function isCBTSummaryCardContent(content: string): boolean {
   return CBT_CARD_PATTERN.test(content);
 }
 
-const MessageContentComponent = function MessageContent({ content, role, messageId, className }: MessageContentProps) {
+const MessageContentComponent = function MessageContent({
+  content,
+  role,
+  messageId,
+  className,
+}: MessageContentProps) {
   // Check if this is a CBT session report message
   const isCBTReport = role === 'assistant' && detectCBTSessionReport(content);
 

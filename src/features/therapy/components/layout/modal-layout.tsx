@@ -27,7 +27,7 @@ export function ModalLayout({ children, title, className, ...props }: ModalLayou
       {...props}
     >
       {title && (
-        <div className="border-border sticky top-0 z-10 border-b bg-inherit pb-4 pt-2">
+        <div className="border-border sticky top-0 z-10 border-b bg-inherit pt-2 pb-4">
           <h2 className="text-foreground text-2xl font-semibold tracking-tight">{title}</h2>
         </div>
       )}

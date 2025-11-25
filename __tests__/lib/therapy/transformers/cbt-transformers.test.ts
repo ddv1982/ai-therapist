@@ -1,4 +1,3 @@
-
 import {
   asEmotionData,
   asThoughtDataArray,
@@ -185,7 +184,7 @@ describe('cbt-transformers', () => {
 
     it('should filter empty questions', () => {
       const input = [
-        { question: '' }, 
+        { question: '' },
         { question: 'Q1' },
         { unrelated: 'data' }, // Object without question keys
       ];
@@ -219,8 +218,8 @@ describe('cbt-transformers', () => {
     });
 
     it('should filter empty thoughts from objects', () => {
-        const input = [{ unrelated: 'data', confidence: 1 }];
-        expect(asRationalThoughtsArray(input)).toEqual([]);
+      const input = [{ unrelated: 'data', confidence: 1 }];
+      expect(asRationalThoughtsArray(input)).toEqual([]);
     });
   });
 

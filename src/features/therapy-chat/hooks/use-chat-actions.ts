@@ -187,7 +187,8 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
   }, [settings.webSearchEnabled, updateSettings]);
 
   const handleSmartModelToggle = useCallback(() => {
-    const nextModel = settings.model === ANALYTICAL_MODEL_ID ? DEFAULT_MODEL_ID : ANALYTICAL_MODEL_ID;
+    const nextModel =
+      settings.model === ANALYTICAL_MODEL_ID ? DEFAULT_MODEL_ID : ANALYTICAL_MODEL_ID;
     updateSettings({
       model: nextModel,
       webSearchEnabled: false,

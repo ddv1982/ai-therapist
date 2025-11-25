@@ -1,7 +1,7 @@
 /**
  * Auto-generated translation types from en.json
  * Run 'npm run i18n:types' to regenerate
- * 
+ *
  * @generated
  * DO NOT EDIT MANUALLY
  */
@@ -10,689 +10,689 @@
  * Nested structure of all translation messages
  */
 export interface Messages {
-  "ui": {
-    "ok": string
-    "cancel": string
-    "save": string
-    "delete": string
-    "close": string
-    "saved": string
-    "valid": string
-    "invalid": string
-    "command": {
-      "placeholder": string
-      "noResults": string
-      "quick": string
-      "newChat": string
-      "cbt": string
-      "settings": string
-      "theme": string
-      "recent": string
-      "messages": string
-      "nav": string
-      "gotoChat": string
-      "reports": string
-    }
-    "settings": {
-      "title": string
-      "subtitle": string
-      "model": string
-      "modelPlaceholder": string
-      "modelFast": string
-      "modelAnalytical": string
-    }
-    "notFound": {
-      "title": string
-      "desc": string
-      "returnHome": string
-      "goBack": string
-    }
-    "datePick": string
-  }
-  "auth": {
-    "title": string
-    "submit": string
-    "setup": {
-      "title": string
-      "subtitle": string
-      "step1": {
-        "title": string
-        "desc": string
-        "cantScan": string
-      }
-      "copy": string
-      "addedAccount": string
-      "step2": {
-        "title": string
-        "desc": string
-      }
-      "download": string
-      "copyAll": string
-      "confirmSaved": string
-      "continueVerification": string
-      "step3": {
-        "title": string
-        "desc": string
-      }
-      "verifying": string
-      "completeSetup": string
-      "loading": string
-      "failed": {
-        "title": string
-        "desc": string
-      }
-      "retry": string
-      "error": {
-        "load": string
-        "verify": string
-      }
-      "placeholder": string
-      "qrAlt": string
-    }
-  }
-  "chat": {
-    "input": {
-      "placeholder": string
-      "ariaLabel": string
-      "send": string
-      "sending": string
-      "help": string
-      "error": string
-    }
-    "app": {
-      "aria": string
-    }
-    "sidebar": {
-      "aria": string
-      "messages": string
-      "noMessages": string
-      "webSearchEnabled": string
-      "webSearchDisabled": string
-      "smartEnabled": string
-      "smartDisabled": string
-      "localModelEnabled": string
-      "localModelDisabled": string
-      "localModelTooltipActive": string
-      "localModelTooltipInactive": string
-      "startNew": string
-      "noSessions": string
-      "startPrompt": string
-      "brandName": string
-      "tagline": string
-    }
-    "main": {
-      "aria": string
-      "toggleSidebar": string
-      "sessionTitle": string
-      "newConversation": string
-      "sessionSubtitle": string
-      "newSubtitle": string
-      "generateReport": string
-      "cbtMobile": string
-      "cbtOpen": string
-      "obsessionsTooltip": string
-      "messagesAria": string
-      "jumpToLatest": string
-      "latest": string
-      "modelChipLabel": string
-      "modelChipAria": string
-      "stopGenerating": string
-    }
-    "empty": {
-      "welcome": string
-      "tagline": string
-      "intro": string
-      "compassionTitle": string
-      "compassionDesc": string
-      "privateTitle": string
-      "privateDesc": string
-    }
-    "moon": {
-      "phase": {
-        "new": string
-        "waxing_crescent": string
-        "first_quarter": string
-        "waxing_gibbous": string
-        "full": string
-        "waning_gibbous": string
-        "last_quarter": string
-        "waning_crescent": string
-      }
-      "illumination": string
-      "quote": {
-        "new": string
-        "waxing_crescent": string
-        "first_quarter": string
-        "waxing_gibbous": string
-        "full": string
-        "waning_gibbous": string
-        "last_quarter": string
-        "waning_crescent": string
-      }
-    }
-  }
-  "toast": {
-    "saved": string
-    "messageNotSavedTitle": string
-    "messageNotSavedBody": string
-    "messageNotSentTitle": string
-    "messageNotSentBody": string
-    "issueReportedTitle": string
-    "issueReportFailedTitle": string
-    "issueReportedBody": string
-    "issueReportFailedBody": string
-    "reportIssueButton": string
-    "sendFailedTitle": string
-    "sendFailedBody": string
-    "deleteSessionFailedTitle": string
-    "deleteSessionFailedBody": string
-    "memoryLoadErrorTitle": string
-    "memoryLoadErrorBody": string
-    "memoryDeleteSuccessTitle": string
-    "memoryDeleteSuccessBody": string
-    "memoryDeleteFailedTitle": string
-    "memoryDeleteFailedBody": string
-    "memoryDeleteErrorTitle": string
-    "memoryDeleteErrorBody": string
-    "hideTrackerUnavailableTitle": string
-    "hideTrackerUnavailableBody": string
-    "hideTrackerFailedTitle": string
-    "hideTrackerSuccessTitle": string
-    "hideTrackerSuccessBody": string
-    "generalRetry": string
-    "saveFailedTitle": string
-    "saveFailedBody": string
-    "trackerCreateFailedTitle": string
-    "trackerCreateSuccessTitle": string
-    "trackerCreateSuccessBody": string
-    "checkingLocalModelTitle": string
-    "checkingLocalModelBody": string
-    "localModelReadyTitle": string
-    "localModelReadyBody": string
-    "localModelUnavailableTitle": string
-    "localModelUnavailableBody": string
-    "connectionErrorTitle": string
-    "connectionErrorBody": string
-    "draftDeletedTitle": string
-    "draftDeletedBody": string
-    "draftDeleteFailedTitle": string
-    "draftDeleteFailedBody": string
-    "draftResumedTitle": string
-    "draftResumedBody": string
-    "newSessionStartedTitle": string
-    "newSessionStartedBody": string
-    "noCbtSessionTitle": string
-    "noCbtSessionBody": string
-    "cbtSentTitle": string
-    "cbtSentBody": string
-    "cbtSendFailedTitle": string
-    "cbtSendFailedBody": string
-  }
-  "reports": {
-    "title": string
-    "subtitle": string
-    "comingSoon": {
-      "title": string
-      "desc": string
-      "includes": string
-      "item1": string
-      "item2": string
-      "item3": string
-      "item4": string
-      "item5": string
-    }
-    "cta": string
-    "example": {
-      "title": string
-      "cardTitle": string
-      "duration": string
-      "section1": string
-      "section1i1": string
-      "section1i2": string
-      "section1i3": string
-      "section2": string
-      "section2i1": string
-      "section2i2": string
-      "section2i3": string
-      "section3": string
-      "section3i1": string
-      "section3i2": string
-      "section3i3": string
-    }
-  }
-  "sessions": {
-    "defaultTitle": string
-  }
-  "cbt": {
-    "nav": {
-      "chat": string
-      "session": string
-      "backToChat": string
-      "back": string
-      "skip": string
-      "next": string
-    }
-    "status": {
-      "saved": string
-      "at": string
-      "saving": string
-    }
-    "welcome": {
-      "title": string
-      "subtitle": string
-      "evidenceTitle": string
-      "evidenceDesc": string
-      "interactiveTitle": string
-      "interactiveDesc": string
-    }
-    "draft": {
-      "choice": string
-      "found": string
-      "statusSaved": string
-      "delete": string
-    }
-    "actions": {
-      "resume": string
-      "startNew": string
-      "begin": string
-      "sendToChat": string
-      "deleteDraft": string
-    }
-    "sessionReportTitle": string
-    "actionPlan": {
-      "title": string
-      "subtitle": string
-      "nextToReflection": string
-      "header": string
-      "headerDesc": string
-      "improvement": string
-      "reflectionTitle": string
-      "originalThoughtCredibility": string
-      "futureActionTitle": string
-      "futureActionLabel": string
-      "futureActionPlaceholder": string
-      "successMessage": string
-      "improvedState": string
-    }
-    "finalEmotions": {
-      "title": string
-      "subtitle": string
-      "emotions": string
-      "selected": string
-      "addCustom": string
-      "customPlaceholder": string
-    }
-    "emotionIntensity": {
-      "none": string
-      "mild": string
-      "moderate": string
-      "strong": string
-      "veryStrong": string
-      "overwhelming": string
-    }
-    "thoughts": {
-      "title": string
-      "subtitle": string
-      "next": string
-      "countLabel": string
-      "help": string
-      "promptLabel": string
-      "entryLabel": string
-      "placeholder": string
-      "credibility": string
-      "addAnother": string
-      "prompts": string[]
-    }
-    "situation": {
-      "title": string
-      "subtitle": string
-      "helper": string
-      "when": string
-      "datePlaceholder": string
-      "quick": string
-      "placeholder": string
-      "moreDetails": string
-      "lookingGood": string
-      "next": string
-      "prompts": string[]
-    }
-    "rational": {
-      "title": string
-      "subtitle": string
-      "subtitleAlt": string
-      "next": string
-      "countLabel": string
-      "help": string
-      "promptLabel": string
-      "placeholder": string
-      "confidence": string
-      "thought": string
-      "addAnother": string
-      "prompts": string[]
-    }
-    "coreBelief": {
-      "title": string
-      "subtitle": string
-      "next": string
-      "help": string
-      "promptLabel": string
-      "placeholder": string
-      "moreDetails": string
-      "lookingGood": string
-      "credibility": string
-      "prompts": string[]
-    }
-    "challenge": {
-      "title": string
-      "subtitle": string
-      "subtitleAlt": string
-      "next": string
-      "answeredLabel": string
-      "help": string
-      "placeholder": string
-      "defaultQuestions": {
-        "evidence": string
-        "friend": string
-        "helping": string
-        "letGo": string
-        "impact": string
-        "truth": string
-        "perspectives": string
-        "support": string
-        "fallback": string
-      }
-    }
-    "progress": {
-      "step": string
-      "complete": string
-      "status": string
-      "overall": string
-      "optional": string
-    }
-    "steps": {
-      "situation": {
-        "label": string
-        "title": string
-        "subtitle": string
-        "completed": string
-      }
-      "emotions": {
-        "label": string
-        "title": string
-        "subtitle": string
-        "completed": string
-      }
-      "thoughts": {
-        "label": string
-        "title": string
-        "subtitle": string
-        "completed": string
-      }
-      "coreBelief": {
-        "label": string
-        "title": string
-        "subtitle": string
-        "completed": string
-      }
-      "challenge": {
-        "label": string
-        "title": string
-        "subtitle": string
-        "completed": string
-      }
-      "rational": {
-        "label": string
-        "title": string
-        "subtitle": string
-        "completed": string
-      }
-      "schema": {
-        "label": string
-        "title": string
-        "subtitle": string
-        "completed": string
-      }
-      "actions": {
-        "label": string
-        "title": string
-        "subtitle": string
-        "completed": string
-      }
-      "finalEmotions": {
-        "label": string
-        "title": string
-        "subtitle": string
-        "completed": string
-      }
-    }
-    "emotions": {
-      "title": string
-      "titleNow": string
-      "subtitle": string
-      "subtitleNow": string
-      "next": string
-      "help": string
-      "labels": {
-        "fear": string
-        "anger": string
-        "sadness": string
-        "joy": string
-        "anxiety": string
-        "shame": string
-        "guilt": string
-      }
-      "addCustom": string
-      "customPlaceholder": string
-    }
-    "schema": {
-      "title": string
-      "subtitle": string
-      "selected": string
-      "modes": string
-      "desc": string
-      "active": string
-      "intensity": string
-    }
-    "slider": {
-      "credLeft": string
-      "credCenter": string
-      "credRight": string
-      "confLeft": string
-      "confCenter": string
-      "confRight": string
-      "intLeft": string
-      "intCenter": string
-      "intRight": string
-    }
-    "summary": {
-      "title": string
-      "completedSteps": string
-      "situation": string
-      "initialEmotions": string
-      "automaticThoughts": string
-      "moreThoughts": string
-      "coreBelief": string
-      "credibility": string
-      "rationalThoughts": string
-      "moreRationalThoughts": string
-      "activeSchemaModes": string
-      "moreModes": string
-      "actionAndNext": string
-      "newBehaviors": string
-      "moreStrategies": string
-      "emotionalProgress": string
-      "completionNote": string
-    }
-    "footer": {
-      "analyzing": string
-      "completeStep": string
-      "reflectAndSend": string
-      "autoSaved": string
-      "start": string
-    }
-    "ai": {
-      "situationNext": string
-      "emotionsNext": string
-      "thoughtsNext": string
-      "coreBeliefNext": string
-      "challengeNext": string
-      "rationalNext": string
-      "schemaNext": string
-      "actionsNext": string
-      "finalNext": string
-    }
-  }
-  "schema": {
-    "mode": {
-      "vulnerableChild": {
-        "name": string
-        "description": string
-      }
-      "angryChild": {
-        "name": string
-        "description": string
-      }
-      "punishingParent": {
-        "name": string
-        "description": string
-      }
-      "demandingParent": {
-        "name": string
-        "description": string
-      }
-      "detachedSelfSoother": {
-        "name": string
-        "description": string
-      }
-      "healthyAdult": {
-        "name": string
-        "description": string
-      }
-    }
-  }
-  "obsessions": {
-    "title": string
-    "subtitle": string
-    "button": string
-    "buttonTooltip": string
-    "tableTitle": string
-    "tableSubtitle": string
-    "obsessions": string
-    "compulsions": string
-    "start": string
-    "addObsession": string
-    "addCompulsion": string
-    "editObsession": string
-    "editCompulsion": string
-    "deleteObsession": string
-    "deleteCompulsion": string
-    "step1Title": string
-    "step1Subtitle": string
-    "step2Title": string
-    "step2Subtitle": string
-    "savePair": string
-    "updatePair": string
-    "back": string
-    "cancel": string
-    "continueLabel": string
-    "pair": string
-    "recorded": string
-    "minutes": string
-    "obsessionLabel": string
-    "obsessionPlaceholder": string
-    "intensityLabel": string
-    "intensityHelp": string
-    "triggersLabel": string
-    "triggersPlaceholder": string
-    "triggersHelp": string
-    "compulsionLabel": string
-    "compulsionPlaceholder": string
-    "frequencyLabel": string
-    "frequencyHelp": string
-    "durationLabel": string
-    "durationHelp": string
-    "reliefLabel": string
-    "reliefHelp": string
-    "intensityScale": {
-      "1": string
-      "2": string
-      "3": string
-      "4": string
-      "5": string
-      "6": string
-      "7": string
-      "8": string
-      "9": string
-      "10": string
-    }
-    "frequencyScale": {
-      "1": string
-      "2": string
-      "3": string
-      "4": string
-      "5": string
-      "6": string
-      "7": string
-      "8": string
-      "9": string
-      "10": string
-    }
-    "reliefScale": {
-      "1": string
-      "2": string
-      "3": string
-      "4": string
-      "5": string
-      "6": string
-      "7": string
-      "8": string
-      "9": string
-      "10": string
-    }
-    "actions": {
-      "save": string
-      "cancel": string
-      "delete": string
-      "edit": string
-      "add": string
-      "saving": string
-      "saved": string
-      "error": string
-    }
-    "validation": {
-      "obsessionRequired": string
-      "compulsionRequired": string
-      "intensityRequired": string
-      "frequencyRequired": string
-      "durationRequired": string
-      "reliefRequired": string
-      "durationMin": string
-      "durationMax": string
-    }
-    "addPairButton": string
-    "removeBlock": string
-    "complete": string
-    "editLabel": string
-    "editPair": string
-    "cancelAction": string
-    "deletePair": string
-    "emptyState": {
-      "title": string
-      "subtitle": string
-      "addFirst": string
-    }
-    "export": {
-      "title": string
-      "format": string
-      "success": string
-      "error": string
-    }
-  }
-  "accessibility": {
-    "skipLinksLabel": string
-    "skipToMainContent": string
-    "skipToNavigation": string
-  }
+  ui: {
+    ok: string;
+    cancel: string;
+    save: string;
+    delete: string;
+    close: string;
+    saved: string;
+    valid: string;
+    invalid: string;
+    command: {
+      placeholder: string;
+      noResults: string;
+      quick: string;
+      newChat: string;
+      cbt: string;
+      settings: string;
+      theme: string;
+      recent: string;
+      messages: string;
+      nav: string;
+      gotoChat: string;
+      reports: string;
+    };
+    settings: {
+      title: string;
+      subtitle: string;
+      model: string;
+      modelPlaceholder: string;
+      modelFast: string;
+      modelAnalytical: string;
+    };
+    notFound: {
+      title: string;
+      desc: string;
+      returnHome: string;
+      goBack: string;
+    };
+    datePick: string;
+  };
+  auth: {
+    title: string;
+    submit: string;
+    setup: {
+      title: string;
+      subtitle: string;
+      step1: {
+        title: string;
+        desc: string;
+        cantScan: string;
+      };
+      copy: string;
+      addedAccount: string;
+      step2: {
+        title: string;
+        desc: string;
+      };
+      download: string;
+      copyAll: string;
+      confirmSaved: string;
+      continueVerification: string;
+      step3: {
+        title: string;
+        desc: string;
+      };
+      verifying: string;
+      completeSetup: string;
+      loading: string;
+      failed: {
+        title: string;
+        desc: string;
+      };
+      retry: string;
+      error: {
+        load: string;
+        verify: string;
+      };
+      placeholder: string;
+      qrAlt: string;
+    };
+  };
+  chat: {
+    input: {
+      placeholder: string;
+      ariaLabel: string;
+      send: string;
+      sending: string;
+      help: string;
+      error: string;
+    };
+    app: {
+      aria: string;
+    };
+    sidebar: {
+      aria: string;
+      messages: string;
+      noMessages: string;
+      webSearchEnabled: string;
+      webSearchDisabled: string;
+      smartEnabled: string;
+      smartDisabled: string;
+      localModelEnabled: string;
+      localModelDisabled: string;
+      localModelTooltipActive: string;
+      localModelTooltipInactive: string;
+      startNew: string;
+      noSessions: string;
+      startPrompt: string;
+      brandName: string;
+      tagline: string;
+    };
+    main: {
+      aria: string;
+      toggleSidebar: string;
+      sessionTitle: string;
+      newConversation: string;
+      sessionSubtitle: string;
+      newSubtitle: string;
+      generateReport: string;
+      cbtMobile: string;
+      cbtOpen: string;
+      obsessionsTooltip: string;
+      messagesAria: string;
+      jumpToLatest: string;
+      latest: string;
+      modelChipLabel: string;
+      modelChipAria: string;
+      stopGenerating: string;
+    };
+    empty: {
+      welcome: string;
+      tagline: string;
+      intro: string;
+      compassionTitle: string;
+      compassionDesc: string;
+      privateTitle: string;
+      privateDesc: string;
+    };
+    moon: {
+      phase: {
+        new: string;
+        waxing_crescent: string;
+        first_quarter: string;
+        waxing_gibbous: string;
+        full: string;
+        waning_gibbous: string;
+        last_quarter: string;
+        waning_crescent: string;
+      };
+      illumination: string;
+      quote: {
+        new: string;
+        waxing_crescent: string;
+        first_quarter: string;
+        waxing_gibbous: string;
+        full: string;
+        waning_gibbous: string;
+        last_quarter: string;
+        waning_crescent: string;
+      };
+    };
+  };
+  toast: {
+    saved: string;
+    messageNotSavedTitle: string;
+    messageNotSavedBody: string;
+    messageNotSentTitle: string;
+    messageNotSentBody: string;
+    issueReportedTitle: string;
+    issueReportFailedTitle: string;
+    issueReportedBody: string;
+    issueReportFailedBody: string;
+    reportIssueButton: string;
+    sendFailedTitle: string;
+    sendFailedBody: string;
+    deleteSessionFailedTitle: string;
+    deleteSessionFailedBody: string;
+    memoryLoadErrorTitle: string;
+    memoryLoadErrorBody: string;
+    memoryDeleteSuccessTitle: string;
+    memoryDeleteSuccessBody: string;
+    memoryDeleteFailedTitle: string;
+    memoryDeleteFailedBody: string;
+    memoryDeleteErrorTitle: string;
+    memoryDeleteErrorBody: string;
+    hideTrackerUnavailableTitle: string;
+    hideTrackerUnavailableBody: string;
+    hideTrackerFailedTitle: string;
+    hideTrackerSuccessTitle: string;
+    hideTrackerSuccessBody: string;
+    generalRetry: string;
+    saveFailedTitle: string;
+    saveFailedBody: string;
+    trackerCreateFailedTitle: string;
+    trackerCreateSuccessTitle: string;
+    trackerCreateSuccessBody: string;
+    checkingLocalModelTitle: string;
+    checkingLocalModelBody: string;
+    localModelReadyTitle: string;
+    localModelReadyBody: string;
+    localModelUnavailableTitle: string;
+    localModelUnavailableBody: string;
+    connectionErrorTitle: string;
+    connectionErrorBody: string;
+    draftDeletedTitle: string;
+    draftDeletedBody: string;
+    draftDeleteFailedTitle: string;
+    draftDeleteFailedBody: string;
+    draftResumedTitle: string;
+    draftResumedBody: string;
+    newSessionStartedTitle: string;
+    newSessionStartedBody: string;
+    noCbtSessionTitle: string;
+    noCbtSessionBody: string;
+    cbtSentTitle: string;
+    cbtSentBody: string;
+    cbtSendFailedTitle: string;
+    cbtSendFailedBody: string;
+  };
+  reports: {
+    title: string;
+    subtitle: string;
+    comingSoon: {
+      title: string;
+      desc: string;
+      includes: string;
+      item1: string;
+      item2: string;
+      item3: string;
+      item4: string;
+      item5: string;
+    };
+    cta: string;
+    example: {
+      title: string;
+      cardTitle: string;
+      duration: string;
+      section1: string;
+      section1i1: string;
+      section1i2: string;
+      section1i3: string;
+      section2: string;
+      section2i1: string;
+      section2i2: string;
+      section2i3: string;
+      section3: string;
+      section3i1: string;
+      section3i2: string;
+      section3i3: string;
+    };
+  };
+  sessions: {
+    defaultTitle: string;
+  };
+  cbt: {
+    nav: {
+      chat: string;
+      session: string;
+      backToChat: string;
+      back: string;
+      skip: string;
+      next: string;
+    };
+    status: {
+      saved: string;
+      at: string;
+      saving: string;
+    };
+    welcome: {
+      title: string;
+      subtitle: string;
+      evidenceTitle: string;
+      evidenceDesc: string;
+      interactiveTitle: string;
+      interactiveDesc: string;
+    };
+    draft: {
+      choice: string;
+      found: string;
+      statusSaved: string;
+      delete: string;
+    };
+    actions: {
+      resume: string;
+      startNew: string;
+      begin: string;
+      sendToChat: string;
+      deleteDraft: string;
+    };
+    sessionReportTitle: string;
+    actionPlan: {
+      title: string;
+      subtitle: string;
+      nextToReflection: string;
+      header: string;
+      headerDesc: string;
+      improvement: string;
+      reflectionTitle: string;
+      originalThoughtCredibility: string;
+      futureActionTitle: string;
+      futureActionLabel: string;
+      futureActionPlaceholder: string;
+      successMessage: string;
+      improvedState: string;
+    };
+    finalEmotions: {
+      title: string;
+      subtitle: string;
+      emotions: string;
+      selected: string;
+      addCustom: string;
+      customPlaceholder: string;
+    };
+    emotionIntensity: {
+      none: string;
+      mild: string;
+      moderate: string;
+      strong: string;
+      veryStrong: string;
+      overwhelming: string;
+    };
+    thoughts: {
+      title: string;
+      subtitle: string;
+      next: string;
+      countLabel: string;
+      help: string;
+      promptLabel: string;
+      entryLabel: string;
+      placeholder: string;
+      credibility: string;
+      addAnother: string;
+      prompts: string[];
+    };
+    situation: {
+      title: string;
+      subtitle: string;
+      helper: string;
+      when: string;
+      datePlaceholder: string;
+      quick: string;
+      placeholder: string;
+      moreDetails: string;
+      lookingGood: string;
+      next: string;
+      prompts: string[];
+    };
+    rational: {
+      title: string;
+      subtitle: string;
+      subtitleAlt: string;
+      next: string;
+      countLabel: string;
+      help: string;
+      promptLabel: string;
+      placeholder: string;
+      confidence: string;
+      thought: string;
+      addAnother: string;
+      prompts: string[];
+    };
+    coreBelief: {
+      title: string;
+      subtitle: string;
+      next: string;
+      help: string;
+      promptLabel: string;
+      placeholder: string;
+      moreDetails: string;
+      lookingGood: string;
+      credibility: string;
+      prompts: string[];
+    };
+    challenge: {
+      title: string;
+      subtitle: string;
+      subtitleAlt: string;
+      next: string;
+      answeredLabel: string;
+      help: string;
+      placeholder: string;
+      defaultQuestions: {
+        evidence: string;
+        friend: string;
+        helping: string;
+        letGo: string;
+        impact: string;
+        truth: string;
+        perspectives: string;
+        support: string;
+        fallback: string;
+      };
+    };
+    progress: {
+      step: string;
+      complete: string;
+      status: string;
+      overall: string;
+      optional: string;
+    };
+    steps: {
+      situation: {
+        label: string;
+        title: string;
+        subtitle: string;
+        completed: string;
+      };
+      emotions: {
+        label: string;
+        title: string;
+        subtitle: string;
+        completed: string;
+      };
+      thoughts: {
+        label: string;
+        title: string;
+        subtitle: string;
+        completed: string;
+      };
+      coreBelief: {
+        label: string;
+        title: string;
+        subtitle: string;
+        completed: string;
+      };
+      challenge: {
+        label: string;
+        title: string;
+        subtitle: string;
+        completed: string;
+      };
+      rational: {
+        label: string;
+        title: string;
+        subtitle: string;
+        completed: string;
+      };
+      schema: {
+        label: string;
+        title: string;
+        subtitle: string;
+        completed: string;
+      };
+      actions: {
+        label: string;
+        title: string;
+        subtitle: string;
+        completed: string;
+      };
+      finalEmotions: {
+        label: string;
+        title: string;
+        subtitle: string;
+        completed: string;
+      };
+    };
+    emotions: {
+      title: string;
+      titleNow: string;
+      subtitle: string;
+      subtitleNow: string;
+      next: string;
+      help: string;
+      labels: {
+        fear: string;
+        anger: string;
+        sadness: string;
+        joy: string;
+        anxiety: string;
+        shame: string;
+        guilt: string;
+      };
+      addCustom: string;
+      customPlaceholder: string;
+    };
+    schema: {
+      title: string;
+      subtitle: string;
+      selected: string;
+      modes: string;
+      desc: string;
+      active: string;
+      intensity: string;
+    };
+    slider: {
+      credLeft: string;
+      credCenter: string;
+      credRight: string;
+      confLeft: string;
+      confCenter: string;
+      confRight: string;
+      intLeft: string;
+      intCenter: string;
+      intRight: string;
+    };
+    summary: {
+      title: string;
+      completedSteps: string;
+      situation: string;
+      initialEmotions: string;
+      automaticThoughts: string;
+      moreThoughts: string;
+      coreBelief: string;
+      credibility: string;
+      rationalThoughts: string;
+      moreRationalThoughts: string;
+      activeSchemaModes: string;
+      moreModes: string;
+      actionAndNext: string;
+      newBehaviors: string;
+      moreStrategies: string;
+      emotionalProgress: string;
+      completionNote: string;
+    };
+    footer: {
+      analyzing: string;
+      completeStep: string;
+      reflectAndSend: string;
+      autoSaved: string;
+      start: string;
+    };
+    ai: {
+      situationNext: string;
+      emotionsNext: string;
+      thoughtsNext: string;
+      coreBeliefNext: string;
+      challengeNext: string;
+      rationalNext: string;
+      schemaNext: string;
+      actionsNext: string;
+      finalNext: string;
+    };
+  };
+  schema: {
+    mode: {
+      vulnerableChild: {
+        name: string;
+        description: string;
+      };
+      angryChild: {
+        name: string;
+        description: string;
+      };
+      punishingParent: {
+        name: string;
+        description: string;
+      };
+      demandingParent: {
+        name: string;
+        description: string;
+      };
+      detachedSelfSoother: {
+        name: string;
+        description: string;
+      };
+      healthyAdult: {
+        name: string;
+        description: string;
+      };
+    };
+  };
+  obsessions: {
+    title: string;
+    subtitle: string;
+    button: string;
+    buttonTooltip: string;
+    tableTitle: string;
+    tableSubtitle: string;
+    obsessions: string;
+    compulsions: string;
+    start: string;
+    addObsession: string;
+    addCompulsion: string;
+    editObsession: string;
+    editCompulsion: string;
+    deleteObsession: string;
+    deleteCompulsion: string;
+    step1Title: string;
+    step1Subtitle: string;
+    step2Title: string;
+    step2Subtitle: string;
+    savePair: string;
+    updatePair: string;
+    back: string;
+    cancel: string;
+    continueLabel: string;
+    pair: string;
+    recorded: string;
+    minutes: string;
+    obsessionLabel: string;
+    obsessionPlaceholder: string;
+    intensityLabel: string;
+    intensityHelp: string;
+    triggersLabel: string;
+    triggersPlaceholder: string;
+    triggersHelp: string;
+    compulsionLabel: string;
+    compulsionPlaceholder: string;
+    frequencyLabel: string;
+    frequencyHelp: string;
+    durationLabel: string;
+    durationHelp: string;
+    reliefLabel: string;
+    reliefHelp: string;
+    intensityScale: {
+      '1': string;
+      '2': string;
+      '3': string;
+      '4': string;
+      '5': string;
+      '6': string;
+      '7': string;
+      '8': string;
+      '9': string;
+      '10': string;
+    };
+    frequencyScale: {
+      '1': string;
+      '2': string;
+      '3': string;
+      '4': string;
+      '5': string;
+      '6': string;
+      '7': string;
+      '8': string;
+      '9': string;
+      '10': string;
+    };
+    reliefScale: {
+      '1': string;
+      '2': string;
+      '3': string;
+      '4': string;
+      '5': string;
+      '6': string;
+      '7': string;
+      '8': string;
+      '9': string;
+      '10': string;
+    };
+    actions: {
+      save: string;
+      cancel: string;
+      delete: string;
+      edit: string;
+      add: string;
+      saving: string;
+      saved: string;
+      error: string;
+    };
+    validation: {
+      obsessionRequired: string;
+      compulsionRequired: string;
+      intensityRequired: string;
+      frequencyRequired: string;
+      durationRequired: string;
+      reliefRequired: string;
+      durationMin: string;
+      durationMax: string;
+    };
+    addPairButton: string;
+    removeBlock: string;
+    complete: string;
+    editLabel: string;
+    editPair: string;
+    cancelAction: string;
+    deletePair: string;
+    emptyState: {
+      title: string;
+      subtitle: string;
+      addFirst: string;
+    };
+    export: {
+      title: string;
+      format: string;
+      success: string;
+      error: string;
+    };
+  };
+  accessibility: {
+    skipLinksLabel: string;
+    skipToMainContent: string;
+    skipToNavigation: string;
+  };
 }
 
 /**

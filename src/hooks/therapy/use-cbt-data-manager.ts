@@ -798,8 +798,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
   };
 }
 
-
-
 export const useUnifiedCBT = useCBTDataManager;
 export type UseUnifiedCBTOptions = UseCBTDataManagerOptions;
 export type UseUnifiedCBTReturn = UseCBTDataManagerReturn;

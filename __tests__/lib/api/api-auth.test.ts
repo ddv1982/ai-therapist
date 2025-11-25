@@ -5,7 +5,10 @@ describe('lib/api/api-auth.validateApiAuth', () => {
 
   it('returns isValid=true and clerkId when auth() returns userId', async () => {
     jest.doMock('@clerk/nextjs/server', () => ({
-      auth: jest.fn().mockResolvedValue({ userId: 'clerk_user_1', getToken: jest.fn().mockResolvedValue('mock_jwt_token') }),
+      auth: jest.fn().mockResolvedValue({
+        userId: 'clerk_user_1',
+        getToken: jest.fn().mockResolvedValue('mock_jwt_token'),
+      }),
       getAuth: jest.fn(),
     }));
     const { validateApiAuth } = await import('@/lib/api/api-auth');
@@ -28,8 +31,14 @@ describe('lib/api/api-auth.validateApiAuth', () => {
 
   it('uses request-bound getAuth(request) when provided', async () => {
     jest.doMock('@clerk/nextjs/server', () => ({
-      auth: jest.fn().mockResolvedValue({ userId: 'fallback', getToken: jest.fn().mockResolvedValue('fallback_token') }),
-      getAuth: jest.fn(() => ({ userId: 'request_user', getToken: jest.fn().mockResolvedValue('request_jwt_token') })),
+      auth: jest.fn().mockResolvedValue({
+        userId: 'fallback',
+        getToken: jest.fn().mockResolvedValue('fallback_token'),
+      }),
+      getAuth: jest.fn(() => ({
+        userId: 'request_user',
+        getToken: jest.fn().mockResolvedValue('request_jwt_token'),
+      })),
     }));
     const { validateApiAuth } = await import('@/lib/api/api-auth');
     const res = await validateApiAuth({} as any);

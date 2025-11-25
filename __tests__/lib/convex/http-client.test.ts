@@ -241,7 +241,7 @@ describe('lib/convex/http-client', () => {
       const startTime = Date.now();
       const client = mod.getConvexHttpClient();
       const duration = Date.now() - startTime;
-      
+
       expect(client).toBeTruthy();
       expect(typeof client).toBe('object');
       // Client creation should be instant (< 100ms)
@@ -259,9 +259,9 @@ describe('lib/convex/http-client', () => {
       const mod = await import('@/lib/convex/http-client');
       const clients = Array.from({ length: 10 }, () => mod.getConvexHttpClient());
       const firstClient = clients[0];
-      
+
       // All clients should be the same cached instance
-      clients.forEach(client => {
+      clients.forEach((client) => {
         expect(client).toBe(firstClient);
       });
     });
@@ -269,12 +269,12 @@ describe('lib/convex/http-client', () => {
     it('cache is invalidated on module reload', async () => {
       const mod1 = await import('@/lib/convex/http-client');
       const client1 = mod1.getConvexHttpClient();
-      
+
       jest.resetModules();
-      
+
       const mod2 = await import('@/lib/convex/http-client');
       const client2 = mod2.getConvexHttpClient();
-      
+
       // After module reload, should get a new instance
       expect(client2).not.toBe(client1);
     });

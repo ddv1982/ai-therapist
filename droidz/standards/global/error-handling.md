@@ -25,9 +25,13 @@ Proper error handling is critical for application reliability, user experience, 
 ### DO: Use Specific Error Types
 
 **✅ DO**:
+
 ```typescript
 class ValidationError extends Error {
-  constructor(message: string, public field: string) {
+  constructor(
+    message: string,
+    public field: string
+  ) {
     super(message);
     this.name = 'ValidationError';
   }
@@ -46,12 +50,13 @@ throw new ValidationError('Email is required', 'email');
 ### DO: Provide Context in Errors
 
 **✅ DO**:
+
 ```typescript
 try {
   await fetchUser(userId);
 } catch (error) {
   throw new Error(`Failed to fetch user ${userId}: ${error.message}`, {
-    cause: error
+    cause: error,
   });
 }
 ```
@@ -59,6 +64,7 @@ try {
 ### DO: Handle Errors at Boundaries
 
 **✅ DO**:
+
 ```typescript
 // API route handler
 app.post('/api/users', async (req, res) => {
@@ -82,6 +88,7 @@ app.post('/api/users', async (req, res) => {
 ### DO: Clean Up Resources
 
 **✅ DO**:
+
 ```typescript
 async function processFile(filePath: string) {
   const file = await fs.open(filePath);
@@ -97,17 +104,15 @@ async function processFile(filePath: string) {
 ### DO: Use Retry Logic for Transient Failures
 
 **✅ DO**:
+
 ```typescript
-async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  maxRetries: number = 3
-): Promise<T> {
+async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries: number = 3): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await fn();
     } catch (error) {
       if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+      await new Promise((resolve) => setTimeout(resolve, Math.pow(2, i) * 1000));
     }
   }
   throw new Error('Max retries exceeded');
@@ -122,6 +127,7 @@ const data = await retryWithBackoff(() => fetchFromAPI(url));
 ### DON'T: Swallow Errors Silently
 
 **❌ DON'T**:
+
 ```typescript
 try {
   await saveData(data);
@@ -129,20 +135,24 @@ try {
   // Silent failure - data not saved but no indication!
 }
 ```
+
 **Why**: Hides failures and makes debugging impossible.
 
 ### DON'T: Use Generic Error Types
 
 **❌ DON'T**:
+
 ```typescript
 throw new Error('Something went wrong');
 throw new Error('Error');
 ```
+
 **Why**: Doesn't provide enough context for debugging or handling.
 
 ### DON'T: Expose Internal Details to Users
 
 **❌ DON'T**:
+
 ```typescript
 catch (error) {
   res.status(500).json({
@@ -151,11 +161,13 @@ catch (error) {
   });
 }
 ```
+
 **Why**: Security risk and poor UX.
 
 ### DON'T: Catch Without Re-throwing
 
 **❌ DON'T**:
+
 ```typescript
 async function fetchData() {
   try {
@@ -166,11 +178,13 @@ async function fetchData() {
   }
 }
 ```
+
 **Why**: Caller can't distinguish between "no data" and "error".
 
 ### DON'T: Create Error Handling Pyramids
 
 **❌ DON'T**:
+
 ```typescript
 try {
   const user = await getUser();
@@ -179,10 +193,11 @@ try {
     try {
       const comments = await getComments(posts);
       // Nested hell
-    } catch (e3) { }
-  } catch (e2) { }
-} catch (e1) { }
+    } catch (e3) {}
+  } catch (e2) {}
+} catch (e1) {}
 ```
+
 **Why**: Hard to read and maintain. Use async/await properly.
 
 ## Patterns & Examples
@@ -192,19 +207,20 @@ try {
 **Use Case**: Catch errors in React component tree
 
 **Implementation**:
+
 ```typescript
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
-  
+
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
-  
+
   componentDidCatch(error, errorInfo) {
     // Log to error reporting service
     console.error('Error caught:', error, errorInfo);
   }
-  
+
   render() {
     if (this.state.hasError) {
       return <ErrorFallback error={this.state.error} />;
@@ -219,10 +235,9 @@ class ErrorBoundary extends React.Component {
 **Use Case**: Avoid throwing exceptions for expected failures
 
 **Implementation**:
+
 ```typescript
-type Result<T, E = Error> = 
-  | { ok: true; value: T }
-  | { ok: false; error: E };
+type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
 
 function divide(a: number, b: number): Result<number> {
   if (b === 0) {
@@ -245,10 +260,11 @@ if (result.ok) {
 **Use Case**: Continue operation when non-critical services fail
 
 **Implementation**:
+
 ```typescript
 async function getUserWithRecommendations(userId: string) {
   const user = await getUser(userId); // Critical - throw if fails
-  
+
   let recommendations = [];
   try {
     recommendations = await getRecommendations(userId); // Non-critical
@@ -256,7 +272,7 @@ async function getUserWithRecommendations(userId: string) {
     console.warn('Failed to load recommendations:', error);
     // Continue without recommendations
   }
-  
+
   return { user, recommendations };
 }
 ```
@@ -284,10 +300,9 @@ async function getUserWithRecommendations(userId: string) {
 ```typescript
 describe('Error Handling', () => {
   it('should throw ValidationError for invalid input', () => {
-    expect(() => createUser({ email: '' }))
-      .toThrow(ValidationError);
+    expect(() => createUser({ email: '' })).toThrow(ValidationError);
   });
-  
+
   it('should include field name in validation error', () => {
     try {
       createUser({ email: '' });
@@ -296,12 +311,13 @@ describe('Error Handling', () => {
       expect(error.field).toBe('email');
     }
   });
-  
+
   it('should retry on transient failures', async () => {
-    const mock = jest.fn()
+    const mock = jest
+      .fn()
       .mockRejectedValueOnce(new Error('Transient'))
       .mockResolvedValueOnce('success');
-    
+
     const result = await retryWithBackoff(mock);
     expect(result).toBe('success');
     expect(mock).toHaveBeenCalledTimes(2);

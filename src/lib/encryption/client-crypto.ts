@@ -202,7 +202,7 @@ function getUserIdentifier(): string {
 
 /**
  * Encrypts sensitive data for secure client-side storage using AES-256-GCM.
- * 
+ *
  * This function applies rate limiting (100 operations per minute) to prevent abuse
  * and uses the same encryption standards as server-side operations. The encrypted
  * data includes salt and IV for proper key derivation and secure decryption.
@@ -214,8 +214,8 @@ function getUserIdentifier(): string {
  *
  * @example
  * ```typescript
- * const encrypted = await encryptClientData(JSON.stringify({ 
- *   draft: 'My therapy notes' 
+ * const encrypted = await encryptClientData(JSON.stringify({
+ *   draft: 'My therapy notes'
  * }));
  * // Store encrypted data in localStorage or IndexedDB
  * localStorage.setItem('draft', encrypted);
@@ -265,7 +265,7 @@ export async function encryptClientData(plaintext: string): Promise<string> {
     if (error instanceof Error && error.message.includes('Rate limit exceeded')) {
       throw error;
     }
-    
+
     throw new ClientCryptoError(
       'Failed to encrypt client data',
       error instanceof Error ? error : new Error(String(error))
@@ -275,7 +275,7 @@ export async function encryptClientData(plaintext: string): Promise<string> {
 
 /**
  * Decrypts sensitive data from secure client-side storage.
- * 
+ *
  * This function reverses the encryption performed by encryptClientData,
  * extracting the salt and IV from the encrypted payload and using them
  * to derive the correct decryption key. Rate limiting is applied to
@@ -337,7 +337,7 @@ export async function decryptClientData(encryptedData: string): Promise<string> 
     if (cryptoError instanceof Error && cryptoError.message.includes('Rate limit exceeded')) {
       throw cryptoError;
     }
-    
+
     throw new ClientCryptoError(
       'Failed to decrypt client data',
       cryptoError instanceof Error ? cryptoError : new Error(String(cryptoError))
@@ -363,7 +363,7 @@ export function clearClientCryptoSession(): void {
   try {
     sessionStorage.removeItem('therapeutic-session-key');
     sessionStorage.removeItem('therapeutic-session-id');
-    
+
     // Also reset rate limiter for this user
     const userId = getUserIdentifier();
     cryptoRateLimiter.reset(userId);
@@ -390,7 +390,7 @@ export function getClientCryptoStatus(): {
 } {
   const userId = getUserIdentifier();
   const usage = cryptoRateLimiter.getUsage(userId);
-  
+
   return {
     available: isClientCryptoAvailable(),
     hasSessionKey: sessionStorage.getItem('therapeutic-session-key') !== null,

@@ -1,4 +1,3 @@
-
 import { deriveMessageMetadata } from '@/lib/chat/message-domain-parsers';
 import { isObsessionsCompulsionsMessage } from '@/features/therapy/obsessions-compulsions/utils/obsessions-message-detector';
 import { parseObsessionsCompulsionsFromMarkdown } from '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions';
@@ -24,9 +23,9 @@ describe('message-domain-parsers', () => {
 
     it('should return undefined if content is not an obsessions/compulsions message', () => {
       (isObsessionsCompulsionsMessage as jest.Mock).mockReturnValue(false);
-      
+
       const result = deriveMessageMetadata('Some random chat message');
-      
+
       expect(isObsessionsCompulsionsMessage).toHaveBeenCalledWith('Some random chat message');
       expect(result).toBeUndefined();
     });

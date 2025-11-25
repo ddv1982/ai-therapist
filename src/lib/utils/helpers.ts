@@ -20,7 +20,7 @@ import { isDevelopment } from '@/config/env.public';
 
 /**
  * Combines and merges Tailwind CSS class names intelligently.
- * 
+ *
  * Uses clsx for conditional classes and tailwind-merge to resolve
  * conflicting Tailwind utilities, ensuring the last class takes precedence.
  *
@@ -271,11 +271,7 @@ class RequestDeduplicator {
     return parts.join(':');
   }
 
-  deduplicate<T>(
-    key: string,
-    operation: () => Promise<T>,
-    ttlMs: number = 5000
-  ): Promise<T> {
+  deduplicate<T>(key: string, operation: () => Promise<T>, ttlMs: number = 5000): Promise<T> {
     const now = Date.now();
     const existing = this.entries.get(key);
 

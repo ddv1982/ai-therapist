@@ -13,7 +13,7 @@ import type { TherapeuticBaseCardProps } from './card-types';
 /**
  * Legacy wrapper that maintains the old monolithic API
  * Uses compound components under the hood
- * 
+ *
  * For new code, prefer using compound components directly:
  * <TherapeuticCard variant="therapeutic">
  *   <TherapeuticCard.Header title="Title" />

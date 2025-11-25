@@ -34,13 +34,15 @@ describe('Memory Utils', () => {
 
       const result = await checkMemoryContext();
 
-      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(expect.objectContaining({
-        toString: expect.any(Function)
-      }));
+      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(
+        expect.objectContaining({
+          toString: expect.any(Function),
+        })
+      );
       // Verify query params manually if needed, or rely on implementation detail
       const callArg = (apiClient.getMemoryReports as jest.Mock).mock.calls[0][0];
       expect(callArg.toString()).toContain('limit=3');
-      
+
       expect(result).toEqual({
         hasMemory: true,
         reportCount: 1,
@@ -226,7 +228,7 @@ describe('Memory Utils', () => {
         fullContent: 'Complete therapeutic session content with detailed analysis...',
         keyInsights: ['Insight 1', 'Insight 2'],
         reportSize: 2048,
-        structuredCBTData: undefined
+        structuredCBTData: undefined,
       });
     });
 

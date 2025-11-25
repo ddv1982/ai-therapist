@@ -3,9 +3,11 @@
 ## Task Assignment
 
 ### Task 3.1: Identify All Files with dark: Classes
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Run: `grep -r "dark:" src/ --include="*.tsx" --include="*.ts" -l > dark-files.txt`
 - [ ] Review list, estimate ~20-30 files
 - [ ] Prioritize files by user-facing importance
@@ -13,9 +15,11 @@
 ---
 
 ### Task 3.2: Update High Priority Chat Components
+
 **Priority**: High | **Effort**: Medium | **Risk**: Medium
 
 **Components to update**:
+
 1. `/src/features/chat/components/chat-composer.tsx`
 2. `/src/features/chat/components/chat-header.tsx`
 3. `/src/features/chat/components/dashboard/chat-sidebar.tsx`
@@ -23,6 +27,7 @@
 5. `/src/features/chat/components/dashboard/chat-empty-state.tsx`
 
 **Transformation rules**:
+
 - `bg-white dark:bg-black` → `bg-black`
 - `bg-card/70 dark:bg-card/60` → `bg-card/60`
 - `text-gray-900 dark:text-gray-100` → `text-gray-100`
@@ -34,9 +39,11 @@
 ---
 
 ### Task 3.3: Update Medium Priority Therapy Components
+
 **Priority**: Medium | **Effort**: Medium | **Risk**: Low
 
 **Components to update**:
+
 1. `/src/features/therapy/ui/therapy-card.tsx`
 2. `/src/features/therapy/cbt/chat-components/action-plan.tsx`
 3. `/src/features/therapy/cbt/chat-components/schema-modes.tsx`
@@ -44,6 +51,7 @@
 5. `/src/features/therapy/components/cbt-session-summary-card.tsx`
 
 **Special attention**:
+
 - Pay special attention to therapeutic color classes
 - Ensure emotion colors remain distinguishable
 
@@ -52,13 +60,16 @@
 ---
 
 ### Task 3.4: Update Remaining Components
+
 **Priority**: Low | **Effort**: Medium | **Risk**: Low
 
 **Components to update**:
+
 - All remaining files from `dark-files.txt`
 - Includes session controls, moon component, misc UI elements
 
 **For each file**:
+
 - [ ] Apply standard transformation rules
 - [ ] Test if component is user-facing
 
@@ -67,16 +78,19 @@
 ---
 
 ### Task 3.5: Special Case - Realistic Moon Component
+
 **Priority**: Low | **Effort**: Small | **Risk**: Low
 
 **File**: `/src/features/chat/components/dashboard/realistic-moon.tsx`
 
 **Subtasks**:
+
 - [ ] Update SVG element classes with `dark:` variants
 - [ ] Example: `fill-slate-700 dark:fill-slate-900` → `fill-slate-900`
 - [ ] Test moon renders correctly on dashboard
 
 **Files Changed**:
+
 - `/src/features/chat/components/dashboard/realistic-moon.tsx`
 
 ---
@@ -84,6 +98,7 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: droidz/specs/019-dark-mode-only/spec.md
 - requirements: droidz/specs/019-dark-mode-only/planning/requirements.md
 - tasks: droidz/specs/019-dark-mode-only/tasks.md
@@ -104,6 +119,7 @@ Read these for requirements and patterns:
 ## Verification
 
 After each component update:
+
 ```bash
 npm run dev
 # Navigate to the updated component
@@ -111,6 +127,7 @@ npm run dev
 ```
 
 Final verification:
+
 ```bash
 grep -r "dark:" src/ --include="*.tsx" -c
 # Should show significantly reduced count or zero
@@ -119,6 +136,7 @@ grep -r "dark:" src/ --include="*.tsx" -c
 ## Standards
 
 Follow all standards in:
+
 - /Users/vriesd/projects/ai-therapist/AGENTS.md
 - /Users/vriesd/projects/ai-therapist/droidz/standards/
 

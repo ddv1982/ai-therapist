@@ -290,9 +290,7 @@ export async function getSessionReportDetail(
       logger.reportOperation('Session report located', reportId, {
         reportFound: !!report ? 'true' : 'false',
         hasFullContent: !!(report as MemoryDetailInfo)?.fullContent ? 'true' : 'false',
-        hasStructuredCBTData: !!(report as MemoryDetailInfo)?.structuredCBTData
-          ? 'true'
-          : 'false',
+        hasStructuredCBTData: !!(report as MemoryDetailInfo)?.structuredCBTData ? 'true' : 'false',
         reportKeyCount: report ? Object.keys(report).length : 0,
       });
 

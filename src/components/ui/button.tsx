@@ -16,7 +16,8 @@ const buttonVariants = cva(
         secondary:
           'bg-background text-foreground border border-border shadow-apple-xs hover:shadow-apple-sm hover:bg-accent hover:text-accent-foreground transition-all duration-fast ease-out-smooth',
         // 60% - Ghost/minimal (neutral backgrounds)
-        ghost: 'shadow-apple-xs hover:shadow-apple-sm hover:bg-muted hover:text-foreground transition-all duration-fast',
+        ghost:
+          'shadow-apple-xs hover:shadow-apple-sm hover:bg-muted hover:text-foreground transition-all duration-fast',
         // Glass variant - Apple frosted glass effect
         glass:
           'bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] text-foreground shadow-apple-md hover:shadow-apple-lg hover:bg-[var(--glass-white)]/90 transition-all duration-base ease-out-smooth',
@@ -51,9 +52,7 @@ export interface ButtonProps
 
 function Button({ className, variant, size, asChild = false, ref, ...props }: ButtonProps) {
   const Comp = asChild ? Slot : 'button';
-  return (
-    <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
-  );
+  return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
 }
 
 export { Button, buttonVariants };

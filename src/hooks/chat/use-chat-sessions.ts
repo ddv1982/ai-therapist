@@ -24,10 +24,9 @@ export function useChatSessions(options: UseChatSessionsOptions) {
   const { currentSessionId, setCurrentSession } = useSession();
   const authReady = useAuthReady();
 
-  const {
-    data: apiSessions = [],
-    refetch: refetchSessions,
-  } = useSessionsQuery({ enabled: authReady });
+  const { data: apiSessions = [], refetch: refetchSessions } = useSessionsQuery({
+    enabled: authReady,
+  });
 
   const { mutateAsync: createSessionRequest } = useCreateSessionMutation();
   const { mutateAsync: deleteSessionRequest } = useDeleteSessionMutation();
@@ -39,10 +38,7 @@ export function useChatSessions(options: UseChatSessionsOptions) {
       title: session.title,
       startedAt: session.createdAt ? new Date(session.createdAt) : undefined,
       lastMessage: session.lastMessage,
-      _count:
-        session.messageCount !== undefined
-          ? { messages: session.messageCount }
-          : undefined,
+      _count: session.messageCount !== undefined ? { messages: session.messageCount } : undefined,
     }));
   }, [apiSessions]);
 
@@ -84,7 +80,13 @@ export function useChatSessions(options: UseChatSessionsOptions) {
     } catch (error) {
       throw error instanceof Error ? error : new Error(String(error));
     }
-  }, [currentSessionId, resolveDefaultTitle, createSessionRequest, setCurrentSessionAndLoad, loadSessions]);
+  }, [
+    currentSessionId,
+    resolveDefaultTitle,
+    createSessionRequest,
+    setCurrentSessionAndLoad,
+    loadSessions,
+  ]);
 
   const startNewSession = useCallback(async () => {
     await clearCurrentSession();

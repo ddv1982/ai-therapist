@@ -26,6 +26,15 @@ export { CardAction, type CardActionProps } from './compound/card-action';
 export { TherapeuticBaseCard } from '@/components/ui/therapeutic-cards/base/therapeutic-base-card';
 
 // Specialized cards (client-side)
-export { CBTSectionCard, type CBTSectionCardProps } from '@/components/ui/therapeutic-cards/specialized/cbt-section-card';
-export { EmotionCard, type EmotionCardProps } from '@/components/ui/therapeutic-cards/specialized/emotion-card';
-export { SessionCard, type SessionCardProps } from '@/components/ui/therapeutic-cards/specialized/session-card';
+export {
+  CBTSectionCard,
+  type CBTSectionCardProps,
+} from '@/components/ui/therapeutic-cards/specialized/cbt-section-card';
+export {
+  EmotionCard,
+  type EmotionCardProps,
+} from '@/components/ui/therapeutic-cards/specialized/emotion-card';
+export {
+  SessionCard,
+  type SessionCardProps,
+} from '@/components/ui/therapeutic-cards/specialized/session-card';

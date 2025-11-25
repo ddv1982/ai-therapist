@@ -49,7 +49,7 @@ class CryptoRateLimiter {
    */
   checkLimit(userId: string): boolean {
     const now = Date.now();
-    
+
     // Periodic cleanup of expired entries
     this.periodicCleanup(now);
 
@@ -131,7 +131,7 @@ class CryptoRateLimiter {
     }
 
     this.lastCleanup = now;
-    
+
     for (const [userId, entry] of this.attempts.entries()) {
       if (now > entry.resetAt) {
         this.attempts.delete(userId);

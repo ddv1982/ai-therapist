@@ -14,11 +14,11 @@ const projectRoot = join(__dirname, '..');
 
 function expandDotNotation(flatMessages) {
   const nested = {};
-  
+
   for (const [key, value] of Object.entries(flatMessages)) {
     const parts = key.split('.');
     let current = nested;
-    
+
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
       if (i === parts.length - 1) {
@@ -37,22 +37,22 @@ function expandDotNotation(flatMessages) {
       }
     }
   }
-  
+
   return nested;
 }
 
 function convertFile(filePath) {
   console.log(`Converting ${filePath}...`);
-  
+
   // Read flat JSON
   const flatJson = JSON.parse(readFileSync(filePath, 'utf-8'));
-  
+
   // Convert to nested
   const nested = expandDotNotation(flatJson);
-  
+
   // Write back with nice formatting
   writeFileSync(filePath, JSON.stringify(nested, null, 2) + '\n', 'utf-8');
-  
+
   console.log(`✅ Converted ${filePath}`);
 }
 

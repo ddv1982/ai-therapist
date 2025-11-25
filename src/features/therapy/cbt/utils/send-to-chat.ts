@@ -52,10 +52,11 @@ export async function sendToChat({
   const now = Date.now();
   let sessionId: string | null = null;
 
-  const reportMessages: Array<{ role: 'user' | 'assistant'; content: string; timestamp: string }> = [
-    { role: 'user', content: summaryCard, timestamp: new Date(now).toISOString() },
-    ...contextualMessages,
-  ];
+  const reportMessages: Array<{ role: 'user' | 'assistant'; content: string; timestamp: string }> =
+    [
+      { role: 'user', content: summaryCard, timestamp: new Date(now).toISOString() },
+      ...contextualMessages,
+    ];
 
   try {
     const createdSession = mapApiResponse<any>(

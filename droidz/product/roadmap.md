@@ -11,12 +11,12 @@ This roadmap outlines the planned feature development and enhancements for the A
 
 ## Roadmap at a Glance
 
-| Phase | Timeline | Focus | Status |
-|-------|----------|-------|--------|
-| **Phase 1: MVP Foundation** | Q3-Q4 2025 | Core functionality, security, performance | ✅ Complete |
-| **Phase 2: Enhancement** | Q1-Q2 2026 | Analytics, advanced features, UX improvements | 🎯 Planned |
-| **Phase 3: Growth** | Q3-Q4 2026 | Scale, integrations, mobile apps | 🚀 Future |
-| **Phase 4: Platform** | 2027+ | Ecosystem, partnerships, enterprise | 💡 Vision |
+| Phase                       | Timeline   | Focus                                         | Status      |
+| --------------------------- | ---------- | --------------------------------------------- | ----------- |
+| **Phase 1: MVP Foundation** | Q3-Q4 2025 | Core functionality, security, performance     | ✅ Complete |
+| **Phase 2: Enhancement**    | Q1-Q2 2026 | Analytics, advanced features, UX improvements | 🎯 Planned  |
+| **Phase 3: Growth**         | Q3-Q4 2026 | Scale, integrations, mobile apps              | 🚀 Future   |
+| **Phase 4: Platform**       | 2027+      | Ecosystem, partnerships, enterprise           | 💡 Vision   |
 
 ---
 
@@ -29,6 +29,7 @@ This roadmap outlines the planned feature development and enhancements for the A
 ### Completed Features
 
 #### 🧠 Core Therapeutic Functionality
+
 - ✅ **Real-time AI Chat**
   - Streaming responses with Groq AI models
   - Natural conversation flow with typing indicators
@@ -54,6 +55,7 @@ This roadmap outlines the planned feature development and enhancements for the A
   - Pattern recognition across sessions
 
 #### 🔒 Enterprise Security
+
 - ✅ **Field-Level Encryption**
   - AES-256-GCM encryption for message content
   - Server-side encryption key management
@@ -73,6 +75,7 @@ This roadmap outlines the planned feature development and enhancements for the A
   - Signed webhook verification
 
 #### ⚡ Performance & Technical Excellence
+
 - ✅ **Production Optimization**
   - 20x faster server rendering (235ms → 12ms)
   - 1156x faster locale detection (208ms → 0.18ms)
@@ -92,6 +95,7 @@ This roadmap outlines the planned feature development and enhancements for the A
   - Automated CI/CD pipelines
 
 #### 🎨 User Experience
+
 - ✅ **Beautiful Interface**
   - Dual theme support (dark/light modes)
   - Mobile-optimized responsive design
@@ -105,6 +109,7 @@ This roadmap outlines the planned feature development and enhancements for the A
   - Safe-area handling for notched devices
 
 ### Technical Foundation Established
+
 - Next.js 16 with App Router and Turbopack
 - React 19 with concurrent features
 - TypeScript strict mode
@@ -299,6 +304,7 @@ This roadmap outlines the planned feature development and enhancements for the A
 ### Phase 2 Priorities (MoSCoW Method)
 
 #### Must Have (Q1 2026)
+
 1. Personal Dashboard
 2. Mood Tracking
 3. Progress Visualization
@@ -306,6 +312,7 @@ This roadmap outlines the planned feature development and enhancements for the A
 5. Crisis Resources Enhancement
 
 #### Should Have (Q2 2026)
+
 6. Guided Exercises
 7. Therapeutic Journaling
 8. Additional Frameworks (DBT, ACT)
@@ -316,10 +323,12 @@ This roadmap outlines the planned feature development and enhancements for the A
 13. Onboarding Experience
 
 #### Could Have (End of Q2 2026)
+
 14. Smart Suggestions
 15. Anonymous Peer Support (evaluate feasibility)
 
 #### Won't Have (Postponed to Phase 3)
+
 - Native mobile apps (iOS/Android)
 - Provider integrations
 - Enterprise features
@@ -420,11 +429,13 @@ This roadmap outlines the planned feature development and enhancements for the A
 ### Phase 3 Priorities
 
 #### Q3 2026
+
 - Native mobile apps (iOS & Android)
 - Provider integration foundations
 - Internationalization (5 languages)
 
 #### Q4 2026
+
 - Voice interactions
 - Predictive analytics
 - B2B pilot programs
@@ -517,6 +528,7 @@ Higher RICE scores get prioritized within each phase.
 ## Success Criteria by Phase
 
 ### Phase 1: MVP Foundation (✅ Complete)
+
 - ✅ Core therapeutic chat operational
 - ✅ Enterprise security implemented
 - ✅ 1,000+ active users
@@ -525,6 +537,7 @@ Higher RICE scores get prioritized within each phase.
 - ✅ All tests passing
 
 ### Phase 2: Enhancement (Target)
+
 - 📊 10,000+ active users
 - 📊 70%+ return rate (7-day)
 - 📊 85%+ rate features as helpful
@@ -533,6 +546,7 @@ Higher RICE scores get prioritized within each phase.
 - 📊 8+ sessions per user per month
 
 ### Phase 3: Growth (Target)
+
 - 🚀 100,000+ active users
 - 🚀 Mobile apps launched (iOS & Android)
 - 🚀 10+ languages supported
@@ -541,6 +555,7 @@ Higher RICE scores get prioritized within each phase.
 - 🚀 20% month-over-month growth
 
 ### Phase 4: Platform (Vision)
+
 - 💡 1M+ active users
 - 💡 Insurance partnerships secured
 - 💡 Clinical validation published
@@ -552,6 +567,7 @@ Higher RICE scores get prioritized within each phase.
 ## Technology Evolution
 
 ### Current Stack (Phase 1)
+
 - Next.js 16, React 19, TypeScript
 - Convex backend
 - React Query state management
@@ -560,12 +576,14 @@ Higher RICE scores get prioritized within each phase.
 - Tailwind CSS v4
 
 ### Planned Additions (Phase 2)
+
 - Advanced analytics libraries (D3.js, Recharts)
 - Audio/video processing for exercises
 - Enhanced mobile PWA capabilities
 - Real-time notifications
 
 ### Future Considerations (Phase 3+)
+
 - Native mobile frameworks (Swift, Kotlin)
 - Voice AI and speech recognition
 - Machine learning pipelines for personalization
@@ -578,39 +596,42 @@ Higher RICE scores get prioritized within each phase.
 
 ### Technical Risks
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| AI model failures | High | Medium | Comprehensive testing, human review, fallback responses |
-| Performance degradation at scale | High | Medium | Load testing, caching, CDN, database optimization |
-| Security vulnerabilities | Critical | Low | Security audits, penetration testing, bug bounty |
-| Third-party service outages | Medium | Medium | Redundancy, circuit breakers, graceful degradation |
+| Risk                             | Impact   | Probability | Mitigation                                              |
+| -------------------------------- | -------- | ----------- | ------------------------------------------------------- |
+| AI model failures                | High     | Medium      | Comprehensive testing, human review, fallback responses |
+| Performance degradation at scale | High     | Medium      | Load testing, caching, CDN, database optimization       |
+| Security vulnerabilities         | Critical | Low         | Security audits, penetration testing, bug bounty        |
+| Third-party service outages      | Medium   | Medium      | Redundancy, circuit breakers, graceful degradation      |
 
 ### Product Risks
 
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| Feature scope creep | Medium | High | Strict roadmap adherence, RICE prioritization |
-| User adoption challenges | High | Medium | User research, iterative testing, onboarding optimization |
-| Regulatory compliance issues | Critical | Low | Legal review, HIPAA compliance, transparency |
-| Competition from large players | High | Medium | Focus on quality, community, therapeutic excellence |
+| Risk                           | Impact   | Probability | Mitigation                                                |
+| ------------------------------ | -------- | ----------- | --------------------------------------------------------- |
+| Feature scope creep            | Medium   | High        | Strict roadmap adherence, RICE prioritization             |
+| User adoption challenges       | High     | Medium      | User research, iterative testing, onboarding optimization |
+| Regulatory compliance issues   | Critical | Low         | Legal review, HIPAA compliance, transparency              |
+| Competition from large players | High     | Medium      | Focus on quality, community, therapeutic excellence       |
 
 ---
 
 ## Dependencies & Prerequisites
 
 ### Phase 2 Dependencies
+
 - Phase 1 completion ✅
 - Analytics infrastructure setup
 - User research on feature priorities
 - Design system expansion
 
 ### Phase 3 Dependencies
+
 - Phase 2 feature validation
 - Mobile development team hiring
 - International legal/regulatory review
 - AI voice model selection
 
 ### Phase 4 Dependencies
+
 - Phase 3 market validation
 - Research partnerships established
 - Regulatory pathway identified
@@ -623,30 +644,35 @@ Higher RICE scores get prioritized within each phase.
 ### Continuous Improvements (All Phases)
 
 #### Security & Compliance
+
 - Regular security audits (quarterly)
 - Penetration testing (bi-annual)
 - Dependency updates (monthly)
 - Compliance reviews (quarterly)
 
 #### Performance & Reliability
+
 - Performance monitoring and optimization
 - Error tracking and resolution
 - Uptime monitoring and alerts
 - Load testing for scale
 
 #### Quality Assurance
+
 - Maintain 100% test pass rate
 - Add tests for new features
 - E2E test coverage expansion
 - Automated regression testing
 
 #### User Experience
+
 - A/B testing for UX improvements
 - User feedback analysis
 - Accessibility audits
 - Design refinements
 
 #### Therapeutic Effectiveness
+
 - AI response quality monitoring
 - Therapeutic framework validation
 - Crisis response testing
@@ -657,6 +683,7 @@ Higher RICE scores get prioritized within each phase.
 ## Changelog & Version History
 
 ### Version 1.0 (Current)
+
 - Initial roadmap creation
 - Phase 1 completion documentation
 - Phase 2-4 planning
@@ -672,6 +699,7 @@ Higher RICE scores get prioritized within each phase.
 **Status**: Active
 
 For more context, see:
+
 - [Product Mission](./mission.md)
 - [Technical Stack Documentation](./tech-stack.md)
 - [Project README](../../README.md)

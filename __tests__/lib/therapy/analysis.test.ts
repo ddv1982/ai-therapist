@@ -1,7 +1,4 @@
-import {
-  analyzeCBTMessage,
-  hasSchemaReflection,
-} from '@/lib/chat/cbt-message-detector';
+import { analyzeCBTMessage, hasSchemaReflection } from '@/lib/chat/cbt-message-detector';
 import { validateTherapeuticContext } from '@/lib/therapy/validators';
 import * as Analysis from '@/lib/therapy/analysis';
 
@@ -15,17 +12,23 @@ describe('Therapy Analysis Utilities', () => {
       it('should extract emotion ratings with format "emotion: 8/10"', () => {
         const content = 'I am feeling - anxiety: 8/10 and - depression: 6/10';
         const ratings = Analysis.extractUserRatings(content);
-        expect(ratings).toEqual(expect.arrayContaining([
-          expect.objectContaining({ rating: 8, context: 'anxiety', type: 'emotion' }),
-          expect.objectContaining({ rating: 6, context: 'depression', type: 'emotion' }),
-        ]));
+        expect(ratings).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ rating: 8, context: 'anxiety', type: 'emotion' }),
+            expect.objectContaining({ rating: 6, context: 'depression', type: 'emotion' }),
+          ])
+        );
       });
 
       it('should extract credibility ratings with format "*(8/10)*"', () => {
         const content = 'This thought feels true *(8/10)*';
         const ratings = Analysis.extractUserRatings(content);
         expect(ratings).toContainEqual(
-          expect.objectContaining({ rating: 8, context: 'thought credibility', type: 'credibility' })
+          expect.objectContaining({
+            rating: 8,
+            context: 'thought credibility',
+            type: 'credibility',
+          })
         );
       });
 
@@ -39,7 +42,7 @@ describe('Therapy Analysis Utilities', () => {
 
         examples.forEach(({ text, rating }) => {
           const ratings = Analysis.extractUserRatings(text);
-          expect(ratings.some(r => r.rating === rating)).toBe(true);
+          expect(ratings.some((r) => r.rating === rating)).toBe(true);
         });
       });
 
@@ -51,7 +54,7 @@ describe('Therapy Analysis Utilities', () => {
         // Actually regex for standard format uses \d+, so 11 is captured.
         // enhancedPatterns usually capture specific digits.
         // Let's verify specific behavior.
-        expect(ratings.some(r => r.rating === 11)).toBe(false);
+        expect(ratings.some((r) => r.rating === 11)).toBe(false);
       });
     });
 
@@ -120,7 +123,9 @@ describe('Therapy Analysis Utilities', () => {
       });
 
       it('should return false for detailed content', () => {
-        expect(Analysis.isBriefRequest('I have been feeling really down lately because...')).toBe(false);
+        expect(Analysis.isBriefRequest('I have been feeling really down lately because...')).toBe(
+          false
+        );
       });
     });
   });
@@ -161,7 +166,9 @@ describe('Therapy Analysis Utilities', () => {
     });
 
     it('should detect intrusive thoughts', () => {
-      expect(Analysis.detectIntrusiveThoughts('I have contamination fear and feel dirty')).toBeGreaterThan(0);
+      expect(
+        Analysis.detectIntrusiveThoughts('I have contamination fear and feel dirty')
+      ).toBeGreaterThan(0);
     });
 
     it('should detect avoidance behaviors', () => {
@@ -177,7 +184,8 @@ describe('Therapy Analysis Utilities', () => {
     });
 
     it('should analyze ERP applicability', () => {
-      const content = 'I check door lock repeatedly because I am afraid of intruders. I check stove too.';
+      const content =
+        'I check door lock repeatedly because I am afraid of intruders. I check stove too.';
       const result = Analysis.analyzeERPApplicability(content);
       expect(result.compulsiveBehaviorCount).toBeGreaterThan(0);
       expect(result.erpApplicabilityScore).toBeGreaterThan(0);
@@ -207,7 +215,7 @@ describe('Therapy Analysis Utilities', () => {
         userDataReliability: 80,
         shouldPrioritizeUserData: true,
         extractedRatings: [],
-        userAssessmentTypes: []
+        userAssessmentTypes: [],
       };
       const conf = Analysis.calculateUserDataWeightedConfidence(50, priority);
       // Reliability 80 -> adj 0.3. base 0.7. weight 1.0 (min 0.85).
@@ -233,7 +241,7 @@ describe('Therapy Analysis Utilities', () => {
         hasCBTHeader: true,
         hasEmotionRatings: true,
         hasAutomaticThoughts: true,
-        confidence: 0.9
+        confidence: 0.9,
       });
       (hasSchemaReflection as jest.Mock).mockReturnValue(true);
       (validateTherapeuticContext as jest.Mock).mockReturnValue({
@@ -244,8 +252,8 @@ describe('Therapy Analysis Utilities', () => {
           neutralContextFlags: [],
           stressIndicators: [],
           contextType: 'therapeutic',
-          confidence: 100
-        }
+          confidence: 100,
+        },
       });
 
       const messages = [{ role: 'user', content: 'CBT Entry. Emotion: 8/10. Thought: I am bad.' }];
@@ -257,7 +265,7 @@ describe('Therapy Analysis Utilities', () => {
 
     it('should analyze Tier 3 Content (Minimal/Brief)', () => {
       (analyzeCBTMessage as jest.Mock).mockReturnValue({
-        confidence: 0.1
+        confidence: 0.1,
       });
       (hasSchemaReflection as jest.Mock).mockReturnValue(false);
       (validateTherapeuticContext as jest.Mock).mockReturnValue({
@@ -269,8 +277,8 @@ describe('Therapy Analysis Utilities', () => {
           neutralContextFlags: ['brief'],
           stressIndicators: [],
           contextType: 'neutral',
-          confidence: 90
-        }
+          confidence: 90,
+        },
       });
 
       const messages = [{ role: 'user', content: 'Hi there' }];
@@ -281,7 +289,7 @@ describe('Therapy Analysis Utilities', () => {
 
     it('should analyze Tier 2 Content (Standard)', () => {
       (analyzeCBTMessage as jest.Mock).mockReturnValue({
-        confidence: 0.5 // Partial
+        confidence: 0.5, // Partial
       });
       (hasSchemaReflection as jest.Mock).mockReturnValue(false);
       (validateTherapeuticContext as jest.Mock).mockReturnValue({
@@ -292,8 +300,8 @@ describe('Therapy Analysis Utilities', () => {
           neutralContextFlags: [],
           stressIndicators: ['stress'],
           contextType: 'therapeutic',
-          confidence: 80
-        }
+          confidence: 80,
+        },
       });
 
       const messages = [{ role: 'user', content: 'I am feeling a bit stressed about work.' }];
@@ -303,14 +311,14 @@ describe('Therapy Analysis Utilities', () => {
     });
 
     it('should handle empty content', () => {
-        const messages: any[] = [];
-        const result = Analysis.analyzeContentTier(messages);
-        expect(result.tier).toBe('tier3_minimal');
+      const messages: any[] = [];
+      const result = Analysis.analyzeContentTier(messages);
+      expect(result.tier).toBe('tier3_minimal');
     });
 
     it('should analyze Tier 1 Content via hasUserQuantifiedAssessments and schema depth', () => {
       (analyzeCBTMessage as jest.Mock).mockReturnValue({
-        confidence: 0.1
+        confidence: 0.1,
       });
       (hasSchemaReflection as jest.Mock).mockReturnValue(false);
       // This test relies on analyzeContentTier internal logic:
@@ -324,17 +332,19 @@ describe('Therapy Analysis Utilities', () => {
           neutralContextFlags: [],
           stressIndicators: [],
           contextType: 'therapeutic',
-          confidence: 80
-        }
+          confidence: 80,
+        },
       });
 
       // To mock hasUserData, we can use a string that matches patterns, or mock extraction (if we could, but it's inside the file).
       // We are testing the real Analysis functions (except the mocked external ones).
       // So we need a string that passes extractUserRatings/hasUserQuantifiedAssessments AND assessSchemaReflectionDepth.
       // String: "My anxiety is 8/10. I notice patterns in thinking."
-      const messages = [{ role: 'user', content: 'My anxiety is 8/10. I notice patterns in thinking.' }];
+      const messages = [
+        { role: 'user', content: 'My anxiety is 8/10. I notice patterns in thinking.' },
+      ];
       const result = Analysis.analyzeContentTier(messages);
-      
+
       expect(result.tier).toBe('tier1_premium');
     });
   });
@@ -348,7 +358,7 @@ describe('Therapy Analysis Utilities', () => {
         analysisRecommendation: {} as any,
         reportType: 'client_friendly',
         userSelfAssessmentPresent: true,
-        schemaReflectionDepth: 'moderate'
+        schemaReflectionDepth: 'moderate',
       };
       const exp = Analysis.getContentTierExplanation(analysis);
       expect(exp).toContain('Premium CBT/Schema Analysis');
@@ -358,22 +368,26 @@ describe('Therapy Analysis Utilities', () => {
   });
 
   describe('meetsAnalysisThreshold', () => {
-      it('should return true for tier 1 and 2', () => {
-          expect(Analysis.meetsAnalysisThreshold({ tier: 'tier1_premium' } as any)).toBe(true);
-          expect(Analysis.meetsAnalysisThreshold({ tier: 'tier2_standard' } as any)).toBe(true);
-      });
+    it('should return true for tier 1 and 2', () => {
+      expect(Analysis.meetsAnalysisThreshold({ tier: 'tier1_premium' } as any)).toBe(true);
+      expect(Analysis.meetsAnalysisThreshold({ tier: 'tier2_standard' } as any)).toBe(true);
+    });
 
-      it('should return true for tier 3 ONLY if insights are recommended', () => {
-          expect(Analysis.meetsAnalysisThreshold({
-              tier: 'tier3_minimal',
-              analysisRecommendation: { shouldProvideTherapeuticInsights: true }
-           } as any)).toBe(true);
+    it('should return true for tier 3 ONLY if insights are recommended', () => {
+      expect(
+        Analysis.meetsAnalysisThreshold({
+          tier: 'tier3_minimal',
+          analysisRecommendation: { shouldProvideTherapeuticInsights: true },
+        } as any)
+      ).toBe(true);
 
-           expect(Analysis.meetsAnalysisThreshold({
-            tier: 'tier3_minimal',
-            analysisRecommendation: { shouldProvideTherapeuticInsights: false }
-         } as any)).toBe(false);
-      });
+      expect(
+        Analysis.meetsAnalysisThreshold({
+          tier: 'tier3_minimal',
+          analysisRecommendation: { shouldProvideTherapeuticInsights: false },
+        } as any)
+      ).toBe(false);
+    });
   });
 
   describe('Branch Coverage & Edge Cases', () => {
@@ -386,7 +400,7 @@ describe('Therapy Analysis Utilities', () => {
       it('should handle low reliability user data', () => {
         const priority = {
           hasUserProvidedData: true,
-          userDataReliability: 30 // < 50
+          userDataReliability: 30, // < 50
         } as any;
         // expected: aiConf + (30-50)*0.05 = aiConf - 1.
         // Then weighted avg.
@@ -402,142 +416,144 @@ describe('Therapy Analysis Utilities', () => {
     });
 
     describe('analyzeContentTier (Tier 2 Branches)', () => {
-        beforeEach(() => {
-            jest.clearAllMocks();
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it('should handle high therapeutic relevance in Tier 2', () => {
+        (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.5 });
+        (hasSchemaReflection as jest.Mock).mockReturnValue(false);
+        (validateTherapeuticContext as jest.Mock).mockReturnValue({
+          isValidTherapeuticContext: true,
+          contextualAnalysis: {
+            emotionalIntensity: 5,
+            therapeuticRelevance: 8, // High
+            neutralContextFlags: [],
+            stressIndicators: ['stress', 'anxiety'], // >= 2
+            contextType: 'therapeutic',
+            confidence: 100,
+          },
         });
 
-        it('should handle high therapeutic relevance in Tier 2', () => {
-             (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.5 });
-             (hasSchemaReflection as jest.Mock).mockReturnValue(false);
-             (validateTherapeuticContext as jest.Mock).mockReturnValue({
-                 isValidTherapeuticContext: true,
-                 contextualAnalysis: {
-                     emotionalIntensity: 5,
-                     therapeuticRelevance: 8, // High
-                     neutralContextFlags: [],
-                     stressIndicators: ['stress', 'anxiety'], // >= 2
-                     contextType: 'therapeutic',
-                     confidence: 100
-                 }
-             });
+        const result = Analysis.analyzeContentTier([{ role: 'user', content: 'text' }]);
+        expect(result.tier).toBe('tier2_standard');
+        expect(result.triggers).toContain('High therapeutic relevance detected');
+        expect(result.triggers).toContain('Multiple emotional distress indicators');
+      });
 
-             const result = Analysis.analyzeContentTier([{ role: 'user', content: 'text' }]);
-             expect(result.tier).toBe('tier2_standard');
-             expect(result.triggers).toContain('High therapeutic relevance detected');
-             expect(result.triggers).toContain('Multiple emotional distress indicators');
+      it('should handle user self assessments in Tier 2', () => {
+        // Tier 2 path: not Tier 1.
+        // Tier 1 checks: hasUserData && schemaDepth !== 'none'.
+        // So if we have UserData but schemaDepth is 'none', it falls through to logic check.
+        // analyzeContentTier logic:
+        // if (hasStrongCBT || hasSchemaContent || (hasUserData && schemaDepth !== 'none') || (cbtSignature.confidence >= 0.4 && hasUserData))
+        // We need to avoid these to hit Tier 2 WITH user data?
+        // If hasUserData is true, and conf < 0.4, and schemaDepth none.
+
+        (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.2 });
+        (hasSchemaReflection as jest.Mock).mockReturnValue(false);
+        (validateTherapeuticContext as jest.Mock).mockReturnValue({
+          isValidTherapeuticContext: true,
+          contextualAnalysis: {
+            emotionalIntensity: 5,
+            therapeuticRelevance: 5,
+            neutralContextFlags: [],
+            stressIndicators: [],
+            contextType: 'therapeutic',
+            confidence: 100,
+          },
         });
 
-        it('should handle user self assessments in Tier 2', () => {
-            // Tier 2 path: not Tier 1.
-            // Tier 1 checks: hasUserData && schemaDepth !== 'none'.
-            // So if we have UserData but schemaDepth is 'none', it falls through to logic check.
-            // analyzeContentTier logic:
-            // if (hasStrongCBT || hasSchemaContent || (hasUserData && schemaDepth !== 'none') || (cbtSignature.confidence >= 0.4 && hasUserData))
-            // We need to avoid these to hit Tier 2 WITH user data?
-            // If hasUserData is true, and conf < 0.4, and schemaDepth none.
-            
-            (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.2 });
-            (hasSchemaReflection as jest.Mock).mockReturnValue(false);
-            (validateTherapeuticContext as jest.Mock).mockReturnValue({
-                isValidTherapeuticContext: true,
-                contextualAnalysis: {
-                    emotionalIntensity: 5,
-                    therapeuticRelevance: 5,
-                    neutralContextFlags: [],
-                    stressIndicators: [],
-                    contextType: 'therapeutic',
-                    confidence: 100
-                }
-            });
-            
-            // Content that has user data but no schema reflection.
-            const content = '- anxiety: 8/10.'; 
-            const result = Analysis.analyzeContentTier([{ role: 'user', content }]);
-            expect(result.tier).toBe('tier2_standard');
-            expect(result.userSelfAssessmentPresent).toBe(true);
-            expect(result.triggers).toContain('User self-assessments and ratings detected');
-       });
+        // Content that has user data but no schema reflection.
+        const content = '- anxiety: 8/10.';
+        const result = Analysis.analyzeContentTier([{ role: 'user', content }]);
+        expect(result.tier).toBe('tier2_standard');
+        expect(result.userSelfAssessmentPresent).toBe(true);
+        expect(result.triggers).toContain('User self-assessments and ratings detected');
+      });
 
-       it('should handle low emotional intensity in Tier 2', () => {
-            (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.2 });
-            (hasSchemaReflection as jest.Mock).mockReturnValue(false);
-            (validateTherapeuticContext as jest.Mock).mockReturnValue({
-                isValidTherapeuticContext: true,
-                contextualAnalysis: {
-                    emotionalIntensity: 2, // <= 3
-                    therapeuticRelevance: 5,
-                    neutralContextFlags: [],
-                    stressIndicators: [],
-                    contextType: 'therapeutic',
-                    confidence: 100
-                }
-            });
-            
-            const result = Analysis.analyzeContentTier([{ role: 'user', content: 'mild stuff' }]);
-            expect(result.tier).toBe('tier2_standard');
-            // Check confidence cap or logic if possible, but tier check is good enough to exercise the path.
-       });
+      it('should handle low emotional intensity in Tier 2', () => {
+        (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.2 });
+        (hasSchemaReflection as jest.Mock).mockReturnValue(false);
+        (validateTherapeuticContext as jest.Mock).mockReturnValue({
+          isValidTherapeuticContext: true,
+          contextualAnalysis: {
+            emotionalIntensity: 2, // <= 3
+            therapeuticRelevance: 5,
+            neutralContextFlags: [],
+            stressIndicators: [],
+            contextType: 'therapeutic',
+            confidence: 100,
+          },
+        });
 
-       it('should handle high emotional intensity in Tier 2', () => {
-           (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.2 });
-           (hasSchemaReflection as jest.Mock).mockReturnValue(false);
-           (validateTherapeuticContext as jest.Mock).mockReturnValue({
-               isValidTherapeuticContext: true,
-               contextualAnalysis: {
-                   emotionalIntensity: 9, // >= 8
-                   therapeuticRelevance: 5,
-                   neutralContextFlags: [],
-                   stressIndicators: [],
-                   contextType: 'therapeutic',
-                   confidence: 100
-               }
-           });
-           
-           const result = Analysis.analyzeContentTier([{ role: 'user', content: 'INTENSE' }]);
-           expect(result.tier).toBe('tier2_standard');
+        const result = Analysis.analyzeContentTier([{ role: 'user', content: 'mild stuff' }]);
+        expect(result.tier).toBe('tier2_standard');
+        // Check confidence cap or logic if possible, but tier check is good enough to exercise the path.
+      });
+
+      it('should handle high emotional intensity in Tier 2', () => {
+        (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.2 });
+        (hasSchemaReflection as jest.Mock).mockReturnValue(false);
+        (validateTherapeuticContext as jest.Mock).mockReturnValue({
+          isValidTherapeuticContext: true,
+          contextualAnalysis: {
+            emotionalIntensity: 9, // >= 8
+            therapeuticRelevance: 5,
+            neutralContextFlags: [],
+            stressIndicators: [],
+            contextType: 'therapeutic',
+            confidence: 100,
+          },
+        });
+
+        const result = Analysis.analyzeContentTier([{ role: 'user', content: 'INTENSE' }]);
+        expect(result.tier).toBe('tier2_standard');
       });
     });
 
     describe('analyzeContentTier (Tier 3 Branches)', () => {
-        it('should handle brief request in Tier 3', () => {
-            (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.1 });
-            (hasSchemaReflection as jest.Mock).mockReturnValue(false);
-            (validateTherapeuticContext as jest.Mock).mockReturnValue({
-                isValidTherapeuticContext: false,
-                contextualAnalysis: {
-                    emotionalIntensity: 1,
-                    therapeuticRelevance: 1,
-                    neutralContextFlags: [],
-                    stressIndicators: [],
-                    contextType: 'neutral',
-                    confidence: 100
-                }
-            });
-
-            const result = Analysis.analyzeContentTier([{ role: 'user', content: 'can you search for X' }]);
-            expect(result.tier).toBe('tier3_minimal');
-            expect(result.triggers).toContain('Brief request or casual interaction');
+      it('should handle brief request in Tier 3', () => {
+        (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.1 });
+        (hasSchemaReflection as jest.Mock).mockReturnValue(false);
+        (validateTherapeuticContext as jest.Mock).mockReturnValue({
+          isValidTherapeuticContext: false,
+          contextualAnalysis: {
+            emotionalIntensity: 1,
+            therapeuticRelevance: 1,
+            neutralContextFlags: [],
+            stressIndicators: [],
+            contextType: 'neutral',
+            confidence: 100,
+          },
         });
 
-        it('should handle neutral context flags in Tier 3', () => {
-            (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.1 });
-            (hasSchemaReflection as jest.Mock).mockReturnValue(false);
-            (validateTherapeuticContext as jest.Mock).mockReturnValue({
-                isValidTherapeuticContext: false,
-                contextualAnalysis: {
-                    emotionalIntensity: 1,
-                    therapeuticRelevance: 1,
-                    neutralContextFlags: ['meeting_notes'],
-                    stressIndicators: [],
-                    contextType: 'neutral',
-                    confidence: 100
-                }
-            });
+        const result = Analysis.analyzeContentTier([
+          { role: 'user', content: 'can you search for X' },
+        ]);
+        expect(result.tier).toBe('tier3_minimal');
+        expect(result.triggers).toContain('Brief request or casual interaction');
+      });
 
-            const result = Analysis.analyzeContentTier([{ role: 'user', content: 'notes' }]);
-            expect(result.tier).toBe('tier3_minimal');
-            expect(result.triggers).toContain('Neutral/organizational context flags');
+      it('should handle neutral context flags in Tier 3', () => {
+        (analyzeCBTMessage as jest.Mock).mockReturnValue({ confidence: 0.1 });
+        (hasSchemaReflection as jest.Mock).mockReturnValue(false);
+        (validateTherapeuticContext as jest.Mock).mockReturnValue({
+          isValidTherapeuticContext: false,
+          contextualAnalysis: {
+            emotionalIntensity: 1,
+            therapeuticRelevance: 1,
+            neutralContextFlags: ['meeting_notes'],
+            stressIndicators: [],
+            contextType: 'neutral',
+            confidence: 100,
+          },
         });
+
+        const result = Analysis.analyzeContentTier([{ role: 'user', content: 'notes' }]);
+        expect(result.tier).toBe('tier3_minimal');
+        expect(result.triggers).toContain('Neutral/organizational context flags');
+      });
     });
   });
 });

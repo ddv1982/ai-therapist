@@ -123,7 +123,9 @@ export function MobileCBTSheet({ isOpen, onOpenChange }: MobileCBTSheetProps) {
       ) {
         // Type assertion is safe here because we've validated all required fields
         // Using the correct CBTFormData type from form-schema
-        cbt.completeCBTEntry(completeEntry as unknown as import('@/features/therapy/cbt/form-schema').CBTFormData);
+        cbt.completeCBTEntry(
+          completeEntry as unknown as import('@/features/therapy/cbt/form-schema').CBTFormData
+        );
         onOpenChange(false);
       }
     }

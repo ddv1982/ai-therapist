@@ -1,32 +1,32 @@
 /**
  * Backward Compatible Wrapper for TherapeuticFormField
- * 
+ *
  * This component maintains the old API for backward compatibility while using
  * the new focused components under the hood.
- * 
+ *
  * MIGRATION GUIDE:
  * Instead of using this wrapper, prefer the specific components:
- * 
+ *
  * OLD:
  *   <TherapeuticFormField type="input" ... />
  * NEW:
  *   <TherapeuticTextInput ... />
- * 
+ *
  * OLD:
  *   <TherapeuticFormField type="textarea" ... />
  * NEW:
  *   <TherapeuticTextArea ... />
- * 
+ *
  * OLD:
  *   <TherapeuticFormField type="slider" ... />
  * NEW:
  *   <TherapeuticSlider ... />
- * 
+ *
  * OLD:
  *   <TherapeuticFormField type="emotion-scale" ... />
  * NEW:
  *   <EmotionScaleInput ... />
- * 
+ *
  * OLD:
  *   <TherapeuticFormField type="array" ... />
  * NEW:
@@ -36,12 +36,27 @@
 import { ReactNode } from 'react';
 import { TherapeuticTextInput } from '@/components/ui/therapeutic-forms/inputs/therapeutic-text-input';
 import { TherapeuticTextArea } from '@/components/ui/therapeutic-forms/inputs/therapeutic-text-area';
-import { TherapeuticSlider, type SliderVariant } from '@/components/ui/therapeutic-forms/inputs/therapeutic-slider';
-import { EmotionScaleInput, type Emotion } from '@/components/ui/therapeutic-forms/specialized/emotion-scale-input';
+import {
+  TherapeuticSlider,
+  type SliderVariant,
+} from '@/components/ui/therapeutic-forms/inputs/therapeutic-slider';
+import {
+  EmotionScaleInput,
+  type Emotion,
+} from '@/components/ui/therapeutic-forms/specialized/emotion-scale-input';
 import { logger } from '@/lib/utils/logger';
-import { ArrayFieldInput, type ArrayItem } from '@/components/ui/therapeutic-forms/specialized/array-field-input';
-import type { FieldVariant, FieldSize } from '@/components/ui/therapeutic-forms/base/therapeutic-field-wrapper';
-import type { FormFieldValue, ValidationFunction } from '@/components/ui/therapeutic-forms/base/use-therapeutic-field';
+import {
+  ArrayFieldInput,
+  type ArrayItem,
+} from '@/components/ui/therapeutic-forms/specialized/array-field-input';
+import type {
+  FieldVariant,
+  FieldSize,
+} from '@/components/ui/therapeutic-forms/base/therapeutic-field-wrapper';
+import type {
+  FormFieldValue,
+  ValidationFunction,
+} from '@/components/ui/therapeutic-forms/base/use-therapeutic-field';
 
 export interface TherapeuticFormFieldProps {
   // Field identification

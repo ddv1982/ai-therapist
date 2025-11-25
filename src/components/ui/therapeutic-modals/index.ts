@@ -14,9 +14,21 @@ export { ModalActions, type ModalActionsProps } from './compound/modal-actions';
 export { TherapeuticModal } from '@/components/ui/therapeutic-modals/base/therapeutic-modal';
 
 // Specialized modals (client-side)
-export { CBTFlowModal, type CBTFlowModalProps } from '@/components/ui/therapeutic-modals/specialized/cbt-flow-modal';
-export { ConfirmationModal, type ConfirmationModalProps } from '@/components/ui/therapeutic-modals/specialized/confirmation-modal';
-export { SessionReportModal, type SessionReportModalProps } from '@/components/ui/therapeutic-modals/specialized/session-report-modal';
+export {
+  CBTFlowModal,
+  type CBTFlowModalProps,
+} from '@/components/ui/therapeutic-modals/specialized/cbt-flow-modal';
+export {
+  ConfirmationModal,
+  type ConfirmationModalProps,
+} from '@/components/ui/therapeutic-modals/specialized/confirmation-modal';
+export {
+  SessionReportModal,
+  type SessionReportModalProps,
+} from '@/components/ui/therapeutic-modals/specialized/session-report-modal';
 
 // Hooks
-export { useTherapeuticConfirm, type ConfirmOptions } from '@/components/ui/therapeutic-modals/hooks/use-therapeutic-confirm';
+export {
+  useTherapeuticConfirm,
+  type ConfirmOptions,
+} from '@/components/ui/therapeutic-modals/hooks/use-therapeutic-confirm';

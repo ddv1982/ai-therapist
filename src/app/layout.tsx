@@ -12,9 +12,9 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
-  preload: true,  // Preload font for faster render
+  preload: true, // Preload font for faster render
   fallback: ['system-ui', 'arial'],
-  adjustFontFallback: true,  // Show fallback while loading
+  adjustFontFallback: true, // Show fallback while loading
 });
 export const metadata: Metadata = {
   title: 'Therapist AI - Compassionate AI Therapy Support',
@@ -32,9 +32,7 @@ export const metadata: Metadata = {
       { url: '/icons/icon-192.png', type: 'image/png', sizes: '192x192' },
     ],
     shortcut: '/favicon-32.png',
-    apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180' },
-    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
   },
 };
 
@@ -85,7 +83,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const headerStore = await headers();
   const cookieLocale = headerStore.get('x-locale');
   const detected = await getLocale();
-  
+
   const resolvedLocale: Locale = routing.locales.includes(cookieLocale as Locale)
     ? (cookieLocale as Locale)
     : routing.locales.includes(detected as Locale)

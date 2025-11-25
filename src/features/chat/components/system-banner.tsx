@@ -25,7 +25,7 @@ export function SystemBanner({
 
   return (
     <div className={`mb-4 ${isMobile ? 'mx-1' : 'mx-2'}`} role="status" aria-live="polite">
-      <div className="bg-primary/5 rounded-lg shadow-apple-sm px-3 py-2">
+      <div className="bg-primary/5 shadow-apple-sm rounded-lg px-3 py-2">
         <div className="flex items-center justify-between">
           <p className="text-primary/80 flex items-center gap-2 text-sm">
             <Sparkles className="h-3 w-3" aria-hidden="true" />

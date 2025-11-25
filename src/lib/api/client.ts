@@ -133,17 +133,11 @@ export class ApiClient {
   // Token refresh removed; DB-backed session cookie handles auth.
 
   // Sessions
-  async listSessions(): Promise<
-    ApiResponse<PaginatedResponse<Session>>
-  > {
-    return this.request<ApiResponse<PaginatedResponse<Session>>>(
-      '/api/sessions'
-    );
+  async listSessions(): Promise<ApiResponse<PaginatedResponse<Session>>> {
+    return this.request<ApiResponse<PaginatedResponse<Session>>>('/api/sessions');
   }
 
-  async createSession(
-    body: { title: string }
-  ): Promise<ApiResponse<Session>> {
+  async createSession(body: { title: string }): Promise<ApiResponse<Session>> {
     return this.request<ApiResponse<Session>>('/api/sessions', {
       method: 'POST',
       body: JSON.stringify(body),
@@ -165,9 +159,7 @@ export class ApiClient {
     if (params?.page) qs.set('page', String(params.page));
     if (params?.limit) qs.set('limit', String(params.limit));
     const path = `/api/sessions/${sessionId}/messages${qs.toString() ? `?${qs.toString()}` : ''}`;
-    return this.request<ApiResponse<PaginatedResponse<ChatMessage>>>(
-      path
-    );
+    return this.request<ApiResponse<PaginatedResponse<ChatMessage>>>(path);
   }
 
   async postMessage(
@@ -179,13 +171,10 @@ export class ApiClient {
       metadata?: Record<string, unknown>;
     }
   ): Promise<ApiResponse<ChatMessage>> {
-    return this.request<ApiResponse<ChatMessage>>(
-      `/api/sessions/${sessionId}/messages`,
-      {
-        method: 'POST',
-        body: JSON.stringify(body),
-      }
-    );
+    return this.request<ApiResponse<ChatMessage>>(`/api/sessions/${sessionId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   }
 
   async patchMessageMetadata(
@@ -208,9 +197,11 @@ export class ApiClient {
   // Reports (legacy POST /api/reports removed)
 
   // Reports (detailed generate endpoint)
-  async generateReportDetailed(
-    body: { sessionId: string; messages: ChatMessage[]; model?: string }
-  ): Promise<
+  async generateReportDetailed(body: {
+    sessionId: string;
+    messages: ChatMessage[];
+    model?: string;
+  }): Promise<
     ApiResponse<{
       reportContent: string;
       modelUsed: string;
@@ -245,12 +236,8 @@ export class ApiClient {
   }
 
   // Single session
-  async getSessionById(
-    sessionId: string
-  ): Promise<ApiResponse<Session>> {
-    return this.request<ApiResponse<Session>>(
-      `/api/sessions/${sessionId}`
-    );
+  async getSessionById(sessionId: string): Promise<ApiResponse<Session>> {
+    return this.request<ApiResponse<Session>>(`/api/sessions/${sessionId}`);
   }
 
   // Auth/session status

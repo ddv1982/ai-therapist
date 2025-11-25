@@ -94,7 +94,9 @@ export function SchemaModes({
         selected: schemaModesData.some(
           (reduxMode: SchemaModeData) => reduxMode.mode === mode.id && reduxMode.isActive
         ),
-        intensity: schemaModesData.find((reduxMode: SchemaModeData) => reduxMode.mode === mode.id)?.intensity || 5,
+        intensity:
+          schemaModesData.find((reduxMode: SchemaModeData) => reduxMode.mode === mode.id)
+            ?.intensity || 5,
       }));
       return { selectedModes };
     }

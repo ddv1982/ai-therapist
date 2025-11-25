@@ -5,6 +5,7 @@ This document records the removal of legacy migration infrastructure from the co
 ## Removed Files
 
 ### `import.ts` (deleted 2025-11-19)
+
 - **Purpose**: Data migration from previous system
 - **Size**: 285 lines
 - **Status**: DELETED - no legacy data exists in database
@@ -13,15 +14,18 @@ This document records the removal of legacy migration infrastructure from the co
 ## Schema Changes
 
 As of 2025-11-19, the following fields were removed from the schema:
+
 - `users.legacyId` (optional string)
 - `sessions.legacyId` (optional string)
 - `messages.legacyId` (optional string)
 - `sessionReports.legacyId` (optional string)
 
 Index removed:
+
 - `users.by_legacyId` index
 
 Functions removed:
+
 - `users.getOrCreate` (legacy migration mutation)
 - `users.getByLegacyId` (legacy migration query)
 

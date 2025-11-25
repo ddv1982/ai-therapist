@@ -16,15 +16,15 @@ This specification outlines a comprehensive, phased approach to improving the AI
 
 ### 1.2 Current State Summary
 
-| Aspect | Status |
-|--------|--------|
-| Framework | Next.js 16 with React 19 |
-| Backend | Convex (BaaS) |
-| Authentication | Clerk |
-| Test Suite | 1,529 passing tests, 139 test suites |
-| TypeScript | Strict mode enabled, `noImplicitAny: false` |
-| Code Quality | ESLint configured, Prettier formatting |
-| Coverage | High overall (~87-99% per module) |
+| Aspect         | Status                                      |
+| -------------- | ------------------------------------------- |
+| Framework      | Next.js 16 with React 19                    |
+| Backend        | Convex (BaaS)                               |
+| Authentication | Clerk                                       |
+| Test Suite     | 1,529 passing tests, 139 test suites        |
+| TypeScript     | Strict mode enabled, `noImplicitAny: false` |
+| Code Quality   | ESLint configured, Prettier formatting      |
+| Coverage       | High overall (~87-99% per module)           |
 
 ### 1.3 Key Strengths
 
@@ -65,12 +65,13 @@ AI: AI SDK 5, Groq
 
 #### 2.1.1 Current State
 
-| File | Size | Lines | Concerns |
-|------|------|-------|----------|
-| `src/hooks/use-chat-controller.ts` | 11KB | 366 | 15+ hooks orchestration |
-| `src/hooks/use-chat-messages.ts` | 20KB | 598 | Messages, persistence, metadata |
+| File                               | Size | Lines | Concerns                        |
+| ---------------------------------- | ---- | ----- | ------------------------------- |
+| `src/hooks/use-chat-controller.ts` | 11KB | 366   | 15+ hooks orchestration         |
+| `src/hooks/use-chat-messages.ts`   | 20KB | 598   | Messages, persistence, metadata |
 
 The `useChatController` hook imports and orchestrates:
+
 - `useChatMessages`
 - `useScrollToBottom`
 - `useChatTransport`
@@ -115,13 +116,13 @@ export class MetadataManager {
 export function useChatController() {
   // Core state
   const { messages, actions } = useChatCore();
-  
+
   // UI concerns (extracted)
   const ui = useChatUI();
-  
+
   // Session management (extracted)
   const sessions = useChatSessionManager();
-  
+
   return { messages, actions, ui, sessions };
 }
 ```
@@ -157,6 +158,7 @@ src/lib/chat/       # Chat utilities (tightly coupled to features)
 #### 2.2.3 Proposed Solution
 
 **Option A: Consolidate into Chat Feature**
+
 ```
 src/features/
 ├── auth/
@@ -174,6 +176,7 @@ src/features/
 ```
 
 **Option B: Keep Separated with Clear Boundaries**
+
 - `features/chat` - Generic chat infrastructure
 - `features/therapy` - Therapy-specific features and frameworks
 - Remove `features/therapy-chat` and distribute to appropriate modules
@@ -250,7 +253,7 @@ src/components/
 {
   "compilerOptions": {
     "strict": true,
-    "noImplicitAny": false  // <-- Problem
+    "noImplicitAny": false // <-- Problem
   }
 }
 ```
@@ -306,27 +309,24 @@ export interface TherapeuticInsight {
 
 ```typescript
 // convex/schema.ts - Improved
-const messageMetadataValidator = v.optional(v.object({
-  therapeuticFramework: v.optional(v.union(
-    v.literal('CBT'),
-    v.literal('Schema'),
-    v.literal('ERP'),
-    v.literal('General')
-  )),
-  emotionalTone: v.optional(v.string()),
-  crisisIndicators: v.optional(v.boolean()),
-  toolsUsed: v.optional(v.array(v.string())),
-}));
+const messageMetadataValidator = v.optional(
+  v.object({
+    therapeuticFramework: v.optional(
+      v.union(v.literal('CBT'), v.literal('Schema'), v.literal('ERP'), v.literal('General'))
+    ),
+    emotionalTone: v.optional(v.string()),
+    crisisIndicators: v.optional(v.boolean()),
+    toolsUsed: v.optional(v.array(v.string())),
+  })
+);
 
-const keyPointValidator = v.array(v.object({
-  topic: v.string(),
-  summary: v.string(),
-  relevance: v.union(
-    v.literal('high'),
-    v.literal('medium'),
-    v.literal('low')
-  ),
-}));
+const keyPointValidator = v.array(
+  v.object({
+    topic: v.string(),
+    summary: v.string(),
+    relevance: v.union(v.literal('high'), v.literal('medium'), v.literal('low')),
+  })
+);
 ```
 
 **Step 3: Enable noImplicitAny**
@@ -369,9 +369,7 @@ const keyPointValidator = v.array(v.object({
 
 ```typescript
 // src/lib/utils/result.ts
-export type Result<T, E = Error> = 
-  | { success: true; data: T }
-  | { success: false; error: E };
+export type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
 export function ok<T>(data: T): Result<T, never> {
   return { success: true, data };
@@ -390,7 +388,7 @@ const sendMessage = async () => {
   try {
     await api.sendMessage(content);
   } catch (e) {
-    console.error(e);  // Silent failure
+    console.error(e); // Silent failure
   }
 };
 
@@ -491,14 +489,15 @@ export async function withRetry<T>(
 
 #### 4.1.1 Current State
 
-| Module | Coverage |
-|--------|----------|
-| lib/therapy | ~99% |
-| lib/utils | ~89% |
-| repositories | ~87% |
-| services | ~92% |
+| Module       | Coverage |
+| ------------ | -------- |
+| lib/therapy  | ~99%     |
+| lib/utils    | ~89%     |
+| repositories | ~87%     |
+| services     | ~92%     |
 
 **Gaps Identified:**
+
 - Complex paths in `session-repository.ts`
 - E2E tests limited to 2 main flow specs
 - No visual regression testing
@@ -514,11 +513,11 @@ describe('SessionRepository', () => {
     it('handles concurrent session updates', async () => {
       // Test race condition handling
     });
-    
+
     it('recovers from partial save failures', async () => {
       // Test transaction rollback
     });
-    
+
     it('handles max message limit per session', async () => {
       // Test boundary conditions
     });
@@ -534,11 +533,11 @@ test.describe('Edge Cases', () => {
   test('handles network interruption during message send', async ({ page }) => {
     // Simulate offline mode
   });
-  
+
   test('recovers from session expiration', async ({ page }) => {
     // Test auth refresh flow
   });
-  
+
   test('handles rapid session switching', async ({ page }) => {
     // Test state consistency
   });
@@ -570,28 +569,28 @@ test.describe('Edge Cases', () => {
 describe('Chat Flow Integration', () => {
   let convexMock: ConvexMock;
   let clerkMock: ClerkMock;
-  
+
   beforeEach(() => {
     convexMock = setupConvexMock();
     clerkMock = setupClerkMock();
   });
-  
+
   it('completes full message send cycle', async () => {
     const { result } = renderHook(() => useChatController(), {
       wrapper: IntegrationTestWrapper,
     });
-    
+
     // Send message
     await act(async () => {
       result.current.setInput('Hello');
       await result.current.sendMessage();
     });
-    
+
     // Verify Convex mutation called
     expect(convexMock.messages.send).toHaveBeenCalledWith(
       expect.objectContaining({ content: 'Hello' })
     );
-    
+
     // Verify optimistic update
     expect(result.current.messages).toContainEqual(
       expect.objectContaining({ content: 'Hello', status: 'pending' })
@@ -608,7 +607,7 @@ describe('Auth Flow Integration', () => {
   it('syncs Clerk user to Convex on login', async () => {
     // Simulate Clerk webhook
     await webhookHandler(mockClerkUserCreated);
-    
+
     // Verify Convex user created
     expect(convexMock.users.getByClerkId).toHaveBeenCalled();
   });
@@ -657,9 +656,7 @@ import { motion } from 'framer-motion';
 import { motion } from 'framer-motion/dist/es/render/dom/motion';
 
 // Or lazy load
-const MotionDiv = dynamic(() => 
-  import('framer-motion').then(m => m.motion.div)
-);
+const MotionDiv = dynamic(() => import('framer-motion').then((m) => m.motion.div));
 ```
 
 **Step 3: Add CI Monitoring**
@@ -669,7 +666,7 @@ const MotionDiv = dynamic(() =>
 - name: Check bundle size
   uses: preactjs/compressed-size-action@v2
   with:
-    repo-token: "${{ secrets.GITHUB_TOKEN }}"
+    repo-token: '${{ secrets.GITHUB_TOKEN }}'
 ```
 
 #### 5.1.3 Success Criteria
@@ -697,19 +694,19 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 
 export function MessageList({ messages }: Props) {
   const parentRef = useRef<HTMLDivElement>(null);
-  
+
   const virtualizer = useVirtualizer({
     count: messages.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 100,
     overscan: 5,
   });
-  
+
   return (
     <div ref={parentRef} className="h-full overflow-auto">
       <div style={{ height: virtualizer.getTotalSize() }}>
         {virtualizer.getVirtualItems().map((virtualRow) => (
-          <MessageItem 
+          <MessageItem
             key={virtualRow.index}
             message={messages[virtualRow.index]}
             style={{
@@ -730,11 +727,7 @@ export function MessageList({ messages }: Props) {
 // Development only
 import { Profiler } from 'react';
 
-function onRenderCallback(
-  id: string,
-  phase: 'mount' | 'update',
-  actualDuration: number
-) {
+function onRenderCallback(id: string, phase: 'mount' | 'update', actualDuration: number) {
   if (actualDuration > 16) {
     console.warn(`Slow render: ${id} took ${actualDuration}ms`);
   }
@@ -792,7 +785,7 @@ export const invalidationMap = {
 
 export function invalidateRelated(mutation: string, queryClient: QueryClient) {
   const keys = invalidationMap[mutation] ?? [];
-  keys.forEach(key => queryClient.invalidateQueries({ queryKey: [key] }));
+  keys.forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
 }
 ```
 
@@ -877,16 +870,19 @@ export const CSP_EXCEPTIONS = {
 // src/lib/validation/schemas/message.ts
 import { z } from 'zod';
 
-export const messageContentSchema = z.string()
+export const messageContentSchema = z
+  .string()
   .min(1, 'Message cannot be empty')
   .max(10000, 'Message too long')
-  .transform(content => content.trim());
+  .transform((content) => content.trim());
 
-export const messageMetadataSchema = z.object({
-  therapeuticFramework: z.enum(['CBT', 'Schema', 'ERP', 'General']).optional(),
-  emotionalTone: z.enum(['positive', 'negative', 'neutral', 'mixed']).optional(),
-  crisisIndicators: z.boolean().optional(),
-}).strict();
+export const messageMetadataSchema = z
+  .object({
+    therapeuticFramework: z.enum(['CBT', 'Schema', 'ERP', 'General']).optional(),
+    emotionalTone: z.enum(['positive', 'negative', 'neutral', 'mixed']).optional(),
+    crisisIndicators: z.boolean().optional(),
+  })
+  .strict();
 
 // Used on both client and server
 export const sendMessageSchema = z.object({
@@ -904,21 +900,22 @@ import { v } from 'convex/values';
 
 // Mirror Zod schemas for Convex
 export const messageContentValidator = v.string();
-export const messageMetadataValidator = v.optional(v.object({
-  therapeuticFramework: v.optional(v.union(
-    v.literal('CBT'),
-    v.literal('Schema'),
-    v.literal('ERP'),
-    v.literal('General')
-  )),
-  emotionalTone: v.optional(v.union(
-    v.literal('positive'),
-    v.literal('negative'),
-    v.literal('neutral'),
-    v.literal('mixed')
-  )),
-  crisisIndicators: v.optional(v.boolean()),
-}));
+export const messageMetadataValidator = v.optional(
+  v.object({
+    therapeuticFramework: v.optional(
+      v.union(v.literal('CBT'), v.literal('Schema'), v.literal('ERP'), v.literal('General'))
+    ),
+    emotionalTone: v.optional(
+      v.union(
+        v.literal('positive'),
+        v.literal('negative'),
+        v.literal('neutral'),
+        v.literal('mixed')
+      )
+    ),
+    crisisIndicators: v.optional(v.boolean()),
+  })
+);
 ```
 
 #### 6.2.3 Success Criteria
@@ -947,13 +944,13 @@ import { Redis } from '@upstash/redis';
 
 export class RedisRateLimiter {
   constructor(private redis: Redis) {}
-  
+
   async check(key: string, limit: number, window: number): Promise<RateLimitResult> {
     const current = await this.redis.incr(key);
     if (current === 1) {
       await this.redis.expire(key, window);
     }
-    
+
     return {
       allowed: current <= limit,
       remaining: Math.max(0, limit - current),
@@ -967,10 +964,7 @@ export class RedisRateLimiter {
 
 ```typescript
 // src/lib/api/middleware/rate-limit.ts
-export function withRateLimitHeaders(
-  response: Response,
-  result: RateLimitResult
-): Response {
+export function withRateLimitHeaders(response: Response, result: RateLimitResult): Response {
   response.headers.set('X-RateLimit-Limit', String(result.limit));
   response.headers.set('X-RateLimit-Remaining', String(result.remaining));
   response.headers.set('X-RateLimit-Reset', String(result.reset));
@@ -1008,21 +1002,27 @@ export function withRateLimitHeaders(
 
 ```markdown
 <!-- docs/adr/001-convex-backend.md -->
+
 # ADR 001: Using Convex as Backend
 
 ## Status
+
 Accepted
 
 ## Context
+
 We needed a real-time backend with strong TypeScript support.
 
 ## Decision
+
 We chose Convex for:
+
 - Real-time reactivity out of the box
 - Type-safe queries and mutations
 - Automatic scaling
 
 ## Consequences
+
 - Vendor lock-in to Convex
 - Learning curve for team
 - Simplified backend development
@@ -1032,22 +1032,27 @@ We chose Convex for:
 
 ```markdown
 <!-- docs/DEVELOPMENT.md -->
+
 # Development Guide
 
 ## Prerequisites
+
 - Node.js 24+
 - npm 10+
 
 ## Quick Start
+
 1. Clone repository
 2. Run `npm install`
 3. Copy `.env.example` to `.env.local`
 4. Run `npm run dev`
 
 ## Architecture Overview
+
 [Diagram and explanation]
 
 ## Common Tasks
+
 - Adding a new feature
 - Creating a new component
 - Writing tests
@@ -1100,15 +1105,15 @@ npx tsc --noEmit
 # .github/dependabot.yml
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     groups:
       minor-and-patch:
         update-types:
-          - "minor"
-          - "patch"
+          - 'minor'
+          - 'patch'
 ```
 
 #### 7.2.3 Success Criteria
@@ -1288,11 +1293,11 @@ const envSchema = z.object({
   CONVEX_URL: z.string().url(),
   ENCRYPTION_KEY: z.string().length(32),
   GROQ_API_KEY: z.string().min(1),
-  
+
   // Optional with defaults
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   RATE_LIMIT_DISABLED: z.coerce.boolean().default(false),
-  
+
   // Public (client-safe)
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
   NEXT_PUBLIC_CONVEX_URL: z.string().url(),
@@ -1330,16 +1335,16 @@ echo "All required environment variables present"
 
 ### 9.1 Recommended Order
 
-| Order | Phase | Rationale |
-|-------|-------|-----------|
-| 1 | 2.1 TypeScript Strict | Quick win, immediate benefits |
-| 2 | 5.1 CSP Monitoring | Security visibility |
-| 3 | 1.1 Hook Complexity | Foundation for maintainability |
-| 4 | 3.1 Test Coverage | Quality assurance |
-| 5 | 4.2 Render Optimization | User experience |
-| 6 | 1.2 Feature Boundaries | Architecture clarity |
-| 7 | 6.1 Documentation | Team scalability |
-| 8 | 7.1 CI/CD | Deployment reliability |
+| Order | Phase                   | Rationale                      |
+| ----- | ----------------------- | ------------------------------ |
+| 1     | 2.1 TypeScript Strict   | Quick win, immediate benefits  |
+| 2     | 5.1 CSP Monitoring      | Security visibility            |
+| 3     | 1.1 Hook Complexity     | Foundation for maintainability |
+| 4     | 3.1 Test Coverage       | Quality assurance              |
+| 5     | 4.2 Render Optimization | User experience                |
+| 6     | 1.2 Feature Boundaries  | Architecture clarity           |
+| 7     | 6.1 Documentation       | Team scalability               |
+| 8     | 7.1 CI/CD               | Deployment reliability         |
 
 ### 9.2 Task Spec Creation
 
@@ -1358,16 +1363,17 @@ droidz/specs/030-ci-cd-pipeline/
 
 ### 9.3 Risk Mitigation
 
-| Risk | Mitigation |
-|------|------------|
+| Risk                              | Mitigation                                 |
+| --------------------------------- | ------------------------------------------ |
 | Breaking changes from refactoring | Comprehensive test coverage before changes |
-| TypeScript migration breaks | Incremental enablement with CI gates |
-| Performance regressions | Bundle size and render time monitoring |
-| Security gaps during changes | CSP monitoring active before changes |
+| TypeScript migration breaks       | Incremental enablement with CI gates       |
+| Performance regressions           | Bundle size and render time monitoring     |
+| Security gaps during changes      | CSP monitoring active before changes       |
 
 ### 9.4 Rollback Strategy
 
 Each phase should be:
+
 1. Implemented in a feature branch
 2. Reviewed via PR with test evidence
 3. Deployed to staging (if available)
@@ -1408,17 +1414,20 @@ Each phase should be:
 ## Appendix A: File References
 
 ### Key Files for Phase 1
+
 - `src/hooks/use-chat-controller.ts` (366 lines)
 - `src/hooks/use-chat-messages.ts` (598 lines)
 - `src/features/therapy-chat/`
 - `src/components/ui/` (48 files)
 
 ### Key Files for Phase 2
+
 - `tsconfig.json`
 - `convex/schema.ts`
 - `src/lib/api/error-codes.ts` (326 lines)
 
 ### Key Files for Phase 5
+
 - `middleware.ts`
 - `src/lib/security/`
 - `src/lib/api/middleware/`

@@ -108,16 +108,21 @@ function createMockMessage(index, sessionId) {
   return {
     id: `msg-${sessionId}-${index}`,
     role: index % 2 === 0 ? 'user' : 'assistant',
-    content: `This is message ${index} with some content. `.repeat(10 + Math.floor(Math.random() * 20)),
+    content: `This is message ${index} with some content. `.repeat(
+      10 + Math.floor(Math.random() * 20)
+    ),
     timestamp: new Date(),
     metadata: {
       step: index % 10 === 0 ? 'thoughts' : undefined,
-      sessionData: index % 10 === 0 ? {
-        thoughtData: Array.from({ length: 3 }, (_, i) => ({
-          thought: `Sample thought ${i}`,
-          credibility: Math.floor(Math.random() * 10),
-        })),
-      } : undefined,
+      sessionData:
+        index % 10 === 0
+          ? {
+              thoughtData: Array.from({ length: 3 }, (_, i) => ({
+                thought: `Sample thought ${i}`,
+                credibility: Math.floor(Math.random() * 10),
+              })),
+            }
+          : undefined,
     },
     digest: `digest-${sessionId}-${index}`,
   };
@@ -160,8 +165,8 @@ async function runMemoryProfile(config) {
   if (global.gc) {
     global.gc();
   }
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
   const initialMemory = getMemoryUsage();
   measurements.push({
     phase: 'initial',
@@ -221,14 +226,14 @@ async function runMemoryProfile(config) {
     if (sessionIndex > 0) {
       console.log('  Clearing previous session...');
       sessions[sessionIndex - 1].clear();
-      
+
       // Force GC if available
       if (global.gc) {
         global.gc();
       }
-      
-      await new Promise(resolve => setTimeout(resolve, intervalMs));
-      
+
+      await new Promise((resolve) => setTimeout(resolve, intervalMs));
+
       const postClearMemory = getMemoryUsage();
       measurements.push({
         phase: 'after_clear',
@@ -245,14 +250,14 @@ async function runMemoryProfile(config) {
 
   // Final cleanup
   console.log('\nFinal cleanup...');
-  sessions.forEach(s => s.clear());
-  
+  sessions.forEach((s) => s.clear());
+
   if (global.gc) {
     global.gc();
   }
-  
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
+
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
   const finalMemory = getMemoryUsage();
   measurements.push({
     phase: 'final',
@@ -267,15 +272,17 @@ async function runMemoryProfile(config) {
   console.log('========================================\n');
 
   const heapGrowth = finalMemory.heapUsed - initialMemory.heapUsed;
-  const maxHeap = Math.max(...measurements.map(m => m.heapUsed));
-  const minHeap = Math.min(...measurements.map(m => m.heapUsed));
+  const maxHeap = Math.max(...measurements.map((m) => m.heapUsed));
+  const minHeap = Math.min(...measurements.map((m) => m.heapUsed));
 
   console.log('Summary:');
   console.log(`  Initial heap:     ${formatBytes(initialMemory.heapUsed)}`);
   console.log(`  Final heap:       ${formatBytes(finalMemory.heapUsed)}`);
   console.log(`  Max heap:         ${formatBytes(maxHeap)}`);
   console.log(`  Min heap:         ${formatBytes(minHeap)}`);
-  console.log(`  Heap growth:      ${formatBytes(heapGrowth)} (${heapGrowth > 0 ? '+' : ''}${((heapGrowth / initialMemory.heapUsed) * 100).toFixed(2)}%)`);
+  console.log(
+    `  Heap growth:      ${formatBytes(heapGrowth)} (${heapGrowth > 0 ? '+' : ''}${((heapGrowth / initialMemory.heapUsed) * 100).toFixed(2)}%)`
+  );
   console.log('');
 
   // Check for potential memory leaks
@@ -294,9 +301,10 @@ async function runMemoryProfile(config) {
   console.log('\n');
 
   // Performance metrics
-  const sessionCompletePhases = measurements.filter(m => m.phase === 'session_complete');
+  const sessionCompletePhases = measurements.filter((m) => m.phase === 'session_complete');
   if (sessionCompletePhases.length > 1) {
-    const avgHeapPerSession = sessionCompletePhases.reduce((sum, m) => sum + m.heapUsed, 0) / sessionCompletePhases.length;
+    const avgHeapPerSession =
+      sessionCompletePhases.reduce((sum, m) => sum + m.heapUsed, 0) / sessionCompletePhases.length;
     console.log('Performance Metrics:');
     console.log(`  Average heap per session: ${formatBytes(avgHeapPerSession)}`);
     console.log(`  Messages processed: ${messageCount * sessionCount}`);
@@ -318,16 +326,16 @@ async function runMemoryProfile(config) {
 // Main entry point
 async function main() {
   const config = parseArgs();
-  
+
   try {
     const result = await runMemoryProfile(config);
-    
+
     if (config.outputFile) {
       const { writeFileSync } = await import('fs');
       writeFileSync(config.outputFile, JSON.stringify(result, null, 2));
       console.log(`\nResults written to ${config.outputFile}`);
     }
-    
+
     process.exit(result.success ? 0 : 1);
   } catch (error) {
     console.error('Error during memory profiling:', error);

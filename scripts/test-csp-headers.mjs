@@ -2,7 +2,11 @@
  * Test script to verify CSP headers in production mode
  */
 
-import { generateCSPNonce, getCSPHeader, getSecurityHeaders } from '../src/lib/security/csp-nonce.ts';
+import {
+  generateCSPNonce,
+  getCSPHeader,
+  getSecurityHeaders,
+} from '../src/lib/security/csp-nonce.ts';
 
 console.log('Testing CSP Nonce Generation and Headers\n');
 console.log('='.repeat(80));
@@ -39,10 +43,10 @@ const requiredDomains = [
   'https://*.clerk.accounts.dev',
   'https://api.groq.com',
   'https://convex.cloud',
-  'https://recaptcha.net'
+  'https://recaptcha.net',
 ];
 
-requiredDomains.forEach(domain => {
+requiredDomains.forEach((domain) => {
   const included = prodCSP.includes(domain);
   console.log(`   ${included ? '✓' : '✗'} ${domain}: ${included ? 'included' : 'MISSING'}`);
 });
@@ -57,10 +61,10 @@ const expectedHeaders = [
   'X-XSS-Protection',
   'Referrer-Policy',
   'Permissions-Policy',
-  'Strict-Transport-Security'
+  'Strict-Transport-Security',
 ];
 
-expectedHeaders.forEach(header => {
+expectedHeaders.forEach((header) => {
   const present = header in securityHeaders;
   console.log(`   ${present ? '✓' : '✗'} ${header}: ${present ? 'present' : 'MISSING'}`);
 });
@@ -75,10 +79,10 @@ const requiredDirectives = [
   'font-src',
   'connect-src',
   'frame-src',
-  'worker-src'
+  'worker-src',
 ];
 
-requiredDirectives.forEach(directive => {
+requiredDirectives.forEach((directive) => {
   const present = prodCSP.includes(directive);
   console.log(`   ${present ? '✓' : '✗'} ${directive}: ${present ? 'present' : 'MISSING'}`);
 });

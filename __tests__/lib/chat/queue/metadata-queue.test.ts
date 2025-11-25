@@ -1,4 +1,3 @@
-
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useMetadataQueue } from '@/lib/chat/queue/metadata-queue';
 import { apiClient } from '@/lib/api/client';
@@ -37,13 +36,15 @@ describe('useMetadataQueue', () => {
     });
 
     // Wait for the flush (setTimeout default 60ms)
-    await waitFor(() => {
-      expect(apiClient.patchMessageMetadata).toHaveBeenCalledWith(
-        'session-1',
-        'msg-1',
-        { metadata: { key: 'value' }, mergeStrategy: 'merge' }
-      );
-    }, { timeout: 200 });
+    await waitFor(
+      () => {
+        expect(apiClient.patchMessageMetadata).toHaveBeenCalledWith('session-1', 'msg-1', {
+          metadata: { key: 'value' },
+          mergeStrategy: 'merge',
+        });
+      },
+      { timeout: 200 }
+    );
 
     expect(mockOnMessageUpdated).toHaveBeenCalled();
   });
@@ -71,11 +72,10 @@ describe('useMetadataQueue', () => {
       await result.current.flushPendingMetadata('msg-2');
     });
 
-    expect(apiClient.patchMessageMetadata).toHaveBeenCalledWith(
-      'session-1',
-      'msg-2',
-      { metadata: { key: 'manual' }, mergeStrategy: 'replace' }
-    );
+    expect(apiClient.patchMessageMetadata).toHaveBeenCalledWith('session-1', 'msg-2', {
+      metadata: { key: 'manual' },
+      mergeStrategy: 'replace',
+    });
     expect(mockOnMessageUpdated).toHaveBeenCalled();
   });
 
@@ -92,10 +92,13 @@ describe('useMetadataQueue', () => {
       });
     });
 
-    await waitFor(() => {
-      // Should verify it was NOT called, but we need to wait to be sure it didn't happen
-      // Since queueMetadataUpdate with default shouldSchedule=true uses setTimeout
-    }, { timeout: 100 });
+    await waitFor(
+      () => {
+        // Should verify it was NOT called, but we need to wait to be sure it didn't happen
+        // Since queueMetadataUpdate with default shouldSchedule=true uses setTimeout
+      },
+      { timeout: 100 }
+    );
 
     expect(apiClient.patchMessageMetadata).not.toHaveBeenCalled();
   });
@@ -115,11 +118,15 @@ describe('useMetadataQueue', () => {
     );
 
     act(() => {
-      result.current.queueMetadataUpdate('msg-fail', {
-        sessionId: 'session-1',
-        metadata: { key: 'retry' },
-        mergeStrategy: 'merge',
-      }, false);
+      result.current.queueMetadataUpdate(
+        'msg-fail',
+        {
+          sessionId: 'session-1',
+          metadata: { key: 'retry' },
+          mergeStrategy: 'merge',
+        },
+        false
+      );
     });
 
     // First attempt (fail)
@@ -152,11 +159,15 @@ describe('useMetadataQueue', () => {
     );
 
     act(() => {
-      result.current.queueMetadataUpdate('msg-max', {
-        sessionId: 'session-1',
-        metadata: { key: 'max' },
-        mergeStrategy: 'merge',
-      }, false);
+      result.current.queueMetadataUpdate(
+        'msg-max',
+        {
+          sessionId: 'session-1',
+          metadata: { key: 'max' },
+          mergeStrategy: 'merge',
+        },
+        false
+      );
     });
 
     // 3 attempts (retries 0->1, 1->2, 2->3 (fail))
@@ -172,7 +183,7 @@ describe('useMetadataQueue', () => {
       expect.objectContaining({ retries: 3 }),
       expect.any(Error)
     );
-    
+
     // Try one more time - should be gone from queue?
     // The implementation deletes it from map when retries >= MAX (which is 3)
     // So next flush should do nothing if we pass the ID, as it's not in map
@@ -190,11 +201,15 @@ describe('useMetadataQueue', () => {
 
     act(() => {
       // Queue on temp ID without scheduling
-      result.current.queueMetadataUpdate('temp-1', {
-        sessionId: 'session-1',
-        metadata: { key: 'transfer' },
-        mergeStrategy: 'merge',
-      }, false);
+      result.current.queueMetadataUpdate(
+        'temp-1',
+        {
+          sessionId: 'session-1',
+          metadata: { key: 'transfer' },
+          mergeStrategy: 'merge',
+        },
+        false
+      );
     });
 
     act(() => {
@@ -218,11 +233,15 @@ describe('useMetadataQueue', () => {
 
     act(() => {
       // Queue without scheduling
-      result.current.queueMetadataUpdate('msg-exist', {
-        sessionId: 'session-1',
-        metadata: { key: 'exist' },
-        mergeStrategy: 'merge',
-      }, false);
+      result.current.queueMetadataUpdate(
+        'msg-exist',
+        {
+          sessionId: 'session-1',
+          metadata: { key: 'exist' },
+          mergeStrategy: 'merge',
+        },
+        false
+      );
     });
 
     act(() => {
@@ -244,11 +263,15 @@ describe('useMetadataQueue', () => {
     );
 
     act(() => {
-      result.current.queueMetadataUpdate('msg-clear', {
-        sessionId: 'session-1',
-        metadata: { key: 'clear' },
-        mergeStrategy: 'merge',
-      }, false);
+      result.current.queueMetadataUpdate(
+        'msg-clear',
+        {
+          sessionId: 'session-1',
+          metadata: { key: 'clear' },
+          mergeStrategy: 'merge',
+        },
+        false
+      );
     });
 
     act(() => {
@@ -264,8 +287,10 @@ describe('useMetadataQueue', () => {
 
   it('should not flush if already flushing', async () => {
     let resolvePromise: (val: any) => void;
-    const promise = new Promise((resolve) => { resolvePromise = resolve; });
-    
+    const promise = new Promise((resolve) => {
+      resolvePromise = resolve;
+    });
+
     (apiClient.patchMessageMetadata as jest.Mock).mockReturnValue(promise);
 
     const { result } = renderHook(() =>
@@ -273,11 +298,15 @@ describe('useMetadataQueue', () => {
     );
 
     act(() => {
-      result.current.queueMetadataUpdate('msg-busy', {
-        sessionId: 'session-1',
-        metadata: { key: 'busy' },
-        mergeStrategy: 'merge',
-      }, false);
+      result.current.queueMetadataUpdate(
+        'msg-busy',
+        {
+          sessionId: 'session-1',
+          metadata: { key: 'busy' },
+          mergeStrategy: 'merge',
+        },
+        false
+      );
     });
 
     // Start first flush
@@ -292,10 +321,10 @@ describe('useMetadataQueue', () => {
 
     // Finish first flush
     resolvePromise!({ success: true, data: {} });
-    
+
     expect(apiClient.patchMessageMetadata).toHaveBeenCalledTimes(1);
   });
-  
+
   it('should handle 404 error by keeping in queue without incrementing retries', async () => {
     const error = { status: 404 };
     (apiClient.patchMessageMetadata as jest.Mock).mockRejectedValue(error);
@@ -305,11 +334,15 @@ describe('useMetadataQueue', () => {
     );
 
     act(() => {
-      result.current.queueMetadataUpdate('msg-404', {
-        sessionId: 'session-1',
-        metadata: { key: '404' },
-        mergeStrategy: 'merge',
-      }, false);
+      result.current.queueMetadataUpdate(
+        'msg-404',
+        {
+          sessionId: 'session-1',
+          metadata: { key: '404' },
+          mergeStrategy: 'merge',
+        },
+        false
+      );
     });
 
     await act(async () => {
@@ -321,11 +354,11 @@ describe('useMetadataQueue', () => {
 
     // Verify it's still in queue (by trying again and checking it calls API)
     (apiClient.patchMessageMetadata as jest.Mock).mockResolvedValue({ success: true });
-    
+
     await act(async () => {
       await result.current.flushPendingMetadata('msg-404');
     });
-    
+
     expect(apiClient.patchMessageMetadata).toHaveBeenCalledTimes(2);
   });
 
@@ -342,11 +375,15 @@ describe('useMetadataQueue', () => {
     );
 
     act(() => {
-      result.current.queueMetadataUpdate('msg-fail-success', {
-        sessionId: 'session-1',
-        metadata: { key: 'retry' },
-        mergeStrategy: 'merge',
-      }, false);
+      result.current.queueMetadataUpdate(
+        'msg-fail-success',
+        {
+          sessionId: 'session-1',
+          metadata: { key: 'retry' },
+          mergeStrategy: 'merge',
+        },
+        false
+      );
     });
 
     // First attempt (returns success: false, throws Error, catches, retries)
@@ -373,7 +410,9 @@ describe('useMetadataQueue', () => {
 
   it('should log generic error if entry is missing during error handling', async () => {
     let rejectPromise: (err: any) => void;
-    const promise = new Promise((_, reject) => { rejectPromise = reject; });
+    const promise = new Promise((_, reject) => {
+      rejectPromise = reject;
+    });
     (apiClient.patchMessageMetadata as jest.Mock).mockReturnValue(promise);
 
     const { result } = renderHook(() =>
@@ -381,11 +420,15 @@ describe('useMetadataQueue', () => {
     );
 
     act(() => {
-      result.current.queueMetadataUpdate('msg-gone', {
-        sessionId: 'session-1',
-        metadata: { key: 'gone' },
-        mergeStrategy: 'merge',
-      }, false);
+      result.current.queueMetadataUpdate(
+        'msg-gone',
+        {
+          sessionId: 'session-1',
+          metadata: { key: 'gone' },
+          mergeStrategy: 'merge',
+        },
+        false
+      );
     });
 
     // Start flush
@@ -407,7 +450,7 @@ describe('useMetadataQueue', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       'Failed to persist queued metadata update',
-      expect.objectContaining({ 
+      expect.objectContaining({
         messageId: 'msg-gone',
         // Should NOT have sessionId or retries because entry is gone
       }),
@@ -434,27 +477,32 @@ describe('useMetadataQueue', () => {
 
     act(() => {
       // 1. Valid pending message
-      result.current.queueMetadataUpdate('msg-valid', {
-        sessionId: 'session-1',
-        metadata: { key: 'valid' },
-        mergeStrategy: 'merge',
-      }, false);
+      result.current.queueMetadataUpdate(
+        'msg-valid',
+        {
+          sessionId: 'session-1',
+          metadata: { key: 'valid' },
+          mergeStrategy: 'merge',
+        },
+        false
+      );
 
       // 2. Temp message (should be skipped by processQueue)
-      result.current.queueMetadataUpdate('temp-msg', {
-        sessionId: 'session-1',
-        metadata: { key: 'temp' },
-        mergeStrategy: 'merge',
-      }, false);
+      result.current.queueMetadataUpdate(
+        'temp-msg',
+        {
+          sessionId: 'session-1',
+          metadata: { key: 'temp' },
+          mergeStrategy: 'merge',
+        },
+        false
+      );
     });
 
     // 3. Add a message that is NOT in the queue to the list passed to processQueue (should be ignored)
-    
+
     act(() => {
-      result.current.processQueueForMessages([
-        { id: 'msg-valid' },
-        { id: 'msg-not-in-queue' }
-      ]);
+      result.current.processQueueForMessages([{ id: 'msg-valid' }, { id: 'msg-not-in-queue' }]);
     });
 
     await waitFor(() => {

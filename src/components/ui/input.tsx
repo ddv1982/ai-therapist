@@ -17,10 +17,10 @@ function Input({ className, type, ref, ...props }: InputProps) {
         'border-border bg-background text-foreground',
         'placeholder:text-muted-foreground',
         // Focus state with Apple-style glow (no ring-offset to avoid white line)
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        'focus-visible:ring-primary focus-visible:ring-2 focus-visible:outline-none',
         'focus-visible:border-primary',
         // Smooth transitions (Apple spring physics)
-        'transition-all duration-fast ease-out-smooth',
+        'duration-fast ease-out-smooth transition-all',
         // File input styling
         'file:border-0 file:bg-transparent file:text-sm file:font-semibold',
         // Disabled state

@@ -43,12 +43,7 @@ export function SessionCard({
       mobileOptimized={true}
       className={className}
     >
-      <CardHeader
-        title={title}
-        subtitle={subtitle}
-        statusBadge={statusBadge}
-        headerLayout="split"
-      >
+      <CardHeader title={title} subtitle={subtitle} statusBadge={statusBadge} headerLayout="split">
         <CardActions actions={secondaryActions} />
       </CardHeader>
 

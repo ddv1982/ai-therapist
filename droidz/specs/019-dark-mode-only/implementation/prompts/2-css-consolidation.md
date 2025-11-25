@@ -3,9 +3,11 @@
 ## Task Assignment
 
 ### Task 2.1: Consolidate Dark Mode Variables to :root
+
 **Priority**: High | **Effort**: Medium | **Risk**: Medium
 
 **Subtasks**:
+
 - [ ] Open `/src/styles/base.css`
 - [ ] Copy all variables from `.dark { ... }` block
 - [ ] Replace entire `:root { ... }` block with dark mode variables
@@ -16,6 +18,7 @@
 - [ ] Keep safe area insets in body styles
 
 **Key Variables to Move**:
+
 ```css
 /* Backgrounds */
 --background: oklch(0.12 0.01 250);
@@ -51,20 +54,24 @@
 ```
 
 **Files Changed**:
+
 - `/src/styles/base.css` (modified - major restructure)
 
 ---
 
 ### Task 2.2: Verify Tailwind Theme Registration
+
 **Priority**: Medium | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Open `/src/app/globals.css`
 - [ ] Verify `@theme` block exists and maps CSS variables
 - [ ] Confirm all color names match updated `:root` variables
 - [ ] No changes needed unless variable names changed
 
 **Files Changed**:
+
 - `/src/app/globals.css` (likely no changes needed)
 
 ---
@@ -72,6 +79,7 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: droidz/specs/019-dark-mode-only/spec.md
 - requirements: droidz/specs/019-dark-mode-only/planning/requirements.md
 - tasks: droidz/specs/019-dark-mode-only/tasks.md
@@ -90,6 +98,7 @@ Read these for requirements and patterns:
 ## Verification
 
 After changes:
+
 ```bash
 npm run dev  # Load app, verify dark colors render
 # Visual check: backgrounds should be dark, text white
@@ -99,6 +108,7 @@ npm run build  # Should build without CSS errors
 ## Standards
 
 Follow all standards in:
+
 - /Users/vriesd/projects/ai-therapist/AGENTS.md
 - /Users/vriesd/projects/ai-therapist/droidz/standards/
 

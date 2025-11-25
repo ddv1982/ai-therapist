@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const wrapper = ({ children }: { children: React.ReactNode }) => 
+const wrapper = ({ children }: { children: React.ReactNode }) =>
   React.createElement(QueryClientProvider, { client: queryClient }, children);
 
 describe('Reports Queries', () => {
@@ -29,21 +29,21 @@ describe('Reports Queries', () => {
   });
 
   it('useGenerateReportMutation should call generateReportDetailed', async () => {
-      const mockResponse = { success: true, data: { reportContent: 'Report content' } };
-      (apiClient.generateReportDetailed as jest.Mock).mockResolvedValue(mockResponse);
+    const mockResponse = { success: true, data: { reportContent: 'Report content' } };
+    (apiClient.generateReportDetailed as jest.Mock).mockResolvedValue(mockResponse);
 
-      const { result } = renderHook(() => useGenerateReportMutation(), { wrapper });
+    const { result } = renderHook(() => useGenerateReportMutation(), { wrapper });
 
-      const request = {
-          sessionId: '1',
-          messages: [{ role: 'user', content: 'Hello' } as any],
-          model: 'gpt-4',
-      };
+    const request = {
+      sessionId: '1',
+      messages: [{ role: 'user', content: 'Hello' } as any],
+      model: 'gpt-4',
+    };
 
-      result.current.mutate(request);
+    result.current.mutate(request);
 
-      await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      expect(result.current.data).toEqual(mockResponse);
-      expect(apiClient.generateReportDetailed).toHaveBeenCalledWith(request);
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual(mockResponse);
+    expect(apiClient.generateReportDetailed).toHaveBeenCalledWith(request);
   });
 });

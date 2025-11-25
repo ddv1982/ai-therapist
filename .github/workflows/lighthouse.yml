@@ -59,7 +59,7 @@ jobs:
           script: |
             const fs = require('fs');
             const resultsPath = './.lighthouse/manifest.json';
-            
+
             if (!fs.existsSync(resultsPath)) {
               console.log('Lighthouse results not found');
               return;

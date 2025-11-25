@@ -3,6 +3,7 @@
 ## Task Assignment
 
 ### Task 10.1: Add Husky Pre-commit Hooks
+
 - **Description**: Install and configure Husky for pre-commit validation.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -13,6 +14,7 @@
 - **Complexity**: Small
 
 ### Task 10.2: Configure lint-staged
+
 - **Description**: Set up lint-staged for efficient pre-commit checks.
 - **Dependencies**: Task 10.1
 - **Acceptance Criteria**:
@@ -23,6 +25,7 @@
 - **Complexity**: Small
 
 ### Task 10.3: Configure Dependabot
+
 - **Description**: Set up automated dependency updates.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -33,6 +36,7 @@
 - **Complexity**: Small
 
 ### Task 10.4: Add Log Level Filtering
+
 - **Description**: Make logging configurable by environment variable.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -43,6 +47,7 @@
 - **Complexity**: Small
 
 ### Task 10.5: Evaluate Error Tracking Service
+
 - **Description**: Assess Sentry or similar for production error tracking.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -55,11 +60,13 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: `droidz/specs/022-codebase-improvement-plan/spec.md`
 - requirements: `droidz/specs/022-codebase-improvement-plan/planning/requirements.md`
 - tasks: `droidz/specs/022-codebase-improvement-plan/tasks.md`
 
 Key files to study:
+
 - `package.json` - Current scripts and dependencies
 - `eslint.config.js` - ESLint configuration
 - `.prettierrc` or prettier config - Prettier settings

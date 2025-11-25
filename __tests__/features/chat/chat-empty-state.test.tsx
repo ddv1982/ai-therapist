@@ -40,9 +40,9 @@ describe('ChatEmptyState', () => {
   });
 
   it('renders moon phase info', () => {
-     render(<ChatEmptyState isMobile={false} translate={mockTranslate} />);
-     expect(screen.getByText(/Illum\./)).toBeInTheDocument();
-     expect(screen.getByText(/New Moon/)).toBeInTheDocument();
+    render(<ChatEmptyState isMobile={false} translate={mockTranslate} />);
+    expect(screen.getByText(/Illum\./)).toBeInTheDocument();
+    expect(screen.getByText(/New Moon/)).toBeInTheDocument();
   });
 
   it('applies mobile layout when isMobile prop is true', () => {

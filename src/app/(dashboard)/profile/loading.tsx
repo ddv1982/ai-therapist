@@ -15,7 +15,7 @@ export default function ProfileLoading() {
         </CardHeader>
       </Card>
 
-      <div className="rounded-lg border bg-card p-6">
+      <div className="bg-card rounded-lg border p-6">
         <div className="space-y-6">
           {/* Avatar skeleton */}
           <div className="flex items-center gap-4">

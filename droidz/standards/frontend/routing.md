@@ -70,6 +70,7 @@ src/app/
 ### Route Organization
 
 **✅ DO**: Use route groups for layout separation without URL impact
+
 ```
 src/app/
 ├── (auth)/           # URL: /sign-in, /sign-up (not /auth/sign-in)
@@ -79,18 +80,21 @@ src/app/
 ```
 
 **✅ DO**: Use dynamic segments for resource-based routes
+
 ```
 src/app/api/sessions/[sessionId]/route.ts
 // Handles: /api/sessions/abc123
 ```
 
 **✅ DO**: Use catch-all routes for third-party auth providers
+
 ```
 src/app/(auth)/sign-in/[[...sign-in]]/page.tsx
 // Handles: /sign-in, /sign-in/factor-one, /sign-in/sso-callback
 ```
 
 **✅ DO**: Keep route files minimal, delegate to feature modules
+
 ```typescript
 // src/app/(dashboard)/chat/page.tsx
 import { ChatPage } from '@/features/chat/components/chat-page';
@@ -103,6 +107,7 @@ export default function Page() {
 ### Layouts
 
 **✅ DO**: Use layouts for shared UI that persists across navigation
+
 ```typescript
 // src/app/(dashboard)/layout.tsx
 interface DashboardLayoutProps {
@@ -120,12 +125,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 ```
 
 **✅ DO**: Keep root layout focused on essential providers
+
 ```typescript
 // src/app/layout.tsx
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   const messages = await getMessages({ locale });
-  
+
   return (
     <html lang={locale}>
       <body>
@@ -141,6 +147,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 ### Loading States
 
 **✅ DO**: Add loading.tsx for routes with data fetching
+
 ```typescript
 // src/app/(dashboard)/reports/loading.tsx
 import { Skeleton } from '@/components/ui/skeleton';
@@ -156,6 +163,7 @@ export default function ReportsLoading() {
 ```
 
 **✅ DO**: Use Suspense boundaries for granular loading states
+
 ```typescript
 // src/app/(dashboard)/chat/page.tsx
 import { Suspense } from 'react';
@@ -173,6 +181,7 @@ export default function ChatPage() {
 ### Error Handling
 
 **✅ DO**: Add error.tsx for graceful error recovery
+
 ```typescript
 // src/app/(dashboard)/error.tsx
 'use client';
@@ -198,6 +207,7 @@ export default function DashboardError({ error, reset }: ErrorProps) {
 ### API Routes
 
 **✅ DO**: Use consistent middleware wrappers for API routes
+
 ```typescript
 // src/app/api/sessions/route.ts
 import { withAuth, withValidation } from '@/lib/api/api-middleware';
@@ -217,6 +227,7 @@ export const POST = withValidation(createSessionSchema, async (request, context,
 ```
 
 **✅ DO**: Follow RESTful conventions for API routes
+
 ```
 GET    /api/sessions              # List sessions
 POST   /api/sessions              # Create session
@@ -228,6 +239,7 @@ POST   /api/sessions/[id]/messages  # Create message
 ```
 
 **✅ DO**: Use route handlers for streaming responses
+
 ```typescript
 // src/app/api/chat/route.ts
 export const POST = withAuthAndRateLimitStreaming(async (req, context) => {
@@ -242,6 +254,7 @@ export const maxDuration = 30;
 ### Metadata
 
 **✅ DO**: Export metadata for SEO and sharing
+
 ```typescript
 // src/app/(dashboard)/reports/page.tsx
 import type { Metadata } from 'next';
@@ -255,6 +268,7 @@ export default function ReportsPage() { ... }
 ```
 
 **✅ DO**: Use generateMetadata for dynamic pages
+
 ```typescript
 // src/app/(dashboard)/sessions/[sessionId]/page.tsx
 import type { Metadata } from 'next';
@@ -266,7 +280,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { sessionId } = await params;
   const session = await getSession(sessionId);
-  
+
   return {
     title: `${session.title} | AI Therapist`,
   };
@@ -276,6 +290,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 ### Navigation
 
 **✅ DO**: Use Next.js Link for client-side navigation
+
 ```typescript
 import Link from 'next/link';
 
@@ -285,13 +300,14 @@ import Link from 'next/link';
 ```
 
 **✅ DO**: Use useRouter for programmatic navigation
+
 ```typescript
 'use client';
 import { useRouter } from 'next/navigation';
 
 function ChatActions() {
   const router = useRouter();
-  
+
   const handleNewSession = async () => {
     const session = await createSession();
     router.push(`/chat?session=${session.id}`);
@@ -306,6 +322,7 @@ function ChatActions() {
 ### Route Organization
 
 **❌ DON'T**: Create redundant redirect routes
+
 ```typescript
 // BAD: src/app/dashboard/page.tsx
 import { redirect } from 'next/navigation';
@@ -313,9 +330,11 @@ export default function DashboardRedirect() {
   redirect('/');
 }
 ```
+
 **Why**: Adds unnecessary files and potential for stale redirects. Use middleware or remove the route.
 
 **❌ DON'T**: Mix concerns in route files
+
 ```typescript
 // BAD: src/app/(dashboard)/chat/page.tsx
 'use client';
@@ -327,9 +346,11 @@ export default function ChatPage() {
   // 500 lines of component logic...
 }
 ```
+
 **Why**: Makes routes hard to test and maintain. Extract to feature modules.
 
 **❌ DON'T**: Use Pages Router patterns in App Router
+
 ```typescript
 // BAD: Don't use getServerSideProps or getStaticProps
 export async function getServerSideProps() { ... }
@@ -340,11 +361,13 @@ export default async function Page() {
   return <Component data={data} />;
 }
 ```
+
 **Why**: App Router has different data fetching patterns.
 
 ### Layouts
 
 **❌ DON'T**: Add heavy providers in nested layouts
+
 ```typescript
 // BAD: src/app/(dashboard)/chat/layout.tsx
 export default function ChatLayout({ children }) {
@@ -357,9 +380,11 @@ export default function ChatLayout({ children }) {
   );
 }
 ```
+
 **Why**: Causes unnecessary re-renders. Keep providers in root layout.
 
 **❌ DON'T**: Duplicate layout structure
+
 ```typescript
 // BAD: Repeating the same wrapper in multiple layouts
 // src/app/(dashboard)/layout.tsx
@@ -367,16 +392,18 @@ export default function DashboardLayout({ children }) {
   return <div className="min-h-screen bg-background"><main>{children}</main></div>;
 }
 
-// src/app/(auth)/layout.tsx  
+// src/app/(auth)/layout.tsx
 export default function AuthLayout({ children }) {
   return <div className="min-h-screen bg-background"><main>{children}</main></div>;
 }
 ```
+
 **Why**: Use a shared layout component or consolidate in root layout.
 
 ### API Routes
 
 **❌ DON'T**: Skip authentication middleware
+
 ```typescript
 // BAD: No auth check
 export async function GET(request: NextRequest) {
@@ -390,9 +417,11 @@ export const GET = withAuth(async (request, context) => {
   return createSuccessResponse(sessions);
 });
 ```
+
 **Why**: Exposes data to unauthenticated users.
 
 **❌ DON'T**: Return plain Response without standard format
+
 ```typescript
 // BAD: Inconsistent response format
 export async function GET() {
@@ -404,9 +433,11 @@ export const GET = withAuth(async (request, context) => {
   return createSuccessResponse(sessions, { requestId: context.requestId });
 });
 ```
+
 **Why**: Inconsistent API responses make frontend error handling harder.
 
 **❌ DON'T**: Use GET for mutations
+
 ```typescript
 // BAD: Mutation via GET
 export async function GET(request: NextRequest) {
@@ -423,11 +454,13 @@ export const DELETE = withAuth(async (request, context, params) => {
   return createSuccessResponse({ success: true });
 });
 ```
+
 **Why**: Violates REST principles, can be triggered by crawlers/prefetch.
 
 ### Navigation
 
 **❌ DON'T**: Use anchor tags for internal navigation
+
 ```typescript
 // BAD: Full page reload
 <a href="/reports">View Reports</a>
@@ -435,9 +468,11 @@ export const DELETE = withAuth(async (request, context, params) => {
 // GOOD: Client-side navigation
 <Link href="/reports">View Reports</Link>
 ```
+
 **Why**: Loses client-side state and causes full page reloads.
 
 **❌ DON'T**: Hard-code URLs in multiple places
+
 ```typescript
 // BAD: URL strings everywhere
 router.push('/api/sessions');
@@ -458,6 +493,7 @@ export const routes = {
   },
 } as const;
 ```
+
 **Why**: Makes refactoring routes error-prone.
 
 ---
@@ -469,6 +505,7 @@ export const routes = {
 **Use Case**: Group routes that require authentication with shared layout
 
 **Implementation**:
+
 ```typescript
 // src/app/(dashboard)/layout.tsx
 import { auth } from '@clerk/nextjs/server';
@@ -480,11 +517,11 @@ interface DashboardLayoutProps {
 
 export default async function DashboardLayout({ children }: DashboardLayoutProps) {
   const { userId } = await auth();
-  
+
   if (!userId) {
     redirect('/sign-in');
   }
-  
+
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
@@ -495,6 +532,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
 ```
 
 **Explanation**:
+
 - Route group `(dashboard)` doesn't affect URL
 - Layout checks auth and redirects if needed
 - All child routes inherit protection
@@ -504,6 +542,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
 **Use Case**: Create API endpoint with request validation and consistent responses
 
 **Implementation**:
+
 ```typescript
 // src/app/api/sessions/route.ts
 import { withValidation, withAuth } from '@/lib/api/api-middleware';
@@ -517,17 +556,17 @@ export const POST = withValidation(
   async (_request, context, validatedData) => {
     try {
       const { title } = validatedData;
-      
+
       const session = await createSession({
         userId: context.userInfo.userId,
         title,
       });
-      
+
       logger.info('Session created', {
         requestId: context.requestId,
         sessionId: session.id,
       });
-      
+
       return createSuccessResponse(session, { requestId: context.requestId });
     } catch (error) {
       return enhancedErrorHandlers.handleDatabaseError(error, 'create session', context);
@@ -540,14 +579,15 @@ export const GET = withAuth(async (request, context) => {
   const url = new URL(request.url);
   const limit = parseInt(url.searchParams.get('limit') ?? '10');
   const offset = parseInt(url.searchParams.get('offset') ?? '0');
-  
+
   const result = await getSessions(context.userInfo.userId, { limit, offset });
-  
+
   return createSuccessResponse(result, { requestId: context.requestId });
 });
 ```
 
 **Explanation**:
+
 - `withValidation` wraps `withAuth` - validated requests are always authenticated
 - Schema validation happens before handler executes
 - Consistent error handling and response format
@@ -557,6 +597,7 @@ export const GET = withAuth(async (request, context) => {
 **Use Case**: Handle routes with URL parameters (Next.js 15+ async params)
 
 **Implementation**:
+
 ```typescript
 // src/app/api/sessions/[sessionId]/route.ts
 import { withAuth } from '@/lib/api/api-middleware';
@@ -567,26 +608,27 @@ interface RouteParams {
 
 export const GET = withAuth(async (_request, context, params) => {
   const { sessionId } = await params;
-  
+
   // Validate ownership
   const session = await getSession(sessionId);
   if (session.userId !== context.userInfo.userId) {
     return createNotFoundErrorResponse('Session', context.requestId);
   }
-  
+
   return createSuccessResponse(session, { requestId: context.requestId });
 });
 
 export const DELETE = withAuth(async (_request, context, params) => {
   const { sessionId } = await params;
-  
+
   await deleteSession(sessionId, context.userInfo.userId);
-  
+
   return createSuccessResponse({ success: true }, { requestId: context.requestId });
 });
 ```
 
 **Explanation**:
+
 - Next.js 15+ requires `await` on params
 - Always verify resource ownership
 - Support multiple HTTP methods in same file
@@ -596,6 +638,7 @@ export const DELETE = withAuth(async (_request, context, params) => {
 **Use Case**: AI chat endpoint with streaming response
 
 **Implementation**:
+
 ```typescript
 // src/app/api/chat/route.ts
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
@@ -605,12 +648,12 @@ export const maxDuration = 30;
 
 export const POST = withAuthAndRateLimitStreaming(async (req, context) => {
   const { message, sessionId } = await req.json();
-  
+
   const streamResult = await streamChatCompletion({
     messages: [{ role: 'user', content: message }],
     model: languageModels.default,
   });
-  
+
   // Return streaming response
   return streamResult.toUIMessageStreamResponse({
     onError: (error) => {
@@ -622,6 +665,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req, context) => {
 ```
 
 **Explanation**:
+
 - Use streaming-specific middleware wrapper
 - Set `maxDuration` for long-running requests
 - Handle stream errors gracefully
@@ -631,6 +675,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req, context) => {
 **Use Case**: Page that fetches data on the server
 
 **Implementation**:
+
 ```typescript
 // src/app/(dashboard)/reports/page.tsx
 import type { Metadata } from 'next';
@@ -646,18 +691,19 @@ export const metadata: Metadata = {
 
 export default async function ReportsPage() {
   const { userId } = await auth();
-  
+
   if (!userId) {
     redirect('/sign-in');
   }
-  
+
   const reports = await getReports(userId);
-  
+
   return <ReportsView initialReports={reports} />;
 }
 ```
 
 **Explanation**:
+
 - Server Component fetches data directly
 - Pass initial data to client component
 - Metadata defined for SEO
@@ -691,12 +737,14 @@ export default async function ReportsPage() {
 ## Testing Standards
 
 ### Page Routes
+
 - Test that pages render without errors
 - Test navigation between pages
 - Test loading and error states
 - Use Playwright for E2E tests
 
 ### API Routes
+
 - Unit test with mocked request/response
 - Test authentication requirements
 - Test validation error responses
@@ -709,12 +757,12 @@ describe('POST /api/sessions', () => {
     const response = await POST(mockRequest());
     expect(response.status).toBe(401);
   });
-  
+
   it('validates request body', async () => {
     const response = await POST(mockAuthenticatedRequest({ title: '' }));
     expect(response.status).toBe(400);
   });
-  
+
   it('creates session with valid data', async () => {
     const response = await POST(mockAuthenticatedRequest({ title: 'New Session' }));
     expect(response.status).toBe(200);

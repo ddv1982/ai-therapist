@@ -13,10 +13,10 @@ export interface ConfirmOptions {
 /**
  * Hook for quick confirmation modals
  * Returns props to spread onto a ConfirmationModal component
- * 
+ *
  * Usage:
  * const confirmDelete = useTherapeuticConfirm();
- * 
+ *
  * <ConfirmationModal {...confirmDelete({
  *   title: "Delete session?",
  *   description: "This cannot be undone",

@@ -3,7 +3,10 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { useChatActions, type UseChatActionsParams } from '@/features/therapy-chat/hooks/use-chat-actions';
+import {
+  useChatActions,
+  type UseChatActionsParams,
+} from '@/features/therapy-chat/hooks/use-chat-actions';
 import { createRef } from 'react';
 import type { ChatState } from '@/features/therapy-chat/hooks/use-chat-state';
 import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
@@ -36,9 +39,7 @@ describe('useChatActions', () => {
     ...overrides,
   });
 
-  const createMockParams = (
-    overrides?: Partial<UseChatActionsParams>
-  ): UseChatActionsParams => ({
+  const createMockParams = (overrides?: Partial<UseChatActionsParams>): UseChatActionsParams => ({
     chatState: createMockChatState(),
     setInput: jest.fn(),
     sendMessage: jest.fn().mockResolvedValue(undefined),
@@ -197,7 +198,10 @@ describe('useChatActions', () => {
 
   it('should toggle web search on and switch to analytical model', () => {
     const updateSettings = jest.fn();
-    const params = createMockParams({ updateSettings, settings: { model: DEFAULT_MODEL_ID, webSearchEnabled: false } });
+    const params = createMockParams({
+      updateSettings,
+      settings: { model: DEFAULT_MODEL_ID, webSearchEnabled: false },
+    });
     const { result } = renderHook(() => useChatActions(params));
 
     act(() => {
@@ -212,7 +216,10 @@ describe('useChatActions', () => {
 
   it('should toggle web search off and reset to default model', () => {
     const updateSettings = jest.fn();
-    const params = createMockParams({ updateSettings, settings: { model: ANALYTICAL_MODEL_ID, webSearchEnabled: true } });
+    const params = createMockParams({
+      updateSettings,
+      settings: { model: ANALYTICAL_MODEL_ID, webSearchEnabled: true },
+    });
     const { result } = renderHook(() => useChatActions(params));
 
     act(() => {
@@ -227,7 +234,10 @@ describe('useChatActions', () => {
 
   it('should toggle smart model', () => {
     const updateSettings = jest.fn();
-    const params = createMockParams({ updateSettings, settings: { model: DEFAULT_MODEL_ID, webSearchEnabled: false } });
+    const params = createMockParams({
+      updateSettings,
+      settings: { model: DEFAULT_MODEL_ID, webSearchEnabled: false },
+    });
     const { result } = renderHook(() => useChatActions(params));
 
     act(() => {

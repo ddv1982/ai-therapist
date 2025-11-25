@@ -38,7 +38,7 @@ export function CBTFlowLayout({
       {currentStep && totalSteps && (
         <div className="mb-8 flex justify-center">
           <div className="bg-primary/10 text-primary inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold shadow-sm backdrop-blur-sm">
-            <span className="h-2 w-2 rounded-full bg-current animate-pulse" />
+            <span className="h-2 w-2 animate-pulse rounded-full bg-current" />
             Step {currentStep} of {totalSteps}
           </div>
         </div>

@@ -38,6 +38,7 @@ Mental health challenges affect millions of people globally, yet significant bar
 ### The Opportunity
 
 While AI cannot and should not replace human therapists, it can serve as a complementary tool that:
+
 - Provides immediate, 24/7 support for emotional processing
 - Offers a judgment-free space for exploration and self-reflection
 - Bridges the gap between therapy sessions
@@ -126,14 +127,18 @@ AI Therapist leverages advanced artificial intelligence combined with evidence-b
 ### Why Choose AI Therapist?
 
 #### 1. Always Available Support
+
 Unlike traditional therapy with weekly appointments, AI Therapist provides:
+
 - **Immediate access** when you need support most
 - **24/7 availability** regardless of time zones or holidays
 - **Real-time responses** with streaming AI conversation
 - **No scheduling hassles** or wait times
 
 #### 2. Evidence-Based Therapeutic Approach
+
 Not just a chatbot, but a tool grounded in professional frameworks:
+
 - **CBT principles** for identifying and challenging cognitive distortions
 - **ERP techniques** for exposure therapy and anxiety management
 - **Schema Therapy** for recognizing deep patterns and core beliefs
@@ -141,7 +146,9 @@ Not just a chatbot, but a tool grounded in professional frameworks:
 - **AI-generated insights** with session reports and progress tracking
 
 #### 3. Enterprise Security & Privacy
+
 Your therapeutic conversations deserve the highest protection:
+
 - **AES-256-GCM encryption** on all message content
 - **Clerk authentication** with industry-standard security
 - **HIPAA-compliant practices** for data handling
@@ -149,7 +156,9 @@ Your therapeutic conversations deserve the highest protection:
 - **Server-authoritative architecture** preventing data enumeration
 
 #### 4. Modern, Delightful Experience
+
 Mental health tools should be beautiful and easy to use:
+
 - **Elegant design** with dark/light themes
 - **Mobile-first** responsive interface
 - **Smooth animations** and real-time streaming
@@ -157,7 +166,9 @@ Mental health tools should be beautiful and easy to use:
 - **PWA support** for native-like mobile experience
 
 #### 5. Cost-Effective Mental Health Support
+
 Making therapy principles accessible:
+
 - **Affordable alternative** to $100-300/session therapy
 - **No insurance requirements** or pre-authorization
 - **Unlimited conversations** without per-session fees
@@ -170,21 +181,27 @@ Making therapy principles accessible:
 ### What Makes Us Unique?
 
 #### 1. Security-First Architecture
+
 While competitors treat security as an afterthought, we built it into our foundation:
+
 - Field-level encryption on therapeutic content (not just transport encryption)
 - Server-side only backend functions with strict ownership validation
 - Clerk managed authentication with webhook synchronization
 - HIPAA-compliant logging and monitoring
 
 #### 2. Professional Therapeutic Framework
+
 Not generic AI chat, but specialized therapeutic support:
+
 - Trained on evidence-based therapeutic modalities
 - Crisis detection and intervention protocols
 - Structured session reports with therapeutic insights
 - Pattern recognition across sessions
 
 #### 3. Modern Technical Excellence
+
 Built with latest technologies for optimal performance:
+
 - React 19 with concurrent features and optimistic UI updates
 - Next.js 16 with Turbopack for lightning-fast builds
 - 20x faster server rendering (235ms → 12ms)
@@ -192,7 +209,9 @@ Built with latest technologies for optimal performance:
 - Comprehensive test coverage (1,528+ passing tests)
 
 #### 4. Developer Experience & Quality
+
 Maintained to highest engineering standards:
+
 - Type-safe TypeScript throughout
 - 100% test pass rate (Jest + Playwright)
 - Modern architecture (Server Components, React Query)
@@ -206,24 +225,28 @@ Maintained to highest engineering standards:
 ### Key Performance Indicators (KPIs)
 
 #### User Engagement
+
 - **Daily Active Users (DAU)** - Target: 10,000 within 12 months
 - **Session Length** - Target: Average 15+ minutes per session
 - **Return Rate** - Target: 70% users return within 7 days
 - **Sessions per User** - Target: Average 8+ sessions per month
 
 #### Therapeutic Effectiveness
+
 - **User-Reported Helpfulness** - Target: 80%+ rate conversations as helpful
 - **Crisis Intervention Success** - Target: 95%+ appropriate crisis responses
 - **Therapeutic Framework Application** - Target: 85%+ CBT/ERP techniques applied correctly
 - **Session Completion Rate** - Target: 70%+ sessions reach meaningful conclusion
 
 #### Technical Performance
+
 - **Response Time** - Target: <500ms for first token
 - **System Uptime** - Target: 99.9% availability
 - **Test Coverage** - Target: Maintain 100% pass rate
 - **Performance Benchmarks** - Target: <15ms server render time
 
 #### Security & Compliance
+
 - **Zero Security Incidents** - Target: No breaches or data exposure
 - **Encryption Coverage** - Target: 100% therapeutic content encrypted
 - **Authentication Success** - Target: <0.1% auth-related failures
@@ -276,16 +299,17 @@ Maintained to highest engineering standards:
 
 ### Competitive Landscape
 
-| Competitor | Their Approach | Our Advantage |
-|------------|----------------|---------------|
-| **Traditional Therapy** | Licensed human therapists | 24/7 availability, lower cost, no appointment scheduling |
-| **Therapy Apps** (BetterHelp, Talkspace) | Human therapists via app | Immediate access, AI-powered insights, more affordable |
-| **Mental Health AI** (Woebot, Wysa) | Basic AI chatbots | Professional frameworks, enterprise security, better UX |
-| **General AI** (ChatGPT) | Generic conversational AI | Specialized therapeutic training, privacy focus, session continuity |
+| Competitor                               | Their Approach            | Our Advantage                                                       |
+| ---------------------------------------- | ------------------------- | ------------------------------------------------------------------- |
+| **Traditional Therapy**                  | Licensed human therapists | 24/7 availability, lower cost, no appointment scheduling            |
+| **Therapy Apps** (BetterHelp, Talkspace) | Human therapists via app  | Immediate access, AI-powered insights, more affordable              |
+| **Mental Health AI** (Woebot, Wysa)      | Basic AI chatbots         | Professional frameworks, enterprise security, better UX             |
+| **General AI** (ChatGPT)                 | Generic conversational AI | Specialized therapeutic training, privacy focus, session continuity |
 
 ### Our Sweet Spot
 
 We serve users who want:
+
 - **More than generic AI** - Professional therapeutic frameworks, not just conversation
 - **Better than basic chatbots** - Modern UX, real-time streaming, session management
 - **More accessible than human therapy** - 24/7 availability, lower cost, no stigma
@@ -296,7 +320,9 @@ We serve users who want:
 ## Strategic Roadmap Alignment
 
 ### Phase 1: Foundation (Current State)
+
 ✅ **Completed**
+
 - Core therapeutic chat with CBT/ERP/Schema Therapy frameworks
 - Enterprise security (encryption, Clerk auth, HIPAA compliance)
 - Session management and report generation
@@ -305,14 +331,18 @@ We serve users who want:
 - Production performance optimization (20x faster rendering)
 
 ### Phase 2: Enhancement (Q1-Q2 2026)
+
 🎯 **Planned** (See roadmap.md)
+
 - Advanced analytics and progress visualization
 - Enhanced therapeutic techniques and frameworks
 - Mood tracking and pattern recognition
 - Community and peer support features
 
 ### Phase 3: Scale (Q3-Q4 2026)
+
 🚀 **Future** (See roadmap.md)
+
 - Provider integration and collaboration tools
 - Mobile native applications (iOS/Android)
 - Advanced AI capabilities and personalization
@@ -325,18 +355,21 @@ We serve users who want:
 ### Launch Approach
 
 #### Phase 1: Soft Launch (Months 1-3)
+
 - **Target**: Early adopters and tech-savvy users
 - **Channels**: Product Hunt, Reddit (r/mentalhealth, r/anxiety), Twitter
 - **Goal**: 1,000 active users, gather feedback
 - **Messaging**: "AI therapy that's actually secure and helpful"
 
 #### Phase 2: Growth (Months 4-6)
+
 - **Target**: Broader mental health community
 - **Channels**: Content marketing, SEO, partnerships with mental health advocates
 - **Goal**: 10,000 active users, testimonials and case studies
 - **Messaging**: "Your 24/7 mental health companion"
 
 #### Phase 3: Scale (Months 7-12)
+
 - **Target**: Mainstream adoption
 - **Channels**: Paid advertising, influencer partnerships, press coverage
 - **Goal**: 100,000+ active users, establish market leadership
@@ -345,12 +378,14 @@ We serve users who want:
 ### Pricing Strategy
 
 #### Free Tier (Launch)
+
 - Unlimited conversations
 - Core therapeutic frameworks (CBT, ERP)
 - Basic session reports
 - **Goal**: Build user base and gather feedback
 
 #### Premium Tier (Future)
+
 - Advanced therapeutic frameworks (DBT, ACT, IFS)
 - Detailed progress analytics and visualizations
 - Priority support and faster responses
@@ -359,6 +394,7 @@ We serve users who want:
 - **Price**: $9.99/month or $99/year
 
 #### Enterprise Tier (Future)
+
 - White-label deployment options
 - HIPAA-compliant hosting
 - Custom therapeutic frameworks
@@ -373,40 +409,50 @@ We serve users who want:
 ### Key Risks
 
 #### 1. Clinical Efficacy Concerns
+
 **Risk**: Questions about whether AI can provide effective therapeutic support  
 **Mitigation**:
+
 - Clear messaging that we complement, not replace, human therapy
 - Partner with licensed therapists for framework validation
 - Conduct user studies measuring therapeutic outcomes
 - Publish transparency reports on effectiveness
 
 #### 2. Security & Privacy Breaches
+
 **Risk**: Data breach could be catastrophic for user trust  
 **Mitigation**:
+
 - Enterprise-grade encryption (AES-256-GCM)
 - Regular security audits and penetration testing
 - Bug bounty program
 - Incident response plan and cyber insurance
 
 #### 3. Regulatory Challenges
+
 **Risk**: Healthcare regulations may impose restrictions  
 **Mitigation**:
+
 - Legal review of all messaging and claims
 - Clear disclaimers about AI limitations
 - HIPAA compliance from day one
 - Consult with healthcare attorneys
 
 #### 4. Competition from Established Players
+
 **Risk**: Large companies (Google, Apple) may enter this space  
 **Mitigation**:
+
 - Focus on specialized therapeutic excellence
 - Build strong user community and loyalty
 - Maintain technical excellence and innovation speed
 - Consider strategic partnerships or acquisition opportunities
 
 #### 5. AI Model Failures
+
 **Risk**: AI could provide harmful or inappropriate responses  
 **Mitigation**:
+
 - Comprehensive testing of crisis scenarios
 - Human review of flagged conversations
 - Continuous model refinement based on feedback
@@ -421,6 +467,7 @@ We serve users who want:
 **Mission Evolution**: From "AI therapeutic support" to "Comprehensive digital mental health ecosystem"
 
 #### 2030 Vision
+
 - **10M+ users** globally accessing AI therapeutic support
 - **Partnerships** with healthcare providers and insurance companies
 - **Research validation** through published clinical studies
@@ -431,6 +478,7 @@ We serve users who want:
 ### Ultimate Impact
 
 We envision a world where:
+
 - **Mental health support is universally accessible**, regardless of income or location
 - **AI augments human therapists**, freeing them to focus on complex cases
 - **Stigma is reduced** through normalized, private digital interactions
@@ -455,9 +503,10 @@ Our foundation is strong: enterprise security, evidence-based frameworks, modern
 **Version**: 1.0  
 **Last Updated**: November 24, 2025  
 **Owner**: Product Team  
-**Status**: Active  
+**Status**: Active
 
 For detailed implementation plans, see:
+
 - [Development Roadmap](./roadmap.md)
 - [Technical Stack Documentation](./tech-stack.md)
 - [Project README](../../README.md)

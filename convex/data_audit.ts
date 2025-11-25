@@ -16,7 +16,7 @@ export const findOrphanedMessages = query({
       sessionId: string;
       createdAt: string;
     }> = [];
-    
+
     for (const message of messages) {
       const session = await ctx.db.get(message.sessionId);
       if (!session) {
@@ -27,7 +27,7 @@ export const findOrphanedMessages = query({
         });
       }
     }
-    
+
     return {
       total: messages.length,
       orphaned: orphaned.length,
@@ -47,7 +47,7 @@ export const findOrphanedReports = query({
       sessionId: string;
       createdAt: string;
     }> = [];
-    
+
     for (const report of reports) {
       const session = await ctx.db.get(report.sessionId);
       if (!session) {
@@ -58,7 +58,7 @@ export const findOrphanedReports = query({
         });
       }
     }
-    
+
     return {
       total: reports.length,
       orphaned: orphaned.length,
@@ -79,7 +79,7 @@ export const findOrphanedSessions = query({
       title: string;
       createdAt: string;
     }> = [];
-    
+
     for (const session of sessions) {
       const user = await ctx.db.get(session.userId);
       if (!user) {
@@ -91,7 +91,7 @@ export const findOrphanedSessions = query({
         });
       }
     }
-    
+
     return {
       total: sessions.length,
       orphaned: orphaned.length,
@@ -111,7 +111,7 @@ export const analyzeLegacyIds = query({
     const sessions = await ctx.db.query('sessions').collect();
     const messages = await ctx.db.query('messages').collect();
     const reports = await ctx.db.query('sessionReports').collect();
-    
+
     // Legacy fields have been removed from schema, so these will all be 0
     return {
       users: {
@@ -149,20 +149,20 @@ export const verifyIndexes = query({
   handler: async (ctx) => {
     // Query using the new compound index
     const testSessionId = (await ctx.db.query('sessions').first())?._id;
-    
+
     if (!testSessionId) {
       return {
         status: 'no_data',
         message: 'No sessions in database to test index',
       };
     }
-    
+
     // This should use the by_session_created index
     const reportsWithIndex = await ctx.db
       .query('sessionReports')
       .withIndex('by_session_created', (q) => q.eq('sessionId', testSessionId))
       .collect();
-    
+
     return {
       status: 'success',
       message: 'Compound index by_session_created is active and working',
@@ -185,13 +185,14 @@ export const getDatabaseStats = query({
     const sessions = await ctx.db.query('sessions').collect();
     const messages = await ctx.db.query('messages').collect();
     const reports = await ctx.db.query('sessionReports').collect();
-    
+
     return {
       users: users.length,
       sessions: sessions.length,
       messages: messages.length,
       reports: reports.length,
-      avgMessagesPerSession: sessions.length > 0 ? Math.round(messages.length / sessions.length) : 0,
+      avgMessagesPerSession:
+        sessions.length > 0 ? Math.round(messages.length / sessions.length) : 0,
       avgReportsPerSession: sessions.length > 0 ? (reports.length / sessions.length).toFixed(2) : 0,
     };
   },

@@ -27,13 +27,13 @@ describe('withApiRoute', () => {
   it('passes through without auth/rate limit and adds X-Request-Id', async () => {
     const handler = jest.fn(async (_req: any, _ctx: any) => NextResponse.json({ success: true }));
     const wrapped = withApiMiddleware(handler);
-    
+
     const req = {
       headers: new Headers({ 'x-request-id': 'rid', 'user-agent': 'jest' }),
       method: 'GET',
       url: 'http://test/api',
     } as any;
-    
+
     const res = await wrapped(req, { params: Promise.resolve({}) } as any);
     expect(handler).toHaveBeenCalled();
     expect((res as any).headers.get('X-Request-Id')).toBeTruthy();
@@ -44,15 +44,15 @@ describe('withApiRoute', () => {
       validateApiAuth: jest.Mock;
     };
     validateApiAuth.mockResolvedValueOnce({ isValid: false, error: 'nope' });
-    
+
     const wrapped = withAuth(async () => NextResponse.json({ success: true }) as any);
-    
+
     const req = {
       headers: new Headers({ 'x-request-id': 'rid-2', 'user-agent': 'jest' }),
       method: 'GET',
       url: 'http://test',
     } as any;
-    
+
     const res = await wrapped(req, { params: Promise.resolve({}) } as any);
     const json = await (res as any).json();
     expect((res as any).status).toBe(401);
@@ -66,18 +66,18 @@ describe('withApiRoute', () => {
     getRateLimiter.mockReturnValueOnce({
       checkRateLimit: jest.fn(async () => ({ allowed: false, retryAfter: 5 })),
     });
-    
+
     const wrapped = withRateLimitUnauthenticated(
       async (_req: any, _ctx: any) => NextResponse.json({ success: true }) as any,
       { bucket: 'api' }
     );
-    
+
     const req = {
       headers: new Headers({ 'x-request-id': 'rid-3', 'user-agent': 'jest' }),
       method: 'GET',
       url: 'http://test',
     } as any;
-    
+
     const res = await wrapped(req, { params: Promise.resolve({}) } as any);
     const json = await (res as any).json();
     expect((res as any).status).toBe(429);

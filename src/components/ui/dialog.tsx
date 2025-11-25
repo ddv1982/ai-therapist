@@ -15,7 +15,8 @@ const DialogPortal = DialogPrimitive.Portal;
 
 const DialogClose = DialogPrimitive.Close;
 
-interface DialogOverlayProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> {
+interface DialogOverlayProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay> {
   ref?: Ref<React.ElementRef<typeof DialogPrimitive.Overlay>>;
 }
 
@@ -31,7 +32,7 @@ function DialogOverlay({ className, ref, ...props }: DialogOverlayProps) {
         // Smooth fade animations
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-        'transition-all duration-base ease-smooth',
+        'duration-base ease-smooth transition-all',
         className
       )}
       {...props}
@@ -39,7 +40,8 @@ function DialogOverlay({ className, ref, ...props }: DialogOverlayProps) {
   );
 }
 
-interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
+interface DialogContentProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
   ref?: Ref<React.ElementRef<typeof DialogPrimitive.Content>>;
 }
 
@@ -66,7 +68,7 @@ function DialogContent({ className, children, ref, ...props }: DialogContentProp
           'grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%]',
           'gap-4 p-6',
           // Apple-style appearance
-          'bg-background border border-border',
+          'bg-background border-border border',
           'rounded-2xl', // 16px rounded corners (Apple style)
           'shadow-apple-xl',
           // Spring animations (Apple physics)
@@ -80,7 +82,7 @@ function DialogContent({ className, children, ref, ...props }: DialogContentProp
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute top-4 right-4 rounded-md opacity-70 hover:opacity-100 hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-fast ease-out-smooth disabled:pointer-events-none p-1.5">
+        <DialogPrimitive.Close className="hover:bg-muted focus:ring-ring duration-fast ease-out-smooth absolute top-4 right-4 rounded-md p-1.5 opacity-70 transition-all hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
           <X className="h-5 w-5" />
           <span className="sr-only">{t('close')}</span>
         </DialogPrimitive.Close>

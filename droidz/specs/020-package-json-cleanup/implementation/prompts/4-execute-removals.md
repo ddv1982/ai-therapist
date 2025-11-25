@@ -3,9 +3,11 @@
 ## Task Assignment
 
 ### Task 4.1: Remove Batch 1 (Lowest Risk)
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Process**:
+
 1. Remove packages: `npm uninstall pkg1 pkg2 pkg3`
 2. Clean install: `rm -rf node_modules package-lock.json && npm install`
 3. Run verification: tsc, lint, build, test
@@ -13,16 +15,19 @@
 5. If failures, restore and document
 
 ### Task 4.2: Remove Batch 2
+
 **Priority**: High | **Effort**: Small | **Risk**: Low-Medium
 
 Follow same process as Batch 1
 
 ### Task 4.3: Remove Batch 3
+
 **Priority**: Medium | **Effort**: Small | **Risk**: Medium
 
 Follow same process with extra caution
 
 ### Task 4.4: Remove Remaining Batches
+
 **Priority**: Medium | **Effort**: Variable | **Risk**: Variable
 
 Continue batch removal process
@@ -32,6 +37,7 @@ Continue batch removal process
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: droidz/specs/020-package-json-cleanup/spec.md
 - requirements: droidz/specs/020-package-json-cleanup/planning/requirements.md
 - tasks: droidz/specs/020-package-json-cleanup/tasks.md
@@ -53,6 +59,7 @@ Read these for requirements and patterns:
 ## Verification Commands
 
 After each batch:
+
 ```bash
 npx tsc --noEmit  # Type check
 npm run lint       # Lint
@@ -63,6 +70,7 @@ npm test          # Tests
 ## Standards
 
 Follow all standards in:
+
 - /Users/vriesd/projects/ai-therapist/AGENTS.md
 
 ## Important Notes

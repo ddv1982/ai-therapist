@@ -12,12 +12,7 @@ export interface ModalLayoutProps extends TherapeuticLayoutProps {
  * Specialized layout for modal content
  * Provides consistent styling for dialog and modal components
  */
-export function ModalLayout({
-  children,
-  title,
-  className,
-  ...props
-}: ModalLayoutProps) {
+export function ModalLayout({ children, title, className, ...props }: ModalLayoutProps) {
   return (
     <TherapeuticLayout
       layout="modal"

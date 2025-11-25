@@ -3,6 +3,7 @@
 ## Task Assignment
 
 ### Task 8.1: Create Shared Validation Schemas
+
 - **Description**: Ensure client and server use identical validation schemas.
 - **Dependencies**: Group 1 (typed schemas)
 - **Acceptance Criteria**:
@@ -14,6 +15,7 @@
 - **Complexity**: Medium
 
 ### Task 8.2: Align Convex Validators with Zod Schemas
+
 - **Description**: Ensure Convex validators match Zod schemas exactly.
 - **Dependencies**: Task 8.1
 - **Acceptance Criteria**:
@@ -24,6 +26,7 @@
 - **Complexity**: Medium
 
 ### Task 8.3: Document Input Sanitization Requirements
+
 - **Description**: Create documentation for input handling and sanitization.
 - **Dependencies**: Task 8.1
 - **Acceptance Criteria**:
@@ -34,6 +37,7 @@
 - **Complexity**: Small
 
 ### Task 8.4: Evaluate Distributed Rate Limiting
+
 - **Description**: Assess need for Redis-based rate limiting for horizontal scaling.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -44,6 +48,7 @@
 - **Complexity**: Medium
 
 ### Task 8.5: Add Rate Limit Response Headers
+
 - **Description**: Include rate limit information in API responses.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -54,6 +59,7 @@
 - **Complexity**: Small
 
 ### Task 8.6: Implement Progressive Rate Limiting (If Needed)
+
 - **Description**: Add escalating penalties for repeated limit violations.
 - **Dependencies**: Task 8.4
 - **Acceptance Criteria**:
@@ -66,11 +72,13 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: `droidz/specs/022-codebase-improvement-plan/spec.md`
 - requirements: `droidz/specs/022-codebase-improvement-plan/planning/requirements.md`
 - tasks: `droidz/specs/022-codebase-improvement-plan/tasks.md`
 
 Key files to study:
+
 - `src/lib/api/rate-limiter.ts` - Current rate limiting
 - `src/lib/api/middleware.ts` - API middleware
 - `convex/schema.ts` - Convex validators

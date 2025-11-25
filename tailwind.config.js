@@ -69,16 +69,16 @@ const config = {
          ======================================== */
       spacing: {
         0.5: '0.125rem', // 2px
-        1: '0.25rem',    // 4px
-        2: '0.5rem',     // 8px
-        3: '0.75rem',    // 12px
-        4: '1rem',       // 16px
-        6: '1.5rem',     // 24px
-        8: '2rem',       // 32px
-        12: '3rem',      // 48px
-        16: '4rem',      // 64px
-        20: '5rem',      // 80px
-        24: '6rem',      // 96px
+        1: '0.25rem', // 4px
+        2: '0.5rem', // 8px
+        3: '0.75rem', // 12px
+        4: '1rem', // 16px
+        6: '1.5rem', // 24px
+        8: '2rem', // 32px
+        12: '3rem', // 48px
+        16: '4rem', // 64px
+        20: '5rem', // 80px
+        24: '6rem', // 96px
       },
 
       /* ========================================
@@ -86,17 +86,17 @@ const config = {
          ======================================== */
       fontSize: {
         '3xl': '1.875rem', // 30px - Large headings
-        xl: '1.25rem',     // 20px - Subheadings
-        base: '1rem',      // 16px - Body text
-        sm: '0.875rem',    // 14px - Small text
+        xl: '1.25rem', // 20px - Subheadings
+        base: '1rem', // 16px - Body text
+        sm: '0.875rem', // 14px - Small text
       },
       fontWeight: {
-        normal: '400',   // Regular
+        normal: '400', // Regular
         semibold: '600', // Semibold
       },
       fontFamily: {
         sans: ['var(--font-system)'], // Apple SF Pro / system fonts
-        mono: ['var(--font-mono)'],   // SF Mono / monospace
+        mono: ['var(--font-mono)'], // SF Mono / monospace
       },
       lineHeight: {
         tight: '1.2',
@@ -104,9 +104,9 @@ const config = {
         relaxed: '1.5',
       },
       letterSpacing: {
-        tight: '-0.011em',   // Large headings (Apple SF Pro spec)
-        normal: '0em',        // Body text
-        wide: '0.011em',      // Labels/UI elements
+        tight: '-0.011em', // Large headings (Apple SF Pro spec)
+        normal: '0em', // Body text
+        wide: '0.011em', // Labels/UI elements
       },
 
       /* ========================================
@@ -173,9 +173,9 @@ const config = {
         slow: '500ms',
       },
       transitionTimingFunction: {
-        spring: 'cubic-bezier(0.5, 1.25, 0.75, 1.25)',      // Bouncy spring
+        spring: 'cubic-bezier(0.5, 1.25, 0.75, 1.25)', // Bouncy spring
         'ease-out-smooth': 'cubic-bezier(0.16, 1, 0.3, 1)', // Smooth deceleration
-        smooth: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',     // Ultra smooth
+        smooth: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Ultra smooth
       },
       keyframes: {
         'accordion-down': {
@@ -223,13 +223,13 @@ const config = {
       },
     },
   },
-  
+
   /* ========================================
      CUSTOM PLUGINS
      ======================================== */
   plugins: [
     // Tap highlight utilities (for mobile touch interactions)
-    function({ addUtilities }) {
+    function ({ addUtilities }) {
       addUtilities({
         '.tap-transparent': {
           '-webkit-tap-highlight-color': 'transparent',
@@ -237,7 +237,7 @@ const config = {
         '.tap-primary': {
           '-webkit-tap-highlight-color': 'hsl(var(--primary) / 0.2)',
         },
-      })
+      });
     },
   ],
 };

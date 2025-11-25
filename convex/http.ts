@@ -104,11 +104,11 @@ http.route({
           'svix-timestamp': request.headers.get('svix-timestamp') || 'missing',
         },
       };
-      
+
       // Convex captures this in their logging system - structured format for log aggregation
       // eslint-disable-next-line no-console
       console.error(JSON.stringify(errorDetails));
-      
+
       return new Response('Webhook verification failed', { status: 401 });
     }
   }),

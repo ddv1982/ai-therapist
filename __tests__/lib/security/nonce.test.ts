@@ -22,7 +22,9 @@ describe('nonce', () => {
       const mockHeadersObj: MockHeaders = {
         get: (name: string) => (name === 'x-csp-nonce' ? mockNonce : null),
       };
-      mockHeaders.mockResolvedValue(mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>);
+      mockHeaders.mockResolvedValue(
+        mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>
+      );
 
       const result = await getNonce();
 
@@ -33,7 +35,9 @@ describe('nonce', () => {
       const mockHeadersObj: MockHeaders = {
         get: () => null,
       };
-      mockHeaders.mockResolvedValue(mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>);
+      mockHeaders.mockResolvedValue(
+        mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>
+      );
 
       const result = await getNonce();
 
@@ -44,7 +48,9 @@ describe('nonce', () => {
       const mockHeadersObj: MockHeaders = {
         get: (name: string) => (name === 'x-csp-nonce' ? null : null),
       };
-      mockHeaders.mockResolvedValue(mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>);
+      mockHeaders.mockResolvedValue(
+        mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>
+      );
 
       const result = await getNonce();
 
@@ -55,7 +61,9 @@ describe('nonce', () => {
       const mockHeadersObj: MockHeaders = {
         get: (name: string) => (name === 'x-csp-nonce' ? '' : null),
       };
-      mockHeaders.mockResolvedValue(mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>);
+      mockHeaders.mockResolvedValue(
+        mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>
+      );
 
       const result = await getNonce();
 
@@ -69,7 +77,9 @@ describe('nonce', () => {
       const mockHeadersObj: MockHeaders = {
         get: (name: string) => (name === 'x-csp-nonce' ? mockNonce : null),
       };
-      mockHeaders.mockResolvedValue(mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>);
+      mockHeaders.mockResolvedValue(
+        mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>
+      );
 
       const result = await getNonceAttr();
 
@@ -80,7 +90,9 @@ describe('nonce', () => {
       const mockHeadersObj: MockHeaders = {
         get: () => null,
       };
-      mockHeaders.mockResolvedValue(mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>);
+      mockHeaders.mockResolvedValue(
+        mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>
+      );
 
       const result = await getNonceAttr();
 
@@ -91,7 +103,9 @@ describe('nonce', () => {
       const mockHeadersObj: MockHeaders = {
         get: () => null,
       };
-      mockHeaders.mockResolvedValue(mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>);
+      mockHeaders.mockResolvedValue(
+        mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>
+      );
 
       const result = await getNonceAttr();
 
@@ -103,7 +117,9 @@ describe('nonce', () => {
       const mockHeadersObj: MockHeaders = {
         get: (name: string) => (name === 'x-csp-nonce' ? mockNonce : null),
       };
-      mockHeaders.mockResolvedValue(mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>);
+      mockHeaders.mockResolvedValue(
+        mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>
+      );
 
       const result = await getNonceAttr();
       const jsxProps = { id: 'test', ...result };
@@ -115,7 +131,9 @@ describe('nonce', () => {
       const mockHeadersObj: MockHeaders = {
         get: () => null,
       };
-      mockHeaders.mockResolvedValue(mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>);
+      mockHeaders.mockResolvedValue(
+        mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>
+      );
 
       const result = await getNonceAttr();
       const jsxProps = { id: 'test', ...result };
@@ -131,7 +149,9 @@ describe('nonce', () => {
       const mockHeadersObj: MockHeaders = {
         get: (name: string) => (name === 'x-csp-nonce' ? mockNonce : null),
       };
-      mockHeaders.mockResolvedValue(mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>);
+      mockHeaders.mockResolvedValue(
+        mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>
+      );
 
       const nonce = await getNonce();
       const attr = await getNonceAttr();
@@ -145,7 +165,9 @@ describe('nonce', () => {
       const mockHeadersObj: MockHeaders = {
         get: (name: string) => (name === 'x-csp-nonce' ? mockNonce : null),
       };
-      mockHeaders.mockResolvedValue(mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>);
+      mockHeaders.mockResolvedValue(
+        mockHeadersObj as unknown as Awaited<ReturnType<typeof headers>>
+      );
 
       const [nonce1, nonce2, attr1, attr2] = await Promise.all([
         getNonce(),

@@ -15,10 +15,7 @@ import type { ChatActions } from '@/features/therapy-chat/hooks/use-chat-actions
 
 export interface ChatControlsProps {
   chatState: ChatState;
-  chatActions: Pick<
-    ChatActions,
-    'handleInputChange' | 'handleKeyDown' | 'handleFormSubmit'
-  >;
+  chatActions: Pick<ChatActions, 'handleInputChange' | 'handleKeyDown' | 'handleFormSubmit'>;
   onStop: () => void;
 }
 

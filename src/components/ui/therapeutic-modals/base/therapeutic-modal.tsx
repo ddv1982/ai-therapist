@@ -11,7 +11,7 @@ import type { TherapeuticModalProps } from './modal-types';
 /**
  * Legacy wrapper that maintains the old monolithic API
  * Uses compound components under the hood
- * 
+ *
  * For new code, prefer using compound components directly:
  * <TherapeuticModal open={open} onOpenChange={setOpen}>
  *   <TherapeuticModal.Header title="Title" />

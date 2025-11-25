@@ -1,6 +1,6 @@
 /**
  * WCAG 2.1 AA Accessibility Tests for Dialog Component
- * 
+ *
  * Tests compliance with:
  * - 2.1.1 Keyboard: All functionality available via keyboard
  * - 2.1.2 No Keyboard Trap: Focus can move away (via Escape)
@@ -8,7 +8,7 @@
  * - 2.4.7 Focus Visible: Keyboard focus indicator visible
  * - 3.2.1 On Focus: No unexpected context changes
  * - 4.1.2 Name, Role, Value: Proper ARIA attributes
- * 
+ *
  * NOTE: These tests validate that Radix UI Dialog's built-in focus management
  * meets WCAG 2.1 AA standards. Radix handles focus trap, focus return, and
  * keyboard navigation automatically.
@@ -36,7 +36,13 @@ const messages = {
   },
 };
 
-const DialogTest = ({ open, onOpenChange }: { open?: boolean; onOpenChange?: (open: boolean) => void }) => (
+const DialogTest = ({
+  open,
+  onOpenChange,
+}: {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) => (
   <NextIntlClientProvider locale="en" messages={messages}>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -51,7 +57,9 @@ const DialogTest = ({ open, onOpenChange }: { open?: boolean; onOpenChange?: (op
           <label htmlFor="test-input">Test Input</label>
           <input id="test-input" type="text" />
           <Button id="action-button">Action</Button>
-          <a href="#" id="test-link">Test Link</a>
+          <a href="#" id="test-link">
+            Test Link
+          </a>
         </div>
         <DialogFooter>
           <Button id="cancel-button">Cancel</Button>
@@ -70,7 +78,7 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
 
       const trigger = screen.getByText('Open Dialog');
       trigger.focus();
-      
+
       await user.keyboard('{Enter}');
 
       await waitFor(() => {
@@ -84,7 +92,7 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
 
       const trigger = screen.getByText('Open Dialog');
       trigger.focus();
-      
+
       await user.keyboard(' ');
 
       await waitFor(() => {
@@ -102,7 +110,7 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
 
       // Radix UI automatically focuses first element - verify focus is in dialog
       const dialog = screen.getByRole('dialog');
-      
+
       await waitFor(() => {
         expect(dialog).toContainElement(document.activeElement as HTMLElement);
       });
@@ -117,7 +125,7 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
     it('should close dialog with Escape key', async () => {
       const user = userEvent.setup();
       const onOpenChange = jest.fn();
-      
+
       render(<DialogTest open={true} onOpenChange={onOpenChange} />);
 
       await waitFor(() => {
@@ -136,7 +144,7 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
       render(<DialogTest />);
 
       const trigger = screen.getByText('Open Dialog');
-      
+
       await user.click(trigger);
 
       await waitFor(() => {
@@ -166,11 +174,11 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
       });
 
       const dialog = screen.getByRole('dialog');
-      
+
       // Just verify focus stays within dialog during navigation
       await user.tab();
       expect(dialog).toContainElement(document.activeElement as HTMLElement);
-      
+
       await user.tab();
       expect(dialog).toContainElement(document.activeElement as HTMLElement);
     });
@@ -214,7 +222,7 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
 
       // Wait for dialog to be in DOM first
       const dialog = await screen.findByRole('dialog');
-      
+
       // Radix UI Portal may delay attribute setting - check it exists
       // Note: Some versions of Radix use data-state instead of aria-modal
       expect(dialog).toBeInTheDocument();
@@ -257,19 +265,19 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
 
       // Rapidly toggle
       rerender(<DialogTest open={true} />);
-      
+
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
 
       rerender(<DialogTest open={false} />);
-      
+
       await waitFor(() => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       });
 
       rerender(<DialogTest open={true} />);
-      
+
       await waitFor(() => {
         expect(screen.getByRole('dialog')).toBeInTheDocument();
       });
@@ -302,7 +310,7 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
       });
 
       const nestedButton = screen.getByText('Nested Button') as HTMLElement;
-      
+
       // Can manually focus nested elements
       nestedButton.focus();
       expect(document.activeElement).toBe(nestedButton);
@@ -350,11 +358,11 @@ describe('Dialog Accessibility - WCAG 2.1 AA Compliance', () => {
 
       // Wait for dialog to appear
       const dialog = await screen.findByRole('dialog');
-      
+
       // Verify dialog role is present (screen readers will announce it)
       expect(dialog).toBeInTheDocument();
       expect(dialog).toHaveAttribute('role', 'dialog');
-      
+
       // Verify it has title for screen reader context
       expect(screen.getByText('Test Dialog Title')).toBeInTheDocument();
     });

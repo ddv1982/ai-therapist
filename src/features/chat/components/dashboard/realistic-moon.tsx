@@ -238,42 +238,18 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
 
           {/* Enhanced Radial Gradient - more realistic 3D depth */}
           <radialGradient id="moon-sphere" cx="45%" cy="45%" r="55%">
-            <stop
-              offset="0%"
-              stopColor="currentColor"
-              className="text-slate-50"
-            />
-            <stop
-              offset="40%"
-              stopColor="currentColor"
-              className="text-slate-100"
-            />
-            <stop
-              offset="70%"
-              stopColor="currentColor"
-              className="text-slate-200"
-            />
-            <stop
-              offset="90%"
-              stopColor="currentColor"
-              className="text-slate-400"
-            />
-            <stop
-              offset="100%"
-              stopColor="currentColor"
-              className="text-slate-500"
-            />
+            <stop offset="0%" stopColor="currentColor" className="text-slate-50" />
+            <stop offset="40%" stopColor="currentColor" className="text-slate-100" />
+            <stop offset="70%" stopColor="currentColor" className="text-slate-200" />
+            <stop offset="90%" stopColor="currentColor" className="text-slate-400" />
+            <stop offset="100%" stopColor="currentColor" className="text-slate-500" />
           </radialGradient>
 
           {/* Rim light gradient for edge highlight */}
           <radialGradient id="rim-light" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="transparent" />
             <stop offset="85%" stopColor="transparent" />
-            <stop
-              offset="95%"
-              stopColor="currentColor"
-              className="text-white/30"
-            />
+            <stop offset="95%" stopColor="currentColor" className="text-white/30" />
             <stop offset="100%" stopColor="transparent" />
           </radialGradient>
 
@@ -281,11 +257,7 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
           <radialGradient id="inner-shadow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="transparent" />
             <stop offset="80%" stopColor="transparent" />
-            <stop
-              offset="100%"
-              stopColor="currentColor"
-              className="text-black/25"
-            />
+            <stop offset="100%" stopColor="currentColor" className="text-black/25" />
           </radialGradient>
         </defs>
 
@@ -311,13 +283,7 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
         />
 
         {/* 6. Subtle atmospheric edge glow */}
-        <circle
-          cx="100"
-          cy="100"
-          r="99"
-          className="fill-none stroke-white/5"
-          strokeWidth="2"
-        />
+        <circle cx="100" cy="100" r="99" className="fill-none stroke-white/5" strokeWidth="2" />
       </motion.svg>
     </motion.div>
   );

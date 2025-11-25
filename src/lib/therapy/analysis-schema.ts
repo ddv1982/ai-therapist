@@ -19,10 +19,7 @@ export const schemaAnalysisSchema = z.object({
     .array(z.any())
     .optional()
     .describe('Core schemas that were triggered during the conversation'),
-  behavioralPatterns: z
-    .array(z.string())
-    .default([])
-    .describe('Observable behavioral patterns'),
+  behavioralPatterns: z.array(z.string()).default([]).describe('Observable behavioral patterns'),
   predominantMode: z
     .string()
     .nullable()
@@ -70,10 +67,7 @@ export const userDataIntegrationSchema = z.object({
 
 export const contentTierMetadataSchema = z.object({
   tier: z.string().optional().describe('Content tier (e.g., structured-cbt, conversational)'),
-  analysisScope: z
-    .string()
-    .optional()
-    .describe('Scope of analysis (e.g., comprehensive, basic)'),
+  analysisScope: z.string().optional().describe('Scope of analysis (e.g., comprehensive, basic)'),
   userDataReliability: z
     .number()
     .min(0)
@@ -98,11 +92,7 @@ export const parsedAnalysisSchema = z.object({
     .optional()
     .describe('Therapeutic frameworks applicable to this case'),
   recommendations: z.array(z.any()).optional().describe('Clinical recommendations'),
-  keyPoints: z
-    .array(z.string())
-    .optional()
-    .describe('Key takeaways from the session')
-    .or(z.any()),
+  keyPoints: z.array(z.string()).optional().describe('Key takeaways from the session').or(z.any()),
   therapeuticInsights: z.any().optional().describe('Therapeutic insights and observations'),
   patternsIdentified: z.any().optional().describe('Behavioral patterns identified'),
   actionItems: z.any().optional().describe('Action items for client'),

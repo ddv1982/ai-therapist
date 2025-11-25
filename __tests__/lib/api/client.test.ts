@@ -297,7 +297,6 @@ describe('ApiClient', () => {
         const calls = (global.fetch as jest.Mock).mock.calls;
         expect(calls[0][0]).toBe('/api/api/sessions/sess-456');
       });
-
     });
 
     describe('Messages', () => {

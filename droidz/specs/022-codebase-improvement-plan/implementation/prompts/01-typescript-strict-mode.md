@@ -3,6 +3,7 @@
 ## Task Assignment
 
 ### Task 1.1: Audit Current TypeScript Errors
+
 - **Description**: Run `npx tsc --noImplicitAny` to identify all files with implicit any types and document the scope of work.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -12,6 +13,7 @@
 - **Complexity**: Small
 
 ### Task 1.2: Define Metadata Type Schemas
+
 - **Description**: Create proper TypeScript interfaces and Zod schemas for all metadata fields currently using `v.any()` in Convex schema.
 - **Dependencies**: Task 1.1
 - **Acceptance Criteria**:
@@ -22,6 +24,7 @@
 - **Complexity**: Medium
 
 ### Task 1.3: Update Convex Schema Validators
+
 - **Description**: Replace all `v.any()` usages in Convex schema with proper typed validators.
 - **Dependencies**: Task 1.2
 - **Acceptance Criteria**:
@@ -32,6 +35,7 @@
 - **Complexity**: Medium
 
 ### Task 1.4: Fix Implicit Any Errors in Hooks
+
 - **Description**: Add proper type annotations to hooks directory files.
 - **Dependencies**: Task 1.2
 - **Acceptance Criteria**:
@@ -42,6 +46,7 @@
 - **Complexity**: Medium
 
 ### Task 1.5: Fix Implicit Any Errors in Features
+
 - **Description**: Add proper type annotations to feature modules.
 - **Dependencies**: Task 1.2
 - **Acceptance Criteria**:
@@ -51,6 +56,7 @@
 - **Complexity**: Medium
 
 ### Task 1.6: Fix Implicit Any Errors in Lib/Utils
+
 - **Description**: Add proper type annotations to library and utility files.
 - **Dependencies**: Task 1.2
 - **Acceptance Criteria**:
@@ -60,6 +66,7 @@
 - **Complexity**: Medium
 
 ### Task 1.7: Enable noImplicitAny Permanently
+
 - **Description**: Enable `noImplicitAny: true` in tsconfig.json and verify CI passes.
 - **Dependencies**: Tasks 1.4, 1.5, 1.6
 - **Acceptance Criteria**:
@@ -72,6 +79,7 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: `droidz/specs/022-codebase-improvement-plan/spec.md`
 - requirements: `droidz/specs/022-codebase-improvement-plan/planning/requirements.md`
 - tasks: `droidz/specs/022-codebase-improvement-plan/tasks.md`

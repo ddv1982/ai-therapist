@@ -16,8 +16,11 @@ export const listByUserPaginated = query({
     if (user._id !== userId) {
       throw new Error('Session access denied');
     }
-    const numItems_clamped = Math.min(numItems ?? QUERY_LIMITS.DEFAULT_LIMIT, QUERY_LIMITS.MAX_SESSIONS_PER_REQUEST);
-    
+    const numItems_clamped = Math.min(
+      numItems ?? QUERY_LIMITS.DEFAULT_LIMIT,
+      QUERY_LIMITS.MAX_SESSIONS_PER_REQUEST
+    );
+
     const result = await ctx.db
       .query('sessions')
       .withIndex('by_user_created', (q) => q.eq('userId', userId))
@@ -101,13 +104,13 @@ export const create = mutation({
       createdAt: now,
       updatedAt: now,
     });
-    
+
     // Update user's cached session count
     await ctx.db.patch(user._id, {
       sessionCount: (user.sessionCount ?? 0) + 1,
       updatedAt: now,
     });
-    
+
     return await ctx.db.get(sessionId);
   },
 });
@@ -134,7 +137,7 @@ export const remove = mutation({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
     const { user } = await requireSessionOwnership(ctx, sessionId);
-    
+
     const msgs = await ctx.db
       .query('messages')
       .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
@@ -142,7 +145,7 @@ export const remove = mutation({
     for (const m of msgs) {
       await ctx.db.delete(m._id);
     }
-    
+
     const reports = await ctx.db
       .query('sessionReports')
       .withIndex('by_session', (q) => q.eq('sessionId', sessionId))
@@ -150,15 +153,15 @@ export const remove = mutation({
     for (const r of reports) {
       await ctx.db.delete(r._id);
     }
-    
+
     await ctx.db.delete(sessionId);
-    
+
     // Update user's cached session count
     await ctx.db.patch(user._id, {
       sessionCount: Math.max(0, (user.sessionCount ?? 1) - 1),
       updatedAt: Date.now(),
     });
-    
+
     return { ok: true, deleted: true };
   },
 });
@@ -183,22 +186,22 @@ export const _incrementMessageCount = internalMutation({
 export const _initializeSessionCounts = internalMutation({
   handler: async (ctx) => {
     const users = await ctx.db.query('users').collect();
-    
+
     for (const user of users) {
       if (user.sessionCount !== undefined) continue; // Already initialized
-      
+
       // Count sessions for this user
       const sessions = await ctx.db
         .query('sessions')
         .withIndex('by_user_created', (q) => q.eq('userId', user._id))
         .collect();
-      
+
       await ctx.db.patch(user._id, {
         sessionCount: sessions.length,
       });
     }
-    
-    return { usersUpdated: users.filter(u => u.sessionCount === undefined).length };
+
+    return { usersUpdated: users.filter((u) => u.sessionCount === undefined).length };
   },
 });
 

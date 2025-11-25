@@ -3,9 +3,11 @@
 ## Task Assignment
 
 ### Task 1.1: Setup and Backup
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Create backup files: `cp package.json package.json.backup && cp package-lock.json package-lock.json.backup`
 - [ ] Commit current state: `git add -A && git commit -m "chore: backup before dependency cleanup"`
 - [ ] Install analysis tools: `npm install -g depcheck npm-check`
@@ -14,9 +16,11 @@
 ---
 
 ### Task 1.2: Run Dependency Analysis Tools
+
 **Priority**: High | **Effort**: Medium | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Run depcheck and save output: `depcheck --json > depcheck-report.json && depcheck`
 - [ ] Generate import list from codebase:
   ```bash
@@ -29,9 +33,11 @@
 ---
 
 ### Task 1.3: Establish Baseline
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Run full test suite and save results: `npm run qa:full 2>&1 | tee baseline-test-results.txt`
 - [ ] Record metrics in cleanup-metrics.txt:
   - Current node_modules size
@@ -44,6 +50,7 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: droidz/specs/020-package-json-cleanup/spec.md
 - requirements: droidz/specs/020-package-json-cleanup/planning/requirements.md
 - tasks: droidz/specs/020-package-json-cleanup/tasks.md
@@ -60,6 +67,7 @@ Read these for requirements and patterns:
 ## Standards
 
 Follow all standards in:
+
 - /Users/vriesd/projects/ai-therapist/AGENTS.md
 - /Users/vriesd/projects/ai-therapist/droidz/standards/
 

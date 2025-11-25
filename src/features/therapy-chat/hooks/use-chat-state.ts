@@ -76,7 +76,7 @@ export interface UseChatStateParams {
 
 /**
  * Consolidates multiple chat state parameters into a single, memoized state object.
- * 
+ *
  * This hook aggregates chat state from various sources (controller, UI state, refs)
  * into a unified ChatState object, improving performance through memoization and
  * reducing prop drilling by providing a single state object to child components.

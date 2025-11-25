@@ -12,7 +12,11 @@ interface MessageTimestampProps {
   className?: string;
 }
 
-const MessageTimestampComponent = function MessageTimestamp({ timestamp, role, className }: MessageTimestampProps) {
+const MessageTimestampComponent = function MessageTimestamp({
+  timestamp,
+  role,
+  className,
+}: MessageTimestampProps) {
   const timestampClasses = buildMessageClasses(role, 'timestamp');
 
   const formattedTime = timestamp.toLocaleTimeString([], {

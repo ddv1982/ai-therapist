@@ -3,6 +3,7 @@
 ## Task Assignment
 
 ### Task 3.1: Analyze Hook Dependencies
+
 - **Description**: Map the dependency graph of `useChatController` and its 15+ child hooks.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -13,6 +14,7 @@
 - **Complexity**: Medium
 
 ### Task 3.2: Extract Message Persistence Service
+
 - **Description**: Create a service class for message persistence logic extracted from `use-chat-messages.ts`.
 - **Dependencies**: Task 3.1
 - **Acceptance Criteria**:
@@ -24,6 +26,7 @@
 - **Complexity**: Large
 
 ### Task 3.3: Extract Metadata Manager Service
+
 - **Description**: Create dedicated service for message metadata management.
 - **Dependencies**: Task 3.2
 - **Acceptance Criteria**:
@@ -34,6 +37,7 @@
 - **Complexity**: Medium
 
 ### Task 3.4: Simplify useChatMessages Hook
+
 - **Description**: Refactor `use-chat-messages.ts` to use extracted services, reducing from 598 to <200 lines.
 - **Dependencies**: Tasks 3.2, 3.3
 - **Acceptance Criteria**:
@@ -45,6 +49,7 @@
 - **Complexity**: Large
 
 ### Task 3.5: Create useChatCore Hook
+
 - **Description**: Extract core message state management into focused hook.
 - **Dependencies**: Task 3.4
 - **Acceptance Criteria**:
@@ -55,6 +60,7 @@
 - **Complexity**: Medium
 
 ### Task 3.6: Create useChatUI Hook
+
 - **Description**: Extract UI-specific concerns (viewport, scroll, input state) from controller.
 - **Dependencies**: Task 3.1
 - **Acceptance Criteria**:
@@ -65,6 +71,7 @@
 - **Complexity**: Medium
 
 ### Task 3.7: Simplify useChatController Hook
+
 - **Description**: Refactor main controller to compose simplified hooks, reducing from 366 lines.
 - **Dependencies**: Tasks 3.5, 3.6
 - **Acceptance Criteria**:
@@ -75,6 +82,7 @@
 - **Complexity**: Large
 
 ### Task 3.8: Add Hook Performance Benchmarks
+
 - **Description**: Create performance benchmarks for hook operations.
 - **Dependencies**: Task 3.7
 - **Acceptance Criteria**:
@@ -87,11 +95,13 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: `droidz/specs/022-codebase-improvement-plan/spec.md`
 - requirements: `droidz/specs/022-codebase-improvement-plan/planning/requirements.md`
 - tasks: `droidz/specs/022-codebase-improvement-plan/tasks.md`
 
 Key files to study:
+
 - `src/hooks/use-chat-controller.ts` (366 lines)
 - `src/hooks/use-chat-messages.ts` (598 lines)
 - `src/hooks/chat/` - Related hooks

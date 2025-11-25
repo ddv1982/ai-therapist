@@ -10,13 +10,13 @@
 export const QUERY_LIMITS = {
   /** Maximum sessions to return in a single query */
   MAX_SESSIONS_PER_REQUEST: 100,
-  
+
   /** Maximum messages to return in a single query */
   MAX_MESSAGES_PER_REQUEST: 200,
-  
+
   /** Maximum reports to return in a single query */
   MAX_REPORTS_PER_REQUEST: 50,
-  
+
   /** Default limit when not specified */
   DEFAULT_LIMIT: 50,
 } as const;
@@ -27,7 +27,7 @@ export const QUERY_LIMITS = {
 export const PAGINATION_DEFAULTS = {
   /** Default offset for pagination */
   DEFAULT_OFFSET: 0,
-  
+
   /** Minimum offset (floor) */
   MIN_OFFSET: 0,
 } as const;

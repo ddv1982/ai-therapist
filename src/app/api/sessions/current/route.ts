@@ -38,9 +38,9 @@ export const GET = withAuth(async (_request, context) => {
         userId: user._id,
       })) as ConvexSession[];
       currentSession = Array.isArray(sessions)
-        ? sessions
+        ? (sessions
             .filter((s) => s.status === 'active')
-            .sort((a, b) => b.updatedAt - a.updatedAt || b.createdAt - a.createdAt)[0] ?? null
+            .sort((a, b) => b.updatedAt - a.updatedAt || b.createdAt - a.createdAt)[0] ?? null)
         : null;
     }
 
@@ -90,7 +90,6 @@ export const POST = withValidation(
         sessionId,
         status: 'active',
       })) as ConvexSession;
-
 
       await convex.mutation(anyApi.users.setCurrentSession, { sessionId });
       logger.info('Current session updated', {

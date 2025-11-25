@@ -56,7 +56,7 @@ export interface UseDraftSavingReturn<T> {
 
 /**
  * Reusable hook for debounced draft saving
- * 
+ *
  * @example
  * ```tsx
  * const { saveDraft, isSaving, isSaved } = useDraftSaving({
@@ -65,13 +65,13 @@ export interface UseDraftSavingReturn<T> {
  *   },
  *   debounceMs: 600,
  * });
- * 
+ *
  * // In onChange
  * const handleChange = (value: string) => {
  *   setValue(value);
  *   saveDraft(value);
  * };
- * 
+ *
  * // Show indicator
  * {isSaving && <Spinner />}
  * {isSaved && <CheckIcon />}
@@ -102,26 +102,29 @@ export function useDraftSaving<T = unknown>(
   }, []);
 
   // Save immediately without debouncing
-  const saveImmediately = useCallback(async (value: T) => {
-    if (!enabled) return;
+  const saveImmediately = useCallback(
+    async (value: T) => {
+      if (!enabled) return;
 
-    cancelPending();
-    setIsSaving(true);
+      cancelPending();
+      setIsSaving(true);
 
-    try {
-      await onSaveRef.current(value);
-      setLastSaved(new Date());
-    } catch (error) {
-      logger.error('Draft save failed', {
-        hook: 'useDraftSaving',
-        operation: 'saveNow',
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    } finally {
-      setIsSaving(false);
-    }
-  }, [enabled, cancelPending]);
+      try {
+        await onSaveRef.current(value);
+        setLastSaved(new Date());
+      } catch (error) {
+        logger.error('Draft save failed', {
+          hook: 'useDraftSaving',
+          operation: 'saveNow',
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [enabled, cancelPending]
+  );
 
   // Save with debouncing
   const saveDraft = useCallback(

@@ -2,10 +2,10 @@
 
 /**
  * Run database audit to check for orphaned data and legacy field usage
- * 
+ *
  * Usage:
  *   node scripts/run-data-audit.js
- * 
+ *
  * This script requires Convex to be running (npm run convex:dev)
  */
 
@@ -26,7 +26,7 @@ async function runAudit() {
 
   const envContent = fs.readFileSync(envPath, 'utf8');
   const convexUrlMatch = envContent.match(/CONVEX_URL=["']?([^"'\n]+)["']?/);
-  
+
   if (!convexUrlMatch) {
     console.error('❌ Error: CONVEX_URL not found in .env.local');
     process.exit(1);
@@ -68,12 +68,14 @@ async function runAudit() {
     // 3. Check for Orphaned Data
     console.log('🧹 Orphaned Data Check');
     console.log('─'.repeat(60));
-    
+
     const orphanedMessages = await client.query('data_audit:findOrphanedMessages');
     if (orphanedMessages.orphaned > 0) {
-      console.log(`⚠️  Found ${orphanedMessages.orphaned} orphaned messages (out of ${orphanedMessages.total})`);
+      console.log(
+        `⚠️  Found ${orphanedMessages.orphaned} orphaned messages (out of ${orphanedMessages.total})`
+      );
       console.log('   These messages reference sessions that no longer exist');
-      orphanedMessages.orphanedMessages.slice(0, 5).forEach(m => {
+      orphanedMessages.orphanedMessages.slice(0, 5).forEach((m) => {
         console.log(`   - Message ${m.messageId} → Session ${m.sessionId}`);
       });
       if (orphanedMessages.orphaned > 5) {
@@ -85,9 +87,11 @@ async function runAudit() {
 
     const orphanedReports = await client.query('data_audit:findOrphanedReports');
     if (orphanedReports.orphaned > 0) {
-      console.log(`⚠️  Found ${orphanedReports.orphaned} orphaned reports (out of ${orphanedReports.total})`);
+      console.log(
+        `⚠️  Found ${orphanedReports.orphaned} orphaned reports (out of ${orphanedReports.total})`
+      );
       console.log('   These reports reference sessions that no longer exist');
-      orphanedReports.orphanedReports.slice(0, 5).forEach(r => {
+      orphanedReports.orphanedReports.slice(0, 5).forEach((r) => {
         console.log(`   - Report ${r.reportId} → Session ${r.sessionId}`);
       });
       if (orphanedReports.orphaned > 5) {
@@ -99,9 +103,11 @@ async function runAudit() {
 
     const orphanedSessions = await client.query('data_audit:findOrphanedSessions');
     if (orphanedSessions.orphaned > 0) {
-      console.log(`⚠️  Found ${orphanedSessions.orphaned} orphaned sessions (out of ${orphanedSessions.total})`);
+      console.log(
+        `⚠️  Found ${orphanedSessions.orphaned} orphaned sessions (out of ${orphanedSessions.total})`
+      );
       console.log('   These sessions reference users that no longer exist');
-      orphanedSessions.orphanedSessions.slice(0, 5).forEach(s => {
+      orphanedSessions.orphanedSessions.slice(0, 5).forEach((s) => {
         console.log(`   - Session ${s.sessionId} (${s.title}) → User ${s.userId}`);
       });
       if (orphanedSessions.orphaned > 5) {
@@ -116,23 +122,31 @@ async function runAudit() {
     console.log('🔄 Legacy ID Usage Analysis');
     console.log('─'.repeat(60));
     const legacyAnalysis = await client.query('data_audit:analyzeLegacyIds');
-    
+
     console.log('Users:');
     console.log(`  Total: ${legacyAnalysis.users.total}`);
-    console.log(`  With legacyId: ${legacyAnalysis.users.withLegacyId} (${legacyAnalysis.users.percentage}%)`);
-    
+    console.log(
+      `  With legacyId: ${legacyAnalysis.users.withLegacyId} (${legacyAnalysis.users.percentage}%)`
+    );
+
     console.log('Sessions:');
     console.log(`  Total: ${legacyAnalysis.sessions.total}`);
-    console.log(`  With legacyId: ${legacyAnalysis.sessions.withLegacyId} (${legacyAnalysis.sessions.percentage}%)`);
-    
+    console.log(
+      `  With legacyId: ${legacyAnalysis.sessions.withLegacyId} (${legacyAnalysis.sessions.percentage}%)`
+    );
+
     console.log('Messages:');
     console.log(`  Total: ${legacyAnalysis.messages.total}`);
-    console.log(`  With legacyId: ${legacyAnalysis.messages.withLegacyId} (${legacyAnalysis.messages.percentage}%)`);
-    
+    console.log(
+      `  With legacyId: ${legacyAnalysis.messages.withLegacyId} (${legacyAnalysis.messages.percentage}%)`
+    );
+
     console.log('Reports:');
     console.log(`  Total: ${legacyAnalysis.reports.total}`);
-    console.log(`  With legacyId: ${legacyAnalysis.reports.withLegacyId} (${legacyAnalysis.reports.percentage}%)`);
-    
+    console.log(
+      `  With legacyId: ${legacyAnalysis.reports.withLegacyId} (${legacyAnalysis.reports.percentage}%)`
+    );
+
     console.log('');
     console.log('📋 Recommendation:');
     console.log(`   ${legacyAnalysis.summary.recommendation}`);
@@ -144,16 +158,16 @@ async function runAudit() {
     console.log('═'.repeat(60));
 
     // Return summary for programmatic use
-    const hasOrphans = orphanedMessages.orphaned > 0 || 
-                       orphanedReports.orphaned > 0 || 
-                       orphanedSessions.orphaned > 0;
-    
+    const hasOrphans =
+      orphanedMessages.orphaned > 0 ||
+      orphanedReports.orphaned > 0 ||
+      orphanedSessions.orphaned > 0;
+
     if (hasOrphans) {
       console.log('\n⚠️  Action Required: Orphaned data found');
       console.log('   Run cleanup mutation to remove orphaned records\n');
       process.exit(1);
     }
-
   } catch (error) {
     console.error('❌ Audit failed:', error.message);
     process.exit(1);

@@ -3,9 +3,11 @@
 ## Task Assignment
 
 ### Task 1.1: Remove Theme Provider and Dependencies
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Remove ThemeProvider from `/src/app/providers.tsx`
 - [ ] Delete `/src/components/providers/theme-provider.tsx`
 - [ ] Delete `/src/lib/theme-context.ts`
@@ -14,6 +16,7 @@
 - [ ] Verify `npm list next-themes` returns empty
 
 **Files Changed**:
+
 - `/src/app/providers.tsx` (modified)
 - `/src/components/providers/theme-provider.tsx` (deleted)
 - `/src/lib/theme-context.ts` (deleted)
@@ -22,9 +25,11 @@
 ---
 
 ### Task 1.2: Remove Theme Toggle UI Component
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Delete `/src/components/shared/theme-toggle.tsx`
 - [ ] Remove ThemeToggle export from `/src/features/shared/index.ts`
 - [ ] Remove ThemeToggle import and usage from `/src/features/chat/components/dashboard/chat-sidebar.tsx`
@@ -32,6 +37,7 @@
 - [ ] Search codebase for any other ThemeToggle references: `grep -r "ThemeToggle" src/`
 
 **Files Changed**:
+
 - `/src/components/shared/theme-toggle.tsx` (deleted)
 - `/src/features/shared/index.ts` (modified)
 - `/src/features/chat/components/dashboard/chat-sidebar.tsx` (modified)
@@ -40,9 +46,11 @@
 ---
 
 ### Task 1.3: Remove Command Palette Theme Option
+
 **Priority**: Medium | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Open `/src/components/ui/command-palette.tsx`
 - [ ] Remove `onThemeToggle?: () => void` from CommandPaletteProps interface
 - [ ] Remove theme toggle CommandItem (search for Moon icon)
@@ -50,6 +58,7 @@
 - [ ] Update components that pass `onThemeToggle` prop to CommandPalette
 
 **Files Changed**:
+
 - `/src/components/ui/command-palette.tsx` (modified)
 - Any parent components passing `onThemeToggle` (modified)
 
@@ -58,6 +67,7 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: droidz/specs/019-dark-mode-only/spec.md
 - requirements: droidz/specs/019-dark-mode-only/planning/requirements.md
 - tasks: droidz/specs/019-dark-mode-only/tasks.md
@@ -76,6 +86,7 @@ Read these for requirements and patterns:
 ## Standards
 
 Follow all standards in:
+
 - /Users/vriesd/projects/ai-therapist/AGENTS.md
 - /Users/vriesd/projects/ai-therapist/droidz/standards/
 

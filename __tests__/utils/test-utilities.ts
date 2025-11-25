@@ -579,10 +579,7 @@ export class ComponentTestUtils {
       store?: any;
     } = {}
   ): RenderResult {
-    const {
-      withToastProvider = false,
-      ...renderOptions
-    } = options;
+    const { withToastProvider = false, ...renderOptions } = options;
 
     function AllProviders({ children }: { children: ReactNode }) {
       let content = children;

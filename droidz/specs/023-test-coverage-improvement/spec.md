@@ -671,6 +671,7 @@ Based on analysis of existing tests:
 1. **File Location:** Tests in `__tests__/` mirroring `src/` structure
 2. **File Naming:** `.test.ts` for utilities, `.test.tsx` for React components
 3. **Test Structure:**
+
    ```typescript
    describe('ModuleName', () => {
      beforeEach(() => {

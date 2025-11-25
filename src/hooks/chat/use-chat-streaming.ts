@@ -119,7 +119,8 @@ export function useChatStreaming(params: UseChatStreamingParams) {
       // Validate model before sending to API
       const requestedModel = optionsRef.current?.model;
       const validModels = Object.values(MODEL_IDS);
-      const isValidModel = requestedModel && validModels.includes(requestedModel as typeof validModels[number]);
+      const isValidModel =
+        requestedModel && validModels.includes(requestedModel as (typeof validModels)[number]);
       const safeModel = isValidModel ? requestedModel : DEFAULT_MODEL_ID;
 
       try {

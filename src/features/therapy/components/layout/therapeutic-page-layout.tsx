@@ -35,7 +35,7 @@ export function TherapeuticPageLayout({
       {...props}
     >
       {title && (
-        <header className="mb-8 text-center animate-in fade-in slide-in-from-top-4 duration-700">
+        <header className="animate-in fade-in slide-in-from-top-4 mb-8 text-center duration-700">
           <h1 className="text-primary mb-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             {title}
           </h1>
@@ -46,7 +46,7 @@ export function TherapeuticPageLayout({
           )}
         </header>
       )}
-      <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+      <div className="animate-in fade-in slide-in-from-bottom-4 w-full delay-150 duration-700">
         {children}
       </div>
     </TherapeuticLayout>

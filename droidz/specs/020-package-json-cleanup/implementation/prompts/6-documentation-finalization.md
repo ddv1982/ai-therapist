@@ -3,9 +3,11 @@
 ## Task Assignment
 
 ### Task 6.1: Complete Cleanup Report
+
 **Priority**: High | **Effort**: Medium | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Fill in all sections of dependency-cleanup-report.md
 - [ ] Update cleanup-metrics.txt with final numbers
 - [ ] Calculate improvements (%, size, time)
@@ -14,9 +16,11 @@
 ---
 
 ### Task 6.2: Final Verification Checklist
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 Complete all verification items:
+
 - [ ] npm install works
 - [ ] npm run build succeeds
 - [ ] All tests pass
@@ -26,9 +30,11 @@ Complete all verification items:
 ---
 
 ### Task 6.3: Update Project Documentation
+
 **Priority**: Medium | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Update README.md if needed
 - [ ] Document any removed features
 - [ ] Add cleanup notes to CHANGELOG if exists
@@ -37,9 +43,11 @@ Complete all verification items:
 ---
 
 ### Task 6.4: Final Commit and Sign-off
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Review all changes
 - [ ] Create final commit with summary
 - [ ] Push to remote
@@ -50,6 +58,7 @@ Complete all verification items:
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: droidz/specs/020-package-json-cleanup/spec.md
 - requirements: droidz/specs/020-package-json-cleanup/planning/requirements.md
 - tasks: droidz/specs/020-package-json-cleanup/tasks.md
@@ -92,6 +101,7 @@ Co-authored-by: factory-droid[bot] <138933559+factory-droid[bot]@users.noreply.g
 ## Standards
 
 Follow all standards in:
+
 - /Users/vriesd/projects/ai-therapist/AGENTS.md
 
 ## Important Notes

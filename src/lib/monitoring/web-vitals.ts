@@ -1,13 +1,13 @@
 /**
  * Web Vitals Performance Monitoring
- * 
+ *
  * Tracks Core Web Vitals metrics for performance observability:
  * - LCP (Largest Contentful Paint): Loading performance
  * - INP (Interaction to Next Paint): Interactivity (replaces FID)
  * - CLS (Cumulative Layout Shift): Visual stability
  * - FCP (First Contentful Paint): Initial paint
  * - TTFB (Time to First Byte): Server response time
- * 
+ *
  * @fileoverview Client-side performance monitoring with Web Vitals
  * @version 1.0.0
  */
@@ -42,7 +42,7 @@ function getRating(metric: Metric): 'good' | 'needs-improvement' | 'poor' {
 
 /**
  * Send metric to analytics/monitoring service
- * 
+ *
  * In production, this would send to:
  * - Vercel Analytics
  * - Google Analytics
@@ -67,9 +67,7 @@ function sendToAnalytics(metric: Metric): void {
   if (isDevelopment) {
     const color = rating === 'good' ? '🟢' : rating === 'needs-improvement' ? '🟡' : '🔴';
     // eslint-disable-next-line no-console
-    console.info(
-      `${color} ${metric.name}: ${Math.round(metric.value)} (${rating}) [${path}]`
-    );
+    console.info(`${color} ${metric.name}: ${Math.round(metric.value)} (${rating}) [${path}]`);
   }
 
   // Send to analytics service
@@ -113,7 +111,7 @@ function sendToAnalytics(metric: Metric): void {
 
 /**
  * Initialize Web Vitals monitoring
- * 
+ *
  * Call this once in your root layout or _app component:
  * ```tsx
  * useEffect(() => {

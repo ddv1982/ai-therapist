@@ -16,7 +16,7 @@ export function SessionControls({
   const isPaused = status === 'paused';
 
   return (
-    <div className="bg-card flex items-center justify-between shadow-[0_1px_0_rgba(255,255,255,0.06)] p-4">
+    <div className="bg-card flex items-center justify-between p-4 shadow-[0_1px_0_rgba(255,255,255,0.06)]">
       <div className="flex items-center space-x-4">
         <div className="text-xl font-semibold">
           {sessionId ? `Session Active` : 'Ready to Start'}

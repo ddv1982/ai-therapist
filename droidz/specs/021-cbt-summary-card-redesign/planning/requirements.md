@@ -11,6 +11,7 @@ The CBT Session Summary Card currently displays with visual issues when rendered
 ## Current Implementation
 
 ### Files Involved
+
 - `src/features/therapy/components/cbt-session-summary-card.tsx` - The card component
 - `src/features/chat/messages/message-content.tsx` - Wraps content with message bubble styling
 - `src/components/ui/markdown.tsx` - Renders CBT card when detected in message content
@@ -18,6 +19,7 @@ The CBT Session Summary Card currently displays with visual issues when rendered
 - `src/styles/typography.css` - `therapeutic-content` class styles
 
 ### Current Flow
+
 1. AI generates message with CBT summary data embedded as HTML comment
 2. `markdown.tsx` detects and extracts CBT data, renders `CBTSessionSummaryCard`
 3. `message-content.tsx` wraps the card in message bubble with `therapeutic-content` class
@@ -26,6 +28,7 @@ The CBT Session Summary Card currently displays with visual issues when rendered
 ## Requirements
 
 ### Visual Design
+
 1. CBT Summary Card should display as a standalone, visually distinct element
 2. No double-border or double-shadow effects
 3. Clean separation from regular chat message styling
@@ -33,6 +36,7 @@ The CBT Session Summary Card currently displays with visual issues when rendered
 5. Card should feel "premium" - polished, Apple-inspired design
 
 ### Technical Requirements
+
 1. CBT Summary Card should NOT be wrapped in message bubble styling
 2. Preserve the `therapeutic-content` styling for regular chat messages (it works well there)
 3. Card should be responsive (mobile and desktop)
@@ -40,7 +44,9 @@ The CBT Session Summary Card currently displays with visual issues when rendered
 5. Keep animation/transition effects subtle and performant
 
 ### Card Content Sections
+
 The card displays these CBT therapy sections:
+
 - Header with date and completed steps count
 - Situation description
 - Initial Emotions (badges with ratings)
@@ -54,28 +60,34 @@ The card displays these CBT therapy sections:
 ## Design Direction
 
 ### Option A: Glass Card (Recommended)
+
 - Use the existing `glass` variant from Card component
 - Frosted glass effect with subtle backdrop blur
 - Subtle border for definition
 - Works well with dark theme
 
 ### Option B: Elevated Card
+
 - Use `elevated` variant with hover lift effect
 - More prominent shadow
 - Clear visual hierarchy
 
 ### Option C: Custom Summary Card Style
+
 - Create a new card variant specifically for CBT summaries
 - Unique styling that distinguishes it from other cards
 - Could include accent color border or gradient
 
 ## User's Notes
+
 - The thick border effect is caused by the `therapeutic-content` class
 - This class should remain on chat bubbles where it works well
 - Only the CBT Summary Card needs special handling
 
 ## Visual Reference
+
 Screenshot provided shows:
+
 - Current card with visible thick border issue
 - Card displayed in chat context with sidebar visible
 - Dark theme environment

@@ -68,29 +68,32 @@ export function ChatSettingsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Memoize the context value to prevent unnecessary re-renders
-  const value: ChatContextValue = useMemo(() => ({
-    settings,
-    isStreaming,
-    currentInput,
-    streamingMessageId,
-    error,
-    updateSettings,
-    setStreaming,
-    setCurrentInput,
-    clearMessages,
-    setError,
-  }), [
-    settings,
-    isStreaming,
-    currentInput,
-    streamingMessageId,
-    error,
-    updateSettings,
-    setStreaming,
-    setCurrentInput,
-    clearMessages,
-    setError,
-  ]);
+  const value: ChatContextValue = useMemo(
+    () => ({
+      settings,
+      isStreaming,
+      currentInput,
+      streamingMessageId,
+      error,
+      updateSettings,
+      setStreaming,
+      setCurrentInput,
+      clearMessages,
+      setError,
+    }),
+    [
+      settings,
+      isStreaming,
+      currentInput,
+      streamingMessageId,
+      error,
+      updateSettings,
+      setStreaming,
+      setCurrentInput,
+      clearMessages,
+      setError,
+    ]
+  );
 
   return <ChatContext value={value}>{children}</ChatContext>;
 }

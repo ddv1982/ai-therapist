@@ -20,7 +20,16 @@ export {
 export { therapeuticLayoutPresets } from './base/layout-presets';
 
 // Specialized layouts (client-side)
-export { TherapeuticSection, type TherapeuticSectionProps } from '@/components/ui/therapeutic-layouts/specialized/therapeutic-section';
-export { CBTFlowLayout, type CBTFlowLayoutProps } from '@/components/ui/therapeutic-layouts/specialized/cbt-flow-layout';
-export { ModalLayout, type ModalLayoutProps } from '@/components/ui/therapeutic-layouts/specialized/modal-layout';
+export {
+  TherapeuticSection,
+  type TherapeuticSectionProps,
+} from '@/components/ui/therapeutic-layouts/specialized/therapeutic-section';
+export {
+  CBTFlowLayout,
+  type CBTFlowLayoutProps,
+} from '@/components/ui/therapeutic-layouts/specialized/cbt-flow-layout';
+export {
+  ModalLayout,
+  type ModalLayoutProps,
+} from '@/components/ui/therapeutic-layouts/specialized/modal-layout';
 export { ResponsiveGrid } from '@/components/ui/therapeutic-layouts/specialized/responsive-grid';

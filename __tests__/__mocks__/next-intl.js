@@ -60,9 +60,9 @@ function defineRouting(config) {
   return config;
 }
 
-const nextIntlMock = { 
-  useTranslations, 
-  useFormatter, 
+const nextIntlMock = {
+  useTranslations,
+  useFormatter,
   NextIntlClientProvider,
   defineRouting,
 };

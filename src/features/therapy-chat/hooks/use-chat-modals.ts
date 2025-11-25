@@ -47,7 +47,7 @@ export interface UseChatModalsReturn {
 
 /**
  * Manages modal visibility state for the therapy chat interface.
- * 
+ *
  * Provides a centralized way to control modal dialogs with optimized,
  * memoized callbacks to prevent unnecessary re-renders. Currently manages
  * the memory management modal, with extensibility for additional modals.
@@ -64,7 +64,7 @@ export interface UseChatModalsReturn {
  *       <button onClick={actions.openMemoryModal}>
  *         Manage Memory
  *       </button>
- *       <MemoryModal 
+ *       <MemoryModal
  *         open={modals.showMemoryModal}
  *         onClose={actions.closeMemoryModal}
  *       />

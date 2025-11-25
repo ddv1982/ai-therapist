@@ -16,10 +16,10 @@ function Textarea({ className, ref, ...props }: TextareaProps) {
         'border-border bg-background text-foreground',
         'placeholder:text-muted-foreground',
         // Focus state with Apple-style glow (no ring-offset to avoid white line)
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        'focus-visible:ring-primary focus-visible:ring-2 focus-visible:outline-none',
         'focus-visible:border-primary',
         // Smooth transitions
-        'transition-all duration-fast ease-out-smooth',
+        'duration-fast ease-out-smooth transition-all',
         'shadow-apple-sm focus-visible:shadow-apple-md',
         // Disabled state
         'disabled:cursor-not-allowed disabled:opacity-50',

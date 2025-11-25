@@ -13,7 +13,8 @@ const SelectGroup = SelectPrimitive.Group;
 
 const SelectValue = SelectPrimitive.Value;
 
-interface SelectTriggerProps extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> {
+interface SelectTriggerProps
+  extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> {
   ref?: Ref<React.ElementRef<typeof SelectPrimitive.Trigger>>;
 }
 
@@ -27,9 +28,9 @@ function SelectTrigger({ className, children, ref, ...props }: SelectTriggerProp
         'border-border bg-background text-foreground',
         'data-[placeholder]:text-muted-foreground',
         // Focus state with Apple-style glow
-        'focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary',
+        'focus:ring-primary focus:border-primary focus:ring-2 focus:outline-none',
         // Smooth transitions
-        'transition-all duration-fast ease-out-smooth',
+        'duration-fast ease-out-smooth transition-all',
         'shadow-apple-sm focus:shadow-apple-md',
         // Disabled state
         'disabled:cursor-not-allowed disabled:opacity-50',
@@ -40,7 +41,7 @@ function SelectTrigger({ className, children, ref, ...props }: SelectTriggerProp
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDown className="h-4 w-4 opacity-50 transition-transform duration-fast" />
+        <ChevronDown className="duration-fast h-4 w-4 opacity-50 transition-transform" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -80,11 +81,18 @@ function SelectScrollDownButton({ className, ref, ...props }: SelectScrollDownBu
   );
 }
 
-interface SelectContentProps extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> {
+interface SelectContentProps
+  extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> {
   ref?: Ref<React.ElementRef<typeof SelectPrimitive.Content>>;
 }
 
-function SelectContent({ className, children, position = 'popper', ref, ...props }: SelectContentProps) {
+function SelectContent({
+  className,
+  children,
+  position = 'popper',
+  ref,
+  ...props
+}: SelectContentProps) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -151,7 +159,7 @@ function SelectItem({ className, children, ref, ...props }: SelectItemProps) {
         // Apple-style select item with smooth transitions
         'relative flex w-full cursor-default items-center rounded-md py-2 pr-8 pl-3 text-base outline-none select-none',
         'focus:bg-accent focus:text-accent-foreground',
-        'transition-colors duration-fast ease-out-smooth',
+        'duration-fast ease-out-smooth transition-colors',
         'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className
       )}
@@ -167,7 +175,8 @@ function SelectItem({ className, children, ref, ...props }: SelectItemProps) {
   );
 }
 
-interface SelectSeparatorProps extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator> {
+interface SelectSeparatorProps
+  extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator> {
   ref?: Ref<React.ElementRef<typeof SelectPrimitive.Separator>>;
 }
 

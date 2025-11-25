@@ -1,7 +1,13 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { readStreamableValue, useActions, useSyncUIState, useUIState, type StreamableValue } from '@ai-sdk/rsc';
+import {
+  readStreamableValue,
+  useActions,
+  useSyncUIState,
+  useUIState,
+  type StreamableValue,
+} from '@ai-sdk/rsc';
 import type { SessionAIType, SessionSelectionStatus } from '@/app/ai/session-ai';
 
 interface SessionContextValue {
@@ -32,9 +38,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setSelectionStatus((prev) =>
-      prev.phase === 'idle'
-        ? { ...prev, sessionId: currentSessionId }
-        : prev
+      prev.phase === 'idle' ? { ...prev, sessionId: currentSessionId } : prev
     );
   }, [currentSessionId]);
 
@@ -90,7 +94,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 }
 
 type SessionAIActions = {
-  selectSession: (sessionId: string | null) => Promise<StreamableValue<SessionSelectionStatus> | undefined>;
+  selectSession: (
+    sessionId: string | null
+  ) => Promise<StreamableValue<SessionSelectionStatus> | undefined>;
 };
 
 export function useSession() {

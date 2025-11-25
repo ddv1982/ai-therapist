@@ -1,16 +1,8 @@
 'use client';
 
 import { memo, createContext, useContext } from 'react';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-} from '@/components/ui/dialog';
-import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-} from '@/components/ui/sheet';
+import { Dialog, DialogTrigger, DialogContent } from '@/components/ui/dialog';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import type { TherapeuticModalProps, ModalContextValue } from '../base/modal-types';
 import { sizeClasses, variantClasses } from '../base/modal-config';

@@ -67,7 +67,7 @@ export const ChatComposer = memo(function ChatComposer({
                 }
               }, [isMobile, textareaRef])}
               placeholder={!isLoading && input.trim().length === 0 ? t('input.placeholder') : ''}
-              className="bg-background/80 placeholder:text-muted-foreground/70 max-h-[120px] min-h-[52px] touch-manipulation resize-none rounded-xl px-3 py-3 text-base backdrop-blur-sm transition-all duration-300 shadow-apple-xs focus:shadow-apple-md focus:shadow-primary/20 focus:outline-none sm:max-h-[200px] sm:min-h-[80px] sm:rounded-2xl sm:px-6 sm:py-4 tap-transparent"
+              className="bg-background/80 placeholder:text-muted-foreground/70 shadow-apple-xs focus:shadow-apple-md focus:shadow-primary/20 tap-transparent max-h-[120px] min-h-[52px] touch-manipulation resize-none rounded-xl px-3 py-3 text-base backdrop-blur-sm transition-all duration-300 focus:outline-none sm:max-h-[200px] sm:min-h-[80px] sm:rounded-2xl sm:px-6 sm:py-4"
               disabled={false}
               style={{
                 fontSize: isMobile ? '16px' : undefined,
@@ -86,7 +86,7 @@ export const ChatComposer = memo(function ChatComposer({
             <Button
               type="button"
               onClick={onStop}
-              className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-muted text-foreground hover:bg-muted/90 active:bg-muted/80 group relative flex-shrink-0 touch-manipulation overflow-hidden border shadow-lg transition-all duration-200 hover:shadow-xl active:shadow-md tap-transparent`}
+              className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-muted text-foreground hover:bg-muted/90 active:bg-muted/80 group tap-transparent relative flex-shrink-0 touch-manipulation overflow-hidden border shadow-lg transition-all duration-200 hover:shadow-xl active:shadow-md`}
               aria-label={t('main.stopGenerating')}
             >
               <X className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} relative z-10`} />
@@ -95,7 +95,7 @@ export const ChatComposer = memo(function ChatComposer({
             <Button
               type="submit"
               disabled={!input.trim()}
-              className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} group relative flex-shrink-0 touch-manipulation overflow-hidden text-white shadow-lg transition-all duration-200 hover:shadow-xl active:shadow-md disabled:cursor-not-allowed disabled:opacity-50 tap-transparent`}
+              className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} group tap-transparent relative flex-shrink-0 touch-manipulation overflow-hidden text-white shadow-lg transition-all duration-200 hover:shadow-xl active:shadow-md disabled:cursor-not-allowed disabled:opacity-50`}
               aria-label={t('input.send')}
               aria-disabled={!input.trim()}
             >

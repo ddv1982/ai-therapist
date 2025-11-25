@@ -51,10 +51,14 @@ export function ChatEmptyState({ isMobile, translate }: ChatEmptyStateProps) {
   if (!mounted) {
     return (
       <div className={`flex items-center justify-center ${isMobile ? 'py-8' : 'py-16'}`}>
-        <div className={`max-w-xl text-center ${isMobile ? 'px-6 py-8' : 'px-12 py-12'} bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] rounded-2xl shadow-apple-xl`}>
-          <div className={`${isMobile ? 'mb-6' : 'mb-8'} flex flex-col items-center justify-center`}>
+        <div
+          className={`max-w-xl text-center ${isMobile ? 'px-6 py-8' : 'px-12 py-12'} backdrop-blur-glass backdrop-saturate-glass shadow-apple-xl rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-white)]`}
+        >
+          <div
+            className={`${isMobile ? 'mb-6' : 'mb-8'} flex flex-col items-center justify-center`}
+          >
             {/* Placeholder during SSR */}
-            <div className={`${isMobile ? 'w-[180px] h-[180px]' : 'w-[240px] h-[240px]'} mb-4`} />
+            <div className={`${isMobile ? 'h-[180px] w-[180px]' : 'h-[240px] w-[240px]'} mb-4`} />
           </div>
         </div>
       </div>
@@ -64,30 +68,27 @@ export function ChatEmptyState({ isMobile, translate }: ChatEmptyStateProps) {
   return (
     <div className={`flex items-center justify-center ${isMobile ? 'py-8' : 'py-16'}`}>
       {/* Apple-style frosted glass card */}
-      <div className={`animate-fade-in max-w-xl text-center ${isMobile ? 'px-6 py-8' : 'px-12 py-12'} bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] rounded-2xl shadow-apple-xl transition-all duration-base ease-out-smooth hover:shadow-apple-xl hover:-translate-y-0.5`}>
+      <div
+        className={`animate-fade-in max-w-xl text-center ${isMobile ? 'px-6 py-8' : 'px-12 py-12'} backdrop-blur-glass backdrop-saturate-glass shadow-apple-xl duration-base ease-out-smooth hover:shadow-apple-xl rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-white)] transition-all hover:-translate-y-0.5`}
+      >
         {/* Realistic Moon Illustration */}
         <div className={`${isMobile ? 'mb-6' : 'mb-8'} flex flex-col items-center justify-center`}>
-          <RealisticMoon 
-            phase={moonPhase} 
-            size={isMobile ? 180 : 240} 
-            className="mb-4"
-          />
-          
+          <RealisticMoon phase={moonPhase} size={isMobile ? 180 : 240} className="mb-4" />
+
           {/* Phase Label */}
-          <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground/70">
-            {getPhaseTranslation(moonPhase.name)} • {moonPhase.illumination}% {translate('moon.illumination')}
+          <span className="text-muted-foreground/70 text-xs font-medium tracking-widest uppercase">
+            {getPhaseTranslation(moonPhase.name)} • {moonPhase.illumination}%{' '}
+            {translate('moon.illumination')}
           </span>
-          
+
           {/* Spiritual Quote */}
-          <p className="mt-6 max-w-lg animate-fade-in px-6 text-center text-base font-light italic leading-relaxed text-primary/70 animation-delay-300">
+          <p className="animate-fade-in text-primary/70 animation-delay-300 mt-6 max-w-lg px-6 text-center text-base leading-relaxed font-light italic">
             "{getPhaseQuote(moonPhase.name)}"
           </p>
         </div>
 
         {/* Welcome text */}
-        <h2 className="gradient-text mt-8 text-3xl tracking-tight">
-          {translate('empty.welcome')}
-        </h2>
+        <h2 className="gradient-text mt-8 text-3xl tracking-tight">{translate('empty.welcome')}</h2>
       </div>
     </div>
   );

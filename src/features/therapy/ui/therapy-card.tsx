@@ -65,51 +65,51 @@ function TherapyCard({
   ref,
   ...props
 }: TherapyCardProps) {
-    return (
-      <Card
-        ref={ref}
-        className={cn(therapyCardVariants({ variant, size, elevation }), className)}
-        {...props}
-      >
-        {/* Header Section */}
-        {(title || subtitle || badge || icon || action) && (
-          <div className="mb-2 flex items-start justify-between">
-            <div className="flex min-w-0 flex-1 items-start gap-2">
-              {/* Icon */}
-              {icon && (
-                <div className="bg-primary/10 text-primary flex-shrink-0 rounded p-1">{icon}</div>
-              )}
+  return (
+    <Card
+      ref={ref}
+      className={cn(therapyCardVariants({ variant, size, elevation }), className)}
+      {...props}
+    >
+      {/* Header Section */}
+      {(title || subtitle || badge || icon || action) && (
+        <div className="mb-2 flex items-start justify-between">
+          <div className="flex min-w-0 flex-1 items-start gap-2">
+            {/* Icon */}
+            {icon && (
+              <div className="bg-primary/10 text-primary flex-shrink-0 rounded p-1">{icon}</div>
+            )}
 
-              {/* Title and Subtitle */}
-              <div className="min-w-0 flex-1">
-                <div className="mb-1 flex items-center gap-1">
-                  {title && (
-                    <h3 className="text-foreground truncate text-xl font-semibold">{title}</h3>
-                  )}
-                  {badge && (
-                    <Badge variant={badgeVariant} size="sm">
-                      {badge}
-                    </Badge>
-                  )}
-                </div>
-                {subtitle && <p className="text-muted-foreground text-sm">{subtitle}</p>}
+            {/* Title and Subtitle */}
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex items-center gap-1">
+                {title && (
+                  <h3 className="text-foreground truncate text-xl font-semibold">{title}</h3>
+                )}
+                {badge && (
+                  <Badge variant={badgeVariant} size="sm">
+                    {badge}
+                  </Badge>
+                )}
               </div>
+              {subtitle && <p className="text-muted-foreground text-sm">{subtitle}</p>}
             </div>
-
-            {/* Action */}
-            {action && <div className="ml-2 flex-shrink-0">{action}</div>}
           </div>
-        )}
 
-        {/* Description */}
-        {description && (
-          <p className="text-muted-foreground mb-4 text-sm leading-relaxed">{description}</p>
-        )}
+          {/* Action */}
+          {action && <div className="ml-2 flex-shrink-0">{action}</div>}
+        </div>
+      )}
 
-        {/* Content */}
-        {children && <div className="therapy-card-content">{children}</div>}
-      </Card>
-    );
+      {/* Description */}
+      {description && (
+        <p className="text-muted-foreground mb-4 text-sm leading-relaxed">{description}</p>
+      )}
+
+      {/* Content */}
+      {children && <div className="therapy-card-content">{children}</div>}
+    </Card>
+  );
 }
 
 // Specialized variants for common therapy use cases

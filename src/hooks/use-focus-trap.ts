@@ -3,13 +3,13 @@ import { useEffect, useRef } from 'react';
 /**
  * WCAG 2.1 AA compliant focus trap hook
  * Ensures focus remains within a modal when active and handles keyboard navigation
- * 
+ *
  * Satisfies:
  * - WCAG 2.1.1 Keyboard: All functionality available via keyboard
  * - WCAG 2.1.2 No Keyboard Trap: Focus can move away via Escape
  * - WCAG 2.4.3 Focus Order: Focus order is logical
  * - WCAG 2.4.7 Focus Visible: Keyboard focus indicator visible
- * 
+ *
  * @param isActive - Whether the focus trap should be active
  * @returns Ref to attach to the container element
  */
@@ -96,7 +96,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(isActive: b
     // Cleanup: Remove event listener and restore focus
     return () => {
       container.removeEventListener('keydown', handleKeyDown);
-      
+
       // Restore focus to the previously focused element
       if (previousFocusRef.current && document.body.contains(previousFocusRef.current)) {
         previousFocusRef.current.focus();
@@ -110,7 +110,7 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(isActive: b
 /**
  * Hook to manage focus return on modal close
  * Ensures focus returns to the trigger element when modal closes
- * 
+ *
  * @param isOpen - Whether the modal is open
  * @returns Object containing trigger ref and focus management functions
  */

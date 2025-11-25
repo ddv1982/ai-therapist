@@ -1,6 +1,6 @@
 /**
  * Lazy-loaded Session Analytics Components
- * 
+ *
  * These wrappers enable code splitting for heavy chart components (recharts library).
  * Use these instead of importing directly from session-analytics.tsx to reduce initial bundle size.
  */

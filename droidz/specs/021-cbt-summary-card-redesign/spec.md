@@ -16,13 +16,13 @@ Redesign the rendering architecture so the CBT Session Summary Card displays as 
 
 ### 1.3 Scope
 
-| In Scope | Out of Scope |
-|----------|--------------|
-| Fix double-wrapping issue | Redesigning card content structure |
-| Implement glass/elevated card variant | Adding new CBT data fields |
-| Update rendering pipeline | Modifying CBT data generation |
-| Add accessibility improvements | Chat message layout changes |
-| Testing and verification | Other therapy components |
+| In Scope                              | Out of Scope                       |
+| ------------------------------------- | ---------------------------------- |
+| Fix double-wrapping issue             | Redesigning card content structure |
+| Implement glass/elevated card variant | Adding new CBT data fields         |
+| Update rendering pipeline             | Modifying CBT data generation      |
+| Add accessibility improvements        | Chat message layout changes        |
+| Testing and verification              | Other therapy components           |
 
 ---
 
@@ -48,12 +48,12 @@ Redesign the rendering architecture so the CBT Session Summary Card displays as 
 
 ### 2.2 File Responsibilities
 
-| File | Responsibility | Current Behavior |
-|------|---------------|------------------|
-| `message-content.tsx` | Wraps message content in bubble styling | Always applies bubble + therapeutic-content classes |
-| `markdown.tsx` | Parses content, extracts CBT data | Returns CBTSessionSummaryCard when CBT data found |
-| `cbt-session-summary-card.tsx` | Renders structured CBT summary | Applies Card component with shadow styling |
-| `message.ts` | Defines message design tokens | Provides bubble classes for user/assistant |
+| File                           | Responsibility                          | Current Behavior                                    |
+| ------------------------------ | --------------------------------------- | --------------------------------------------------- |
+| `message-content.tsx`          | Wraps message content in bubble styling | Always applies bubble + therapeutic-content classes |
+| `markdown.tsx`                 | Parses content, extracts CBT data       | Returns CBTSessionSummaryCard when CBT data found   |
+| `cbt-session-summary-card.tsx` | Renders structured CBT summary          | Applies Card component with shadow styling          |
+| `message.ts`                   | Defines message design tokens           | Provides bubble classes for user/assistant          |
 
 ### 2.3 Data Flow
 
@@ -87,6 +87,7 @@ Returns CBTSessionSummaryCard (inside bubble wrapper) ← PROBLEM HERE
 ### 2.4 Style Conflict Details
 
 **Message Bubble Classes (assistant role):**
+
 ```css
 /* From buildMessageClasses() */
 p-4 rounded-2xl shadow-sm break-words selectable-text
@@ -96,12 +97,14 @@ shadow-md max-w-none md:max-w-[min(85%,_45rem)] md:mr-auto
 ```
 
 **CBT Card Classes:**
+
 ```css
 /* From Card component */
 bg-card text-foreground shadow-apple-sm rounded-lg
 ```
 
 **therapeutic-content Class:**
+
 ```css
 font-size: 1rem;
 line-height: 1.6;
@@ -138,12 +141,12 @@ Modify `MessageContent` to detect CBT card content **before** applying bubble wr
 
 ### 3.3 Alternative Approaches Considered
 
-| Approach | Pros | Cons | Verdict |
-|----------|------|------|---------|
-| **A. Content-Type Detection** (Recommended) | Clean separation, explicit control | Requires pattern matching | ✅ Best balance |
-| **B. CSS Override** | No structural changes | Brittle, fights cascade | ❌ Technical debt |
-| **C. Markdown Signal** | Component-level control | Complex prop threading | ❌ Over-engineered |
-| **D. Separate Render Path** | Full isolation | Code duplication | ❌ Maintenance burden |
+| Approach                                    | Pros                               | Cons                      | Verdict               |
+| ------------------------------------------- | ---------------------------------- | ------------------------- | --------------------- |
+| **A. Content-Type Detection** (Recommended) | Clean separation, explicit control | Requires pattern matching | ✅ Best balance       |
+| **B. CSS Override**                         | No structural changes              | Brittle, fights cascade   | ❌ Technical debt     |
+| **C. Markdown Signal**                      | Component-level control            | Complex prop threading    | ❌ Over-engineered    |
+| **D. Separate Render Path**                 | Full isolation                     | Code duplication          | ❌ Maintenance burden |
 
 ---
 
@@ -204,8 +207,8 @@ Update the Card to use the `glass` variant for a premium, standalone appearance:
 
 ```typescript
 return (
-  <Card 
-    variant="glass" 
+  <Card
+    variant="glass"
     className={cn(
       'cbt-summary-card',
       'w-full',
@@ -256,16 +259,17 @@ Use the existing `glass` Card variant for a premium, Apple-inspired look:
 
 ```css
 /* Glass variant from card.tsx */
-bg-[var(--glass-white)] 
-backdrop-blur-glass 
-backdrop-saturate-glass 
-border border-[var(--glass-border)] 
-text-foreground 
-shadow-apple-md 
+bg-[var(--glass-white)]
+backdrop-blur-glass
+backdrop-saturate-glass
+border border-[var(--glass-border)]
+text-foreground
+shadow-apple-md
 hover:shadow-apple-lg
 ```
 
 **Visual Characteristics:**
+
 - Frosted glass background with 70% opacity
 - Subtle backdrop blur (12px)
 - Soft white border for definition
@@ -274,20 +278,20 @@ hover:shadow-apple-lg
 
 ### 5.2 Design Tokens Applied
 
-| Property | Value | Purpose |
-|----------|-------|---------|
-| Background | `oklch(0.15 0.01 250 / 0.7)` | Semi-transparent dark glass |
-| Border | `oklch(0.99 0 0 / 0.1)` | Subtle white edge |
-| Shadow | `shadow-apple-md` | Floating appearance |
-| Blur | `backdrop-blur-glass` | Frosted effect |
-| Border Radius | `0.75rem` (12px) | Consistent with design system |
+| Property      | Value                        | Purpose                       |
+| ------------- | ---------------------------- | ----------------------------- |
+| Background    | `oklch(0.15 0.01 250 / 0.7)` | Semi-transparent dark glass   |
+| Border        | `oklch(0.99 0 0 / 0.1)`      | Subtle white edge             |
+| Shadow        | `shadow-apple-md`            | Floating appearance           |
+| Blur          | `backdrop-blur-glass`        | Frosted effect                |
+| Border Radius | `0.75rem` (12px)             | Consistent with design system |
 
 ### 5.3 Mobile Considerations
 
-| Viewport | Behavior |
-|----------|----------|
-| Desktop (≥768px) | Max width 42rem, centered in chat |
-| Mobile (<768px) | Full width with 16px horizontal margins |
+| Viewport         | Behavior                                |
+| ---------------- | --------------------------------------- |
+| Desktop (≥768px) | Max width 42rem, centered in chat       |
+| Mobile (<768px)  | Full width with 16px horizontal margins |
 
 ---
 
@@ -295,24 +299,24 @@ hover:shadow-apple-lg
 
 ### 6.1 Files to Modify
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `src/features/chat/messages/message-content.tsx` | Modify | Add content detection, conditional rendering |
-| `src/features/therapy/components/cbt-session-summary-card.tsx` | Modify | Add glass variant, refine styling |
+| File                                                           | Change Type | Description                                  |
+| -------------------------------------------------------------- | ----------- | -------------------------------------------- |
+| `src/features/chat/messages/message-content.tsx`               | Modify      | Add content detection, conditional rendering |
+| `src/features/therapy/components/cbt-session-summary-card.tsx` | Modify      | Add glass variant, refine styling            |
 
 ### 6.2 Files to Create (Optional)
 
-| File | Purpose |
-|------|---------|
+| File                      | Purpose                                                |
+| ------------------------- | ------------------------------------------------------ |
 | `src/styles/cbt-card.css` | Container and animation styles (if not using Tailwind) |
 
 ### 6.3 No Changes Required
 
-| File | Reason |
-|------|--------|
-| `markdown.tsx` | Extraction logic works correctly |
-| `card.tsx` | Glass variant already exists |
-| `message.ts` | Design tokens unchanged |
+| File             | Reason                                             |
+| ---------------- | -------------------------------------------------- |
+| `markdown.tsx`   | Extraction logic works correctly                   |
+| `card.tsx`       | Glass variant already exists                       |
+| `message.ts`     | Design tokens unchanged                            |
 | `typography.css` | therapeutic-content preserved for regular messages |
 
 ---
@@ -327,7 +331,8 @@ hover:shadow-apple-lg
 describe('MessageContent', () => {
   describe('CBT Card Detection', () => {
     it('should detect CBT card marker in content', () => {
-      const content = 'Summary:\n<!-- CBT_SUMMARY_CARD:{"date":"2024-01-01"} -->\n<!-- END_CBT_SUMMARY_CARD -->';
+      const content =
+        'Summary:\n<!-- CBT_SUMMARY_CARD:{"date":"2024-01-01"} -->\n<!-- END_CBT_SUMMARY_CARD -->';
       expect(isCBTSummaryCardContent(content)).toBe(true);
     });
 
@@ -391,18 +396,18 @@ test.describe('CBT Summary Card Visual', () => {
 
 ### 8.1 WCAG Compliance
 
-| Requirement | Implementation |
-|-------------|----------------|
-| Color Contrast | Verify 4.5:1 ratio for all text |
-| Focus States | Ensure visible focus ring on interactive elements |
-| Screen Reader | Add appropriate ARIA labels to card |
-| Reduced Motion | Respect `prefers-reduced-motion` for animations |
+| Requirement    | Implementation                                    |
+| -------------- | ------------------------------------------------- |
+| Color Contrast | Verify 4.5:1 ratio for all text                   |
+| Focus States   | Ensure visible focus ring on interactive elements |
+| Screen Reader  | Add appropriate ARIA labels to card               |
+| Reduced Motion | Respect `prefers-reduced-motion` for animations   |
 
 ### 8.2 ARIA Implementation
 
 ```tsx
-<Card 
-  variant="glass" 
+<Card
+  variant="glass"
   role="region"
   aria-label="CBT Session Summary"
   className={cn('cbt-summary-card', className)}
@@ -531,8 +536,10 @@ const cardVariants = cva('rounded-lg transition-all duration-base ease-out-smoot
   variants: {
     variant: {
       default: 'bg-card text-card-foreground shadow-apple-sm hover:shadow-apple-md',
-      glass: 'bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] text-foreground shadow-apple-md hover:shadow-apple-lg',
-      elevated: 'bg-card text-card-foreground shadow-apple-md hover:shadow-apple-lg hover:-translate-y-0.5',
+      glass:
+        'bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] text-foreground shadow-apple-md hover:shadow-apple-lg',
+      elevated:
+        'bg-card text-card-foreground shadow-apple-md hover:shadow-apple-lg hover:-translate-y-0.5',
     },
   },
   defaultVariants: { variant: 'default' },
@@ -541,6 +548,6 @@ const cardVariants = cva('rounded-lg transition-all duration-base ease-out-smoot
 
 ---
 
-*Specification Version: 1.0*  
-*Created: 2024*  
-*Last Updated: 2024*
+_Specification Version: 1.0_  
+_Created: 2024_  
+_Last Updated: 2024_

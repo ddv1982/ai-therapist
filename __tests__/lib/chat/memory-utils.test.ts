@@ -29,20 +29,22 @@ describe('memory-utils', () => {
     });
 
     it('excludes session ID when provided', async () => {
-      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({ data: { memoryContext: [] } });
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        data: { memoryContext: [] },
+      });
 
       await checkMemoryContext('session123');
 
-      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(
-        expect.any(URLSearchParams)
-      );
+      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(expect.any(URLSearchParams));
       const params = (apiClient.getMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
       expect(params.get('excludeSessionId')).toBe('session123');
       expect(params.get('limit')).toBe('3');
     });
 
     it('returns no memory when empty array', async () => {
-      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({ data: { memoryContext: [] } });
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        data: { memoryContext: [] },
+      });
 
       const result = await checkMemoryContext();
 
@@ -99,7 +101,9 @@ describe('memory-utils', () => {
     });
 
     it('handles null memoryContext', async () => {
-      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({ data: { memoryContext: null } });
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        data: { memoryContext: null },
+      });
 
       const result = await checkMemoryContext();
 
@@ -125,9 +129,7 @@ describe('memory-utils', () => {
       const result = await getMemoryManagementData();
 
       expect(result.success).toBe(true);
-      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(
-        expect.any(URLSearchParams)
-      );
+      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(expect.any(URLSearchParams));
       const params = (apiClient.getMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
       expect(params.get('manage')).toBe('true');
     });
@@ -148,9 +150,7 @@ describe('memory-utils', () => {
 
       await getMemoryManagementData('session123');
 
-      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(
-        expect.any(URLSearchParams)
-      );
+      expect(apiClient.getMemoryReports).toHaveBeenCalledWith(expect.any(URLSearchParams));
       const params = (apiClient.getMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
       expect(params.get('manage')).toBe('true');
       expect(params.get('excludeSessionId')).toBe('session123');
@@ -224,10 +224,9 @@ describe('memory-utils', () => {
 
       expect(result.success).toBe(true);
       expect(result.deletedCount).toBe(2);
-      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(
-        expect.any(URLSearchParams)
-      );
-      const params = (apiClient.deleteMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
+      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(expect.any(URLSearchParams));
+      const params = (apiClient.deleteMemoryReports as jest.Mock).mock
+        .calls[0][0] as URLSearchParams;
       expect(params.get('sessionIds')).toBe('s1,s2');
     });
 
@@ -242,10 +241,9 @@ describe('memory-utils', () => {
       const result = await deleteMemory({ type: 'recent', limit: 3 });
 
       expect(result.success).toBe(true);
-      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(
-        expect.any(URLSearchParams)
-      );
-      const params = (apiClient.deleteMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
+      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(expect.any(URLSearchParams));
+      const params = (apiClient.deleteMemoryReports as jest.Mock).mock
+        .calls[0][0] as URLSearchParams;
       expect(params.get('limit')).toBe('3');
     });
 
@@ -264,10 +262,9 @@ describe('memory-utils', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(
-        expect.any(URLSearchParams)
-      );
-      const params = (apiClient.deleteMemoryReports as jest.Mock).mock.calls[0][0] as URLSearchParams;
+      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(expect.any(URLSearchParams));
+      const params = (apiClient.deleteMemoryReports as jest.Mock).mock
+        .calls[0][0] as URLSearchParams;
       expect(params.get('excludeSessionId')).toBe('current123');
     });
 
@@ -282,9 +279,7 @@ describe('memory-utils', () => {
       const result = await deleteMemory({ type: 'all' });
 
       expect(result.success).toBe(true);
-      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(
-        expect.any(URLSearchParams)
-      );
+      expect(apiClient.deleteMemoryReports).toHaveBeenCalledWith(expect.any(URLSearchParams));
     });
 
     it('returns failure on DELETE error', async () => {
@@ -300,7 +295,9 @@ describe('memory-utils', () => {
     });
 
     it('handles network errors during deletion', async () => {
-      (apiClient.deleteMemoryReports as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
+      (apiClient.deleteMemoryReports as jest.Mock).mockRejectedValueOnce(
+        new Error('Network error')
+      );
 
       const result = await deleteMemory({ type: 'specific', sessionIds: ['s1'] });
 

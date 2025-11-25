@@ -8,7 +8,7 @@ import { describe, it, expect } from '@jest/globals';
 /**
  * IMPORTANT: These tests are designed to document expected authorization behavior.
  * They will need to be adapted to work with your actual Convex test setup.
- * 
+ *
  * To properly test Convex functions:
  * 1. Set up Convex test environment (see: https://docs.convex.dev/testing)
  * 2. Create test users with different IDs
@@ -334,37 +334,37 @@ describe('Convex Authorization - Error Messages', () => {
 
 /**
  * Testing Instructions:
- * 
+ *
  * 1. Set up Convex test environment:
  *    - Install @convex-dev/convex-test or use Convex testing utilities
  *    - Configure test deployment
- * 
+ *
  * 2. Create test fixtures:
  *    - createTestUser(clerkId: string) -> returns user ID
  *    - createTestSession(userId: Id<'users'>) -> returns session
  *    - createTestMessage(sessionId: Id<'sessions'>) -> returns message
  *    - createTestReport(sessionId: Id<'sessions'>) -> returns report
- * 
+ *
  * 3. Mock authentication:
  *    - Mock ctx.auth.getUserIdentity() to return test user identity
  *    - Create helper to switch authenticated user context
- * 
+ *
  * 4. Run tests:
  *    npm run test -- __tests__/convex/authorization.test.ts
- * 
+ *
  * 5. Verify all tests pass before deploying to production
- * 
+ *
  * Example test implementation:
- * 
+ *
  * ```typescript
  * it('should deny access to sessions owned by other users', async () => {
  *   const userA = await createTestUser('clerk_userA');
  *   const userB = await createTestUser('clerk_userB');
  *   const sessionA = await createTestSession(userA._id);
- *   
+ *
  *   // Switch to user B's context
  *   mockAuthenticatedUser('clerk_userB');
- *   
+ *
  *   // Attempt to access user A's session
  *   await expect(
  *     ctx.run(sessions.get, { sessionId: sessionA._id })

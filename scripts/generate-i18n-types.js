@@ -42,34 +42,34 @@ function generateTypeFromObject(obj, indent = 0) {
  */
 function flattenKeys(obj, prefix = '') {
   const keys = [];
-  
+
   for (const [key, value] of Object.entries(obj)) {
     const path = prefix ? `${prefix}.${key}` : key;
-    
+
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       keys.push(...flattenKeys(value, path));
     } else {
       keys.push(path);
     }
   }
-  
+
   return keys;
 }
 
 function generateTypes() {
   console.log('Generating i18n types from en.json...\n');
-  
+
   // Read English messages (source of truth)
   const messagesPath = join(projectRoot, 'src', 'i18n', 'messages', 'en.json');
   const messages = JSON.parse(readFileSync(messagesPath, 'utf-8'));
-  
+
   // Generate nested interface
   const nestedType = generateTypeFromObject(messages, 1);
-  
+
   // Generate flat keys union type
   const flatKeys = flattenKeys(messages);
-  const keysUnion = flatKeys.map(key => `  | '${key}'`).join('\n');
-  
+  const keysUnion = flatKeys.map((key) => `  | '${key}'`).join('\n');
+
   // Generate TypeScript declaration file
   const typeDefinition = `/**
  * Auto-generated translation types from en.json
@@ -121,7 +121,7 @@ declare global {
   // Write to types file
   const outputPath = join(projectRoot, 'src', 'i18n', 'types.ts');
   writeFileSync(outputPath, typeDefinition, 'utf-8');
-  
+
   console.log(`✅ Generated types with ${flatKeys.length} translation keys`);
   console.log(`📁 Output: ${outputPath}`);
   console.log('\n✨ Type-safe translations are now enabled!');

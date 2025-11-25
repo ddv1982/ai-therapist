@@ -3,9 +3,11 @@
 ## Task Assignment
 
 ### Task 3.1: Compile Removal List
+
 **Priority**: High | **Effort**: Medium | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Create/update dependency-cleanup-report.md
 - [ ] List all packages analyzed (92 total)
 - [ ] Categorize findings:
@@ -19,9 +21,11 @@
 ---
 
 ### Task 3.2: Risk Assessment
+
 **Priority**: High | **Effort**: Small | **Risk**: Low
 
 **Subtasks**:
+
 - [ ] Assign risk level to each removal:
   - Low: Definitely unused, no config references
   - Medium: Appears unused, check configs
@@ -34,6 +38,7 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: droidz/specs/020-package-json-cleanup/spec.md
 - requirements: droidz/specs/020-package-json-cleanup/planning/requirements.md
 - tasks: droidz/specs/020-package-json-cleanup/tasks.md
@@ -55,6 +60,7 @@ Read these for requirements and patterns:
 ## Standards
 
 Follow all standards in:
+
 - /Users/vriesd/projects/ai-therapist/AGENTS.md
 
 ## Important Notes

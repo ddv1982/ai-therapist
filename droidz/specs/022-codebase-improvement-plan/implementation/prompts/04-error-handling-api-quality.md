@@ -3,6 +3,7 @@
 ## Task Assignment
 
 ### Task 4.1: Implement Result Type Utility
+
 - **Description**: Create type-safe Result type for operations that can fail.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -13,6 +14,7 @@
 - **Complexity**: Small
 
 ### Task 4.2: Create Unified API Mutation Hook
+
 - **Description**: Implement `useApiMutation` hook with consistent error handling.
 - **Dependencies**: Task 4.1
 - **Acceptance Criteria**:
@@ -23,6 +25,7 @@
 - **Complexity**: Medium
 
 ### Task 4.3: Implement API Retry Logic
+
 - **Description**: Add retry functionality with exponential backoff for transient failures.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -33,6 +36,7 @@
 - **Complexity**: Medium
 
 ### Task 4.4: Standardize Hook Error Handling
+
 - **Description**: Update hooks to use Result type and consistent error patterns.
 - **Dependencies**: Tasks 4.1, 4.2
 - **Acceptance Criteria**:
@@ -43,6 +47,7 @@
 - **Complexity**: Medium
 
 ### Task 4.5: Add Development Request/Response Logging
+
 - **Description**: Implement logging middleware for API calls in development mode.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -55,11 +60,13 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: `droidz/specs/022-codebase-improvement-plan/spec.md`
 - requirements: `droidz/specs/022-codebase-improvement-plan/planning/requirements.md`
 - tasks: `droidz/specs/022-codebase-improvement-plan/tasks.md`
 
 Key files to study:
+
 - `src/lib/api/api-response.ts` - Current ApiResponse type
 - `src/lib/api/error-codes.ts` - Error code system
 - `src/lib/utils/errors.ts` - Error utilities

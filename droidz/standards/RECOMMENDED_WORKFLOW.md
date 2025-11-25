@@ -35,9 +35,11 @@ This document outlines the **perfect workflow** for using Droidz to plan, spec, 
 **Before starting any development work, establish your project standards.**
 
 #### Commands:
+
 - `/standards-shaper` - Creates comprehensive project standards with dos and don'ts
 
 #### What You Get:
+
 ```
 droidz/standards/
 ├── global/
@@ -57,6 +59,7 @@ droidz/standards/
 ```
 
 #### Why This Matters:
+
 - **Consistency**: All features follow same patterns
 - **Quality**: Standards enforced automatically
 - **Speed**: AI knows your preferences upfront
@@ -69,9 +72,11 @@ droidz/standards/
 **Define your product vision, mission, and roadmap.**
 
 #### Commands:
+
 - `/plan-product` - Interactive product planning session
 
 #### What You Get:
+
 ```
 droidz/product/
 ├── mission.md        # Vision, goals, target users
@@ -80,12 +85,14 @@ droidz/product/
 ```
 
 #### When to Use:
+
 - Starting a new product
 - Major pivot or refactor
 - Adding new team members (onboarding)
 - Quarterly planning sessions
 
 #### Example:
+
 ```
 > /plan-product
 
@@ -106,9 +113,11 @@ AI: [Creates mission.md, roadmap.md, tech-stack.md]
 **Shape the scope and design of a specific feature.**
 
 #### Commands:
+
 - `/shape-spec` - Interactive spec shaping
 
 #### What You Get:
+
 ```
 droidz/specs/YYYY-MM-DD-feature-name/
 ├── planning/
@@ -119,12 +128,14 @@ droidz/specs/YYYY-MM-DD-feature-name/
 ```
 
 #### When to Use:
+
 - Before building any new feature
 - When requirements are fuzzy
 - To validate approach before coding
 - For collaborative design discussions
 
 #### Example:
+
 ```
 > /shape-spec
 
@@ -145,9 +156,11 @@ AI: [Saves requirements, decisions, creates spec folder]
 **Transform shaped requirements into detailed specification.**
 
 #### Commands:
+
 - `/write-spec` - Generates formal spec document
 
 #### What You Get:
+
 ```
 droidz/specs/YYYY-MM-DD-feature-name/
 ├── spec.md              # ⭐ Complete specification
@@ -159,6 +172,7 @@ droidz/specs/YYYY-MM-DD-feature-name/
 ```
 
 #### What `spec.md` Contains:
+
 - Feature overview and objectives
 - User stories and acceptance criteria
 - Technical architecture
@@ -170,6 +184,7 @@ droidz/specs/YYYY-MM-DD-feature-name/
 - Success metrics
 
 #### Example:
+
 ```
 > /write-spec
 
@@ -186,9 +201,11 @@ AI: [Generates comprehensive spec.md]
 **Break down the spec into implementable tasks.**
 
 #### Commands:
+
 - `/create-tasks` - Generates task breakdown
 
 #### What You Get:
+
 ```
 droidz/specs/YYYY-MM-DD-feature-name/
 ├── spec.md
@@ -198,8 +215,10 @@ droidz/specs/YYYY-MM-DD-feature-name/
 ```
 
 #### Task Structure:
+
 ```markdown
 ## Task Group 1: Database Schema
+
 - [ ] Parent Task: Create user authentication tables
   - [ ] Create users table with OAuth fields
   - [ ] Create sessions table
@@ -207,6 +226,7 @@ droidz/specs/YYYY-MM-DD-feature-name/
   - [ ] Write migration scripts
 
 ## Task Group 2: OAuth Integration
+
 - [ ] Parent Task: Implement OAuth flow
   - [ ] Set up OAuth provider configs
   - [ ] Create callback endpoints
@@ -215,6 +235,7 @@ droidz/specs/YYYY-MM-DD-feature-name/
 ```
 
 #### Example:
+
 ```
 > /create-tasks
 
@@ -232,9 +253,11 @@ AI: Found 4 task groups with 23 total tasks
 **Plan and coordinate implementation across task groups.**
 
 #### Commands:
+
 - `/orchestrate-tasks` - Set up implementation coordination
 
 #### What You Get:
+
 ```
 droidz/specs/YYYY-MM-DD-feature-name/
 ├── spec.md
@@ -246,11 +269,13 @@ droidz/specs/YYYY-MM-DD-feature-name/
 ```
 
 #### Orchestration Setup:
+
 1. **Assign specialists** to each task group (Claude Code subagents)
 2. **Map standards** to each task group
 3. **Generate prompts** for guided implementation
 
 #### Example:
+
 ```
 > /orchestrate-tasks
 
@@ -263,7 +288,7 @@ AI: Found 4 task groups. Assign specialists:
 
 AI: Assign standards for each task group:
 
-You: 
+You:
 1. all
 2. backend/*, global/security.md
 3. frontend/*, global/error-handling.md
@@ -279,11 +304,13 @@ You:
 **Execute the implementation plan.**
 
 #### Commands:
+
 - `/implement-tasks` - Start guided implementation
 
 #### Two Approaches:
 
 ##### A. Automated (Claude Code with Subagents)
+
 ```
 > /orchestrate-tasks
 
@@ -295,6 +322,7 @@ AI: [Progress tracked in tasks.md]
 ```
 
 ##### B. Manual (Using Generated Prompts)
+
 ```
 > /orchestrate-tasks
 
@@ -310,6 +338,7 @@ Copy each prompt into chat to guide implementation.
 ```
 
 #### During Implementation:
+
 - Standards automatically enforced
 - Context from spec.md preserved
 - Progress tracked in tasks.md
@@ -322,12 +351,14 @@ Copy each prompt into chat to guide implementation.
 **Ensure implementation meets spec requirements.**
 
 #### Built-in Verification:
+
 - Each task references acceptance criteria from spec
 - Standards compliance checked automatically
 - Tests written according to testing standards
 - Code review against project conventions
 
 #### Manual Verification:
+
 ```
 1. Review completed tasks in tasks.md
 2. Run test suite
@@ -343,6 +374,7 @@ Copy each prompt into chat to guide implementation.
 **Continuous improvement based on learnings.**
 
 #### Update Standards:
+
 ```
 droidz/standards/
 └── [category]/
@@ -350,11 +382,13 @@ droidz/standards/
 ```
 
 #### Refine Workflow:
+
 - Update mission.md if product direction shifts
 - Add to roadmap.md for future phases
 - Document lessons learned in spec folder
 
 #### Create New Specs:
+
 - Start new cycle with /shape-spec
 - Build on existing standards
 - Leverage previous specs as reference
@@ -418,7 +452,7 @@ You: Real-time chat with typing indicators
 # Phase 5: Orchestrate implementation
 > /orchestrate-tasks
 AI: Assign specialists...
-You: 
+You:
 1. WebSocket Server → backend-specialist
 2. Message Persistence → database-specialist
 3. Chat UI → frontend-specialist
@@ -475,16 +509,16 @@ droidz/standards/
 
 ## Command Quick Reference
 
-| Phase | Command | Purpose |
-|-------|---------|---------|
-| 0 | `/standards-shaper` | Create project standards |
-| 1 | `/plan-product` | Define product vision |
-| 2 | `/shape-spec` | Gather feature requirements |
-| 3 | `/write-spec` | Create detailed specification |
-| 4 | `/create-tasks` | Break spec into tasks |
-| 5 | `/orchestrate-tasks` | Plan implementation |
-| 6 | `/implement-tasks` | Execute implementation |
-| - | `/improve-skills` | Enhance AI capabilities |
+| Phase | Command              | Purpose                       |
+| ----- | -------------------- | ----------------------------- |
+| 0     | `/standards-shaper`  | Create project standards      |
+| 1     | `/plan-product`      | Define product vision         |
+| 2     | `/shape-spec`        | Gather feature requirements   |
+| 3     | `/write-spec`        | Create detailed specification |
+| 4     | `/create-tasks`      | Break spec into tasks         |
+| 5     | `/orchestrate-tasks` | Plan implementation           |
+| 6     | `/implement-tasks`   | Execute implementation        |
+| -     | `/improve-skills`    | Enhance AI capabilities       |
 
 ---
 

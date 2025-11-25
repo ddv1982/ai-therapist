@@ -63,7 +63,12 @@ interface DropdownMenuContentProps
   ref?: Ref<React.ElementRef<typeof DropdownMenuPrimitive.Content>>;
 }
 
-function DropdownMenuContent({ className, sideOffset = 4, ref, ...props }: DropdownMenuContentProps) {
+function DropdownMenuContent({
+  className,
+  sideOffset = 4,
+  ref,
+  ...props
+}: DropdownMenuContentProps) {
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
@@ -104,7 +109,13 @@ interface DropdownMenuCheckboxItemProps
   ref?: Ref<React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>>;
 }
 
-function DropdownMenuCheckboxItem({ className, children, checked, ref, ...props }: DropdownMenuCheckboxItemProps) {
+function DropdownMenuCheckboxItem({
+  className,
+  children,
+  checked,
+  ref,
+  ...props
+}: DropdownMenuCheckboxItemProps) {
   return (
     <DropdownMenuPrimitive.CheckboxItem
       ref={ref}

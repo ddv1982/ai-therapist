@@ -81,26 +81,25 @@ export interface ChatHeaderProviderProps {
  */
 export function ChatHeaderProvider({ children, value }: ChatHeaderProviderProps) {
   // Memoize the context value to prevent unnecessary re-renders
-  const memoizedValue = useMemo(() => value, [
-    value.showSidebar,
-    value.hasActiveSession,
-    value.hasMessages,
-    value.isGeneratingReport,
-    value.isLoading,
-    value.isMobile,
-    value.modelLabel,
-    value.onToggleSidebar,
-    value.onGenerateReport,
-    value.onStopGenerating,
-    value.onOpenCBTDiary,
-    value.onCreateObsessionsTable,
-  ]);
-
-  return (
-    <ChatHeaderContext value={memoizedValue}>
-      {children}
-    </ChatHeaderContext>
+  const memoizedValue = useMemo(
+    () => value,
+    [
+      value.showSidebar,
+      value.hasActiveSession,
+      value.hasMessages,
+      value.isGeneratingReport,
+      value.isLoading,
+      value.isMobile,
+      value.modelLabel,
+      value.onToggleSidebar,
+      value.onGenerateReport,
+      value.onStopGenerating,
+      value.onOpenCBTDiary,
+      value.onCreateObsessionsTable,
+    ]
   );
+
+  return <ChatHeaderContext value={memoizedValue}>{children}</ChatHeaderContext>;
 }
 
 /**

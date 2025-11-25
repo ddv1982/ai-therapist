@@ -3,6 +3,7 @@
 ## Task Assignment
 
 ### Task 9.1: Create Architecture Decision Records Template
+
 - **Description**: Establish ADR format and create initial ADRs for key decisions.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -14,6 +15,7 @@
 - **Complexity**: Medium
 
 ### Task 9.2: Write Development Setup Guide
+
 - **Description**: Create comprehensive guide for new developer onboarding.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -25,6 +27,7 @@
 - **Complexity**: Medium
 
 ### Task 9.3: Document Component Usage Patterns
+
 - **Description**: Create documentation for therapeutic component library.
 - **Dependencies**: Task 7.4 (components organized)
 - **Acceptance Criteria**:
@@ -35,6 +38,7 @@
 - **Complexity**: Medium
 
 ### Task 9.4: Create Architecture Overview Diagram
+
 - **Description**: Visual documentation of system architecture.
 - **Dependencies**: Task 7.2 (architecture defined)
 - **Acceptance Criteria**:
@@ -47,11 +51,13 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: `droidz/specs/022-codebase-improvement-plan/spec.md`
 - requirements: `droidz/specs/022-codebase-improvement-plan/planning/requirements.md`
 - tasks: `droidz/specs/022-codebase-improvement-plan/tasks.md`
 
 Key files to study:
+
 - `AGENTS.md` - Existing guidelines
 - `README.md` - Current documentation
 - `docs/` - Documentation directory

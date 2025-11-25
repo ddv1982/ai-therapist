@@ -3,6 +3,7 @@
 ## Task Assignment
 
 ### Task 2.1: Create CSP Violation Reporting Endpoint
+
 - **Description**: Implement API endpoint to receive and log CSP violation reports.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -13,6 +14,7 @@
 - **Complexity**: Small
 
 ### Task 2.2: Configure CSP Report-To Header
+
 - **Description**: Update middleware.ts to include CSP reporting directives.
 - **Dependencies**: Task 2.1
 - **Acceptance Criteria**:
@@ -23,6 +25,7 @@
 - **Complexity**: Small
 
 ### Task 2.3: Document CSP Exceptions
+
 - **Description**: Create documentation explaining all CSP exceptions and why they're needed.
 - **Dependencies**: Task 2.2
 - **Acceptance Criteria**:
@@ -33,6 +36,7 @@
 - **Complexity**: Small
 
 ### Task 2.4: Create CSP Monitoring Dashboard (Optional)
+
 - **Description**: Add simple dashboard to view CSP violations in development.
 - **Dependencies**: Task 2.1
 - **Acceptance Criteria**:
@@ -44,11 +48,13 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: `droidz/specs/022-codebase-improvement-plan/spec.md`
 - requirements: `droidz/specs/022-codebase-improvement-plan/planning/requirements.md`
 - tasks: `droidz/specs/022-codebase-improvement-plan/tasks.md`
 
 Key files to study:
+
 - `middleware.ts` - Current CSP implementation
 - `src/lib/security/csp-nonce.ts` - CSP header generation
 - `src/app/api/` - API route patterns

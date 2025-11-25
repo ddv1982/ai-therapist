@@ -32,7 +32,10 @@ interface ReportGenerationResult {
 export class ReportGenerationService {
   private reportModel: string;
 
-  constructor(reportModel: string, private readonly convexClient: ConvexHttpClient) {
+  constructor(
+    reportModel: string,
+    private readonly convexClient: ConvexHttpClient
+  ) {
     this.reportModel = reportModel;
   }
 
@@ -177,7 +180,7 @@ export class ReportGenerationService {
     _hasCBTContent: boolean
   ): Promise<ParsedAnalysis> {
     devLog('Extracting structured analysis data using generateObject...');
-    
+
     try {
       const parsedAnalysis = await extractStructuredAnalysis(
         completion,

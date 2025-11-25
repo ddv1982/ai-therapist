@@ -30,7 +30,7 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
 
   return (
     <div
-      className={`inline-flex items-center gap-1 rounded-full bg-muted/60 p-1 shadow-apple-xs backdrop-blur-sm ${className ?? ''}`}
+      className={`bg-muted/60 shadow-apple-xs inline-flex items-center gap-1 rounded-full p-1 backdrop-blur-sm ${className ?? ''}`}
       role="group"
       aria-label="Language toggle"
     >

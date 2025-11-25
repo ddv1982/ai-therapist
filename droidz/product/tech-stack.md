@@ -85,9 +85,11 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 ### Runtime & Framework
 
 #### Next.js 16
+
 **Why**: Industry-leading React framework with excellent DX and performance
 
 **Key Features Used**:
+
 - **App Router** - Modern file-system routing with layouts
 - **Server Components** - Zero-bundle components for static content
 - **Server Actions** - Type-safe server functions
@@ -110,9 +112,11 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 ```
 
 #### React 19
+
 **Why**: Latest React with concurrent features and performance improvements
 
 **Key Features Used**:
+
 - **Server Components** - Render on server, no client JS
 - **useOptimistic** - Instant UI updates before server confirmation
 - **useTransition** - Non-blocking state updates
@@ -121,12 +125,14 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 - **Automatic Batching** - Optimized re-renders
 
 **Custom Hooks Created**:
+
 - `useDraftSaving` - Auto-save draft messages
 - `useSessionContext` - Session state management
 - `useEncryptedMessages` - Decryption hook
 - `useTherapyInsights` - Report generation
 
 #### TypeScript 5.6
+
 **Why**: Industry standard for type safety and developer productivity
 
 **Configuration**: `tsconfig.json` (strict mode enabled)
@@ -149,9 +155,11 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 ### UI Framework & Styling
 
 #### Tailwind CSS v4
+
 **Why**: Utility-first CSS with excellent performance and DX
 
 **Key Features**:
+
 - CSS-first configuration (no JS config)
 - Oxide engine for faster builds
 - Automatic purging of unused styles
@@ -162,15 +170,18 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 **Configuration**: `tailwind.config.js`
 
 **Custom Theme**:
+
 - Primary colors: Therapeutic blue palette
 - Dark mode: High contrast for accessibility
 - Typography: Inter font family
 - Spacing: Consistent 4px base unit
 
 #### shadcn/ui Components
+
 **Why**: Accessible, customizable components we own
 
 **Components Used**:
+
 - `Button` - Various button styles
 - `Dialog` - Modal interactions
 - `Dropdown Menu` - Context menus
@@ -184,9 +195,11 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 **Customization**: All components adapted to therapeutic aesthetic
 
 #### Radix UI Primitives
+
 **Why**: Unstyled, accessible component primitives
 
 **Primitives Used**:
+
 - Dialog (@radix-ui/react-dialog)
 - Dropdown Menu (@radix-ui/react-dropdown-menu)
 - Popover (@radix-ui/react-popover)
@@ -195,15 +208,18 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 - Tabs (@radix-ui/react-tabs)
 
 **Benefits**:
+
 - WCAG 2.1 AA compliant
 - Keyboard navigation built-in
 - Screen reader optimized
 - Focus management
 
 #### Framer Motion
+
 **Why**: Production-ready animation library
 
 **Usage**:
+
 - Page transitions
 - Message animations
 - Modal enter/exit
@@ -217,9 +233,11 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 ### State Management
 
 #### TanStack Query v5 (React Query)
+
 **Why**: Powerful async state management for server data
 
 **Key Features Used**:
+
 - Automatic caching and invalidation
 - Background refetching
 - Optimistic updates
@@ -228,11 +246,9 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 - Error handling and retry logic
 
 **Query Keys Structure**:
+
 ```typescript
-['sessions']              // All sessions
-['sessions', sessionId]   // Single session
-['messages', sessionId]   // Messages for session
-['reports', sessionId]    // Reports for session
+['sessions'][('sessions', sessionId)][('messages', sessionId)][('reports', sessionId)]; // All sessions // Single session // Messages for session // Reports for session
 ```
 
 **Configuration**: `src/lib/queries/client.ts`
@@ -251,15 +267,18 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 ```
 
 #### AI SDK (@ai-sdk/react & @ai-sdk/rsc)
+
 **Why**: Purpose-built for AI streaming and state management
 
 **Features Used**:
+
 - `useChat` - Real-time chat streaming
 - `createAI` - Server-authoritative AI state
 - `onSetAIState` / `onGetUIState` - Convex persistence hooks
 - Streamable values for real-time updates
 
 **Session Management**:
+
 - Server manages active session pointer
 - Hydrated during SSR
 - Synced to Convex via authenticated mutations
@@ -269,11 +288,13 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 ### Internationalization
 
 #### next-intl v4
+
 **Why**: Type-safe i18n for Next.js App Router
 
 **Supported Locales**: English (en) - primary
 
 **Features**:
+
 - Server-side locale detection
 - Type-safe translation keys
 - Plural rules
@@ -287,11 +308,13 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 ### Icons & Graphics
 
 #### Lucide React
+
 **Why**: Beautiful, consistent icon set
 
 **Usage**: 50+ icons throughout UI
 
 **Benefits**:
+
 - Tree-shakeable (only imports used icons)
 - Consistent stroke width
 - Accessible with aria-labels
@@ -304,9 +327,11 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 ### Backend-as-a-Service
 
 #### Convex
+
 **Why**: Real-time backend with automatic synchronization
 
 **Key Features**:
+
 - **Real-time Queries** - Auto-updating reactive queries
 - **Transactional Mutations** - ACID guarantees
 - **HTTP Actions** - RESTful endpoints
@@ -368,11 +393,13 @@ sessionReports: {
 ```
 
 **Indexes**:
+
 - `users.by_clerkId` - Fast auth lookup
 - `sessions.by_user_created` - User session list
 - `messages.by_session_time` - Chronological messages
 
 **Functions**:
+
 - `users.ts` - User CRUD operations
 - `sessions.ts` - Session management
 - `messages.ts` - Message operations (encryption/decryption)
@@ -380,6 +407,7 @@ sessionReports: {
 - `http.ts` - HTTP endpoints for API routes
 
 **Security**:
+
 - Server-side only execution
 - Clerk JWT validation
 - Ownership checks on all queries/mutations
@@ -392,9 +420,11 @@ sessionReports: {
 ### AI Inference
 
 #### AI SDK v5 (Vercel AI SDK)
+
 **Why**: Framework-agnostic AI SDK with streaming support
 
 **Features Used**:
+
 - `streamText` - Server-side text generation with streaming
 - `generateText` - Non-streaming text generation (reports)
 - `createAI` - Server-managed AI state
@@ -404,20 +434,24 @@ sessionReports: {
 **Configuration**: Model selection in `src/ai/providers.ts`
 
 #### Groq API (@ai-sdk/groq)
+
 **Why**: Fast, cost-effective LLM inference
 
 **Models Used**:
+
 - `openai/gpt-oss-120b` - Web search enabled (analytical)
 - `openai/gpt-oss-20b` - Regular chat (default)
 
 **Model Selection Logic**:
+
 ```typescript
-const modelId = webSearchEnabled 
-  ? MODEL_IDS.analytical  // 120b for web search
-  : MODEL_IDS.default;    // 20b for regular chat
+const modelId = webSearchEnabled
+  ? MODEL_IDS.analytical // 120b for web search
+  : MODEL_IDS.default; // 20b for regular chat
 ```
 
 **Features**:
+
 - Fast inference (<500ms first token)
 - Streaming responses
 - Function/tool calling
@@ -430,6 +464,7 @@ const modelId = webSearchEnabled
 **System Prompt**: Therapeutic framework instructions
 
 **Key Elements**:
+
 - Professional therapeutic tone
 - Evidence-based frameworks (CBT, ERP, Schema)
 - Crisis detection and intervention
@@ -447,9 +482,11 @@ const modelId = webSearchEnabled
 ### Authentication
 
 #### Clerk
+
 **Why**: Managed authentication with excellent Next.js integration
 
 **Features Used**:
+
 - Email/password authentication
 - Multi-factor authentication (MFA)
 - Social logins (future)
@@ -458,6 +495,7 @@ const modelId = webSearchEnabled
 - JWT token issuance
 
 **Integration Points**:
+
 1. **Next.js Middleware** (`middleware.ts`)
    - Enforces authentication on routes
    - Injects Clerk user context
@@ -475,6 +513,7 @@ const modelId = webSearchEnabled
    - Ownership enforced via `ctx.auth`
 
 **Environment Variables**:
+
 ```bash
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
 CLERK_SECRET_KEY=sk_...
@@ -484,20 +523,24 @@ CLERK_WEBHOOK_SECRET=whsec_...
 ### Security Implementations
 
 #### Field-Level Encryption
+
 **Algorithm**: AES-256-GCM
 
 **What's Encrypted**:
+
 - Message content (`messages.content`)
 - Session-sensitive metadata
 
 **Implementation**: `src/lib/encryption/`
 
 **Key Management**:
+
 - 32-byte encryption key in environment variable
 - Server-side only (never sent to client)
 - Key rotation supported via script
 
 **Process**:
+
 ```typescript
 // Encryption (server)
 encrypt(plaintext: string) → {
@@ -511,9 +554,11 @@ decrypt(ciphertext: string, iv: string, authTag: string) → plaintext
 ```
 
 #### Content Security Policy (CSP)
+
 **Implemented in**: `next.config.js`
 
 **Policies**:
+
 - No inline scripts
 - Restricted script sources
 - No unsafe-eval
@@ -550,36 +595,44 @@ decrypt(ciphertext: string, iv: string, authTag: string) → plaintext
 ### Build Tools
 
 #### Turbopack
+
 **Why**: Next.js 16's default bundler (10x faster than Webpack)
 
 **Benefits**:
+
 - Incremental compilation
 - Hot module replacement (HMR)
 - Optimized production builds
 - Better tree-shaking
 
 #### PostCSS
+
 **Plugins**:
+
 - `@tailwindcss/postcss` - Tailwind processing
 - `autoprefixer` - Browser compatibility
 
 ### Code Quality
 
 #### ESLint
+
 **Configuration**: `eslint.config.js`
 
 **Presets**:
+
 - `next/core-web-vitals` - Next.js best practices
 - `@typescript-eslint` - TypeScript rules
 - `eslint-plugin-unicorn` - Modern JS patterns
 - `eslint-plugin-react-perf` - Performance rules
 
 **Custom Rules**:
+
 - Enforce `'use client'` directive placement
 - No `any` types (TypeScript)
 - Consistent import ordering
 
 #### Prettier
+
 **Configuration**: `.prettierrc`
 
 ```json
@@ -599,6 +652,7 @@ decrypt(ciphertext: string, iv: string, authTag: string) → plaintext
 **Lock File**: `package-lock.json` (npm)
 
 **Scripts** (key ones):
+
 - `npm run dev` - Development server
 - `npm run build` - Production build
 - `npm run lint` - Code linting
@@ -606,6 +660,7 @@ decrypt(ciphertext: string, iv: string, authTag: string) → plaintext
 - `npm run test:e2e` - E2E tests
 
 **Engine Requirements**:
+
 ```json
 {
   "node": ">=24.0.0",
@@ -618,6 +673,7 @@ decrypt(ciphertext: string, iv: string, authTag: string) → plaintext
 **Recommended IDE**: Visual Studio Code
 
 **Extensions**:
+
 - ESLint
 - Prettier
 - TypeScript and JavaScript Language Features
@@ -626,6 +682,7 @@ decrypt(ciphertext: string, iv: string, authTag: string) → plaintext
 - Playwright Test for VS Code
 
 **Environment Files**:
+
 - `.env.local` - Local development secrets
 - `.env.example` - Template with required variables
 
@@ -636,15 +693,18 @@ decrypt(ciphertext: string, iv: string, authTag: string) → plaintext
 ### Unit & Integration Testing
 
 #### Jest 30
+
 **Configuration**: `jest.config.js`
 
 **Features**:
+
 - TypeScript support via `ts-jest`
 - jsdom environment for React testing
 - Module path aliases
 - Coverage reporting
 
 **Test Structure**:
+
 ```
 __tests__/
 ├── components/     # Component tests
@@ -656,22 +716,24 @@ __tests__/
 **Test Count**: 1,528+ tests passing
 
 #### React Testing Library
+
 **Philosophy**: Test user behavior, not implementation
 
 **Common Patterns**:
+
 ```typescript
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 test('user can send message', async () => {
   render(<ChatInterface />);
-  
+
   const input = screen.getByRole('textbox');
   const user = userEvent.setup();
-  
+
   await user.type(input, 'Hello');
   await user.click(screen.getByRole('button', { name: /send/i }));
-  
+
   await waitFor(() => {
     expect(screen.getByText('Hello')).toBeInTheDocument();
   });
@@ -679,22 +741,26 @@ test('user can send message', async () => {
 ```
 
 **Utilities**:
+
 - `@testing-library/jest-dom` - Custom matchers
 - `@testing-library/user-event` - User interaction simulation
 
 ### End-to-End Testing
 
 #### Playwright 1.56
+
 **Configuration**: `playwright.config.ts`
 
 **Browsers**: Chromium, Firefox, WebKit
 
 **Test Suites**:
+
 - `e2e/health-smoke.spec.ts` - Basic health checks
 - `e2e/critical-flows.spec.ts` - Authentication flows
 - `e2e/chat-flows.spec.ts` - Therapy conversation flows
 
 **Features Used**:
+
 - Parallel execution
 - Screenshot on failure
 - Video recording
@@ -702,31 +768,33 @@ test('user can send message', async () => {
 - Mobile emulation
 
 **Example Test**:
+
 ```typescript
 test('user can create and use therapy session', async ({ page }) => {
   await page.goto('/');
-  
+
   // Auth flow
   await page.click('text=Sign In');
   await page.fill('[name=email]', 'test@example.com');
   await page.fill('[name=password]', 'secure123');
   await page.click('button[type=submit]');
-  
+
   // Session creation
   await page.click('text=New Session');
   await page.fill('[name=title]', 'Test Session');
   await page.click('text=Create');
-  
+
   // Send message
   await page.fill('[placeholder="Type a message"]', 'I feel anxious');
   await page.press('[placeholder="Type a message"]', 'Enter');
-  
+
   // Verify response
   await expect(page.locator('.assistant-message')).toBeVisible();
 });
 ```
 
 **Run Commands**:
+
 ```bash
 npm run test:e2e          # Headless
 npm run test:e2e:ui       # Interactive UI
@@ -738,6 +806,7 @@ npm run test:e2e:debug    # Debug mode
 **Coverage Tool**: Jest built-in coverage
 
 **Targets**:
+
 - Statements: >80%
 - Branches: >75%
 - Functions: >80%
@@ -754,9 +823,11 @@ npm run test:e2e:debug    # Debug mode
 ### Hosting & Infrastructure
 
 #### Vercel (Recommended)
+
 **Why**: Built by Next.js creators, optimal integration
 
 **Features**:
+
 - Automatic deployments from Git
 - Preview deployments per PR
 - Edge network (CDN)
@@ -767,18 +838,22 @@ npm run test:e2e:debug    # Debug mode
 **Configuration**: `vercel.json` (optional)
 
 **Domains**:
+
 - Production: `your-domain.com`
 - Preview: `branch-name-project.vercel.app`
 
 #### Convex Cloud
+
 **Why**: Managed backend with real-time sync
 
 **Deployment**:
+
 ```bash
 npm run convex:deploy
 ```
 
 **Features**:
+
 - Automatic function deployment
 - Schema migrations
 - Logging and monitoring
@@ -802,6 +877,7 @@ npm run convex:deploy
    - PR created → Deploy preview environment
 
 **Example Workflow** (`.github/workflows/ci.yml`):
+
 ```yaml
 name: CI
 on: [push, pull_request]
@@ -823,6 +899,7 @@ jobs:
 ### Environment Variables
 
 **Required**:
+
 ```bash
 # AI
 GROQ_API_KEY=gsk_...
@@ -841,6 +918,7 @@ ENCRYPTION_KEY=<32-character-key>
 ```
 
 **Optional**:
+
 ```bash
 # Local development
 RATE_LIMIT_DISABLED=true
@@ -850,6 +928,7 @@ OLLAMA_MODEL_ID=llama2
 ```
 
 **Management**:
+
 - Development: `.env.local` (gitignored)
 - Production: Vercel dashboard or `vercel env`
 
@@ -860,9 +939,11 @@ OLLAMA_MODEL_ID=llama2
 ### Application Monitoring
 
 #### Web Vitals
+
 **Implementation**: `src/lib/monitoring/web-vitals.ts`
 
 **Metrics Tracked**:
+
 - **LCP** (Largest Contentful Paint) - Target: <2.5s
 - **FID** (First Input Delay) - Target: <100ms
 - **CLS** (Cumulative Layout Shift) - Target: <0.1
@@ -873,9 +954,11 @@ OLLAMA_MODEL_ID=llama2
 **Reporting**: `web-vitals` package with custom handler
 
 #### Error Tracking
+
 **Tool**: (Recommendation: Sentry)
 
 **Features**:
+
 - Error boundary integration
 - Breadcrumb tracking
 - User context
@@ -883,9 +966,11 @@ OLLAMA_MODEL_ID=llama2
 - Release tracking
 
 #### Logging
+
 **Implementation**: `src/lib/utils/logger.ts`
 
 **Log Levels**:
+
 - `error` - Errors requiring attention
 - `warn` - Warnings and degraded states
 - `info` - Informational events
@@ -906,6 +991,7 @@ logger.info('Session created', {
 ### Performance Monitoring
 
 #### Metrics Tracked
+
 1. **Server Rendering Time**
    - Target: <15ms (achieved: 12ms)
    - Measured: Time to render page on server
@@ -923,6 +1009,7 @@ logger.info('Session created', {
    - Measured: Time to first streamed token
 
 #### Profiling
+
 **Tool**: React DevTools Profiler
 
 **Usage**: Identify render performance issues
@@ -936,53 +1023,63 @@ logger.info('Session created', {
 ### Achieved Optimizations (Phase 1)
 
 #### 1. Server Rendering (20x Improvement)
+
 **Before**: 235ms → **After**: 12ms
 
 **Techniques**:
+
 - Switched to Server Components
 - Removed unnecessary client-side hydration
 - Optimized locale detection
 - Cached middleware computations
 
 #### 2. Locale Detection (1156x Improvement)
+
 **Before**: 208ms → **After**: 0.18ms
 
 **Techniques**:
+
 - Header-based caching
 - Memoization of locale parsing
 - Removed redundant operations
 
 #### 3. Bundle Size Optimization
+
 **Reduction**: 40-73% per component
 
 **Techniques**:
+
 - Code splitting by route
 - Dynamic imports for heavy components
 - Tree-shaking of unused code
 - Modular component architecture (52 files)
 
 #### 4. Database Performance
+
 **Technique**: Cached message counts (O(1) lookup)
 
 **Before**: Count query on every session load  
 **After**: Cached `sessionCount` and `messageCount` fields
 
 #### 5. React 19 Features
+
 **`useOptimistic` Hook**: Instant UI feedback
 
 **Benefit**: Eliminates loading states for user actions
 
 **Example**:
+
 ```typescript
-const [optimisticMessages, addOptimisticMessage] = useOptimistic(
-  messages,
-  (state, newMessage) => [...state, newMessage]
-);
+const [optimisticMessages, addOptimisticMessage] = useOptimistic(messages, (state, newMessage) => [
+  ...state,
+  newMessage,
+]);
 ```
 
 ### Optimization Strategies
 
 #### Image Optimization
+
 - Next.js `<Image>` component
 - Automatic WebP conversion
 - Lazy loading
@@ -990,17 +1087,20 @@ const [optimisticMessages, addOptimisticMessage] = useOptimistic(
 - Blur placeholders
 
 #### Code Splitting
+
 - Route-based splitting (automatic)
 - Component lazy loading with `React.lazy()`
 - Dynamic imports for heavy libraries
 
 #### Caching Strategy
+
 - React Query caching (5-10 min stale time)
 - Convex query caching
 - CDN caching (Vercel Edge)
 - Browser caching (service worker)
 
 #### Request Optimization
+
 - Request deduplication (React Query)
 - Batching (Convex)
 - Pagination for large datasets
@@ -1018,37 +1118,37 @@ const [optimisticMessages, addOptimisticMessage] = useOptimistic(
   "react": "^19.2.0",
   "react-dom": "^19.2.0",
   "typescript": "^5.6.0",
-  
+
   "@ai-sdk/groq": "^2.0.31",
   "@ai-sdk/react": "^2.0.99",
   "@ai-sdk/rsc": "^1.0.101",
   "ai": "^5.0.99",
-  
+
   "convex": "^1.29.3",
-  
+
   "@clerk/nextjs": "^6.34.0",
   "@clerk/themes": "^2.4.29",
-  
+
   "@tanstack/react-query": "^5.90.10",
   "@tanstack/react-query-devtools": "^5.90.2",
-  
+
   "@tailwindcss/postcss": "^4.1.16",
   "tailwindcss": "^4.1.16",
   "tailwindcss-animate": "^1.0.7",
-  
+
   "framer-motion": "^12.23.24",
   "lucide-react": "^0.548.0",
   "sonner": "^2.0.7",
-  
+
   "zod": "^4.0.17",
   "react-hook-form": "^7.65.0",
   "@hookform/resolvers": "^5.2.2",
-  
+
   "date-fns": "^4.1.0",
   "uuid": "^12.0.0",
   "clsx": "^2.1.0",
   "tailwind-merge": "^3.3.1",
-  
+
   "web-vitals": "^5.1.0"
 }
 ```
@@ -1060,21 +1160,21 @@ const [optimisticMessages, addOptimisticMessage] = useOptimistic(
   "@types/node": "^24.10.1",
   "@types/react": "^19.2.2",
   "@types/react-dom": "^19.2.2",
-  
+
   "jest": "^30.2.0",
   "jest-environment-jsdom": "^30.2.0",
   "@testing-library/react": "^16.3.0",
   "@testing-library/jest-dom": "^6.9.1",
   "@testing-library/user-event": "^14.6.1",
-  
+
   "@playwright/test": "^1.56.1",
-  
+
   "eslint": "^9.39.1",
   "eslint-config-next": "^16.0.3",
   "eslint-config-prettier": "^10.1.8",
   "@typescript-eslint/eslint-plugin": "^8.47.0",
   "@typescript-eslint/parser": "^8.47.0",
-  
+
   "prettier": "^3.6.2",
   "prettier-plugin-tailwindcss": "^0.7.1"
 }
@@ -1085,6 +1185,7 @@ const [optimisticMessages, addOptimisticMessage] = useOptimistic(
 **Frequency**: Monthly security updates, quarterly major updates
 
 **Process**:
+
 1. Run `npm audit` for vulnerabilities
 2. Test updates in development
 3. Run full test suite
@@ -1093,6 +1194,7 @@ const [optimisticMessages, addOptimisticMessage] = useOptimistic(
 6. Deploy to production
 
 **Tools**:
+
 - Dependabot (GitHub) - Automated security updates
 - `npm outdated` - Check for updates
 
@@ -1140,7 +1242,7 @@ npm run audit:names       # Naming conventions audit
 **ADR-002**: Field-level encryption for HIPAA compliance  
 **ADR-003**: Clerk authentication over custom auth  
 **ADR-004**: React Query over Redux for server state  
-**ADR-005**: Server Components by default for performance  
+**ADR-005**: Server Components by default for performance
 
 (See `/docs/architecture/` for full ADRs - future addition)
 
@@ -1148,17 +1250,17 @@ npm run audit:names       # Naming conventions audit
 
 **To React 19**: Completed (from React 18)  
 **To Next.js 16**: Completed (from Next.js 14)  
-**To Tailwind v4**: Completed (from Tailwind v3)  
+**To Tailwind v4**: Completed (from Tailwind v3)
 
 ### Performance Benchmarks
 
-| Metric | Target | Achieved | Status |
-|--------|--------|----------|--------|
-| Server Render | <20ms | 12ms | ✅ Exceeds |
-| First Token (AI) | <500ms | ~350ms | ✅ Exceeds |
-| LCP | <2.5s | ~1.8s | ✅ Exceeds |
-| Test Pass Rate | 100% | 100% | ✅ Meets |
-| Uptime | 99.9% | 99.95% | ✅ Exceeds |
+| Metric           | Target | Achieved | Status     |
+| ---------------- | ------ | -------- | ---------- |
+| Server Render    | <20ms  | 12ms     | ✅ Exceeds |
+| First Token (AI) | <500ms | ~350ms   | ✅ Exceeds |
+| LCP              | <2.5s  | ~1.8s    | ✅ Exceeds |
+| Test Pass Rate   | 100%   | 100%     | ✅ Meets   |
+| Uptime           | 99.9%  | 99.95%   | ✅ Exceeds |
 
 ### Known Issues & Limitations
 
@@ -1178,17 +1280,20 @@ npm run audit:names       # Naming conventions audit
 ### Future Technical Considerations
 
 **Phase 2**:
+
 - Analytics libraries (D3.js, Recharts)
 - Audio processing for guided exercises
 - Advanced PWA features (background sync)
 
 **Phase 3**:
+
 - Native mobile apps (Swift, Kotlin)
 - Voice AI integration
 - ML pipelines for personalization
 - GraphQL API layer (optional)
 
 **Phase 4**:
+
 - Multi-region deployment
 - Microservices architecture (if needed)
 - Advanced caching strategies (Redis)

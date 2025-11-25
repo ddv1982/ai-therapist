@@ -3,6 +3,7 @@
 ## Task Assignment
 
 ### Task 6.1: Profile Chat Component Renders
+
 - **Description**: Use React DevTools Profiler to identify unnecessary re-renders.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -13,6 +14,7 @@
 - **Complexity**: Small
 
 ### Task 6.2: Implement Virtual Scrolling for Messages
+
 - **Description**: Add TanStack Virtual for message list to handle large histories.
 - **Dependencies**: Task 6.1
 - **Acceptance Criteria**:
@@ -24,6 +26,7 @@
 - **Complexity**: Large
 
 ### Task 6.3: Optimize Message Item Rendering
+
 - **Description**: Memoize message components to prevent unnecessary re-renders.
 - **Dependencies**: Task 6.1
 - **Acceptance Criteria**:
@@ -34,6 +37,7 @@
 - **Complexity**: Medium
 
 ### Task 6.4: Add Render Performance Monitoring
+
 - **Description**: Implement development-only slow render warnings.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -44,6 +48,7 @@
 - **Complexity**: Small
 
 ### Task 6.5: Memory Profiling for Long Sessions
+
 - **Description**: Verify memory stability during extended usage.
 - **Dependencies**: Task 6.2
 - **Acceptance Criteria**:
@@ -56,11 +61,13 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: `droidz/specs/022-codebase-improvement-plan/spec.md`
 - requirements: `droidz/specs/022-codebase-improvement-plan/planning/requirements.md`
 - tasks: `droidz/specs/022-codebase-improvement-plan/tasks.md`
 
 Key files to study:
+
 - `src/features/chat/messages/` - Message components
 - `src/features/therapy-chat/components/` - Chat container
 - `src/hooks/use-scroll-to-bottom.ts` - Scroll handling

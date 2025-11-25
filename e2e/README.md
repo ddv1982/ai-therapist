@@ -83,12 +83,7 @@ test('example', async ({ page }) => {
 Reusable test data in `fixtures/test-data.ts`:
 
 ```typescript
-import { 
-  testUsers, 
-  testMessages, 
-  testMemoryData,
-  generateTestEmail 
-} from './fixtures/test-data';
+import { testUsers, testMessages, testMemoryData, generateTestEmail } from './fixtures/test-data';
 ```
 
 ## Writing New Tests
@@ -105,7 +100,7 @@ Example:
 ```typescript
 test('feature description', async ({ page }) => {
   const sessionPage = new TherapySessionPage(page);
-  
+
   await sessionPage.gotoHome();
   await sessionPage.sendMessage('Test message');
   await sessionPage.verifyMessageVisible('Test message');
@@ -121,6 +116,7 @@ npm run test:e2e:ui
 ```
 
 Features:
+
 - Watch tests run in real-time
 - Time travel through test steps
 - Inspect DOM at each step
@@ -146,6 +142,7 @@ test('debug this', async ({ page }) => {
 ### Screenshots & Videos
 
 Failed tests automatically capture:
+
 - Screenshot at failure point
 - Video recording (in CI)
 
@@ -191,11 +188,11 @@ if (await authPage.isAuthenticated()) {
 
 ```typescript
 // Simulate network error
-await page.route('**/api/chat', route => route.abort('failed'));
+await page.route('**/api/chat', (route) => route.abort('failed'));
 
 // Slow network
 await page.route('**/api/**', async (route) => {
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
   await route.continue();
 });
 
@@ -210,9 +207,9 @@ await page.unroute('**/api/**');
 await page.click('[data-testid="button"]');
 
 // Explicit wait when needed
-await page.waitForSelector('[data-testid="result"]', { 
+await page.waitForSelector('[data-testid="result"]', {
   state: 'visible',
-  timeout: 5000 
+  timeout: 5000,
 });
 ```
 
@@ -232,7 +229,8 @@ test('slow operation', async ({ page }) => {
 Check if element is conditionally rendered:
 
 ```typescript
-const isVisible = await page.locator('[data-testid="element"]')
+const isVisible = await page
+  .locator('[data-testid="element"]')
   .isVisible()
   .catch(() => false);
 
@@ -255,10 +253,12 @@ Tests handle Clerk UI gracefully with fallbacks for unauthenticated states.
 ## CI/CD
 
 Tests run automatically on:
+
 - Pull requests
 - Main branch commits
 
 CI configuration:
+
 - Single worker (no parallelization)
 - 2 retries on failure
 - Chromium browser only
@@ -290,6 +290,7 @@ CI configuration:
 ## Support
 
 Questions? Check:
+
 1. This README
 2. Full documentation in `../docs/`
 3. Existing test examples

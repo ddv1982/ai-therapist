@@ -1,8 +1,5 @@
 import { ReportGenerationService } from '@/lib/services/report-generation-service';
-import {
-  generateSessionReport,
-  extractStructuredAnalysis,
-} from '@/lib/api/groq-client';
+import { generateSessionReport, extractStructuredAnalysis } from '@/lib/api/groq-client';
 import {
   encryptSessionReportContent,
   encryptEnhancedAnalysisData,
@@ -76,7 +73,7 @@ describe('ReportGenerationService', () => {
         therapeuticRelevance: 5,
       },
     });
-    
+
     service = new ReportGenerationService(mockModel, mockConvexClient as any);
   });
 
@@ -89,12 +86,12 @@ describe('ReportGenerationService', () => {
         cognitiveDistortions: [],
         keyPoints: ['Point 1'],
       } as ParsedAnalysis);
-      
+
       const result = await service.generateReport(mockSessionId, mockMessages, 'en');
-      
+
       expect(generateSessionReport).toHaveBeenCalledWith(
-        mockMessages, 
-        'mock-report-prompt', 
+        mockMessages,
+        'mock-report-prompt',
         mockModel
       );
       expect(extractStructuredAnalysis).toHaveBeenCalled();
@@ -127,65 +124,70 @@ describe('ReportGenerationService', () => {
       expect(hasCBTData).toHaveBeenCalledWith(mockMessages);
       expect(parseAllCBTData).toHaveBeenCalledWith(mockMessages);
       expect(mockMutation).toHaveBeenCalled();
-      
+
       // Check if CBT data integration logic was triggered (via checking saved data or result)
       expect(result.cbtDataAvailable).toBe(true);
       expect(result.cbtDataSource).toBe('parsed');
     });
 
     it('should handle analysis extraction failure gracefully', async () => {
-        (hasCBTData as jest.Mock).mockReturnValue(false);
-        (generateSessionReport as jest.Mock).mockResolvedValue('Generated Report Content');
-        // Mock extraction to throw an error (generateObject internal error)
-        (extractStructuredAnalysis as jest.Mock).mockRejectedValue(new Error('AI SDK error'));
+      (hasCBTData as jest.Mock).mockReturnValue(false);
+      (generateSessionReport as jest.Mock).mockResolvedValue('Generated Report Content');
+      // Mock extraction to throw an error (generateObject internal error)
+      (extractStructuredAnalysis as jest.Mock).mockRejectedValue(new Error('AI SDK error'));
 
-        const result = await service.generateReport(mockSessionId, mockMessages, 'en');
+      const result = await service.generateReport(mockSessionId, mockMessages, 'en');
 
-        // Should still save report with empty analysis
-        expect(mockMutation).toHaveBeenCalled();
-        expect(result.reportContent).toBe('Generated Report Content');
+      // Should still save report with empty analysis
+      expect(mockMutation).toHaveBeenCalled();
+      expect(result.reportContent).toBe('Generated Report Content');
     });
 
     it('should throw error if report generation fails', async () => {
       (generateSessionReport as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.generateReport(mockSessionId, mockMessages, 'en'))
-        .rejects.toThrow('Failed to generate session report');
+      await expect(service.generateReport(mockSessionId, mockMessages, 'en')).rejects.toThrow(
+        'Failed to generate session report'
+      );
     });
-    
+
     it('should handle database save failure gracefully', async () => {
-        (hasCBTData as jest.Mock).mockReturnValue(false);
-        (generateSessionReport as jest.Mock).mockResolvedValue('Generated Report Content');
-        (extractStructuredAnalysis as jest.Mock).mockResolvedValue({} as ParsedAnalysis);
-        
-        mockMutation.mockRejectedValue(new Error('DB Error'));
-        
-        // Should not throw, but log error (which is mocked)
-        const result = await service.generateReport(mockSessionId, mockMessages, 'en');
-        
-        expect(result.reportContent).toBe('Generated Report Content');
+      (hasCBTData as jest.Mock).mockReturnValue(false);
+      (generateSessionReport as jest.Mock).mockResolvedValue('Generated Report Content');
+      (extractStructuredAnalysis as jest.Mock).mockResolvedValue({} as ParsedAnalysis);
+
+      mockMutation.mockRejectedValue(new Error('DB Error'));
+
+      // Should not throw, but log error (which is mocked)
+      const result = await service.generateReport(mockSessionId, mockMessages, 'en');
+
+      expect(result.reportContent).toBe('Generated Report Content');
     });
 
     it('should apply contextual validation to cognitive distortions', async () => {
-        (hasCBTData as jest.Mock).mockReturnValue(false);
-        (generateSessionReport as jest.Mock).mockResolvedValue('Generated Report Content');
-        
-        const mockAnalysis: ParsedAnalysis = {
-            cognitiveDistortions: [
-                { name: 'All-or-nothing', contextAwareConfidence: 50, falsePositiveRisk: 'high' }
-            ]
-        };
-        (extractStructuredAnalysis as jest.Mock).mockResolvedValue(mockAnalysis);
-        
-        (validateTherapeuticContext as jest.Mock).mockReturnValue({
-            contextualAnalysis: { contextType: 'general', emotionalIntensity: 5, therapeuticRelevance: 8 }
-        });
-        (calculateContextualConfidence as jest.Mock).mockReturnValue(40); // Low confidence
+      (hasCBTData as jest.Mock).mockReturnValue(false);
+      (generateSessionReport as jest.Mock).mockResolvedValue('Generated Report Content');
 
-        await service.generateReport(mockSessionId, mockMessages, 'en');
-        
-        expect(validateTherapeuticContext).toHaveBeenCalled();
-        expect(calculateContextualConfidence).toHaveBeenCalled();
+      const mockAnalysis: ParsedAnalysis = {
+        cognitiveDistortions: [
+          { name: 'All-or-nothing', contextAwareConfidence: 50, falsePositiveRisk: 'high' },
+        ],
+      };
+      (extractStructuredAnalysis as jest.Mock).mockResolvedValue(mockAnalysis);
+
+      (validateTherapeuticContext as jest.Mock).mockReturnValue({
+        contextualAnalysis: {
+          contextType: 'general',
+          emotionalIntensity: 5,
+          therapeuticRelevance: 8,
+        },
+      });
+      (calculateContextualConfidence as jest.Mock).mockReturnValue(40); // Low confidence
+
+      await service.generateReport(mockSessionId, mockMessages, 'en');
+
+      expect(validateTherapeuticContext).toHaveBeenCalled();
+      expect(calculateContextualConfidence).toHaveBeenCalled();
     });
   });
 });

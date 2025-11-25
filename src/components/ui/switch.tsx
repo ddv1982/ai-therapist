@@ -16,9 +16,9 @@ function Switch({ className, ref, ...props }: SwitchProps) {
         // Colors with smooth gradient
         'data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted',
         // Smooth transitions with Apple spring physics
-        'transition-all duration-base ease-out-smooth',
+        'duration-base ease-out-smooth transition-all',
         // Focus state
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        'focus-visible:ring-ring focus-visible:ring-offset-background focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
         // Disabled state
         'disabled:cursor-not-allowed disabled:opacity-50',
         className
@@ -32,7 +32,7 @@ function Switch({ className, ref, ...props }: SwitchProps) {
           'pointer-events-none block h-7 w-7 rounded-full ring-0',
           'bg-background shadow-apple-md',
           // Smooth slide animation with spring physics
-          'transition-transform duration-base ease-spring',
+          'duration-base ease-spring transition-transform',
           'data-[state=checked]:translate-x-6 data-[state=unchecked]:translate-x-0'
         )}
       />

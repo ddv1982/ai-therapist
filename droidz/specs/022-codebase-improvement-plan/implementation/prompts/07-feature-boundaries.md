@@ -3,6 +3,7 @@
 ## Task Assignment
 
 ### Task 7.1: Document Current Module Boundaries
+
 - **Description**: Create documentation of current feature module responsibilities and overlaps.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -13,6 +14,7 @@
 - **Complexity**: Small
 
 ### Task 7.2: Define Target Feature Architecture
+
 - **Description**: Design the target state for feature module organization.
 - **Dependencies**: Task 7.1
 - **Acceptance Criteria**:
@@ -23,6 +25,7 @@
 - **Complexity**: Medium
 
 ### Task 7.3: Consolidate or Clarify therapy-chat Module
+
 - **Description**: Either merge `therapy-chat` into appropriate modules or clarify its boundaries.
 - **Dependencies**: Task 7.2
 - **Acceptance Criteria**:
@@ -33,6 +36,7 @@
 - **Complexity**: Large
 
 ### Task 7.4: Reorganize Component Directory
+
 - **Description**: Restructure `src/components/ui/` from 48 flat files to organized subdirectories.
 - **Dependencies**: None
 - **Acceptance Criteria**:
@@ -44,6 +48,7 @@
 - **Complexity**: Large
 
 ### Task 7.5: Standardize Component Naming
+
 - **Description**: Apply consistent naming convention to all components.
 - **Dependencies**: Task 7.4
 - **Acceptance Criteria**:
@@ -54,6 +59,7 @@
 - **Complexity**: Medium
 
 ### Task 7.6: Create Feature Barrel Exports
+
 - **Description**: Add index.ts files for clean feature imports.
 - **Dependencies**: Task 7.3
 - **Acceptance Criteria**:
@@ -66,11 +72,13 @@
 ## Context Files
 
 Read these for requirements and patterns:
+
 - spec: `droidz/specs/022-codebase-improvement-plan/spec.md`
 - requirements: `droidz/specs/022-codebase-improvement-plan/planning/requirements.md`
 - tasks: `droidz/specs/022-codebase-improvement-plan/tasks.md`
 
 Key files to study:
+
 - `src/features/` - Current feature structure
 - `src/features/chat/` - Chat feature
 - `src/features/therapy/` - Therapy feature
