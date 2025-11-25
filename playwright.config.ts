@@ -59,7 +59,7 @@ export default defineConfig({
       // Start Convex backend first - required for API routes that use ConvexHttpClient
       command: 'npx convex dev',
       url: 'http://127.0.0.1:3210',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       stdout: 'pipe',
       stderr: 'pipe',
       timeout: 30_000,
@@ -69,7 +69,7 @@ export default defineConfig({
       command: 'npm run dev:local',
       // Wait for health endpoint to be ready instead of the home page
       url: 'http://localhost:4000/api/health',
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: true,
       stdout: 'pipe',
       // Pipe stderr for diagnostics if server fails to start
       stderr: 'pipe',

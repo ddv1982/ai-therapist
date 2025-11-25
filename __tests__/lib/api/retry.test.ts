@@ -11,10 +11,12 @@ import {
   isRateLimitError,
   isTransientServerError,
   calculateRetryDelay,
+  getRetryAfterDelay,
   DEFAULT_RETRY_OPTIONS,
   AGGRESSIVE_RETRY,
   CONSERVATIVE_RETRY,
   FAST_RETRY,
+  RATE_LIMIT_RETRY,
 } from '@/lib/api/retry';
 import { ApiErrorCode } from '@/lib/api/error-codes';
 import { isOk, isErr } from '@/lib/utils/result';
@@ -313,6 +315,264 @@ describe('API Retry Logic', () => {
       expect(FAST_RETRY.maxAttempts).toBe(3);
       expect(FAST_RETRY.initialDelay).toBe(100);
       expect(FAST_RETRY.jitter).toBe(false);
+    });
+
+    it('should have rate limit preset with appropriate settings', () => {
+      expect(RATE_LIMIT_RETRY.maxAttempts).toBe(5);
+      expect(RATE_LIMIT_RETRY.backoffMultiplier).toBe(3);
+      expect(RATE_LIMIT_RETRY.retryableStatusCodes).toEqual([429]);
+    });
+  });
+
+  // Additional tests for uncovered branches
+  describe('isTransientServerError - error code branches', () => {
+    it('should identify server errors by ApiErrorCode', () => {
+      const error = new Error('Server error') as Error & { code: string };
+      error.code = ApiErrorCode.INTERNAL_SERVER_ERROR;
+      expect(isTransientServerError(error)).toBe(true);
+    });
+
+    it('should identify database errors as transient server errors', () => {
+      const error = new Error('Database error') as Error & { code: string };
+      error.code = ApiErrorCode.DATABASE_ERROR;
+      expect(isTransientServerError(error)).toBe(true);
+    });
+
+    it('should not identify non-error codes as server errors', () => {
+      const error = new Error('Some error') as Error & { code: string };
+      error.code = 'UNKNOWN_CODE';
+      expect(isTransientServerError(error)).toBe(false);
+    });
+
+    it('should not identify client error codes as transient', () => {
+      const error = new Error('Client error') as Error & { code: string };
+      error.code = ApiErrorCode.VALIDATION_ERROR;
+      expect(isTransientServerError(error)).toBe(false);
+    });
+  });
+
+  describe('isRetryableError - additional branches', () => {
+    it('should use custom retryable error codes', () => {
+      const error = new Error('Custom error') as Error & { code: string };
+      error.code = ApiErrorCode.VALIDATION_ERROR;
+
+      // Without custom codes, validation error is not retryable
+      expect(isRetryableError(error)).toBe(false);
+
+      // With custom retryable codes including VALIDATION_ERROR
+      expect(
+        isRetryableError(error, { retryableErrorCodes: [ApiErrorCode.VALIDATION_ERROR] })
+      ).toBe(true);
+    });
+
+    it('should not retry client error codes', () => {
+      const error = new Error('Not found') as Error & { code: string };
+      error.code = ApiErrorCode.NOT_FOUND;
+      expect(isRetryableError(error)).toBe(false);
+    });
+
+    it('should not retry authentication error codes', () => {
+      const error = new Error('Auth error') as Error & { code: string };
+      error.code = ApiErrorCode.AUTHENTICATION_ERROR;
+      expect(isRetryableError(error)).toBe(false);
+    });
+
+    it('should identify server error codes as retryable', () => {
+      const error = new Error('Server error') as Error & { code: string };
+      error.code = ApiErrorCode.DATABASE_ERROR;
+      expect(isRetryableError(error)).toBe(true);
+    });
+  });
+
+  describe('getRetryAfterDelay', () => {
+    it('should return delay from numeric retryAfter property', () => {
+      const error = new Error('Rate limited') as Error & { retryAfter: number };
+      error.retryAfter = 30; // 30 seconds
+      expect(getRetryAfterDelay(error)).toBe(30000); // 30000 ms
+    });
+
+    it('should return delay from string retryAfter property', () => {
+      const error = new Error('Rate limited') as Error & { retryAfter: string };
+      error.retryAfter = '60'; // 60 seconds
+      expect(getRetryAfterDelay(error)).toBe(60000); // 60000 ms
+    });
+
+    it('should handle missing retryAfter property gracefully', () => {
+      const error = new Error('Error without retryAfter');
+      expect(getRetryAfterDelay(error)).toBe(null);
+    });
+
+    it('should return delay from headers', () => {
+      const error = new Error('Rate limited') as Error & {
+        headers: { get: (key: string) => string | null };
+      };
+      error.headers = {
+        get: (key: string) => (key === 'retry-after' ? '45' : null),
+      };
+      expect(getRetryAfterDelay(error)).toBe(45000);
+    });
+
+    it('should return null when no retry-after info', () => {
+      const error = new Error('Regular error');
+      expect(getRetryAfterDelay(error)).toBe(null);
+    });
+
+    it('should return null for invalid string retryAfter', () => {
+      const error = new Error('Rate limited') as Error & { retryAfter: string };
+      error.retryAfter = 'invalid';
+      expect(getRetryAfterDelay(error)).toBe(null);
+    });
+
+    it('should return null for invalid header value', () => {
+      const error = new Error('Rate limited') as Error & {
+        headers: { get: (key: string) => string | null };
+      };
+      error.headers = {
+        get: (key: string) => (key === 'retry-after' ? 'invalid' : null),
+      };
+      expect(getRetryAfterDelay(error)).toBe(null);
+    });
+  });
+
+  describe('withRetry - additional branches', () => {
+    it('should use retry-after delay when available', async () => {
+      const rateLimitError = new Error('Rate limited') as Error & {
+        status: number;
+        retryAfter: number;
+      };
+      rateLimitError.status = 429;
+      rateLimitError.retryAfter = 0.01; // 10ms
+
+      const operation = jest
+        .fn()
+        .mockRejectedValueOnce(rateLimitError)
+        .mockResolvedValue('success');
+
+      const result = await withRetry(operation, {
+        maxAttempts: 2,
+        initialDelay: 1000, // Would be 1s, but retryAfter overrides
+        jitter: false,
+      });
+
+      expect(result).toBe('success');
+      expect(operation).toHaveBeenCalledTimes(2);
+    });
+
+    it('should use custom shouldRetry function', async () => {
+      const customShouldRetry = jest.fn().mockReturnValue(true);
+      const operation = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('Custom error'))
+        .mockResolvedValue('success');
+
+      await withRetry(operation, {
+        maxAttempts: 2,
+        initialDelay: 10,
+        shouldRetry: customShouldRetry,
+      });
+
+      expect(customShouldRetry).toHaveBeenCalledWith(expect.any(Error), 1);
+    });
+
+    it('should not retry when custom shouldRetry returns false', async () => {
+      const operation = jest.fn().mockRejectedValue(new Error('Network error'));
+
+      await expect(
+        withRetry(operation, {
+          maxAttempts: 3,
+          shouldRetry: () => false,
+        })
+      ).rejects.toThrow('Network error');
+
+      expect(operation).toHaveBeenCalledTimes(1);
+    });
+
+    it('should convert non-Error exceptions to Error', async () => {
+      const operation = jest.fn().mockRejectedValue('string error');
+
+      await expect(withRetry(operation, { maxAttempts: 0 })).rejects.toThrow('string error');
+    });
+
+    it('should abort immediately if signal already aborted', async () => {
+      const controller = new AbortController();
+      controller.abort();
+
+      const operation = jest.fn().mockResolvedValue('success');
+
+      await expect(withRetry(operation, { signal: controller.signal })).rejects.toThrow(
+        'Retry operation aborted'
+      );
+
+      expect(operation).not.toHaveBeenCalled();
+    });
+
+    it('should abort during sleep via abort event listener', async () => {
+      const controller = new AbortController();
+      let sleepStarted = false;
+
+      const operation = jest.fn().mockImplementation(async () => {
+        if (!sleepStarted) {
+          sleepStarted = true;
+          throw new Error('Network error');
+        }
+        return 'success';
+      });
+
+      const promise = withRetry(operation, {
+        maxAttempts: 3,
+        initialDelay: 500,
+        jitter: false,
+        signal: controller.signal,
+        onRetry: () => {
+          // Abort during the sleep delay
+          setTimeout(() => controller.abort(), 10);
+        },
+      });
+
+      await expect(promise).rejects.toThrow('Retry aborted');
+    });
+  });
+
+  describe('withRetryResult - additional branches', () => {
+    it('should convert non-Error exception to Error in result', async () => {
+      const operation = jest.fn().mockRejectedValue('string error');
+
+      const result = await withRetryResult(operation, { maxAttempts: 0 });
+
+      expect(isErr(result)).toBe(true);
+      if (isErr(result)) {
+        expect(result.error.message).toBe('string error');
+      }
+    });
+  });
+
+  describe('withRetryDetailed - additional branches', () => {
+    it('should call original onRetry while tracking attempts', async () => {
+      const originalOnRetry = jest.fn();
+      const operation = jest
+        .fn()
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValue('success');
+
+      const result = await withRetryDetailed(operation, {
+        maxAttempts: 2,
+        initialDelay: 10,
+        jitter: false,
+        onRetry: originalOnRetry,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.attempts).toBe(2);
+      expect(originalOnRetry).toHaveBeenCalledWith(expect.any(Error), 1, 10);
+    });
+
+    it('should convert non-Error to Error in failure result', async () => {
+      const operation = jest.fn().mockRejectedValue('string error');
+
+      const result = await withRetryDetailed(operation, { maxAttempts: 0 });
+
+      expect(result.success).toBe(false);
+      expect(result.error?.message).toBe('string error');
     });
   });
 });

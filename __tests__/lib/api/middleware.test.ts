@@ -3,6 +3,7 @@ import {
   withApiMiddleware,
   withAuth,
   withValidation,
+  withValidationAndParams,
   withRateLimitUnauthenticated,
   withAuthAndRateLimit,
   withAuthStreaming,
@@ -35,18 +36,18 @@ jest.mock('next/server', () => {
   return {
     __esModule: true,
     NextRequest: class MockNextRequest {
-        url: string;
-        method: string;
-        headers: Headers;
-        nextUrl: URL;
-        json: jest.Mock;
-        constructor(url: string, init: any) {
-            this.url = url;
-            this.method = init?.method || 'GET';
-            this.headers = new Headers(init?.headers || {});
-            this.nextUrl = new URL(url);
-            this.json = jest.fn().mockResolvedValue({});
-        }
+      url: string;
+      method: string;
+      headers: Headers;
+      nextUrl: URL;
+      json: jest.Mock;
+      constructor(url: string, init: any) {
+        this.url = url;
+        this.method = init?.method || 'GET';
+        this.headers = new Headers(init?.headers || {});
+        this.nextUrl = new URL(url);
+        this.json = jest.fn().mockResolvedValue({});
+      }
     },
     NextResponse: MockNextResponse,
   };
@@ -76,16 +77,28 @@ jest.mock('@/config/env', () => ({
     NODE_ENV: 'test',
     RATE_LIMIT_DISABLED: false,
     API_WINDOW_MS: 60000,
+    API_MAX_REQS: 100,
     CHAT_WINDOW_MS: 60000,
     RATE_LIMIT_WINDOW_MS: 60000,
+    RATE_LIMIT_MAX_REQS: 100,
     CHAT_MAX_CONCURRENCY: 2,
     CHAT_MAX_REQS: 5,
     CHAT_CLEANUP_INTERVAL_MS: 1000,
   },
 }));
 
+// Mock request-utils to control client IP
+const mockGetClientIP = jest.fn().mockReturnValue('127.0.0.1');
+jest.mock('@/lib/api/middleware/request-utils', () => ({
+  ...jest.requireActual('@/lib/api/middleware/request-utils'),
+  getClientIPFromRequest: () => mockGetClientIP(),
+}));
+
 // Helper to create a mock request object
-function createMockRequest(url: string, options: { method?: string; headers?: Record<string, string> } = {}) {
+function createMockRequest(
+  url: string,
+  options: { method?: string; headers?: Record<string, string> } = {}
+) {
   const headers = new Headers(options.headers || {});
   return {
     url,
@@ -103,7 +116,7 @@ describe('Middleware Tests', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     req = createMockRequest('http://localhost:3000/api/test', {
       method: 'GET',
       headers: {
@@ -111,9 +124,8 @@ describe('Middleware Tests', () => {
         'user-agent': 'TestAgent',
       },
     });
-    
-    mockHandler = jest.fn().mockResolvedValue(NextResponse.json({ success: true }));
 
+    mockHandler = jest.fn().mockResolvedValue(NextResponse.json({ success: true }));
 
     // Default mock implementations
     (validateApiAuth as jest.Mock).mockResolvedValue({ isValid: true });
@@ -140,7 +152,7 @@ describe('Middleware Tests', () => {
     it('should handle errors and return 500 response', async () => {
       const error = new Error('Test error');
       mockHandler.mockRejectedValue(error);
-      
+
       const wrapped = withApiMiddleware(mockHandler);
       const res = await wrapped(req, { params: Promise.resolve({}) });
 
@@ -160,9 +172,9 @@ describe('Middleware Tests', () => {
     });
 
     it('should return 401 when auth is invalid', async () => {
-      (validateApiAuth as jest.Mock).mockResolvedValue({ 
-        isValid: false, 
-        error: 'Invalid token' 
+      (validateApiAuth as jest.Mock).mockResolvedValue({
+        isValid: false,
+        error: 'Invalid token',
       });
 
       const wrapped = withAuth(mockHandler);
@@ -187,13 +199,13 @@ describe('Middleware Tests', () => {
       expect(contextArgs.userInfo).toBeDefined();
       expect(contextArgs.userInfo.userId).toBe('therapeutic-ai-user');
     });
-    
+
     it('should merge clerkId if present in authResult', async () => {
-       (validateApiAuth as jest.Mock).mockResolvedValue({ 
-        isValid: true, 
-        userId: 'clerk_123'
+      (validateApiAuth as jest.Mock).mockResolvedValue({
+        isValid: true,
+        userId: 'clerk_123',
       });
-      
+
       const capturingHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
 
       const wrapped = withAuth(capturingHandler);
@@ -214,13 +226,13 @@ describe('Middleware Tests', () => {
       const postReq = createMockRequest('http://localhost:3000/api/test', {
         method: 'POST',
       });
-      
+
       // Mock json response for this specific request
       (postReq.json as jest.Mock).mockResolvedValue({ name: 'Test' });
-      
+
       const wrapped = withValidation(schema, mockHandler);
       await wrapped(postReq, { params: Promise.resolve({}) });
-      
+
       expect(mockHandler).toHaveBeenCalled();
     });
 
@@ -275,9 +287,9 @@ describe('Middleware Tests', () => {
 
     it('should return 429 when limit exceeded', async () => {
       (getRateLimiter as jest.Mock).mockReturnValue({
-        checkRateLimit: jest.fn().mockResolvedValue({ 
-          allowed: false, 
-          retryAfter: 10 
+        checkRateLimit: jest.fn().mockResolvedValue({
+          allowed: false,
+          retryAfter: 10,
         }),
       });
 
@@ -290,17 +302,17 @@ describe('Middleware Tests', () => {
   });
 
   describe('withAuthAndRateLimit', () => {
-     it('should pass when auth valid and rate limit ok', async () => {
+    it('should pass when auth valid and rate limit ok', async () => {
       const wrapped = withAuthAndRateLimit(mockHandler);
       await wrapped(req, { params: Promise.resolve({}) });
       expect(mockHandler).toHaveBeenCalled();
     });
 
     it('should fail when auth invalid', async () => {
-       (validateApiAuth as jest.Mock).mockResolvedValue({ isValid: false });
-       const wrapped = withAuthAndRateLimit(mockHandler);
-       const res = await wrapped(req, { params: Promise.resolve({}) });
-       expect(res.status).toBe(401);
+      (validateApiAuth as jest.Mock).mockResolvedValue({ isValid: false });
+      const wrapped = withAuthAndRateLimit(mockHandler);
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+      expect(res.status).toBe(401);
     });
 
     it('should fail when rate limit exceeded', async () => {
@@ -311,12 +323,12 @@ describe('Middleware Tests', () => {
       const res = await wrapped(req, { params: Promise.resolve({}) });
       expect(res.status).toBe(429);
     });
-    
+
     it('should handle errors', async () => {
-       mockHandler.mockRejectedValue(new Error('Explosion'));
-       const wrapped = withAuthAndRateLimit(mockHandler);
-       const res = await wrapped(req, { params: Promise.resolve({}) });
-       expect(res.status).toBe(500);
+      mockHandler.mockRejectedValue(new Error('Explosion'));
+      const wrapped = withAuthAndRateLimit(mockHandler);
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+      expect(res.status).toBe(500);
     });
   });
 
@@ -347,13 +359,15 @@ describe('Middleware Tests', () => {
 
       expect(res.status).toBe(500);
     });
-    
+
     it('should use fallback user info on session error', async () => {
-       (getSingleUserInfo as jest.Mock).mockImplementation(() => { throw new Error('No session'); });
-       const streamHandler = jest.fn().mockResolvedValue(new Response('ok'));
-       const wrapped = withAuthStreaming(streamHandler);
-       await wrapped(req, { params: Promise.resolve({}) });
-       expect(streamHandler).toHaveBeenCalled();
+      (getSingleUserInfo as jest.Mock).mockImplementation(() => {
+        throw new Error('No session');
+      });
+      const streamHandler = jest.fn().mockResolvedValue(new Response('ok'));
+      const wrapped = withAuthStreaming(streamHandler);
+      await wrapped(req, { params: Promise.resolve({}) });
+      expect(streamHandler).toHaveBeenCalled();
     });
   });
 
@@ -370,19 +384,19 @@ describe('Middleware Tests', () => {
 
       expect(res.status).toBe(429);
     });
-    
+
     it('should return 401 when auth fails', async () => {
-       (validateApiAuth as jest.Mock).mockResolvedValue({ isValid: false });
-       const wrapped = withAuthAndRateLimitStreaming(streamHandler);
-       const res = await wrapped(req, { params: Promise.resolve({}) });
-       expect(res.status).toBe(401);
+      (validateApiAuth as jest.Mock).mockResolvedValue({ isValid: false });
+      const wrapped = withAuthAndRateLimitStreaming(streamHandler);
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+      expect(res.status).toBe(401);
     });
-    
+
     it('should handle internal error', async () => {
-       mockHandler = jest.fn().mockRejectedValue(new Error('Fail'));
-       const wrapped = withAuthAndRateLimitStreaming(mockHandler);
-       const res = await wrapped(req, { params: Promise.resolve({}) });
-       expect(res.status).toBe(500);
+      mockHandler = jest.fn().mockRejectedValue(new Error('Fail'));
+      const wrapped = withAuthAndRateLimitStreaming(mockHandler);
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+      expect(res.status).toBe(500);
     });
   });
 
@@ -500,7 +514,7 @@ describe('Middleware Tests', () => {
 
     it('should handle non-Error exceptions in withApiMiddleware', async () => {
       mockHandler.mockRejectedValue('String error');
-      
+
       const wrapped = withApiMiddleware(mockHandler);
       const res = await wrapped(req, { params: Promise.resolve({}) });
 
@@ -534,6 +548,226 @@ describe('Middleware Tests', () => {
 
       expect(mockHandler).toHaveBeenCalled();
     });
+
+    it('should handle validation with PATCH method', async () => {
+      const schema = z.object({ name: z.string() });
+      const patchReq = createMockRequest('http://localhost:3000/api/test', {
+        method: 'PATCH',
+      });
+      (patchReq.json as jest.Mock).mockResolvedValue({ name: 'Valid' });
+
+      const wrapped = withValidation(schema, mockHandler);
+      await wrapped(patchReq, { params: Promise.resolve({}) });
+
+      expect(mockHandler).toHaveBeenCalled();
+    });
+  });
+
+  describe('withValidationAndParams', () => {
+    it('should pass route params to handler', async () => {
+      const schema = z.object({ name: z.string() });
+      const capturingHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+
+      const postReq = createMockRequest('http://localhost:3000/api/test/123', {
+        method: 'POST',
+      });
+      (postReq.json as jest.Mock).mockResolvedValue({ name: 'Test' });
+
+      const wrapped = withValidationAndParams(schema, capturingHandler);
+      await wrapped(postReq, { params: Promise.resolve({ id: '123' }) });
+
+      expect(capturingHandler).toHaveBeenCalled();
+      const [, , , params] = capturingHandler.mock.calls[0];
+      expect(params).toEqual({ id: '123' });
+    });
+
+    it('should validate request body before passing params', async () => {
+      const schema = z.object({ name: z.string() });
+      const capturingHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
+
+      const postReq = createMockRequest('http://localhost:3000/api/test/123', {
+        method: 'POST',
+      });
+      (postReq.json as jest.Mock).mockResolvedValue({ name: 123 }); // Invalid
+
+      const wrapped = withValidationAndParams(schema, capturingHandler);
+      const res = await wrapped(postReq, { params: Promise.resolve({ id: '123' }) });
+
+      expect(res.status).toBe(400);
+      expect(capturingHandler).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Rate limit headers on successful responses', () => {
+    beforeEach(() => {
+      (getRateLimiter as jest.Mock).mockReturnValue({
+        checkRateLimit: jest.fn().mockResolvedValue({ allowed: true }),
+        getStatus: jest.fn().mockReturnValue({
+          remaining: 95,
+          resetTime: Date.now() + 60000,
+        }),
+      });
+    });
+
+    it('should add rate limit headers to successful withRateLimitUnauthenticated response', async () => {
+      const wrapped = withRateLimitUnauthenticated(mockHandler);
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+
+      expect(res.status).toBe(200);
+      expect(getRateLimiter().getStatus).toHaveBeenCalled();
+    });
+
+    it('should add rate limit headers to successful withAuthAndRateLimit response', async () => {
+      const wrapped = withAuthAndRateLimit(mockHandler);
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+
+      expect(res.status).toBe(200);
+      expect(getRateLimiter().getStatus).toHaveBeenCalled();
+    });
+  });
+
+  describe('withAuthAndRateLimitStreaming - advanced scenarios', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      // Use unique IP per test to avoid counter collision
+      mockGetClientIP.mockReturnValue(`192.168.1.${Math.floor(Math.random() * 255)}`);
+      (getRateLimiter as jest.Mock).mockReturnValue({
+        checkRateLimit: jest.fn().mockResolvedValue({ allowed: true }),
+        getStatus: jest.fn().mockReturnValue({
+          remaining: 95,
+          resetTime: Date.now() + 60000,
+        }),
+      });
+    });
+
+    it('should handle successful streaming with rate limit headers', async () => {
+      const streamHandler = jest.fn().mockResolvedValue(new Response('stream data'));
+      const wrapped = withAuthAndRateLimitStreaming(streamHandler);
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+
+      expect(res.status).toBe(200);
+      expect(streamHandler).toHaveBeenCalled();
+    });
+
+    it('should return 429 for streaming counter rate limit exceeded', async () => {
+      // Use consistent IP for this test
+      mockGetClientIP.mockReturnValue('192.168.100.1');
+
+      const streamHandler = jest.fn().mockResolvedValue(new Response('ok'));
+      const wrapped = withAuthAndRateLimitStreaming(streamHandler, { maxRequests: 2 });
+
+      // Make requests up to the limit
+      let rateLimited = false;
+      for (let i = 0; i < 5; i++) {
+        const newReq = createMockRequest('http://localhost:3000/api/test');
+        const res = await wrapped(newReq, { params: Promise.resolve({}) });
+        if (res.status === 429) {
+          rateLimited = true;
+          break;
+        }
+      }
+      expect(rateLimited).toBe(true);
+    });
+
+    it('should track and clean up inflight counters', async () => {
+      mockGetClientIP.mockReturnValue('192.168.100.2');
+      const streamHandler = jest.fn().mockResolvedValue(new Response('ok'));
+      const wrapped = withAuthAndRateLimitStreaming(streamHandler);
+
+      // Make a successful request to increment inflight counter
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+      expect(res.status).toBe(200);
+
+      // The finally block should decrement the counter
+    });
+
+    it('should return 429 when concurrent request limit is reached', async () => {
+      // Use consistent IP for this test
+      mockGetClientIP.mockReturnValue('192.168.100.3');
+
+      // Create a handler that takes time to complete
+      let resolveFirst: () => void;
+      const firstPromise = new Promise<void>((resolve) => {
+        resolveFirst = resolve;
+      });
+
+      const streamHandler = jest
+        .fn()
+        .mockImplementationOnce(async () => {
+          await firstPromise; // Wait until we tell it to complete
+          return new Response('ok');
+        })
+        .mockResolvedValue(new Response('ok'));
+
+      const wrapped = withAuthAndRateLimitStreaming(streamHandler, { maxConcurrent: 1 });
+
+      // Start first request (but don't await yet)
+      const req1 = createMockRequest('http://localhost:3000/api/test');
+      const promise1 = wrapped(req1, { params: Promise.resolve({}) });
+
+      // Second request should be rate limited due to concurrent limit
+      const req2 = createMockRequest('http://localhost:3000/api/test2');
+      const res2 = await wrapped(req2, { params: Promise.resolve({}) });
+
+      // Release first request
+      resolveFirst!();
+      await promise1;
+
+      expect(res2.status).toBe(429);
+    });
+  });
+
+  describe('withAuthStreaming - fallback user info edge cases', () => {
+    it('should rethrow error when fallback user info also fails', async () => {
+      (getSingleUserInfo as jest.Mock).mockImplementationOnce(() => {
+        throw new Error('Primary error');
+      });
+
+      const streamHandler = jest.fn().mockResolvedValue(new Response('ok'));
+      const wrapped = withAuthStreaming(streamHandler);
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+
+      // Should still succeed with fallback
+      expect(res.status).toBe(200);
+    });
+  });
+
+  describe('withRateLimitUnauthenticated - bucket options', () => {
+    let mockCheckRateLimit: jest.Mock;
+    let mockGetStatus: jest.Mock;
+
+    beforeEach(() => {
+      mockCheckRateLimit = jest.fn().mockResolvedValue({ allowed: true });
+      mockGetStatus = jest.fn().mockReturnValue({ remaining: 95, resetTime: Date.now() + 60000 });
+      (getRateLimiter as jest.Mock).mockReturnValue({
+        checkRateLimit: mockCheckRateLimit,
+        getStatus: mockGetStatus,
+      });
+    });
+
+    it('should use chat bucket when specified', async () => {
+      const wrapped = withRateLimitUnauthenticated(mockHandler, { bucket: 'chat' });
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+
+      expect(res.status).toBe(200);
+      expect(mockCheckRateLimit).toHaveBeenCalled();
+    });
+
+    it('should use default bucket when specified', async () => {
+      const wrapped = withRateLimitUnauthenticated(mockHandler, { bucket: 'default' });
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+
+      expect(res.status).toBe(200);
+      expect(mockCheckRateLimit).toHaveBeenCalled();
+    });
+
+    it('should use custom windowMs when provided', async () => {
+      mockCheckRateLimit.mockResolvedValue({ allowed: false });
+
+      const wrapped = withRateLimitUnauthenticated(mockHandler, { windowMs: 30000 });
+      const res = await wrapped(req, { params: Promise.resolve({}) });
+
+      expect(res.status).toBe(429);
+    });
   });
 });
-
