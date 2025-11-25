@@ -6,7 +6,7 @@ exports[`ChatEmptyState matches snapshot for desktop 1`] = `
     class="flex items-center justify-center py-16"
   >
     <div
-      class="animate-fade-in max-w-xl text-center px-12 py-12 bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] rounded-2xl shadow-apple-xl transition-all duration-base ease-out-smooth hover:shadow-apple-xl hover:-translate-y-0.5"
+      class="animate-fade-in max-w-xl text-center px-12 py-12 backdrop-blur-glass backdrop-saturate-glass shadow-apple-xl duration-base ease-out-smooth hover:shadow-apple-xl rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-white)] transition-all hover:-translate-y-0.5"
     >
       <div
         class="mb-8 flex flex-col items-center justify-center"
@@ -293,16 +293,17 @@ exports[`ChatEmptyState matches snapshot for desktop 1`] = `
           </svg>
         </div>
         <span
-          class="text-xs font-medium tracking-widest uppercase text-muted-foreground/70"
+          class="text-muted-foreground/70 text-xs font-medium tracking-widest uppercase"
         >
           New Moon
            • 
           0
-          % 
+          %
+           
           Illum.
         </span>
         <p
-          class="mt-6 max-w-lg animate-fade-in px-6 text-center text-base font-light italic leading-relaxed text-primary/70 animation-delay-300"
+          class="animate-fade-in text-primary/70 animation-delay-300 mt-6 max-w-lg px-6 text-center text-base leading-relaxed font-light italic"
         >
           "
           moon.quote.new
@@ -325,7 +326,7 @@ exports[`ChatEmptyState matches snapshot for mobile 1`] = `
     class="flex items-center justify-center py-8"
   >
     <div
-      class="animate-fade-in max-w-xl text-center px-6 py-8 bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] rounded-2xl shadow-apple-xl transition-all duration-base ease-out-smooth hover:shadow-apple-xl hover:-translate-y-0.5"
+      class="animate-fade-in max-w-xl text-center px-6 py-8 backdrop-blur-glass backdrop-saturate-glass shadow-apple-xl duration-base ease-out-smooth hover:shadow-apple-xl rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-white)] transition-all hover:-translate-y-0.5"
     >
       <div
         class="mb-6 flex flex-col items-center justify-center"
@@ -612,16 +613,17 @@ exports[`ChatEmptyState matches snapshot for mobile 1`] = `
           </svg>
         </div>
         <span
-          class="text-xs font-medium tracking-widest uppercase text-muted-foreground/70"
+          class="text-muted-foreground/70 text-xs font-medium tracking-widest uppercase"
         >
           New Moon
            • 
           0
-          % 
+          %
+           
           Illum.
         </span>
         <p
-          class="mt-6 max-w-lg animate-fade-in px-6 text-center text-base font-light italic leading-relaxed text-primary/70 animation-delay-300"
+          class="animate-fade-in text-primary/70 animation-delay-300 mt-6 max-w-lg px-6 text-center text-base leading-relaxed font-light italic"
         >
           "
           moon.quote.new
