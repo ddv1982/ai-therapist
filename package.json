@@ -59,7 +59,6 @@
     "@tailwindcss/postcss": "^4.1.16",
     "@tanstack/react-query": "^5.90.10",
     "@tanstack/react-table": "^8.20.5",
-    "@types/uuid": "^10.0.0",
     "ai": "^5.0.99",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
@@ -80,7 +79,6 @@
     "streamdown": "^1.4.0",
     "svix": "^1.80.0",
     "tailwind-merge": "^3.3.1",
-    "tailwindcss-animate": "^1.0.7",
     "uuid": "^12.0.0",
     "web-vitals": "^5.1.0",
     "zod": "^4.0.17"
@@ -97,6 +95,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.47.0",
     "@typescript-eslint/parser": "^8.47.0",
     "autoprefixer": "^10.4.21",
@@ -112,7 +111,6 @@
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.7.1",
     "tailwindcss": "^4.1.16",
-    "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.6.0",
     "web-streams-polyfill": "^4.2.0"
   }
