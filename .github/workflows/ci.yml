@@ -109,6 +109,7 @@ jobs:
         with:
           name: nextjs-build
           path: .next/
+          include-hidden-files: true
           retention-days: 1
 
   # Job 4: E2E Tests with Playwright
