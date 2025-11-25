@@ -79,7 +79,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
         {/* Situation */}
         {data.situation && (
           <div>
-            <h4 className="text-white/70 text-xs font-bold uppercase tracking-wide mb-2">
+            <h4 className="text-white font-semibold mb-2">
               {t('summary.situation')}
             </h4>
             <div 
@@ -94,7 +94,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
         {/* Initial Emotions */}
         {data.initialEmotions && data.initialEmotions.length > 0 && (
           <div>
-            <h4 className="text-white/70 text-xs font-bold uppercase tracking-wide mb-2">
+            <h4 className="text-white font-semibold mb-2">
               {t('summary.initialEmotions')}
             </h4>
             <div className="flex flex-wrap gap-2">
@@ -115,7 +115,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
         {/* Automatic Thoughts */}
         {data.automaticThoughts && data.automaticThoughts.length > 0 && (
           <div>
-            <h4 className="text-white/70 text-xs font-bold uppercase tracking-wide mb-2">
+            <h4 className="text-white font-semibold mb-2">
               {t('summary.automaticThoughts')}
             </h4>
             <div 
@@ -151,7 +151,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
         {/* Core Belief */}
         {data.coreBelief && (
           <div>
-            <h4 className="text-white/70 text-xs font-bold uppercase tracking-wide mb-2">
+            <h4 className="text-white font-semibold mb-2">
               {t('summary.coreBelief')}
             </h4>
             <div 
@@ -175,7 +175,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
         {/* Rational Alternative Thoughts */}
         {data.rationalThoughts && data.rationalThoughts.length > 0 && (
           <div>
-            <h4 className="text-white/70 text-xs font-bold uppercase tracking-wide mb-2">
+            <h4 className="text-white font-semibold mb-2">
               {t('summary.rationalThoughts')}
             </h4>
             <div 
@@ -211,7 +211,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
         {/* Active Schema Modes */}
         {data.schemaModes && data.schemaModes.length > 0 && (
           <div>
-            <h4 className="text-white/70 text-xs font-bold uppercase tracking-wide mb-2">
+            <h4 className="text-white font-semibold mb-2">
               {t('summary.activeSchemaModes')}
             </h4>
             <div 
@@ -252,7 +252,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
           <div className="space-y-4">
             {data.newBehaviors && data.newBehaviors.length > 0 && (
               <div>
-                <h4 className="text-white/70 text-xs font-bold uppercase tracking-wide mb-2">
+                <h4 className="text-white font-semibold mb-2">
                   {t('summary.newBehaviors')}
                 </h4>
                     <div 
@@ -280,7 +280,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
 
             {data.finalEmotions && data.finalEmotions.length > 0 && (
               <div>
-                <h4 className="text-white/70 text-xs font-bold uppercase tracking-wide mb-2">
+                <h4 className="text-white font-semibold mb-2">
                   {t('summary.emotionalProgress')}
                 </h4>
                 <div className="flex flex-wrap gap-2">
