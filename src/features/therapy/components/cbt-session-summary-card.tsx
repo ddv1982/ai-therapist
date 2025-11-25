@@ -72,11 +72,11 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
       aria-label={t('summary.ariaLabel', { date: data.date })}
       className={cn(
         'cbt-summary-card w-full',
-        'bg-primary text-white border-0 rounded-2xl',
+        'bg-primary text-white border-0 rounded-2xl overflow-hidden',
         className
       )}
     >
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-4 bg-black/10">
         <div className="flex items-center gap-3">
           <div className="bg-white/20 flex h-12 w-12 items-center justify-center rounded-full">
             <Brain className="text-white h-6 w-6" />
@@ -116,7 +116,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                 <Badge
                   key={index}
                   variant="secondary"
-                  className="bg-black/20 text-white px-2 py-0.5 font-bold border-0"
+                  className="bg-cyan-900/70 text-white px-3 py-1 font-semibold border-0"
                 >
                   {translateEmotion(emotion.emotion)}: {emotion.rating}/10
                 </Badge>
@@ -131,23 +131,23 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
             <div className="text-white">
               <h4 className="font-semibold">{t('summary.automaticThoughts')}</h4>
             </div>
-            <div className="bg-black/20 divide-y divide-white/10 rounded-md">
+            <div className="bg-cyan-900/60 divide-y divide-white/10 rounded-lg overflow-hidden">
               {data.automaticThoughts.slice(0, 3).map((thought, index) => (
                 <div
                   key={index}
-                  className="flex items-start justify-between gap-3 px-3 py-2 text-sm"
+                  className="flex items-start justify-between gap-3 px-4 py-3 text-sm"
                 >
-                  <div className="text-white/90 break-words">&ldquo;{thought.thought}&rdquo;</div>
+                  <div className="text-white break-words">&ldquo;{thought.thought}&rdquo;</div>
                   <Badge
                     variant="secondary"
-                    className="bg-black/30 text-white ml-2 text-sm border-0"
+                    className="bg-white/20 text-white ml-2 text-sm border-0 shrink-0"
                   >
                     {thought.credibility}/10
                   </Badge>
                 </div>
               ))}
               {data.automaticThoughts.length > 3 && (
-                <div className="px-3 py-2">
+                <div className="px-4 py-2 bg-cyan-950/40">
                   <p className="text-white/60 text-sm italic">
                     {t('summary.moreThoughts', { count: data.automaticThoughts.length - 3 })}
                   </p>
@@ -178,23 +178,23 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
             <div className="text-white">
               <h4 className="font-semibold">{t('summary.rationalThoughts')}</h4>
             </div>
-            <div className="bg-black/20 divide-y divide-white/10 rounded-md">
+            <div className="bg-emerald-900/50 divide-y divide-white/10 rounded-lg overflow-hidden">
               {data.rationalThoughts.slice(0, 2).map((thought, index) => (
                 <div
                   key={index}
-                  className="flex items-start justify-between gap-3 px-3 py-2 text-sm"
+                  className="flex items-start justify-between gap-3 px-4 py-3 text-sm"
                 >
-                  <div className="text-white/90 break-words">&ldquo;{thought.thought}&rdquo;</div>
+                  <div className="text-white break-words">&ldquo;{thought.thought}&rdquo;</div>
                   <Badge
                     variant="secondary"
-                    className="bg-green-600/80 text-white ml-2 text-sm border-0"
+                    className="bg-emerald-500 text-white ml-2 text-sm border-0 shrink-0"
                   >
                     {thought.confidence}/10
                   </Badge>
                 </div>
               ))}
               {data.rationalThoughts.length > 2 && (
-                <div className="px-3 py-2">
+                <div className="px-4 py-2 bg-emerald-950/40">
                   <p className="text-white/60 text-sm italic">
                     {t('summary.moreRationalThoughts', { count: data.rationalThoughts.length - 2 })}
                   </p>
@@ -210,17 +210,17 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
             <div className="text-white">
               <h4 className="font-semibold">{t('summary.activeSchemaModes')}</h4>
             </div>
-            <div className="bg-black/20 divide-y divide-white/10 rounded-md">
+            <div className="bg-purple-900/50 divide-y divide-white/10 rounded-lg overflow-hidden">
               {data.schemaModes.slice(0, 3).map((mode, index) => (
                 <div
                   key={index}
-                  className="flex items-start justify-between gap-3 px-3 py-2 text-sm"
+                  className="flex items-start justify-between gap-3 px-4 py-3 text-sm"
                 >
-                  <div className="text-white/90">{translateSchemaModeLabel(mode.name)}</div>
+                  <div className="text-white">{translateSchemaModeLabel(mode.name)}</div>
                   {mode.intensity && (
                     <Badge
                       variant="secondary"
-                      className="bg-purple-600/80 text-white ml-2 text-sm border-0"
+                      className="bg-purple-500 text-white ml-2 text-sm border-0 shrink-0"
                     >
                       {mode.intensity}/10
                     </Badge>
@@ -228,7 +228,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                 </div>
               ))}
               {data.schemaModes.length > 3 && (
-                <div className="px-3 py-2">
+                <div className="px-4 py-2 bg-purple-950/40">
                   <p className="text-white/60 text-sm italic">
                     {t('summary.moreModes', { count: data.schemaModes.length - 3 })}
                   </p>
@@ -252,17 +252,17 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                     <p className="text-white mb-1 text-sm font-semibold">
                       {t('summary.newBehaviors')}
                     </p>
-                    <div className="bg-black/20 divide-y divide-white/10 rounded-md">
+                    <div className="bg-cyan-900/60 divide-y divide-white/10 rounded-lg overflow-hidden">
                       {data.newBehaviors.slice(0, 3).map((behavior, index) => (
                         <div
                           key={index}
-                          className="text-white/90 flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                          className="text-white flex items-center justify-between gap-3 px-4 py-3 text-sm"
                         >
                           <span className="truncate">{behavior}</span>
                         </div>
                       ))}
                       {data.newBehaviors.length > 3 && (
-                        <div className="px-3 py-2">
+                        <div className="px-4 py-2 bg-cyan-950/40">
                           <p className="text-white/60 text-[11px] italic">
                             {t('summary.moreStrategies', { count: data.newBehaviors.length - 3 })}
                           </p>
@@ -282,7 +282,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                         <Badge
                           key={index}
                           variant="secondary"
-                          className="bg-black/20 text-white px-2 py-0.5 text-sm border-0"
+                          className="bg-cyan-900/70 text-white px-3 py-1 text-sm border-0"
                         >
                           {translateEmotion(emotion.emotion)}: {emotion.rating}/10
                         </Badge>
