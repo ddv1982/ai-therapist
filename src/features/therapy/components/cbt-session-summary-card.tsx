@@ -102,7 +102,12 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
             <div className="text-white">
               <h4 className="font-semibold">{t('summary.situation')}</h4>
             </div>
-            <p className="text-white/90 break-words">{data.situation}</p>
+            <div 
+              className="rounded-lg overflow-hidden px-4 py-3"
+              style={{ backgroundColor: 'rgba(0, 50, 70, 0.7)' }}
+            >
+              <p className="text-white break-words text-sm">{data.situation}</p>
+            </div>
           </div>
         )}
 
@@ -170,11 +175,11 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
               <h4 className="font-semibold">{t('summary.coreBelief')}</h4>
             </div>
             <div 
-              className="rounded-lg overflow-hidden px-4 py-3"
+              className="rounded-lg overflow-hidden"
               style={{ backgroundColor: 'rgba(0, 50, 70, 0.7)' }}
             >
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-white break-words text-sm">&ldquo;{data.coreBelief.belief}&rdquo;</p>
+              <div className="flex items-start justify-between gap-3 px-4 py-3 text-sm">
+                <p className="text-white break-words">&ldquo;{data.coreBelief.belief}&rdquo;</p>
                 <Badge
                   variant="secondary"
                   className="text-white ml-2 text-sm border-0 shrink-0"
