@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const convexCommand = process.env.PLAYWRIGHT_CONVEX_COMMAND ?? 'npx convex dev';
+const webCommand = process.env.PLAYWRIGHT_WEB_COMMAND ?? 'npm run dev:local';
+
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
@@ -57,7 +60,7 @@ export default defineConfig({
   webServer: [
     {
       // Start Convex backend first - required for API routes that use ConvexHttpClient
-      command: 'npx convex dev',
+      command: convexCommand,
       url: 'http://127.0.0.1:3210',
       reuseExistingServer: true,
       stdout: 'pipe',
@@ -66,7 +69,7 @@ export default defineConfig({
     },
     {
       // Then start Next.js dev server
-      command: 'npm run dev:local',
+      command: webCommand,
       // Wait for health endpoint to be ready instead of the home page
       url: 'http://localhost:4000/api/health',
       reuseExistingServer: true,
