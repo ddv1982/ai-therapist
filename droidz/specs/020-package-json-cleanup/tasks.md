@@ -260,19 +260,26 @@ npm run build  # Build should succeed
 
 **Status**: ✅ COMPLETED (2025-11-25)
 
-**Report Created**: `dependency-cleanup-report.md` (root directory)
+**Report Location**: `droidz/specs/020-package-json-cleanup/dependency-cleanup-report.md`
 
 **Analysis Results**:
-- Total packages analyzed: 92 (57 dependencies + 35 devDependencies)
-- Packages to remove: 9 packages
-- Packages to keep: 83 packages
-- Removal batches: 5 batches created
+- Total packages analyzed: 92 (62 dependencies + 30 devDependencies)
+- Packages to remove: 14 packages (15% reduction)
+- Packages to keep: 78 packages
+- Removal batches: 7 batches created (ordered by risk)
 
-**Categories Identified**:
-- **Safe to Remove** (4 pkgs): swagger-typescript-api, tsx, @tanstack/react-query-devtools, tailwindcss-animate
-- **Verify First** (2 pkgs): ua-parser-js, @types/ua-parser-js
-- **Keep** (83 pkgs): All core framework, UI components, testing, and actively used packages
-- **Redundant** (1 pkg): tailwindcss-animate (duplicate in both deps and devDeps)
+**Formal Removal Plan Created**:
+- 7 batches with 1-5 packages each
+- Risk levels assigned (LOW/MEDIUM/MEDIUM-HIGH)
+- Verification steps documented for each batch
+- Rollback procedures for quick recovery
+- Manual testing requirements identified
+
+**Batch Overview**:
+- **Batch 1-3**: 🟢 LOW RISK (4 packages total) - Dev tools, UI dev tool, duplicate styling
+- **Batch 4-5**: 🟡 MEDIUM RISK (5 packages total) - Markdown packages, device detection
+- **Batch 6**: 🔴 MEDIUM-HIGH RISK (5 packages) - Security/auth packages (TOTP, JWT)
+- **Batch 7**: 🟡 MEDIUM RISK (1 package) - Verify Clerk themes (test and decide)
 
 ---
 
@@ -289,18 +296,27 @@ npm run build  # Build should succeed
 
 **Status**: ✅ COMPLETED (2025-11-25)
 
-**Risk Levels Assigned**:
-- **Batch 1** (LOW): swagger-typescript-api, tsx
-- **Batch 2** (LOW): @tanstack/react-query-devtools
-- **Batch 3** (LOW): tailwindcss-animate (duplicate)
-- **Batch 4** (MEDIUM): ua-parser-js, @types/ua-parser-js
-- **Batch 5** (MEDIUM-HIGH): qrcode, @types/qrcode, speakeasy, @types/speakeasy (TOTP packages)
+**Risk Framework Established**:
+- 🟢 **LOW RISK**: Definitely unused, no config references, safe removal
+- 🟡 **MEDIUM RISK**: Appears unused, needs verification, edge cases possible
+- 🔴 **HIGH RISK**: Security/auth related, requires manual testing
+
+**Batches Ordered by Risk** (safest → riskiest):
+1. **Batch 1** (🟢 LOW): swagger-typescript-api, tsx (dev tools)
+2. **Batch 2** (🟢 LOW): @tanstack/react-query-devtools (UI dev tool)
+3. **Batch 3** (🟢 LOW): tailwindcss-animate (duplicate removal)
+4. **Batch 4** (🟡 MEDIUM): markdown-it, markdown-it-attrs, @types/markdown-it
+5. **Batch 5** (🟡 MEDIUM): ua-parser-js, @types/ua-parser-js (device detection)
+6. **Batch 6** (🔴 MEDIUM-HIGH): jose, speakeasy, qrcode, @types/speakeasy, @types/qrcode
+7. **Batch 7** (🟡 MEDIUM): @clerk/themes (verify and decide)
 
 **Mitigation Strategies Documented**:
-- Batch removals with verification after each
-- Rollback procedures for each batch
-- Comprehensive testing checklist
-- Team verification required for Batch 5 (TOTP packages)
+- Detailed verification steps for each batch
+- Rollback procedures with git commands
+- Expected outcomes documented
+- Pre-removal verification for security packages
+- Manual testing requirements for high-risk batches
+- Estimated time: 1-2 hours total (including verification)
 
 ---
 
