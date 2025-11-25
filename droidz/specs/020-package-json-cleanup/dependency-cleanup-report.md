@@ -420,53 +420,44 @@ These packages were flagged by depcheck but are actually required:
 
 ---
 
-## 🚀 Next Steps
+## 🎯 Phase 3: Formal Removal Plan
 
-### Phase 3: Execute Removals
+### Risk Assessment Framework
 
-#### Batch 1: Low Risk (UI/Utility packages that are clearly unused)
+**Risk Levels:**
+- 🟢 **LOW**: Package definitely unused, no config references, safe removal
+- 🟡 **MEDIUM**: Appears unused, needs verification, edge cases possible
+- 🔴 **HIGH**: Security/auth related, or requires manual testing
+
+### Batch Strategy
+
+Batches are ordered from **lowest to highest risk** to catch issues early. Each batch contains 3-5 related packages. After each batch:
+1. Clean install: `npm install`
+2. Type check: `npx tsc --noEmit`
+3. Lint: `npm run lint`
+4. Build: `npm run build`
+5. Tests: `npm test`
+6. Commit if successful
+
+---
+
+### 📦 Batch 1: Unused Dev Tools (🟢 LOW RISK)
+
+**Packages to Remove (2):**
+1. `swagger-typescript-api` (devDep) - Not found in any npm scripts, redundant with openapi-typescript
+2. `tsx` (devDep) - Not found in scripts, not imported anywhere
+
+**Risk Level:** 🟢 LOW
+- These are dev tools not referenced in any script or code
+- No config files reference them
+- No runtime impact
+
+**Commands:**
 ```bash
-npm uninstall @tanstack/react-query-devtools ua-parser-js
+npm uninstall --save-dev swagger-typescript-api tsx
 ```
 
-#### Batch 2: Medium Risk (Markdown packages)
-```bash
-npm uninstall markdown-it markdown-it-attrs @types/markdown-it
-```
-
-#### Batch 3: Security Packages (Verify TOTP not used first!)
-```bash
-npm uninstall jose speakeasy qrcode @types/speakeasy @types/qrcode @types/ua-parser-js
-```
-
-#### Batch 4: Dev Tools
-```bash
-npm uninstall --save-dev @eslint/eslintrc typescript-eslint swagger-typescript-api
-```
-
-#### Batch 5: Install Missing Packages
-```bash
-npm install --save-dev eslint-plugin-react-hooks
-npm install server-only @ai-sdk/provider
-npm install --save-dev @jest/globals @ai-sdk/provider-utils
-```
-
-#### Batch 6: Move Misplaced Type Definitions
-```bash
-npm uninstall @types/uuid
-npm install --save-dev @types/uuid
-```
-
-#### Batch 7: Verify @clerk/themes
-```bash
-# Test build and app without @clerk/themes
-npm uninstall @clerk/themes
-npm run build && npm run dev
-# If Clerk UI breaks, reinstall:
-npm install @clerk/themes
-```
-
-### Verification After Each Batch:
+**Verification:**
 ```bash
 npm install
 npm run lint
@@ -474,6 +465,431 @@ npx tsc --noEmit
 npm run build
 npm test
 ```
+
+**Expected Outcome:**
+- ✅ All verifications pass
+- ✅ No missing module errors
+- ✅ Build and tests succeed
+
+**Rollback (if needed):**
+```bash
+npm install --save-dev swagger-typescript-api tsx
+```
+
+**Mitigation:**
+- If any script uses `tsx`, it will fail immediately in verification
+- Easy to restore if needed
+
+---
+
+### 📦 Batch 2: Unused UI Dev Tool (🟢 LOW RISK)
+
+**Packages to Remove (1):**
+1. `@tanstack/react-query-devtools` (dep) - Dev tool not imported anywhere, should be devDep anyway
+
+**Risk Level:** 🟢 LOW
+- Dev tool only, not used in production
+- Not imported in any component
+- Small package
+
+**Commands:**
+```bash
+npm uninstall @tanstack/react-query-devtools
+```
+
+**Verification:**
+```bash
+npm install
+npx tsc --noEmit
+npm run build
+npm test
+```
+
+**Expected Outcome:**
+- ✅ All verifications pass
+- ✅ React Query still works (core package separate)
+
+**Rollback (if needed):**
+```bash
+npm install @tanstack/react-query-devtools
+```
+
+**Mitigation:**
+- DevTools is optional component, not required for React Query functionality
+- Can reinstall if developers want debugging UI
+
+---
+
+### 📦 Batch 3: Duplicate/Unused Styling (🟢 LOW RISK)
+
+**Packages to Remove (1):**
+1. `tailwindcss-animate` (dep) - Duplicate entry, already in devDependencies
+
+**Risk Level:** 🟢 LOW
+- Package is correctly installed in devDependencies
+- This is just removing duplicate from dependencies
+- No actual removal of functionality
+
+**Commands:**
+```bash
+npm uninstall tailwindcss-animate
+# Verify it still exists in devDependencies
+npm ls tailwindcss-animate
+```
+
+**Verification:**
+```bash
+npm install
+npm run build
+npm test
+```
+
+**Expected Outcome:**
+- ✅ tailwindcss-animate still available via devDependencies
+- ✅ Animations still work
+- ✅ Tailwind config still valid
+
+**Rollback (if needed):**
+```bash
+npm install tailwindcss-animate
+```
+
+**Mitigation:**
+- Not actually removing the package, just cleaning up duplicate
+- If build fails, package is still in devDeps
+
+---
+
+### 📦 Batch 4: Unused Markdown Packages (🟡 MEDIUM RISK)
+
+**Packages to Remove (3):**
+1. `markdown-it` (dep) - Not imported anywhere, likely replaced by streamdown
+2. `markdown-it-attrs` (dep) - Plugin for markdown-it, no longer needed
+3. `@types/markdown-it` (devDep) - Type definitions for removed package
+
+**Risk Level:** 🟡 MEDIUM
+- Not found in codebase, but markdown is core to chat functionality
+- Need to verify streamdown fully replaced markdown-it
+- Could impact message rendering if still used indirectly
+
+**Commands:**
+```bash
+npm uninstall markdown-it markdown-it-attrs
+npm uninstall --save-dev @types/markdown-it
+```
+
+**Verification (Extra thorough):**
+```bash
+npm install
+npx tsc --noEmit
+npm run lint
+npm run build
+npm test
+# Extra: Test chat message rendering manually
+```
+
+**Expected Outcome:**
+- ✅ All verifications pass
+- ✅ streamdown handles markdown rendering
+- ✅ Message formatting works correctly
+
+**Rollback (if needed):**
+```bash
+npm install markdown-it markdown-it-attrs
+npm install --save-dev @types/markdown-it
+```
+
+**Mitigation:**
+- Verify message rendering in chat after removal
+- Check for any dynamic requires or plugin loading
+- Test with formatted messages (bold, italic, lists, code blocks)
+
+---
+
+### 📦 Batch 5: Unused Device Detection (🟡 MEDIUM RISK)
+
+**Packages to Remove (2):**
+1. `ua-parser-js` (dep) - User agent parsing, not found in codebase
+2. `@types/ua-parser-js` (dep) - Type definitions (incorrectly in deps)
+
+**Risk Level:** 🟡 MEDIUM
+- Device detection could be used for analytics or responsive features
+- Need to verify no dynamic imports or indirect usage
+- Type definition in wrong location (should be devDep)
+
+**Commands:**
+```bash
+npm uninstall ua-parser-js @types/ua-parser-js
+```
+
+**Verification:**
+```bash
+npm install
+npx tsc --noEmit
+npm run build
+npm test
+# Check web-vitals and analytics still work
+```
+
+**Expected Outcome:**
+- ✅ All verifications pass
+- ✅ No device detection features broken
+- ✅ Analytics still functional
+
+**Rollback (if needed):**
+```bash
+npm install ua-parser-js
+npm install --save-dev @types/ua-parser-js  # Correct location
+```
+
+**Mitigation:**
+- Grep for 'navigator.userAgent' to check for custom UA parsing
+- Test analytics and monitoring features
+- Check middleware.ts for device detection logic
+
+---
+
+### 📦 Batch 6: Unused Security/Auth Packages (🔴 MEDIUM-HIGH RISK)
+
+**Packages to Remove (5):**
+1. `qrcode` (dep) - QR code generation for TOTP, not used
+2. `@types/qrcode` (dep) - Type definitions (wrong location)
+3. `speakeasy` (dep) - TOTP/MFA implementation, not used
+4. `@types/speakeasy` (dep) - Type definitions (wrong location)
+5. `jose` (dep) - JWT library, not found in codebase
+
+**Risk Level:** 🔴 MEDIUM-HIGH
+- ⚠️ Security-related packages require extra caution
+- Appears to be unused custom TOTP implementation
+- Clerk likely provides built-in MFA instead
+- Need to verify no MFA features break
+
+**Pre-Removal Verification:**
+```bash
+# Verify TOTP/MFA not used
+rg "totp|speakeasy|qrcode|QRCode" src/ convex/ --ignore-case
+rg "jose|SignJWT|jwtVerify" src/ convex/
+
+# Check if Clerk handles MFA
+rg "clerk.*mfa|clerk.*totp" src/ --ignore-case
+```
+
+**Commands:**
+```bash
+npm uninstall jose speakeasy qrcode @types/speakeasy @types/qrcode
+```
+
+**Verification (Thorough):**
+```bash
+npm install
+npx tsc --noEmit
+npm run lint
+npm run build
+npm test
+npm run test:e2e  # Extra: E2E tests for auth flows
+```
+
+**Expected Outcome:**
+- ✅ All verifications pass
+- ✅ Authentication still works
+- ✅ No MFA features broken (Clerk handles it)
+- ✅ No JWT validation errors
+
+**Rollback (if needed):**
+```bash
+npm install jose speakeasy qrcode
+npm install --save-dev @types/speakeasy @types/qrcode
+```
+
+**Mitigation:**
+- **CRITICAL:** Test authentication flow thoroughly
+- Verify Clerk's built-in MFA works
+- Check webhook signature verification (uses svix, not jose)
+- Test both sign-up and sign-in flows
+- Consider keeping packages if any uncertainty remains
+
+**Manual Testing Required:**
+1. Test user authentication
+2. Test Clerk MFA setup (if enabled)
+3. Verify webhook processing works
+4. Check for any JWT validation in API routes
+
+---
+
+### 📦 Batch 7: Verify Clerk Themes (🟡 MEDIUM RISK)
+
+**Packages to Verify (1):**
+1. `@clerk/themes` (dep) - Depcheck says unused, but may be implicit
+
+**Risk Level:** 🟡 MEDIUM
+- Theme package may be auto-loaded by Clerk
+- Could affect UI appearance
+- Small package (~50KB), not critical to remove
+
+**Test Procedure:**
+```bash
+# Backup first
+cp package.json package.json.batch7-backup
+
+# Remove and test
+npm uninstall @clerk/themes
+npm install
+npm run build
+npm run dev
+
+# Manual verification in browser:
+# 1. Check Clerk UI components (sign-in, sign-up)
+# 2. Verify styling looks correct
+# 3. Test dark mode if applicable
+```
+
+**Decision Tree:**
+- ✅ If UI looks correct → **REMOVE (commit)**
+- ❌ If Clerk UI breaks or looks unstyled → **KEEP (restore)**
+
+**Rollback (if needed):**
+```bash
+npm install @clerk/themes
+# Or restore from backup
+cp package.json.batch7-backup package.json
+npm install
+```
+
+**Mitigation:**
+- This is a "verify and decide" batch, not automatic removal
+- Can easily restore if UI is affected
+- Check Clerk documentation for theme requirements
+
+---
+
+### 📦 Summary: Removal Plan
+
+| Batch | Risk | Packages | Type | Verification Time |
+|-------|------|----------|------|-------------------|
+| 1 | 🟢 LOW | 2 | Dev Tools | ~5 min |
+| 2 | 🟢 LOW | 1 | UI Dev Tool | ~5 min |
+| 3 | 🟢 LOW | 1 | Duplicate | ~5 min |
+| 4 | 🟡 MEDIUM | 3 | Markdown | ~10 min |
+| 5 | 🟡 MEDIUM | 2 | Device Detection | ~10 min |
+| 6 | 🔴 MEDIUM-HIGH | 5 | Security/Auth | ~20 min + manual testing |
+| 7 | 🟡 MEDIUM | 1 | Verify Theme | ~10 min + manual testing |
+
+**Total Estimated Time:** 1-2 hours (including verification and manual testing)
+
+**Total Packages to Remove:** 14 packages (15% reduction)
+
+---
+
+### 🔄 General Rollback Procedure
+
+If any batch causes issues:
+
+**Quick Rollback:**
+```bash
+# Restore specific packages
+npm install <package-names>
+
+# Or use git
+git checkout package.json package-lock.json
+npm install
+```
+
+**Full Rollback (if multiple batches committed):**
+```bash
+# Find the commit before cleanup started
+git log --oneline -10
+
+# Revert to that commit
+git revert <commit-hash>
+npm install
+```
+
+**Identify Problem Package:**
+If batch fails, reinstall one package at a time to identify which is needed:
+```bash
+npm install package1
+npm run build && npm test  # If passes, package1 was needed
+```
+
+---
+
+### ✅ Verification Checklist (After Each Batch)
+
+**Quick Verification (after Batches 1-3):**
+- [ ] `npm install` completes without errors
+- [ ] `npx tsc --noEmit` passes (no type errors)
+- [ ] `npm run lint` passes (no linting errors)
+- [ ] `npm run build` succeeds (production build)
+- [ ] `npm test` passes (all unit tests)
+
+**Thorough Verification (after Batches 4-6):**
+- [ ] All quick verification steps pass
+- [ ] `npm run test:coverage` meets thresholds (≥70%)
+- [ ] No console errors during build
+- [ ] Check specific functionality (markdown rendering, auth flows, etc.)
+
+**Manual Testing (after Batch 6-7):**
+- [ ] Authentication works (sign-up, sign-in, sign-out)
+- [ ] Clerk UI components render correctly
+- [ ] No missing styles or broken layouts
+- [ ] Chat functionality works
+- [ ] Message rendering correct (especially markdown)
+
+---
+
+### 🚀 Execution Order
+
+**Phase 3 Complete:** ✅ Removal plan created with risk assessment
+
+**Next: Phase 4 - Execute Removals**
+
+Execute batches in order:
+1. ✅ Batch 1 → Commit if successful
+2. ✅ Batch 2 → Commit if successful
+3. ✅ Batch 3 → Commit if successful
+4. ✅ Batch 4 → Commit if successful (extra verification)
+5. ✅ Batch 5 → Commit if successful (extra verification)
+6. ✅ Batch 6 → Commit if successful (thorough testing required)
+7. ✅ Batch 7 → Test and decide (manual verification)
+
+After all batches complete → **Phase 5: Comprehensive Verification**
+
+---
+
+## 🚀 Additional Actions (Not Removal, but Cleanup)
+
+These are not removals but organization fixes:
+
+### Action A: Move Misplaced Type Definitions
+**Issue:** `@types/uuid` is in `dependencies`, should be in `devDependencies`
+
+**Fix:**
+```bash
+npm uninstall @types/uuid
+npm install --save-dev @types/uuid
+```
+
+**Risk:** 🟢 LOW - Just moving to correct location
+
+---
+
+### Action B: Install Missing Packages (Discovered in Analysis)
+**Issue:** Packages imported but not in package.json
+
+**Required Packages:**
+```bash
+# These should be in dependencies (found in src/ code)
+npm install server-only @ai-sdk/provider
+
+# These should be in devDependencies (found in tests)
+npm install --save-dev eslint-plugin-react-hooks @jest/globals @ai-sdk/provider-utils
+```
+
+**Risk:** 🟢 LOW - Adding missing dependencies, should fix issues not cause them
+
+**Note:** These installs can be done before or after removals
+
+---
 
 ---
 
