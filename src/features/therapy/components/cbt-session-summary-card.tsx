@@ -86,7 +86,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
               className="rounded-lg overflow-hidden px-4 py-3"
               style={{ backgroundColor: 'rgba(0, 50, 70, 0.7)' }}
             >
-              <p className="text-white break-words text-sm">{data.situation}</p>
+              <p className="text-white/90 break-words text-sm font-normal">{data.situation}</p>
             </div>
           </div>
         )}
@@ -102,7 +102,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                 <Badge
                   key={index}
                   variant="secondary"
-                  className="text-white px-3 py-1 font-semibold border-0"
+                  className="text-white/90 px-3 py-1 font-normal border-0"
                   style={{ backgroundColor: 'rgba(0, 50, 70, 0.8)' }}
                 >
                   {translateEmotion(emotion.emotion)}: {emotion.rating}/10
@@ -127,7 +127,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                   key={index}
                   className="flex items-start justify-between gap-3 px-4 py-3 text-sm"
                 >
-                  <div className="text-white break-words">&ldquo;{thought.thought}&rdquo;</div>
+                  <div className="text-white/90 break-words font-normal">&ldquo;{thought.thought}&rdquo;</div>
                   <Badge
                     variant="secondary"
                     className="text-white ml-2 text-sm border-0 shrink-0"
@@ -159,7 +159,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
               style={{ backgroundColor: 'rgba(0, 50, 70, 0.7)' }}
             >
               <div className="flex items-start justify-between gap-3 px-4 py-3 text-sm">
-                <div className="text-white break-words">&ldquo;{data.coreBelief.belief}&rdquo;</div>
+                <div className="text-white/90 break-words font-normal">&ldquo;{data.coreBelief.belief}&rdquo;</div>
                 <Badge
                   variant="secondary"
                   className="text-white ml-2 text-sm border-0 shrink-0"
@@ -187,7 +187,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                   key={index}
                   className="flex items-start justify-between gap-3 px-4 py-3 text-sm"
                 >
-                  <div className="text-white break-words">&ldquo;{thought.thought}&rdquo;</div>
+                  <div className="text-white/90 break-words font-normal">&ldquo;{thought.thought}&rdquo;</div>
                   <Badge
                     variant="secondary"
                     className="text-white ml-2 text-sm border-0 shrink-0"
@@ -223,7 +223,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                   key={index}
                   className="flex items-start justify-between gap-3 px-4 py-3 text-sm"
                 >
-                  <div className="text-white">{translateSchemaModeLabel(mode.name)}</div>
+                  <div className="text-white/90 font-normal">{translateSchemaModeLabel(mode.name)}</div>
                   {mode.intensity && (
                     <Badge
                       variant="secondary"
@@ -262,7 +262,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                       {data.newBehaviors.slice(0, 3).map((behavior, index) => (
                         <div
                           key={index}
-                          className="text-white flex items-center justify-between gap-3 px-4 py-3 text-sm"
+                          className="text-white/90 font-normal flex items-center justify-between gap-3 px-4 py-3 text-sm"
                         >
                           <span className="truncate">{behavior}</span>
                         </div>
@@ -288,7 +288,7 @@ export function CBTSessionSummaryCard({ data, className }: CBTSessionSummaryCard
                     <Badge
                       key={index}
                       variant="secondary"
-                      className="text-white px-3 py-1 text-sm border-0"
+                      className="text-white/90 px-3 py-1 text-sm font-normal border-0"
                       style={{ backgroundColor: 'rgba(0, 50, 70, 0.8)' }}
                     >
                       {translateEmotion(emotion.emotion)}: {emotion.rating}/10
