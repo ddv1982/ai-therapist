@@ -1,5 +1,18 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+// Validators are used in defineTable schema definition below
+// Using flexible validators to support both string arrays and structured objects
+import {
+  messageMetadataValidator,
+  flexibleKeyPointsValidator,
+  flexibleTherapeuticInsightsValidator,
+  flexiblePatternsIdentifiedValidator,
+  flexibleActionItemsValidator,
+  flexibleCognitiveDistortionsValidator,
+  schemaAnalysisValidator,
+  therapeuticFrameworksValidator,
+  recommendationsValidator,
+} from './validators';
 // Dates are stored as epoch milliseconds (number)
 export default defineSchema({
   users: defineTable({
@@ -37,7 +50,7 @@ export default defineSchema({
     role: v.string(),
     content: v.string(),
     modelUsed: v.optional(v.string()),
-    metadata: v.optional(v.any()),
+    metadata: messageMetadataValidator,
     timestamp: v.number(),
     createdAt: v.number(),
   }).index('by_session_time', ['sessionId', 'timestamp']),
@@ -45,16 +58,16 @@ export default defineSchema({
   sessionReports: defineTable({
     sessionId: v.id('sessions'),
     reportContent: v.string(),
-    keyPoints: v.any(),
-    therapeuticInsights: v.any(),
-    patternsIdentified: v.any(),
-    actionItems: v.any(),
+    keyPoints: flexibleKeyPointsValidator,
+    therapeuticInsights: flexibleTherapeuticInsightsValidator,
+    patternsIdentified: flexiblePatternsIdentifiedValidator,
+    actionItems: flexibleActionItemsValidator,
     moodAssessment: v.optional(v.string()),
     progressNotes: v.optional(v.string()),
-    cognitiveDistortions: v.optional(v.any()),
-    schemaAnalysis: v.optional(v.any()),
-    therapeuticFrameworks: v.optional(v.any()),
-    recommendations: v.optional(v.any()),
+    cognitiveDistortions: flexibleCognitiveDistortionsValidator,
+    schemaAnalysis: schemaAnalysisValidator,
+    therapeuticFrameworks: therapeuticFrameworksValidator,
+    recommendations: recommendationsValidator,
     analysisConfidence: v.optional(v.number()),
     analysisVersion: v.optional(v.string()),
     createdAt: v.number(),

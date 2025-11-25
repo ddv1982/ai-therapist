@@ -3,6 +3,16 @@ import type { QueryCtx, MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { QUERY_LIMITS } from './constants';
 import type { Doc } from './_generated/dataModel';
+import {
+  flexibleKeyPointsValidator,
+  flexibleTherapeuticInsightsValidator,
+  flexiblePatternsIdentifiedValidator,
+  flexibleActionItemsValidator,
+  flexibleCognitiveDistortionsValidator,
+  schemaAnalysisValidator,
+  therapeuticFrameworksValidator,
+  recommendationsValidator,
+} from './validators';
 
 export const listBySession = query({
   args: { sessionId: v.id('sessions') },
@@ -19,16 +29,16 @@ export const create = mutation({
   args: {
     sessionId: v.id('sessions'),
     reportContent: v.string(),
-    keyPoints: v.any(),
-    therapeuticInsights: v.any(),
-    patternsIdentified: v.any(),
-    actionItems: v.any(),
+    keyPoints: flexibleKeyPointsValidator,
+    therapeuticInsights: flexibleTherapeuticInsightsValidator,
+    patternsIdentified: flexiblePatternsIdentifiedValidator,
+    actionItems: flexibleActionItemsValidator,
     moodAssessment: v.optional(v.string()),
     progressNotes: v.optional(v.string()),
-    cognitiveDistortions: v.optional(v.any()),
-    schemaAnalysis: v.optional(v.any()),
-    therapeuticFrameworks: v.optional(v.any()),
-    recommendations: v.optional(v.any()),
+    cognitiveDistortions: flexibleCognitiveDistortionsValidator,
+    schemaAnalysis: schemaAnalysisValidator,
+    therapeuticFrameworks: therapeuticFrameworksValidator,
+    recommendations: recommendationsValidator,
     analysisConfidence: v.optional(v.number()),
     analysisVersion: v.optional(v.string()),
   },
@@ -97,9 +107,7 @@ export const listRecent = query({
     const allUserReports = reportsPerSession.flat();
 
     // Sort all reports by creation time (descending) and apply limit
-    return allUserReports
-      .sort((a, b) => b.createdAt - a.createdAt)
-      .slice(0, limit_clamped);
+    return allUserReports.sort((a, b) => b.createdAt - a.createdAt).slice(0, limit_clamped);
   },
 });
 

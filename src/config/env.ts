@@ -19,6 +19,19 @@ const coerceBoolean = (defaultValue: boolean) =>
       return defaultValue;
     });
 
+/**
+ * Get the appropriate default log level based on NODE_ENV.
+ * Development defaults to 'debug' for verbose output.
+ * Production/test defaults to 'info' for cleaner logs.
+ */
+function getDefaultLogLevel(): 'error' | 'warn' | 'info' | 'debug' {
+  const nodeEnv = process.env.NODE_ENV ?? envDefaults.NODE_ENV;
+  if (nodeEnv === 'development') {
+    return 'debug';
+  }
+  return 'info';
+}
+
 const serverEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default(envDefaults.NODE_ENV),
   PORT: z.coerce.number().int().positive().default(envDefaults.PORT),
@@ -34,17 +47,41 @@ const serverEnvSchema = z.object({
   OLLAMA_BASE_URL: z.string().default(envDefaults.OLLAMA_BASE_URL),
   OLLAMA_MODEL_ID: z.string().default(envDefaults.OLLAMA_MODEL_ID),
 
-  RATE_LIMIT_BLOCK_MS: z.coerce.number().int().nonnegative().default(envDefaults.RATE_LIMIT_BLOCK_MS),
-  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().nonnegative().default(envDefaults.RATE_LIMIT_WINDOW_MS),
+  RATE_LIMIT_BLOCK_MS: z.coerce
+    .number()
+    .int()
+    .nonnegative()
+    .default(envDefaults.RATE_LIMIT_BLOCK_MS),
+  RATE_LIMIT_WINDOW_MS: z.coerce
+    .number()
+    .int()
+    .nonnegative()
+    .default(envDefaults.RATE_LIMIT_WINDOW_MS),
   RATE_LIMIT_MAX_REQS: z.coerce.number().int().positive().default(envDefaults.RATE_LIMIT_MAX_REQS),
   RATE_LIMIT_DISABLED: coerceBoolean(envDefaults.RATE_LIMIT_DISABLED),
 
   CHAT_WINDOW_MS: z.coerce.number().int().nonnegative().default(envDefaults.CHAT_WINDOW_MS),
   CHAT_MAX_REQS: z.coerce.number().int().positive().default(envDefaults.CHAT_MAX_REQS),
-  CHAT_MAX_CONCURRENCY: z.coerce.number().int().positive().default(envDefaults.CHAT_MAX_CONCURRENCY),
-  CHAT_CLEANUP_INTERVAL_MS: z.coerce.number().int().min(1000).default(envDefaults.CHAT_CLEANUP_INTERVAL_MS),
-  CHAT_RESPONSE_MAX_CHARS: z.coerce.number().int().positive().default(envDefaults.CHAT_RESPONSE_MAX_CHARS),
-  CHAT_INPUT_MAX_BYTES: z.coerce.number().int().positive().default(envDefaults.CHAT_INPUT_MAX_BYTES),
+  CHAT_MAX_CONCURRENCY: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(envDefaults.CHAT_MAX_CONCURRENCY),
+  CHAT_CLEANUP_INTERVAL_MS: z.coerce
+    .number()
+    .int()
+    .min(1000)
+    .default(envDefaults.CHAT_CLEANUP_INTERVAL_MS),
+  CHAT_RESPONSE_MAX_CHARS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(envDefaults.CHAT_RESPONSE_MAX_CHARS),
+  CHAT_INPUT_MAX_BYTES: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(envDefaults.CHAT_INPUT_MAX_BYTES),
 
   API_WINDOW_MS: z.coerce.number().int().nonnegative().default(envDefaults.API_WINDOW_MS),
   API_MAX_REQS: z.coerce.number().int().positive().default(envDefaults.API_MAX_REQS),
@@ -55,7 +92,7 @@ const serverEnvSchema = z.object({
   CACHE_MESSAGE_TTL: z.coerce.number().int().nonnegative().default(envDefaults.CACHE_MESSAGE_TTL),
   MESSAGES_CACHE_ENABLED: coerceBoolean(envDefaults.MESSAGES_CACHE_ENABLED),
 
-  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default(envDefaults.LOG_LEVEL as 'error' | 'warn' | 'info' | 'debug'),
+  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default(getDefaultLogLevel()),
 
   AI_TELEMETRY_ENABLED: coerceBoolean(envDefaults.AI_TELEMETRY_ENABLED),
   AI_TELEMETRY_RECORD_INPUTS: coerceBoolean(envDefaults.AI_TELEMETRY_RECORD_INPUTS),

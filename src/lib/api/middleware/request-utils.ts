@@ -72,3 +72,42 @@ export function setResponseHeaders(
     logger.warn('Failed to set response headers', { requestId, error: (error as Error).message });
   }
 }
+
+/**
+ * Rate limit status information returned by the rate limiter
+ */
+export interface RateLimitStatus {
+  /** Current request count in the window */
+  count: number;
+  /** Remaining requests allowed in the window */
+  remaining: number;
+  /** Unix timestamp (ms) when the window resets */
+  resetTime: number;
+}
+
+/**
+ * Sets rate limit headers on a Response
+ *
+ * Headers added:
+ * - X-RateLimit-Limit: Maximum requests allowed in window
+ * - X-RateLimit-Remaining: Requests remaining in current window
+ * - X-RateLimit-Reset: Unix timestamp (seconds) when window resets
+ *
+ * @param response - The response to add headers to
+ * @param status - Rate limit status from the limiter
+ * @param limit - Maximum requests allowed in the window
+ */
+export function setRateLimitHeaders(
+  response: NextResponse | Response,
+  status: RateLimitStatus,
+  limit: number
+): void {
+  try {
+    response.headers.set('X-RateLimit-Limit', String(limit));
+    response.headers.set('X-RateLimit-Remaining', String(status.remaining));
+    // Convert milliseconds to seconds for standard header format
+    response.headers.set('X-RateLimit-Reset', String(Math.ceil(status.resetTime / 1000)));
+  } catch (error) {
+    logger.warn('Failed to set rate limit headers', { error: (error as Error).message });
+  }
+}

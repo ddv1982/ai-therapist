@@ -46,6 +46,7 @@ const publicEnvSchema = z.object({
     .optional(),
   NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP: coerceBoolean(envDefaults.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP),
   NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO: coerceBoolean(envDefaults.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO),
+  NEXT_PUBLIC_ENABLE_RENDER_PROFILING: coerceBoolean(false),
   LOG_LEVEL: z
     .enum(['error', 'warn', 'info', 'debug'])
     .default(envDefaults.LOG_LEVEL as 'error' | 'warn' | 'info' | 'debug')
@@ -53,6 +54,19 @@ const publicEnvSchema = z.object({
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
+
+/**
+ * Get the appropriate default log level based on NODE_ENV.
+ * Development defaults to 'debug' for verbose output.
+ * Production/test defaults to 'info' for cleaner logs.
+ */
+function getDefaultLogLevel(): 'error' | 'warn' | 'info' | 'debug' {
+  const nodeEnv = process.env.NODE_ENV ?? envDefaults.NODE_ENV;
+  if (nodeEnv === 'development') {
+    return 'debug';
+  }
+  return 'info';
+}
 
 function parsePublicEnv(): PublicEnv {
   const rawPublicEnv: Record<keyof PublicEnv, unknown> = {
@@ -62,7 +76,8 @@ function parsePublicEnv(): PublicEnv {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP: process.env.NEXT_PUBLIC_MARKDOWN_ALLOW_HTTP,
     NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO: process.env.NEXT_PUBLIC_MARKDOWN_ALLOW_MAILTO,
-    LOG_LEVEL: process.env.LOG_LEVEL ?? envDefaults.LOG_LEVEL,
+    NEXT_PUBLIC_ENABLE_RENDER_PROFILING: process.env.NEXT_PUBLIC_ENABLE_RENDER_PROFILING,
+    LOG_LEVEL: process.env.LOG_LEVEL ?? getDefaultLogLevel(),
   };
 
   const parsedPublicEnv = publicEnvSchema.safeParse(rawPublicEnv);

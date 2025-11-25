@@ -2,10 +2,7 @@
  * Chat Controller Hook
  *
  * Central orchestration hook for the therapy chat application.
- * Manages messages, sessions, streaming, memory context, and UI state.
- * 
- * This is the primary interface for chat functionality, combining multiple
- * specialized hooks into a unified API for the UI layer.
+ * Composes specialized hooks into a unified API for the UI layer.
  *
  * @module useChatController
  */
@@ -17,20 +14,17 @@ import type { MessageData } from '@/features/chat/messages/message';
 import { useChatMessages } from './use-chat-messages';
 import { useScrollToBottom } from './use-scroll-to-bottom';
 import { logger } from '@/lib/utils/logger';
-// import { apiClient } from '@/lib/api/client';
 import { useTranslations } from 'next-intl';
 import { useChatTransport } from '@/hooks/use-chat-transport';
 import { useMemoryContext } from '@/hooks/use-memory-context';
 import { useChatSessions } from '@/hooks/chat/use-chat-sessions';
-import { useChatViewport } from '@/hooks/chat/use-chat-viewport';
-// import { REPORT_MODEL_ID } from '@/features/chat/config';
-import type { ObsessionsCompulsionsData } from '@/types';
-import type { UiSession } from '@/lib/chat/session-mapper';
-import type { MemoryContextInfo } from '@/lib/chat/memory-utils';
-import { useChatUiState } from '@/hooks/chat/use-chat-ui-state';
+import { useChatUI } from '@/hooks/chat/use-chat-ui';
 import { useChatStreaming } from '@/hooks/chat/use-chat-streaming';
 import { useSendMessage } from '@/hooks/chat/use-send-message';
 import { useGenerateReport } from '@/hooks/chat/use-generate-report';
+import type { ObsessionsCompulsionsData } from '@/types';
+import type { UiSession } from '@/lib/chat/session-mapper';
+import type { MemoryContextInfo } from '@/lib/chat/memory-utils';
 
 type Message = MessageData;
 
@@ -111,7 +105,7 @@ export interface ChatController {
     source?: string;
     metadata?: Record<string, unknown>;
   }) => Promise<{ success: boolean; error?: string }>;
-  
+
   /** Updates metadata for a specific message */
   updateMessageMetadata: (
     sessionId: string,
@@ -148,12 +142,12 @@ export interface ChatController {
  *
  *   return (
  *     <div>
- *       <ChatHeader 
+ *       <ChatHeader
  *         onNewSession={controller.startNewSession}
  *         sessions={controller.sessions}
  *       />
  *       <MessageList messages={controller.messages} />
- *       <ChatInput 
+ *       <ChatInput
  *         value={controller.input}
  *         onChange={controller.setInput}
  *         onSend={controller.sendMessage}
@@ -194,21 +188,13 @@ export function useChatController(options?: {
   } = useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle });
 
   const { memoryContext, setMemoryContext } = useMemoryContext(currentSession);
-  const { isMobile, viewportHeight } = useChatViewport();
 
-  const {
-    input,
-    setInput,
-    isLoading,
-    setIsLoading,
-    showSidebar,
-    setShowSidebar,
-    isGeneratingReport,
-    setIsGeneratingReport,
-    textareaRef,
-    messagesContainerRef,
-    inputContainerRef,
-  } = useChatUiState();
+  // UI state (input, loading, viewport, refs)
+  const { state: uiState, refs: uiRefs, actions: uiActions } = useChatUI();
+  const { input, isLoading, showSidebar, isGeneratingReport, isMobile, viewportHeight } = uiState;
+  const { textareaRef, messagesContainerRef, inputContainerRef } = uiRefs;
+  const { setInput, setIsLoading, setShowSidebar, setIsGeneratingReport, scheduleFocus } =
+    uiActions;
 
   const { scrollToBottom, isNearBottom } = useScrollToBottom({
     isStreaming: isLoading,
@@ -248,9 +234,9 @@ export function useChatController(options?: {
   const startNewSession = useCallback(() => {
     void (async () => {
       await resetSessionState();
-      setTimeout(() => textareaRef.current?.focus(), 100);
+      scheduleFocus(100);
     })();
-  }, [resetSessionState, textareaRef]);
+  }, [resetSessionState, scheduleFocus]);
 
   const sendMessageHandler = useCallback(async () => {
     const messageText = input;
@@ -268,8 +254,8 @@ export function useChatController(options?: {
 
   const stopGenerating = useCallback(() => {
     stopStream();
-    setTimeout(() => textareaRef.current?.focus(), 50);
-  }, [stopStream, textareaRef]);
+    scheduleFocus(50);
+  }, [stopStream, scheduleFocus]);
 
   const { generateReport } = useGenerateReport({
     currentSession,

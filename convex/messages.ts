@@ -3,6 +3,7 @@ import type { QueryCtx, MutationCtx } from './_generated/server';
 import { v } from 'convex/values';
 import { QUERY_LIMITS } from './constants';
 import type { Doc } from './_generated/dataModel';
+import { messageMetadataValidator } from './validators';
 
 /**
  * Paginated query for session messages. Uses cursor-based pagination for O(limit) performance.
@@ -66,7 +67,7 @@ export const create = mutation({
     role: v.string(),
     content: v.string(),
     modelUsed: v.optional(v.string()),
-    metadata: v.optional(v.any()),
+    metadata: messageMetadataValidator,
     timestamp: v.optional(v.number()),
   },
   handler: async (ctx, { sessionId, role, content, modelUsed, metadata, timestamp }) => {
@@ -93,7 +94,7 @@ export const update = mutation({
   args: {
     messageId: v.id('messages'),
     content: v.optional(v.string()),
-    metadata: v.optional(v.any()),
+    metadata: messageMetadataValidator,
     modelUsed: v.optional(v.string()),
   },
   handler: async (ctx, { messageId, content, metadata, modelUsed }) => {
@@ -119,10 +120,10 @@ export const remove = mutation({
     }
 
     await assertSessionOwnership(ctx, message.sessionId);
-    
+
     const session = await ctx.db.get(message.sessionId);
     await ctx.db.delete(messageId);
-    
+
     // Update session message count if session still exists
     if (session) {
       await ctx.db.patch(session._id, {
@@ -130,7 +131,7 @@ export const remove = mutation({
         updatedAt: Date.now(),
       });
     }
-    
+
     return { ok: true, deleted: true };
   },
 });

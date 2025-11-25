@@ -26,11 +26,11 @@ import { ChatSidebar } from '@/features/chat/components/dashboard/chat-sidebar';
 import { ChatHeader } from '@/features/chat/components/chat-header';
 import { ChatHeaderProvider } from '@/features/chat/context/chat-header-context';
 import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
-import { useChatState } from '@/features/therapy-chat/hooks/use-chat-state';
-import { useChatActions } from '@/features/therapy-chat/hooks/use-chat-actions';
-import { useChatModals } from '@/features/therapy-chat/hooks/use-chat-modals';
-import { ChatContainer } from '@/features/therapy-chat/components/chat-container';
-import { ChatControls } from '@/features/therapy-chat/components/chat-controls';
+import { useChatState } from '@/features/chat/hooks/use-chat-state';
+import { useChatActions } from '@/features/chat/hooks/use-chat-actions';
+import { useChatModals } from '@/features/chat/hooks/use-chat-modals';
+import { ChatContainer } from '@/features/chat/components/chat-container';
+import { ChatControls } from '@/features/chat/components/chat-controls';
 
 function ChatPageContent() {
   const router = useRouter();
@@ -145,7 +145,7 @@ function ChatPageContent() {
   return (
     <ChatUIProvider bridge={chatUIBridge}>
       <div
-        className="gradient-bg-app flex bg-app-subtle"
+        className="gradient-bg-app bg-app-subtle flex"
         role="application"
         aria-label={t('app.aria')}
         style={appContainerStyle}

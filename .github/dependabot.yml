@@ -1,0 +1,55 @@
+# Dependabot configuration for automated dependency updates
+# See https://docs.github.com/en/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically
+
+version: 2
+updates:
+  # npm dependencies
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'UTC'
+    # Group minor and patch updates to reduce PR noise
+    groups:
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+        patterns:
+          - '*'
+        exclude-patterns:
+          # Keep major updates separate for careful review
+          - 'next'
+          - 'react'
+          - 'react-dom'
+          - '@clerk/*'
+          - 'convex'
+    # Open PRs for major version updates separately
+    open-pull-requests-limit: 10
+    # Labels to add to PRs
+    labels:
+      - 'dependencies'
+      - 'npm'
+    # Commit message configuration
+    commit-message:
+      prefix: 'deps'
+      prefix-development: 'deps(dev)'
+    # Reviewers for dependency PRs
+    # reviewers:
+    #   - 'your-team'
+
+  # GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'UTC'
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+    commit-message:
+      prefix: 'ci'

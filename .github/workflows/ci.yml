@@ -1,0 +1,317 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24'
+  # Mock environment variables for CI builds
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_mock_key_for_ci_build' }}
+  NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL || 'https://mock-convex-url.convex.cloud' }}
+  CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY || 'sk_test_mock_key_for_ci_build' }}
+  ENCRYPTION_KEY: 'ci-test-encryption-key-32-chars!'
+
+jobs:
+  # Job 1: Lint and Type Check
+  lint-and-typecheck:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript type check
+        run: npx tsc --noEmit
+
+      - name: Check formatting
+        run: npm run format:check
+
+  # Job 2: Unit Tests with Coverage
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+        env:
+          CI: true
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # Job 3: Build Verification
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js application
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next/
+          retention-days: 1
+
+  # Job 4: E2E Tests with Playwright
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [build]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next/
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          CI: true
+
+      - name: Upload Playwright report on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+      - name: Upload test traces on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: test-results/**/*.zip
+          retention-days: 7
+
+  # Job 5: Bundle Size Monitoring
+  bundle-size:
+    name: Bundle Size
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and analyze bundle
+        run: npm run build
+        env:
+          ANALYZE: false
+
+      - name: Get bundle stats
+        id: bundle-stats
+        run: |
+          # Calculate bundle sizes from .next/static
+          if [ -d ".next/static" ]; then
+            TOTAL_SIZE=$(du -sb .next/static | cut -f1)
+            JS_SIZE=$(find .next/static -name '*.js' -exec du -cb {} + 2>/dev/null | tail -1 | cut -f1 || echo "0")
+            CSS_SIZE=$(find .next/static -name '*.css' -exec du -cb {} + 2>/dev/null | tail -1 | cut -f1 || echo "0")
+            
+            # Convert to KB with 2 decimal places
+            TOTAL_KB=$(echo "scale=2; $TOTAL_SIZE / 1024" | bc)
+            JS_KB=$(echo "scale=2; $JS_SIZE / 1024" | bc)
+            CSS_KB=$(echo "scale=2; $CSS_SIZE / 1024" | bc)
+            
+            echo "total_size=${TOTAL_KB}KB" >> $GITHUB_OUTPUT
+            echo "js_size=${JS_KB}KB" >> $GITHUB_OUTPUT
+            echo "css_size=${CSS_KB}KB" >> $GITHUB_OUTPUT
+          else
+            echo "total_size=N/A" >> $GITHUB_OUTPUT
+            echo "js_size=N/A" >> $GITHUB_OUTPUT
+            echo "css_size=N/A" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment bundle size on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const totalSize = '${{ steps.bundle-stats.outputs.total_size }}';
+            const jsSize = '${{ steps.bundle-stats.outputs.js_size }}';
+            const cssSize = '${{ steps.bundle-stats.outputs.css_size }}';
+
+            const body = `## 📦 Bundle Size Report
+
+            | Metric | Size |
+            |--------|------|
+            | Total Static | ${totalSize} |
+            | JavaScript | ${jsSize} |
+            | CSS | ${cssSize} |
+
+            <details>
+            <summary>💡 Optimization Tips</summary>
+
+            - Use dynamic imports for heavy components
+            - Ensure tree-shaking for large libraries (recharts, framer-motion)
+            - Check for duplicate dependencies
+
+            </details>
+
+            ---
+            *Generated by CI on ${new Date().toISOString().split('T')[0]}*`;
+
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.find(c => 
+              c.user.type === 'Bot' && 
+              c.body.includes('📦 Bundle Size Report')
+            );
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+  # Job 6: Environment Parity Check
+  env-check:
+    name: Environment Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check environment parity
+        run: |
+          chmod +x scripts/check-env-parity.sh
+          ./scripts/check-env-parity.sh --ci
+        env:
+          CI: true
+          # Provide all required env vars for the check
+          ENCRYPTION_KEY: ${{ env.ENCRYPTION_KEY }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_CONVEX_URL: ${{ env.NEXT_PUBLIC_CONVEX_URL }}
+          CLERK_SECRET_KEY: ${{ env.CLERK_SECRET_KEY }}
+
+  # Final status check for branch protection
+  ci-status:
+    name: CI Status
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, unit-tests, build, e2e-tests, env-check]
+    if: always()
+    steps:
+      - name: Check all jobs status
+        run: |
+          if [[ "${{ needs.lint-and-typecheck.result }}" != "success" ]]; then
+            echo "Lint and type check failed"
+            exit 1
+          fi
+          if [[ "${{ needs.unit-tests.result }}" != "success" ]]; then
+            echo "Unit tests failed"
+            exit 1
+          fi
+          if [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo "Build failed"
+            exit 1
+          fi
+          if [[ "${{ needs.e2e-tests.result }}" != "success" ]]; then
+            echo "E2E tests failed"
+            exit 1
+          fi
+          if [[ "${{ needs.env-check.result }}" != "success" ]]; then
+            echo "Environment check failed"
+            exit 1
+          fi
+          echo "All CI checks passed! ✅"

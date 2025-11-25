@@ -22,6 +22,7 @@ import {
   getClientIPFromRequest,
   toRequestContext,
   setResponseHeaders,
+  setRateLimitHeaders,
 } from '@/lib/api/middleware/request-utils';
 import { env } from '@/config/env';
 
@@ -40,9 +41,7 @@ export interface AuthenticatedRequestContext extends RequestContext {
   jwtToken?: string;
 }
 
-function createFallbackUserInfo(
-  req: NextRequest
-): ReturnType<typeof getSingleUserInfo> {
+function createFallbackUserInfo(req: NextRequest): ReturnType<typeof getSingleUserInfo> {
   const ua = req.headers.get('user-agent') || '';
   let deviceType = 'Device';
   if (ua.includes('Mobile') || ua.includes('Android') || ua.includes('iPhone'))
@@ -189,18 +188,18 @@ export function withAuthStreaming(
         };
       } catch {
         try {
-           userInfo = createFallbackUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
+          userInfo = createFallbackUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
             clerkId?: string;
-           };
+          };
         } catch (err) {
-           throw err;
+          throw err;
         }
       }
       const authWithId = authResult as unknown as { userId?: string };
       const mergedUserInfo = authWithId?.userId
         ? { ...userInfo, clerkId: authWithId.userId }
         : userInfo;
-      
+
       const authenticatedContext: AuthenticatedRequestContext = {
         requestId: baseContext.requestId || 'unknown',
         method: baseContext.method,
@@ -242,20 +241,12 @@ export function withValidation<TSchema extends z.ZodSchema, TResponse = unknown>
         try {
           requestData = await (request as NextRequest).json();
         } catch {
-          logger.validationError(
-            context.url || 'unknown',
-            'Invalid JSON in request body',
-            context
-          );
-          return createErrorResponse(
-            'Invalid JSON format in request body',
-            400,
-            {
-              code: 'VALIDATION_ERROR',
-              details: 'JSON parsing failed',
-              requestId: context.requestId,
-            }
-          ) as NextResponse<ApiResponse<TResponse>>;
+          logger.validationError(context.url || 'unknown', 'Invalid JSON in request body', context);
+          return createErrorResponse('Invalid JSON format in request body', 400, {
+            code: 'VALIDATION_ERROR',
+            details: 'JSON parsing failed',
+            requestId: context.requestId,
+          }) as NextResponse<ApiResponse<TResponse>>;
         }
       } else {
         const { searchParams } = new URL((request as { url: string }).url);
@@ -277,16 +268,12 @@ export function withValidation<TSchema extends z.ZodSchema, TResponse = unknown>
         context
       );
       // Use createErrorResponse directly to put the specific error in the message field
-      return createErrorResponse(
-        validation.error || 'Validation failed',
-        400,
-        {
-          code: 'VALIDATION_ERROR',
-          details: validation.error,
-          suggestedAction: 'Please check your input data and try again',
-          requestId: context.requestId,
-        }
-      ) as NextResponse<ApiResponse<TResponse>>;
+      return createErrorResponse(validation.error || 'Validation failed', 400, {
+        code: 'VALIDATION_ERROR',
+        details: validation.error,
+        suggestedAction: 'Please check your input data and try again',
+        requestId: context.requestId,
+      }) as NextResponse<ApiResponse<TResponse>>;
     }
 
     return handler(request, context, validation.data as z.infer<TSchema>, params);
@@ -320,17 +307,24 @@ export function withRateLimitUnauthenticated<T = unknown>(
 ) {
   return withApiMiddleware<T>(async (request, context, params) => {
     const rateLimitDisabled = env.RATE_LIMIT_DISABLED && env.NODE_ENV !== 'production';
+    const clientIP = getClientIPFromRequest(request);
+    const limiter = getRateLimiter();
+    const bucket = options.bucket || 'api';
+    const maxRequests =
+      bucket === 'chat'
+        ? env.CHAT_MAX_REQS
+        : bucket === 'api'
+          ? env.API_MAX_REQS
+          : env.RATE_LIMIT_MAX_REQS;
+    const defaultWindow =
+      bucket === 'chat'
+        ? env.CHAT_WINDOW_MS
+        : bucket === 'api'
+          ? env.API_WINDOW_MS
+          : env.RATE_LIMIT_WINDOW_MS;
+    const windowMs = options.windowMs ?? defaultWindow ?? 5 * 60 * 1000;
+
     if (!rateLimitDisabled) {
-      const clientIP = getClientIPFromRequest(request);
-      const limiter = getRateLimiter();
-      const bucket = options.bucket || 'api';
-      const defaultWindow =
-        bucket === 'chat'
-          ? env.CHAT_WINDOW_MS
-          : bucket === 'api'
-            ? env.API_WINDOW_MS
-            : env.RATE_LIMIT_WINDOW_MS;
-      const windowMs = options.windowMs ?? defaultWindow ?? 5 * 60 * 1000;
       const result = await limiter.checkRateLimit(clientIP, bucket);
       if (!result.allowed) {
         const retryAfter = String(result.retryAfter || Math.ceil(windowMs / 1000));
@@ -348,7 +342,15 @@ export function withRateLimitUnauthenticated<T = unknown>(
         return NextResponse.json(body, { status: 429, headers }) as NextResponse<ApiResponse<T>>;
       }
     }
-    return handler(request, context, params);
+
+    // Get response from handler
+    const response = await handler(request, context, params);
+
+    // Add rate limit headers to successful responses
+    const status = limiter.getStatus(clientIP, bucket);
+    setRateLimitHeaders(response, status, maxRequests);
+
+    return response;
   });
 }
 
@@ -414,6 +416,12 @@ export function withAuthAndRateLimit<T = unknown>(
       const res = await handler(request, authenticatedContext, routeParams?.params);
       const durationMs = Math.round(performance.now() - startHighRes);
       setResponseHeaders(res, authenticatedContext.requestId, durationMs);
+
+      // Add rate limit headers to successful responses
+      const maxRequests = options.maxRequests ?? env.API_MAX_REQS;
+      const status = limiter.getStatus(clientIP, 'api');
+      setRateLimitHeaders(res, status, maxRequests);
+
       return res;
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
@@ -612,6 +620,12 @@ export function withAuthAndRateLimitStreaming(
       const response = await handler(request, authenticatedContext, routeParams?.params);
       const durationMs = Math.round(performance.now() - startHighRes);
       setResponseHeaders(response, authenticatedContext.requestId, durationMs);
+
+      // Add rate limit headers to successful streaming responses
+      const limiter = getRateLimiter();
+      const status = limiter.getStatus(clientIP, 'chat');
+      setRateLimitHeaders(response, status, maxRequests);
+
       try {
         recordEndpointSuccess(authenticatedContext.method, authenticatedContext.url);
       } catch {}
