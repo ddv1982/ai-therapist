@@ -77,99 +77,33 @@ exports[`ChatEmptyState matches snapshot for desktop 1`] = `
             <svg
               fill="none"
               height="240"
-              style="shape-rendering: geometricPrecision;"
               viewBox="0 0 200 200"
               width="240"
               xmlns="http://www.w3.org/2000/svg"
             >
               <defs>
-                <filter
-                  height="100%"
-                  id="desaturate-dark"
-                  width="100%"
-                  x="0"
-                  y="0"
-                >
-                  <fecolormatrix
-                    type="saturate"
-                    values="0.3"
-                  />
-                </filter>
-                <filter
-                  height="100%"
-                  id="desaturate-lit"
-                  width="100%"
-                  x="0"
-                  y="0"
-                >
-                  <fecolormatrix
-                    type="saturate"
-                    values="0.85"
-                  />
-                </filter>
-                <mask
-                  id="moon-mask"
+                <clippath
+                  id="moon-clip"
                 >
                   <circle
                     cx="100"
                     cy="100"
-                    fill="white"
                     r="100"
                   />
-                </mask>
-                <mask
-                  id="lit-mask"
+                </clippath>
+                <clippath
+                  id="lit-clip"
                 >
                   <path
                     d="M 100 200
               A 100 100 0 0 1 100 0
               A 100 100 0 0 1 100 200"
-                    fill="white"
                   />
-                </mask>
-                <radialgradient
-                  cx="40%"
-                  cy="40%"
-                  id="moon-sphere"
-                  r="60%"
-                >
-                  <stop
-                    offset="0%"
-                    stop-color="#f8fafc"
-                  />
-                  <stop
-                    offset="25%"
-                    stop-color="#f1f5f9"
-                  />
-                  <stop
-                    offset="45%"
-                    stop-color="#e2e8f0"
-                  />
-                  <stop
-                    offset="60%"
-                    stop-color="#cbd5e1"
-                  />
-                  <stop
-                    offset="75%"
-                    stop-color="#94a3b8"
-                  />
-                  <stop
-                    offset="85%"
-                    stop-color="#64748b"
-                  />
-                  <stop
-                    offset="95%"
-                    stop-color="#475569"
-                  />
-                  <stop
-                    offset="100%"
-                    stop-color="#334155"
-                  />
-                </radialgradient>
+                </clippath>
                 <lineargradient
-                  id="terminator-shadow"
-                  x1="100%"
-                  x2="0%"
+                  id="terminator-fade"
+                  x1="60%"
+                  x2="40%"
                   y1="50%"
                   y2="50%"
                 >
@@ -178,113 +112,43 @@ exports[`ChatEmptyState matches snapshot for desktop 1`] = `
                     stop-color="transparent"
                   />
                   <stop
-                    offset="20%"
-                    stop-color="transparent"
-                  />
-                  <stop
-                    offset="15%"
-                    stop-color="rgba(0,0,0,0.3)"
-                  />
-                  <stop
                     offset="100%"
-                    stop-color="rgba(0,0,0,0.5)"
-                  />
-                </lineargradient>
-                <lineargradient
-                  id="terminator-blend"
-                  x1="0%"
-                  x2="100%"
-                  y1="50%"
-                  y2="50%"
-                >
-                  <stop
-                    offset="0%"
-                    stop-color="transparent"
-                  />
-                  <stop
-                    offset="40%"
-                    stop-color="transparent"
-                  />
-                  <stop
-                    offset="50%"
-                    stop-color="rgba(10,10,10,0.6)"
-                  />
-                  <stop
-                    offset="60%"
-                    stop-color="rgba(10,10,10,0.3)"
-                  />
-                  <stop
-                    offset="100%"
-                    stop-color="transparent"
+                    stop-color="rgba(0,0,0,0.7)"
                   />
                 </lineargradient>
               </defs>
-              <circle
-                cx="100"
-                cy="100"
-                fill="#0a0a0a"
-                r="100"
-              />
               <g
-                filter="url(#desaturate-dark)"
-                mask="url(#moon-mask)"
+                clip-path="url(#moon-clip)"
               >
                 <image
-                  height="300"
-                  href="/moon-texture.jpg"
-                  opacity="0.08"
+                  height="200"
+                  href="/moon-texture-hq.jpg"
+                  opacity="0.15"
                   preserveAspectRatio="xMidYMid slice"
-                  width="200"
-                  x="0"
-                  y="-50"
+                  width="400"
+                  x="-100"
+                  y="0"
                 />
-              </g>
-              <g
-                filter="url(#desaturate-lit)"
-                mask="url(#lit-mask)"
-              >
-                <image
-                  height="300"
-                  href="/moon-texture.jpg"
-                  opacity="0.9"
-                  preserveAspectRatio="xMidYMid slice"
-                  width="200"
-                  x="0"
-                  y="-50"
-                />
-              </g>
-              <path
-                d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-                fill="#e2e8f0"
-                opacity="0.1"
-              />
-              <path
-                d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-                fill="url(#moon-sphere)"
-                opacity="0.25"
-              />
-              <g
-                mask="url(#lit-mask)"
-              >
+                <g
+                  clip-path="url(#lit-clip)"
+                >
+                  <image
+                    height="200"
+                    href="/moon-texture-hq.jpg"
+                    preserveAspectRatio="xMidYMid slice"
+                    width="400"
+                    x="-100"
+                    y="0"
+                  />
+                </g>
                 <circle
                   cx="100"
                   cy="100"
-                  fill="url(#terminator-shadow)"
+                  fill="url(#terminator-fade)"
+                  opacity="0.5"
                   r="100"
-                  style="pointer-events: none;"
                 />
               </g>
-              <circle
-                cx="100"
-                cy="100"
-                fill="url(#terminator-blend)"
-                r="100"
-                style="pointer-events: none;"
-              />
             </svg>
           </div>
         </div>
@@ -393,99 +257,33 @@ exports[`ChatEmptyState matches snapshot for mobile 1`] = `
             <svg
               fill="none"
               height="180"
-              style="shape-rendering: geometricPrecision;"
               viewBox="0 0 200 200"
               width="180"
               xmlns="http://www.w3.org/2000/svg"
             >
               <defs>
-                <filter
-                  height="100%"
-                  id="desaturate-dark"
-                  width="100%"
-                  x="0"
-                  y="0"
-                >
-                  <fecolormatrix
-                    type="saturate"
-                    values="0.3"
-                  />
-                </filter>
-                <filter
-                  height="100%"
-                  id="desaturate-lit"
-                  width="100%"
-                  x="0"
-                  y="0"
-                >
-                  <fecolormatrix
-                    type="saturate"
-                    values="0.85"
-                  />
-                </filter>
-                <mask
-                  id="moon-mask"
+                <clippath
+                  id="moon-clip"
                 >
                   <circle
                     cx="100"
                     cy="100"
-                    fill="white"
                     r="100"
                   />
-                </mask>
-                <mask
-                  id="lit-mask"
+                </clippath>
+                <clippath
+                  id="lit-clip"
                 >
                   <path
                     d="M 100 200
               A 100 100 0 0 1 100 0
               A 100 100 0 0 1 100 200"
-                    fill="white"
                   />
-                </mask>
-                <radialgradient
-                  cx="40%"
-                  cy="40%"
-                  id="moon-sphere"
-                  r="60%"
-                >
-                  <stop
-                    offset="0%"
-                    stop-color="#f8fafc"
-                  />
-                  <stop
-                    offset="25%"
-                    stop-color="#f1f5f9"
-                  />
-                  <stop
-                    offset="45%"
-                    stop-color="#e2e8f0"
-                  />
-                  <stop
-                    offset="60%"
-                    stop-color="#cbd5e1"
-                  />
-                  <stop
-                    offset="75%"
-                    stop-color="#94a3b8"
-                  />
-                  <stop
-                    offset="85%"
-                    stop-color="#64748b"
-                  />
-                  <stop
-                    offset="95%"
-                    stop-color="#475569"
-                  />
-                  <stop
-                    offset="100%"
-                    stop-color="#334155"
-                  />
-                </radialgradient>
+                </clippath>
                 <lineargradient
-                  id="terminator-shadow"
-                  x1="100%"
-                  x2="0%"
+                  id="terminator-fade"
+                  x1="60%"
+                  x2="40%"
                   y1="50%"
                   y2="50%"
                 >
@@ -494,113 +292,43 @@ exports[`ChatEmptyState matches snapshot for mobile 1`] = `
                     stop-color="transparent"
                   />
                   <stop
-                    offset="20%"
-                    stop-color="transparent"
-                  />
-                  <stop
-                    offset="15%"
-                    stop-color="rgba(0,0,0,0.3)"
-                  />
-                  <stop
                     offset="100%"
-                    stop-color="rgba(0,0,0,0.5)"
-                  />
-                </lineargradient>
-                <lineargradient
-                  id="terminator-blend"
-                  x1="0%"
-                  x2="100%"
-                  y1="50%"
-                  y2="50%"
-                >
-                  <stop
-                    offset="0%"
-                    stop-color="transparent"
-                  />
-                  <stop
-                    offset="40%"
-                    stop-color="transparent"
-                  />
-                  <stop
-                    offset="50%"
-                    stop-color="rgba(10,10,10,0.6)"
-                  />
-                  <stop
-                    offset="60%"
-                    stop-color="rgba(10,10,10,0.3)"
-                  />
-                  <stop
-                    offset="100%"
-                    stop-color="transparent"
+                    stop-color="rgba(0,0,0,0.7)"
                   />
                 </lineargradient>
               </defs>
-              <circle
-                cx="100"
-                cy="100"
-                fill="#0a0a0a"
-                r="100"
-              />
               <g
-                filter="url(#desaturate-dark)"
-                mask="url(#moon-mask)"
+                clip-path="url(#moon-clip)"
               >
                 <image
-                  height="300"
-                  href="/moon-texture.jpg"
-                  opacity="0.08"
+                  height="200"
+                  href="/moon-texture-hq.jpg"
+                  opacity="0.15"
                   preserveAspectRatio="xMidYMid slice"
-                  width="200"
-                  x="0"
-                  y="-50"
+                  width="400"
+                  x="-100"
+                  y="0"
                 />
-              </g>
-              <g
-                filter="url(#desaturate-lit)"
-                mask="url(#lit-mask)"
-              >
-                <image
-                  height="300"
-                  href="/moon-texture.jpg"
-                  opacity="0.9"
-                  preserveAspectRatio="xMidYMid slice"
-                  width="200"
-                  x="0"
-                  y="-50"
-                />
-              </g>
-              <path
-                d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-                fill="#e2e8f0"
-                opacity="0.1"
-              />
-              <path
-                d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-                fill="url(#moon-sphere)"
-                opacity="0.25"
-              />
-              <g
-                mask="url(#lit-mask)"
-              >
+                <g
+                  clip-path="url(#lit-clip)"
+                >
+                  <image
+                    height="200"
+                    href="/moon-texture-hq.jpg"
+                    preserveAspectRatio="xMidYMid slice"
+                    width="400"
+                    x="-100"
+                    y="0"
+                  />
+                </g>
                 <circle
                   cx="100"
                   cy="100"
-                  fill="url(#terminator-shadow)"
+                  fill="url(#terminator-fade)"
+                  opacity="0.5"
                   r="100"
-                  style="pointer-events: none;"
                 />
               </g>
-              <circle
-                cx="100"
-                cy="100"
-                fill="url(#terminator-blend)"
-                r="100"
-                style="pointer-events: none;"
-              />
             </svg>
           </div>
         </div>
