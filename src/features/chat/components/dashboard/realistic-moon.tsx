@@ -15,20 +15,24 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
   const center = 100;
   const prefersReducedMotion = useReducedMotion();
 
+  // Determine waxing vs waning based on cycle position
+  const isWaxing = phase.fraction <= 0.5;
+  const illumFraction = phase.illumination / 100;
+
   // Calculate the SVG path for the lit portion of the moon
   const litPath = useMemo(() => {
     const { fraction, illumination } = phase;
     const p = fraction; // 0..1 position in lunar cycle
-    const illumFraction = illumination / 100; // Convert percentage to 0..1
+    const illumFrac = illumination / 100; // Convert percentage to 0..1
 
     // Determine waxing vs waning based on cycle position
-    const isWaxing = p <= 0.5;
+    const waxing = p <= 0.5;
 
     // Calculate terminator position based on actual illumination
     // illumination follows: 0% (new) -> 50% (quarter) -> 100% (full)
     // Map to terminator x-position: -radius (full) to +radius (new)
     // For 50% illumination (quarter), terminator should be at x=0 (center)
-    const terminatorX = radius * (1 - 2 * illumFraction);
+    const terminatorX = radius * (1 - 2 * illumFrac);
 
     // Construct Path
     // M 100 0 (Top)
@@ -56,7 +60,7 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
     //   Outer: Bottom -> Left -> Top.
     //   Inner (Terminator): Top -> Bottom.
 
-    if (isWaxing) {
+    if (waxing) {
       // Waxing: Lit on Right
       // Path: Top -> (Outer Right) -> Bottom -> (Terminator) -> Top
       const outerSweep = 1;
@@ -101,13 +105,6 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
   }, [phase.fraction]);
 
   // Animation variants based on reduced motion preference
-  const glowAnimation = prefersReducedMotion
-    ? {}
-    : {
-        scale: [1, 1.08, 1],
-        opacity: [0.4, 0.6, 0.4],
-      };
-
   const breathingAnimation = prefersReducedMotion
     ? {}
     : {
@@ -152,45 +149,31 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
         </div>
       )}
 
-      {/* Multi-layer Atmospheric Glow - creates depth and therapeutic calm */}
-      {/* Outer halo - softest, widest glow */}
-      <motion.div
-        className="from-primary/15 via-accent/10 absolute inset-0 rounded-full bg-linear-to-br to-transparent blur-3xl"
+      {/* Multi-layer Atmospheric Glow - silvery white moonlight */}
+      {/* Outer halo - soft silver glow */}
+      <div
+        className="absolute inset-0 rounded-full bg-radial from-slate-200/30 via-slate-300/15 to-transparent blur-2xl"
         style={{
-          transform: 'scale(1.3)',
-        }}
-        animate={glowAnimation}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: [0.45, 0.05, 0.55, 0.95], // Therapeutic breathing curve
+          transform: `scale(1.15) translateX(${isWaxing ? 10 : -10}%)`,
+          opacity: 0.4 + illumFraction * 0.3,
         }}
       />
 
-      {/* Middle halo - medium intensity */}
-      <motion.div
-        className="from-primary/20 via-therapy-info/15 absolute inset-0 rounded-full bg-linear-to-br to-transparent blur-2xl"
+      {/* Middle halo - silver moonlight glow */}
+      <div
+        className="absolute inset-0 rounded-full bg-radial from-white/30 via-slate-100/15 to-transparent blur-xl"
         style={{
-          transform: 'scale(1.15)',
-        }}
-        animate={glowAnimation}
-        transition={{
-          duration: 6,
-          repeat: Infinity,
-          ease: [0.45, 0.05, 0.55, 0.95],
-          delay: 0.5,
+          transform: `scale(1.08) translateX(${isWaxing ? 8 : -8}%)`,
+          opacity: 0.5 + illumFraction * 0.3,
         }}
       />
 
-      {/* Inner glow - strongest, tightest */}
-      <motion.div
-        className="from-accent/25 via-primary/20 absolute inset-0 rounded-full bg-linear-to-br to-transparent blur-xl"
-        animate={glowAnimation}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: [0.45, 0.05, 0.55, 0.95],
-          delay: 1,
+      {/* Inner glow - bright white core */}
+      <div
+        className="absolute inset-0 rounded-full bg-radial from-white/40 via-slate-50/15 to-transparent blur-lg"
+        style={{
+          transform: `scale(1.02) translateX(${isWaxing ? 5 : -5}%)`,
+          opacity: 0.5 + illumFraction * 0.4,
         }}
       />
 
@@ -217,73 +200,125 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
         }}
       >
         <defs>
-          {/* Enhanced Crater Pattern - multiple layers for depth */}
-          <pattern id="craters" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
-            {/* Large craters */}
-            <circle cx="25" cy="25" r="10" fill="currentColor" className="text-black/8" />
-            <circle cx="25" cy="25" r="8" fill="currentColor" className="text-black/4" />
+          {/* Soft edge filter for anti-aliasing */}
+          <filter id="soften" x="-2%" y="-2%" width="104%" height="104%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" />
+          </filter>
 
-            {/* Medium craters */}
-            <circle cx="12" cy="12" r="4" fill="currentColor" className="text-black/6" />
-            <circle cx="38" cy="38" r="5" fill="currentColor" className="text-black/7" />
-            <circle cx="8" cy="40" r="3" fill="currentColor" className="text-black/5" />
-            <circle cx="42" cy="15" r="3.5" fill="currentColor" className="text-black/6" />
+          {/* Mask for full moon with soft edge */}
+          <mask id="moon-mask">
+            <circle cx="100" cy="100" r="99" fill="white" filter="url(#soften)" />
+          </mask>
 
-            {/* Small craters - detail */}
-            <circle cx="18" cy="35" r="1.5" fill="currentColor" className="text-black/4" />
-            <circle cx="32" cy="8" r="1.2" fill="currentColor" className="text-black/4" />
-            <circle cx="5" cy="20" r="1" fill="currentColor" className="text-black/3" />
-            <circle cx="45" cy="28" r="1.8" fill="currentColor" className="text-black/5" />
-          </pattern>
+          {/* Mask for lit portion with soft edge */}
+          <mask id="lit-mask">
+            <path d={litPath} fill="white" filter="url(#soften)" />
+          </mask>
 
-          {/* Enhanced Radial Gradient - more realistic 3D depth */}
-          <radialGradient id="moon-sphere" cx="45%" cy="45%" r="55%">
-            <stop offset="0%" stopColor="currentColor" className="text-slate-50" />
-            <stop offset="40%" stopColor="currentColor" className="text-slate-100" />
-            <stop offset="70%" stopColor="currentColor" className="text-slate-200" />
-            <stop offset="90%" stopColor="currentColor" className="text-slate-400" />
-            <stop offset="100%" stopColor="currentColor" className="text-slate-500" />
+          {/* Enhanced Radial Gradient - bright silvery moonlight */}
+          <radialGradient id="moon-sphere" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#f8fafc" />
+            <stop offset="25%" stopColor="#f1f5f9" />
+            <stop offset="45%" stopColor="#e2e8f0" />
+            <stop offset="60%" stopColor="#cbd5e1" />
+            <stop offset="75%" stopColor="#94a3b8" />
+            <stop offset="85%" stopColor="#64748b" />
+            <stop offset="95%" stopColor="#475569" />
+            <stop offset="100%" stopColor="#334155" />
           </radialGradient>
 
-          {/* Rim light gradient for edge highlight */}
-          <radialGradient id="rim-light" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="transparent" />
-            <stop offset="85%" stopColor="transparent" />
-            <stop offset="95%" stopColor="currentColor" className="text-white/30" />
+          {/* Highlight accent - subtle top-left accent for extra 3D pop */}
+          <radialGradient id="highlight-accent" cx="30%" cy="30%" r="40%">
+            <stop offset="0%" stopColor="currentColor" className="text-white/20" />
+            <stop offset="50%" stopColor="currentColor" className="text-white/5" />
             <stop offset="100%" stopColor="transparent" />
           </radialGradient>
 
-          {/* Subtle inner shadow for depth */}
-          <radialGradient id="inner-shadow" cx="50%" cy="50%" r="50%">
+          {/* Limb darkening - realistic edge falloff for 3D depth */}
+          <radialGradient id="limb-darkening" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="transparent" />
-            <stop offset="80%" stopColor="transparent" />
-            <stop offset="100%" stopColor="currentColor" className="text-black/25" />
+            <stop offset="60%" stopColor="transparent" />
+            <stop offset="80%" stopColor="currentColor" className="text-black/5" />
+            <stop offset="90%" stopColor="currentColor" className="text-black/15" />
+            <stop offset="100%" stopColor="currentColor" className="text-black/40" />
           </radialGradient>
+
+          {/* Terminator shadow - soft gradient at the light/dark boundary */}
+          <linearGradient
+            id="terminator-shadow"
+            x1={isWaxing ? '0%' : '100%'}
+            y1="50%"
+            x2={isWaxing ? '100%' : '0%'}
+            y2="50%"
+          >
+            <stop offset="0%" stopColor="transparent" />
+            <stop offset={`${Math.max(20, illumFraction * 80)}%`} stopColor="transparent" />
+            <stop
+              offset={`${Math.min(95, illumFraction * 100 + 15)}%`}
+              stopColor="currentColor"
+              className="text-black/30"
+            />
+            <stop offset="100%" stopColor="currentColor" className="text-black/50" />
+          </linearGradient>
         </defs>
 
-        {/* 1. Dark Moon Base (Shadow side) - enhanced darkness */}
-        <circle cx="100" cy="100" r="100" className="fill-slate-900" />
+        {/* 1. Dark Moon Base */}
+        <circle cx="100" cy="100" r="100" fill="#0a0a0a" />
 
-        {/* 2. Lit Portion - Enhanced 3D sphere gradient */}
-        <path d={litPath} fill="url(#moon-sphere)" />
+        {/* 2. Full Moon Texture - very faint on dark side (earthshine effect) */}
+        <g mask="url(#moon-mask)" style={{ filter: 'saturate(0.3)' }}>
+          <image
+            href="/moon-texture.jpg"
+            x="-100"
+            y="0"
+            width="400"
+            height="200"
+            preserveAspectRatio="xMidYMid slice"
+            className="opacity-10"
+          />
+        </g>
 
-        {/* 3. Crater Texture Overlay - only on lit part */}
-        <path d={litPath} fill="url(#craters)" className="opacity-40 mix-blend-multiply" />
+        {/* 3. Lit portion texture */}
+        <g mask="url(#lit-mask)" style={{ filter: 'brightness(1.0) saturate(0.85)' }}>
+          <image
+            href="/moon-texture.jpg"
+            x="-100"
+            y="0"
+            width="400"
+            height="200"
+            preserveAspectRatio="xMidYMid slice"
+            className="opacity-90"
+          />
+        </g>
 
-        {/* 4. Rim Light - subtle edge highlight for 3D effect */}
-        <circle cx="100" cy="100" r="100" fill="url(#rim-light)" className="pointer-events-none" />
+        {/* 4. Subtle silvery overlay on lit portion */}
+        <path d={litPath} fill="#e2e8f0" className="opacity-10" />
 
-        {/* 5. Inner shadow for depth perception */}
+        {/* 5. Lit Portion gradient overlay - adds 3D depth to texture */}
+        <path d={litPath} fill="url(#moon-sphere)" className="opacity-25 mix-blend-overlay" />
+
+        {/* 6. Terminator shadow - soft falloff at light/dark boundary */}
+        <g mask="url(#lit-mask)">
+          <circle
+            cx="100"
+            cy="100"
+            r="100"
+            fill="url(#terminator-shadow)"
+            className="pointer-events-none"
+          />
+        </g>
+
+        {/* 7. Highlight accent on lit portion - extra 3D pop */}
+        <path d={litPath} fill="url(#highlight-accent)" className="pointer-events-none" />
+
+        {/* 8. Limb darkening overlay - realistic edge falloff */}
         <circle
           cx="100"
           cy="100"
           r="100"
-          fill="url(#inner-shadow)"
+          fill="url(#limb-darkening)"
           className="pointer-events-none"
         />
-
-        {/* 6. Subtle atmospheric edge glow */}
-        <circle cx="100" cy="100" r="99" className="fill-none stroke-white/5" strokeWidth="2" />
       </motion.svg>
     </motion.div>
   );
