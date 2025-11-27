@@ -13,7 +13,7 @@ exports[`ChatEmptyState matches snapshot for desktop 1`] = `
       >
         <div
           aria-label="New Moon at 0% illumination"
-          class="group relative cursor-default mb-4"
+          class="relative mb-4"
           role="img"
           style="width: 240px; height: 240px;"
         >
@@ -71,255 +71,222 @@ exports[`ChatEmptyState matches snapshot for desktop 1`] = `
             />
           </div>
           <div
-            class="from-slate-200/30 via-slate-300/15 absolute inset-0 rounded-full bg-radial to-transparent blur-2xl"
-            style="transform: scale(1.15) translateX(-10%); opacity: 0.4;"
-          />
-          <div
-            class="from-white/30 via-slate-100/15 absolute inset-0 rounded-full bg-radial to-transparent blur-xl"
-            style="transform: scale(1.08) translateX(-8%); opacity: 0.5;"
-          />
-          <div
-            class="from-white/40 via-slate-50/15 absolute inset-0 rounded-full bg-radial to-transparent blur-lg"
-            style="transform: scale(1.02) translateX(-5%); opacity: 0.5;"
-          />
-          <div
-            class="absolute inset-0 rounded-full bg-linear-to-br from-white/0 via-white/5 to-white/0 opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100"
-            style="transform: scale(0.95);"
-          />
-          <svg
             class="relative z-10"
-            fill="none"
-            height="240"
-            viewBox="0 0 200 200"
-            width="240"
-            xmlns="http://www.w3.org/2000/svg"
+            style="transform: scale(1); transition: transform 0.3s ease-out; border-radius: 50%; overflow: hidden;"
           >
-            <defs>
-              <filter
-                height="104%"
-                id="soften"
-                width="104%"
-                x="-2%"
-                y="-2%"
+            <svg
+              fill="none"
+              height="240"
+              style="shape-rendering: geometricPrecision;"
+              viewBox="0 0 200 200"
+              width="240"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <filter
+                  height="100%"
+                  id="desaturate-dark"
+                  width="100%"
+                  x="0"
+                  y="0"
+                >
+                  <fecolormatrix
+                    type="saturate"
+                    values="0.3"
+                  />
+                </filter>
+                <filter
+                  height="100%"
+                  id="desaturate-lit"
+                  width="100%"
+                  x="0"
+                  y="0"
+                >
+                  <fecolormatrix
+                    type="saturate"
+                    values="0.85"
+                  />
+                </filter>
+                <mask
+                  id="moon-mask"
+                >
+                  <circle
+                    cx="100"
+                    cy="100"
+                    fill="white"
+                    r="100"
+                  />
+                </mask>
+                <mask
+                  id="lit-mask"
+                >
+                  <path
+                    d="M 100 200
+              A 100 100 0 0 1 100 0
+              A 100 100 0 0 1 100 200"
+                    fill="white"
+                  />
+                </mask>
+                <radialgradient
+                  cx="40%"
+                  cy="40%"
+                  id="moon-sphere"
+                  r="60%"
+                >
+                  <stop
+                    offset="0%"
+                    stop-color="#f8fafc"
+                  />
+                  <stop
+                    offset="25%"
+                    stop-color="#f1f5f9"
+                  />
+                  <stop
+                    offset="45%"
+                    stop-color="#e2e8f0"
+                  />
+                  <stop
+                    offset="60%"
+                    stop-color="#cbd5e1"
+                  />
+                  <stop
+                    offset="75%"
+                    stop-color="#94a3b8"
+                  />
+                  <stop
+                    offset="85%"
+                    stop-color="#64748b"
+                  />
+                  <stop
+                    offset="95%"
+                    stop-color="#475569"
+                  />
+                  <stop
+                    offset="100%"
+                    stop-color="#334155"
+                  />
+                </radialgradient>
+                <lineargradient
+                  id="terminator-shadow"
+                  x1="100%"
+                  x2="0%"
+                  y1="50%"
+                  y2="50%"
+                >
+                  <stop
+                    offset="0%"
+                    stop-color="transparent"
+                  />
+                  <stop
+                    offset="20%"
+                    stop-color="transparent"
+                  />
+                  <stop
+                    offset="15%"
+                    stop-color="rgba(0,0,0,0.3)"
+                  />
+                  <stop
+                    offset="100%"
+                    stop-color="rgba(0,0,0,0.5)"
+                  />
+                </lineargradient>
+                <lineargradient
+                  id="terminator-blend"
+                  x1="0%"
+                  x2="100%"
+                  y1="50%"
+                  y2="50%"
+                >
+                  <stop
+                    offset="0%"
+                    stop-color="transparent"
+                  />
+                  <stop
+                    offset="40%"
+                    stop-color="transparent"
+                  />
+                  <stop
+                    offset="50%"
+                    stop-color="rgba(10,10,10,0.6)"
+                  />
+                  <stop
+                    offset="60%"
+                    stop-color="rgba(10,10,10,0.3)"
+                  />
+                  <stop
+                    offset="100%"
+                    stop-color="transparent"
+                  />
+                </lineargradient>
+              </defs>
+              <circle
+                cx="100"
+                cy="100"
+                fill="#0a0a0a"
+                r="100"
+              />
+              <g
+                filter="url(#desaturate-dark)"
+                mask="url(#moon-mask)"
               >
-                <fegaussianblur
-                  in="SourceGraphic"
-                  stdDeviation="0.5"
+                <image
+                  height="300"
+                  href="/moon-texture.jpg"
+                  opacity="0.08"
+                  preserveAspectRatio="xMidYMid slice"
+                  width="200"
+                  x="0"
+                  y="-50"
                 />
-              </filter>
-              <mask
-                id="moon-mask"
+              </g>
+              <g
+                filter="url(#desaturate-lit)"
+                mask="url(#lit-mask)"
+              >
+                <image
+                  height="300"
+                  href="/moon-texture.jpg"
+                  opacity="0.9"
+                  preserveAspectRatio="xMidYMid slice"
+                  width="200"
+                  x="0"
+                  y="-50"
+                />
+              </g>
+              <path
+                d="M 100 200
+              A 100 100 0 0 1 100 0
+              A 100 100 0 0 1 100 200"
+                fill="#e2e8f0"
+                opacity="0.1"
+              />
+              <path
+                d="M 100 200
+              A 100 100 0 0 1 100 0
+              A 100 100 0 0 1 100 200"
+                fill="url(#moon-sphere)"
+                opacity="0.25"
+              />
+              <g
+                mask="url(#lit-mask)"
               >
                 <circle
                   cx="100"
                   cy="100"
-                  fill="white"
-                  filter="url(#soften)"
-                  r="99"
+                  fill="url(#terminator-shadow)"
+                  r="100"
+                  style="pointer-events: none;"
                 />
-              </mask>
-              <mask
-                id="lit-mask"
-              >
-                <path
-                  d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-                  fill="white"
-                  filter="url(#soften)"
-                />
-              </mask>
-              <radialgradient
-                cx="40%"
-                cy="40%"
-                id="moon-sphere"
-                r="60%"
-              >
-                <stop
-                  offset="0%"
-                  stop-color="#f8fafc"
-                />
-                <stop
-                  offset="25%"
-                  stop-color="#f1f5f9"
-                />
-                <stop
-                  offset="45%"
-                  stop-color="#e2e8f0"
-                />
-                <stop
-                  offset="60%"
-                  stop-color="#cbd5e1"
-                />
-                <stop
-                  offset="75%"
-                  stop-color="#94a3b8"
-                />
-                <stop
-                  offset="85%"
-                  stop-color="#64748b"
-                />
-                <stop
-                  offset="95%"
-                  stop-color="#475569"
-                />
-                <stop
-                  offset="100%"
-                  stop-color="#334155"
-                />
-              </radialgradient>
-              <radialgradient
-                cx="30%"
-                cy="30%"
-                id="highlight-accent"
-                r="40%"
-              >
-                <stop
-                  class="text-white/20"
-                  offset="0%"
-                  stop-color="currentColor"
-                />
-                <stop
-                  class="text-white/5"
-                  offset="50%"
-                  stop-color="currentColor"
-                />
-                <stop
-                  offset="100%"
-                  stop-color="transparent"
-                />
-              </radialgradient>
-              <radialgradient
-                cx="50%"
-                cy="50%"
-                id="limb-darkening"
-                r="50%"
-              >
-                <stop
-                  offset="0%"
-                  stop-color="transparent"
-                />
-                <stop
-                  offset="60%"
-                  stop-color="transparent"
-                />
-                <stop
-                  class="text-black/5"
-                  offset="80%"
-                  stop-color="currentColor"
-                />
-                <stop
-                  class="text-black/15"
-                  offset="90%"
-                  stop-color="currentColor"
-                />
-                <stop
-                  class="text-black/40"
-                  offset="100%"
-                  stop-color="currentColor"
-                />
-              </radialgradient>
-              <lineargradient
-                id="terminator-shadow"
-                x1="100%"
-                x2="0%"
-                y1="50%"
-                y2="50%"
-              >
-                <stop
-                  offset="0%"
-                  stop-color="transparent"
-                />
-                <stop
-                  offset="20%"
-                  stop-color="transparent"
-                />
-                <stop
-                  class="text-black/30"
-                  offset="15%"
-                  stop-color="currentColor"
-                />
-                <stop
-                  class="text-black/50"
-                  offset="100%"
-                  stop-color="currentColor"
-                />
-              </lineargradient>
-            </defs>
-            <circle
-              cx="100"
-              cy="100"
-              fill="#0a0a0a"
-              r="100"
-            />
-            <g
-              mask="url(#moon-mask)"
-              style="filter: saturate(0.3);"
-            >
-              <image
-                class="opacity-10"
-                height="200"
-                href="/moon-texture.jpg"
-                preserveAspectRatio="xMidYMid slice"
-                width="400"
-                x="-100"
-                y="0"
-              />
-            </g>
-            <g
-              mask="url(#lit-mask)"
-              style="filter: brightness(1.0) saturate(0.85);"
-            >
-              <image
-                class="opacity-90"
-                height="200"
-                href="/moon-texture.jpg"
-                preserveAspectRatio="xMidYMid slice"
-                width="400"
-                x="-100"
-                y="0"
-              />
-            </g>
-            <path
-              class="opacity-10"
-              d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-              fill="#e2e8f0"
-            />
-            <path
-              class="opacity-25 mix-blend-overlay"
-              d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-              fill="url(#moon-sphere)"
-            />
-            <g
-              mask="url(#lit-mask)"
-            >
+              </g>
               <circle
-                class="pointer-events-none"
                 cx="100"
                 cy="100"
-                fill="url(#terminator-shadow)"
+                fill="url(#terminator-blend)"
                 r="100"
+                style="pointer-events: none;"
               />
-            </g>
-            <path
-              class="pointer-events-none"
-              d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-              fill="url(#highlight-accent)"
-            />
-            <circle
-              class="pointer-events-none"
-              cx="100"
-              cy="100"
-              fill="url(#limb-darkening)"
-              r="100"
-            />
-          </svg>
+            </svg>
+          </div>
         </div>
         <span
           class="text-muted-foreground/70 text-xs font-medium tracking-widest uppercase"
@@ -362,7 +329,7 @@ exports[`ChatEmptyState matches snapshot for mobile 1`] = `
       >
         <div
           aria-label="New Moon at 0% illumination"
-          class="group relative cursor-default mb-4"
+          class="relative mb-4"
           role="img"
           style="width: 180px; height: 180px;"
         >
@@ -420,255 +387,222 @@ exports[`ChatEmptyState matches snapshot for mobile 1`] = `
             />
           </div>
           <div
-            class="from-slate-200/30 via-slate-300/15 absolute inset-0 rounded-full bg-radial to-transparent blur-2xl"
-            style="transform: scale(1.15) translateX(-10%); opacity: 0.4;"
-          />
-          <div
-            class="from-white/30 via-slate-100/15 absolute inset-0 rounded-full bg-radial to-transparent blur-xl"
-            style="transform: scale(1.08) translateX(-8%); opacity: 0.5;"
-          />
-          <div
-            class="from-white/40 via-slate-50/15 absolute inset-0 rounded-full bg-radial to-transparent blur-lg"
-            style="transform: scale(1.02) translateX(-5%); opacity: 0.5;"
-          />
-          <div
-            class="absolute inset-0 rounded-full bg-linear-to-br from-white/0 via-white/5 to-white/0 opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100"
-            style="transform: scale(0.95);"
-          />
-          <svg
             class="relative z-10"
-            fill="none"
-            height="180"
-            viewBox="0 0 200 200"
-            width="180"
-            xmlns="http://www.w3.org/2000/svg"
+            style="transform: scale(1); transition: transform 0.3s ease-out; border-radius: 50%; overflow: hidden;"
           >
-            <defs>
-              <filter
-                height="104%"
-                id="soften"
-                width="104%"
-                x="-2%"
-                y="-2%"
+            <svg
+              fill="none"
+              height="180"
+              style="shape-rendering: geometricPrecision;"
+              viewBox="0 0 200 200"
+              width="180"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <filter
+                  height="100%"
+                  id="desaturate-dark"
+                  width="100%"
+                  x="0"
+                  y="0"
+                >
+                  <fecolormatrix
+                    type="saturate"
+                    values="0.3"
+                  />
+                </filter>
+                <filter
+                  height="100%"
+                  id="desaturate-lit"
+                  width="100%"
+                  x="0"
+                  y="0"
+                >
+                  <fecolormatrix
+                    type="saturate"
+                    values="0.85"
+                  />
+                </filter>
+                <mask
+                  id="moon-mask"
+                >
+                  <circle
+                    cx="100"
+                    cy="100"
+                    fill="white"
+                    r="100"
+                  />
+                </mask>
+                <mask
+                  id="lit-mask"
+                >
+                  <path
+                    d="M 100 200
+              A 100 100 0 0 1 100 0
+              A 100 100 0 0 1 100 200"
+                    fill="white"
+                  />
+                </mask>
+                <radialgradient
+                  cx="40%"
+                  cy="40%"
+                  id="moon-sphere"
+                  r="60%"
+                >
+                  <stop
+                    offset="0%"
+                    stop-color="#f8fafc"
+                  />
+                  <stop
+                    offset="25%"
+                    stop-color="#f1f5f9"
+                  />
+                  <stop
+                    offset="45%"
+                    stop-color="#e2e8f0"
+                  />
+                  <stop
+                    offset="60%"
+                    stop-color="#cbd5e1"
+                  />
+                  <stop
+                    offset="75%"
+                    stop-color="#94a3b8"
+                  />
+                  <stop
+                    offset="85%"
+                    stop-color="#64748b"
+                  />
+                  <stop
+                    offset="95%"
+                    stop-color="#475569"
+                  />
+                  <stop
+                    offset="100%"
+                    stop-color="#334155"
+                  />
+                </radialgradient>
+                <lineargradient
+                  id="terminator-shadow"
+                  x1="100%"
+                  x2="0%"
+                  y1="50%"
+                  y2="50%"
+                >
+                  <stop
+                    offset="0%"
+                    stop-color="transparent"
+                  />
+                  <stop
+                    offset="20%"
+                    stop-color="transparent"
+                  />
+                  <stop
+                    offset="15%"
+                    stop-color="rgba(0,0,0,0.3)"
+                  />
+                  <stop
+                    offset="100%"
+                    stop-color="rgba(0,0,0,0.5)"
+                  />
+                </lineargradient>
+                <lineargradient
+                  id="terminator-blend"
+                  x1="0%"
+                  x2="100%"
+                  y1="50%"
+                  y2="50%"
+                >
+                  <stop
+                    offset="0%"
+                    stop-color="transparent"
+                  />
+                  <stop
+                    offset="40%"
+                    stop-color="transparent"
+                  />
+                  <stop
+                    offset="50%"
+                    stop-color="rgba(10,10,10,0.6)"
+                  />
+                  <stop
+                    offset="60%"
+                    stop-color="rgba(10,10,10,0.3)"
+                  />
+                  <stop
+                    offset="100%"
+                    stop-color="transparent"
+                  />
+                </lineargradient>
+              </defs>
+              <circle
+                cx="100"
+                cy="100"
+                fill="#0a0a0a"
+                r="100"
+              />
+              <g
+                filter="url(#desaturate-dark)"
+                mask="url(#moon-mask)"
               >
-                <fegaussianblur
-                  in="SourceGraphic"
-                  stdDeviation="0.5"
+                <image
+                  height="300"
+                  href="/moon-texture.jpg"
+                  opacity="0.08"
+                  preserveAspectRatio="xMidYMid slice"
+                  width="200"
+                  x="0"
+                  y="-50"
                 />
-              </filter>
-              <mask
-                id="moon-mask"
+              </g>
+              <g
+                filter="url(#desaturate-lit)"
+                mask="url(#lit-mask)"
+              >
+                <image
+                  height="300"
+                  href="/moon-texture.jpg"
+                  opacity="0.9"
+                  preserveAspectRatio="xMidYMid slice"
+                  width="200"
+                  x="0"
+                  y="-50"
+                />
+              </g>
+              <path
+                d="M 100 200
+              A 100 100 0 0 1 100 0
+              A 100 100 0 0 1 100 200"
+                fill="#e2e8f0"
+                opacity="0.1"
+              />
+              <path
+                d="M 100 200
+              A 100 100 0 0 1 100 0
+              A 100 100 0 0 1 100 200"
+                fill="url(#moon-sphere)"
+                opacity="0.25"
+              />
+              <g
+                mask="url(#lit-mask)"
               >
                 <circle
                   cx="100"
                   cy="100"
-                  fill="white"
-                  filter="url(#soften)"
-                  r="99"
+                  fill="url(#terminator-shadow)"
+                  r="100"
+                  style="pointer-events: none;"
                 />
-              </mask>
-              <mask
-                id="lit-mask"
-              >
-                <path
-                  d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-                  fill="white"
-                  filter="url(#soften)"
-                />
-              </mask>
-              <radialgradient
-                cx="40%"
-                cy="40%"
-                id="moon-sphere"
-                r="60%"
-              >
-                <stop
-                  offset="0%"
-                  stop-color="#f8fafc"
-                />
-                <stop
-                  offset="25%"
-                  stop-color="#f1f5f9"
-                />
-                <stop
-                  offset="45%"
-                  stop-color="#e2e8f0"
-                />
-                <stop
-                  offset="60%"
-                  stop-color="#cbd5e1"
-                />
-                <stop
-                  offset="75%"
-                  stop-color="#94a3b8"
-                />
-                <stop
-                  offset="85%"
-                  stop-color="#64748b"
-                />
-                <stop
-                  offset="95%"
-                  stop-color="#475569"
-                />
-                <stop
-                  offset="100%"
-                  stop-color="#334155"
-                />
-              </radialgradient>
-              <radialgradient
-                cx="30%"
-                cy="30%"
-                id="highlight-accent"
-                r="40%"
-              >
-                <stop
-                  class="text-white/20"
-                  offset="0%"
-                  stop-color="currentColor"
-                />
-                <stop
-                  class="text-white/5"
-                  offset="50%"
-                  stop-color="currentColor"
-                />
-                <stop
-                  offset="100%"
-                  stop-color="transparent"
-                />
-              </radialgradient>
-              <radialgradient
-                cx="50%"
-                cy="50%"
-                id="limb-darkening"
-                r="50%"
-              >
-                <stop
-                  offset="0%"
-                  stop-color="transparent"
-                />
-                <stop
-                  offset="60%"
-                  stop-color="transparent"
-                />
-                <stop
-                  class="text-black/5"
-                  offset="80%"
-                  stop-color="currentColor"
-                />
-                <stop
-                  class="text-black/15"
-                  offset="90%"
-                  stop-color="currentColor"
-                />
-                <stop
-                  class="text-black/40"
-                  offset="100%"
-                  stop-color="currentColor"
-                />
-              </radialgradient>
-              <lineargradient
-                id="terminator-shadow"
-                x1="100%"
-                x2="0%"
-                y1="50%"
-                y2="50%"
-              >
-                <stop
-                  offset="0%"
-                  stop-color="transparent"
-                />
-                <stop
-                  offset="20%"
-                  stop-color="transparent"
-                />
-                <stop
-                  class="text-black/30"
-                  offset="15%"
-                  stop-color="currentColor"
-                />
-                <stop
-                  class="text-black/50"
-                  offset="100%"
-                  stop-color="currentColor"
-                />
-              </lineargradient>
-            </defs>
-            <circle
-              cx="100"
-              cy="100"
-              fill="#0a0a0a"
-              r="100"
-            />
-            <g
-              mask="url(#moon-mask)"
-              style="filter: saturate(0.3);"
-            >
-              <image
-                class="opacity-10"
-                height="200"
-                href="/moon-texture.jpg"
-                preserveAspectRatio="xMidYMid slice"
-                width="400"
-                x="-100"
-                y="0"
-              />
-            </g>
-            <g
-              mask="url(#lit-mask)"
-              style="filter: brightness(1.0) saturate(0.85);"
-            >
-              <image
-                class="opacity-90"
-                height="200"
-                href="/moon-texture.jpg"
-                preserveAspectRatio="xMidYMid slice"
-                width="400"
-                x="-100"
-                y="0"
-              />
-            </g>
-            <path
-              class="opacity-10"
-              d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-              fill="#e2e8f0"
-            />
-            <path
-              class="opacity-25 mix-blend-overlay"
-              d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-              fill="url(#moon-sphere)"
-            />
-            <g
-              mask="url(#lit-mask)"
-            >
+              </g>
               <circle
-                class="pointer-events-none"
                 cx="100"
                 cy="100"
-                fill="url(#terminator-shadow)"
+                fill="url(#terminator-blend)"
                 r="100"
+                style="pointer-events: none;"
               />
-            </g>
-            <path
-              class="pointer-events-none"
-              d="M 100 200
-              A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
-              fill="url(#highlight-accent)"
-            />
-            <circle
-              class="pointer-events-none"
-              cx="100"
-              cy="100"
-              fill="url(#limb-darkening)"
-              r="100"
-            />
-          </svg>
+            </svg>
+          </div>
         </div>
         <span
           class="text-muted-foreground/70 text-xs font-medium tracking-widest uppercase"

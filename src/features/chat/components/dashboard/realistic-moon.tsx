@@ -104,22 +104,12 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
     });
   }, [phase.fraction]);
 
-  // Animation variants based on reduced motion preference
-  const breathingAnimation = prefersReducedMotion
-    ? {}
-    : {
-        scale: [1, 1.02, 1],
-        opacity: [0.9, 1, 0.9],
-      };
-
   return (
-    <motion.div
-      className={`group relative cursor-default ${className}`}
+    <div
+      className={`relative ${className}`}
       style={{ width: size, height: size }}
       role="img"
       aria-label={`${phase.name} at ${phase.illumination}% illumination`}
-      whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
-      transition={{ duration: 0.3, ease: 'easeOut' }}
     >
       {/* Atmospheric Starfield - subtle background stars */}
       {!prefersReducedMotion && (
@@ -149,177 +139,154 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
         </div>
       )}
 
-      {/* Multi-layer Atmospheric Glow - silvery white moonlight */}
-      {/* Outer halo - soft silver glow */}
+      {/* SVG wrapper for Safari-compatible hover scaling */}
       <div
-        className="absolute inset-0 rounded-full bg-radial from-slate-200/30 via-slate-300/15 to-transparent blur-2xl"
-        style={{
-          transform: `scale(1.15) translateX(${isWaxing ? 10 : -10}%)`,
-          opacity: 0.4 + illumFraction * 0.3,
-        }}
-      />
-
-      {/* Middle halo - silver moonlight glow */}
-      <div
-        className="absolute inset-0 rounded-full bg-radial from-white/30 via-slate-100/15 to-transparent blur-xl"
-        style={{
-          transform: `scale(1.08) translateX(${isWaxing ? 8 : -8}%)`,
-          opacity: 0.5 + illumFraction * 0.3,
-        }}
-      />
-
-      {/* Inner glow - bright white core */}
-      <div
-        className="absolute inset-0 rounded-full bg-radial from-white/40 via-slate-50/15 to-transparent blur-lg"
-        style={{
-          transform: `scale(1.02) translateX(${isWaxing ? 5 : -5}%)`,
-          opacity: 0.5 + illumFraction * 0.4,
-        }}
-      />
-
-      {/* Subtle rim light that intensifies on hover */}
-      <motion.div
-        className="absolute inset-0 rounded-full bg-linear-to-br from-white/0 via-white/5 to-white/0 opacity-0 blur-md transition-opacity duration-500 group-hover:opacity-100"
-        style={{
-          transform: 'scale(0.95)',
-        }}
-      />
-
-      <motion.svg
-        width={size}
-        height={size}
-        viewBox="0 0 200 200"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
         className="relative z-10"
-        animate={breathingAnimation}
-        transition={{
-          duration: 6,
-          repeat: Infinity,
-          ease: [0.37, 0, 0.63, 1], // Gentle breathing ease
+        style={{
+          transform: 'scale(1)',
+          transition: 'transform 0.3s ease-out',
+          borderRadius: '50%',
+          overflow: 'hidden',
+        }}
+        onMouseEnter={(e) => {
+          if (!prefersReducedMotion) {
+            e.currentTarget.style.transform = 'scale(1.05)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
         }}
       >
-        <defs>
-          {/* Soft edge filter for anti-aliasing */}
-          <filter id="soften" x="-2%" y="-2%" width="104%" height="104%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" />
-          </filter>
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 200 200"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ shapeRendering: 'geometricPrecision' }}
+        >
+          <defs>
+            {/* Desaturate filter for dark side */}
+            <filter id="desaturate-dark" x="0" y="0" width="100%" height="100%">
+              <feColorMatrix type="saturate" values="0.3" />
+            </filter>
 
-          {/* Mask for full moon with soft edge */}
-          <mask id="moon-mask">
-            <circle cx="100" cy="100" r="99" fill="white" filter="url(#soften)" />
-          </mask>
+            {/* Slight desaturate for lit side */}
+            <filter id="desaturate-lit" x="0" y="0" width="100%" height="100%">
+              <feColorMatrix type="saturate" values="0.85" />
+            </filter>
 
-          {/* Mask for lit portion with soft edge */}
-          <mask id="lit-mask">
-            <path d={litPath} fill="white" filter="url(#soften)" />
-          </mask>
+            {/* Mask for full moon */}
+            <mask id="moon-mask">
+              <circle cx="100" cy="100" r="100" fill="white" />
+            </mask>
 
-          {/* Enhanced Radial Gradient - bright silvery moonlight */}
-          <radialGradient id="moon-sphere" cx="40%" cy="40%" r="60%">
-            <stop offset="0%" stopColor="#f8fafc" />
-            <stop offset="25%" stopColor="#f1f5f9" />
-            <stop offset="45%" stopColor="#e2e8f0" />
-            <stop offset="60%" stopColor="#cbd5e1" />
-            <stop offset="75%" stopColor="#94a3b8" />
-            <stop offset="85%" stopColor="#64748b" />
-            <stop offset="95%" stopColor="#475569" />
-            <stop offset="100%" stopColor="#334155" />
-          </radialGradient>
+            {/* Mask for lit portion */}
+            <mask id="lit-mask">
+              <path d={litPath} fill="white" />
+            </mask>
 
-          {/* Highlight accent - subtle top-left accent for extra 3D pop */}
-          <radialGradient id="highlight-accent" cx="30%" cy="30%" r="40%">
-            <stop offset="0%" stopColor="currentColor" className="text-white/20" />
-            <stop offset="50%" stopColor="currentColor" className="text-white/5" />
-            <stop offset="100%" stopColor="transparent" />
-          </radialGradient>
+            {/* Enhanced Radial Gradient - bright silvery moonlight */}
+            <radialGradient id="moon-sphere" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#f8fafc" />
+              <stop offset="25%" stopColor="#f1f5f9" />
+              <stop offset="45%" stopColor="#e2e8f0" />
+              <stop offset="60%" stopColor="#cbd5e1" />
+              <stop offset="75%" stopColor="#94a3b8" />
+              <stop offset="85%" stopColor="#64748b" />
+              <stop offset="95%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </radialGradient>
 
-          {/* Limb darkening - realistic edge falloff for 3D depth */}
-          <radialGradient id="limb-darkening" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="transparent" />
-            <stop offset="60%" stopColor="transparent" />
-            <stop offset="80%" stopColor="currentColor" className="text-black/5" />
-            <stop offset="90%" stopColor="currentColor" className="text-black/15" />
-            <stop offset="100%" stopColor="currentColor" className="text-black/40" />
-          </radialGradient>
+            {/* Terminator shadow - soft gradient at the light/dark boundary */}
+            <linearGradient
+              id="terminator-shadow"
+              x1={isWaxing ? '0%' : '100%'}
+              y1="50%"
+              x2={isWaxing ? '100%' : '0%'}
+              y2="50%"
+            >
+              <stop offset="0%" stopColor="transparent" />
+              <stop offset={`${Math.max(20, illumFraction * 80)}%`} stopColor="transparent" />
+              <stop
+                offset={`${Math.min(95, illumFraction * 100 + 15)}%`}
+                stopColor="rgba(0,0,0,0.3)"
+              />
+              <stop offset="100%" stopColor="rgba(0,0,0,0.5)" />
+            </linearGradient>
 
-          {/* Terminator shadow - soft gradient at the light/dark boundary */}
-          <linearGradient
-            id="terminator-shadow"
-            x1={isWaxing ? '0%' : '100%'}
-            y1="50%"
-            x2={isWaxing ? '100%' : '0%'}
-            y2="50%"
-          >
-            <stop offset="0%" stopColor="transparent" />
-            <stop offset={`${Math.max(20, illumFraction * 80)}%`} stopColor="transparent" />
-            <stop
-              offset={`${Math.min(95, illumFraction * 100 + 15)}%`}
-              stopColor="currentColor"
-              className="text-black/30"
+            {/* Terminator edge softener - blends the harsh lit/dark boundary */}
+            <linearGradient
+              id="terminator-blend"
+              x1={isWaxing ? '100%' : '0%'}
+              y1="50%"
+              x2={isWaxing ? '0%' : '100%'}
+              y2="50%"
+            >
+              <stop offset="0%" stopColor="transparent" />
+              <stop offset="40%" stopColor="transparent" />
+              <stop offset="50%" stopColor="rgba(10,10,10,0.6)" />
+              <stop offset="60%" stopColor="rgba(10,10,10,0.3)" />
+              <stop offset="100%" stopColor="transparent" />
+            </linearGradient>
+          </defs>
+
+          {/* 1. Dark Moon Base */}
+          <circle cx="100" cy="100" r="100" fill="#0a0a0a" />
+
+          {/* 2. Full Moon Texture - very faint on dark side (earthshine effect) */}
+          <g mask="url(#moon-mask)" filter="url(#desaturate-dark)">
+            <image
+              href="/moon-texture.jpg"
+              x="0"
+              y="-50"
+              width="200"
+              height="300"
+              preserveAspectRatio="xMidYMid slice"
+              opacity="0.08"
             />
-            <stop offset="100%" stopColor="currentColor" className="text-black/50" />
-          </linearGradient>
-        </defs>
+          </g>
 
-        {/* 1. Dark Moon Base */}
-        <circle cx="100" cy="100" r="100" fill="#0a0a0a" />
+          {/* 3. Lit portion texture */}
+          <g mask="url(#lit-mask)" filter="url(#desaturate-lit)">
+            <image
+              href="/moon-texture.jpg"
+              x="0"
+              y="-50"
+              width="200"
+              height="300"
+              preserveAspectRatio="xMidYMid slice"
+              opacity="0.9"
+            />
+          </g>
 
-        {/* 2. Full Moon Texture - very faint on dark side (earthshine effect) */}
-        <g mask="url(#moon-mask)" style={{ filter: 'saturate(0.3)' }}>
-          <image
-            href="/moon-texture.jpg"
-            x="-100"
-            y="0"
-            width="400"
-            height="200"
-            preserveAspectRatio="xMidYMid slice"
-            className="opacity-10"
-          />
-        </g>
+          {/* 4. Subtle silvery overlay on lit portion */}
+          <path d={litPath} fill="#e2e8f0" opacity="0.1" />
 
-        {/* 3. Lit portion texture */}
-        <g mask="url(#lit-mask)" style={{ filter: 'brightness(1.0) saturate(0.85)' }}>
-          <image
-            href="/moon-texture.jpg"
-            x="-100"
-            y="0"
-            width="400"
-            height="200"
-            preserveAspectRatio="xMidYMid slice"
-            className="opacity-90"
-          />
-        </g>
+          {/* 5. Lit Portion gradient overlay - adds 3D depth to texture */}
+          <path d={litPath} fill="url(#moon-sphere)" opacity="0.25" />
 
-        {/* 4. Subtle silvery overlay on lit portion */}
-        <path d={litPath} fill="#e2e8f0" className="opacity-10" />
+          {/* 6. Terminator shadow - soft falloff at light/dark boundary */}
+          <g mask="url(#lit-mask)">
+            <circle
+              cx="100"
+              cy="100"
+              r="100"
+              fill="url(#terminator-shadow)"
+              style={{ pointerEvents: 'none' }}
+            />
+          </g>
 
-        {/* 5. Lit Portion gradient overlay - adds 3D depth to texture */}
-        <path d={litPath} fill="url(#moon-sphere)" className="opacity-25 mix-blend-overlay" />
-
-        {/* 6. Terminator shadow - soft falloff at light/dark boundary */}
-        <g mask="url(#lit-mask)">
+          {/* 7. Terminator edge blend - softens the harsh lit/dark edge */}
           <circle
             cx="100"
             cy="100"
             r="100"
-            fill="url(#terminator-shadow)"
-            className="pointer-events-none"
+            fill="url(#terminator-blend)"
+            style={{ pointerEvents: 'none' }}
           />
-        </g>
-
-        {/* 7. Highlight accent on lit portion - extra 3D pop */}
-        <path d={litPath} fill="url(#highlight-accent)" className="pointer-events-none" />
-
-        {/* 8. Limb darkening overlay - realistic edge falloff */}
-        <circle
-          cx="100"
-          cy="100"
-          r="100"
-          fill="url(#limb-darkening)"
-          className="pointer-events-none"
-        />
-      </motion.svg>
-    </motion.div>
+        </svg>
+      </div>
+    </div>
   );
 }
