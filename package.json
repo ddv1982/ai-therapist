@@ -120,11 +120,15 @@
     "web-streams-polyfill": "^4.2.0"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
+    "*.{js,jsx,ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ],
-    "*.{json,md,yml,yaml}": [
+    "*.{json,md,yml,yaml,css,html}": [
+      "prettier --write"
+    ],
+    "convex/**/*.ts": [
+      "eslint --fix",
       "prettier --write"
     ]
   }

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Pre-push hook: Full verification before pushing to remote
+# Runs complete test suite and build verification
+
+echo "🚀 Pre-push: Running full verification..."
+
+# 1. Run full test suite
+echo "🧪 Running full test suite..."
+npm test || exit 1
+
+# 2. Verify build compiles successfully
+echo "🏗️ Verifying production build..."
+npm run build || exit 1
+
+echo "✅ Pre-push checks passed! Pushing to remote..."
