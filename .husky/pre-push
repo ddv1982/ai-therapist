@@ -1,24 +1,18 @@
 #!/bin/sh
 
 # Pre-push hook: Full verification before pushing to remote
-# Runs qa:smoke (api:types + lint + tsc + jest), coverage, and e2e tests
+# Runs qa:full (api:types + lint + tsc + jest + coverage + e2e)
+
+# Find bun binary
+BUN=$(command -v bun 2>/dev/null || echo "$HOME/.bun/bin/bun")
 
 echo "🚀 Pre-push: Running full QA verification..."
 
-# 1. Run smoke tests (api:types + lint + tsc + unit tests)
-echo "🔍 Running smoke tests (lint, typecheck, unit tests)..."
-CI=1 npm run qa:smoke || exit 1
+# 1. Run full QA suite
+CI=1 $BUN run qa:full || exit 1
 
-# 2. Run test coverage
-echo "📊 Running test coverage..."
-CI=1 npm run test:coverage || exit 1
-
-# 3. Run e2e tests
-echo "🎭 Running end-to-end tests..."
-CI=1 npm run test:e2e || exit 1
-
-# 4. Verify build compiles successfully
+# 2. Verify build compiles successfully
 echo "🏗️ Verifying production build..."
-npm run build || exit 1
+$BUN run build || exit 1
 
 echo "✅ Pre-push checks passed! Pushing to remote..."

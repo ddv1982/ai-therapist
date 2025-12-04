@@ -500,8 +500,8 @@ Our foundation is strong: enterprise security, evidence-based frameworks, modern
 
 ## Document Information
 
-**Version**: 1.0  
-**Last Updated**: November 24, 2025  
+**Version**: 1.1  
+**Last Updated**: December 4, 2025  
 **Owner**: Product Team  
 **Status**: Active
 

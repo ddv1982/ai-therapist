@@ -12,7 +12,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Modern React 19**: Leveraging latest React features for optimal performance
   - `useOptimistic` for instant UI feedback on user actions
   - `useDraftSaving` custom hook eliminating ~250 lines of duplicated code
-- **Production-Ready**: All 1,528 tests passing with zero console errors
+- **Production-Ready**: Full test coverage with zero console errors
 
 ### 🏗️ Code Architecture Modernization
 
@@ -92,6 +92,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 ### Prerequisites
 
 - Node.js 24+
+- Bun 1.2+
 - Convex (backend - runs locally during development)
 
 ### Installation
@@ -101,7 +102,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
    ```bash
    git clone <your-repo-url>
    cd ai-therapist
-   npm install
+   bun install
    ```
 
 2. **Set up Clerk** (Required)
@@ -111,7 +112,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 3. **Set up Convex** (Required)
    - Go to [convex.dev](https://convex.dev) and create a new project
-   - Run `npx convex dev` to get your local development URL
+   - Run `bunx convex dev` to get your local development URL
 
 4. **Set up environment**
 
@@ -137,20 +138,26 @@ CACHE_ENABLED=true
 EOF
 ```
 
-5. **Initialize Convex**
+5. **Generate encryption key**
 
    ```bash
-   npm run encryption:setup # Generate encryption keys
-   npm run convex:dev       # Runs backend (keep in separate terminal)
+   bun run encryption:generate
+   # Copy the output to .env.local as ENCRYPTION_KEY="..."
    ```
 
-6. **Start development**
+6. **Start Convex backend** (keep in separate terminal)
 
    ```bash
-   npm run dev
+   bun run convex:dev
    ```
 
-7. **Open browser**
+7. **Start development**
+
+   ```bash
+   bun run dev
+   ```
+
+8. **Open browser**
    - Navigate to `http://localhost:4000`
    - Sign up/Login with Clerk
    - Enable web search in chat settings for access to current information
@@ -159,30 +166,29 @@ EOF
 
 ### Core Development
 
-- `npm run dev` - Start development server (port 4000)
-- `npm run dev:local` - Start development server (localhost only)
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run api:types` - Generate TypeScript types from OpenAPI spec
+- `bun run dev` - Start development server (port 4000)
+- `bun run dev:local` - Start development server (localhost only)
+- `bun run build` - Build for production
+- `bun run start` - Start production server
+- `bun run lint` - Run ESLint
+- `bun run api:types` - Generate TypeScript types from OpenAPI spec
 
 ### Database Management (Convex)
 
-- `npm run convex:dev` - Start local Convex backend
-- `npm run convex:deploy` - Deploy Convex backend to production
+- `bun run convex:dev` - Start local Convex backend
+- `bun run convex:deploy` - Deploy Convex backend to production
 
 ### Encryption
 
-- `npm run encryption:setup` - Setup encryption configuration
-- `npm run encryption:generate` - Generate new encryption keys
+- `bun run encryption:generate` - Generate new encryption key (copy to .env.local)
 
 ### Testing
 
-- `npm run test` - Run unit tests with Jest
-- `npm run test:watch` - Run tests in watch mode
-- `npm run test:coverage` - Generate coverage report
-- `npm run test:e2e` - Run Playwright E2E tests
-- `npm run qa:full` - Run full QA suite (smoke + coverage + E2E)
+- `bun run test` - Run unit tests with Jest
+- `bun run test:watch` - Run tests in watch mode
+- `bun run test:coverage` - Generate coverage report
+- `bun run test:e2e` - Run Playwright E2E tests
+- `bun run qa:full` - Run full QA suite (smoke + coverage + E2E)
 
 ### Makefile Workflow
 
@@ -227,7 +233,7 @@ Key variables required in `.env.local`:
 ### API Key Setup
 
 - Server-side only via `GROQ_API_KEY` (never sent to client).
-- Encryption keys managed via `npm run encryption:setup`.
+- Encryption keys generated via `bun run encryption:generate`.
 
 ## 📱 Mobile Experience
 
@@ -257,6 +263,7 @@ Key variables required in `.env.local`:
 - **Next.js 16** with App Router and Turbopack
 - **React 19** with Concurrent Features
 - **TypeScript** Strict Mode
+- **Bun** Package Manager (10-25x faster than npm)
 - **React Query** (TanStack Query v5)
 - **Convex** Backend-as-a-Service
 - **Tailwind CSS v4**

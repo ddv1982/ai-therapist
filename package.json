@@ -5,7 +5,7 @@
   "type": "module",
   "engines": {
     "node": ">=24.0.0",
-    "npm": ">=10.0.0"
+    "bun": ">=1.2.0"
   },
   "scripts": {
     "dev": "next dev --turbo --port 4000",
@@ -19,9 +19,7 @@
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy",
     "api:types": "openapi-typescript docs/api.yaml -o src/types/api.generated.ts",
-    "encryption:generate": "node scripts/setup-encryption.js generate",
-    "encryption:setup": "node scripts/setup-encryption.js setup",
-    "encryption:validate": "node scripts/setup-encryption.js validate",
+    "encryption:generate": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\"",
     "env:init": "node scripts/setup-env-local.js",
     "i18n:types": "node scripts/generate-i18n-types.js",
     "test": "jest",
@@ -31,12 +29,11 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",
-    "qa:smoke": "npm run api:types && npm run lint && tsc --noEmit && npm test",
-    "qa:full": "CI=1 npm run qa:smoke && CI=1 npm run test:coverage && npx playwright install --with-deps || true && CI=1 npm run test:e2e && node scripts/print-coverage-summary.mjs",
-    "audit:names": "node scripts/naming-audit.mjs",
-    "analyze": "ANALYZE=true npm run build",
-    "analyze:server": "ANALYZE=true BUNDLE_ANALYZE=server npm run build",
-    "analyze:browser": "ANALYZE=true BUNDLE_ANALYZE=browser npm run build",
+    "qa:smoke": "openapi-typescript docs/api.yaml -o src/types/api.generated.ts && eslint . && tsc --noEmit && jest",
+    "qa:full": "CI=1 openapi-typescript docs/api.yaml -o src/types/api.generated.ts && CI=1 eslint . && CI=1 tsc --noEmit && CI=1 jest --coverage && playwright install --with-deps || true && CI=1 playwright test && node scripts/print-coverage-summary.mjs",
+    "analyze": "ANALYZE=true next build",
+    "analyze:server": "ANALYZE=true BUNDLE_ANALYZE=server next build",
+    "analyze:browser": "ANALYZE=true BUNDLE_ANALYZE=browser next build",
     "prepare": "husky"
   },
   "dependencies": {

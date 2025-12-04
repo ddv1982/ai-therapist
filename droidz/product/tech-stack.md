@@ -4,9 +4,9 @@
 
 AI Therapist is built with modern, production-ready technologies prioritizing performance, security, and developer experience. This document provides a comprehensive overview of our technical architecture, core dependencies, and development practices.
 
-**Last Updated**: November 24, 2025  
+**Last Updated**: December 4, 2025  
 **Node Version**: 24+  
-**Package Manager**: npm 10+
+**Package Manager**: Bun 1.2+
 
 ---
 
@@ -649,22 +649,33 @@ decrypt(ciphertext: string, iv: string, authTag: string) → plaintext
 
 ### Package Management
 
-**Lock File**: `package-lock.json` (npm)
+#### Bun
+
+**Why**: Fast, all-in-one JavaScript runtime and toolkit
+
+**Lock File**: `bun.lock`
+
+**Benefits**:
+
+- 10-25x faster package installation than npm
+- Built-in TypeScript support
+- Native bundler and test runner
+- Drop-in npm replacement
 
 **Scripts** (key ones):
 
-- `npm run dev` - Development server
-- `npm run build` - Production build
-- `npm run lint` - Code linting
-- `npm run test` - Unit tests
-- `npm run test:e2e` - E2E tests
+- `bun run dev` - Development server
+- `bun run build` - Production build
+- `bun run lint` - Code linting
+- `bun run test` - Unit tests
+- `bun run test:e2e` - E2E tests
 
 **Engine Requirements**:
 
 ```json
 {
   "node": ">=24.0.0",
-  "npm": ">=10.0.0"
+  "bun": ">=1.2.0"
 }
 ```
 
@@ -1186,7 +1197,7 @@ const [optimisticMessages, addOptimisticMessage] = useOptimistic(messages, (stat
 
 **Process**:
 
-1. Run `npm audit` for vulnerabilities
+1. Run `bun audit` for vulnerabilities (or `bun pm audit`)
 2. Test updates in development
 3. Run full test suite
 4. Deploy to preview environment
@@ -1196,7 +1207,7 @@ const [optimisticMessages, addOptimisticMessage] = useOptimistic(messages, (stat
 **Tools**:
 
 - Dependabot (GitHub) - Automated security updates
-- `npm outdated` - Check for updates
+- `bun outdated` - Check for updates
 
 ---
 
@@ -1206,34 +1217,34 @@ const [optimisticMessages, addOptimisticMessage] = useOptimistic(messages, (stat
 
 ```bash
 # Development
-npm run dev                # Start dev server
-npm run build              # Production build
-npm run start              # Start production server
+bun run dev                # Start dev server
+bun run build              # Production build
+bun run start              # Start production server
 
 # Convex
-npm run convex:dev         # Start Convex backend
-npm run convex:deploy      # Deploy to production
+bun run convex:dev         # Start Convex backend
+bun run convex:deploy      # Deploy to production
 
 # Testing
-npm run test               # Unit tests
-npm run test:watch         # Watch mode
-npm run test:coverage      # Coverage report
-npm run test:e2e           # E2E tests
-npm run test:e2e:ui        # Playwright UI
+bun run test               # Unit tests
+bun run test:watch         # Watch mode
+bun run test:coverage      # Coverage report
+bun run test:e2e           # E2E tests
+bun run test:e2e:ui        # Playwright UI
 
 # Code Quality
-npm run lint               # ESLint
-npm run format             # Prettier format
-npx tsc --noEmit          # Type check
+bun run lint               # ESLint
+bun run format             # Prettier format
+bunx tsc --noEmit          # Type check
 
 # Setup
-npm run encryption:setup   # Generate encryption keys
-npm run encryption:validate # Verify encryption
-npm run env:init          # Create .env.local template
+bun run encryption:setup   # Generate encryption keys
+bun run encryption:validate # Verify encryption
+bun run env:init           # Create .env.local template
 
 # Analysis
-npm run analyze           # Bundle size analysis
-npm run audit:names       # Naming conventions audit
+bun run analyze            # Bundle size analysis
+bun run audit:names        # Naming conventions audit
 ```
 
 ### Architecture Decision Records (ADRs)
@@ -1305,8 +1316,8 @@ npm run audit:names       # Naming conventions audit
 
 **Owner**: Engineering Team  
 **Review Frequency**: Quarterly or on major tech changes  
-**Last Reviewed**: November 24, 2025  
-**Next Review**: February 24, 2026
+**Last Reviewed**: December 4, 2025  
+**Next Review**: March 4, 2026
 
 ### Contributing to This Document
 

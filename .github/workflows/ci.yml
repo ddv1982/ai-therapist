@@ -32,19 +32,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run ESLint
-        run: npm run lint
+        run: bun run lint
 
       - name: Run TypeScript type check
-        run: npx tsc --noEmit
+        run: bunx tsc --noEmit
 
       - name: Check formatting
-        run: npm run format:check
+        run: bun run format:check
 
   # Job 2: Unit Tests with Coverage
   unit-tests:
@@ -58,13 +62,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Run unit tests with coverage
-        run: npm run test:coverage
+        run: bun run test:coverage
         env:
           CI: true
 
@@ -96,13 +104,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build Next.js application
-        run: npm run build
+        run: bun run build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -126,13 +138,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       - name: Clear existing build output
         if: ${{ !startsWith(env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '', 'pk_test_') }}
@@ -146,7 +162,7 @@ jobs:
           path: .next/
 
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: bun run test:e2e
         env:
           CI: true
           PLAYWRIGHT_SKIP_CONVEX: 'true'
@@ -183,13 +199,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build and analyze bundle
-        run: npm run build
+        run: bun run build
         env:
           ANALYZE: false
 
