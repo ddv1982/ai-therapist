@@ -97,7 +97,7 @@ exports[`ChatEmptyState matches snapshot for desktop 1`] = `
                   <path
                     d="M 100 200
               A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
+              A 100 100 0 0 0 100 200"
                   />
                 </clippath>
                 <lineargradient
@@ -277,7 +277,7 @@ exports[`ChatEmptyState matches snapshot for mobile 1`] = `
                   <path
                     d="M 100 200
               A 100 100 0 0 1 100 0
-              A 100 100 0 0 1 100 200"
+              A 100 100 0 0 0 100 200"
                   />
                 </clippath>
                 <lineargradient

@@ -35,7 +35,7 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
               A ${rx} ${radius} 0 0 ${termSweep} ${center} 0`;
     } else {
       const outerSweep = 1;
-      const termSweep = p < 0.75 ? 0 : 1;
+      const termSweep = p < 0.75 ? 1 : 0;
       return `M ${center} ${center * 2}
               A ${radius} ${radius} 0 0 ${outerSweep} ${center} 0
               A ${rx} ${radius} 0 0 ${termSweep} ${center} ${center * 2}`;
