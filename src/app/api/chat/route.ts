@@ -2,11 +2,14 @@ import { NextRequest } from 'next/server';
 import { convertToModelMessages } from 'ai';
 import type { UIMessage } from 'ai';
 import { languageModels, ModelID } from '@/ai/providers';
+import { MODEL_IDS } from '@/ai/model-metadata';
 import { groq } from '@ai-sdk/groq';
+import { createOpenAI } from '@ai-sdk/openai';
 import { getTherapySystemPrompt } from '@/lib/therapy/therapy-prompts';
 import { streamChatCompletion } from '@/lib/chat/streaming';
 import { normalizeChatRequest, buildForwardedMessages } from '@/lib/chat/chat-request';
 import { selectModelAndTools } from '@/lib/chat/model-selector';
+import { extractBYOKKey, BYOK_OPENAI_MODEL } from '@/lib/chat/byok-helper';
 import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
 import { createErrorResponse } from '@/lib/api/api-response';
@@ -74,6 +77,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       message?: unknown;
       selectedModel?: string;
       webSearchEnabled?: boolean;
+      byokKey?: string;
     };
     const firstUser = Array.isArray(raw?.messages)
       ? raw.messages.find((m) => m?.role === 'user')
@@ -122,27 +126,66 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     const payloadMessages = Array.isArray(raw?.messages) ? raw.messages : null;
     const forwarded = buildForwardedMessages(payloadMessages, normalized.data.message);
 
+    // Check if user has provided their own API key (BYOK) - check early to affect model selection
+    const byokApiKey = extractBYOKKey(req.headers);
+    
+    logger.info('BYOK header check', {
+      apiEndpoint: '/api/chat',
+      requestId: context.requestId,
+      hasByokKey: Boolean(byokApiKey),
+    });
+
+    // When BYOK is active, we override the model and disable web search (Groq-specific feature)
+    const webSearchRequested = Boolean(raw?.webSearchEnabled);
+    const effectiveWebSearch = byokApiKey ? false : webSearchRequested;
+
     const decision = selectModelAndTools({
       message: normalized.data.message,
       preferredModel: normalized.data.model,
-      webSearchEnabled: Boolean(raw?.webSearchEnabled),
+      webSearchEnabled: effectiveWebSearch,
     });
-    const modelId = decision.model;
-    const hasWebSearch = decision.tools.includes('web-search');
-    const toolChoiceHeader = hasWebSearch ? 'auto' : 'none';
+    
+    // Determine which model to use
+    let effectiveModelId: string;
+    let modelToUse;
+    let hasWebSearch: boolean;
+    let toolChoiceHeader: string;
+
+    if (byokApiKey) {
+      // BYOK mode: Use user's OpenAI key
+      const userOpenAI = createOpenAI({ apiKey: byokApiKey });
+      modelToUse = userOpenAI(BYOK_OPENAI_MODEL);
+      effectiveModelId = MODEL_IDS.byok;
+      hasWebSearch = false; // Web search is Groq-specific, not available with BYOK
+      toolChoiceHeader = 'none';
+
+      logger.info('BYOK mode active', {
+        apiEndpoint: '/api/chat',
+        requestId: context.requestId,
+        effectiveModelId,
+        webSearchDisabled: webSearchRequested, // Log if user wanted web search but it was disabled
+      });
+    } else {
+      // Standard mode: Use system models
+      const modelId = decision.model;
+      effectiveModelId = modelId;
+      modelToUse = languageModels[modelId as ModelID];
+      hasWebSearch = decision.tools.includes('web-search');
+      toolChoiceHeader = hasWebSearch ? 'auto' : 'none';
+    }
 
     logger.info('Model selection for chat request', {
       apiEndpoint: '/api/chat',
       requestId: context.requestId,
-      modelId,
+      modelId: effectiveModelId,
       toolChoice: toolChoiceHeader,
       webSearchEnabled: hasWebSearch,
-      selectedModelProvided: Boolean(normalized.data.model),
+      byokActive: Boolean(byokApiKey),
     });
 
     const systemPrompt = await buildSystemPrompt(req, hasWebSearch);
     try {
-      recordModelUsage(modelId, toolChoiceHeader);
+      recordModelUsage(effectiveModelId, toolChoiceHeader);
     } catch {}
     const toUiMessages = (messages: ApiChatMessage[]): Array<Omit<UIMessage, 'id'>> =>
       messages.map((message) => ({
@@ -158,7 +201,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     const modelMessages = convertToModelMessages(uiMessages);
 
     const streamResultPromise = streamChatCompletion({
-      model: languageModels[modelId as ModelID],
+      model: modelToUse,
       system: systemPrompt,
       messages: modelMessages,
       telemetry: { metadata: { requestId: context.requestId } },
@@ -170,7 +213,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     const collector = new AssistantResponseCollector(
       providedSessionId,
       ownership,
-      modelId,
+      effectiveModelId,
       context.requestId,
       MAX_ASSISTANT_RESPONSE_CHARS,
       appendWithLimitUtil,
@@ -178,7 +221,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     );
     const streamResult = await streamResultPromise;
 
-    let resolvedModelId = modelId;
+    let resolvedModelId = effectiveModelId;
     const updateResolvedModel = (candidate?: string) => {
       if (typeof candidate !== 'string' || candidate.length === 0) return;
       if (candidate === resolvedModelId) return;
@@ -190,7 +233,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       onError: createStreamErrorHandler({
         context,
         systemPrompt,
-        modelId,
+        modelId: effectiveModelId,
         webSearchEnabled: hasWebSearch,
       }),
       messageMetadata: ({ part }) => {
@@ -220,7 +263,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       });
 
     if (!normalized.data.sessionId) {
-      attachResponseHeaders(uiResponse as Response, context.requestId, modelId, toolChoiceHeader);
+      attachResponseHeaders(uiResponse as Response, context.requestId, effectiveModelId, toolChoiceHeader);
       return uiResponse as Response;
     }
 
@@ -234,14 +277,14 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
         uiResponse as Response,
         collector,
         context.requestId,
-        modelId,
+        effectiveModelId,
         toolChoiceHeader
       );
       if (responseWithHeaders) return responseWithHeaders;
     }
 
     await persistFromClonedStreamUtil(uiResponse as Response, collector);
-    attachResponseHeaders(uiResponse as Response, context.requestId, modelId, toolChoiceHeader);
+    attachResponseHeaders(uiResponse as Response, context.requestId, effectiveModelId, toolChoiceHeader);
     return uiResponse as Response;
   } catch (error) {
     // Use ChatError response system for consistent error handling

@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { LanguageToggle } from '@/components/ui/language-switcher';
 
 import type { ChatSessionSummary } from '@/hooks/use-chat-controller';
-import { Plus, MessageSquare, Trash2, Sparkles, Brain, Globe, EyeOff } from 'lucide-react';
+import { Plus, MessageSquare, Trash2, Sparkles, Brain, Globe, EyeOff, Key } from 'lucide-react';
 
 interface ChatSidebarProps {
   open: boolean;
@@ -23,6 +23,8 @@ interface ChatSidebarProps {
   smartModelActive: boolean;
   onToggleLocalModel: () => void;
   localModelActive: boolean;
+  onApiKeysOpen?: () => void;
+  byokActive?: boolean;
   translate: (key: string) => string;
 }
 
@@ -42,6 +44,8 @@ export function ChatSidebar(props: ChatSidebarProps) {
     webSearchEnabled,
     smartModelActive,
     localModelActive,
+    onApiKeysOpen,
+    byokActive,
     translate,
   } = props;
 
@@ -232,6 +236,26 @@ export function ChatSidebar(props: ChatSidebarProps) {
                   : translate('sidebar.localModelTooltipInactive')}
               </div>
             </div>
+            {onApiKeysOpen && (
+              <div className="group relative">
+                <button
+                  onClick={onApiKeysOpen}
+                  className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none ${
+                    byokActive
+                      ? 'shadow-apple-md bg-amber-600 text-white'
+                      : 'bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted shadow-apple-xs backdrop-blur-sm'
+                  }`}
+                  aria-label={translate('sidebar.apiKeys')}
+                  aria-pressed={byokActive}
+                  title={byokActive ? translate('sidebar.byokActive') : translate('sidebar.apiKeys')}
+                >
+                  <Key className="h-4 w-4" />
+                </button>
+                <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 transform rounded bg-gray-800 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  {byokActive ? translate('sidebar.byokActive') : translate('sidebar.apiKeys')}
+                </div>
+              </div>
+            )}
             <LanguageToggle />
           </div>
         </div>

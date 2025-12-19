@@ -74,7 +74,7 @@ describe('ReportGenerationService', () => {
       },
     });
 
-    service = new ReportGenerationService(mockModel, mockConvexClient as any);
+    service = new ReportGenerationService(mockModel, mockModel, mockConvexClient as any);
   });
 
   describe('generateReport', () => {
@@ -92,9 +92,15 @@ describe('ReportGenerationService', () => {
       expect(generateSessionReport).toHaveBeenCalledWith(
         mockMessages,
         'mock-report-prompt',
-        mockModel
+        mockModel,
+        { temperature: 0.3, topP: 0.9 }
       );
-      expect(extractStructuredAnalysis).toHaveBeenCalled();
+      expect(extractStructuredAnalysis).toHaveBeenCalledWith(
+        'Generated Report Content',
+        'mock-analysis-prompt',
+        mockModel,
+        { temperature: 0.1 }
+      );
       expect(mockMutation).toHaveBeenCalled();
       expect(result).toEqual({
         reportContent: 'Generated Report Content',

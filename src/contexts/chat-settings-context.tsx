@@ -2,10 +2,21 @@
 
 import { createContext, useContext, useState, ReactNode, useCallback, useMemo } from 'react';
 import { DEFAULT_MODEL_ID } from '@/features/chat/config';
+import { getProviderForModel, isBYOKModel } from '@/ai/model-metadata';
 
 interface ChatSettings {
   model: string;
   webSearchEnabled: boolean;
+}
+
+/**
+ * Extended chat settings with derived properties
+ */
+export interface ChatSettingsWithDerived extends ChatSettings {
+  /** Provider derived from selected model (null for system models) */
+  selectedProvider: string | null;
+  /** Whether the selected model is a BYOK model */
+  isBYOK: boolean;
 }
 
 interface ChatState {
@@ -22,6 +33,8 @@ interface ChatContextValue extends ChatState {
   setCurrentInput: (input: string) => void;
   clearMessages: () => void;
   setError: (error: string | null) => void;
+  /** Settings with derived provider info */
+  settingsWithProvider: ChatSettingsWithDerived;
 }
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
@@ -67,6 +80,16 @@ export function ChatSettingsProvider({ children }: { children: ReactNode }) {
     setStreamingMessageId(null);
   }, []);
 
+  // Derive provider info from selected model
+  const settingsWithProvider = useMemo<ChatSettingsWithDerived>(
+    () => ({
+      ...settings,
+      selectedProvider: getProviderForModel(settings.model),
+      isBYOK: isBYOKModel(settings.model),
+    }),
+    [settings]
+  );
+
   // Memoize the context value to prevent unnecessary re-renders
   const value: ChatContextValue = useMemo(
     () => ({
@@ -80,6 +103,7 @@ export function ChatSettingsProvider({ children }: { children: ReactNode }) {
       setCurrentInput,
       clearMessages,
       setError,
+      settingsWithProvider,
     }),
     [
       settings,
@@ -92,6 +116,7 @@ export function ChatSettingsProvider({ children }: { children: ReactNode }) {
       setCurrentInput,
       clearMessages,
       setError,
+      settingsWithProvider,
     ]
   );
 

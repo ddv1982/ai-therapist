@@ -5,6 +5,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { QueryProvider } from '@/providers/query-provider';
 import { SessionProvider } from '@/contexts/session-context';
 import { ChatSettingsProvider } from '@/contexts/chat-settings-context';
+import { ApiKeysProvider } from '@/contexts/api-keys-context';
 import { CBTProvider } from '@/contexts/cbt-context';
 import { ToastProvider } from '@/components/ui/toast';
 import { Toaster } from '@/components/ui/sonner';
@@ -28,16 +29,18 @@ export function RootProviders({ children }: RootProvidersProps) {
     <ClerkProvider publishableKey={clerkPublishableKey}>
       <QueryProvider>
         <SessionProvider>
-          <ChatSettingsProvider>
-            <CBTProvider>
-              <ToastProvider>
-                <SkipLinks />
-                <Toaster />
-                <WebVitalsReporter />
-                <ErrorBoundary>{children}</ErrorBoundary>
-              </ToastProvider>
-            </CBTProvider>
-          </ChatSettingsProvider>
+          <ApiKeysProvider>
+            <ChatSettingsProvider>
+              <CBTProvider>
+                <ToastProvider>
+                  <SkipLinks />
+                  <Toaster />
+                  <WebVitalsReporter />
+                  <ErrorBoundary>{children}</ErrorBoundary>
+                </ToastProvider>
+              </CBTProvider>
+            </ChatSettingsProvider>
+          </ApiKeysProvider>
         </SessionProvider>
       </QueryProvider>
     </ClerkProvider>

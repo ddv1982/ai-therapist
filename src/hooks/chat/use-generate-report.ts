@@ -3,6 +3,8 @@
 import { useCallback } from 'react';
 import { apiClient } from '@/lib/api/client';
 import { REPORT_MODEL_ID } from '@/features/chat/config';
+import { useApiKeys } from '@/hooks/use-api-keys';
+import { createBYOKHeaders, getEffectiveModelId } from '@/lib/chat/byok-helper';
 
 // Internal mapping helper types intentionally omitted to reduce surface area
 
@@ -30,22 +32,32 @@ export function useGenerateReport(params: {
   setIsGeneratingReport: (val: boolean) => void;
 }) {
   const { currentSession, messages, setMessages, loadSessions, setIsGeneratingReport } = params;
+  const { keys, isActive } = useApiKeys();
+  const byokKey = isActive ? keys.openai : null;
 
   const generateReport = useCallback(async () => {
     if (!currentSession || messages.length === 0) return;
     setIsGeneratingReport(true);
+
+    // Determine effective model: BYOK overrides report model
+    const effectiveModelId = getEffectiveModelId(byokKey, REPORT_MODEL_ID);
+    const headers = createBYOKHeaders(byokKey);
+
     try {
-      const result = await apiClient.generateReportDetailed({
-        sessionId: currentSession,
-        messages: messages
-          .filter((m) => !m.content.startsWith('📊 **Session Report**'))
-          .map((m) => ({
-            role: m.role,
-            content: m.content,
-            timestamp: m.timestamp.toISOString?.(),
-          })),
-        model: REPORT_MODEL_ID,
-      });
+      const result = await apiClient.generateReportDetailed(
+        {
+          sessionId: currentSession,
+          messages: messages
+            .filter((m) => !m.content.startsWith('📊 **Session Report**'))
+            .map((m) => ({
+              role: m.role,
+              content: m.content,
+              timestamp: m.timestamp.toISOString?.(),
+            })),
+          model: effectiveModelId,
+        },
+        { headers }
+      );
 
       const dataObj = (result as { success?: boolean; data?: { reportContent?: unknown } }).data;
       const legacyReport = (result as { reportContent?: unknown }).reportContent;
@@ -62,14 +74,14 @@ export function useGenerateReport(params: {
           role: 'assistant' as const,
           content: `📊 **Session Report**\n\n${content}`,
           timestamp: new Date(),
-          modelUsed: REPORT_MODEL_ID,
+          modelUsed: effectiveModelId,
         };
         setMessages((prev) => [...prev, reportMessage]);
         try {
           await apiClient.postMessage(currentSession, {
             role: 'assistant',
             content: reportMessage.content,
-            modelUsed: REPORT_MODEL_ID,
+            modelUsed: effectiveModelId,
           });
           await loadSessions();
         } catch {}
@@ -77,7 +89,7 @@ export function useGenerateReport(params: {
     } finally {
       setIsGeneratingReport(false);
     }
-  }, [currentSession, messages, setMessages, loadSessions, setIsGeneratingReport]);
+  }, [currentSession, messages, setMessages, loadSessions, setIsGeneratingReport, byokKey]);
 
   return { generateReport };
 }

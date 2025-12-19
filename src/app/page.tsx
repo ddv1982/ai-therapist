@@ -6,6 +6,22 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { MobileDebugInfo } from '@/components/layout/mobile-debug-info';
 import { ModalSkeleton } from '@/components/ui/loading-fallback';
+import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
+import { useInputFooterHeight } from '@/hooks/use-input-footer-height';
+import { useChatSettings } from '@/contexts/chat-settings-context';
+import { useChatController } from '@/hooks';
+import { useApiKeys } from '@/hooks/use-api-keys';
+import { LOCAL_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
+import { useToast } from '@/components/ui/toast';
+import { ChatSidebar } from '@/features/chat/components/dashboard/chat-sidebar';
+import { ChatHeader } from '@/features/chat/components/chat-header';
+import { ChatHeaderProvider } from '@/features/chat/context/chat-header-context';
+import { getModelDisplayName, supportsWebSearch, MODEL_IDS } from '@/ai/model-metadata';
+import { useChatState } from '@/features/chat/hooks/use-chat-state';
+import { useChatActions } from '@/features/chat/hooks/use-chat-actions';
+import { useChatModals } from '@/features/chat/hooks/use-chat-modals';
+import { ChatContainer } from '@/features/chat/components/chat-container';
+import { ChatControls } from '@/features/chat/components/chat-controls';
 
 const MemoryManagementModal = dynamic(
   () =>
@@ -16,21 +32,16 @@ const MemoryManagementModal = dynamic(
     loading: () => <ModalSkeleton />,
   }
 );
-import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
-import { useInputFooterHeight } from '@/hooks/use-input-footer-height';
-import { useChatSettings } from '@/contexts/chat-settings-context';
-import { useChatController } from '@/hooks';
-import { LOCAL_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
-import { useToast } from '@/components/ui/toast';
-import { ChatSidebar } from '@/features/chat/components/dashboard/chat-sidebar';
-import { ChatHeader } from '@/features/chat/components/chat-header';
-import { ChatHeaderProvider } from '@/features/chat/context/chat-header-context';
-import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
-import { useChatState } from '@/features/chat/hooks/use-chat-state';
-import { useChatActions } from '@/features/chat/hooks/use-chat-actions';
-import { useChatModals } from '@/features/chat/hooks/use-chat-modals';
-import { ChatContainer } from '@/features/chat/components/chat-container';
-import { ChatControls } from '@/features/chat/components/chat-controls';
+
+const ApiKeysPanel = dynamic(
+  () =>
+    import('@/features/settings/api-keys-panel').then((mod) => ({
+      default: mod.ApiKeysPanel,
+    })),
+  {
+    loading: () => <ModalSkeleton />,
+  }
+);
 
 function ChatPageContent() {
   const router = useRouter();
@@ -39,11 +50,21 @@ function ChatPageContent() {
   const toastT = useTranslations('toast');
   const { showToast } = useToast();
 
-  const effectiveModelId = settings.webSearchEnabled ? ANALYTICAL_MODEL_ID : settings.model;
+  const { isActive: byokActive } = useApiKeys();
+  
+  const effectiveModelId = byokActive 
+    ? MODEL_IDS.byok 
+    : settings.webSearchEnabled 
+      ? ANALYTICAL_MODEL_ID 
+      : settings.model;
+  
   const modelLabel = useMemo(() => {
+    if (byokActive) {
+      return `${getModelDisplayName(MODEL_IDS.byok)} (Your Key)`;
+    }
     const base = getModelDisplayName(effectiveModelId);
     return supportsWebSearch(effectiveModelId) ? `${base} (Deep Analysis)` : base;
-  }, [effectiveModelId]);
+  }, [effectiveModelId, byokActive]);
 
   const controller = useChatController({
     model: settings.model,
@@ -168,6 +189,8 @@ function ChatPageContent() {
             webSearchEnabled={settings.webSearchEnabled}
             smartModelActive={!settings.webSearchEnabled && settings.model === ANALYTICAL_MODEL_ID}
             localModelActive={!settings.webSearchEnabled && settings.model === LOCAL_MODEL_ID}
+            onApiKeysOpen={modalActions.openApiKeysPanel}
+            byokActive={byokActive}
             translate={t}
           />
         </div>
@@ -205,6 +228,11 @@ function ChatPageContent() {
           onOpenChange={modalActions.setShowMemoryModal}
           currentSessionId={chatState.currentSession ?? undefined}
           onMemoryUpdated={controller.setMemoryContext}
+        />
+
+        <ApiKeysPanel
+          open={modals.showApiKeysPanel}
+          onOpenChange={modalActions.setShowApiKeysPanel}
         />
       </div>
     </ChatUIProvider>

@@ -1,4 +1,5 @@
 import type { LanguageModel, ModelMessage, ToolChoice, ToolSet } from 'ai';
+import type { SharedV2ProviderOptions } from '@ai-sdk/provider';
 import { streamText, type TelemetrySettings } from 'ai';
 import { getTelemetrySettings } from '@/lib/observability/telemetry';
 
@@ -13,8 +14,10 @@ export async function streamChatCompletion(params: {
   tools?: ChatTools;
   toolChoice?: ChatToolChoice;
   telemetry?: boolean | Partial<TelemetrySettings>;
+  providerOptions?: SharedV2ProviderOptions;
 }) {
-  const { model, system, messages, maxOutputTokens, tools, toolChoice, telemetry } = params;
+  const { model, system, messages, maxOutputTokens, tools, toolChoice, telemetry, providerOptions } =
+    params;
 
   const args: Parameters<typeof streamText>[0] = {
     model,
@@ -36,6 +39,9 @@ export async function streamChatCompletion(params: {
   const telemetrySettings = getTelemetrySettings(telemetry);
   if (telemetrySettings) {
     args.experimental_telemetry = telemetrySettings;
+  }
+  if (providerOptions) {
+    args.providerOptions = providerOptions;
   }
 
   return streamText(args);

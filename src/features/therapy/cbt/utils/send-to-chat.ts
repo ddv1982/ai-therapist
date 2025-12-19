@@ -4,12 +4,14 @@ import { getApiData, type ApiResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import type { SessionData } from '@/lib/queries/sessions';
 import { buildSessionSummaryCard, type CBTFlowState } from '@/features/therapy/cbt/flow';
+import { createBYOKHeaders, getEffectiveModelId } from '@/lib/chat/byok-helper';
 
 export interface SendToChatParams {
   title: string;
   flowState: CBTFlowState;
   contextualMessages: { role: 'user' | 'assistant'; content: string; timestamp: string }[];
   model?: string;
+  byokKey?: string | null;
 }
 
 export interface SendToChatResult {
@@ -47,10 +49,15 @@ export async function sendToChat({
   flowState,
   contextualMessages,
   model = ANALYTICAL_MODEL_ID,
+  byokKey,
 }: SendToChatParams): Promise<SendToChatResult> {
   const summaryCard = buildSessionSummaryCard(flowState);
   const now = Date.now();
   let sessionId: string | null = null;
+
+  // Determine effective model: BYOK overrides default model
+  const effectiveModelId = getEffectiveModelId(byokKey, model);
+  const headers = createBYOKHeaders(byokKey);
 
   const reportMessages: Array<{ role: 'user' | 'assistant'; content: string; timestamp: string }> =
     [
@@ -64,11 +71,14 @@ export async function sendToChat({
     ) as SessionData;
     sessionId = createdSession.id;
 
-    const reportResponse = await apiClient.generateReportDetailed({
-      sessionId,
-      messages: reportMessages,
-      model,
-    });
+    const reportResponse = await apiClient.generateReportDetailed(
+      {
+        sessionId,
+        messages: reportMessages,
+        model: effectiveModelId,
+      },
+      { headers }
+    );
 
     const reportContent = extractReportContentFlexible(reportResponse);
 
@@ -78,7 +88,7 @@ export async function sendToChat({
     await apiClient.postMessage(sessionId, {
       role: 'assistant',
       content: prefixedReportContent,
-      modelUsed: model,
+      modelUsed: effectiveModelId,
     });
 
     logger.info('CBT session exported to chat', { sessionId, title });

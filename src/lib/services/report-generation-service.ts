@@ -1,7 +1,9 @@
+import type { LanguageModel } from 'ai';
 import {
   generateSessionReport,
   extractStructuredAnalysis,
   type ReportMessage,
+  type GenerationOptions,
 } from '@/lib/api/groq-client';
 import { ANALYSIS_EXTRACTION_PROMPT_TEXT } from '@/lib/therapy/therapy-prompts';
 import { getReportPrompt } from '@/lib/therapy/therapy-prompts';
@@ -30,13 +32,38 @@ interface ReportGenerationResult {
 }
 
 export class ReportGenerationService {
-  private reportModel: string;
+  private modelOrId: LanguageModel | string;
+  private reportModelId: string;
 
   constructor(
-    reportModel: string,
+    modelOrId: LanguageModel | string,
+    modelId: string,
     private readonly convexClient: ConvexHttpClient
   ) {
-    this.reportModel = reportModel;
+    this.modelOrId = modelOrId;
+    this.reportModelId = modelId;
+  }
+
+  /**
+   * Check if using Groq model (string ID) vs BYOK (model instance).
+   * Groq models support temperature/topP, reasoning models don't.
+   */
+  private isGroqModel(): boolean {
+    return typeof this.modelOrId === 'string';
+  }
+
+  /**
+   * Get generation options for report generation (Groq only).
+   */
+  private getReportGenerationOptions(): GenerationOptions | undefined {
+    return this.isGroqModel() ? { temperature: 0.3, topP: 0.9 } : undefined;
+  }
+
+  /**
+   * Get generation options for analysis extraction (Groq only).
+   */
+  private getAnalysisGenerationOptions(): GenerationOptions | undefined {
+    return this.isGroqModel() ? { temperature: 0.1 } : undefined;
   }
 
   /**
@@ -185,14 +212,15 @@ export class ReportGenerationService {
       const parsedAnalysis = await extractStructuredAnalysis(
         completion,
         ANALYSIS_EXTRACTION_PROMPT_TEXT,
-        this.reportModel
+        this.modelOrId,
+        this.getAnalysisGenerationOptions()
       );
 
       // Apply contextual validation to cognitive distortions
       this.applyContextualValidation(parsedAnalysis, messages);
 
       logger.info('Structured analysis extracted successfully', {
-        modelUsed: this.reportModel,
+        modelUsed: this.reportModelId,
         hasCognitiveDistortions: !!parsedAnalysis.cognitiveDistortions?.length,
         hasSchemaAnalysis: !!parsedAnalysis.schemaAnalysis,
         analysisConfidence: parsedAnalysis.analysisConfidence,
@@ -202,7 +230,7 @@ export class ReportGenerationService {
     } catch (error) {
       logger.error('Failed to extract structured analysis', {
         error: error instanceof Error ? error.message : 'Unknown error',
-        modelUsed: this.reportModel,
+        modelUsed: this.reportModelId,
       });
 
       // Return empty analysis on failure - generateObject already handles retries
@@ -269,13 +297,13 @@ export class ReportGenerationService {
     locale: 'en' | 'nl'
   ): Promise<ReportGenerationResult> {
     const modelDisplay = (() => {
-      const base = getModelDisplayName(this.reportModel) || this.reportModel;
-      return supportsWebSearch(this.reportModel) ? `${base} (Deep Analysis)` : base;
+      const base = getModelDisplayName(this.reportModelId) || this.reportModelId;
+      return supportsWebSearch(this.reportModelId) ? `${base} (Deep Analysis)` : base;
     })();
 
     logger.info('Report generation started', {
       sessionId,
-      modelUsed: this.reportModel,
+      modelUsed: this.reportModelId,
       modelDisplayName: modelDisplay,
       messageCount: messages.length,
     });
@@ -308,12 +336,17 @@ export class ReportGenerationService {
     // Generate the human-readable session report using AI
     logger.info('Generating session report with AI model', {
       sessionId,
-      modelUsed: this.reportModel,
+      modelUsed: this.reportModelId,
       messageCount: messages.length,
     });
 
     const reportPrompt = getReportPrompt(locale);
-    const completion = await generateSessionReport(messages, reportPrompt, this.reportModel);
+    const completion = await generateSessionReport(
+      messages,
+      reportPrompt,
+      this.modelOrId,
+      this.getReportGenerationOptions()
+    );
 
     if (!completion) {
       throw new Error('Failed to generate session report');
@@ -343,14 +376,14 @@ export class ReportGenerationService {
 
     logger.info('Session report generated successfully', {
       sessionId,
-      modelUsed: this.reportModel,
+      modelUsed: this.reportModelId,
       reportLength: completion.length,
       cbtDataSource: dataSource,
     });
 
     return {
       reportContent: completion,
-      modelUsed: this.reportModel,
+      modelUsed: this.reportModelId,
       modelDisplayName: modelDisplay,
       cbtDataSource: dataSource,
       cbtDataAvailable: dataSource !== 'none',

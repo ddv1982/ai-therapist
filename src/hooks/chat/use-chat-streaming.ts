@@ -8,6 +8,7 @@ import { logger } from '@/lib/utils/logger';
 import type { MessageData } from '@/features/chat/messages/message';
 import type { useChatTransport } from '../use-chat-transport';
 import { apiClient } from '@/lib/api/client';
+import { createBYOKHeaders } from '@/lib/chat/byok-helper';
 
 interface UseChatStreamingParams {
   currentSession: string | null;
@@ -16,6 +17,7 @@ interface UseChatStreamingParams {
   setMessages: Dispatch<SetStateAction<MessageData[]>>;
   loadSessions: () => Promise<void>;
   setIsLoading: (value: boolean) => void;
+  byokKey?: string | null;
 }
 
 interface StartStreamArgs {
@@ -25,11 +27,15 @@ interface StartStreamArgs {
 }
 
 export function useChatStreaming(params: UseChatStreamingParams) {
-  const { currentSession, transport, options, setMessages, loadSessions, setIsLoading } = params;
+  const { currentSession, transport, options, setMessages, loadSessions, setIsLoading, byokKey } = params;
 
   const optionsRef = useRef(options);
   const aiPlaceholderIdRef = useRef<string | null>(null);
   const sessionIdRef = useRef<string | null>(currentSession);
+  const byokKeyRef = useRef(byokKey);
+
+  // Update refs synchronously to avoid race conditions on deactivation
+  byokKeyRef.current = byokKey;
 
   useEffect(() => {
     optionsRef.current = options;
@@ -124,12 +130,14 @@ export function useChatStreaming(params: UseChatStreamingParams) {
       const safeModel = isValidModel ? requestedModel : DEFAULT_MODEL_ID;
 
       try {
+        const currentByokKey = byokKeyRef.current;
         await sendAiMessage(
           {
             role: 'user',
             parts: [{ type: 'text', text: userMessage }],
           },
           {
+            headers: createBYOKHeaders(currentByokKey),
             body: {
               sessionId,
               webSearchEnabled: optionsRef.current?.webSearchEnabled ?? false,

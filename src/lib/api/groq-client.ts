@@ -1,9 +1,10 @@
 import { generateText, generateObject, convertToModelMessages, streamText } from 'ai';
-import type { UIMessage } from 'ai';
+import type { UIMessage, LanguageModel } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import { languageModels, type ModelID } from '@/ai/providers';
 import { supportsWebSearch } from '@/ai/model-metadata';
 import { parsedAnalysisSchema, type ParsedAnalysis } from '@/lib/therapy/analysis-schema';
+import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 
 // Simplified message type for report generation (only needs role and content)
 export interface ReportMessage {
@@ -16,43 +17,70 @@ export interface AIMessage {
   content: string;
 }
 
-import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
+export interface GenerationOptions {
+  temperature?: number;
+  topP?: number;
+}
+
+/**
+ * Generate a therapeutic session report using any LanguageModel instance.
+ * Accepts either a model instance directly or falls back to model ID lookup.
+ *
+ * @param options - Optional temperature/topP settings (omit for reasoning models)
+ */
 export const generateSessionReport = async (
   messages: ReportMessage[],
   systemPrompt: string,
-  selectedModel: string = ANALYTICAL_MODEL_ID
+  modelOrId: LanguageModel | string = ANALYTICAL_MODEL_ID,
+  options?: GenerationOptions
 ) => {
   const userPrompt = `Please generate a therapeutic session report based on the following conversation:\n\n${messages.map((m) => `${m.role}: ${m.content}`).join('\n\n')}`;
 
+  // Support both model instance and model ID
+  const model =
+    typeof modelOrId === 'string'
+      ? languageModels[modelOrId as keyof typeof languageModels]
+      : modelOrId;
+
   const result = await generateText({
-    model: languageModels[selectedModel as keyof typeof languageModels],
+    model,
     system: systemPrompt,
     prompt: userPrompt,
-    temperature: 0.3,
-    topP: 0.9,
+    // Only include temperature/topP if provided (reasoning models don't support them)
+    ...options,
   });
 
   return result.text;
 };
 
 /**
- * Extract structured analysis using generateObject for type-safe outputs
- * Replaces manual JSON parsing with Zod schema validation
+ * Extract structured analysis using generateObject for type-safe outputs.
+ * Accepts either a model instance directly or falls back to model ID lookup.
+ *
+ * @param options - Optional temperature settings (omit for reasoning models)
  */
 export const extractStructuredAnalysis = async (
   reportContent: string,
   systemPrompt: string,
-  selectedModel: string = ANALYTICAL_MODEL_ID
+  modelOrId: LanguageModel | string = ANALYTICAL_MODEL_ID,
+  options?: GenerationOptions
 ): Promise<ParsedAnalysis> => {
   const userPrompt = `Please extract structured analysis data from the following therapeutic report:\n\n${reportContent}`;
 
+  // Support both model instance and model ID
+  const model =
+    typeof modelOrId === 'string'
+      ? languageModels[modelOrId as keyof typeof languageModels]
+      : modelOrId;
+
   const result = await generateObject({
-    model: languageModels[selectedModel as keyof typeof languageModels],
+    model,
     schema: parsedAnalysisSchema,
     system: systemPrompt,
     prompt: userPrompt,
-    temperature: 0.1, // Lower temperature for more consistent outputs
-    mode: 'json', // Use JSON mode for better compatibility
+    mode: 'json',
+    // Only include temperature if provided (reasoning models don't support it)
+    ...(options?.temperature !== undefined && { temperature: options.temperature }),
   });
 
   return result.object;

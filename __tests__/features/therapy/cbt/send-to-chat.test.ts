@@ -135,7 +135,8 @@ describe('sendToChat', () => {
     expect(apiClient.createSession).toHaveBeenCalledWith({ title: 'CBT Summary' });
 
     expect(apiClient.generateReportDetailed).toHaveBeenCalledWith(
-      expect.objectContaining({ sessionId: 'session-123', model: 'openai/gpt-oss-120b' })
+      expect.objectContaining({ sessionId: 'session-123', model: 'openai/gpt-oss-120b' }),
+      expect.objectContaining({ headers: undefined })
     );
 
     const messagesArg = (apiClient.generateReportDetailed as jest.Mock).mock.calls[0][0].messages;

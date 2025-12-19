@@ -10,7 +10,7 @@ import type {
 import { logger } from '@/lib/utils/logger';
 import { env } from '@/config/env';
 import { MODEL_IDS } from '@/ai/model-metadata';
-import type { ModelIdentifier } from '@/ai/model-metadata';
+import type { SystemModelIdentifier } from '@/ai/model-metadata';
 
 const ollamaBaseUrl = trimTrailingSlash(env.OLLAMA_BASE_URL);
 const ollamaApiBaseUrl = ensureApiBase(ollamaBaseUrl);
@@ -36,7 +36,7 @@ if (typeof window === 'undefined') {
   }
 }
 
-const baseLanguageModels: Record<ModelIdentifier, LanguageModel> = {
+const baseLanguageModels: Record<SystemModelIdentifier, LanguageModel> = {
   [MODEL_IDS.default]: groq(MODEL_IDS.default),
   [MODEL_IDS.analytical]: groq(MODEL_IDS.analytical),
   [MODEL_IDS.local]: localOllamaModel ?? groq(MODEL_IDS.default),

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { createOpenAI } from '@ai-sdk/openai';
 import { type ReportMessage } from '@/lib/api/groq-client';
 import { logger } from '@/lib/utils/logger';
 import { reportGenerationSchema, validateRequest } from '@/lib/utils/validation';
@@ -8,17 +9,44 @@ import { createErrorResponse, createSuccessResponse } from '@/lib/api/api-respon
 import { ReportGenerationService } from '@/lib/services/report-generation-service';
 import { verifySessionOwnership } from '@/lib/repositories/session-repository';
 import { getAuthenticatedConvexClient } from '@/lib/convex/http-client';
+import { extractBYOKKey, BYOK_OPENAI_MODEL } from '@/lib/chat/byok-helper';
+import { MODEL_IDS } from '@/ai/model-metadata';
+import { languageModels } from '@/ai/providers';
+
+// Allow report generation up to 2 minutes (reasoning models can be slow)
+export const maxDuration = 120;
 
 export const POST = withAuth(async (request: NextRequest, context: AuthenticatedRequestContext) => {
   try {
     const convex = getAuthenticatedConvexClient(context.jwtToken);
-    // Always use analytical model for detailed session reports
     const { REPORT_MODEL_ID } = await import('@/features/chat/config');
+
+    // Check for BYOK key - user's own OpenAI API key
+    const byokApiKey = extractBYOKKey(request.headers);
+
+    // Determine model to use: BYOK overrides default
+    let modelToUse;
+    let effectiveModelId: string;
+
+    if (byokApiKey) {
+      const userOpenAI = createOpenAI({ apiKey: byokApiKey });
+      modelToUse = userOpenAI(BYOK_OPENAI_MODEL);
+      effectiveModelId = MODEL_IDS.byok;
+      logger.info('BYOK key detected for report generation, using user OpenAI model', {
+        ...context,
+        modelUsed: effectiveModelId,
+      });
+    } else {
+      modelToUse = languageModels[REPORT_MODEL_ID as keyof typeof languageModels];
+      effectiveModelId = REPORT_MODEL_ID;
+    }
 
     logger.info('Report generation request received', {
       ...context,
-      modelUsed: REPORT_MODEL_ID,
-      selectionReason: 'Report generation requires analytical model',
+      modelUsed: effectiveModelId,
+      selectionReason: byokApiKey
+        ? 'BYOK key provided, using user OpenAI model'
+        : 'Report generation requires analytical model',
       reportGenerationFlow: true,
     });
 
@@ -62,14 +90,14 @@ export const POST = withAuth(async (request: NextRequest, context: Authenticated
         const { getApiRequestLocale } = await import('@/i18n/request');
         const locale = getApiRequestLocale(request);
 
-        // Use service layer to generate report
-        const service = new ReportGenerationService(REPORT_MODEL_ID, convex);
+        // Use service layer to generate report with model instance and ID
+        const service = new ReportGenerationService(modelToUse, effectiveModelId, convex);
         const result = await service.generateReport(sessionId, messages as ReportMessage[], locale);
 
         return createSuccessResponse(result, { requestId: context.requestId });
       },
       undefined,
-      30000 // 30 second TTL for report generation deduplication
+      120000 // 2 minute TTL for report generation deduplication (reasoning models can be slow)
     );
   } catch (error) {
     logger.apiError('/api/reports/generate', error as Error, context);

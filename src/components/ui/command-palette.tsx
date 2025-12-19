@@ -14,7 +14,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useSession } from '@/contexts/session-context';
 import { useChatSettings } from '@/contexts/chat-settings-context';
 import { useSessionsQuery, SessionData } from '@/lib/queries/sessions';
-import { MessageSquare, Brain, Plus, Settings, Search, Clock, Loader2 } from 'lucide-react';
+import { MessageSquare, Brain, Plus, Settings, Search, Clock, Loader2, Key } from 'lucide-react';
 // import { v4 as uuidv4 } from 'uuid'; // Unused
 import { useTranslations } from 'next-intl';
 import { useSelectSession } from '@/hooks';
@@ -22,9 +22,10 @@ import { useSelectSession } from '@/hooks';
 interface CommandPaletteProps {
   onCBTOpen?: () => void;
   onSettingsOpen?: () => void;
+  onApiKeysOpen?: () => void;
 }
 
-export function CommandPalette({ onCBTOpen, onSettingsOpen }: CommandPaletteProps) {
+export function CommandPalette({ onCBTOpen, onSettingsOpen, onApiKeysOpen }: CommandPaletteProps) {
   const t = useTranslations('ui');
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -99,6 +100,13 @@ export function CommandPalette({ onCBTOpen, onSettingsOpen }: CommandPaletteProp
                 <CommandItem onSelect={() => handleSelect(openCBTDiary)}>
                   <Brain className="mr-2 h-4 w-4" />
                   {t('command.cbt')}
+                </CommandItem>
+                <CommandItem
+                  onSelect={() => handleSelect(() => onApiKeysOpen?.())}
+                  keywords={['settings', 'keys', 'api', 'openai', 'anthropic', 'groq', 'byok']}
+                >
+                  <Key className="mr-2 h-4 w-4" />
+                  {t('command.apiKeys')}
                 </CommandItem>
                 <CommandItem onSelect={() => handleSelect(() => onSettingsOpen?.())}>
                   <Settings className="mr-2 h-4 w-4" />

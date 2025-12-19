@@ -18,6 +18,8 @@ import { useState, useCallback } from 'react';
 export interface ChatModalsState {
   /** Whether the memory management modal is currently visible */
   showMemoryModal: boolean;
+  /** Whether the API keys panel is currently visible */
+  showApiKeysPanel: boolean;
 }
 
 /**
@@ -32,6 +34,12 @@ export interface ChatModalsActions {
   closeMemoryModal: () => void;
   /** Directly sets memory modal visibility state */
   setShowMemoryModal: (show: boolean) => void;
+  /** Opens the API keys panel */
+  openApiKeysPanel: () => void;
+  /** Closes the API keys panel */
+  closeApiKeysPanel: () => void;
+  /** Directly sets API keys panel visibility state */
+  setShowApiKeysPanel: (show: boolean) => void;
 }
 
 /**
@@ -75,6 +83,7 @@ export interface UseChatModalsReturn {
  */
 export function useChatModals(): UseChatModalsReturn {
   const [showMemoryModal, setShowMemoryModal] = useState(false);
+  const [showApiKeysPanel, setShowApiKeysPanel] = useState(false);
 
   const openMemoryModal = useCallback(() => {
     setShowMemoryModal(true);
@@ -84,14 +93,26 @@ export function useChatModals(): UseChatModalsReturn {
     setShowMemoryModal(false);
   }, []);
 
+  const openApiKeysPanel = useCallback(() => {
+    setShowApiKeysPanel(true);
+  }, []);
+
+  const closeApiKeysPanel = useCallback(() => {
+    setShowApiKeysPanel(false);
+  }, []);
+
   return {
     modals: {
       showMemoryModal,
+      showApiKeysPanel,
     },
     actions: {
       openMemoryModal,
       closeMemoryModal,
       setShowMemoryModal,
+      openApiKeysPanel,
+      closeApiKeysPanel,
+      setShowApiKeysPanel,
     },
   };
 }

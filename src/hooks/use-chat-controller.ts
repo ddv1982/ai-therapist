@@ -17,6 +17,7 @@ import { logger } from '@/lib/utils/logger';
 import { useTranslations } from 'next-intl';
 import { useChatTransport } from '@/hooks/use-chat-transport';
 import { useMemoryContext } from '@/hooks/use-memory-context';
+import { useApiKeys } from '@/hooks/use-api-keys';
 import { useChatSessions } from '@/hooks/chat/use-chat-sessions';
 import { useChatUI } from '@/hooks/chat/use-chat-ui';
 import { useChatStreaming } from '@/hooks/chat/use-chat-streaming';
@@ -189,6 +190,10 @@ export function useChatController(options?: {
 
   const { memoryContext, setMemoryContext } = useMemoryContext(currentSession);
 
+  // Get BYOK key if active
+  const { keys: apiKeys, isActive: byokActive } = useApiKeys();
+  const byokKey = byokActive ? (apiKeys.openai ?? null) : null;
+
   // UI state (input, loading, viewport, refs)
   const { state: uiState, refs: uiRefs, actions: uiActions } = useChatUI();
   const { input, isLoading, showSidebar, isGeneratingReport, isMobile, viewportHeight } = uiState;
@@ -204,7 +209,11 @@ export function useChatController(options?: {
     respectUserScroll: true,
   });
 
-  const transport = useChatTransport({ sessionId: currentSession });
+  const transport = useChatTransport({
+    sessionId: currentSession,
+    selectedModel: options?.model,
+    byokKey,
+  });
 
   const { startStream, stopStream } = useChatStreaming({
     currentSession,
@@ -213,6 +222,7 @@ export function useChatController(options?: {
     setMessages,
     loadSessions,
     setIsLoading,
+    byokKey,
   });
 
   const { sendMessage } = useSendMessage({

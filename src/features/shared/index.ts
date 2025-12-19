@@ -21,6 +21,9 @@ export { CommandPalette, useCommandPalette } from '@/components/ui/command-palet
 export { TherapeuticTable, useTherapeuticTableStyles } from '@/components/ui/therapeutic-table';
 export { MobileCBTSheet } from '@/features/therapy/components/mobile-cbt-sheet';
 
+// Settings
+export { ApiKeysPanel, useApiKeysPanel } from '@/features/settings';
+
 // Hook utilities
 export { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 

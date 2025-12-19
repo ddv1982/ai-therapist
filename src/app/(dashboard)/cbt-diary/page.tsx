@@ -24,6 +24,7 @@ import { useCbtDiaryFlow } from '@/features/therapy/cbt/hooks/use-cbt-diary-flow
 import { sendToChat } from '@/features/therapy/cbt/utils/send-to-chat';
 import { sessionKeys } from '@/lib/queries/sessions';
 import { useSession } from '@/contexts/session-context';
+import { useApiKeys } from '@/hooks/use-api-keys';
 
 // Using MessageData from the message system
 // Type alias not required locally
@@ -36,6 +37,8 @@ function CBTDiaryPageContent() {
   const toastT = useTranslations('toast');
   const { selectSession } = useSelectSession();
   const queryClient = useQueryClient();
+  const { keys, isActive: byokActive } = useApiKeys();
+  const byokKey = byokActive ? keys.openai : null;
 
   // Get session ID from CBT context
   const reduxSessionId = cbt.flow?.sessionId ?? null;
@@ -198,6 +201,7 @@ function CBTDiaryPageContent() {
         flowState: cbtFlowState,
         contextualMessages: contextual,
         model: (await import('@/features/chat/config')).ANALYTICAL_MODEL_ID,
+        byokKey,
       });
 
       await selectSession(sessionId);
@@ -255,6 +259,8 @@ function CBTDiaryPageContent() {
     selectSession,
     toastT,
     cbt,
+    byokKey,
+    queryClient,
   ]);
 
   return (

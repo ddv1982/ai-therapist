@@ -197,11 +197,14 @@ export class ApiClient {
   // Reports (legacy POST /api/reports removed)
 
   // Reports (detailed generate endpoint)
-  async generateReportDetailed(body: {
-    sessionId: string;
-    messages: ChatMessage[];
-    model?: string;
-  }): Promise<
+  async generateReportDetailed(
+    body: {
+      sessionId: string;
+      messages: ChatMessage[];
+      model?: string;
+    },
+    options?: { headers?: Record<string, string> }
+  ): Promise<
     ApiResponse<{
       reportContent: string;
       modelUsed: string;
@@ -210,6 +213,7 @@ export class ApiClient {
       cbtDataAvailable: boolean;
     }>
   > {
+    // Use 2 minute timeout for report generation (reasoning models can be slow)
     return this.request<
       ApiResponse<{
         reportContent: string;
@@ -218,10 +222,15 @@ export class ApiClient {
         cbtDataSource: string;
         cbtDataAvailable: boolean;
       }>
-    >('/api/reports/generate', {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
+    >(
+      '/api/reports/generate',
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: options?.headers,
+      },
+      120000
+    );
   }
 
   // Memory Management
