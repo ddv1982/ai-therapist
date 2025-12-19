@@ -86,7 +86,7 @@ export function CommandPalette({ onCBTOpen, onSettingsOpen, onApiKeysOpen }: Com
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl overflow-hidden p-0 shadow-2xl">
-          <Command className="[&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-semibold">
+          <Command className="**:[[cmdk-group-heading]]:text-muted-foreground **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:font-semibold">
             <CommandInput placeholder={t('command.placeholder')} className="h-12" />
             <CommandList className="max-h-[400px] overflow-y-auto">
               <CommandEmpty>{t('command.noResults')}</CommandEmpty>
