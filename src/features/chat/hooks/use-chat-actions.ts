@@ -106,6 +106,18 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
     setByokActive,
   } = params;
 
+  /**
+   * Helper to update settings while ensuring BYOK is deactivated.
+   * This centralizes the synchronization logic between system models and BYOK.
+   */
+  const updateSettingsWithSync = useCallback(
+    (updates: Parameters<typeof updateSettings>[0]) => {
+      setByokActive(false);
+      updateSettings(updates);
+    },
+    [updateSettings, setByokActive]
+  );
+
   const handleInputChange = useCallback(
     (value: string) => {
       setInput(value);
@@ -184,29 +196,26 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
 
   const handleWebSearchToggle = useCallback(() => {
     const newWebSearchEnabled = !settings.webSearchEnabled;
-    setByokActive(false);
-    updateSettings({
+    updateSettingsWithSync({
       webSearchEnabled: newWebSearchEnabled,
       model: newWebSearchEnabled ? ANALYTICAL_MODEL_ID : DEFAULT_MODEL_ID,
     });
-  }, [settings.webSearchEnabled, updateSettings, setByokActive]);
+  }, [settings.webSearchEnabled, updateSettingsWithSync]);
 
   const handleSmartModelToggle = useCallback(() => {
     const nextModel =
       settings.model === ANALYTICAL_MODEL_ID ? DEFAULT_MODEL_ID : ANALYTICAL_MODEL_ID;
-    setByokActive(false);
-    updateSettings({
+    updateSettingsWithSync({
       model: nextModel,
       webSearchEnabled: false,
     });
-  }, [settings.model, updateSettings, setByokActive]);
+  }, [settings.model, updateSettingsWithSync]);
 
   const handleLocalModelToggle = useCallback(async () => {
     const isLocal = settings.model === LOCAL_MODEL_ID;
-    setByokActive(false);
 
     if (isLocal) {
-      updateSettings({
+      updateSettingsWithSync({
         model: DEFAULT_MODEL_ID,
         webSearchEnabled: false,
       });
@@ -234,7 +243,7 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
         | undefined;
 
       if (health?.ok) {
-        updateSettings({
+        updateSettingsWithSync({
           model: LOCAL_MODEL_ID,
           webSearchEnabled: false,
         });
@@ -258,7 +267,7 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
         message: toastT('connectionErrorBody'),
       });
     }
-  }, [settings.model, updateSettings, showToast, toastT, setByokActive]);
+  }, [settings.model, updateSettingsWithSync, showToast, toastT]);
 
   const scrollToBottom = useCallback(() => {
     scrollToBottomFn();
