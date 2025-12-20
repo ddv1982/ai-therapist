@@ -44,6 +44,23 @@ Therapist AI App is a Next.js application designed to provide AI-driven therapy 
 - **Performance**: Use `.withIndex()` instead of `.filter()` for database queries whenever possible.
 - **Pagination**: Use `usePaginatedQuery` for lists that can grow large.
 
+### Import Aliases
+Always prefer path aliases over relative imports:
+- `@/*` → `./src/*` (source code)
+- `@convex/*` → `./convex/*` (Convex backend)
+- `@tests/*` → `./__tests__/*` (test utilities)
+
+```typescript
+// ✅ Good
+import { api } from '@convex/_generated/api';
+import { Button } from '@/components/ui/button';
+import { ComponentTestUtils } from '@tests/utils/test-utilities';
+
+// ❌ Avoid
+import { api } from '../../../convex/_generated/api';
+import { Button } from '../../components/ui/button';
+```
+
 ### Testing Convention
 Tests follow a hybrid colocation pattern:
 - `src/features/*/__tests__/`: Feature-specific unit tests (colocated with source code).
