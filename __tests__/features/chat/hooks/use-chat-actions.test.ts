@@ -48,6 +48,7 @@ describe('useChatActions', () => {
     router: { push: jest.fn() },
     showToast: jest.fn(),
     toastT: jest.fn((key) => key),
+    setByokActive: jest.fn(),
     ...overrides,
   });
 
@@ -193,10 +194,12 @@ describe('useChatActions', () => {
     });
   });
 
-  it('should toggle web search on and switch to analytical model', () => {
+  it('should toggle web search on and switch to analytical model and deactivate BYOK', () => {
     const updateSettings = jest.fn();
+    const setByokActive = jest.fn();
     const params = createMockParams({
       updateSettings,
+      setByokActive,
       settings: { model: DEFAULT_MODEL_ID, webSearchEnabled: false },
     });
     const { result } = renderHook(() => useChatActions(params));
@@ -205,6 +208,7 @@ describe('useChatActions', () => {
       result.current.handleWebSearchToggle();
     });
 
+    expect(setByokActive).toHaveBeenCalledWith(false);
     expect(updateSettings).toHaveBeenCalledWith({
       webSearchEnabled: true,
       model: ANALYTICAL_MODEL_ID,
@@ -229,10 +233,12 @@ describe('useChatActions', () => {
     });
   });
 
-  it('should toggle smart model', () => {
+  it('should toggle smart model and deactivate BYOK', () => {
     const updateSettings = jest.fn();
+    const setByokActive = jest.fn();
     const params = createMockParams({
       updateSettings,
+      setByokActive,
       settings: { model: DEFAULT_MODEL_ID, webSearchEnabled: false },
     });
     const { result } = renderHook(() => useChatActions(params));
@@ -241,6 +247,7 @@ describe('useChatActions', () => {
       result.current.handleSmartModelToggle();
     });
 
+    expect(setByokActive).toHaveBeenCalledWith(false);
     expect(updateSettings).toHaveBeenCalledWith({
       model: ANALYTICAL_MODEL_ID,
       webSearchEnabled: false,

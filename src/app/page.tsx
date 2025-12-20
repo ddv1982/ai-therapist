@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -11,7 +11,7 @@ import { useInputFooterHeight } from '@/hooks/use-input-footer-height';
 import { useChatSettings } from '@/contexts/chat-settings-context';
 import { useChatController } from '@/hooks';
 import { useApiKeys } from '@/hooks/use-api-keys';
-import { LOCAL_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
+import { LOCAL_MODEL_ID, ANALYTICAL_MODEL_ID, DEFAULT_MODEL_ID } from '@/features/chat/config';
 import { useToast } from '@/components/ui/toast';
 import { ChatSidebar } from '@/features/chat/components/dashboard/chat-sidebar';
 import { ChatHeader } from '@/features/chat/components/chat-header';
@@ -50,7 +50,17 @@ function ChatPageContent() {
   const toastT = useTranslations('toast');
   const { showToast } = useToast();
 
-  const { isActive: byokActive } = useApiKeys();
+  const { isActive: byokActive, setActive: setByokActive } = useApiKeys();
+
+  // Reset system model selection when BYOK is activated
+  useEffect(() => {
+    if (byokActive) {
+      updateSettings({
+        model: DEFAULT_MODEL_ID,
+        webSearchEnabled: false,
+      });
+    }
+  }, [byokActive, updateSettings]);
   
   const effectiveModelId = byokActive 
     ? MODEL_IDS.byok 
@@ -102,6 +112,7 @@ function ChatPageContent() {
     router,
     showToast,
     toastT,
+    setByokActive,
   });
 
   const { modals, actions: modalActions } = useChatModals();

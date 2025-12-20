@@ -163,7 +163,7 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 - CSS-first configuration (no JS config)
 - Oxide engine for faster builds
 - Automatic purging of unused styles
-- Dark mode support via CSS variables
+- Dark mode only (optimized for therapeutic focus)
 - Custom design tokens
 - Responsive design utilities
 
@@ -172,7 +172,7 @@ AI Therapist is built with modern, production-ready technologies prioritizing pe
 **Custom Theme**:
 
 - Primary colors: Therapeutic blue palette
-- Dark mode: High contrast for accessibility
+- Dark mode: Dark-mode only high contrast for accessibility
 - Typography: Inter font family
 - Spacing: Consistent 4px base unit
 

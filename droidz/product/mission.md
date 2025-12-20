@@ -76,7 +76,7 @@ AI Therapist leverages advanced artificial intelligence combined with evidence-b
    - Server-side only Convex functions with ownership validation
 
 4. **Exceptional User Experience**
-   - Beautiful dual-theme interface (light/dark modes)
+   - Immersive dark-mode only design (optimized for therapeutic focus)
    - Mobile-optimized responsive design
    - Real-time AI streaming with smooth animations
    - Session management for organizing therapeutic conversations
@@ -88,19 +88,25 @@ AI Therapist leverages advanced artificial intelligence combined with evidence-b
 
 ### Primary Users
 
-1. **Young Adults (18-35)**
+1. **Individuals Seeking Support**
    - Tech-savvy individuals comfortable with AI tools
    - May be experiencing anxiety, stress, or depression
-   - Looking for accessible mental health support
+   - Looking for accessible, immediate mental health support
    - Often underserved by traditional therapy due to cost or stigma
 
-2. **Working Professionals (25-45)**
+2. **Mental Health Practitioners**
+   - Therapists looking for tools to support clients between sessions
+   - Researchers studying AI-powered therapeutic interventions
+   - Practitioners needing automated session reporting and pattern analysis
+   - Clinical supervisors monitoring therapeutic framework application
+
+3. **Working Professionals (25-45)**
    - High-stress careers needing flexible support options
    - Cannot commit to regular therapy schedules
    - Need immediate coping strategies during work challenges
    - Value privacy and discretion
 
-3. **Students (16-25)**
+4. **Students (16-25)**
    - Facing academic pressure, social anxiety, or identity challenges
    - Limited budget for traditional therapy
    - Comfortable with digital-first solutions
@@ -155,11 +161,11 @@ Your therapeutic conversations deserve the highest protection:
 - **Zero exposure** of sensitive data in logs
 - **Server-authoritative architecture** preventing data enumeration
 
-#### 4. Modern, Delightful Experience
+#### 4. Modern, Focused Experience
 
-Mental health tools should be beautiful and easy to use:
+Mental health tools should be immersive and undistracting:
 
-- **Elegant design** with dark/light themes
+- **Elegant dark-mode only design** to minimize eye strain and maximize focus
 - **Mobile-first** responsive interface
 - **Smooth animations** and real-time streaming
 - **Session organization** for managing multiple therapeutic conversations

@@ -97,7 +97,7 @@ This roadmap outlines the planned feature development and enhancements for the A
 #### 🎨 User Experience
 
 - ✅ **Beautiful Interface**
-  - Dual theme support (dark/light modes)
+  - Immersive dark-mode only design (therapeutic focus)
   - Mobile-optimized responsive design
   - Smooth animations and transitions
   - Elegant shadcn/ui components
@@ -269,7 +269,7 @@ This roadmap outlines the planned feature development and enhancements for the A
     - **Description**: Make app usable for everyone
     - **Features**:
       - Screen reader optimization
-      - High contrast themes
+      - High contrast dark theme options
       - Font size customization
       - Keyboard navigation improvements
       - WCAG 2.1 AA compliance

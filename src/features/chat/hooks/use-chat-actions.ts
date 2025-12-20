@@ -81,6 +81,9 @@ export interface UseChatActionsParams {
 
   // Translations
   toastT: (key: string) => string;
+
+  // BYOK deactivation
+  setByokActive: (active: boolean) => void;
 }
 
 /**
@@ -100,6 +103,7 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
     router,
     showToast,
     toastT,
+    setByokActive,
   } = params;
 
   const handleInputChange = useCallback(
@@ -180,23 +184,26 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
 
   const handleWebSearchToggle = useCallback(() => {
     const newWebSearchEnabled = !settings.webSearchEnabled;
+    setByokActive(false);
     updateSettings({
       webSearchEnabled: newWebSearchEnabled,
       model: newWebSearchEnabled ? ANALYTICAL_MODEL_ID : DEFAULT_MODEL_ID,
     });
-  }, [settings.webSearchEnabled, updateSettings]);
+  }, [settings.webSearchEnabled, updateSettings, setByokActive]);
 
   const handleSmartModelToggle = useCallback(() => {
     const nextModel =
       settings.model === ANALYTICAL_MODEL_ID ? DEFAULT_MODEL_ID : ANALYTICAL_MODEL_ID;
+    setByokActive(false);
     updateSettings({
       model: nextModel,
       webSearchEnabled: false,
     });
-  }, [settings.model, updateSettings]);
+  }, [settings.model, updateSettings, setByokActive]);
 
   const handleLocalModelToggle = useCallback(async () => {
     const isLocal = settings.model === LOCAL_MODEL_ID;
+    setByokActive(false);
 
     if (isLocal) {
       updateSettings({
@@ -251,7 +258,7 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
         message: toastT('connectionErrorBody'),
       });
     }
-  }, [settings.model, updateSettings, showToast, toastT]);
+  }, [settings.model, updateSettings, showToast, toastT, setByokActive]);
 
   const scrollToBottom = useCallback(() => {
     scrollToBottomFn();
