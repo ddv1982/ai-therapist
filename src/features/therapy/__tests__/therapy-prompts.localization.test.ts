@@ -15,33 +15,33 @@ describe('buildTherapySystemPrompt localization', () => {
   it('returns a fully localized Dutch prompt without English remnants', () => {
     const prompt = buildTherapySystemPrompt('nl');
 
-    expect(prompt).toContain('Je bent een warme, professionele AI-therapeut');
+    expect(prompt).toContain('Je bent een empathische, professionele AI-therapeut');
     expect(prompt).not.toContain('You are a compassionate, professional AI therapist');
   });
 
   it('includes Dutch memory guidance when memory context is provided', () => {
     const prompt = buildTherapySystemPrompt('nl', { memory: sampleMemory });
 
-    expect(prompt).toContain('THERAPEUTISCH GEHEUGEN (SAMENVATTINGEN VAN EERDERE SESSIES):');
-    expect(prompt).not.toContain('THERAPEUTIC MEMORY CONTEXT');
+    expect(prompt).toContain('### Therapeutisch Geheugen');
+    expect(prompt).not.toContain('### Therapeutic Memory Context');
   });
 
   it('appends Dutch web search instructions when enabled', () => {
     const prompt = buildTherapySystemPrompt('nl', { webSearch: true });
 
-    expect(prompt).toContain('**WEBZOEKFUNCTIE ACTIEF:**');
-    expect(prompt).not.toContain('**WEB SEARCH CAPABILITIES ACTIVE:**');
+    expect(prompt).toContain('**WEBZOEKEN ACTIEF:**');
+    expect(prompt).not.toContain('**WEB SEARCH ENABLED:**');
   });
 
   it('delegates to buildTherapySystemPrompt when using getTherapySystemPrompt', () => {
     const prompt = getTherapySystemPrompt('en', { memory: sampleMemory, webSearch: true });
 
-    expect(prompt).toContain('THERAPEUTIC MEMORY CONTEXT');
-    expect(prompt).toContain('**WEB SEARCH CAPABILITIES ACTIVE:**');
+    expect(prompt).toContain('### Therapeutic Memory Context');
+    expect(prompt).toContain('**WEB SEARCH ENABLED:**');
   });
 
   it('returns localized report prompts for each supported locale', () => {
-    expect(getReportPrompt('nl')).toContain('CLIËNT‑GERICHT');
-    expect(getReportPrompt('en')).toContain('CLIENT-CENTERED APPROACH');
+    expect(getReportPrompt('nl')).toContain('# Instructies Therapeutisch Sessierapport');
+    expect(getReportPrompt('en')).toContain('# Therapeutic Session Report Instructions');
   });
 });
