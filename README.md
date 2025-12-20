@@ -4,6 +4,14 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ## 🚀 Recent Improvements
 
+### 🌙 Advanced AI Orchestration & UX (Dec 2025)
+
+- **Bring Your Own Key (BYOK)**: Integrated support for OpenAI `gpt-5-mini` using user-provided API keys, synchronized across sessions.
+- **Local AI Support**: Integration with **Ollama** for running models like `gemma3:4b` locally, ensuring maximum privacy.
+- **Dynamic UI Enhancements**: Implemented an astronomy-based **Realistic Moon** dashboard that reflects real-world lunar phases for a calming therapeutic atmosphere.
+- **Global Reach**: Added full **internationalization (i18n)** support with English and Dutch locales.
+- **Next.js 16 & React 19**: Fully migrated to the latest stable versions with optimized Turbopack builds.
+
 ### ⚡ Production Performance Optimization (Nov 2024)
 
 - **20x Faster Server Rendering**: Production server render time improved from 235ms → 12ms
@@ -45,13 +53,14 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Prettier Auto-Format**: Consistent code formatting across the codebase
 - **Cleaner Codebase**: Removed custom auth endpoints and legacy TOTP service
 - **Latest Dependencies**: All packages upgraded to latest stable versions
-- **Better Test Coverage**: 100% test pass rate across E2E and unit tests
+- **Robust Test Suite**: 174 active tests (169 unit/integration, 5 E2E) ensuring 100% stability.
 
 ## ✨ Features
 
 ### 🎨 Beautiful Experience
 
 - **Dark Mode Design** - Optimized dark interface for reduced eye strain and therapeutic use
+- **Realistic Moon Dashboard** - Astronomy-based lunar illumination matching real-world phases
 - **Mobile Optimized** - Touch-friendly responsive design
 - **Real-time Streaming** - AI responses with smooth animations
 - **Session Management** - Create and switch between therapy sessions
@@ -59,6 +68,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 ### 🧠 Therapeutic Framework
 
 - **Professional AI Prompting** - Trained with therapeutic principles
+- **Multi-Language Support** - Native support for English and Dutch (i18n)
 - **CBT & ERP Support** - Cognitive Behavioral Therapy and Exposure Response Prevention
 - **Schema Therapy** - Deep pattern recognition and healing approaches
 - **Crisis Intervention** - Automatic safety responses
@@ -67,6 +77,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ### 🔒 Enterprise Security
 
+- **Bring Your Own Key (BYOK)** - Optional use of personal OpenAI keys for enhanced privacy and cost control
 - **Clerk Managed Authentication** - Secure, industry-standard identity management
 - **AES-256-GCM Encryption** - Field-level encryption for therapeutic message content
 - **Webhook Authentication** - Svix signature verification for Clerk events
@@ -94,6 +105,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - Node.js 24+
 - Bun 1.2+
 - Convex (backend - runs locally during development)
+- Ollama (optional, for local model support)
 
 ### Installation
 
@@ -131,6 +143,10 @@ NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:6790/?d=...
 # AI & Encryption (required)
 GROQ_API_KEY=your_groq_api_key_here
 ENCRYPTION_KEY=your_32_character_encryption_key_here
+
+# Local AI (optional)
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL_ID=gemma3:4b
 
 # Local-only opts
 RATE_LIMIT_DISABLED=true
@@ -206,18 +222,22 @@ The repository includes a `Makefile` for common tasks.
 
 ## 🧠 AI Model System
 
-### Unified AI SDK 5 + Groq
+### Unified AI SDK 5 + Multi-Provider Support
 
 - Client streaming uses `@ai-sdk/react` `useChat` to `/api/chat`.
-- Server streaming uses AI SDK 5 `streamText` with Groq models.
+- **System Models**: Groq-based `gpt-oss-120b` and `gpt-oss-20b`.
+- **Local Models**: Native Ollama integration (defaults to `gemma3:4b`).
+- **BYOK (Bring Your Own Key)**: Support for user-provided OpenAI keys using `gpt-5-mini`.
 - Reports use AI SDK 5 `generateText`.
 - Session context/state uses `@ai-sdk/rsc` (`SessionAI`) for hydration and server-authoritative selection.
-- Model definition source of truth: `src/ai/providers.ts`.
+- Model definition source of truth: `src/ai/model-metadata.ts`.
 
 ### Smart Model Selection
 
 - **🔍 Web Search Enabled**: `openai/gpt-oss-120b` with browser tools
 - **💬 Regular Chat**: `openai/gpt-oss-20b` for fast responses
+- **🏠 Private / Local**: `ollama/gemma3:4b` for on-device inference
+- **🔑 Personal Key**: `openai/gpt-5-mini` via BYOK synchronization
 
 ## 🔧 Configuration
 
