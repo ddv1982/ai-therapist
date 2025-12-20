@@ -8,10 +8,10 @@ import {
   buildMemoryEnhancedPrompt,
   THERAPY_SYSTEM_PROMPT,
   type MemoryContext,
-} from '@/lib/therapy/therapy-prompts';
+} from '@/features/therapy/lib/therapy-prompts';
 
 // Mock the message encryption module
-jest.mock('@/lib/chat/message-encryption', () => ({
+jest.mock('@/features/chat/lib/message-encryption', () => ({
   encryptSessionReportContent: jest.fn((content: string) => `encrypted_${content}`),
   decryptSessionReportContent: jest.fn((encryptedContent: string) =>
     encryptedContent.replace('encrypted_', '')
@@ -29,7 +29,7 @@ import {
   encryptSessionReportContent,
   decryptSessionReportContent,
   encryptEnhancedAnalysisData,
-} from '@/lib/chat/message-encryption';
+} from '@/features/chat/lib/message-encryption';
 
 const mockEncryptSessionReportContent = encryptSessionReportContent as jest.MockedFunction<
   typeof encryptSessionReportContent

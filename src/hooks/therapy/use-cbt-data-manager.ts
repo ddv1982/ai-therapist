@@ -27,7 +27,7 @@ import type {
 } from '@/types';
 import type { CBTFormInput } from '@/features/therapy/cbt/cbt-form-schema';
 import { useChatUI } from '@/contexts/chat-ui-context';
-import { useCBTChatBridge, type SendStepOptions } from '@/lib/therapy/use-cbt-chat-bridge';
+import { useCBTChatBridge, type SendStepOptions } from '@/features/therapy/lib/use-cbt-chat-bridge';
 import { buildSessionSummaryCard } from '@/features/therapy/cbt/flow/cards';
 import { buildMarkdownSummary } from '@/features/therapy/cbt/flow/summary';
 import { generateUUID } from '@/lib/utils';
@@ -41,7 +41,7 @@ import {
   asChallengeQuestionsArray,
   asRationalThoughtsArray,
   asActionPlanData,
-} from '@/lib/therapy/transformers/cbt-transformers';
+} from '@/features/therapy/lib/transformers/cbt-transformers';
 
 // Removed Redux selectors - now using CBT context directly
 

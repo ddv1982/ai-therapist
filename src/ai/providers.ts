@@ -482,7 +482,7 @@ function createLocalOllamaLanguageModel(params: {
         },
         cancel(reason) {
           try {
-            reader.cancel(reason);
+            void reader.cancel(reason);
           } catch {
             // ignore cancellation errors
           }

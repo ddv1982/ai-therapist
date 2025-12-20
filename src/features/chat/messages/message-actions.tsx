@@ -12,9 +12,9 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { isCBTDiaryMessage, analyzeCBTMessage } from '@/lib/chat/cbt-message-detector';
+import { isCBTDiaryMessage, analyzeCBTMessage } from '@/features/chat/lib/cbt-message-detector';
 import { logger } from '@/lib/utils/logger';
-import { parseCBTFromMarkdown } from '@/lib/therapy/parsers';
+import { parseCBTFromMarkdown } from '@/features/therapy/lib/parsers';
 import { useCBTExportActions } from '@/hooks/therapy/use-cbt-export';
 import { CBTExportFormat } from '@/lib/cbt/export-utils';
 import { isObsessionsCompulsionsMessage } from '@/features/therapy/obsessions-compulsions/utils/obsessions-message-detector';
@@ -168,7 +168,7 @@ const MessageActionsComponent = function MessageActions({
   const confidencePercentage = cbtAnalysis ? Math.round(cbtAnalysis.confidence * 100) : null;
 
   const handleExport = (exportFunction: () => Promise<void>) => {
-    exportFunction();
+    void exportFunction();
     setShowDropdown(false);
   };
 

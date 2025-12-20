@@ -213,7 +213,7 @@ export class ApiClient {
       cbtDataAvailable: boolean;
     }>
   > {
-    // Use 2 minute timeout for report generation (reasoning models can be slow)
+    // Use 5 minute timeout for report generation (reasoning models can be slow)
     return this.request<
       ApiResponse<{
         reportContent: string;
@@ -229,7 +229,7 @@ export class ApiClient {
         body: JSON.stringify(body),
         headers: options?.headers,
       },
-      120000
+      300000
     );
   }
 

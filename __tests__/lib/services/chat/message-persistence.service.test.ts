@@ -2,8 +2,8 @@
  * Tests for MessagePersistenceService
  */
 
-import { MessagePersistenceService } from '@/lib/services/chat/message-persistence.service';
-import type { IChatApiClient } from '@/lib/services/chat/types';
+import { MessagePersistenceService } from '@/features/chat/lib/message-persistence.service';
+import type { IChatApiClient } from '@/features/chat/lib/types';
 
 describe('MessagePersistenceService', () => {
   let service: MessagePersistenceService;

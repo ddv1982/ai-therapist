@@ -8,7 +8,7 @@ import { logger } from '@/lib/utils/logger';
 import type { MessageData } from '@/features/chat/messages/message';
 import type { useChatTransport } from '../use-chat-transport';
 import { apiClient } from '@/lib/api/client';
-import { createBYOKHeaders } from '@/lib/chat/byok-helper';
+import { createBYOKHeaders } from '@/features/chat/lib/byok-helper';
 
 interface UseChatStreamingParams {
   currentSession: string | null;
@@ -170,7 +170,7 @@ export function useChatStreaming(params: UseChatStreamingParams) {
 
   const stopStream = useCallback(() => {
     try {
-      stopAi?.();
+      void stopAi?.();
     } catch {
       // swallow stop errors
     }

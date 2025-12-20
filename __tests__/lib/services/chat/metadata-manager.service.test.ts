@@ -2,8 +2,8 @@
  * Tests for MetadataManager
  */
 
-import { MetadataManager } from '@/lib/services/chat/metadata-manager.service';
-import type { IChatApiClient } from '@/lib/services/chat/types';
+import { MetadataManager } from '@/features/chat/lib/metadata-manager.service';
+import type { IChatApiClient } from '@/features/chat/lib/types';
 
 describe('MetadataManager', () => {
   let manager: MetadataManager;

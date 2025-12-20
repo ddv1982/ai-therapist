@@ -9,6 +9,7 @@ import {
   transformDeleteSessionResponse,
 } from '@/lib/queries/sessions';
 import { apiClient } from '@/lib/api/client';
+import { createSessionAction, deleteSessionAction } from '@/features/chat/actions/session-actions';
 import React from 'react';
 
 // Mock apiClient
@@ -18,6 +19,12 @@ jest.mock('@/lib/api/client', () => ({
     createSession: jest.fn(),
     deleteSession: jest.fn(),
   },
+}));
+
+// Mock Server Actions
+jest.mock('@/features/chat/actions/session-actions', () => ({
+  createSessionAction: jest.fn(),
+  deleteSessionAction: jest.fn(),
 }));
 
 const queryClient = new QueryClient({
@@ -186,7 +193,7 @@ describe('Sessions Queries', () => {
         updatedAt: '',
         messageCount: 0,
       };
-      (apiClient.createSession as jest.Mock).mockResolvedValue({ success: true, data: newSession });
+      (createSessionAction as jest.Mock).mockResolvedValue({ success: true, data: newSession });
 
       const { result } = renderHook(() => useCreateSessionMutation(), { wrapper });
 
@@ -194,13 +201,12 @@ describe('Sessions Queries', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(result.current.data).toEqual(newSession);
-      expect(apiClient.createSession).toHaveBeenCalledWith({ title: 'New Session' });
+      expect(createSessionAction).toHaveBeenCalledWith({ title: 'New Session' });
     });
 
     it('useDeleteSessionMutation should delete session', async () => {
-      (apiClient.deleteSession as jest.Mock).mockResolvedValue({
+      (deleteSessionAction as jest.Mock).mockResolvedValue({
         success: true,
-        data: { success: true },
       });
 
       const { result } = renderHook(() => useDeleteSessionMutation(), { wrapper });
@@ -208,7 +214,7 @@ describe('Sessions Queries', () => {
       result.current.mutate('1');
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      expect(apiClient.deleteSession).toHaveBeenCalledWith('1');
+      expect(deleteSessionAction).toHaveBeenCalledWith('1');
     });
   });
 });

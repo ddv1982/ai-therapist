@@ -14,37 +14,19 @@ import { ArrowDown } from 'lucide-react';
 import { SystemBanner } from '@/features/chat/components/system-banner';
 import { ChatEmptyState } from '@/features/chat/components/dashboard/chat-empty-state';
 import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
-import type { ChatState } from '@/features/chat/hooks/use-chat-state';
-import type { ObsessionsCompulsionsData } from '@/types';
-import { formatMemoryInfo } from '@/lib/chat/memory-utils';
-
-export interface ChatContainerProps {
-  chatState: ChatState;
-  onObsessionsCompulsionsComplete: (data: ObsessionsCompulsionsData) => Promise<void>;
-  onUpdateMessageMetadata: (
-    sessionId: string,
-    messageId: string,
-    metadata: Record<string, unknown>,
-    options?: { mergeStrategy?: 'merge' | 'replace' }
-  ) => Promise<{ success: boolean; error?: string }>;
-  onManageMemory: () => void;
-  onScrollToBottom: () => void;
-  translate: (key: string) => string;
-}
+import { formatMemoryInfo } from '@/features/chat/lib/memory-utils';
+import { useChat } from '@/features/chat/context/chat-context';
+import { useTranslations } from 'next-intl';
 
 /**
  * Component that renders the chat messages container.
  * Includes system banner, messages list, empty state, and scroll-to-bottom button.
  * Wrapped with React.memo to prevent unnecessary re-renders.
  */
-export const ChatContainer = memo(function ChatContainer({
-  chatState,
-  onObsessionsCompulsionsComplete,
-  onUpdateMessageMetadata,
-  onManageMemory,
-  onScrollToBottom,
-  translate,
-}: ChatContainerProps) {
+export const ChatContainer = memo(function ChatContainer() {
+  const { state: chatState, actions: chatActions, modalActions, controller } = useChat();
+  const translate = useTranslations('chat');
+
   const {
     messages,
     isLoading,
@@ -82,9 +64,9 @@ export const ChatContainer = memo(function ChatContainer({
 
   // Memoize scroll button click handler
   const handleScrollButtonClick = useCallback(() => {
-    onScrollToBottom();
+    chatActions.scrollToBottom();
     setTimeout(() => textareaRef.current?.focus(), 50);
-  }, [onScrollToBottom, textareaRef]);
+  }, [chatActions, textareaRef]);
 
   return (
     <div
@@ -102,7 +84,7 @@ export const ChatContainer = memo(function ChatContainer({
         hasMemory={memoryContext.hasMemory}
         messageCount={messages.length}
         isMobile={isMobile}
-        onManageMemory={onManageMemory}
+        onManageMemory={modalActions.openMemoryModal}
         formatText={formatMemoryInfo}
         contextInfo={memoryContext}
       />
@@ -115,8 +97,8 @@ export const ChatContainer = memo(function ChatContainer({
           isStreaming={isLoading}
           isMobile={isMobile}
           sessionId={currentSession ?? undefined}
-          onObsessionsCompulsionsComplete={onObsessionsCompulsionsComplete}
-          onUpdateMessageMetadata={onUpdateMessageMetadata}
+          onObsessionsCompulsionsComplete={chatActions.handleObsessionsCompulsionsComplete}
+          onUpdateMessageMetadata={controller.updateMessageMetadata}
         />
       )}
 

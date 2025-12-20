@@ -5,7 +5,7 @@ import {
   getERPChallengeQuestions,
   generateERPTemplate,
   generateQuickERPTemplate,
-} from '@/lib/therapy/cbt-template';
+} from '@/features/therapy/lib/cbt-template';
 
 describe('CBT Template Functions', () => {
   describe('generateCBTTemplate', () => {

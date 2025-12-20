@@ -4,7 +4,7 @@
  * Tests for shared chat service types and helper functions.
  */
 
-import { ok, err, type Result } from '@/lib/services/chat/types';
+import { ok, err, type Result } from '@/features/chat/lib/types';
 
 describe('Chat Service Types', () => {
   // ============================================================================

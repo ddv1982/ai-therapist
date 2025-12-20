@@ -5,8 +5,9 @@ import {
   refreshMemoryContext,
   getSessionReportDetail,
   type MemoryContextInfo,
-} from '@/lib/chat/memory-utils';
+} from '@/features/chat/lib/memory-utils';
 import { apiClient } from '@/lib/api/client';
+import { deleteMemoryAction } from '@/features/chat/actions/memory-actions';
 
 // Mock apiClient
 jest.mock('@/lib/api/client', () => ({
@@ -14,6 +15,11 @@ jest.mock('@/lib/api/client', () => ({
     getMemoryReports: jest.fn(),
     deleteMemoryReports: jest.fn(),
   },
+}));
+
+// Mock Server Actions
+jest.mock('@/features/chat/actions/memory-actions', () => ({
+  deleteMemoryAction: jest.fn(),
 }));
 
 describe('Memory Utils', () => {
@@ -138,11 +144,11 @@ describe('Memory Utils', () => {
         deletionType: 'all',
       };
 
-      (apiClient.deleteMemoryReports as jest.Mock).mockResolvedValue(mockResponse);
+      (deleteMemoryAction as jest.Mock).mockResolvedValue({ success: true, data: mockResponse });
 
       const result = await deleteMemory({ type: 'all' });
 
-      expect(apiClient.deleteMemoryReports).toHaveBeenCalled();
+      expect(deleteMemoryAction).toHaveBeenCalled();
       expect(result).toEqual(mockResponse);
     });
 
@@ -154,20 +160,23 @@ describe('Memory Utils', () => {
         deletionType: 'specific',
       };
 
-      (apiClient.deleteMemoryReports as jest.Mock).mockResolvedValue(mockResponse);
+      (deleteMemoryAction as jest.Mock).mockResolvedValue({ success: true, data: mockResponse });
 
       const result = await deleteMemory({
         type: 'specific',
         sessionIds: ['session-1', 'session-2'],
       });
 
-      const callArg = (apiClient.deleteMemoryReports as jest.Mock).mock.calls[0][0];
-      expect(decodeURIComponent(callArg.toString())).toContain('sessionIds=session-1,session-2');
+      expect(deleteMemoryAction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sessionIds: ['session-1', 'session-2'],
+        })
+      );
       expect(result).toEqual(mockResponse);
     });
 
     it('should handle deletion errors', async () => {
-      (apiClient.deleteMemoryReports as jest.Mock).mockRejectedValue(new Error('Network error'));
+      (deleteMemoryAction as jest.Mock).mockRejectedValue(new Error('Network error'));
 
       const result = await deleteMemory({ type: 'all' });
       expect(result.success).toBe(false);

@@ -1,21 +1,21 @@
-import { ReportGenerationService } from '@/lib/services/report-generation-service';
+import { ReportGenerationService } from '@/features/therapy/lib/report-generation-service';
 import { generateSessionReport, extractStructuredAnalysis } from '@/lib/api/groq-client';
 import {
   encryptSessionReportContent,
   encryptEnhancedAnalysisData,
-} from '@/lib/chat/message-encryption';
+} from '@/features/chat/lib/message-encryption';
 import {
   validateTherapeuticContext,
   calculateContextualConfidence,
-} from '@/lib/therapy/validators';
-import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/lib/therapy/parsers';
+} from '@/features/therapy/lib/validators';
+import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/features/therapy/lib/parsers';
 import { supportsWebSearch, getModelDisplayName } from '@/ai/model-metadata';
-import { getReportPrompt } from '@/lib/therapy/therapy-prompts';
-import type { ParsedAnalysis } from '@/lib/therapy/analysis-schema';
+import { getReportPrompt } from '@/features/therapy/lib/therapy-prompts';
+import type { ParsedAnalysis } from '@/features/therapy/lib/analysis-schema';
 
 // Mocks
 jest.mock('@/lib/api/groq-client');
-jest.mock('@/lib/therapy/therapy-prompts', () => ({
+jest.mock('@/features/therapy/lib/therapy-prompts', () => ({
   __esModule: true,
   ANALYSIS_EXTRACTION_PROMPT_TEXT: 'mock-analysis-prompt',
   getReportPrompt: jest.fn(),
@@ -35,9 +35,9 @@ jest.mock('@/lib/utils/logger', () => ({
   },
   devLog: jest.fn(),
 }));
-jest.mock('@/lib/chat/message-encryption');
-jest.mock('@/lib/therapy/validators');
-jest.mock('@/lib/therapy/parsers');
+jest.mock('@/features/chat/lib/message-encryption');
+jest.mock('@/features/therapy/lib/validators');
+jest.mock('@/features/therapy/lib/parsers');
 jest.mock('@/ai/model-metadata');
 
 describe('ReportGenerationService', () => {

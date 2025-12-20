@@ -138,7 +138,7 @@ export type { MessageRole } from '@/lib/ui/design-system/message';
 export type { ApiResponse } from '@/lib/api/api-response';
 
 // Session reducer types
-import type { Session as SessionReducerType } from '@/lib/chat/session-reducer';
+import type { Session as SessionReducerType } from '@/features/chat/lib/session-reducer';
 export type SessionReducer = SessionReducerType;
 
 // ============================================================================

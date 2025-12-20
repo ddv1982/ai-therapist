@@ -302,16 +302,16 @@ describe('helpers utils', () => {
       jest.useFakeTimers();
       const operation = jest.fn().mockResolvedValue('result');
 
-      deduplicateWithKey('key1', operation, 100);
+      void deduplicateWithKey('key1', operation, 100);
       jest.advanceTimersByTime(200);
 
-      deduplicateWithKey('key1', operation, 100);
+      void deduplicateWithKey('key1', operation, 100);
       expect(operation).toHaveBeenCalledTimes(2);
     });
 
     it('getDeduplicationStats returns stats', () => {
       const operation = jest.fn().mockImplementation(() => new Promise(() => {}));
-      deduplicateWithKey('key1', operation);
+      void deduplicateWithKey('key1', operation);
       const stats = getDeduplicationStats();
       expect(stats.activeRequests).toBe(1);
     });
@@ -319,8 +319,8 @@ describe('helpers utils', () => {
     it('cleanup removes only expired entries', () => {
       jest.useFakeTimers();
       const operation = jest.fn().mockImplementation(() => new Promise(() => {}));
-      deduplicateWithKey('expired', operation, 100);
-      deduplicateWithKey('fresh', operation, 10000);
+      void deduplicateWithKey('expired', operation, 100);
+      void deduplicateWithKey('fresh', operation, 10000);
 
       jest.advanceTimersByTime(200);
       // Deduplicator cleanup runs on interval (mocked above? No, interval is internal)
@@ -346,7 +346,7 @@ describe('helpers utils', () => {
 
       // Reset
       clearDeduplicationCache();
-      deduplicateWithKey('valid', operation, 1000000);
+      void deduplicateWithKey('valid', operation, 1000000);
       jest.advanceTimersByTime(60 * 1000); // Trigger cleanup interval
       const stats2 = getDeduplicationStats();
       expect(stats2.activeRequests).toBe(1); // Still there

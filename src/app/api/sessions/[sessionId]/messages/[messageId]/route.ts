@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership } from '@/lib/repositories/session-repository';
 import { createNotFoundErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
-import { decryptMessage } from '@/lib/chat/message-encryption';
+import { decryptMessage } from '@/features/chat/lib/message-encryption';
 import { MessageCache } from '@/lib/cache';
 import { enhancedErrorHandlers } from '@/lib/utils/errors';
 import { getAuthenticatedConvexClient, anyApi } from '@/lib/convex/http-client';

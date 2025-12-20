@@ -16,7 +16,7 @@ import { ChatEmptyState } from '@/features/chat/components/dashboard/chat-empty-
 import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
 import type { ChatState } from '@/features/therapy-chat/hooks/use-chat-state';
 import type { ObsessionsCompulsionsData } from '@/types';
-import { formatMemoryInfo } from '@/lib/chat/memory-utils';
+import { formatMemoryInfo } from '@/features/chat/lib/memory-utils';
 
 export interface ChatContainerProps {
   chatState: ChatState;

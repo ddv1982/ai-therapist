@@ -18,8 +18,8 @@ import { logger } from '@/lib/utils/logger';
 import type { ObsessionsCompulsionsData } from '@/types';
 import { parseObsessionsCompulsionsFromMarkdown } from '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions';
 import { isObsessionsCompulsionsMessage } from '@/features/therapy/obsessions-compulsions/utils/obsessions-message-detector';
-import { MessagePersistenceService, MetadataManager } from '@/lib/services/chat';
-import { chatApiClientAdapter } from '@/lib/services/chat/api-client-adapter';
+import { MessagePersistenceService, MetadataManager } from '@/features/chat/lib';
+import { chatApiClientAdapter } from '@/features/chat/lib/api-client-adapter';
 
 export type Message = MessageData;
 

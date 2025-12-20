@@ -6,7 +6,7 @@ import {
   createErrorResponse,
   type ApiResponse,
 } from '@/lib/api/api-response';
-import { MemoryManagementService } from '@/lib/services/memory-management-service';
+import { MemoryManagementService } from '@/features/chat/lib/memory-management-service';
 import { getAuthenticatedConvexClient } from '@/lib/convex/http-client';
 
 type MemoryContextEntry = {

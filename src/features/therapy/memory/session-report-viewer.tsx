@@ -5,8 +5,8 @@ import { MessageContent } from '@/features/chat/messages/message-content';
 import { MessageAvatar } from '@/features/chat/messages/message-avatar';
 import { MessageTimestamp } from '@/features/chat/messages/message-timestamp';
 import { buildMessageClasses } from '@/lib/ui/design-system/message';
-import { type SessionReportDetail } from '@/lib/chat/memory-utils';
-import { type CBTStructuredAssessment } from '@/lib/therapy/parsers';
+import { type SessionReportDetail } from '@/features/chat/lib/memory-utils';
+import { type CBTStructuredAssessment } from '@/features/therapy/lib/parsers';
 import {
   Calendar,
   FileText,

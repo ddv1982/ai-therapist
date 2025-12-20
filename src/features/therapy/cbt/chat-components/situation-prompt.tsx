@@ -107,7 +107,7 @@ export function SituationPrompt({ onComplete, className, onNavigateStep }: Situa
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' && e.ctrlKey) {
         e.preventDefault();
-        handleNext();
+        void handleNext();
       }
     },
     [handleNext]

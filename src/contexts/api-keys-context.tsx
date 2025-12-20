@@ -11,7 +11,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { useAuth } from '@clerk/nextjs';
-import { BYOK_OPENAI_MODEL } from '@/lib/chat/byok-helper';
+import { BYOK_OPENAI_MODEL } from '@/features/chat/lib/byok-helper';
 
 export type Provider = 'openai';
 export const PROVIDERS: Provider[] = ['openai'];

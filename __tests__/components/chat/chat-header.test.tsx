@@ -1,5 +1,6 @@
 import { screen, fireEvent, render } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
+import { useChat } from '@/features/chat/context/chat-context';
 
 // Mock lucide-react before importing ChatHeader
 jest.mock('lucide-react', () => ({
@@ -10,8 +11,12 @@ jest.mock('lucide-react', () => ({
   List: () => <div data-testid="list-icon" />,
 }));
 
+// Mock the context
+jest.mock('@/features/chat/context/chat-context', () => ({
+  useChat: jest.fn(),
+}));
+
 import { ChatHeader } from '@/features/chat/components/chat-header';
-import { ChatHeaderProvider } from '@/features/chat/context/chat-header-context';
 import enMessages from '@/i18n/messages/en.json';
 
 function renderWithIntl(ui: React.ReactNode) {
@@ -23,56 +28,46 @@ function renderWithIntl(ui: React.ReactNode) {
 }
 
 describe('ChatHeader', () => {
-  test('renders new conversation title when no active session', () => {
-    renderWithIntl(
-      <ChatHeaderProvider
-        value={{
-          showSidebar: false,
-          onToggleSidebar: () => {},
-          hasActiveSession: false,
-          hasMessages: false,
-          isGeneratingReport: false,
-          isLoading: false,
-          isMobile: false,
-          onGenerateReport: () => {},
-          onStopGenerating: () => {},
-          onOpenCBTDiary: () => {},
-          onCreateObsessionsTable: () => {},
-          modelLabel: 'GPT-OSS 20B',
-        }}
-      >
-        <ChatHeader />
-      </ChatHeaderProvider>
-    );
+  const mockState = {
+    showSidebar: false,
+    isGeneratingReport: false,
+    isLoading: false,
+    isMobile: false,
+    currentSession: null,
+    messages: [],
+  };
 
+  const mockActions = {
+    openCBTDiary: jest.fn(),
+    handleCreateObsessionsTable: jest.fn(),
+  };
+
+  const mockController = {
+    setShowSidebar: jest.fn(),
+    generateReport: jest.fn(),
+    stopGenerating: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (useChat as jest.Mock).mockReturnValue({
+      state: mockState,
+      actions: mockActions,
+      controller: mockController,
+      modelLabel: 'GPT-OSS 20B',
+    });
+  });
+
+  test('renders new conversation title when no active session', () => {
+    renderWithIntl(<ChatHeader />);
     expect(screen.getByText('New Conversation')).toBeInTheDocument();
   });
 
   test('invokes toggle sidebar on button click', () => {
-    const onToggle = jest.fn();
-    renderWithIntl(
-      <ChatHeaderProvider
-        value={{
-          showSidebar: false,
-          onToggleSidebar: onToggle,
-          hasActiveSession: false,
-          hasMessages: false,
-          isGeneratingReport: false,
-          isLoading: false,
-          isMobile: false,
-          onGenerateReport: () => {},
-          onStopGenerating: () => {},
-          onOpenCBTDiary: () => {},
-          onCreateObsessionsTable: () => {},
-          modelLabel: 'GPT-OSS 20B',
-        }}
-      >
-        <ChatHeader />
-      </ChatHeaderProvider>
-    );
+    renderWithIntl(<ChatHeader />);
 
     const btn = screen.getByLabelText('Toggle session sidebar');
     fireEvent.click(btn);
-    expect(onToggle).toHaveBeenCalled();
+    expect(mockController.setShowSidebar).toHaveBeenCalledWith(true);
   });
 });

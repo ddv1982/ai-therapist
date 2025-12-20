@@ -8,8 +8,8 @@ import {
   validateTherapeuticContext,
   calculateContextualConfidence,
   getContextValidationExplanation,
-} from '@/lib/therapy/validators';
-import type { ValidationResult } from '@/lib/therapy/validators';
+} from '@/features/therapy/lib/validators';
+import type { ValidationResult } from '@/features/therapy/lib/validators';
 
 describe('Contextual Validation System', () => {
   describe('analyzeTherapeuticContext', () => {

@@ -370,11 +370,11 @@ export class ComponentTestTemplate {
           });
         });
 
-        it('should show validation errors for required fields', () => {
+        it('should show validation errors for required fields', async () => {
           ComponentTestUtils.renderWithProviders(React.createElement(FormComponent, defaultProps));
 
           // Submit form without required fields
-          ComponentTestUtils.submitForm();
+          await ComponentTestUtils.submitForm();
 
           // Check for validation errors
           const requiredFields = formFields.filter((f) => f.required);

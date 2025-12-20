@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { DefaultChatTransport } from 'ai';
 import type { UIMessage } from 'ai';
-import { createBYOKHeaders } from '@/lib/chat/byok-helper';
+import { createBYOKHeaders } from '@/features/chat/lib/byok-helper';
 
 interface UseChatTransportParams {
   sessionId: string | null;

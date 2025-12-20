@@ -14,11 +14,11 @@ function Switch({ className, ref, ...props }: SwitchProps) {
         // iOS-inspired switch (Apple style)
         'peer inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent',
         // Colors with smooth gradient
-        'data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted',
+        'data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted/50',
         // Smooth transitions with Apple spring physics
         'duration-base ease-out-smooth transition-all',
         // Focus state
-        'focus-visible:ring-ring focus-visible:ring-offset-background focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+        'focus-visible:ring-primary focus-visible:ring-2 focus-visible:outline-none',
         // Disabled state
         'disabled:cursor-not-allowed disabled:opacity-50',
         className

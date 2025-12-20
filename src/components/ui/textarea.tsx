@@ -1,36 +1,43 @@
 import { type Ref } from 'react';
-
+import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  placeholder?: string;
+const textareaVariants = cva(
+  'flex w-full rounded-md border text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-primary duration-fast ease-out-smooth transition-all disabled:cursor-not-allowed disabled:opacity-50 shadow-apple-sm focus-visible:shadow-apple-md resize-y',
+  {
+    variants: {
+      variant: {
+        default: 'border-border bg-background text-foreground',
+      },
+      size: {
+        default: 'min-h-[96px] px-4 py-3',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'default',
+    },
+  }
+);
+
+export interface TextareaProps
+  extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'>,
+    VariantProps<typeof textareaVariants> {
   ref?: Ref<HTMLTextAreaElement>;
 }
 
-function Textarea({ className, ref, ...props }: TextareaProps) {
+/**
+ * Standard Textarea Component
+ * Uses CVA for consistency with Input component.
+ */
+function Textarea({ className, variant, size, ref, ...props }: TextareaProps) {
   return (
     <textarea
-      className={cn(
-        // Apple-style textarea matching Input component
-        'flex min-h-[96px] w-full rounded-md border px-4 py-3 text-base',
-        'border-border bg-background text-foreground',
-        'placeholder:text-muted-foreground',
-        // Focus state with Apple-style glow (no ring-offset to avoid white line)
-        'focus-visible:ring-primary focus-visible:ring-2 focus-visible:outline-none',
-        'focus-visible:border-primary',
-        // Smooth transitions
-        'duration-fast ease-out-smooth transition-all',
-        'shadow-apple-sm focus-visible:shadow-apple-md',
-        // Disabled state
-        'disabled:cursor-not-allowed disabled:opacity-50',
-        // Resize handle styling
-        'resize-y',
-        className
-      )}
+      className={cn(textareaVariants({ variant, size, className }))}
       ref={ref}
       {...props}
     />
   );
 }
 
-export { Textarea };
+export { Textarea, textareaVariants };

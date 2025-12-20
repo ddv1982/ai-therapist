@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { checkMemoryContext, type MemoryContextInfo } from '@/lib/chat/memory-utils';
+import { checkMemoryContext, type MemoryContextInfo } from '@/features/chat/lib/memory-utils';
 
 export function useMemoryContext(sessionId: string | null) {
   const [memoryContext, setMemoryContext] = useState<MemoryContextInfo>({
@@ -11,7 +11,7 @@ export function useMemoryContext(sessionId: string | null) {
 
   useEffect(() => {
     let active = true;
-    (async () => {
+    void (async () => {
       try {
         const info = await checkMemoryContext(sessionId ?? undefined);
         if (active) setMemoryContext(info);

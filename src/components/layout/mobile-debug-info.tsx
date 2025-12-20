@@ -152,7 +152,7 @@ export function MobileDebugInfo() {
               variant="outline"
               size="sm"
               onClick={() => {
-                navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2));
+                void navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2));
                 alert('Debug info copied to clipboard');
               }}
               className="flex-1"

@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 import { apiClient } from '@/lib/api/client';
 import { REPORT_MODEL_ID } from '@/features/chat/config';
 import { useApiKeys } from '@/hooks/use-api-keys';
-import { createBYOKHeaders, getEffectiveModelId } from '@/lib/chat/byok-helper';
+import { createBYOKHeaders, getEffectiveModelId } from '@/features/chat/lib/byok-helper';
 
 // Internal mapping helper types intentionally omitted to reduce surface area
 

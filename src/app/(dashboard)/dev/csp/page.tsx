@@ -67,7 +67,7 @@ export default function CSPMonitorPage() {
 
   // Initial fetch
   useEffect(() => {
-    fetchViolations();
+    void fetchViolations();
   }, [fetchViolations]);
 
   // Auto-refresh

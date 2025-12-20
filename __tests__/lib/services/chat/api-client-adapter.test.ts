@@ -4,7 +4,7 @@
  * Validates the adapter that wraps apiClient for chat services
  */
 
-import { chatApiClientAdapter } from '@/lib/services/chat/api-client-adapter';
+import { chatApiClientAdapter } from '@/features/chat/lib/api-client-adapter';
 import { apiClient } from '@/lib/api/client';
 
 // Mock the apiClient

@@ -8,7 +8,7 @@ export { cn } from './utils/helpers';
 export { logger } from './utils/logger';
 
 // Therapy utilities
-export { buildMemoryEnhancedPrompt } from './therapy/therapy-prompts';
+export { buildMemoryEnhancedPrompt } from '@/features/therapy/lib/therapy-prompts';
 
 // Database
 // (Prisma removed; using Convex)

@@ -14,7 +14,7 @@ import {
   getSessionReportDetail,
   type SessionReportDetail,
   type MemoryDetailInfo,
-} from '@/lib/chat/memory-utils';
+} from '@/features/chat/lib/memory-utils';
 import { logger } from '@/lib/utils/logger';
 import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 
@@ -107,7 +107,7 @@ export function SessionReportDetailModal({
 
   useEffect(() => {
     if (open && reportInfo) {
-      loadReportDetail();
+      void loadReportDetail();
     } else {
       // Reset state when modal closes
       setReportDetail(null);
@@ -120,7 +120,7 @@ export function SessionReportDetailModal({
   };
 
   const handleRetry = () => {
-    loadReportDetail();
+    void loadReportDetail();
   };
 
   return (

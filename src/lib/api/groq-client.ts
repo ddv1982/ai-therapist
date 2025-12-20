@@ -3,7 +3,7 @@ import type { UIMessage, LanguageModel } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import { languageModels, type ModelID } from '@/ai/providers';
 import { supportsWebSearch } from '@/ai/model-metadata';
-import { parsedAnalysisSchema, type ParsedAnalysis } from '@/lib/therapy/analysis-schema';
+import { parsedAnalysisSchema, type ParsedAnalysis } from '@/features/therapy/lib/analysis-schema';
 import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 
 // Simplified message type for report generation (only needs role and content)

@@ -5,11 +5,11 @@ import { languageModels, ModelID } from '@/ai/providers';
 import { MODEL_IDS } from '@/ai/model-metadata';
 import { groq } from '@ai-sdk/groq';
 import { createOpenAI } from '@ai-sdk/openai';
-import { getTherapySystemPrompt } from '@/lib/therapy/therapy-prompts';
-import { streamChatCompletion } from '@/lib/chat/streaming';
-import { normalizeChatRequest, buildForwardedMessages } from '@/lib/chat/chat-request';
-import { selectModelAndTools } from '@/lib/chat/model-selector';
-import { extractBYOKKey, BYOK_OPENAI_MODEL } from '@/lib/chat/byok-helper';
+import { getTherapySystemPrompt } from '@/features/therapy/lib/therapy-prompts';
+import { streamChatCompletion } from '@/features/chat/lib/streaming';
+import { normalizeChatRequest, buildForwardedMessages } from '@/features/chat/lib/chat-request';
+import { selectModelAndTools } from '@/features/chat/lib/model-selector';
+import { extractBYOKKey, BYOK_OPENAI_MODEL } from '@/features/chat/lib/byok-helper';
 import { logger } from '@/lib/utils/logger';
 import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
 import { createErrorResponse } from '@/lib/api/api-response';
@@ -25,8 +25,8 @@ import {
   teeAndPersistStream as teeAndPersistStreamUtil,
   persistFromClonedStream as persistFromClonedStreamUtil,
   attachResponseHeadersRaw as attachResponseHeadersRawUtil,
-} from '@/lib/chat/stream-utils';
-import { AssistantResponseCollector } from '@/lib/chat/assistant-response-collector';
+} from '@/features/chat/lib/stream-utils';
+import { AssistantResponseCollector } from '@/features/chat/lib/assistant-response-collector';
 import { readJsonBody } from '@/lib/api/request';
 import type { SessionOwnershipResult, SessionWithMessages } from '@/types/database';
 import type { ConvexMessage } from '@/types/convex';
@@ -359,7 +359,7 @@ async function loadSessionHistory(
     .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
     .slice(-HISTORY_LIMIT);
 
-  const { safeDecryptMessages } = await import('@/lib/chat/message-encryption');
+  const { safeDecryptMessages } = await import('@/features/chat/lib/message-encryption');
   const decrypted = safeDecryptMessages(
     sessionMessages.map((message) => ({
       role: message.role,

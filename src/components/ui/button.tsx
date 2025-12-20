@@ -20,7 +20,7 @@ const buttonVariants = cva(
           'shadow-apple-xs hover:shadow-apple-sm hover:bg-muted hover:text-foreground transition-all duration-fast',
         // Glass variant - Apple frosted glass effect
         glass:
-          'bg-[var(--glass-white)] backdrop-blur-glass backdrop-saturate-glass border border-[var(--glass-border)] text-foreground shadow-apple-md hover:shadow-apple-lg hover:bg-[var(--glass-white)]/90 transition-all duration-base ease-out-smooth',
+          'bg-glass-white backdrop-blur-glass backdrop-saturate-glass border border-glass-border text-foreground shadow-apple-md hover:shadow-apple-lg hover:bg-glass-white/90 transition-all duration-base ease-out-smooth',
         // Special cases
         destructive:
           'bg-destructive text-destructive-foreground shadow-apple-xs hover:shadow-apple-sm hover:bg-destructive/90 transition-all duration-fast ease-out-smooth',

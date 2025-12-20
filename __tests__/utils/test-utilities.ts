@@ -654,7 +654,7 @@ export class ComponentTestUtils {
       }));
 
       // Mock encryption
-      jest.doMock('@/lib/chat/message-encryption', () => mocks.encryption);
+      jest.doMock('@/features/chat/lib/message-encryption', () => mocks.encryption);
 
       // Mock AI SDK if needed
       jest.doMock('ai', () => mocks.aiSdk);

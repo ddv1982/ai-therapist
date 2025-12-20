@@ -5,11 +5,7 @@ function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
     <div
       className={cn(
         // Apple-style skeleton with shimmer effect
-        'bg-muted relative overflow-hidden rounded-md',
-        // Shimmer animation gradient
-        'before:absolute before:inset-0',
-        'before:via-background/50 before:bg-gradient-to-r before:from-transparent before:to-transparent',
-        'before:animate-shimmer',
+        'bg-muted relative overflow-hidden rounded-md animate-pulse',
         className
       )}
       {...props}

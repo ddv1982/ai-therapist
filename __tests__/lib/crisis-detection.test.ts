@@ -8,7 +8,7 @@ import {
   requiresImmediateIntervention,
   generateCrisisAlert,
   CrisisDetectionResult,
-} from '@/lib/therapy/validators';
+} from '@/features/therapy/lib/validators';
 
 describe('Crisis Detection System', () => {
   describe('detectCrisisContent', () => {

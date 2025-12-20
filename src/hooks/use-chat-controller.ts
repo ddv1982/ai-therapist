@@ -24,8 +24,8 @@ import { useChatStreaming } from '@/hooks/chat/use-chat-streaming';
 import { useSendMessage } from '@/hooks/chat/use-send-message';
 import { useGenerateReport } from '@/hooks/chat/use-generate-report';
 import type { ObsessionsCompulsionsData } from '@/types';
-import type { UiSession } from '@/lib/chat/session-mapper';
-import type { MemoryContextInfo } from '@/lib/chat/memory-utils';
+import type { UiSession } from '@/features/chat/lib/session-mapper';
+import type { MemoryContextInfo } from '@/features/chat/lib/memory-utils';
 
 type Message = MessageData;
 

@@ -31,7 +31,7 @@ import {
   type MemoryDetailInfo,
   type MemoryManagementResponse,
   type MemoryContextInfo,
-} from '@/lib/chat/memory-utils';
+} from '@/features/chat/lib/memory-utils';
 import { logger } from '@/lib/utils/logger';
 import { SessionReportDetailModal } from './session-report-detail-modal';
 import { useTranslations } from 'next-intl';
@@ -97,7 +97,7 @@ export function MemoryManagementModal({
   }, [open, currentSessionId, showToast, t]);
 
   useEffect(() => {
-    loadMemoryData();
+    void loadMemoryData();
   }, [loadMemoryData]);
 
   const handleDeleteMemory = async (

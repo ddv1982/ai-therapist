@@ -6,12 +6,12 @@ import * as React from 'react';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SessionReportDetailModal } from '@/features/therapy/memory/session-report-detail-modal';
-import * as memoryUtils from '@/lib/chat/memory-utils';
-import type { MemoryDetailInfo } from '@/lib/chat/memory-utils';
+import * as memoryUtils from '@/features/chat/lib/memory-utils';
+import type { MemoryDetailInfo } from '@/features/chat/lib/memory-utils';
 import { ComponentTestUtils } from '../../utils/test-utilities';
 
 // Mock the dependencies
-jest.mock('@/lib/chat/memory-utils', () => ({
+jest.mock('@/features/chat/lib/memory-utils', () => ({
   getSessionReportDetail: jest.fn(),
 }));
 

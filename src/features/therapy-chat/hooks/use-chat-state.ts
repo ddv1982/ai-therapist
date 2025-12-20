@@ -12,8 +12,8 @@
 
 import { useMemo } from 'react';
 import type { MessageData } from '@/features/chat/messages/message';
-import type { UiSession } from '@/lib/chat/session-mapper';
-import type { MemoryContextInfo } from '@/lib/chat/memory-utils';
+import type { UiSession } from '@/features/chat/lib/session-mapper';
+import type { MemoryContextInfo } from '@/features/chat/lib/memory-utils';
 
 /**
  * Consolidated chat state interface.

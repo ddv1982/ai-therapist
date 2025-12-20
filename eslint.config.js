@@ -49,6 +49,7 @@ export default [
     },
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/naming-convention': [
         'error',
         { selector: 'typeLike', format: ['PascalCase'] },

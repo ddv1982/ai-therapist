@@ -1,4 +1,4 @@
-import { MemoryManagementService } from '@/lib/services/memory-management-service';
+import { MemoryManagementService } from '@/features/chat/lib/memory-management-service';
 
 // Mock Convex HTTP client
 const mockQuery = jest.fn();
@@ -21,7 +21,7 @@ jest.mock('@/lib/convex/http-client', () => ({
 }));
 
 // Mock decryption
-jest.mock('@/lib/chat/message-encryption', () => ({
+jest.mock('@/features/chat/lib/message-encryption', () => ({
   decryptSessionReportContent: (content: string) => {
     if (content === 'encrypted_fail') throw new Error('Decryption failed');
     return `Decrypted: ${content}`;

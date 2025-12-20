@@ -4,7 +4,7 @@ import { getApiData, type ApiResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
 import type { SessionData } from '@/lib/queries/sessions';
 import { buildSessionSummaryCard, type CBTFlowState } from '@/features/therapy/cbt/flow';
-import { createBYOKHeaders, getEffectiveModelId } from '@/lib/chat/byok-helper';
+import { createBYOKHeaders, getEffectiveModelId } from '@/features/chat/lib/byok-helper';
 
 export interface SendToChatParams {
   title: string;

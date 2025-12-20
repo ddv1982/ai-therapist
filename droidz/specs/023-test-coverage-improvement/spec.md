@@ -205,7 +205,7 @@ describe('chatApiClientAdapter', () => {
 
 ```typescript
 // Test via import coverage
-import * as chatServices from '@/lib/services/chat';
+import * as chatServices from '@/features/chat/lib';
 
 describe('Chat Services Index', () => {
   it('exports expected modules');

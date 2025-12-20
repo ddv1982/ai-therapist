@@ -71,7 +71,7 @@ test.describe('Edge Case Scenarios', () => {
 
       // Intercept API calls to simulate persistent failure
       await page.route('**/api/chat', (route) => {
-        route.abort('failed');
+        void route.abort('failed');
       });
 
       // Page should still be responsive

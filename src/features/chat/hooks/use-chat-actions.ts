@@ -46,6 +46,9 @@ export interface ChatActions {
 
   /** Scrolls messages container to bottom */
   scrollToBottom: () => void;
+
+  /** Controls sidebar visibility */
+  setShowSidebar: (show: boolean) => void;
 }
 
 export interface UseChatActionsParams {
@@ -63,6 +66,7 @@ export interface UseChatActionsParams {
   }) => Promise<{ success: boolean; error?: string }>;
   createObsessionsCompulsionsTable: () => Promise<{ success: boolean; error?: string }>;
   scrollToBottom: (force?: boolean, delay?: number) => void;
+  setShowSidebar: (show: boolean) => void;
 
   // Settings
   updateSettings: (settings: { model?: string; webSearchEnabled?: boolean }) => void;
@@ -104,6 +108,7 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
     showToast,
     toastT,
     setByokActive,
+    setShowSidebar,
   } = params;
 
   /**
@@ -285,5 +290,6 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
     handleSmartModelToggle,
     handleLocalModelToggle,
     scrollToBottom,
+    setShowSidebar,
   };
 }

@@ -9,7 +9,7 @@ import {
   useDeleteSessionMutation,
   type SessionData,
 } from '@/lib/queries/sessions';
-import type { UiSession } from '@/lib/chat/session-mapper';
+import type { UiSession } from '@/features/chat/lib/session-mapper';
 import { useSession } from '@/contexts/session-context';
 
 interface UseChatSessionsOptions {

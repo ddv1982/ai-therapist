@@ -21,7 +21,7 @@ import {
   CrisisDetectionResult,
   requiresImmediateIntervention,
   generateCrisisAlert,
-} from '@/lib/therapy/validators';
+} from '@/features/therapy/lib/validators';
 
 interface CrisisAlertProps {
   crisisResult: CrisisDetectionResult;

@@ -4,50 +4,52 @@ import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LanguageToggle } from '@/components/ui/language-switcher';
-
-import type { ChatSessionSummary } from '@/hooks/use-chat-controller';
 import { Plus, MessageSquare, Trash2, Sparkles, Brain, Globe, EyeOff, Key } from 'lucide-react';
+import { useChat } from '@/features/chat/context/chat-context';
+import { useTranslations } from 'next-intl';
+import { useChatSettings } from '@/contexts/chat-settings-context';
+import { ANALYTICAL_MODEL_ID, LOCAL_MODEL_ID } from '@/features/chat/config';
 
-interface ChatSidebarProps {
-  open: boolean;
-  sessions: ChatSessionSummary[];
-  currentSessionId: string | null;
-  isMobile: boolean;
-  onClose: () => void;
-  onStartNewSession: () => Promise<void> | void;
-  onSelectSession: (sessionId: string) => Promise<void> | void;
-  onDeleteSession: (sessionId: string) => Promise<void> | void;
-  onToggleSmartModel: () => void;
-  onToggleWebSearch: () => void;
-  webSearchEnabled: boolean;
-  smartModelActive: boolean;
-  onToggleLocalModel: () => void;
-  localModelActive: boolean;
-  onApiKeysOpen?: () => void;
-  byokActive?: boolean;
-  translate: (key: string) => string;
-}
+/**
+ * Chat Sidebar Component
+ *
+ * Renders the session list and model toggles.
+ * Refactored to use ChatContext for better maintainability.
+ */
+export function ChatSidebar() {
+  const { state: chatState, actions: chatActions, modalActions, controller, byokActive } = useChat();
+  const { settings } = useChatSettings();
+  const translate = useTranslations('chat');
 
-export function ChatSidebar(props: ChatSidebarProps) {
   const {
-    open,
+    showSidebar: open,
     sessions,
-    currentSessionId,
+    currentSession: currentSessionId,
     isMobile,
-    onClose,
-    onStartNewSession,
-    onSelectSession,
-    onDeleteSession,
-    onToggleSmartModel,
-    onToggleWebSearch,
-    onToggleLocalModel,
-    webSearchEnabled,
-    smartModelActive,
-    localModelActive,
-    onApiKeysOpen,
-    byokActive,
-    translate,
-  } = props;
+  } = chatState;
+
+  const {
+    setShowSidebar,
+    handleSmartModelToggle: onToggleSmartModel,
+    handleWebSearchToggle: onToggleWebSearch,
+    handleLocalModelToggle: onToggleLocalModel,
+  } = chatActions;
+
+  const {
+    startNewSession: onStartNewSession,
+    setCurrentSessionAndSync: onSelectSession,
+    deleteSession: onDeleteSession,
+  } = controller;
+
+  const {
+    openApiKeysPanel: onApiKeysOpen,
+  } = modalActions;
+
+  const webSearchEnabled = settings.webSearchEnabled;
+  const smartModelActive = !settings.webSearchEnabled && settings.model === ANALYTICAL_MODEL_ID;
+  const localModelActive = !settings.webSearchEnabled && settings.model === LOCAL_MODEL_ID;
+
+  const onClose = () => setShowSidebar(false);
 
   const sidebarClasses = useMemo(
     () =>
@@ -209,7 +211,7 @@ export function ChatSidebar(props: ChatSidebarProps) {
             </button>
             <div className="group relative">
               <button
-                onClick={onToggleLocalModel}
+                onClick={() => { void onToggleLocalModel(); }}
                 className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:outline-none ${
                   localModelActive
                     ? 'bg-violet-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.65)]'

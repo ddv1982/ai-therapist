@@ -6,15 +6,15 @@ import { reportGenerationSchema, validateRequest } from '@/lib/utils/validation'
 import { deduplicateRequest } from '@/lib/utils/helpers';
 import { withAuth, type AuthenticatedRequestContext } from '@/lib/api/api-middleware';
 import { createErrorResponse, createSuccessResponse } from '@/lib/api/api-response';
-import { ReportGenerationService } from '@/lib/services/report-generation-service';
+import { ReportGenerationService } from '@/features/therapy/lib/report-generation-service';
 import { verifySessionOwnership } from '@/lib/repositories/session-repository';
 import { getAuthenticatedConvexClient } from '@/lib/convex/http-client';
-import { extractBYOKKey, BYOK_OPENAI_MODEL } from '@/lib/chat/byok-helper';
+import { extractBYOKKey, BYOK_OPENAI_MODEL } from '@/features/chat/lib/byok-helper';
 import { MODEL_IDS } from '@/ai/model-metadata';
 import { languageModels } from '@/ai/providers';
 
-// Allow report generation up to 2 minutes (reasoning models can be slow)
-export const maxDuration = 120;
+// Allow report generation up to 5 minutes (reasoning models can be slow)
+export const maxDuration = 300;
 
 export const POST = withAuth(async (request: NextRequest, context: AuthenticatedRequestContext) => {
   try {
@@ -97,7 +97,7 @@ export const POST = withAuth(async (request: NextRequest, context: Authenticated
         return createSuccessResponse(result, { requestId: context.requestId });
       },
       undefined,
-      120000 // 2 minute TTL for report generation deduplication (reasoning models can be slow)
+      300000 // 5 minute TTL for report generation deduplication (reasoning models can be slow)
     );
   } catch (error) {
     logger.apiError('/api/reports/generate', error as Error, context);

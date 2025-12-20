@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { getAuthenticatedConvexClient, anyApi } from '@/lib/convex/http-client';
-import { encryptMessage, safeDecryptMessages } from '@/lib/chat/message-encryption';
+import { encryptMessage, safeDecryptMessages } from '@/features/chat/lib/message-encryption';
 import { withAuth, withValidationAndParams } from '@/lib/api/api-middleware';
 import { verifySessionOwnership } from '@/lib/repositories/session-repository';
 import {
@@ -88,7 +88,7 @@ export const POST = withValidationAndParams(
           // First user message: keep placeholder title; count already updated
         } else if (userMessageCount === 2 || userMessageCount === 4) {
           // Generate or regenerate title after 2 and 4 user messages
-          const { generateChatTitle } = await import('@/lib/chat/title-generator');
+          const { generateChatTitle } = await import('@/features/chat/lib/title-generator');
           const { getApiRequestLocale } = await import('@/i18n/request');
 
           // Fetch first few user messages for context

@@ -314,7 +314,7 @@ export function useApiMutation<TData, TVariables = void>(
       // Invalidate queries if specified
       if (invalidateOnSuccess && invalidateOnSuccess.length > 0) {
         invalidateOnSuccess.forEach((queryKey) => {
-          queryClient.invalidateQueries({ queryKey });
+          void queryClient.invalidateQueries({ queryKey });
         });
       }
 

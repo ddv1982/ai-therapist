@@ -4,7 +4,7 @@
  * Validates that all exports are correctly re-exported from the barrel
  */
 
-import * as chatServices from '@/lib/services/chat';
+import * as chatServices from '@/features/chat/lib';
 
 describe('Chat Services Index', () => {
   describe('Service exports', () => {

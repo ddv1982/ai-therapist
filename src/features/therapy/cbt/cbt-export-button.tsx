@@ -141,7 +141,7 @@ export function CBTExportButton({
   };
 
   const handleExport = (exportFunction: () => Promise<void>) => {
-    exportFunction();
+    void exportFunction();
     setShowDropdown(false);
   };
 

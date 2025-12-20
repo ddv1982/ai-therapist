@@ -23,7 +23,7 @@ import {
   decryptTherapeuticRecommendations,
   encryptEnhancedAnalysisData,
   decryptEnhancedAnalysisData,
-} from '@/lib/chat/message-encryption';
+} from '@/features/chat/lib/message-encryption';
 
 // Mock the crypto utils
 jest.mock('@/lib/auth/crypto-utils', () => ({

@@ -1,6 +1,6 @@
 'use client';
 
-import type { MemoryContextInfo } from '@/lib/chat/memory-utils';
+import type { MemoryContextInfo } from '@/features/chat/lib/memory-utils';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Trash2 } from 'lucide-react';
 

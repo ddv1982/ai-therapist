@@ -23,7 +23,13 @@ function SheetOverlay({ className, ref, ...props }: SheetOverlayProps) {
   return (
     <SheetPrimitive.Overlay
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/80',
+        // Apple-style backdrop with glassmorphism
+        'fixed inset-0 z-50',
+        'bg-black/40',
+        'backdrop-blur-[12px] backdrop-saturate-[120%]',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out',
+        'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+        'duration-base ease-smooth transition-all',
         className
       )}
       {...props}
@@ -33,7 +39,7 @@ function SheetOverlay({ className, ref, ...props }: SheetOverlayProps) {
 }
 
 const sheetVariants = cva(
-  'fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out',
+  'fixed z-50 gap-4 bg-background p-6 shadow-apple-2xl transition ease-out-smooth duration-base data-[state=open]:animate-in data-[state=closed]:animate-out',
   {
     variants: {
       side: {

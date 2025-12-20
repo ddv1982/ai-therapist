@@ -2,52 +2,49 @@
  * Chat Header Component
  *
  * Renders the top navigation bar with model selector, action buttons, and user menu.
- * Uses ChatHeaderContext to access state and avoid prop drilling.
+ * Now uses ChatContext for cleaner state access.
  *
  * @module ChatHeader
  */
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { FileText, Menu, X, Brain, List } from 'lucide-react';
 import { getIconButtonSize } from '@/lib/ui/design-tokens';
 import { useTranslations } from 'next-intl';
-import { useChatHeader } from '@/features/chat/context/chat-header-context';
+import { useChat } from '@/features/chat/context/chat-context';
 
 /**
  * Main chat header component.
  * Displays navigation controls, AI model info, action buttons, and user menu.
- * Now uses context for cleaner state access.
  *
  * @component
  * @returns {JSX.Element} The chat header with all controls
- *
- * @example
- * ```tsx
- * <ChatHeaderProvider value={headerState}>
- *   <ChatHeader />
- * </ChatHeaderProvider>
- * ```
  */
 export function ChatHeader() {
+  const { state, actions, controller, modelLabel } = useChat();
+  const t = useTranslations('chat');
+
   const {
     showSidebar,
-    onToggleSidebar,
-    hasActiveSession,
-    hasMessages,
     isGeneratingReport,
     isLoading,
     isMobile,
-    onGenerateReport,
-    onStopGenerating,
-    onOpenCBTDiary,
-    onCreateObsessionsTable,
-    modelLabel,
-  } = useChatHeader();
-  const t = useTranslations('chat');
+    currentSession,
+    messages,
+  } = state;
+
+  const hasActiveSession = Boolean(currentSession);
+  const hasMessages = messages.length > 0;
+
+  const onToggleSidebar = useCallback(
+    () => controller.setShowSidebar(!showSidebar),
+    [controller, showSidebar]
+  );
+
   const UserMenu = useMemo(
     () =>
       dynamic(() => import('./user-menu'), {
@@ -96,7 +93,7 @@ export function ChatHeader() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={onGenerateReport}
+              onClick={controller.generateReport}
               // Avoid disabled to keep spinner fully opaque; block clicks via pointer-events
               className={`${getIconButtonSize('large')} ${isGeneratingReport ? 'pointer-events-none' : ''} text-foreground tap-transparent`}
               aria-disabled={isGeneratingReport}
@@ -113,7 +110,7 @@ export function ChatHeader() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={onStopGenerating}
+              onClick={controller.stopGenerating}
               className={`${getIconButtonSize('large')} tap-transparent`}
               title={t('main.stopGenerating')}
             >
@@ -123,7 +120,7 @@ export function ChatHeader() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={onOpenCBTDiary}
+            onClick={actions.openCBTDiary}
             className={`${getIconButtonSize('large')} tap-transparent`}
             title={isMobile ? t('main.cbtMobile') : t('main.cbtOpen')}
           >
@@ -132,7 +129,7 @@ export function ChatHeader() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={onCreateObsessionsTable}
+            onClick={() => void actions.handleCreateObsessionsTable()}
             className={`${getIconButtonSize('large')} tap-transparent`}
             title={t('main.obsessionsTooltip')}
           >
