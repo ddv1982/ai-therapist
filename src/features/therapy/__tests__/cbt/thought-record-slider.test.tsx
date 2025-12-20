@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { renderWithCBT } from '../../../../../__tests__/utils/test-utilities';
+import { renderWithCBT } from '@tests/utils/test-utilities';
 
 const translationCatalog: Record<string, Record<string, string | string[]>> = {
   cbt: {

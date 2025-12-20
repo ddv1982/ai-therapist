@@ -17,7 +17,7 @@ import {
   createSessionResponse,
   createChatCompletionResponse,
 } from '@/lib/api/api-response';
-import { setEnv, restoreEnv } from '../../test-utils/env';
+import { setEnv, restoreEnv } from '@tests/test-utils/env';
 
 // Ensure the global NextResponse mock returns a compatible object
 jest.mock('next/server', () => ({

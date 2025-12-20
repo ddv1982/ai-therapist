@@ -44,6 +44,17 @@ Therapist AI App is a Next.js application designed to provide AI-driven therapy 
 - **Performance**: Use `.withIndex()` instead of `.filter()` for database queries whenever possible.
 - **Pagination**: Use `usePaginatedQuery` for lists that can grow large.
 
+### Testing Convention
+Tests follow a hybrid colocation pattern:
+- `src/features/*/__tests__/`: Feature-specific unit tests (colocated with source code).
+- `__tests__/`: Integration tests, cross-feature tests, shared component tests.
+- `e2e/`: Playwright end-to-end tests.
+
+When adding tests:
+- **Feature logic** (hooks, utils, services) → `src/features/<feature>/__tests__/`
+- **Integration/API tests** → `__tests__/integration/` or `__tests__/api/`
+- **Shared UI components** → `__tests__/components/ui/`
+
 ## Evidence Required for Every PR
 - Linting must pass (`bun run lint`).
 - Tests must pass (`bun run test`).

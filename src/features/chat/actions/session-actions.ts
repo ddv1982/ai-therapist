@@ -1,11 +1,12 @@
 'use server';
 
 import { validateApiAuth } from '@/lib/api/api-auth';
-import { getAuthenticatedConvexClient, anyApi } from '@/lib/convex/http-client';
+import { getAuthenticatedConvexClient, api } from '@/lib/convex/http-client';
 import { revalidatePath } from 'next/cache';
 import { createSessionSchema } from '@/lib/utils/validation';
 import { logger } from '@/lib/utils/logger';
 import { SessionCache } from '@/lib/cache';
+import type { Id } from '@convex/_generated/dataModel';
 
 export interface CreateSessionOptions {
   title: string;
@@ -32,24 +33,32 @@ export async function createSessionAction(options: CreateSessionOptions) {
     const convex = getAuthenticatedConvexClient(auth.jwtToken);
 
     // 3. Ensure User Exists
-    const user = await convex.mutation(anyApi.users.ensureByClerkId, {
+    const user = await convex.mutation(api.users.ensureByClerkId, {
       clerkId: auth.clerkId,
       email: '', // Webhook handles this, action uses minimal lookup
       name: undefined,
     });
 
+    if (!user) {
+      return { success: false, error: 'Failed to resolve user' };
+    }
+
     // 4. Create Session
-    const session = await convex.mutation(anyApi.sessions.create, {
+    const session = await convex.mutation(api.sessions.create, {
       userId: user._id,
       title,
     });
+
+    if (!session) {
+      return { success: false, error: 'Failed to create session' };
+    }
 
     // 5. Cache & Revalidate
     await SessionCache.set(session._id, {
       id: session._id,
       userId: auth.clerkId,
       title: session.title,
-      status: session.status,
+      status: session.status as 'active' | 'inactive' | 'archived',
       createdAt: new Date(session.createdAt),
       updatedAt: new Date(session.updatedAt),
     });
@@ -85,8 +94,8 @@ export async function deleteSessionAction(sessionId: string) {
   try {
     const convex = getAuthenticatedConvexClient(auth.jwtToken);
 
-    // 2. Perform Deletion
-    await convex.mutation(anyApi.sessions.remove, { sessionId: sessionId as any });
+    // 2. Perform Deletion (cast string to Convex Id type for type safety)
+    await convex.mutation(api.sessions.remove, { sessionId: sessionId as Id<'sessions'> });
 
     // 3. Clear Cache & Revalidate
     await SessionCache.invalidate(sessionId);

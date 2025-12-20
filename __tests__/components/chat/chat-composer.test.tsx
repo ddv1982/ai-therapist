@@ -1,7 +1,7 @@
 import { createRef } from 'react';
 import { screen, fireEvent } from '@testing-library/react';
 import { render } from '@testing-library/react';
-import { ChatComposer } from '../../../src/features/chat/components/chat-composer';
+import { ChatComposer } from '@/features/chat/components/chat-composer';
 
 describe('ChatComposer', () => {
   test('calls onChange and onSubmit', () => {

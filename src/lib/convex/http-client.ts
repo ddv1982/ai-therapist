@@ -1,6 +1,6 @@
 import { ConvexHttpClient } from 'convex/browser';
 import { anyApi } from 'convex/server';
-import { api } from '../../../convex/_generated/api';
+import { api } from '@convex/_generated/api';
 import { env } from '@/config/env';
 
 let cached: ConvexHttpClient | null = null;

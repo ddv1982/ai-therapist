@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 /**
  * State interface for chat modal visibility.
@@ -101,18 +101,32 @@ export function useChatModals(): UseChatModalsReturn {
     setShowApiKeysPanel(false);
   }, []);
 
-  return {
-    modals: {
+  // Memoize the modals state object
+  const modals = useMemo(
+    () => ({
       showMemoryModal,
       showApiKeysPanel,
-    },
-    actions: {
+    }),
+    [showMemoryModal, showApiKeysPanel]
+  );
+
+  // Memoize the actions object (callbacks are already stable)
+  const actions = useMemo(
+    () => ({
       openMemoryModal,
       closeMemoryModal,
       setShowMemoryModal,
       openApiKeysPanel,
       closeApiKeysPanel,
       setShowApiKeysPanel,
-    },
-  };
+    }),
+    [
+      openMemoryModal,
+      closeMemoryModal,
+      openApiKeysPanel,
+      closeApiKeysPanel,
+    ]
+  );
+
+  return { modals, actions };
 }

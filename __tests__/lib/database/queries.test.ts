@@ -1,5 +1,5 @@
 import type { SessionDoc, SessionBundle } from '@/types/database';
-import type { Doc, Id } from '../../../convex/_generated/dataModel';
+import type { Doc, Id } from '@convex/_generated/dataModel';
 
 jest.mock('@/lib/convex/http-client', () => ({
   getConvexHttpClient: jest.fn(),

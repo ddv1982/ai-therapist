@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { ComponentTestUtils } from '../../../../__tests__/utils/test-utilities';
+import { ComponentTestUtils } from '@tests/utils/test-utilities';
 import { useCbtDiaryFlow } from '@/features/therapy/cbt/hooks/use-cbt-diary-flow';
 
 const flush = () => new Promise<void>((r) => setTimeout(r, 0));

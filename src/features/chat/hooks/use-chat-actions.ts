@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { ObsessionsCompulsionsData } from '@/types';
 import type { ChatState } from '@/features/chat/hooks/use-chat-state';
 import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID, LOCAL_MODEL_ID } from '@/features/chat/config';
@@ -279,17 +279,33 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
     setTimeout(() => chatState.textareaRef.current?.focus(), 50);
   }, [scrollToBottomFn, chatState.textareaRef]);
 
-  return {
-    handleInputChange,
-    handleKeyDown,
-    handleFormSubmit,
-    openCBTDiary,
-    handleObsessionsCompulsionsComplete,
-    handleCreateObsessionsTable,
-    handleWebSearchToggle,
-    handleSmartModelToggle,
-    handleLocalModelToggle,
-    scrollToBottom,
-    setShowSidebar,
-  };
+  // Memoize the actions object to prevent unnecessary re-renders in consumers
+  return useMemo(
+    () => ({
+      handleInputChange,
+      handleKeyDown,
+      handleFormSubmit,
+      openCBTDiary,
+      handleObsessionsCompulsionsComplete,
+      handleCreateObsessionsTable,
+      handleWebSearchToggle,
+      handleSmartModelToggle,
+      handleLocalModelToggle,
+      scrollToBottom,
+      setShowSidebar,
+    }),
+    [
+      handleInputChange,
+      handleKeyDown,
+      handleFormSubmit,
+      openCBTDiary,
+      handleObsessionsCompulsionsComplete,
+      handleCreateObsessionsTable,
+      handleWebSearchToggle,
+      handleSmartModelToggle,
+      handleLocalModelToggle,
+      scrollToBottom,
+      setShowSidebar,
+    ]
+  );
 }

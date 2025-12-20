@@ -8,7 +8,7 @@ import userEvent from '@testing-library/user-event';
 import { SessionReportDetailModal } from '@/features/therapy/memory/session-report-detail-modal';
 import * as memoryUtils from '@/features/chat/lib/memory-utils';
 import type { MemoryDetailInfo } from '@/features/chat/lib/memory-utils';
-import { ComponentTestUtils } from '../../utils/test-utilities';
+import { ComponentTestUtils } from '@tests/utils/test-utilities';
 
 // Mock the dependencies
 jest.mock('@/features/chat/lib/memory-utils', () => ({

@@ -4,7 +4,7 @@
 
 import { logger } from '@/lib/utils/logger';
 import { apiClient } from '@/lib/api/client';
-import { deleteMemoryAction } from '@/features/chat/actions/memory-actions';
+import { deleteMemoryAction, type DeletionMode } from '@/features/chat/actions/memory-actions';
 
 export interface MemoryContextInfo {
   hasMemory: boolean;
@@ -196,7 +196,7 @@ export async function deleteMemory(options: {
       success: true,
       deletedCount: actionResult.data.deletedCount,
       message: actionResult.data.message,
-      deletionType: actionResult.data.deletionType as any,
+      deletionType: actionResult.data.deletionType as DeletionMode,
     };
   } catch (error) {
     logger.error('Error deleting memory', {

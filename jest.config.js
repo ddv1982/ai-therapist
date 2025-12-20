@@ -65,6 +65,8 @@ const customJestConfig = {
   coverageReporters: ['text', 'lcov', 'json-summary'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^@convex/(.*)$': '<rootDir>/convex/$1',
+    '^@tests/(.*)$': '<rootDir>/__tests__/$1',
     // Mock static assets
     '\\.(css|less|sass|scss|png|jpg|jpeg|gif|webp|svg)$': 'identity-obj-proxy',
     '^next-intl$': '<rootDir>/__tests__/__mocks__/next-intl.js',
