@@ -78,7 +78,7 @@ export const extractStructuredAnalysis = async (
     schema: parsedAnalysisSchema,
     system: systemPrompt,
     prompt: userPrompt,
-    mode: 'json',
+    output: 'object',
     // Only include temperature if provided (reasoning models don't support it)
     ...(options?.temperature !== undefined && { temperature: options.temperature }),
   });
