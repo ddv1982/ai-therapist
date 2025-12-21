@@ -90,8 +90,18 @@ export const WEB_SEARCH_EN = `
 
 export const MEMORY_SECTION_EN = (memoryContext: MemoryContext[]) => `
 ### Therapeutic Memory Context
-Reference previous progress without using specific details:
-${memoryContext.map((m, i) => `- Session ${i + 1} (${m.sessionDate}): ${m.summary}`).join('\n')}
+THERAPEUTIC MEMORY CONTEXT:
+Build upon insights and patterns identified in earlier sessions while maintaining strict confidentiality.
+Maintain continuity in your therapeutic approach.
+IMPORTANT: Never reference specific conversation details from previous sessions. Only use the general therapeutic insights and patterns provided.
+${memoryContext
+  .map(
+    (m, i) =>
+      `Previous Session ${i + 1} (${m.sessionDate}): "${m.sessionTitle}"
+- Summary: ${m.summary}
+- Report Generated: ${m.reportDate}`
+  )
+  .join('\n')}
 `;
 
 // ========================================
@@ -150,8 +160,18 @@ export const WEB_SEARCH_NL = `
 
 export const MEMORY_SECTION_NL = (memoryContext: MemoryContext[]) => `
 ### Therapeutisch Geheugen
-Bouw voort op eerdere voortgang zonder details te noemen:
-${memoryContext.map((m, i) => `- Sessie ${i + 1} (${m.sessionDate}): ${m.summary}`).join('\n')}
+THERAPEUTISCH GEHEUGEN:
+Bouw voort op eerdere inzichten zonder specifieke details te delen.
+Behoud continuïteit in je therapeutische benadering.
+BELANGRIJK: Verwijs nooit naar specifieke gesprekdetails uit eerdere sessies. Gebruik alleen algemene inzichten en patronen.
+${memoryContext
+  .map(
+    (m, i) =>
+      `Vorige sessie ${i + 1} (${m.sessionDate}): "${m.sessionTitle}"
+- Samenvatting: ${m.summary}
+- Rapportdatum: ${m.reportDate}`
+  )
+  .join('\n')}
 `;
 
 // ========================================

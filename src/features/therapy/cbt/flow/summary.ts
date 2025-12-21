@@ -105,7 +105,7 @@ export function buildMarkdownSummary(state: CBTFlowState): string {
   let summary = `## CBT Session Summary - ${dateLabel}\n\n`;
 
   if (context.situation) {
-    summary += `**Situation**: ${context.situation.situation}\n\n`;
+    summary += `**Situation:** ${context.situation.situation}\n\n`;
   }
 
   const initialEmotions = emotionList(context.emotions);
@@ -113,11 +113,11 @@ export function buildMarkdownSummary(state: CBTFlowState): string {
     const formatted = initialEmotions
       .map((emotion) => `${emotion.emotion}: ${emotion.rating}/10`)
       .join(', ');
-    summary += `**Initial Emotions**: ${formatted}\n\n`;
+    summary += `**Initial Emotions:** ${formatted}\n\n`;
   }
 
   if (context.thoughts && context.thoughts.length > 0) {
-    summary += '**Automatic Thoughts**:\n';
+    summary += '**Automatic Thoughts:**\n';
     context.thoughts.forEach((thought, index) => {
       summary += `${index + 1}. "${thought.thought}" (${thought.credibility}/10)\n`;
     });
@@ -125,12 +125,12 @@ export function buildMarkdownSummary(state: CBTFlowState): string {
   }
 
   if (context.coreBelief) {
-    summary += `**Core Belief**: "${context.coreBelief.coreBeliefText}" (${context.coreBelief.coreBeliefCredibility}/10)\n\n`;
+    summary += `**Core Belief:** "${context.coreBelief.coreBeliefText}" (${context.coreBelief.coreBeliefCredibility}/10)\n\n`;
   }
 
   const rationalThoughts = mapRationalThoughts(context);
   if (rationalThoughts.length > 0) {
-    summary += '**Rational Alternative Thoughts**:\n';
+    summary += '**Rational Alternative Thoughts:**\n';
     rationalThoughts.forEach((thought, index) => {
       summary += `${index + 1}. "${thought.thought}" (${thought.confidence}/10)\n`;
     });
@@ -139,7 +139,7 @@ export function buildMarkdownSummary(state: CBTFlowState): string {
 
   const schemaModes = mapSchemaModes(context);
   if (schemaModes.length > 0) {
-    summary += '**Active Schema Modes**:\n';
+    summary += '**Active Schema Modes:**\n';
     schemaModes.forEach((mode, index) => {
       summary += `${index + 1}. ${mode.name}${typeof mode.intensity === 'number' ? ` (${mode.intensity}/10)` : ''}\n`;
     });
@@ -153,11 +153,11 @@ export function buildMarkdownSummary(state: CBTFlowState): string {
     const formatted = finalEmotionList
       .map((emotion) => `${emotion.emotion}: ${emotion.rating}/10`)
       .join(', ');
-    summary += `**Final Emotions**: ${formatted}\n\n`;
+    summary += `**Final Emotions:** ${formatted}\n\n`;
   }
 
   if (context.actionPlan?.newBehaviors) {
-    summary += `**New Behaviors/Strategies**: ${context.actionPlan.newBehaviors}\n\n`;
+    summary += `**New Behaviors/Strategies:** ${context.actionPlan.newBehaviors}\n\n`;
   }
 
   summary +=

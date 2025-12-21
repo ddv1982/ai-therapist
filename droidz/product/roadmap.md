@@ -1,203 +1,40 @@
-# AI Therapist - Development Roadmap
+# Therapist AI App — Roadmap
 
-## Overview
+Status cadence: build in feature-first slices, respect existing import aliases, keep security and safety gates enforced in every phase.
 
-This roadmap outlines the planned feature development and enhancements for the AI Therapist application. We follow an iterative, user-centered approach with clear phases that build upon our strong foundation.
+## Phase 0: Foundation (done, maintain)
+- Core AI therapy chat (CBT/ERP/Schema), session reports, session switching.
+- Security posture: Clerk-authenticated, server-only Convex, field-level encryption, CSP, webhook verification.
+- Performance: Next.js 16 App Router + React 19, Turbopack, streaming responses; i18n (EN/NL) and dark-mode UX.
+- Ongoing: keep tests green (Jest/Playwright), lint + type checks on every change.
 
-**Current Status**: Phase 1 Complete (MVP Foundation)  
-**Next Phase**: Phase 2 Enhancement (Q1-Q2 2026)
+## Phase 1: Trust & Quality (0–3 months) — Must Have
+- **Safety & clinical guardrails**: reinforce crisis detection/escalation flows; add clinician review notes in reports.
+- **Session quality scoring**: lightweight rubric for adherence to CBT/ERP/Schema patterns; surface score in reports.
+- **Latency budget**: <500ms first token P95 in prod; add perf monitors and alerts.
+- **Data protection**: periodic encryption key rotation playbook; audit Convex ownership checks for all queries/mutations.
 
----
+## Phase 2: Guided Practice & Insights (3–6 months) — Should Have
+- **Guided exercises**: in-chat breathing/grounding flows and CBT thought records with stored completions.
+- **Mood check-ins**: daily/weekly prompts; trend view tied to sessions; respectful defaults for privacy.
+- **Progress dashboards**: per-user goals, streaks, and skills practiced; exportable summaries for clinician review.
+- **Report upgrades**: cross-session themes, homework suggestions, and clear next-step actions.
 
-## Roadmap at a Glance
+## Phase 3: Collaboration & Scale (6–12 months) — Could Have
+- **Clinician workspace**: read-only report review, feedback annotations, and share-back to user (with consent).
+- **Team/organization readiness**: feature flags for cohorts, audit trails, and configurable retention windows.
+- **Mobile polish**: offline-tolerant flows and PWA hardening; evaluate native shell only if justified by usage.
+- **Model flexibility**: BYOK/local model routing guardrails; cost controls and usage caps per org/user.
 
-| Phase                       | Timeline   | Focus                                         | Status      |
-| --------------------------- | ---------- | --------------------------------------------- | ----------- |
-| **Phase 1: MVP Foundation** | Q3-Q4 2025 | Core functionality, security, performance     | ✅ Complete |
-| **Phase 2: Enhancement**    | Q1-Q2 2026 | Analytics, advanced features, UX improvements | 🎯 Planned  |
-| **Phase 3: Growth**         | Q3-Q4 2026 | Scale, integrations, mobile apps              | 🚀 Future   |
-| **Phase 4: Platform**       | 2027+      | Ecosystem, partnerships, enterprise           | 💡 Vision   |
+## Phase 4: Expansion (12+ months) — Future
+- **Advanced modalities**: add ACT/DBT tracks once safety validated.
+- **Integrations**: calendar reminders for exercises, secure data export to clinician systems (opt-in).
+- **Enterprise**: SSO/SAML, data residency options, org-level analytics.
 
----
-
-## Phase 1: MVP Foundation (✅ COMPLETE)
-
-**Timeline**: Q3-Q4 2025  
-**Status**: ✅ Complete  
-**Goal**: Establish robust foundation with core therapeutic functionality and enterprise security
-
-### Completed Features
-
-#### 🧠 Core Therapeutic Functionality
-
-- ✅ **Real-time AI Chat**
-  - Streaming responses with Groq AI models
-  - Natural conversation flow with typing indicators
-  - Context-aware therapeutic responses
-  - Web search integration for current information
-
-- ✅ **Professional Therapeutic Frameworks**
-  - Cognitive Behavioral Therapy (CBT) principles
-  - Exposure and Response Prevention (ERP) techniques
-  - Schema Therapy pattern recognition
-  - Crisis intervention protocols
-
-- ✅ **Session Management**
-  - Create and organize multiple therapy sessions
-  - Switch between sessions seamlessly
-  - Session titles and metadata
-  - Message history preservation
-
-- ✅ **Session Reports**
-  - AI-generated insights and analysis
-  - Key points and takeaways extraction
-  - Therapeutic framework identification
-  - Pattern recognition across sessions
-
-#### 🔒 Enterprise Security
-
-- ✅ **Field-Level Encryption**
-  - AES-256-GCM encryption for message content
-  - Server-side encryption key management
-  - Encrypted at rest and in transit
-
-- ✅ **Clerk Authentication**
-  - Managed identity provider integration
-  - Multi-factor authentication support
-  - Secure session management
-  - Webhook synchronization with Convex
-
-- ✅ **Security Hardening**
-  - Server-side only Convex functions
-  - Ownership validation on all queries/mutations
-  - HIPAA-compliant logging (no sensitive data)
-  - Content Security Policy (CSP)
-  - Signed webhook verification
-
-#### ⚡ Performance & Technical Excellence
-
-- ✅ **Production Optimization**
-  - 20x faster server rendering (235ms → 12ms)
-  - 1156x faster locale detection (208ms → 0.18ms)
-  - React 19 with concurrent features
-  - Next.js 16 with Turbopack
-
-- ✅ **Modern Architecture**
-  - Server Components for optimal rendering
-  - React Query for server state management
-  - Optimistic UI updates with `useOptimistic`
-  - Modular component architecture (52 focused files)
-
-- ✅ **Quality Assurance**
-  - 1,528+ tests passing (Jest + Playwright)
-  - E2E tests for critical flows
-  - 100% test pass rate maintained
-  - Automated CI/CD pipelines
-
-#### 🎨 User Experience
-
-- ✅ **Beautiful Interface**
-  - Immersive dark-mode only design (therapeutic focus)
-  - Mobile-optimized responsive design
-  - Smooth animations and transitions
-  - Elegant shadcn/ui components
-
-- ✅ **Progressive Web App**
-  - Add to Home Screen capability
-  - Offline-ready architecture
-  - iOS integration with fullscreen support
-  - Safe-area handling for notched devices
-
-### Technical Foundation Established
-
-- Next.js 16 with App Router and Turbopack
-- React 19 with concurrent features
-- TypeScript strict mode
-- Convex real-time backend
-- React Query (TanStack Query v5)
-- Tailwind CSS v4
-- Comprehensive testing (Jest + Playwright)
-
----
-
-## Phase 2: Enhancement (🎯 PLANNED)
-
-**Timeline**: Q1-Q2 2026 (6 months)  
-**Status**: 🎯 Planned  
-**Goal**: Enhance therapeutic capabilities and provide deeper insights
-
-### Feature Categories
-
-#### 📊 Analytics & Progress Tracking
-
-**Priority**: Must Have
-
-1. **Personal Dashboard**
-   - **Description**: Visual overview of therapeutic journey
-   - **Features**:
-     - Session frequency and duration charts
-     - Mood trends over time
-     - Topic cloud visualization
-     - Progress milestones and achievements
-   - **Success Metrics**: 60%+ users check dashboard weekly
-   - **Effort**: 3 weeks
-
-2. **Mood Tracking**
-   - **Description**: Daily mood check-ins with trend analysis
-   - **Features**:
-     - Quick mood logging (emoji or scale)
-     - Mood calendar view
-     - Pattern recognition (time of day, triggers)
-     - Correlation with session topics
-   - **Success Metrics**: 40%+ users log mood daily
-   - **Effort**: 2 weeks
-
-3. **Progress Visualization**
-   - **Description**: Track therapeutic goals and improvements
-   - **Features**:
-     - Custom goal setting
-     - Progress bars and milestones
-     - Before/after sentiment analysis
-     - Skill mastery tracking (CBT techniques learned)
-   - **Success Metrics**: 70%+ find progress tracking helpful
-   - **Effort**: 3 weeks
-
-4. **Enhanced Session Reports**
-   - **Description**: Deeper insights with actionable recommendations
-   - **Features**:
-     - Trend analysis across multiple sessions
-     - Personalized homework suggestions
-     - Reading recommendations
-     - Skill-building exercises
-   - **Success Metrics**: 80%+ rate reports as valuable
-   - **Effort**: 2 weeks
-
-#### 🧠 Advanced Therapeutic Features
-
-**Priority**: Should Have
-
-5. **Guided Exercises**
-   - **Description**: Interactive therapeutic exercises within chat
-   - **Features**:
-     - Breathing exercises with visual guides
-     - Progressive muscle relaxation
-     - Thought record worksheets (CBT)
-     - Exposure hierarchy planning (ERP)
-     - Grounding techniques (5-4-3-2-1)
-   - **Success Metrics**: 50%+ complete at least one exercise
-   - **Effort**: 4 weeks
-
-6. **Therapeutic Journaling**
-   - **Description**: Structured prompts for reflection
-   - **Features**:
-     - Daily gratitude prompts
-     - CBT thought records
-     - Emotional processing templates
-     - Free-form journaling with AI analysis
-   - **Success Metrics**: 30%+ journal weekly
-   - **Effort**: 3 weeks
-
-7. **Crisis Resources**
+## Delivery Principles
+- Ship in thin vertical slices per feature folder; keep alias imports (`@/*`, `@convex/*`, `@tests/*`).
+- Every shipped item must include: tests (unit + critical E2E where relevant), lint/type clean, and safety review.
+- Protect user trust: no feature launches without crisis-handling verification and privacy review.
    - **Description**: Enhanced crisis intervention
    - **Features**:
      - Instant crisis line numbers (by region)

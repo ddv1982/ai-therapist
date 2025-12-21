@@ -1,202 +1,37 @@
-# AI Therapist - Technical Stack Documentation
+# Therapist AI App — Tech Stack
 
-## Overview
+Concise reference for what we use today and why. Follow feature-first structure and alias imports (`@/*`, `@convex/*`, `@tests/*`).
 
-AI Therapist is built with modern, production-ready technologies prioritizing performance, security, and developer experience. This document provides a comprehensive overview of our technical architecture, core dependencies, and development practices.
+## Frontend
+- **Framework**: Next.js 16 (App Router, React 19, Server Components by default; `'use client'` only when necessary).
+- **Styling**: Tailwind CSS v4 (CSS-first @theme tokens), shadcn/ui + CVA, dark-mode only; Framer Motion for micro-interactions.
+- **State & Data**: React Context for app state, TanStack Query v5 for server state and caching.
+- **Forms & Validation**: React Hook Form + Zod schemas; async validation kept server-side where needed.
+- **i18n**: Built-in Next.js i18n with EN/NL locales; all user-facing strings routed through shared i18n utilities.
 
-**Last Updated**: December 4, 2025  
-**Node Version**: 24+  
-**Package Manager**: Bun 1.2+
+## Backend
+- **Runtime**: Next.js server (Node 24+ with Bun PM) using App Router server components/actions.
+- **Data & Realtime**: Convex backend with strictly awaited queries/mutations; prefer `.withIndex()` over `.filter()` for performance; use `usePaginatedQuery` for lists.
+- **Auth**: Clerk for identity (JWTs issued to server/Convex); middleware enforces authenticated access before hitting Convex.
+- **AI Orchestration**: AI SDK 5 with streamable responses; BYOK and local model routing supported but controlled by safety and cost guardrails.
+- **Security**: Field-level AES-256-GCM encryption for therapeutic content; CSP enabled; webhook signature verification.
 
----
+## Testing & Quality
+- **Unit/Integration**: Jest + React Testing Library.
+- **E2E**: Playwright.
+- **Static Analysis**: ESLint (Next + Tailwind rules) and `tsc --noEmit`; Prettier auto-format.
+- **Performance/Safety**: Perf budgets (<500ms first token P95), crisis-handling checks on relevant flows.
 
-## Table of Contents
+## Tooling & DX
+- **Package Manager**: Bun.
+- **Build**: Turbopack for dev/build speed.
+- **Import Aliases**: `@/*` to `src`, `@convex/*` to `convex`, `@tests/*` to `__tests__`.
+- **Architecture**: Feature-first directories; server-first rendering; avoid floating promises; reuse shared utilities in `src/lib` and `src/components/ui`.
 
-1. [Architecture Overview](#architecture-overview)
-2. [Core Technologies](#core-technologies)
-3. [Frontend Stack](#frontend-stack)
-4. [Backend & Database](#backend--database)
-5. [AI & Machine Learning](#ai--machine-learning)
-6. [Authentication & Security](#authentication--security)
-7. [Development Tools](#development-tools)
-8. [Testing Infrastructure](#testing-infrastructure)
-9. [DevOps & Deployment](#devops--deployment)
-10. [Monitoring & Observability](#monitoring--observability)
-11. [Performance Optimizations](#performance-optimizations)
-12. [Dependencies Reference](#dependencies-reference)
-
----
-
-## Architecture Overview
-
-### High-Level Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Client Layer                          │
-│  Next.js 16 App Router | React 19 | TypeScript | Tailwind   │
-│                    (Server & Client Components)              │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-                     ├─── Authentication ───> Clerk (Managed Auth)
-                     │
-                     ├─── State Management ──> React Query + AI SDK
-                     │
-                     ├─── API Layer ─────────> Next.js API Routes
-                     │                          │
-                     ├─── AI Inference ──────> │──> Groq AI API
-                     │                          │
-                     └─── Backend ───────────> │──> Convex (Real-time DB)
-                                                │
-                                                └──> Field-level Encryption
-                                                     (AES-256-GCM)
-```
-
-### Design Principles
-
-1. **Server-First Architecture**
-   - React Server Components by default
-   - Client components only when necessary
-   - Reduced JavaScript bundle size
-   - Improved performance and SEO
-
-2. **Type Safety Throughout**
-   - TypeScript strict mode
-   - End-to-end type safety (frontend → backend)
-   - Generated types from OpenAPI spec
-   - Convex automatic type generation
-
-3. **Security by Default**
-   - Server-side authentication validation
-   - Field-level encryption for sensitive data
-   - No sensitive data in client bundles
-   - HIPAA-compliant practices
-
-4. **Real-Time Capabilities**
-   - Convex reactive queries
-   - AI streaming responses
-   - Live session updates
-   - Optimistic UI updates
-
----
-
-## Core Technologies
-
-### Runtime & Framework
-
-#### Next.js 16
-
-**Why**: Industry-leading React framework with excellent DX and performance
-
-**Key Features Used**:
-
-- **App Router** - Modern file-system routing with layouts
-- **Server Components** - Zero-bundle components for static content
-- **Server Actions** - Type-safe server functions
-- **Streaming SSR** - Progressive page rendering
-- **Turbopack** - 10x faster builds than Webpack
-- **Image Optimization** - Automatic WebP conversion and lazy loading
-- **Metadata API** - SEO optimization
-- **Middleware** - Request-time authentication and routing
-
-**Configuration**: `/next.config.js`
-
-```javascript
-{
-  reactStrictMode: true,
-  experimental: {
-    serverComponentsExternalPackages: ['convex'],
-    turbo: true
-  }
-}
-```
-
-#### React 19
-
-**Why**: Latest React with concurrent features and performance improvements
-
-**Key Features Used**:
-
-- **Server Components** - Render on server, no client JS
-- **useOptimistic** - Instant UI updates before server confirmation
-- **useTransition** - Non-blocking state updates
-- **Suspense** - Declarative loading states
-- **Concurrent Rendering** - Improved responsiveness
-- **Automatic Batching** - Optimized re-renders
-
-**Custom Hooks Created**:
-
-- `useDraftSaving` - Auto-save draft messages
-- `useSessionContext` - Session state management
-- `useEncryptedMessages` - Decryption hook
-- `useTherapyInsights` - Report generation
-
-#### TypeScript 5.6
-
-**Why**: Industry standard for type safety and developer productivity
-
-**Configuration**: `tsconfig.json` (strict mode enabled)
-
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
-  }
-}
-```
-
----
-
-## Frontend Stack
-
-### UI Framework & Styling
-
-#### Tailwind CSS v4
-
-**Why**: Utility-first CSS with excellent performance and DX
-
-**Key Features**:
-
-- CSS-first configuration (no JS config)
-- Oxide engine for faster builds
-- Automatic purging of unused styles
-- Dark mode only (optimized for therapeutic focus)
-- Custom design tokens
-- Responsive design utilities
-
-**Configuration**: `tailwind.config.js`
-
-**Custom Theme**:
-
-- Primary colors: Therapeutic blue palette
-- Dark mode: Dark-mode only high contrast for accessibility
-- Typography: Inter font family
-- Spacing: Consistent 4px base unit
-
-#### shadcn/ui Components
-
-**Why**: Accessible, customizable components we own
-
-**Components Used**:
-
-- `Button` - Various button styles
-- `Dialog` - Modal interactions
-- `Dropdown Menu` - Context menus
-- `Scroll Area` - Custom scrollbars
-- `Tabs` - Tab navigation
-- `Switch` - Toggle controls
-- `Slider` - Range inputs
-- `Select` - Dropdown selections
-- `Progress` - Loading indicators
-
-**Customization**: All components adapted to therapeutic aesthetic
-
-#### Radix UI Primitives
-
-**Why**: Unstyled, accessible component primitives
+## Deployment & Ops
+- **Hosting**: Next.js app + Convex deployment (server-only access to Convex); Vercel-compatible setup.
+- **Secrets**: Managed via environment variables; no secrets in client bundles; BYOK stored securely.
+- **Monitoring**: Maintain existing perf and error logging; keep HIPAA-aligned logging (no sensitive payloads).
 
 **Primitives Used**:
 

@@ -1,333 +1,143 @@
 # Error Handling
 
 ## Overview
-
-Proper error handling is critical for application reliability, user experience, and debugging. This standard defines how to handle errors consistently across the codebase.
+Consistent patterns for capturing, mapping, logging, and surfacing errors across Next.js (App Router), Convex, and client hooks—without leaking sensitive therapeutic data.
 
 ## When to Apply
-
-- All functions that can fail
-- External API calls and database operations
-- File I/O and network operations
-- User input validation
-- Async operations and promises
+- API routes, server actions, Convex functions
+- Encryption/decryption, AI calls, external APIs
+- Client hooks/services with network or parsing risk
+- Any user input parsing (Zod) and form handling
 
 ## Core Principles
-
-1. **Fail Fast** - Validate early and throw errors immediately when detecting invalid state
-2. **Be Specific** - Use specific error types/classes for different failure scenarios
-3. **Provide Context** - Include relevant information in error messages for debugging
-4. **User-Friendly** - Show helpful messages to users without exposing internals
-5. **Centralized Handling** - Handle errors at appropriate boundaries (API layer, UI layer)
+1. **Fail safe**: Prefer safe defaults; block risky actions on uncertainty.
+2. **No PHI in logs**: Never log decrypted content or tokens; log IDs and codes.
+3. **Typed errors**: Map unknown errors to a small set of typed codes.
+4. **Boundary handling**: Validate at edges; surface friendly UI messages.
+5. **Bounded retries**: Retry only idempotent operations with caps and jitter.
 
 ## ✅ DO
+### Use typed mappers
+**✅ DO**: Normalize errors before responding.
+```ts
+type AppError = { code: 'UNAUTHENTICATED' | 'FORBIDDEN' | 'VALIDATION' | 'NOT_FOUND' | 'SERVER'; message: string };
 
-### DO: Use Specific Error Types
-
-**✅ DO**:
-
-```typescript
-class ValidationError extends Error {
-  constructor(
-    message: string,
-    public field: string
-  ) {
-    super(message);
-    this.name = 'ValidationError';
-  }
-}
-
-class NotFoundError extends Error {
-  constructor(resource: string, id: string) {
-    super(`${resource} with id ${id} not found`);
-    this.name = 'NotFoundError';
-  }
-}
-
-throw new ValidationError('Email is required', 'email');
-```
-
-### DO: Provide Context in Errors
-
-**✅ DO**:
-
-```typescript
-try {
-  await fetchUser(userId);
-} catch (error) {
-  throw new Error(`Failed to fetch user ${userId}: ${error.message}`, {
-    cause: error,
-  });
+export function toAppError(err: unknown): AppError {
+  if (err instanceof ZodError) return { code: 'VALIDATION', message: 'Invalid input' };
+  if ((err as Error)?.message === 'UNAUTHENTICATED') return { code: 'UNAUTHENTICATED', message: 'Sign in required' };
+  return { code: 'SERVER', message: 'Something went wrong' };
 }
 ```
 
-### DO: Handle Errors at Boundaries
-
-**✅ DO**:
-
-```typescript
-// API route handler
-app.post('/api/users', async (req, res) => {
-  try {
-    const user = await createUser(req.body);
-    res.json(user);
-  } catch (error) {
-    if (error instanceof ValidationError) {
-      return res.status(400).json({ error: error.message, field: error.field });
-    }
-    if (error instanceof NotFoundError) {
-      return res.status(404).json({ error: error.message });
-    }
-    // Generic error
-    console.error('Unexpected error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+### Log safely
+**✅ DO**: Redact sensitive fields.
+```ts
+logger.error('convex:messages.create', {
+  sessionId,
+  userId,
+  error: err instanceof Error ? err.message : 'unknown',
 });
 ```
 
-### DO: Clean Up Resources
+### Validate inputs
+**✅ DO**: Parse before use.
+```ts
+const payload = schema.parse(await req.json());
+```
 
-**✅ DO**:
-
-```typescript
-async function processFile(filePath: string) {
-  const file = await fs.open(filePath);
-  try {
-    const data = await file.read();
-    return processData(data);
-  } finally {
-    await file.close(); // Always clean up
-  }
+### UI-friendly messaging
+**✅ DO**: Show concise, actionable errors.
+```tsx
+if (error) {
+  return <ErrorState title="We hit a snag" message="Please retry. If it persists, contact support." />;
 }
 ```
 
-### DO: Use Retry Logic for Transient Failures
-
-**✅ DO**:
-
-```typescript
-async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries: number = 3): Promise<T> {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (error) {
-      if (i === maxRetries - 1) throw error;
-      await new Promise((resolve) => setTimeout(resolve, Math.pow(2, i) * 1000));
-    }
-  }
-  throw new Error('Max retries exceeded');
+### Guard critical ops
+**✅ DO**: Wrap encryption/Convex/AI calls.
+```ts
+try {
+  const ciphertext = encrypt(content);
+  await ctx.runMutation(api.messages.create, { ciphertext });
+} catch (err) {
+  logger.error('messages.create', { sessionId, err });
+  throw new Error('SAVE_FAILED');
 }
-
-// Usage
-const data = await retryWithBackoff(() => fetchFromAPI(url));
 ```
 
 ## ❌ DON'T
-
-### DON'T: Swallow Errors Silently
-
-**❌ DON'T**:
-
-```typescript
-try {
-  await saveData(data);
-} catch (error) {
-  // Silent failure - data not saved but no indication!
-}
+### Leak data
+**❌ DON'T**: Log decrypted text, tokens, or PII.
+```ts
+logger.debug('payload', { content });
 ```
 
-**Why**: Hides failures and makes debugging impossible.
-
-### DON'T: Use Generic Error Types
-
-**❌ DON'T**:
-
-```typescript
-throw new Error('Something went wrong');
-throw new Error('Error');
+### Swallow errors
+**❌ DON'T**: Empty catches.
+```ts
+try { await doWork(); } catch (_) {}
 ```
 
-**Why**: Doesn't provide enough context for debugging or handling.
-
-### DON'T: Expose Internal Details to Users
-
-**❌ DON'T**:
-
-```typescript
-catch (error) {
-  res.status(500).json({
-    error: error.stack, // Exposes internals!
-    query: sqlQuery     // Security risk!
-  });
-}
+### Expose internals to users
+**❌ DON'T**: Return stack traces or raw error objects.
+```ts
+return NextResponse.json(err, { status: 500 });
 ```
 
-**Why**: Security risk and poor UX.
-
-### DON'T: Catch Without Re-throwing
-
-**❌ DON'T**:
-
-```typescript
-async function fetchData() {
-  try {
-    return await api.getData();
-  } catch (error) {
-    console.log('Error fetching data');
-    return null; // Caller doesn't know it failed!
-  }
-}
+### Unbounded retries
+**❌ DON'T**: Infinite loops on failure.
+```ts
+while (true) await callApi();
 ```
 
-**Why**: Caller can't distinguish between "no data" and "error".
-
-### DON'T: Create Error Handling Pyramids
-
-**❌ DON'T**:
-
-```typescript
-try {
-  const user = await getUser();
-  try {
-    const posts = await getPosts(user.id);
-    try {
-      const comments = await getComments(posts);
-      // Nested hell
-    } catch (e3) {}
-  } catch (e2) {}
-} catch (e1) {}
+### Mix domains
+**❌ DON'T**: Conflate validation with auth errors.
+```ts
+if (!res.ok) throw new Error('validation');
 ```
-
-**Why**: Hard to read and maintain. Use async/await properly.
 
 ## Patterns & Examples
-
-### Pattern 1: Error Boundary Component (React)
-
-**Use Case**: Catch errors in React component tree
-
-**Implementation**:
-
-```typescript
-class ErrorBoundary extends React.Component {
-  state = { hasError: false, error: null };
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    // Log to error reporting service
-    console.error('Error caught:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <ErrorFallback error={this.state.error} />;
-    }
-    return this.props.children;
-  }
-}
-```
-
-### Pattern 2: Result Type (Functional Approach)
-
-**Use Case**: Avoid throwing exceptions for expected failures
-
-**Implementation**:
-
-```typescript
-type Result<T, E = Error> = { ok: true; value: T } | { ok: false; error: E };
-
-function divide(a: number, b: number): Result<number> {
-  if (b === 0) {
-    return { ok: false, error: new Error('Division by zero') };
-  }
-  return { ok: true, value: a / b };
-}
-
-// Usage
-const result = divide(10, 2);
-if (result.ok) {
-  console.log(result.value);
-} else {
-  console.error(result.error);
-}
-```
-
-### Pattern 3: Graceful Degradation
-
-**Use Case**: Continue operation when non-critical services fail
-
-**Implementation**:
-
-```typescript
-async function getUserWithRecommendations(userId: string) {
-  const user = await getUser(userId); // Critical - throw if fails
-
-  let recommendations = [];
+### Pattern: API handler with validation + mapped errors
+```ts
+export async function POST(req: NextRequest) {
   try {
-    recommendations = await getRecommendations(userId); // Non-critical
-  } catch (error) {
-    console.warn('Failed to load recommendations:', error);
-    // Continue without recommendations
+    const body = schema.parse(await req.json());
+    const result = await createReport(body);
+    return NextResponse.json(result, { status: 201 });
+  } catch (err) {
+    const appErr = toAppError(err);
+    logger.error('api/reports', { code: appErr.code, err });
+    const status = appErr.code === 'VALIDATION' ? 400 : appErr.code === 'UNAUTHENTICATED' ? 401 : 500;
+    return NextResponse.json({ error: appErr.message }, { status });
   }
+}
+```
 
-  return { user, recommendations };
+### Pattern: Client hook with typed states
+```ts
+export function useReports(sessionId: string) {
+  return useQuery({
+    queryKey: ['reports', sessionId],
+    queryFn: () => fetchReports(sessionId),
+    retry: 1,
+    meta: { errorMap: toAppError },
+  });
 }
 ```
 
 ## Common Mistakes
-
-1. **Catching Too Broadly**
-   - Problem: `catch(error)` catches everything including typos
-   - Solution: Catch specific error types or let unexpected errors bubble
-
-2. **Not Validating Input Early**
-   - Problem: Errors occur deep in call stack
-   - Solution: Validate at entry points (API routes, function start)
-
-3. **Logging Then Re-throwing Without Adding Context**
-   - Problem: Duplicate logs without useful information
-   - Solution: Add context when re-throwing or log once at boundary
-
-4. **Using Errors for Control Flow**
-   - Problem: `try-catch` for non-exceptional cases
-   - Solution: Use conditionals for expected cases, errors for exceptional ones
+1. Logging decrypted content → redact; log IDs only.
+2. Returning 200 on failure → set appropriate status (400/401/403/404/500).
+3. Rethrowing raw Zod errors → map to user-friendly messages.
+4. Missing try/catch around Convex/AI/encryption → wrap and log.
+5. Using `console.error` in prod code → use structured logger.
 
 ## Testing Standards
-
-```typescript
-describe('Error Handling', () => {
-  it('should throw ValidationError for invalid input', () => {
-    expect(() => createUser({ email: '' })).toThrow(ValidationError);
-  });
-
-  it('should include field name in validation error', () => {
-    try {
-      createUser({ email: '' });
-    } catch (error) {
-      expect(error).toBeInstanceOf(ValidationError);
-      expect(error.field).toBe('email');
-    }
-  });
-
-  it('should retry on transient failures', async () => {
-    const mock = jest
-      .fn()
-      .mockRejectedValueOnce(new Error('Transient'))
-      .mockResolvedValueOnce('success');
-
-    const result = await retryWithBackoff(mock);
-    expect(result).toBe('success');
-    expect(mock).toHaveBeenCalledTimes(2);
-  });
-});
-```
+- Unit-test error mappers and validation branches.
+- Assert UI shows friendly text, not internal codes or stacks.
+- Mock failure paths in hooks/services (network, validation, 500).
 
 ## Resources
-
-- [MDN: Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)
-- [Node.js Error Handling Best Practices](https://nodejs.org/en/docs/guides/error-handling/)
-- [TypeScript: Error Handling](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates)
-- [Rust Book: Error Handling](https://doc.rust-lang.org/book/ch09-00-error-handling.html) (excellent functional patterns)
+- Next.js App Router error handling
+- Convex error patterns
+- Zod error formatting docs
