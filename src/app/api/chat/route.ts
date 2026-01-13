@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { convertToModelMessages } from 'ai';
+import { convertToModelMessages, tool } from 'ai';
 import type { UIMessage } from 'ai';
 import { languageModels, ModelID } from '@/ai/providers';
 import { MODEL_IDS } from '@/ai/model-metadata';
@@ -198,7 +198,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       ...toUiMessages(forwarded),
     ];
 
-    const modelMessages = convertToModelMessages(uiMessages);
+    const modelMessages = await convertToModelMessages(uiMessages);
 
     const streamResultPromise = streamChatCompletion({
       model: modelToUse,
@@ -206,7 +206,15 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       messages: modelMessages,
       telemetry: { metadata: { requestId: context.requestId } },
       ...(hasWebSearch
-        ? { tools: { browser_search: groq.tools.browserSearch({}) }, toolChoice: 'auto' as const }
+        ? {
+            tools: {
+              browser_search: tool({
+                ...groq.tools.browserSearch({}),
+                strict: true,
+              }),
+            },
+            toolChoice: 'auto' as const,
+          }
         : {}),
     });
 
@@ -250,7 +258,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       },
     });
 
-    streamResult.response
+    Promise.resolve(streamResult.response)
       .then((responseMeta) => {
         updateResolvedModel(responseMeta?.modelId);
       })

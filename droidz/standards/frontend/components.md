@@ -14,6 +14,7 @@ Guidelines for React 19 components in Next.js 16 App Router using feature-first 
 3. **Accessible**: Semantic roles/labels; align with RTL queries.
 4. **Composable**: Use CVA for variants; reuse shadcn/ui primitives.
 5. **Typed props**: Explicit prop types; avoid `any`.
+6. **React 19 hooks**: Use `useOptimistic` for instant feedback; `useActionState` for form actions.
 
 ## ✅ DO
 ### Server vs client
@@ -56,6 +57,40 @@ type SessionCardProps = { title: string; createdAt: string; onSelect: () => void
 
 ### Reuse primitives
 **✅ DO**: Use `@/components/ui` for Dialog/Button/Input rather than bespoke elements.
+
+### React 19: useOptimistic for lists
+**✅ DO**: Use `useOptimistic` for instant add/remove feedback.
+```tsx
+'use client';
+
+import { useOptimistic } from 'react';
+
+type Action = { type: 'add'; thought: ThoughtData } | { type: 'remove'; index: number };
+
+export function ThoughtList({ thoughts, onAdd }: Props) {
+  const [optimisticThoughts, updateOptimistic] = useOptimistic(
+    thoughts,
+    (state, action: Action) => {
+      if (action.type === 'add') return [...state, action.thought];
+      if (action.type === 'remove') return state.filter((_, i) => i !== action.index);
+      return state;
+    }
+  );
+
+  const handleAdd = () => {
+    const newThought = { thought: '', credibility: 5 };
+    updateOptimistic({ type: 'add', thought: newThought });
+    onAdd(newThought);
+  };
+
+  return (
+    <div>
+      {optimisticThoughts.map((t, i) => <ThoughtCard key={i} {...t} />)}
+      <Button onClick={handleAdd}>Add Thought</Button>
+    </div>
+  );
+}
+```
 
 ## ❌ DON'T
 ### Client-first pages
