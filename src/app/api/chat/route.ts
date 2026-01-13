@@ -258,6 +258,8 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       },
     });
 
+    // AI SDK v6: streamResult.response may be a Promise or direct value depending on stream state.
+    // Wrapping with Promise.resolve() ensures consistent async handling for both cases.
     Promise.resolve(streamResult.response)
       .then((responseMeta) => {
         updateResolvedModel(responseMeta?.modelId);
