@@ -54,7 +54,8 @@ export const generateSessionReport = async (
 };
 
 /**
- * Extract structured analysis using generateObject for type-safe outputs.
+ * Extract structured analysis using generateText with Output.object() for type-safe outputs.
+ * Uses AI SDK v6 pattern for structured object generation with Zod schema validation.
  * Accepts either a model instance directly or falls back to model ID lookup.
  *
  * @param options - Optional temperature settings (omit for reasoning models)

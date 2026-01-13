@@ -67,8 +67,8 @@ export class ReportGenerationService {
   }
 
   /**
-   * Note: Manual JSON parsing has been removed in favor of generateObject()
-   * which uses Zod schemas for type-safe structured outputs from the AI SDK
+   * Note: Manual JSON parsing has been removed in favor of AI SDK v6's
+   * generateText() with Output.object() which uses Zod schemas for type-safe structured outputs.
    */
 
   /**
@@ -198,15 +198,15 @@ export class ReportGenerationService {
   }
 
   /**
-   * Extracts and processes structured analysis from AI report
-   * Now uses generateObject() with Zod schemas for type-safe outputs
+   * Extracts and processes structured analysis from AI report.
+   * Uses AI SDK v6 generateText() with Output.object() and Zod schemas for type-safe outputs.
    */
   private async processStructuredAnalysis(
     completion: string,
     messages: ReportMessage[],
     _hasCBTContent: boolean
   ): Promise<ParsedAnalysis> {
-    devLog('Extracting structured analysis data using generateObject...');
+    devLog('Extracting structured analysis data using generateText + Output.object()...');
 
     try {
       const parsedAnalysis = await extractStructuredAnalysis(
@@ -233,7 +233,7 @@ export class ReportGenerationService {
         modelUsed: this.reportModelId,
       });
 
-      // Return empty analysis on failure - generateObject already handles retries
+      // Return empty analysis on failure - extractStructuredAnalysis handles the structured output
       return {};
     }
   }
