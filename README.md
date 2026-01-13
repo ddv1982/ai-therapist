@@ -62,7 +62,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Prettier Auto-Format**: Consistent code formatting across the codebase
 - **Cleaner Codebase**: Removed custom auth endpoints and legacy TOTP service
 - **Latest Dependencies**: All packages upgraded to latest stable versions
-- **Robust Test Suite**: 174 active tests (169 unit/integration, 5 E2E) ensuring 100% stability.
+- **Robust Test Suite**: 2476 unit/integration tests across 171 suites + 96 E2E tests ensuring 100% stability.
 
 ## ✨ Features
 
@@ -310,21 +310,24 @@ The application uses a **dark mode only** design optimized for therapeutic use a
 - **Therapeutic Color Palette** - 8 emotion colors + 3 therapeutic state colors
 - **Accessibility** - All colors meet WCAG AA contrast requirements (4.5:1 minimum)
 
-### Domain-Driven Structure
+### Feature-First Structure
 
 ```
 src/
-├── app/             # Next.js App Router
-├── components/      # React components by domain
-├── lib/             # Utilities by domain
-│   ├── auth/        # Authentication helpers
-│   ├── api/         # API clients and middleware
-│   ├── queries/     # React Query hooks
-│   ├── chat/        # Chat functionality
-│   └── therapy/     # Therapeutic frameworks
-├── styles/          # Modularized global styles
-├── types/           # TypeScript definitions
-└── hooks/           # Custom React hooks
+├── app/              # Next.js App Router
+├── features/         # Feature-based modules (primary logic)
+│   ├── chat/         # Chat components, hooks, services
+│   ├── therapy/      # CBT, ERP, Schema therapy
+│   └── therapy-chat/ # Therapy-specific chat UI
+├── components/ui/    # Shared UI components (CVA-based)
+├── lib/              # Shared utilities
+│   ├── api/          # API clients and middleware
+│   ├── auth/         # Authentication helpers
+│   └── queries/      # React Query hooks
+├── hooks/            # Global custom React hooks
+├── types/            # TypeScript definitions
+└── styles/           # Global styles
+convex/               # Convex backend schema and functions
 ```
 
 ## 📄 License
