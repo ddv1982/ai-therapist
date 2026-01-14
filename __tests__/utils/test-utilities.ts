@@ -135,7 +135,7 @@ export class MockFactory {
         decryptSessionReportContent: jest.fn().mockImplementation((content) => content),
         encryptSessionReportContent: jest.fn().mockImplementation((content) => content),
       },
-      // AI SDK mocks
+      // AI SDK mocks (updated for AI SDK v6 - convertToModelMessages is now async)
       aiSdk: {
         streamText: jest.fn().mockReturnValue({
           toUIMessageStreamResponse: jest.fn().mockReturnValue(
@@ -148,7 +148,7 @@ export class MockFactory {
             })
           ),
         }),
-        convertToModelMessages: jest.fn().mockImplementation((messages) => messages),
+        convertToModelMessages: jest.fn().mockImplementation(async (messages) => messages),
       },
     };
   }

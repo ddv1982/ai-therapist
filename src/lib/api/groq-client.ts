@@ -1,4 +1,4 @@
-import { generateText, generateObject, convertToModelMessages, streamText } from 'ai';
+import { generateText, Output, convertToModelMessages, streamText } from 'ai';
 import type { UIMessage, LanguageModel } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import { languageModels, type ModelID } from '@/ai/providers';
@@ -54,7 +54,8 @@ export const generateSessionReport = async (
 };
 
 /**
- * Extract structured analysis using generateObject for type-safe outputs.
+ * Extract structured analysis using generateText with Output.object() for type-safe outputs.
+ * Uses AI SDK v6 pattern for structured object generation with Zod schema validation.
  * Accepts either a model instance directly or falls back to model ID lookup.
  *
  * @param options - Optional temperature settings (omit for reasoning models)
@@ -73,17 +74,18 @@ export const extractStructuredAnalysis = async (
       ? languageModels[modelOrId as keyof typeof languageModels]
       : modelOrId;
 
-  const result = await generateObject({
+  const result = await generateText({
     model,
-    schema: parsedAnalysisSchema,
+    output: Output.object({
+      schema: parsedAnalysisSchema,
+    }),
     system: systemPrompt,
     prompt: userPrompt,
-    output: 'object',
     // Only include temperature if provided (reasoning models don't support it)
     ...(options?.temperature !== undefined && { temperature: options.temperature }),
   });
 
-  return result.object;
+  return result.output;
 };
 
 // Browser search function using direct Groq integration
@@ -106,7 +108,7 @@ export const streamTextWithBrowserSearch = async (
 
   try {
     // Use direct Groq model instance with browser search tool
-    const modelMessages = convertToModelMessages(uiMessages);
+    const modelMessages = await convertToModelMessages(uiMessages);
 
     const result = streamText({
       model: languageModels[modelId],
@@ -130,7 +132,7 @@ export const streamTextWithBrowserSearch = async (
     const fallbackResult = streamText({
       model: languageModels[modelId],
       system: systemPrompt,
-      messages: convertToModelMessages(uiMessages),
+      messages: await convertToModelMessages(uiMessages),
     });
 
     return fallbackResult;

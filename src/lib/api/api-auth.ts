@@ -1,5 +1,10 @@
 import { auth, getAuth } from '@clerk/nextjs/server';
 import type { NextRequest } from 'next/server';
+import { logger } from '@/lib/utils/logger';
+
+const TOKEN_RETRY_MAX_ATTEMPTS = 3;
+const TOKEN_RETRY_BASE_DELAY_MS = 100;
+const TOKEN_RETRY_JITTER_MAX_MS = 50;
 
 export interface AuthValidationResult {
   isValid: boolean;
@@ -7,6 +12,60 @@ export interface AuthValidationResult {
   clerkId?: string;
   jwtToken?: string;
   error?: string;
+}
+
+export interface AuthObjectWithGetToken {
+  getToken: (options: { template: string }) => Promise<string | null>;
+}
+
+/**
+ * Checks if an error is transient and should be retried.
+ */
+export function isTransientError(error: Error): boolean {
+  return (
+    error.message.includes('Bad Gateway') ||
+    error.message.includes('Service Unavailable') ||
+    error.message.includes('ECONNRESET') ||
+    error.message.includes('fetch failed')
+  );
+}
+
+/**
+ * Retry helper for getToken with exponential backoff.
+ * Handles transient Clerk service failures (502, 503, network errors).
+ */
+export async function getTokenWithRetry(
+  authObj: AuthObjectWithGetToken,
+  template: string,
+  maxRetries = TOKEN_RETRY_MAX_ATTEMPTS
+): Promise<string | null> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const token = await authObj.getToken({ template });
+      return token;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      if (!isTransientError(lastError) || attempt === maxRetries - 1) {
+        throw lastError;
+      }
+
+      const jitter = Math.floor(Math.random() * TOKEN_RETRY_JITTER_MAX_MS);
+      const delayMs = TOKEN_RETRY_BASE_DELAY_MS * Math.pow(2, attempt) + jitter;
+      logger.warn('Clerk getToken transient failure, retrying', {
+        attempt: attempt + 1,
+        maxRetries,
+        delayMs,
+        error: lastError.message,
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw lastError ?? new Error('Failed to get token after retries');
 }
 
 /**
@@ -30,8 +89,8 @@ export async function validateApiAuth(request?: NextRequest): Promise<AuthValida
       };
     }
 
-    // Get JWT token for Convex - must specify template name
-    const token = await authObj.getToken({ template: 'convex' });
+    // Get JWT token for Convex with retry logic for transient failures
+    const token = await getTokenWithRetry(authObj, 'convex');
 
     return {
       isValid: true,

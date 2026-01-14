@@ -42,20 +42,27 @@ export interface MessageMetadataBase {
 
 /**
  * Obsession data structure for ERP therapy
+ * Mirrors: ObsessionData in types/domains/therapy.ts
  */
 export interface ObsessionEntry {
-  trigger: string;
-  thought: string;
+  id: string;
+  obsession: string;
   intensity: number;
+  triggers: string[];
+  createdAt: string;
 }
 
 /**
  * Compulsion data structure for ERP therapy
+ * Mirrors: CompulsionData in types/domains/therapy.ts
  */
 export interface CompulsionEntry {
-  behavior: string;
-  frequency: string;
-  reduction?: string;
+  id: string;
+  compulsion: string;
+  frequency: number;
+  duration: number;
+  reliefLevel: number;
+  createdAt: string;
 }
 
 /**
@@ -222,15 +229,20 @@ export const therapeuticFrameworkIdSchema = z.enum([
 export const emotionalToneSchema = z.enum(['positive', 'negative', 'neutral', 'mixed']);
 
 export const obsessionEntrySchema = z.object({
-  trigger: z.string(),
-  thought: z.string(),
+  id: z.string(),
+  obsession: z.string(),
   intensity: z.number(),
+  triggers: z.array(z.string()),
+  createdAt: z.string(),
 });
 
 export const compulsionEntrySchema = z.object({
-  behavior: z.string(),
-  frequency: z.string(),
-  reduction: z.string().optional(),
+  id: z.string(),
+  compulsion: z.string(),
+  frequency: z.number(),
+  duration: z.number(),
+  reliefLevel: z.number(),
+  createdAt: z.string(),
 });
 
 export const obsessionsCompulsionsMetadataSchema = z.object({

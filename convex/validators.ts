@@ -77,20 +77,33 @@ export const messageRoleValidator = v.union(v.literal('user'), v.literal('assist
 
 /**
  * Obsession entry validator for ERP therapy
+ * Mirrors: ObsessionData in types/domains/therapy.ts
+ *
+ * SCHEMA CHANGE (2026-01-13): Updated from {trigger, thought, intensity} to match
+ * client-side ObsessionData. If old data exists, migration may be needed.
  */
 export const obsessionEntryValidator = v.object({
-  trigger: v.string(),
-  thought: v.string(),
+  id: v.string(),
+  obsession: v.string(),
   intensity: v.number(),
+  triggers: v.array(v.string()),
+  createdAt: v.string(),
 });
 
 /**
  * Compulsion entry validator for ERP therapy
+ * Mirrors: CompulsionData in types/domains/therapy.ts
+ *
+ * SCHEMA CHANGE (2026-01-13): Updated from {behavior, frequency: string, reduction}
+ * to match client-side CompulsionData. If old data exists, migration may be needed.
  */
 export const compulsionEntryValidator = v.object({
-  behavior: v.string(),
-  frequency: v.string(),
-  reduction: v.optional(v.string()),
+  id: v.string(),
+  compulsion: v.string(),
+  frequency: v.number(),
+  duration: v.number(),
+  reliefLevel: v.number(),
+  createdAt: v.string(),
 });
 
 /**
