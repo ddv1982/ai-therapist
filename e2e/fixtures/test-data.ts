@@ -109,3 +109,32 @@ export function generateTestEmail(): string {
 export function generateSessionTitle(): string {
   return `Test Session ${Date.now()}`;
 }
+
+/**
+ * Check if a response is an auth redirect (Clerk redirects to sign-in page).
+ * In the current architecture, unauthenticated API requests get redirected
+ * to the sign-in page, resulting in a 200 status with HTML content.
+ */
+export function isAuthRedirect(response: { status: () => number; headers: () => Record<string, string> }): boolean {
+  const status = response.status();
+  const contentType = response.headers()['content-type'] || '';
+  return status === 200 && contentType.includes('text/html');
+}
+
+/**
+ * Valid response statuses for unauthenticated API requests.
+ * Includes both proper error codes AND auth redirect (200 HTML).
+ */
+export const UNAUTH_VALID_STATUSES = [200, 400, 401, 403, 404] as const;
+
+/**
+ * Check if response status is valid for an unauthenticated request.
+ * Accepts: auth redirect (200 HTML), validation error (400), auth error (401/403), not found (404)
+ */
+export function isValidUnauthResponse(response: { status: () => number; headers: () => Record<string, string> }): boolean {
+  const status = response.status();
+  // Auth redirect: 200 with HTML content
+  if (isAuthRedirect(response)) return true;
+  // Proper error responses
+  return [400, 401, 403, 404].includes(status);
+}
