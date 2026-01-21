@@ -9,8 +9,8 @@
  */
 
 import type * as constants from "../constants.js";
-import type * as data_audit from "../data_audit.js";
 import type * as http from "../http.js";
+import type * as lib_errors from "../lib/errors.js";
 import type * as messages from "../messages.js";
 import type * as reports from "../reports.js";
 import type * as sessions from "../sessions.js";
@@ -25,8 +25,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   constants: typeof constants;
-  data_audit: typeof data_audit;
   http: typeof http;
+  "lib/errors": typeof lib_errors;
   messages: typeof messages;
   reports: typeof reports;
   sessions: typeof sessions;

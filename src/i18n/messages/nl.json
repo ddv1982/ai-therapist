@@ -419,6 +419,10 @@
       "sendToChat": "Verzenden naar chat",
       "deleteDraft": "Concept verwijderen"
     },
+    "complete": {
+      "title": "Sessie voltooid",
+      "subtitle": "Goed gedaan! Je hebt alle stappen van je CBT-reflectie doorlopen."
+    },
     "sessionReportTitle": "CBT Sessie Rapport",
     "actionPlan": {
       "title": "Toekomstig actieplan",

@@ -170,15 +170,6 @@ export interface UseCBTDataManagerReturn {
     updateActionPlan: (data: ActionPlanData) => void;
   };
 
-  navigation: {
-    currentStep: number;
-    setCurrentStep: (step: number) => void;
-    canGoNext: boolean;
-    canGoPrevious: boolean;
-    goNext: () => boolean;
-    goPrevious: () => boolean;
-  };
-
   validation: {
     validateForm: () => CBTFormValidationError[];
     isFormValid: boolean;
@@ -638,34 +629,6 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     [flowUpdate]
   );
 
-  const navigation = useMemo(() => {
-    const currentStep = validationState?.currentStep || 1;
-    const maxSteps = TOTAL_CBT_STEPS;
-
-    return {
-      currentStep,
-      setCurrentStep: (step: number) => {
-        cbt.setCurrentStep(step);
-      },
-      canGoNext: currentStep < maxSteps,
-      canGoPrevious: currentStep > 1,
-      goNext: () => {
-        if (currentStep < maxSteps) {
-          cbt.setCurrentStep(currentStep + 1);
-          return true;
-        }
-        return false;
-      },
-      goPrevious: () => {
-        if (currentStep > 1) {
-          cbt.setCurrentStep(currentStep - 1);
-          return true;
-        }
-        return false;
-      },
-    };
-  }, [validationState?.currentStep, cbt]);
-
   const validation = useMemo(() => {
     const validateForm = (): CBTFormValidationError[] => {
       if (!enableValidation || !currentDraft) return [];
@@ -778,8 +741,7 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     schemaActions,
     actionActions,
 
-    // Navigation & Validation
-    navigation,
+    // Validation
     validation,
 
     // Status & Progress

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useOptimistic } from 'react';
+import { useState, useCallback, useOptimistic, startTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,13 +8,17 @@ import { CBTStepWrapper } from '@/features/therapy/components/cbt-step-wrapper';
 import { HelpCircle, Plus, Minus } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { CBTStepType, ChallengeQuestionsData } from '@/types';
-// Removed CBTFormValidationError import - validation errors not displayed
 import { useTranslations } from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
 import { cn } from '@/lib/utils';
+import { useDraftSaving } from '@/hooks/use-draft-saving';
+import { TIMING } from '@/constants/ui';
 
 interface ChallengeQuestionsProps {
+  value?: ChallengeQuestionsData | null;
+  onChange?: (data: ChallengeQuestionsData) => void;
   onComplete: (data: ChallengeQuestionsData) => void;
+  onNavigateStep?: (step: CBTStepType) => void;
   initialData?: ChallengeQuestionsData;
   coreBeliefText?: string;
   title?: string;
@@ -22,7 +26,6 @@ interface ChallengeQuestionsProps {
   stepNumber?: number;
   totalSteps?: number;
   className?: string;
-  onNavigateStep?: (step: CBTStepType) => void;
 }
 
 // Default challenge questions
@@ -39,19 +42,18 @@ const CHALLENGE_QUESTION_KEYS = [
 ] as const;
 
 export function ChallengeQuestions({
+  value,
+  onChange,
   onComplete,
+  onNavigateStep,
   initialData,
   coreBeliefText,
   className,
-  onNavigateStep,
 }: ChallengeQuestionsProps) {
   const t = useTranslations('cbt');
   const { sessionData, challengeActions } = useCBTDataManager();
 
-  // Get challenge questions data from unified CBT hook
-  const challengeQuestionsData = sessionData?.challengeQuestions;
-
-  // Default questions data
+  const challengeQuestionsData = value?.challengeQuestions ?? sessionData?.challengeQuestions;
   const translateQuestion = useCallback(
     (key: (typeof CHALLENGE_QUESTION_KEYS)[number]) => t(key as Parameters<typeof t>[0]),
     [t]
@@ -65,12 +67,8 @@ export function ChallengeQuestions({
   };
 
   const [questionsData, setQuestionsData] = useState<ChallengeQuestionsData>(() => {
-    // Use initialData if provided, otherwise use Redux data or default
-    if (initialData?.challengeQuestions) {
-      return initialData;
-    }
-
-    // Return Redux data if it has content, otherwise default
+    if (value?.challengeQuestions) return value;
+    if (initialData?.challengeQuestions) return initialData;
     if (challengeQuestionsData && challengeQuestionsData.length > 0) {
       return { challengeQuestions: challengeQuestionsData };
     }
@@ -94,25 +92,27 @@ export function ChallengeQuestions({
     }
   );
 
-  // Auto-save to unified CBT state when questions change
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      challengeActions.updateChallengeQuestions(questionsData.challengeQuestions);
-    }, 500); // Debounce updates by 500ms
-
-    return () => clearTimeout(timeoutId);
-  }, [questionsData, challengeActions]);
+  const { saveDraft } = useDraftSaving<ChallengeQuestionsData>({
+    onSave: (data) => {
+      challengeActions.updateChallengeQuestions(data.challengeQuestions);
+      onChange?.(data);
+    },
+    debounceMs: TIMING.DEBOUNCE.DEFAULT,
+    enabled: true,
+  });
 
   const handleQuestionChange = useCallback(
     (index: number, field: 'question' | 'answer', value: string) => {
-      setQuestionsData((prev) => ({
-        ...prev,
-        challengeQuestions: prev.challengeQuestions.map((q, i) =>
+      const updated = {
+        ...questionsData,
+        challengeQuestions: questionsData.challengeQuestions.map((q, i) =>
           i === index ? { ...q, [field]: value } : q
         ),
-      }));
+      };
+      setQuestionsData(updated);
+      saveDraft(updated);
     },
-    []
+    [questionsData, saveDraft]
   );
 
   const addQuestion = useCallback(() => {
@@ -127,31 +127,35 @@ export function ChallengeQuestions({
         answer: '',
       };
 
-      // Optimistic update: Show immediately in UI
-      updateOptimisticQuestions({ type: 'add', question: newQuestion });
+      startTransition(() => {
+        updateOptimisticQuestions({ type: 'add', question: newQuestion });
+      });
 
-      // Actual state update
-      setQuestionsData((prev) => ({
-        ...prev,
-        challengeQuestions: [...prev.challengeQuestions, newQuestion],
-      }));
+      const updated = {
+        ...questionsData,
+        challengeQuestions: [...questionsData.challengeQuestions, newQuestion],
+      };
+      setQuestionsData(updated);
+      saveDraft(updated);
     }
-  }, [questionsData.challengeQuestions, translateQuestion, updateOptimisticQuestions]);
+  }, [questionsData, translateQuestion, updateOptimisticQuestions, saveDraft]);
 
   const removeQuestion = useCallback(
     (index: number) => {
       if (questionsData.challengeQuestions.length > 1) {
-        // Optimistic update: Remove immediately in UI
-        updateOptimisticQuestions({ type: 'remove', index });
+        startTransition(() => {
+          updateOptimisticQuestions({ type: 'remove', index });
+        });
 
-        // Actual state update
-        setQuestionsData((prev) => ({
-          ...prev,
-          challengeQuestions: prev.challengeQuestions.filter((_, i) => i !== index),
-        }));
+        const updated = {
+          ...questionsData,
+          challengeQuestions: questionsData.challengeQuestions.filter((_, i) => i !== index),
+        };
+        setQuestionsData(updated);
+        saveDraft(updated);
       }
     },
-    [questionsData.challengeQuestions.length, updateOptimisticQuestions]
+    [questionsData, updateOptimisticQuestions, saveDraft]
   );
 
   const handleSubmit = useCallback(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useActionState, startTransition } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -11,35 +11,51 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { ActionPlanData, CBTStepType, EmotionData } from '@/types';
 import { useTranslations } from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
+import { useDraftSaving } from '@/hooks/use-draft-saving';
+import { TIMING } from '@/constants/ui';
+
+type ActionPlanFormState = {
+  message: string;
+  errors?: {
+    newBehaviors?: string[];
+    _form?: string[];
+  };
+  success?: boolean;
+};
+
+const initialFormState: ActionPlanFormState = { message: '' };
 
 interface ActionPlanProps {
+  value?: ActionPlanData | null;
+  onChange?: (data: ActionPlanData) => void;
   onComplete: (data: ActionPlanData) => void;
+  onNavigateStep?: (step: CBTStepType) => void;
   initialData?: ActionPlanData;
-  initialEmotions?: EmotionData; // For comparison
+  initialEmotions?: EmotionData;
   customEmotion?: string;
   title?: string;
   subtitle?: string;
   stepNumber?: number;
   totalSteps?: number;
   className?: string;
-  onNavigateStep?: (step: CBTStepType) => void;
 }
 
 export function ActionPlan({
+  value,
+  onChange,
   onComplete,
+  onNavigateStep,
   initialData,
   initialEmotions,
   customEmotion,
   title,
   subtitle,
   className,
-  onNavigateStep,
 }: ActionPlanProps) {
   const t = useTranslations('cbt');
   const { sessionData, actionActions } = useCBTDataManager();
 
-  // Get action plan data from unified CBT hook
-  const actionPlanData = sessionData?.actionPlan;
+  const actionPlanData = value ?? sessionData?.actionPlan;
   const lastModified = sessionData?.lastModified;
 
   const defaultEmotions: EmotionData = {
@@ -94,19 +110,17 @@ export function ActionPlan({
     } as ActionPlanData;
   });
 
-  // Auto-save when action data changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      actionActions.updateActionPlan(actionData);
-    }, 500); // Debounce updates by 500ms
-
-    return () => clearTimeout(timeoutId);
-  }, [actionData, actionActions]);
+  const { saveDraft } = useDraftSaving<ActionPlanData>({
+    onSave: (data) => {
+      actionActions.updateActionPlan(data);
+      onChange?.(data);
+    },
+    debounceMs: TIMING.DEBOUNCE.DEFAULT,
+    enabled: true,
+  });
 
   // Visual indicator for auto-save (based on Redux lastModified)
   const isDraftSaved = !!lastModified;
-
-  // Note: Chat bridge no longer used - data sent only in final comprehensive summary
 
   // Core emotions with visual styling using fitting colors
   const coreEmotions = [
@@ -119,19 +133,50 @@ export function ActionPlan({
     { key: 'guilt', label: 'Guilt', emoji: '😔', color: 'bg-indigo-600' },
   ];
 
-  const handleFieldChange = useCallback((field: keyof ActionPlanData, value: unknown) => {
-    setActionData((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const handleFieldChange = useCallback(
+    (field: keyof ActionPlanData, value: unknown) => {
+      const updated = { ...actionData, [field]: value };
+      setActionData(updated);
+      saveDraft(updated);
+    },
+    [actionData, saveDraft]
+  );
 
   // Alternative responses removed per new requirements
 
-  const handleSubmit = useCallback(async () => {
-    // Update store with final data
-    actionActions.updateActionPlan(actionData);
+  // Form action for useActionState
+  const formAction = useCallback(
+    async (
+      _prevState: ActionPlanFormState,
+      _formData: FormData
+    ): Promise<ActionPlanFormState> => {
+      try {
+        if (!actionData.newBehaviors.trim()) {
+          return {
+            message: 'Please describe your planned behaviors.',
+            errors: { newBehaviors: ['Future behaviors are required.'] },
+            success: false,
+          };
+        }
 
-    // Note: Sending to chat happens in the final reflection step.
-    onComplete(actionData);
-  }, [actionData, actionActions, onComplete]);
+        // Update store with final data
+        actionActions.updateActionPlan(actionData);
+
+        // Note: Sending to chat happens in the final reflection step.
+        onComplete(actionData);
+        return { message: 'Action plan saved.', success: true };
+      } catch (error) {
+        return {
+          message: error instanceof Error ? error.message : 'An error occurred.',
+          errors: { _form: ['Failed to save action plan. Please try again.'] },
+          success: false,
+        };
+      }
+    },
+    [actionData, actionActions, onComplete]
+  );
+
+  const [formState, submitAction, isPending] = useActionState(formAction, initialFormState);
 
   const emotionChanges = coreEmotions.map((emotion) => {
     const current = actionData.finalEmotions[emotion.key as keyof EmotionData] as number;
@@ -153,19 +198,31 @@ export function ActionPlan({
   // Validation logic - keeps form functional without showing error messages
 
   // Next handler for CBTStepWrapper
-  const handleNext = useCallback(async () => {
-    await handleSubmit();
-  }, [handleSubmit]);
+  const handleNext = useCallback(() => {
+    const formData = new FormData();
+    startTransition(() => {
+      submitAction(formData);
+    });
+  }, [submitAction]);
+
+  // Build validation errors from formState
+  const validationErrors: { field: string; message: string }[] = [];
+  if (formState.errors?.newBehaviors) {
+    validationErrors.push({ field: 'newBehaviors', message: formState.errors.newBehaviors[0] });
+  }
+  if (formState.errors?._form) {
+    validationErrors.push({ field: '_form', message: formState.errors._form[0] });
+  }
 
   return (
     <CBTStepWrapper
       step="actions"
       title={title ?? t('actionPlan.title')}
       subtitle={subtitle ?? t('actionPlan.subtitle')}
-      isValid={isBasicValid}
-      validationErrors={[]} // No validation error display
+      isValid={isBasicValid && !isPending}
+      validationErrors={validationErrors}
       onNext={handleNext}
-      nextButtonText={t('actionPlan.nextToReflection')}
+      nextButtonText={isPending ? t('status.saving') : t('actionPlan.nextToReflection')}
       hideProgressBar={true}
       className={className}
       onNavigateStep={onNavigateStep}

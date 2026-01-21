@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { ObsessionData, CompulsionData, ObsessionsCompulsionsData } from '@/types';
 import { DEFAULT_COMPULSION_FORM, DEFAULT_OBSESSION_FORM } from './defaults';
@@ -34,18 +34,44 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Refs to track latest form values (avoids stale closure in callbacks)
+  const obsessionFormRef = useRef(obsessionForm);
+  const compulsionFormRef = useRef(compulsionForm);
+
+  // Keep refs in sync with state
+  obsessionFormRef.current = obsessionForm;
+  compulsionFormRef.current = compulsionForm;
+
+  // Track previous lastModified timestamp to detect true external changes
+  // Using lastModified instead of reference comparison avoids spurious resets
+  // when parent re-renders with new object references containing same data
+  const prevLastModifiedRef = useRef<string | undefined>(initialData?.lastModified);
+
   useEffect(() => {
     if (!initialData) return;
+
+    // Only sync if the data actually changed (compare lastModified timestamp)
+    // This prevents resetting local state when parent re-renders with same data
+    const dataChanged = prevLastModifiedRef.current !== initialData.lastModified;
+    prevLastModifiedRef.current = initialData.lastModified;
+
+    if (!dataChanged) return;
+
     setData(initialData);
-    setBuilderState(
-      createInitialBuilderState(
-        Boolean(initialData.obsessions.length || initialData.compulsions.length)
-      )
-    );
-    setObsessionForm(DEFAULT_OBSESSION_FORM);
-    setCompulsionForm(DEFAULT_COMPULSION_FORM);
-    setErrors({});
-  }, [initialData]);
+
+    // Only reset builder state and forms if builder is currently closed
+    // This prevents resetting mid-flow when user is adding a new pair
+    if (builderState.mode === 'closed') {
+      setBuilderState(
+        createInitialBuilderState(
+          Boolean(initialData.obsessions.length || initialData.compulsions.length)
+        )
+      );
+      setObsessionForm(DEFAULT_OBSESSION_FORM);
+      setCompulsionForm(DEFAULT_COMPULSION_FORM);
+      setErrors({});
+    }
+  }, [initialData, builderState.mode]);
 
   const resetForms = useCallback(() => {
     setObsessionForm(DEFAULT_OBSESSION_FORM);
@@ -168,7 +194,11 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
   );
 
   const savePair = useCallback(async () => {
-    const compulsionErrors = validateCompulsion(compulsionForm);
+    // Read from refs to get latest values (avoids stale closure)
+    const currentObsessionForm = obsessionFormRef.current;
+    const currentCompulsionForm = compulsionFormRef.current;
+
+    const compulsionErrors = validateCompulsion(currentCompulsionForm);
     if (Object.keys(compulsionErrors).length > 0) {
       setFieldErrors(compulsionErrors);
       return;
@@ -182,9 +212,9 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
 
     const obsessionRecord: ObsessionData = {
       id: existingObsession?.id ?? uuidv4(),
-      obsession: obsessionForm.obsession.trim(),
-      intensity: obsessionForm.intensity,
-      triggers: obsessionForm.triggers
+      obsession: currentObsessionForm.obsession.trim(),
+      intensity: currentObsessionForm.intensity,
+      triggers: currentObsessionForm.triggers
         .split(',')
         .map((value) => value.trim())
         .filter(Boolean),
@@ -193,10 +223,10 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
 
     const compulsionRecord: CompulsionData = {
       id: existingCompulsion?.id ?? uuidv4(),
-      compulsion: compulsionForm.compulsion.trim(),
-      frequency: compulsionForm.frequency,
-      duration: compulsionForm.duration,
-      reliefLevel: compulsionForm.reliefLevel,
+      compulsion: currentCompulsionForm.compulsion.trim(),
+      frequency: currentCompulsionForm.frequency,
+      duration: currentCompulsionForm.duration,
+      reliefLevel: currentCompulsionForm.reliefLevel,
       createdAt: existingCompulsion?.createdAt ?? now,
     };
 
@@ -222,10 +252,8 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
     await handleChange(updated);
   }, [
     builderState,
-    compulsionForm,
     data,
     handleChange,
-    obsessionForm,
     resetForms,
     updateBuilderState,
     validateCompulsion,
@@ -235,14 +263,16 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
   const goToCompulsionStep = useCallback(() => setStep('compulsion'), [setStep]);
 
   const handleObsessionNext = useCallback(() => {
-    const issues = validateObsession(obsessionForm);
+    // Read from ref to get latest value (avoids stale closure)
+    const currentObsessionForm = obsessionFormRef.current;
+    const issues = validateObsession(currentObsessionForm);
     if (Object.keys(issues).length > 0) {
       setFieldErrors(issues);
       return;
     }
     setFieldErrors({});
     goToCompulsionStep();
-  }, [goToCompulsionStep, obsessionForm, validateObsession, setFieldErrors]);
+  }, [goToCompulsionStep, validateObsession, setFieldErrors]);
 
   const dismiss = useCallback(() => {
     resetForms();

@@ -1,6 +1,6 @@
-const validateApiAuthMock = jest.fn(async (_req?: unknown) => ({ isValid: true }));
+const validateApiAuthMock = jest.fn(async () => ({ isValid: true }));
 jest.mock('@/lib/api/api-auth', () => ({
-  validateApiAuth: (req: unknown) => validateApiAuthMock(req),
+  validateApiAuth: () => validateApiAuthMock(),
 }));
 jest.mock('@/lib/auth/user-session', () => ({
   getSingleUserInfo: jest.fn(() => ({ userId: 'u1' })),
@@ -11,7 +11,7 @@ describe('authenticateRequest', () => {
     const { validateApiAuth } = require('@/lib/api/api-auth');
     const { getSingleUserInfo } = require('@/lib/auth/user-session');
     const authenticateRequest = async (request: unknown) => {
-      const authResult = await validateApiAuth(request);
+      const authResult = await validateApiAuth();
       if (!authResult.isValid)
         return {
           isAuthenticated: false as const,
@@ -30,7 +30,7 @@ describe('authenticateRequest', () => {
     const { validateApiAuth } = require('@/lib/api/api-auth');
     const { getSingleUserInfo } = require('@/lib/auth/user-session');
     const authenticateRequest = async (request: unknown) => {
-      const authResult = await validateApiAuth(request);
+      const authResult = await validateApiAuth();
       if (!authResult.isValid)
         return {
           isAuthenticated: false as const,

@@ -75,7 +75,11 @@ export function useChatSessions(options: UseChatSessionsOptions) {
       const created = await createSessionRequest({ title });
       if (!created?.id) throw new Error('Failed to create chat session');
       await loadSessions();
-      await setCurrentSessionAndLoad(created.id);
+      // Mark this session as already "loaded" to prevent useEffect from triggering loadMessages
+      // New sessions are empty, so there's nothing to load anyway
+      // This prevents a race condition where loadMessages would clear locally-added messages
+      lastLoadedSessionIdRef.current = created.id;
+      await persistSessionSelection(created.id);
       return created.id;
     } catch (error) {
       throw error instanceof Error ? error : new Error(String(error));
@@ -84,7 +88,7 @@ export function useChatSessions(options: UseChatSessionsOptions) {
     currentSessionId,
     resolveDefaultTitle,
     createSessionRequest,
-    setCurrentSessionAndLoad,
+    persistSessionSelection,
     loadSessions,
   ]);
 

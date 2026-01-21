@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useActionState, startTransition, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { TherapySlider } from '@/features/therapy/components/ui/therapy-slider';
@@ -8,69 +8,92 @@ import { CBTStepWrapper } from '@/features/therapy/components/cbt-step-wrapper';
 import { Target } from 'lucide-react';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { CBTStepType, CoreBeliefData } from '@/types';
-// Removed chat bridge imports - individual data no longer sent during session
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
+import { useDraftSaving } from '@/hooks/use-draft-saving';
+import { TIMING } from '@/constants/ui';
+import { usePromptSelection } from '@/features/therapy/cbt/hooks/use-prompt-selection';
+
+type CoreBeliefFormState = {
+  message: string;
+  errors?: {
+    coreBeliefText?: string[];
+    _form?: string[];
+  };
+  success?: boolean;
+};
+
+const initialFormState: CoreBeliefFormState = { message: '' };
 
 interface CoreBeliefProps {
+  value?: CoreBeliefData | null;
+  onChange?: (data: CoreBeliefData) => void;
   onComplete: (data: CoreBeliefData) => void;
+  onNavigateStep?: (step: CBTStepType) => void;
   initialData?: CoreBeliefData;
   title?: string;
   subtitle?: string;
   stepNumber?: number;
   totalSteps?: number;
   className?: string;
-  onNavigateStep?: (step: CBTStepType) => void;
 }
 
 export function CoreBelief({
+  value,
+  onChange,
   onComplete,
+  onNavigateStep,
   initialData,
   className,
-  onNavigateStep,
 }: CoreBeliefProps) {
   const t = useTranslations('cbt');
   const { sessionData, beliefActions } = useCBTDataManager();
   const skipNextRehydrateRef = useRef<boolean>(false);
 
-  // Get core beliefs data from unified CBT hook
-  const coreBelifsData = sessionData?.coreBeliefs;
-
-  // Default core belief data
+  const coreBelifsData = value ? [value] : sessionData?.coreBeliefs;
   const defaultBeliefData: CoreBeliefData = {
     coreBeliefText: '',
     coreBeliefCredibility: 5,
   };
 
   const [beliefData, setBeliefData] = useState<CoreBeliefData>(() => {
-    // Use initialData if provided, otherwise use Redux data or default
-    if (initialData) {
-      return initialData;
-    }
-
-    // Return first Redux core belief if it exists, otherwise default
+    if (value) return value;
+    if (initialData) return initialData;
     return coreBelifsData && coreBelifsData.length > 0 ? coreBelifsData[0] : defaultBeliefData;
   });
 
-  // Auto-save to unified CBT state when belief data changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      beliefActions.updateCoreBeliefs([beliefData]);
-    }, 500); // Debounce updates by 500ms
+  const beliefPrompts = useMemo(() => (t.raw('coreBelief.prompts') as string[]) || [], [t]);
+  const initialBeliefText =
+    value?.coreBeliefText ?? initialData?.coreBeliefText ?? coreBelifsData?.[0]?.coreBeliefText;
+  const {
+    selected: selectedPrompt,
+    setSelected: setSelectedPrompt,
+    matchPrompt,
+  } = usePromptSelection(beliefPrompts, initialBeliefText);
 
-    return () => clearTimeout(timeoutId);
-  }, [beliefData, beliefData.coreBeliefText, beliefData.coreBeliefCredibility, beliefActions]);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // Rehydrate local state if unified session data changes while mounted
+  const { saveDraft } = useDraftSaving<CoreBeliefData>({
+    onSave: (data) => {
+      skipNextRehydrateRef.current = true;
+      beliefActions.updateCoreBeliefs([data]);
+      onChange?.(data);
+    },
+    debounceMs: TIMING.DEBOUNCE.DEFAULT,
+    enabled: true,
+  });
+
+  // Rehydrate local state only when NOT in controlled mode (no value prop)
   useEffect(() => {
+    if (value !== undefined) return;
+
     const source = coreBelifsData && coreBelifsData.length > 0 ? coreBelifsData[0] : null;
     if (!source) return;
-    const prompts = (t.raw('coreBelief.prompts') as string[]) || [];
-    setSelectedPrompt(prompts.includes(source.coreBeliefText) ? source.coreBeliefText : '');
+
+    setSelectedPrompt(matchPrompt(source.coreBeliefText));
 
     if (skipNextRehydrateRef.current) {
-      // A local change just occurred; skip a single rehydrate pass so slider/text edits persist
       skipNextRehydrateRef.current = false;
       return;
     }
@@ -88,26 +111,24 @@ export function CoreBelief({
             : (prev.coreBeliefCredibility ?? 5),
       };
     });
-  }, [coreBelifsData, beliefData.coreBeliefText, beliefData.coreBeliefCredibility, t]);
+  }, [coreBelifsData, value, matchPrompt, setSelectedPrompt]);
 
-  // Note: Chat bridge no longer used - data sent only in final comprehensive summary
-
-  const [selectedPrompt, setSelectedPrompt] = useState<string>('');
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-
-  const handleBeliefChange = useCallback((value: string) => {
-    setBeliefData((prev) => ({ ...prev, coreBeliefText: value }));
-    skipNextRehydrateRef.current = true;
-    // If user types or value differs from selected prompt, clear highlight
-    setSelectedPrompt((prev) => (prev === value ? prev : ''));
-  }, []);
+  const handleBeliefChange = useCallback(
+    (value: string) => {
+      const updated = { ...beliefData, coreBeliefText: value };
+      setBeliefData(updated);
+      saveDraft(updated);
+      setSelectedPrompt(matchPrompt(value));
+    },
+    [beliefData, saveDraft, matchPrompt, setSelectedPrompt]
+  );
 
   const handlePromptSelect = useCallback(
     (prompt: string) => {
       setSelectedPrompt(prompt);
-      const next = { ...beliefData, coreBeliefText: prompt };
-      setBeliefData(next);
-      beliefActions.updateCoreBeliefs([next]);
+      const updated = { ...beliefData, coreBeliefText: prompt };
+      setBeliefData(updated);
+      saveDraft(updated);
       const el = textareaRef.current;
       if (el) {
         el.focus();
@@ -117,36 +138,70 @@ export function CoreBelief({
         } catch {}
       }
     },
-    [beliefData, beliefActions]
+    [beliefData, saveDraft]
   );
 
-  const handleCredibilityChange = useCallback((value: number) => {
-    setBeliefData((prev) => ({ ...prev, coreBeliefCredibility: value }));
-    skipNextRehydrateRef.current = true;
-  }, []);
+  const handleCredibilityChange = useCallback(
+    (value: number) => {
+      const updated = { ...beliefData, coreBeliefCredibility: value };
+      setBeliefData(updated);
+      saveDraft(updated);
+    },
+    [beliefData, saveDraft]
+  );
 
-  const handleSubmit = useCallback(async () => {
-    if (beliefData.coreBeliefText.trim()) {
-      // Update unified CBT state with final data
-      beliefActions.updateCoreBeliefs([beliefData]);
+  // Form action for useActionState
+  const formAction = useCallback(
+    async (_prevState: CoreBeliefFormState, _formData: FormData): Promise<CoreBeliefFormState> => {
+      try {
+        if (!beliefData.coreBeliefText.trim()) {
+          return {
+            message: 'Please enter a core belief.',
+            errors: { coreBeliefText: ['Core belief is required.'] },
+            success: false,
+          };
+        }
 
-      // Note: Individual core belief data is no longer sent to chat during session.
-      // All data will be included in the comprehensive summary at the end.
+        // Update unified CBT state with final data
+        beliefActions.updateCoreBeliefs([beliefData]);
 
-      onComplete(beliefData);
-    }
-  }, [beliefData, beliefActions, onComplete]);
+        // Note: Individual core belief data is no longer sent to chat during session.
+        // All data will be included in the comprehensive summary at the end.
+
+        onComplete(beliefData);
+        return { message: 'Core belief saved.', success: true };
+      } catch (error) {
+        return {
+          message: error instanceof Error ? error.message : 'An error occurred.',
+          errors: { _form: ['Failed to save core belief. Please try again.'] },
+          success: false,
+        };
+      }
+    },
+    [beliefData, beliefActions, onComplete]
+  );
+
+  const [formState, submitAction, isPending] = useActionState(formAction, initialFormState);
 
   const isValid = beliefData.coreBeliefText.trim().length > 0;
 
   // Validation logic - keeps form functional without showing error messages
 
-  const handleNext = useCallback(async () => {
-    await handleSubmit();
-  }, [handleSubmit]);
+  const handleNext = useCallback(() => {
+    const formData = new FormData();
+    startTransition(() => {
+      submitAction(formData);
+    });
+  }, [submitAction]);
 
-  // Common belief prompts
-  const beliefPrompts = [...((t.raw('coreBelief.prompts') as string[]) || [])];
+  // Build validation errors from formState
+  const validationErrors: { field: string; message: string }[] = [];
+  if (formState.errors?.coreBeliefText) {
+    validationErrors.push({ field: 'coreBeliefText', message: formState.errors.coreBeliefText[0] });
+  }
+  if (formState.errors?._form) {
+    validationErrors.push({ field: '_form', message: formState.errors._form[0] });
+  }
 
   return (
     <CBTStepWrapper
@@ -154,10 +209,10 @@ export function CoreBelief({
       title={t('coreBelief.title')}
       subtitle={t('coreBelief.subtitle')}
       icon={<Target className="h-5 w-5" />}
-      isValid={isValid}
-      validationErrors={[]} // No validation error display
+      isValid={isValid && !isPending}
+      validationErrors={validationErrors}
       onNext={handleNext}
-      nextButtonText={t('coreBelief.next')}
+      nextButtonText={isPending ? t('status.saving') : t('coreBelief.next')}
       helpText={t('coreBelief.help')}
       hideProgressBar={true}
       className={className}

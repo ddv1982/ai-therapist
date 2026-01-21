@@ -1,88 +1,68 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { generateCSPNonce, getSecurityHeaders } from '@/lib/security/csp-nonce';
+import { PUBLIC_ROUTES } from '@/lib/constants/routes';
+import { routing, type Locale } from '@/i18n/routing';
+
+const isPublicRoute = createRouteMatcher([...PUBLIC_ROUTES]);
 
 /**
- * Define which routes are protected (require Clerk authentication)
- * Excludes public routes, API, and root page (which handles its own redirects)
+ * Next.js 16 Proxy (formerly middleware) for authentication and CSP headers.
+ *
+ * Responsibilities:
+ * - Protects non-public routes via Clerk auth.protect()
+ * - Adds CSP security headers to page routes (browser security)
+ * - Lets Clerk handle API route responses for proper session forwarding
+ *
+ * @see https://nextjs.org/docs/app/api-reference/file-conventions/proxy
  */
-const isProtectedRoute = createRouteMatcher([
-  '/cbt-diary(.*)',
-  '/profile(.*)',
-  '/reports(.*)',
-  '/test(.*)',
-]);
-
-/**
- * Define public routes that don't require authentication
- */
-const isPublicRoute = createRouteMatcher([
-  '/',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/api/webhooks/clerk(.*)',
-]);
-
-/**
- * Clerk middleware for Next.js App Router
- * Handles authentication and injects auth context into requests
- */
-// Fallback-only i18n handler (used when Clerk keys are missing)
-async function handleI18nOnly(_request: NextRequest) {
-  return NextResponse.next();
-}
-
-export default function proxy(request: NextRequest, event: unknown) {
-  const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
-  const sk = process.env.CLERK_SECRET_KEY;
-  // If Clerk env is not configured, skip Clerk and run i18n only to avoid 404s
-  if (!pk || !sk) {
-    return handleI18nOnly(request);
-  }
-
-  const handler = async (auth: unknown, request: NextRequest) => {
-    const { pathname } = request.nextUrl;
-    const userId = (auth as { userId?: string | null }).userId;
-
-    // Skip API routes - API auth is handled at individual route level via middleware
-    if (pathname.startsWith('/api')) {
-      return NextResponse.next();
+export default clerkMiddleware(
+  async (auth, req: NextRequest) => {
+    // Protect non-public routes FIRST (before any other logic)
+    if (!isPublicRoute(req)) {
+      await auth.protect();
     }
 
-    // Skip middleware for static files and Next.js internals
-    if (
-      pathname.startsWith('/_next') ||
-      pathname.startsWith('/favicon') ||
-      pathname.includes('.')
-    ) {
-      return NextResponse.next();
+    // API routes: let Clerk handle response internally (no CSP needed for JSON)
+    // This ensures Clerk's session context is properly forwarded to route handlers
+    if (req.nextUrl.pathname.startsWith('/api')) {
+      return;
     }
 
-    // If already signed in, avoid rendering auth pages; send to profile
-    if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
-      if (userId) {
-        return NextResponse.redirect(new URL('/', request.url));
-      }
-      return NextResponse.next();
+    // Page routes: add CSP headers for browser security
+    const response = NextResponse.next();
+    const nonce = generateCSPNonce();
+    const isDev = process.env.NODE_ENV === 'development';
+
+    const securityHeaders = getSecurityHeaders(nonce, isDev);
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+
+    // Store nonce in header for use in server components via headers()
+    response.headers.set('x-csp-nonce', nonce);
+
+    // Cache locale from cookie in header (faster than re-reading in layout)
+    // Also set the cookie if missing to ensure API routes use the correct locale
+    const localeCookie = req.cookies.get('NEXT_LOCALE')?.value;
+    if (localeCookie && routing.locales.includes(localeCookie as Locale)) {
+      response.headers.set('x-locale', localeCookie);
+    } else {
+      // No valid cookie - set default locale cookie to prevent API using browser's Accept-Language
+      const defaultLocale = routing.defaultLocale;
+      response.cookies.set('NEXT_LOCALE', defaultLocale, {
+        path: '/',
+        sameSite: 'lax',
+        // Don't set httpOnly so JavaScript can read it if needed
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+      });
+      response.headers.set('x-locale', defaultLocale);
     }
 
-    // For protected routes, check authentication
-    // If not authenticated, auth.protect() will throw and should be caught by Clerk
-    // to redirect to sign-in. Note: this relies on Clerk's default behavior.
-    if (isProtectedRoute(request) && !isPublicRoute(request)) {
-      // auth.protect() will redirect or throw if user is not authenticated
-      // It's async and will handle the redirect internally
-      await (auth as { protect: () => Promise<void> }).protect();
-    }
-
-    // Skip i18n middleware to avoid potential rewrites causing 404s
-
-    // Continue to main application pages
-    return NextResponse.next();
-  };
-  const mw = clerkMiddleware(handler);
-  // @ts-expect-error: Next middleware signature includes event
-  return mw(request, event);
-}
+    return response;
+  },
+);
 
 export const config = {
   matcher: [

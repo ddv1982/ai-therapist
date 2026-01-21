@@ -1,33 +1,31 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Brain } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
-import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
 import { DraftPanel } from '@/features/therapy/cbt/components/draft-panel';
-import { FooterInfo } from '@/features/therapy/cbt/components/footer-info';
 import { DiaryHeader } from '@/features/therapy/cbt/components/diary-header';
-import { DiaryProgress } from '@/features/therapy/cbt/components/diary-progress';
 import { logger } from '@/lib/utils/logger';
-import type { MessageData } from '@/features/chat/messages/message';
-import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import { useCBT } from '@/contexts/cbt-context';
-import { useChatMessages } from '@/hooks/use-chat-messages';
+import { useChatPersistence } from '@/features/chat/hooks/use-chat-persistence';
 import { useSelectSession } from '@/hooks';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
-//
-import { useCbtDiaryFlow } from '@/features/therapy/cbt/hooks/use-cbt-diary-flow';
+import { CBTDiaryFlow } from '@/features/therapy/cbt/components/cbt-diary-flow';
+import type { CBTSessionData } from '@/features/therapy/cbt/hooks/use-cbt-flow';
+import {
+  hasPersistedDraft,
+  getPersistedDraftTimestamp,
+  clearPersistedDraft,
+} from '@/features/therapy/cbt/hooks/use-persisted-cbt-flow';
+import { CBT_STEP_ORDER } from '@/features/therapy/cbt/flow/types';
 import { sendToChat } from '@/features/therapy/cbt/utils/send-to-chat';
 import { sessionKeys } from '@/lib/queries/sessions';
 import { useSession } from '@/contexts/session-context';
 import { useApiKeys } from '@/hooks/use-api-keys';
-
-// Using MessageData from the message system
-// Type alias not required locally
 
 function CBTDiaryPageContent() {
   const router = useRouter();
@@ -40,62 +38,40 @@ function CBTDiaryPageContent() {
   const { keys, isActive: byokActive } = useApiKeys();
   const byokKey = byokActive ? keys.openai : null;
 
-  // Get session ID from CBT context
-  const reduxSessionId = cbt.flow?.sessionId ?? null;
-  // Streaming and view state
-  const [isLoading, setIsLoading] = useState(false);
+  // View state
   const [hasStarted, setHasStarted] = useState(false);
+  const [skipHydration, setSkipHydration] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // CBT Diary Flow (encapsulated logic)
-  const {
-    messages,
-    isCBTActive,
-    cbtCurrentStep,
-    cbtFlowState,
-    goToStep,
-    startCBTFlow,
-    handleCBTSituationComplete,
-    handleCBTEmotionComplete,
-    handleCBTThoughtComplete,
-    handleCBTCoreBeliefComplete,
-    handleCBTChallengeQuestionsComplete,
-    handleCBTRationalThoughtsComplete,
-    handleCBTSchemaModesComplete,
-    handleCBTActionComplete,
-    handleCBTFinalEmotionsComplete,
-  } = useCbtDiaryFlow();
+  // Session data for send to chat
+  const [sessionData, setSessionData] = useState<CBTSessionData | null>(null);
 
-  // Auto-scroll only when non-CBT text messages are appended (avoid jank on steps)
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Check for existing draft using the new persisted flow utilities
+  const [hasDraft, setHasDraft] = useState(false);
+  const [draftLastSaved, setDraftLastSaved] = useState<string | undefined>(undefined);
+
+  // Check for persisted draft on mount (client-side only)
   useEffect(() => {
-    if (messages.length === 0) return;
-    const last = messages[messages.length - 1];
-    const isCBTComponent = Boolean(last.metadata?.step);
-    if (!isCBTComponent) scrollToBottom();
-  }, [messages]);
+    setHasDraft(hasPersistedDraft());
+    setDraftLastSaved(getPersistedDraftTimestamp() ?? undefined);
+  }, []);
 
-  // Check for existing draft using saved drafts for immediate UI updates
-  const { draftActions, savedDrafts, currentDraft } = useCBTDataManager();
-  const hasDraft = (savedDrafts?.length || 0) > 0 || !!currentDraft;
-  const draftLastSaved: string | undefined =
-    savedDrafts && savedDrafts[0] ? savedDrafts[0].lastSaved : undefined;
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  // Delete existing draft from Redux
+  // Handle draft deletion
   const handleDeleteDraft = useCallback(() => {
     try {
-      // Remove any saved drafts
-      if (savedDrafts && savedDrafts.length > 0) {
-        for (const d of savedDrafts) {
-          draftActions.delete(d.id);
-        }
-      }
-      // Clear current unsaved draft state
-      draftActions.reset();
+      clearPersistedDraft();
+      cbt.clearCBTSession();
+      setHasDraft(false);
+      setDraftLastSaved(undefined);
       showToast({
         type: 'success',
         title: toastT('draftDeletedTitle'),
@@ -108,67 +84,46 @@ function CBTDiaryPageContent() {
         message: toastT('draftDeleteFailedBody'),
       });
     }
-  }, [draftActions, savedDrafts, showToast, toastT]);
+  }, [cbt, showToast, toastT]);
 
-  // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Resume existing draft using unified CBT
-  const handleResumeDraft = useCallback(async () => {
+  // Resume existing draft - will hydrate from localStorage
+  const handleResumeDraft = useCallback(() => {
+    setSkipHydration(false);
     setHasStarted(true);
-
-    // The unified CBT hook will automatically load the existing draft
-    // No need to manually restore - it's already available via unifiedSessionData
-    startCBTFlow();
-
     showToast({
       type: 'success',
       title: toastT('draftResumedTitle'),
       message: toastT('draftResumedBody'),
     });
+  }, [showToast, toastT]);
 
-    logger.info('Resumed CBT draft', {
-      component: 'CBTDiaryPage',
-      operation: 'handleResumeDraft',
-      sessionId: reduxSessionId || undefined,
-    });
-  }, [startCBTFlow, showToast, reduxSessionId, toastT]);
-
-  // Start fresh CBT session (clearing any existing draft)
-  const handleStartFresh = useCallback(async () => {
-    // Use unified CBT action to reset everything
-    draftActions.reset();
-
+  // Start fresh - clear all draft data and skip hydration
+  const handleStartFresh = useCallback(() => {
+    clearPersistedDraft();
+    cbt.clearCBTSession();
+    setSkipHydration(true);
+    setHasStarted(true);
     showToast({
       type: 'info',
       title: toastT('newSessionStartedTitle'),
       message: toastT('newSessionStartedBody'),
     });
-  }, [draftActions, showToast, toastT]);
+  }, [cbt, showToast, toastT]);
 
-  // Start CBT session when user clicks start button
-  const handleStartCBT = useCallback(async () => {
+  // Start CBT session (when no draft exists)
+  const handleStartCBT = useCallback(() => {
+    setSkipHydration(false);
     setHasStarted(true);
-    // Do NOT create a chat session at start. We only create one on "Send to Chat".
-    startCBTFlow();
-  }, [startCBTFlow]);
+  }, []);
 
-  // No local guard needed; handled inside the hook
+  // Handle session data changes (for auto-save)
+  const handleSessionChange = useCallback((data: CBTSessionData) => {
+    setSessionData(data);
+  }, []);
 
-  // Initial CBT step insertion handled here
-
-  // Handlers defined below
-
+  // Send completed session to chat
   const handleSendToChat = useCallback(async () => {
-    if (!hasStarted || !isCBTActive) {
+    if (!sessionData) {
       showToast({
         type: 'warning',
         title: toastT('noCbtSessionTitle'),
@@ -177,29 +132,35 @@ function CBTDiaryPageContent() {
       return;
     }
 
-    // Guard against accidental double-clicks or rapid re-submissions
-    if (isLoading || isStreaming) return;
-
-    setIsLoading(true);
-    setIsStreaming(true);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
-      if (!cbtFlowState) {
-        throw new Error('CBT flow state missing');
-      }
-
-      const contextual = messages
-        .filter((msg: MessageData) => !msg.metadata?.step)
-        .map((m: MessageData) => ({
-          role: m.role,
-          content: m.content,
-          timestamp: m.timestamp.toISOString(),
-        }));
+      // Build flowState for sendToChat
+      const flowState = {
+        sessionId: null,
+        startedAt: sessionData.lastModified,
+        updatedAt: sessionData.lastModified,
+        status: 'complete' as const,
+        currentStepId: 'complete' as const,
+        completedSteps: [...CBT_STEP_ORDER],
+        context: {
+          situation: sessionData.situation ?? undefined,
+          emotions: sessionData.emotions ?? undefined,
+          thoughts: sessionData.thoughts,
+          coreBelief: sessionData.coreBelief ?? undefined,
+          challengeQuestions: sessionData.challengeQuestions ?? undefined,
+          rationalThoughts: sessionData.rationalThoughts ?? undefined,
+          schemaModes: sessionData.schemaModes ?? undefined,
+          actionPlan: sessionData.actionPlan ?? undefined,
+          finalEmotions: sessionData.finalEmotions ?? undefined,
+        },
+      };
 
       const { sessionId } = await sendToChat({
         title: t('sessionReportTitle'),
-        flowState: cbtFlowState,
-        contextualMessages: contextual,
+        flowState,
+        contextualMessages: [],
         model: (await import('@/features/chat/config')).ANALYTICAL_MODEL_ID,
         byokKey,
       });
@@ -208,31 +169,21 @@ function CBTDiaryPageContent() {
       await queryClient.invalidateQueries({ queryKey: sessionKeys.list() });
       cbt.startCBTSession({ sessionId });
 
-      // Clear CBT session since it's complete - use unified CBT action
-      draftActions.reset();
-
-      // Reset component state
+      // Clear persisted draft after successful send
+      clearPersistedDraft();
       setHasStarted(false);
 
-      // Show success
       showToast({
         type: 'success',
         title: toastT('cbtSentTitle'),
         message: toastT('cbtSentBody'),
       });
 
-      // Redirect back to root, chat will load current session
       router.replace('/');
     } catch (error) {
       logger.error(
         'Error sending CBT session to chat',
-        {
-          component: 'CBTDiaryPage',
-          operation: 'handleSendToChat',
-          sessionId: reduxSessionId || 'unknown',
-          hasStarted,
-          isCBTActive,
-        },
+        { component: 'CBTDiaryPage', operation: 'handleSendToChat' },
         error instanceof Error ? error : new Error(String(error))
       );
       showToast({
@@ -241,20 +192,13 @@ function CBTDiaryPageContent() {
         message: toastT('cbtSendFailedBody'),
       });
     } finally {
-      setIsLoading(false);
-      setIsStreaming(false);
+      setIsSubmitting(false);
     }
   }, [
-    hasStarted,
-    isCBTActive,
-    isLoading,
-    isStreaming,
-    cbtFlowState,
-    messages,
+    sessionData,
+    isSubmitting,
     router,
     showToast,
-    draftActions,
-    reduxSessionId,
     t,
     selectSession,
     toastT,
@@ -271,18 +215,12 @@ function CBTDiaryPageContent() {
       {/* Header */}
       <DiaryHeader
         isMobile={isMobile}
-        isCBTActive={isCBTActive}
-        cbtCurrentStep={cbtCurrentStep}
+        isCBTActive={hasStarted}
+        cbtCurrentStep="situation"
         onBack={() => router.push('/')}
       />
 
-      <DiaryProgress
-        isMobile={isMobile}
-        isCBTActive={isCBTActive}
-        cbtCurrentStep={cbtCurrentStep}
-      />
-
-      {/* Messages */}
+      {/* Content */}
       <div
         className="scroll-container min-h-0 flex-1 overflow-y-auto"
         style={{ WebkitOverflowScrolling: 'touch' }}
@@ -321,7 +259,6 @@ function CBTDiaryPageContent() {
                   </div>
                 </div>
 
-                {/* Draft detection and action buttons */}
                 {hasDraft ? (
                   <DraftPanel
                     hasDraft={true}
@@ -341,55 +278,26 @@ function CBTDiaryPageContent() {
               </div>
             </div>
           ) : (
-            <div data-testid="cbt-welcome">
-              <VirtualizedMessageList
-                messages={messages}
-                isStreaming={isLoading}
-                isMobile={isMobile}
-                activeCBTStep={cbtCurrentStep}
-                onCBTStepNavigate={goToStep}
-                onCBTSituationComplete={handleCBTSituationComplete}
-                onCBTEmotionComplete={handleCBTEmotionComplete}
-                onCBTThoughtComplete={handleCBTThoughtComplete}
-                onCBTCoreBeliefComplete={handleCBTCoreBeliefComplete}
-                onCBTChallengeQuestionsComplete={handleCBTChallengeQuestionsComplete}
-                onCBTRationalThoughtsComplete={handleCBTRationalThoughtsComplete}
-                onCBTSchemaModesComplete={handleCBTSchemaModesComplete}
-                onCBTSendToChat={handleSendToChat}
-                onCBTFinalEmotionsComplete={handleCBTFinalEmotionsComplete}
-                onCBTActionComplete={handleCBTActionComplete}
+            <div data-testid="cbt-diary-flow">
+              <CBTDiaryFlow
+                skipHydration={skipHydration}
+                onChange={handleSessionChange}
+                onComplete={handleSessionChange}
+                onSendToChat={handleSendToChat}
               />
-              {/* Inline quick draft form removed */}
             </div>
           )}
-
-          <div ref={messagesEndRef} />
         </div>
       </div>
-
-      {/* Progress Information - desktop only */}
-      {!isMobile && (
-        <FooterInfo
-          isStreaming={isStreaming}
-          isCBTActive={isCBTActive}
-          cbtCurrentStep={cbtCurrentStep}
-          hasStarted={hasStarted}
-        />
-      )}
     </div>
   );
 }
 
 // Main export with ChatUIProvider wrapper
 export default function CBTDiaryPage() {
-  const { addMessageToChat } = useChatMessages();
   const { currentSessionId } = useSession();
   const [currentSession, setCurrentSession] = useState<string | null>(currentSessionId ?? null);
-
-  // Session management for CBT diary (do not auto-create sessions)
-  const ensureSession = useCallback(async (): Promise<string | null> => {
-    return currentSessionId ?? null;
-  }, [currentSessionId]);
+  const { saveMessage } = useChatPersistence(currentSession);
 
   useEffect(() => {
     setCurrentSession(currentSessionId ?? null);
@@ -399,16 +307,19 @@ export default function CBTDiaryPage() {
   const chatUIBridge: ChatUIBridge = {
     addMessageToChat: async (message) => {
       // Ensure we have a session
-      const sessionId = message.sessionId || currentSession || (await ensureSession());
+      const sessionId = message.sessionId || currentSession;
       if (!sessionId) {
         return { success: false, error: 'No session available' };
       }
 
-      // Use the message API directly since this is a standalone page
-      return await addMessageToChat({
-        ...message,
-        sessionId,
+      // Use the persistence hook to save the message
+      const result = await saveMessage({
+        role: message.role,
+        content: message.content,
+        modelUsed: message.modelUsed,
       });
+
+      return result;
     },
     currentSessionId: currentSession,
     isLoading: false,

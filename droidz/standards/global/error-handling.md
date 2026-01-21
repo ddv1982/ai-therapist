@@ -137,7 +137,79 @@ export function useReports(sessionId: string) {
 - Assert UI shows friendly text, not internal codes or stacks.
 - Mock failure paths in hooks/services (network, validation, 500).
 
+## Pattern: Error boundary with recovery
+**✅ DO**: Use error boundaries with retry capability.
+```tsx
+'use client';
+
+import { useEffect, startTransition } from 'react';
+
+export default function ErrorBoundary({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  useEffect(() => {
+    // Log to error monitoring service
+    logger.error('error-boundary', { 
+      message: error.message, 
+      digest: error.digest 
+    });
+  }, [error]);
+
+  return (
+    <div className="flex flex-col items-center gap-4 p-8">
+      <h2 className="text-lg font-semibold">Something went wrong</h2>
+      <p className="text-muted-foreground">
+        We encountered an error. Please try again.
+      </p>
+      <button
+        onClick={() => startTransition(() => reset())}
+        className="btn btn-primary"
+      >
+        Try again
+      </button>
+    </div>
+  );
+}
+```
+
+## Pattern: Async error handling with useTransition
+**✅ DO**: Handle errors in transitions gracefully.
+```tsx
+'use client';
+
+import { useTransition, useState } from 'react';
+
+export function ActionButton({ action }: { action: () => Promise<void> }) {
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleClick = () => {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await action();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Action failed');
+      }
+    });
+  };
+
+  return (
+    <div>
+      <button onClick={handleClick} disabled={isPending}>
+        {isPending ? 'Processing...' : 'Submit'}
+      </button>
+      {error && <p className="text-destructive text-sm">{error}</p>}
+    </div>
+  );
+}
+```
+
 ## Resources
-- Next.js App Router error handling
+- [Next.js Error Handling](https://nextjs.org/docs/app/building-your-application/routing/error-handling)
 - Convex error patterns
-- Zod error formatting docs
+- [Zod error formatting](https://zod.dev/ERROR_HANDLING)

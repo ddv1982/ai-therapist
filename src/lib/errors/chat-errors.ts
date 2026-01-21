@@ -1,10 +1,14 @@
 /**
  * Custom error classes for chat and AI-related operations
  *
- * These errors provide specific context and suggested actions for chat failures
+ * These errors provide specific context and suggested actions for chat failures.
+ *
+ * Note: This file maintains backward compatibility with existing ApiErrorCode usage
+ * while also supporting the new ErrorCode enum from error-codes.ts.
  */
 
 import { ApiErrorCode, getErrorDetails } from '@/lib/api/error-codes';
+import { ErrorCode as AppErrorCode, type AppError } from './error-codes';
 
 export interface ChatErrorOptions {
   code: ApiErrorCode;
@@ -300,5 +304,39 @@ export function getChatErrorResponse(error: unknown) {
     details: error instanceof Error ? error.message : 'Unknown error',
     suggestedAction: 'Please try again or contact support if the issue persists',
     statusCode: 500,
+  };
+}
+
+/**
+ * Maps ApiErrorCode to the new AppErrorCode for consistent error handling.
+ * Provides backward compatibility during migration.
+ */
+export function mapApiErrorCodeToAppErrorCode(code: ApiErrorCode): AppErrorCode {
+  const mapping: Partial<Record<ApiErrorCode, AppErrorCode>> = {
+    [ApiErrorCode.AUTHENTICATION_ERROR]: AppErrorCode.UNAUTHENTICATED,
+    [ApiErrorCode.UNAUTHORIZED]: AppErrorCode.UNAUTHENTICATED,
+    [ApiErrorCode.SESSION_EXPIRED]: AppErrorCode.SESSION_EXPIRED,
+    [ApiErrorCode.FORBIDDEN]: AppErrorCode.FORBIDDEN,
+    [ApiErrorCode.ACCESS_DENIED]: AppErrorCode.FORBIDDEN,
+    [ApiErrorCode.VALIDATION_ERROR]: AppErrorCode.VALIDATION_ERROR,
+    [ApiErrorCode.INVALID_INPUT]: AppErrorCode.INVALID_INPUT,
+    [ApiErrorCode.NOT_FOUND]: AppErrorCode.NOT_FOUND,
+    [ApiErrorCode.RESOURCE_NOT_FOUND]: AppErrorCode.NOT_FOUND,
+    [ApiErrorCode.INTERNAL_SERVER_ERROR]: AppErrorCode.INTERNAL_ERROR,
+    [ApiErrorCode.AI_SERVICE_UNAVAILABLE]: AppErrorCode.SERVICE_UNAVAILABLE,
+    [ApiErrorCode.RATE_LIMIT_EXCEEDED]: AppErrorCode.RATE_LIMITED,
+  };
+
+  return mapping[code] ?? AppErrorCode.INTERNAL_ERROR;
+}
+
+/**
+ * Converts a ChatError to an AppError for use with the new error system.
+ */
+export function chatErrorToAppError(error: ChatError): AppError {
+  return {
+    code: mapApiErrorCodeToAppErrorCode(error.code),
+    message: error.userMessage,
+    details: error.message,
   };
 }

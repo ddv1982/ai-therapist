@@ -1,26 +1,29 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { CBTStepWrapper } from '@/features/therapy/components/cbt-step-wrapper';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
-// Removed CBTFormValidationError import - validation errors not displayed
 import { useTranslations } from 'next-intl';
 import { TherapySlider } from '@/features/therapy/components/ui/therapy-slider';
+import { useDraftSaving } from '@/hooks/use-draft-saving';
+import { TIMING } from '@/constants/ui';
 
 import type { CBTStepType, SchemaMode, SchemaModesData, SchemaModeData } from '@/types';
 
 interface SchemaModesProps {
+  value?: SchemaModesData | null;
+  onChange?: (data: SchemaModesData) => void;
   onComplete: (data: SchemaModesData) => void;
+  onNavigateStep?: (step: CBTStepType) => void;
   initialData?: SchemaModesData;
   title?: string;
   subtitle?: string;
   stepNumber?: number;
   totalSteps?: number;
   className?: string;
-  onNavigateStep?: (step: CBTStepType) => void;
 }
 
 // Default schema modes based on Schema Therapy
@@ -62,35 +65,27 @@ const DEFAULT_SCHEMA_MODES: SchemaMode[] = Object.entries(SCHEMA_MODE_TRANSLATIO
 );
 
 export function SchemaModes({
+  value,
+  onChange,
   onComplete,
+  onNavigateStep,
   initialData,
   className,
-  onNavigateStep,
 }: SchemaModesProps) {
-  const { sessionData, schemaActions, navigation } = useCBTDataManager();
+  const { sessionData, schemaActions } = useCBTDataManager();
   const t = useTranslations('cbt');
   const modeTranslations = useTranslations();
 
-  // Get schema modes data from unified CBT hook
   const schemaModesData = sessionData?.schemaModes;
   const lastModified = sessionData?.lastModified;
-
-  // Default schema modes data
-  const defaultModesData: SchemaModesData = {
-    selectedModes: DEFAULT_SCHEMA_MODES,
-  };
+  const defaultModesData: SchemaModesData = { selectedModes: DEFAULT_SCHEMA_MODES };
 
   const [modesData, setModesData] = useState<SchemaModesData>(() => {
-    // Use initialData if provided, otherwise use Redux data or default
-    if (initialData?.selectedModes) {
-      return initialData;
-    }
-
-    // Convert Redux schema modes to component format
+    if (value?.selectedModes) return value;
+    if (initialData?.selectedModes) return initialData;
     if (schemaModesData && schemaModesData.length > 0) {
       const selectedModes = DEFAULT_SCHEMA_MODES.map((mode) => ({
         ...mode,
-        // Compare using stable id, not display name
         selected: schemaModesData.some(
           (reduxMode: SchemaModeData) => reduxMode.mode === mode.id && reduxMode.isActive
         ),
@@ -100,33 +95,28 @@ export function SchemaModes({
       }));
       return { selectedModes };
     }
-
     return defaultModesData;
   });
 
-  // Auto-save to Redux when modes change
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      const reduxModes = modesData.selectedModes
+  const { saveDraft } = useDraftSaving<SchemaModesData>({
+    onSave: (data) => {
+      const reduxModes = data.selectedModes
         .filter((mode) => mode.selected)
         .map((mode) => ({
-          // Persist stable id into store for consistency
           mode: mode.id,
           description: SCHEMA_MODE_TRANSLATIONS[mode.id]?.description ?? mode.description,
           intensity: mode.intensity || 5,
           isActive: mode.selected,
         }));
       schemaActions.updateSchemaModes(reduxModes);
-    }, 500); // Debounce updates by 500ms
-
-    return () => clearTimeout(timeoutId);
-  }, [modesData, schemaActions]);
+      onChange?.(data);
+    },
+    debounceMs: TIMING.DEBOUNCE.DEFAULT,
+    enabled: true,
+  });
 
   // Visual indicator for auto-save (based on Redux lastModified)
   const isDraftSaved = !!lastModified;
-
-  // CBT chat bridge for sending data to session
-  // Note: Chat bridge no longer used - data sent only in final comprehensive summary
 
   const translateMode = useCallback(
     (mode: SchemaMode) => {
@@ -145,23 +135,33 @@ export function SchemaModes({
     [modeTranslations]
   );
 
-  const handleModeToggle = useCallback((modeId: string) => {
-    setModesData((prev) => ({
-      ...prev,
-      selectedModes: prev.selectedModes.map((mode) =>
-        mode.id === modeId ? { ...mode, selected: !mode.selected } : mode
-      ),
-    }));
-  }, []);
+  const handleModeToggle = useCallback(
+    (modeId: string) => {
+      const updated = {
+        ...modesData,
+        selectedModes: modesData.selectedModes.map((mode) =>
+          mode.id === modeId ? { ...mode, selected: !mode.selected } : mode
+        ),
+      };
+      setModesData(updated);
+      saveDraft(updated);
+    },
+    [modesData, saveDraft]
+  );
 
-  const handleIntensityChange = useCallback((modeId: string, intensity: number) => {
-    setModesData((prev) => ({
-      ...prev,
-      selectedModes: prev.selectedModes.map((mode) =>
-        mode.id === modeId ? { ...mode, intensity } : mode
-      ),
-    }));
-  }, []);
+  const handleIntensityChange = useCallback(
+    (modeId: string, intensity: number) => {
+      const updated = {
+        ...modesData,
+        selectedModes: modesData.selectedModes.map((mode) =>
+          mode.id === modeId ? { ...mode, intensity } : mode
+        ),
+      };
+      setModesData(updated);
+      saveDraft(updated);
+    },
+    [modesData, saveDraft]
+  );
 
   const translatedModes = modesData.selectedModes.map(translateMode);
   const selectedModes = translatedModes.filter((mode) => mode.selected);
@@ -215,9 +215,6 @@ export function SchemaModes({
       isValid={isValid}
       validationErrors={[]} // No validation error display
       onNext={handleNext}
-      onPrevious={() => {
-        navigation.goPrevious();
-      }}
       className={className}
       onNavigateStep={onNavigateStep}
     >

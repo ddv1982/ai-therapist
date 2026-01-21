@@ -42,6 +42,15 @@ export const ANIMATIONS = {
   },
 } as const;
 
+// Timing Constants (milliseconds)
+export const TIMING = {
+  DEBOUNCE: {
+    FAST: 300,
+    DEFAULT: 500,
+    SLOW: 1000,
+  },
+} as const;
+
 // Breakpoints
 export const BREAKPOINTS = {
   SM: 640,

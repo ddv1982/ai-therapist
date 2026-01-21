@@ -11,7 +11,6 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import type { ObsessionsCompulsionsData } from '@/types';
 import type { ChatState } from '@/features/chat/hooks/use-chat-state';
 import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID, LOCAL_MODEL_ID } from '@/features/chat/config';
 
@@ -32,8 +31,6 @@ export interface ChatActions {
   /** Opens the CBT diary modal for thought tracking */
   openCBTDiary: () => void;
 
-  /** Handles completion of obsessions/compulsions data entry */
-  handleObsessionsCompulsionsComplete: (data: ObsessionsCompulsionsData) => Promise<void>;
   /** Creates a new obsessions/compulsions tracking table */
   handleCreateObsessionsTable: () => Promise<void>;
 
@@ -58,12 +55,6 @@ export interface UseChatActionsParams {
   // Core actions from controller
   setInput: (value: string) => void;
   sendMessage: () => Promise<void>;
-  addMessageToChat: (message: {
-    content: string;
-    role: 'user' | 'assistant';
-    sessionId: string;
-    metadata?: Record<string, unknown>;
-  }) => Promise<{ success: boolean; error?: string }>;
   createObsessionsCompulsionsTable: () => Promise<{ success: boolean; error?: string }>;
   scrollToBottom: (force?: boolean, delay?: number) => void;
   setShowSidebar: (show: boolean) => void;
@@ -99,7 +90,6 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
     chatState,
     setInput,
     sendMessage,
-    addMessageToChat,
     createObsessionsCompulsionsTable,
     scrollToBottom: scrollToBottomFn,
     updateSettings,
@@ -151,36 +141,6 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
   const openCBTDiary = useCallback(() => {
     router.push('/cbt-diary');
   }, [router]);
-
-  const handleObsessionsCompulsionsComplete = useCallback(
-    async (data: ObsessionsCompulsionsData) => {
-      if (!chatState.currentSession) return;
-
-      try {
-        const { formatObsessionsCompulsionsForChat } = await import(
-          '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions'
-        );
-        const messageContent = formatObsessionsCompulsionsForChat(data);
-
-        await addMessageToChat({
-          content: messageContent,
-          role: 'user',
-          sessionId: chatState.currentSession,
-          metadata: {
-            type: 'obsessions-compulsions-table',
-            data,
-          },
-        });
-      } catch {
-        showToast({
-          type: 'error',
-          title: toastT('saveFailedTitle'),
-          message: toastT('saveFailedBody'),
-        });
-      }
-    },
-    [chatState.currentSession, addMessageToChat, showToast, toastT]
-  );
 
   const handleCreateObsessionsTable = useCallback(async () => {
     const result = await createObsessionsCompulsionsTable();
@@ -286,7 +246,6 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
       handleKeyDown,
       handleFormSubmit,
       openCBTDiary,
-      handleObsessionsCompulsionsComplete,
       handleCreateObsessionsTable,
       handleWebSearchToggle,
       handleSmartModelToggle,
@@ -299,7 +258,6 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
       handleKeyDown,
       handleFormSubmit,
       openCBTDiary,
-      handleObsessionsCompulsionsComplete,
       handleCreateObsessionsTable,
       handleWebSearchToggle,
       handleSmartModelToggle,

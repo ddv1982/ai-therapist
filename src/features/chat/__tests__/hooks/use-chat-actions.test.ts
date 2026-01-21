@@ -8,11 +8,6 @@ import { createRef } from 'react';
 import type { ChatState } from '@/features/chat/hooks/use-chat-state';
 import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 
-// Mock the import
-jest.mock('@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions', () => ({
-  formatObsessionsCompulsionsForChat: jest.fn(() => 'Formatted obsessions data'),
-}));
-
 describe('useChatActions', () => {
   const createMockChatState = (overrides?: Partial<ChatState>): ChatState => ({
     messages: [],
@@ -40,7 +35,6 @@ describe('useChatActions', () => {
     chatState: createMockChatState(),
     setInput: jest.fn(),
     sendMessage: jest.fn().mockResolvedValue(undefined),
-    addMessageToChat: jest.fn().mockResolvedValue({ success: true }),
     createObsessionsCompulsionsTable: jest.fn().mockResolvedValue({ success: true }),
     scrollToBottom: jest.fn(),
     setShowSidebar: jest.fn(),
@@ -130,32 +124,6 @@ describe('useChatActions', () => {
     });
 
     expect(push).toHaveBeenCalledWith('/cbt-diary');
-  });
-
-  it('should handle obsessions/compulsions completion', async () => {
-    const addMessageToChat = jest.fn().mockResolvedValue({ success: true });
-    const params = createMockParams({ addMessageToChat });
-    const { result } = renderHook(() => useChatActions(params));
-
-    const data = {
-      obsessions: [],
-      compulsions: [],
-      lastModified: new Date().toISOString(),
-    };
-
-    await act(async () => {
-      await result.current.handleObsessionsCompulsionsComplete(data);
-    });
-
-    expect(addMessageToChat).toHaveBeenCalledWith({
-      content: 'Formatted obsessions data',
-      role: 'user',
-      sessionId: 'session-1',
-      metadata: {
-        type: 'obsessions-compulsions-table',
-        data,
-      },
-    });
   });
 
   it('should handle create obsessions table success', async () => {

@@ -50,38 +50,4 @@ export function getSingleUserInfo(request: Request) {
   };
 }
 
-/**
- * Generate a consistent user ID based on browser characteristics
- * @deprecated - Use Clerk authentication via getSingleUserInfo() instead
- */
-export function generateDeviceUserId(request: Request): string {
-  const userAgent = request.headers.get('user-agent') || '';
-  const acceptLanguage = request.headers.get('accept-language') || '';
-  const acceptEncoding = request.headers.get('accept-encoding') || '';
 
-  const browserFingerprint = `${userAgent}-${acceptLanguage}-${acceptEncoding}`;
-  let hash = 0;
-  for (let i = 0; i < browserFingerprint.length; i++) {
-    const char = browserFingerprint.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-
-  return `device-user-${Math.abs(hash).toString(36)}`;
-}
-
-/**
- * Get or create user for this device session
- * @deprecated - Use Clerk authentication via getSingleUserInfo() instead
- */
-export function getDeviceUserInfo(request: Request) {
-  const userId = generateDeviceUserId(request);
-  const userAgent = request.headers.get('user-agent') || '';
-  const deviceType = getDeviceTypeFromUserAgent(userAgent);
-
-  return {
-    userId,
-    email: `${userId}@local.device`,
-    name: `${deviceType} User`,
-  };
-}

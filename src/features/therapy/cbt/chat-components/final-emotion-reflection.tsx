@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -12,42 +12,66 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { EmotionData, ActionPlanData, CBTStepType } from '@/types';
 import { useTranslations } from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
+import { useDraftSaving } from '@/hooks/use-draft-saving';
+import { TIMING } from '@/constants/ui';
 
 interface FinalEmotionReflectionProps {
+  value?: EmotionData | null;
+  onChange?: (data: EmotionData) => void;
   onComplete?: (data: EmotionData) => void;
-  onSendToChat?: () => void;
-  className?: string;
   onNavigateStep?: (step: CBTStepType) => void;
+  onSendToChat?: () => void;
+  initialData?: EmotionData;
+  stepNumber?: number;
+  totalSteps?: number;
+  className?: string;
 }
 
 export function FinalEmotionReflection({
+  value,
+  onChange,
   onComplete,
-  onSendToChat,
-  className,
   onNavigateStep,
+  onSendToChat,
+  initialData,
+  className,
 }: FinalEmotionReflectionProps) {
   const { sessionData, actionActions } = useCBTDataManager();
   const t = useTranslations('cbt');
 
-  // Pull final emotions from action plan if present, else start from zeros
-  const currentFinalEmotions = useMemo<EmotionData>(
-    () =>
-      sessionData?.actionPlan?.finalEmotions || {
-        fear: 0,
-        anger: 0,
-        sadness: 0,
-        joy: 0,
-        anxiety: 0,
-        shame: 0,
-        guilt: 0,
-        other: sessionData?.emotions?.other || '',
-        otherIntensity: 0,
-      },
-    [sessionData?.actionPlan?.finalEmotions, sessionData?.emotions?.other]
+  const defaultEmotions: EmotionData = useMemo(
+    () => ({
+      fear: 0,
+      anger: 0,
+      sadness: 0,
+      joy: 0,
+      anxiety: 0,
+      shame: 0,
+      guilt: 0,
+      other: sessionData?.emotions?.other || '',
+      otherIntensity: 0,
+    }),
+    [sessionData?.emotions?.other]
   );
 
-  const [localFinal, setLocalFinal] = useState<EmotionData>(currentFinalEmotions);
-  const [showCustom, setShowCustom] = useState(Boolean(localFinal.other));
+  const [localFinal, setLocalFinal] = useState<EmotionData>(
+    () => value || initialData || sessionData?.actionPlan?.finalEmotions || defaultEmotions
+  );
+  const [showCustom, setShowCustom] = useState(() => Boolean(value?.other ?? initialData?.other ?? localFinal.other));
+
+  useEffect(() => {
+    const data = value ?? initialData;
+    if (data) {
+      setLocalFinal(data);
+      setShowCustom(Boolean(data.other));
+    }
+  }, [value, initialData]);
+
+  const { saveDraft } = useDraftSaving<EmotionData>({
+    onSave: (data) => onChange?.(data),
+    debounceMs: TIMING.DEBOUNCE.DEFAULT,
+    enabled: !!onChange,
+  });
 
   const coreEmotions = [
     { key: 'fear', label: t('emotions.labels.fear'), emoji: '😨', color: 'bg-emotion-fear' },
@@ -69,13 +93,23 @@ export function FinalEmotionReflection({
     { key: 'guilt', label: t('emotions.labels.guilt'), emoji: '😔', color: 'bg-emotion-guilt' },
   ];
 
-  const handleEmotionChange = useCallback((key: keyof EmotionData, value: number) => {
-    setLocalFinal((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const handleEmotionChange = useCallback(
+    (key: keyof EmotionData, value: number) => {
+      const updated = { ...localFinal, [key]: value };
+      setLocalFinal(updated);
+      saveDraft(updated);
+    },
+    [localFinal, saveDraft]
+  );
 
-  const handleCustomEmotionLabel = useCallback((value: string) => {
-    setLocalFinal((prev) => ({ ...prev, other: value }));
-  }, []);
+  const handleCustomEmotionLabel = useCallback(
+    (value: string) => {
+      const updated = { ...localFinal, other: value };
+      setLocalFinal(updated);
+      saveDraft(updated);
+    },
+    [localFinal, saveDraft]
+  );
 
   const hasSelectedEmotions = useMemo(
     () =>

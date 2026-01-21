@@ -1,24 +1,118 @@
 'use client';
 
-import { createContext, useContext, useMemo, useEffect } from 'react';
-import { useChatController } from '@/hooks/use-chat-controller';
-import { useChatState, type ChatState } from '@/features/chat/hooks/use-chat-state';
-import { useChatActions, type ChatActions } from '@/features/chat/hooks/use-chat-actions';
+import { createContext, useContext, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useTherapyChat } from '@/hooks/chat/use-therapy-chat';
+import { useChatUI } from '@/hooks/chat/use-chat-ui';
 import { useChatModals, type ChatModalsState, type ChatModalsActions } from '@/features/chat/hooks/use-chat-modals';
+import { useChatSessions } from '@/hooks/chat/use-chat-sessions';
+import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
+import { useMemoryContext } from '@/hooks/use-memory-context';
 import { useChatSettings } from '@/contexts/chat-settings-context';
+import { useSession } from '@/contexts/session-context';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useToast } from '@/components/ui/toast';
 import { useApiKeys } from '@/hooks/use-api-keys';
-import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
+import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID, LOCAL_MODEL_ID } from '@/features/chat/config';
 import { getModelDisplayName, supportsWebSearch, MODEL_IDS } from '@/ai/model-metadata';
+import { logger } from '@/lib/utils/logger';
+import { apiClient } from '@/lib/api/client';
+import { generateUUID } from '@/lib/utils';
+import type { MessageData } from '@/features/chat/messages/message';
+import type { UiSession } from '@/features/chat/lib/session-mapper';
+import type { MemoryContextInfo } from '@/features/chat/lib/memory-utils';
+import type { ObsessionsCompulsionsData } from '@/types';
+
+/**
+ * Consolidated chat state interface.
+ * Contains all state needed by chat UI components.
+ */
+export interface ChatState {
+  messages: MessageData[];
+  isLoading: boolean;
+  isGeneratingReport: boolean;
+  sessions: UiSession[];
+  currentSession: string | null;
+  input: string;
+  isMobile: boolean;
+  viewportHeight: string;
+  showSidebar: boolean;
+  isNearBottom: boolean;
+  memoryContext: MemoryContextInfo;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  messagesContainerRef: React.RefObject<HTMLDivElement | null>;
+  inputContainerRef: React.RefObject<HTMLDivElement | null>;
+}
+
+/**
+ * Interface for all chat action handlers.
+ */
+export interface ChatActions {
+  handleInputChange: (value: string) => void;
+  handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  handleFormSubmit: (e: React.FormEvent) => void;
+  openCBTDiary: () => void;
+  handleCreateObsessionsTable: () => Promise<void>;
+  handleWebSearchToggle: () => void;
+  handleSmartModelToggle: () => void;
+  handleLocalModelToggle: () => Promise<void>;
+  scrollToBottom: () => void;
+  setShowSidebar: (show: boolean) => void;
+}
+
+/**
+ * Controller interface for backward compatibility.
+ * Provides the same API as the old useChatController.
+ */
+export interface ChatController {
+  messages: MessageData[];
+  sessions: UiSession[];
+  currentSession: string | null;
+  input: string;
+  isLoading: boolean;
+  isMobile: boolean;
+  viewportHeight: string;
+  isGeneratingReport: boolean;
+  memoryContext: MemoryContextInfo;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  messagesContainerRef: React.RefObject<HTMLDivElement | null>;
+  inputContainerRef: React.RefObject<HTMLDivElement | null>;
+  isNearBottom: boolean;
+  scrollToBottom: (force?: boolean, delay?: number) => void;
+  setInput: (value: string) => void;
+  sendMessage: () => Promise<void>;
+  stopGenerating: () => void;
+  startNewSession: () => void;
+  deleteSession: (sessionId: string) => Promise<void>;
+  loadSessions: () => Promise<void>;
+  setCurrentSessionAndSync: (sessionId: string) => Promise<void>;
+  generateReport: () => Promise<void>;
+  setShowSidebar: (value: boolean) => void;
+  showSidebar: boolean;
+  addMessageToChat: (message: {
+    content: string;
+    role: 'user' | 'assistant';
+    sessionId: string;
+    modelUsed?: string;
+    source?: string;
+    metadata?: Record<string, unknown>;
+  }) => Promise<{ success: boolean; error?: string }>;
+  updateMessageMetadata: (
+    sessionId: string,
+    messageId: string,
+    metadata: Record<string, unknown>,
+    options?: { mergeStrategy?: 'merge' | 'replace' }
+  ) => Promise<{ success: boolean; error?: string }>;
+  createObsessionsCompulsionsTable: () => Promise<{ success: boolean; error?: string }>;
+  setMemoryContext: (info: MemoryContextInfo) => void;
+}
 
 interface ChatContextValue {
   state: ChatState;
   actions: ChatActions;
   modals: ChatModalsState;
   modalActions: ChatModalsActions;
-  controller: ReturnType<typeof useChatController>;
+  controller: ChatController;
   modelLabel: string;
   byokActive: boolean;
 }
@@ -30,7 +124,11 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const { settings, updateSettings } = useChatSettings();
   const toastT = useTranslations('toast');
   const { showToast } = useToast();
-  const { isActive: byokActive, setActive: setByokActive } = useApiKeys();
+  const { keys: apiKeys, isActive: byokActive, setActive: setByokActive } = useApiKeys();
+  const { currentSessionId } = useSession();
+
+  // Get BYOK key if active
+  const byokKey = byokActive ? (apiKeys.openai ?? null) : null;
 
   // Reset system model selection when BYOK is activated
   useEffect(() => {
@@ -56,43 +154,550 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return supportsWebSearch(effectiveModelId) ? `${base} (Deep Analysis)` : base;
   }, [effectiveModelId, byokActive]);
 
-  const controller = useChatController({
+  // Ref to store loadSessions for use in onFinish callback
+  const loadSessionsRef = useRef<(() => Promise<void>) | null>(null);
+
+  // Use the new useTherapyChat hook
+  const therapyChat = useTherapyChat({
+    sessionId: currentSessionId,
     model: settings.model,
     webSearchEnabled: settings.webSearchEnabled,
+    byokKey,
+    onFinish: () => {
+      // Refresh sessions to pick up title changes
+      void loadSessionsRef.current?.();
+    },
   });
 
-  const state = useChatState({
-    messages: controller.messages,
-    sessions: controller.sessions,
-    currentSession: controller.currentSession,
-    input: controller.input,
-    isLoading: controller.isLoading,
-    isMobile: controller.isMobile,
-    viewportHeight: controller.viewportHeight,
-    isGeneratingReport: controller.isGeneratingReport,
-    memoryContext: controller.memoryContext,
-    textareaRef: controller.textareaRef,
-    messagesContainerRef: controller.messagesContainerRef,
-    inputContainerRef: controller.inputContainerRef,
-    isNearBottom: controller.isNearBottom,
-    showSidebar: controller.showSidebar,
+  // UI state (input, loading, viewport, refs)
+  const { state: uiState, refs: uiRefs, actions: uiActions } = useChatUI();
+  const { showSidebar, isGeneratingReport, isMobile, viewportHeight } = uiState;
+  const { textareaRef, messagesContainerRef, inputContainerRef } = uiRefs;
+  const { setShowSidebar, setIsGeneratingReport, scheduleFocus } = uiActions;
+
+  // Memory context
+  const { memoryContext, setMemoryContext } = useMemoryContext(currentSessionId);
+
+  // Scroll management
+  const { scrollToBottom, isNearBottom } = useScrollToBottom({
+    isStreaming: therapyChat.isLoading,
+    messages: therapyChat.messages,
+    container: messagesContainerRef.current,
+    behavior: 'smooth',
+    respectUserScroll: true,
   });
 
-  const actions = useChatActions({
-    chatState: state,
-    setInput: controller.setInput,
-    sendMessage: controller.sendMessage,
-    addMessageToChat: controller.addMessageToChat,
-    createObsessionsCompulsionsTable: controller.createObsessionsCompulsionsTable,
-    scrollToBottom: controller.scrollToBottom,
-    updateSettings,
-    settings,
+  // Session management with message loading via therapyChat
+  const loadMessages = useCallback(
+    async (_sessionId: string) => {
+      // Load messages explicitly when switching sessions
+      await therapyChat.loadSessionMessages();
+    },
+    [therapyChat]
+  );
+
+  const clearMessages = useCallback(() => {
+    therapyChat.clearSession();
+  }, [therapyChat]);
+
+  const resolveDefaultTitle = useCallback((): string => {
+    // Use translated title or fallback
+    return 'New Chat';
+  }, []);
+
+  const {
+    sessions,
+    currentSession,
+    loadSessions,
+    ensureActiveSession,
+    startNewSession: resetSessionState,
+    deleteSession,
+    setCurrentSessionAndLoad,
+  } = useChatSessions({ loadMessages, clearMessages, resolveDefaultTitle });
+
+  // Store loadSessions in ref for onFinish callback
+  loadSessionsRef.current = loadSessions;
+
+  // Report generation
+  const generateReportRef = useRef<(() => Promise<void>) | undefined>(undefined);
+
+  const generateReport = useCallback(async () => {
+    if (!currentSession || therapyChat.messages.length === 0) return;
+    setIsGeneratingReport(true);
+
+    try {
+      const result = await apiClient.generateReportDetailed({
+        sessionId: currentSession,
+        messages: therapyChat.messages
+          .filter((m) => !m.content.startsWith('📊 **Session Report**'))
+          .map((m) => ({
+            role: m.role,
+            content: m.content,
+            timestamp: (m.timestamp instanceof Date ? m.timestamp : new Date(m.timestamp)).toISOString(),
+          })),
+        model: settings.model,
+      });
+
+      const dataObj = (result as { success?: boolean; data?: { reportContent?: unknown } }).data;
+      const legacyReport = (result as { reportContent?: unknown }).reportContent;
+      const content =
+        typeof dataObj?.reportContent === 'string'
+          ? (dataObj.reportContent as string)
+          : typeof legacyReport === 'string'
+            ? (legacyReport as string)
+            : undefined;
+
+      if (content) {
+        const reportMessage: MessageData = {
+          id: generateUUID(),
+          role: 'assistant' as const,
+          content: `📊 **Session Report**\n\n${content}`,
+          timestamp: new Date(),
+          modelUsed: settings.model,
+        };
+        therapyChat.setMessages((prev) => [...prev, reportMessage]);
+        try {
+          await apiClient.postMessage(currentSession, {
+            role: 'assistant',
+            content: reportMessage.content,
+            modelUsed: settings.model,
+          });
+          await loadSessions();
+        } catch {
+          // Ignore persistence errors for reports
+        }
+      }
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  }, [currentSession, therapyChat, settings.model, loadSessions, setIsGeneratingReport]);
+
+  generateReportRef.current = generateReport;
+
+  // Send message handler
+  const sendMessage = useCallback(async () => {
+    const messageText = therapyChat.input;
+    if (!messageText.trim() || therapyChat.isLoading) return;
+
+    // Pass ensureSession to handleSubmit to create session if needed
+    await therapyChat.handleSubmit(undefined, { ensureSession: ensureActiveSession });
+  }, [therapyChat, ensureActiveSession]);
+
+  // Stop generating
+  const stopGenerating = useCallback(() => {
+    therapyChat.stop();
+    scheduleFocus(50);
+  }, [therapyChat, scheduleFocus]);
+
+  // Start new session
+  const startNewSession = useCallback(() => {
+    void (async () => {
+      await resetSessionState();
+      therapyChat.clearSession();
+      scheduleFocus(100);
+    })();
+  }, [resetSessionState, therapyChat, scheduleFocus]);
+
+  // Set current session and sync
+  const setCurrentSessionAndSync = useCallback(
+    async (sessionId: string) => {
+      await setCurrentSessionAndLoad(sessionId);
+    },
+    [setCurrentSessionAndLoad]
+  );
+
+  // Add message to chat (for backward compatibility)
+  const addMessageToChat = useCallback(
+    async (message: {
+      content: string;
+      role: 'user' | 'assistant';
+      sessionId: string;
+      modelUsed?: string;
+      source?: string;
+      metadata?: Record<string, unknown>;
+    }): Promise<{ success: boolean; error?: string }> => {
+      const tempId = generateUUID();
+      const newMessage: MessageData = {
+        id: tempId,
+        role: message.role,
+        content: message.content,
+        timestamp: new Date(),
+        modelUsed: message.modelUsed,
+        metadata: message.metadata,
+      };
+
+      // Add to UI immediately
+      therapyChat.setMessages((prev) => [...prev, newMessage]);
+
+      try {
+        // Persist to database
+        const response = await apiClient.postMessage(message.sessionId, {
+          role: message.role,
+          content: message.content,
+          modelUsed: message.modelUsed,
+          metadata: message.metadata,
+        });
+
+        // Update with real database ID
+        const dbId = response.data?.id;
+        if (dbId && dbId !== tempId) {
+          therapyChat.setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...m, id: dbId } : m)));
+        }
+
+        return { success: true };
+      } catch (error) {
+        // Remove the message on failure
+        therapyChat.setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        const errorMessage = error instanceof Error ? error.message : 'Failed to add message';
+        return { success: false, error: errorMessage };
+      }
+    },
+    [therapyChat]
+  );
+
+  // Update message metadata
+  const updateMessageMetadata = useCallback(
+    async (
+      sessionId: string,
+      messageId: string,
+      metadata: Record<string, unknown>,
+      options?: { mergeStrategy?: 'merge' | 'replace' }
+    ): Promise<{ success: boolean; error?: string }> => {
+      try {
+        await apiClient.patchMessageMetadata(sessionId, messageId, {
+          metadata,
+          mergeStrategy: options?.mergeStrategy,
+        });
+
+        // Update in UI
+        therapyChat.setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === messageId
+              ? {
+                  ...msg,
+                  metadata:
+                    options?.mergeStrategy === 'replace'
+                      ? metadata
+                      : { ...(msg.metadata ?? {}), ...metadata },
+                }
+              : msg
+          )
+        );
+
+        return { success: true };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to update metadata';
+        return { success: false, error: errorMessage };
+      }
+    },
+    [therapyChat]
+  );
+
+  // Create obsessions/compulsions table
+  const createObsessionsCompulsionsTable = useCallback(async (): Promise<{
+    success: boolean;
+    error?: string;
+  }> => {
+    let sessionId: string;
+    
+    try {
+      sessionId = await ensureActiveSession();
+    } catch (error) {
+      logger.error(
+        'Failed to ensure session for obsessions table',
+        { component: 'ChatProvider' },
+        error instanceof Error ? error : new Error(String(error))
+      );
+      return { success: false, error: 'Could not prepare a session for the tracker.' };
+    }
+
+    const baseData: ObsessionsCompulsionsData = {
+      obsessions: [],
+      compulsions: [],
+      lastModified: new Date().toISOString(),
+    };
+
+    const { formatObsessionsCompulsionsForChat } = await import(
+      '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions'
+    );
+    const tableContent = formatObsessionsCompulsionsForChat(baseData);
+
+    const result = await addMessageToChat({
+      content: tableContent,
+      role: 'user',
+      sessionId,
+      metadata: {
+        type: 'obsessions-compulsions-table',
+        step: 'obsessions-compulsions',
+        data: baseData,
+        dismissed: false,
+        dismissedReason: null,
+      },
+    });
+
+    if (!result.success) {
+      logger.error('Failed to add obsessions tracker message', {
+        component: 'ChatProvider',
+        operation: 'createObsessionsCompulsionsTable',
+        sessionId,
+        error: result.error,
+      });
+      return { success: false, error: result.error ?? 'Failed to add the tracker message.' };
+    }
+
+    return { success: true };
+  }, [ensureActiveSession, addMessageToChat]);
+
+  // Build the controller object for backward compatibility
+  const controller: ChatController = useMemo(
+    () => ({
+      messages: therapyChat.messages,
+      sessions,
+      currentSession,
+      input: therapyChat.input,
+      isLoading: therapyChat.isLoading,
+      isMobile,
+      viewportHeight,
+      isGeneratingReport,
+      memoryContext,
+      textareaRef,
+      messagesContainerRef,
+      inputContainerRef,
+      isNearBottom,
+      scrollToBottom,
+      setInput: (value: string) => therapyChat.setInput(value),
+      sendMessage,
+      stopGenerating,
+      startNewSession,
+      deleteSession,
+      loadSessions,
+      setCurrentSessionAndSync,
+      generateReport,
+      setShowSidebar,
+      showSidebar,
+      addMessageToChat,
+      updateMessageMetadata,
+      createObsessionsCompulsionsTable,
+      setMemoryContext,
+    }),
+    [
+      therapyChat,
+      sessions,
+      currentSession,
+      isMobile,
+      viewportHeight,
+      isGeneratingReport,
+      memoryContext,
+      textareaRef,
+      messagesContainerRef,
+      inputContainerRef,
+      isNearBottom,
+      scrollToBottom,
+      sendMessage,
+      stopGenerating,
+      startNewSession,
+      deleteSession,
+      loadSessions,
+      setCurrentSessionAndSync,
+      generateReport,
+      setShowSidebar,
+      showSidebar,
+      addMessageToChat,
+      updateMessageMetadata,
+      createObsessionsCompulsionsTable,
+      setMemoryContext,
+    ]
+  );
+
+  // Build the consolidated state object
+  const state: ChatState = useMemo(
+    () => ({
+      messages: therapyChat.messages,
+      sessions,
+      currentSession,
+      input: therapyChat.input,
+      isLoading: therapyChat.isLoading,
+      isMobile,
+      viewportHeight,
+      isGeneratingReport,
+      memoryContext,
+      textareaRef,
+      messagesContainerRef,
+      inputContainerRef,
+      isNearBottom,
+      showSidebar,
+    }),
+    [
+      therapyChat.messages,
+      therapyChat.input,
+      therapyChat.isLoading,
+      sessions,
+      currentSession,
+      isMobile,
+      viewportHeight,
+      isGeneratingReport,
+      memoryContext,
+      textareaRef,
+      messagesContainerRef,
+      inputContainerRef,
+      isNearBottom,
+      showSidebar,
+    ]
+  );
+
+  // Helper to update settings with BYOK sync
+  const updateSettingsWithSync = useCallback(
+    (updates: Parameters<typeof updateSettings>[0]) => {
+      setByokActive(false);
+      updateSettings(updates);
+    },
+    [updateSettings, setByokActive]
+  );
+
+  // Build the actions object
+  const actions: ChatActions = useMemo(() => {
+    const handleInputChange = (value: string) => {
+      therapyChat.setInput(value);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        void sendMessage();
+      }
+    };
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      void sendMessage();
+    };
+
+    const openCBTDiary = () => {
+      router.push('/cbt-diary');
+    };
+
+    const handleCreateObsessionsTable = async () => {
+      const result = await createObsessionsCompulsionsTable();
+      if (!result.success) {
+        showToast({
+          type: 'error',
+          title: toastT('trackerCreateFailedTitle'),
+          message: result.error ?? toastT('generalRetry'),
+        });
+        return;
+      }
+      showToast({
+        type: 'success',
+        title: toastT('trackerCreateSuccessTitle'),
+        message: toastT('trackerCreateSuccessBody'),
+      });
+    };
+
+    const handleWebSearchToggle = () => {
+      const newWebSearchEnabled = !settings.webSearchEnabled;
+      updateSettingsWithSync({
+        webSearchEnabled: newWebSearchEnabled,
+        model: newWebSearchEnabled ? ANALYTICAL_MODEL_ID : DEFAULT_MODEL_ID,
+      });
+    };
+
+    const handleSmartModelToggle = () => {
+      const nextModel =
+        settings.model === ANALYTICAL_MODEL_ID ? DEFAULT_MODEL_ID : ANALYTICAL_MODEL_ID;
+      updateSettingsWithSync({
+        model: nextModel,
+        webSearchEnabled: false,
+      });
+    };
+
+    const handleLocalModelToggle = async () => {
+      const isLocal = settings.model === LOCAL_MODEL_ID;
+
+      if (isLocal) {
+        updateSettingsWithSync({
+          model: DEFAULT_MODEL_ID,
+          webSearchEnabled: false,
+        });
+        return;
+      }
+
+      showToast({
+        type: 'info',
+        title: toastT('checkingLocalModelTitle'),
+        message: toastT('checkingLocalModelBody'),
+      });
+
+      try {
+        const response = await fetch('/api/ollama/health', { cache: 'no-store' });
+        const payload = await response.json().catch(() => null);
+
+        if (!response.ok || !payload?.success) {
+          throw new Error(
+            payload?.error?.message ?? 'Unexpected response from Ollama health endpoint.'
+          );
+        }
+
+        const health = payload.data as
+          | { ok?: boolean; message?: string; status?: string }
+          | undefined;
+
+        if (health?.ok) {
+          updateSettingsWithSync({
+            model: LOCAL_MODEL_ID,
+            webSearchEnabled: false,
+          });
+          showToast({
+            type: 'success',
+            title: toastT('localModelReadyTitle'),
+            message: health.message ?? toastT('localModelReadyBody'),
+          });
+        } else {
+          const statusMessage = health?.message ?? toastT('localModelUnavailableBody');
+          showToast({
+            type: 'error',
+            title: toastT('localModelUnavailableTitle'),
+            message: statusMessage,
+          });
+        }
+      } catch {
+        showToast({
+          type: 'error',
+          title: toastT('connectionErrorTitle'),
+          message: toastT('connectionErrorBody'),
+        });
+      }
+    };
+
+    const actionScrollToBottom = () => {
+      scrollToBottom();
+      setTimeout(() => textareaRef.current?.focus(), 50);
+    };
+
+    return {
+      handleInputChange,
+      handleKeyDown,
+      handleFormSubmit,
+      openCBTDiary,
+      handleCreateObsessionsTable,
+      handleWebSearchToggle,
+      handleSmartModelToggle,
+      handleLocalModelToggle,
+      scrollToBottom: actionScrollToBottom,
+      setShowSidebar,
+    };
+  }, [
+    therapyChat,
+    sendMessage,
     router,
     showToast,
     toastT,
-    setByokActive,
-    setShowSidebar: controller.setShowSidebar,
-  });
+    createObsessionsCompulsionsTable,
+    settings,
+    updateSettingsWithSync,
+    scrollToBottom,
+    textareaRef,
+    setShowSidebar,
+  ]);
 
   const { modals, actions: modalActions } = useChatModals();
 

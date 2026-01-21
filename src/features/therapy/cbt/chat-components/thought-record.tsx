@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef, useOptimistic } from 'react';
+import { useState, useCallback, useEffect, useRef, useOptimistic, startTransition, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,47 +10,44 @@ import { Brain, Plus, Minus, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { CBTStepType, ThoughtData } from '@/types';
-// Removed CBTFormValidationError import - validation errors not displayed
-// Removed chat bridge imports - individual data no longer sent during session
 import { useTranslations } from 'next-intl';
 import { therapeuticTypography } from '@/lib/ui/design-tokens';
+import { useDraftSaving } from '@/hooks/use-draft-saving';
+import { TIMING } from '@/constants/ui';
+import { usePromptSelections } from '@/features/therapy/cbt/hooks/use-prompt-selection';
 
 interface ThoughtRecordProps {
+  value?: ThoughtData[];
+  onChange?: (data: ThoughtData[]) => void;
   onComplete: (data: ThoughtData[]) => void;
+  onNavigateStep?: (step: CBTStepType) => void;
   initialData?: ThoughtData[];
   title?: string;
   subtitle?: string;
   stepNumber?: number;
   totalSteps?: number;
   className?: string;
-  onNavigateStep?: (step: CBTStepType) => void;
 }
 
 export function ThoughtRecord({
+  value,
+  onChange,
   onComplete,
+  onNavigateStep,
   initialData,
   title,
   subtitle,
   className,
-  onNavigateStep,
 }: ThoughtRecordProps) {
   const t = useTranslations('cbt');
   const { sessionData, thoughtActions } = useCBTDataManager();
 
-  // Get thoughts data from unified CBT hook
-  const thoughtsData = sessionData?.thoughts;
-
-  // Default thought data
+  const thoughtsData = value ?? sessionData?.thoughts;
   const defaultThoughts: ThoughtData[] = [{ thought: '', credibility: 5 }];
 
-  // Initialize local state for form
   const [thoughts, setThoughts] = useState<ThoughtData[]>(() => {
-    // Use initialData if provided, otherwise use Redux data or default
-    if (initialData && initialData.length > 0) {
-      return initialData;
-    }
-
-    // Return Redux data if it has content, otherwise default
+    if (value && value.length > 0) return value;
+    if (initialData && initialData.length > 0) return initialData;
     return thoughtsData && thoughtsData.length > 0 ? thoughtsData : defaultThoughts;
   });
 
@@ -69,9 +66,15 @@ export function ThoughtRecord({
     }
   );
 
-  const [selectedPrompts, setSelectedPrompts] = useState<string[]>(() =>
-    new Array(thoughts.length).fill('')
-  );
+  const thoughtPrompts = useMemo(() => (t.raw('thoughts.prompts') as string[]) || [], [t]);
+  const initialThoughts = value ?? initialData ?? thoughtsData ?? [];
+  const getThoughtText = useCallback((item: ThoughtData) => item.thought, []);
+  const {
+    selected: selectedPrompts,
+    setSelected: setSelectedPrompts,
+    computeSelections,
+  } = usePromptSelections(thoughtPrompts, initialThoughts, getThoughtText);
+
   const [focusedThoughtIndex, setFocusedThoughtIndex] = useState<number>(0);
   const [errors, setErrors] = useState<string[]>(() => new Array(thoughts.length).fill(''));
   // Prevent rehydrate effect from overwriting fresh local changes
@@ -83,11 +86,7 @@ export function ThoughtRecord({
     if (!thoughtsData || thoughtsData.length === 0) return;
 
     // Always recompute highlight from store values to persist selection when navigating
-    const prompts = (t.raw('thoughts.prompts') as string[]) || [];
-    const rehydratedSelections = thoughtsData.map((item: ThoughtData) =>
-      prompts.includes(item.thought) ? item.thought : ''
-    );
-    setSelectedPrompts(rehydratedSelections);
+    setSelectedPrompts(computeSelections(thoughtsData));
 
     if (skipNextRehydrateRef.current) {
       // A local change just occurred; skip a single rehydrate pass so slider edits persist
@@ -121,28 +120,24 @@ export function ThoughtRecord({
             : (prevThoughts[index]?.credibility ?? 5),
       }));
     });
-  }, [thoughtsData, t]);
+  }, [thoughtsData, computeSelections, setSelectedPrompts]);
 
-  // Auto-save to unified CBT state when thoughts change
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      thoughtActions.updateThoughts(thoughts);
-    }, 500); // Debounce updates by 500ms
-
-    return () => clearTimeout(timeoutId);
-  }, [thoughts, thoughtActions]);
-
-  // Note: Chat bridge no longer used - data sent only in final comprehensive summary
-
-  // Common thought prompts to help users get started
-  const thoughtPrompts = t.raw('thoughts.prompts') as string[];
+  const { saveDraft } = useDraftSaving<ThoughtData[]>({
+    onSave: (data) => {
+      skipNextRehydrateRef.current = true;
+      thoughtActions.updateThoughts(data);
+      onChange?.(data);
+    },
+    debounceMs: TIMING.DEBOUNCE.DEFAULT,
+    enabled: true,
+  });
 
   const handleThoughtChange = useCallback(
     (index: number, newThought: string) => {
       const updatedThoughts = [...thoughts];
       updatedThoughts[index] = { ...updatedThoughts[index], thought: newThought };
       setThoughts(updatedThoughts);
-      skipNextRehydrateRef.current = true;
+      saveDraft(updatedThoughts);
 
       // Clear selection when manually typing (unless it matches exactly)
       const updatedSelectedPrompts = [...selectedPrompts];
@@ -156,7 +151,7 @@ export function ThoughtRecord({
       newErrors[index] = '';
       setErrors(newErrors);
     },
-    [thoughts, errors, selectedPrompts]
+    [thoughts, errors, selectedPrompts, saveDraft]
   );
 
   const handleCredibilityChange = useCallback(
@@ -164,9 +159,9 @@ export function ThoughtRecord({
       const updatedThoughts = [...thoughts];
       updatedThoughts[index] = { ...updatedThoughts[index], credibility };
       setThoughts(updatedThoughts);
-      skipNextRehydrateRef.current = true;
+      saveDraft(updatedThoughts);
     },
-    [thoughts]
+    [thoughts, saveDraft]
   );
 
   const handlePromptSelect = useCallback(
@@ -176,15 +171,13 @@ export function ThoughtRecord({
       const at = updated[index] ?? { thought: '', credibility: 5 };
       updated[index] = { ...at, thought: prompt };
       setThoughts(updated);
-      skipNextRehydrateRef.current = true;
+      saveDraft(updated);
 
       // Highlight the chosen prompt for the active thought
       const updatedSelectedPrompts = [...selectedPrompts];
       updatedSelectedPrompts[index] = prompt;
       setSelectedPrompts(updatedSelectedPrompts);
 
-      // Persist to unified state without waiting for debounce
-      thoughtActions.updateThoughts(updated);
       // Move focus to the targeted textarea to make the change visible
       setFocusedThoughtIndex(index);
       const el = textareaRefs.current[index];
@@ -197,17 +190,17 @@ export function ThoughtRecord({
         } catch {}
       }
     },
-    [thoughts, selectedPrompts, thoughtActions]
+    [thoughts, selectedPrompts, saveDraft]
   );
 
   const addThought = useCallback(() => {
     if (thoughts.length < 5) {
       const newThought: ThoughtData = { thought: '', credibility: 5 };
 
-      // Optimistic update: Show immediately in UI
-      updateOptimisticThoughts({ type: 'add', thought: newThought });
+      startTransition(() => {
+        updateOptimisticThoughts({ type: 'add', thought: newThought });
+      });
 
-      // Actual state update
       setThoughts((prev) => [...prev, newThought]);
       setSelectedPrompts((prev) => [...prev, '']);
       setErrors((prev) => [...prev, '']);
@@ -220,10 +213,10 @@ export function ThoughtRecord({
   const removeThought = useCallback(
     (index: number) => {
       if (thoughts.length > 1) {
-        // Optimistic update: Remove immediately in UI
-        updateOptimisticThoughts({ type: 'remove', index });
+        startTransition(() => {
+          updateOptimisticThoughts({ type: 'remove', index });
+        });
 
-        // Actual state update
         setThoughts((prev) => prev.filter((_, i) => i !== index));
         setSelectedPrompts((prev) => prev.filter((_, i) => i !== index));
         setErrors((prev) => prev.filter((_, i) => i !== index));

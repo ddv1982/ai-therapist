@@ -11,7 +11,7 @@ import {
 } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, X } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface ChatComposerProps {
@@ -88,8 +88,9 @@ export const ChatComposer = memo(function ChatComposer({
               onClick={onStop}
               className={`${isMobile ? 'h-[52px] w-[52px] rounded-xl' : 'h-[80px] w-[80px] rounded-2xl'} bg-muted text-foreground hover:bg-muted/90 active:bg-muted/80 group tap-transparent relative flex-shrink-0 touch-manipulation overflow-hidden border shadow-lg transition-all duration-200 hover:shadow-xl active:shadow-md`}
               aria-label={t('main.stopGenerating')}
+              aria-busy={isLoading}
             >
-              <X className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} relative z-10`} />
+              <Loader2 className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} relative z-10 animate-spin`} />
             </Button>
           ) : (
             <Button

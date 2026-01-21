@@ -1,28 +1,3 @@
-/**
- * CBT STEP WRAPPER COMPONENT
- * =============================================================================
- *
- * A reusable wrapper component that provides consistent layout, state management,
- * and navigation for all CBT chat components using a composition pattern.
- *
- * This eliminates the need for each CBT component to manage its own:
- * - State management boilerplate
- * - Navigation controls
- * - Progress indicators
- * - Error handling
- * - Auto-save functionality
- * - Validation display
- *
- * FEATURES:
- * - Consistent step-by-step flow
- * - Unified validation and error display
- * - Built-in navigation controls
- * - Progress tracking
- * - Auto-save with visual feedback
- * - Responsive design with mobile support
- * - Accessibility features
- */
-
 'use client';
 
 import { ReactNode, useCallback, useEffect, useState } from 'react';
@@ -50,10 +25,6 @@ import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import { CBT_STEP_CONFIG } from '@/features/therapy/cbt/flow';
 import { CBT_STEPS, getStepInfo } from '@/features/therapy/cbt/utils/step-mapping';
 import type { CBTStepType, CBTFormValidationError } from '@/types';
-
-// =============================================================================
-// TYPES & INTERFACES
-// =============================================================================
 
 export interface CBTStepWrapperProps {
   // Step Configuration
@@ -97,10 +68,6 @@ export interface CBTStepWrapperProps {
   helpText?: string;
 }
 
-// =============================================================================
-// STEP ICONS CONFIGURATION
-// =============================================================================
-
 const STEP_ICONS: Record<CBTStepType, ReactNode> = {
   situation: <MessageCircle className="h-6 w-6" />,
   emotions: <Heart className="h-6 w-6" />,
@@ -126,10 +93,6 @@ const STEP_COLORS: Record<CBTStepType, string> = {
   actions: 'bg-muted/50 border-border/50 text-foreground',
   complete: 'bg-accent/10 border-primary/30 text-foreground',
 };
-
-// =============================================================================
-// MAIN COMPONENT
-// =============================================================================
 
 export function CBTStepWrapper({
   step,
@@ -160,7 +123,7 @@ export function CBTStepWrapper({
 }: CBTStepWrapperProps) {
   const t = useTranslations('cbt');
 
-  const { navigation, validation, status } = useCBTDataManager();
+  const { validation, status } = useCBTDataManager();
 
   const stepConfig =
     step !== 'complete' ? CBT_STEP_CONFIG[step as keyof typeof CBT_STEP_CONFIG] : undefined;
@@ -207,6 +170,19 @@ export function CBTStepWrapper({
     propIsValid ??
     (stepValidationErrors.length === 0 && (!validation.errors[step] || allowPartialCompletion));
 
+  const navigateToStep = useCallback(
+    (direction: 'next' | 'previous') => {
+      if (!onNavigateStep || step === 'complete') return;
+
+      const currentIndex = CBT_STEPS.indexOf(step as Exclude<CBTStepType, 'complete'>);
+      const targetIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+      const targetStep = CBT_STEPS[targetIndex];
+
+      if (targetStep) onNavigateStep(targetStep);
+    },
+    [onNavigateStep, step]
+  );
+
   const handleNavigation = useCallback(
     async (action: 'next' | 'previous' | 'skip') => {
       if (isProcessing) return;
@@ -219,30 +195,19 @@ export function CBTStepWrapper({
             return;
           }
           await onNext?.();
-          navigation.goNext();
+          navigateToStep('next');
         } else if (action === 'previous') {
           await onPrevious?.();
-          // Keep Redux progress in sync when possible
-          if (navigation.canGoPrevious) {
-            navigation.goPrevious();
-          }
-          // Always inform parent to navigate the flow engine if a previous step exists
-          if (onNavigateStep && step !== 'complete') {
-            const stepIndex = CBT_STEPS.indexOf(step as Exclude<CBTStepType, 'complete'>);
-            if (stepIndex > 0) {
-              const previousStep = CBT_STEPS[stepIndex - 1];
-              onNavigateStep(previousStep);
-            }
-          }
+          navigateToStep('previous');
         } else if (action === 'skip') {
           onSkip?.();
-          navigation.goNext();
+          navigateToStep('next');
         }
       } finally {
         setIsProcessing(false);
       }
     },
-    [isProcessing, isStepValid, navigation, onNext, onPrevious, onSkip, onNavigateStep, step]
+    [isProcessing, isStepValid, onNext, onPrevious, onSkip, navigateToStep, step]
   );
 
   useEffect(() => {

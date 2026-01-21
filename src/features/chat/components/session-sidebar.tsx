@@ -1,6 +1,6 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, MessageSquare, Trash2, Heart, Sparkles, Loader2 } from 'lucide-react';
@@ -22,6 +22,18 @@ export const SessionSidebar = memo(function SessionSidebar({
   selectionStatus,
   children,
 }: SessionSidebarProps) {
+  const [isPending, startTransition] = useTransition();
+
+  const handleSessionSelect = (sessionId: string) => {
+    startTransition(() => {
+      setCurrentSession(sessionId);
+      loadMessages(sessionId);
+      if (isMobile) {
+        setShowSidebar(false);
+      }
+    });
+  };
+
   return (
     <>
       {/* Mobile backdrop overlay */}
@@ -89,22 +101,13 @@ export const SessionSidebar = memo(function SessionSidebar({
                     role="button"
                     tabIndex={0}
                     aria-current={currentSession === session.id ? 'true' : undefined}
+                    aria-busy={isPending && currentSession === session.id}
                     className="focus-visible:ring-ring flex items-start gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                    onClick={() => {
-                      setCurrentSession(session.id);
-                      loadMessages(session.id);
-                      if (isMobile) {
-                        setShowSidebar(false);
-                      }
-                    }}
+                    onClick={() => handleSessionSelect(session.id)}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
-                        setCurrentSession(session.id);
-                        loadMessages(session.id);
-                        if (isMobile) {
-                          setShowSidebar(false);
-                        }
+                        handleSessionSelect(session.id);
                       }
                     }}
                   >
@@ -134,7 +137,7 @@ export const SessionSidebar = memo(function SessionSidebar({
                             : 'Unknown date'}
                         </p>
                       </div>
-                      {isSwitching && (
+                      {(isSwitching || (isPending && currentSession === session.id)) && (
                         <p className="text-primary flex items-center gap-2 pt-2 text-xs">
                           <Loader2 className="h-3 w-3 animate-spin" />
                           {selectionStatus?.message ?? 'Switching session…'}

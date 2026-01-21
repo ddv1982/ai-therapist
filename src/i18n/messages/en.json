@@ -290,6 +290,10 @@
       "sendToChat": "Send to Chat",
       "deleteDraft": "Delete draft"
     },
+    "complete": {
+      "title": "Session Complete",
+      "subtitle": "Great work! You've completed all steps of your CBT reflection."
+    },
     "sessionReportTitle": "CBT Session Report",
     "actionPlan": {
       "title": "Future Action Plan",

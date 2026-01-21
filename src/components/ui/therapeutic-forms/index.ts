@@ -40,9 +40,3 @@ export {
   type ArrayFieldInputProps,
   type ArrayItem,
 } from '@/components/ui/therapeutic-forms/specialized/array-field-input';
-
-// Backward compatible wrapper (maintains old API)
-export {
-  TherapeuticFormField,
-  type TherapeuticFormFieldProps,
-} from '@/components/ui/therapeutic-forms/therapeutic-form-field-new';

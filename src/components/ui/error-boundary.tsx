@@ -1,6 +1,6 @@
 'use client';
 
-import { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode, startTransition } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -114,11 +114,13 @@ export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
     }
 
     this.resetTimeoutId = window.setTimeout(() => {
-      this.setState({
-        hasError: false,
-        error: null,
-        errorInfo: null,
-        errorId: '',
+      startTransition(() => {
+        this.setState({
+          hasError: false,
+          error: null,
+          errorInfo: null,
+          errorId: '',
+        });
       });
     }, 100);
   };

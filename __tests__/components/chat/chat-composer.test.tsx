@@ -3,6 +3,16 @@ import { screen, fireEvent } from '@testing-library/react';
 import { render } from '@testing-library/react';
 import { ChatComposer } from '@/features/chat/components/chat-composer';
 
+// Mock lucide-react icons
+jest.mock('lucide-react', () => ({
+  Send: ({ className }: { className?: string }) => (
+    <svg data-testid="send-icon" className={className} />
+  ),
+  Loader2: ({ className }: { className?: string }) => (
+    <svg data-testid="loader-icon" className={className} />
+  ),
+}));
+
 describe('ChatComposer', () => {
   test('calls onChange and onSubmit', () => {
     const onChange = jest.fn();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useActionState, useCallback } from 'react';
 import { useForm, Controller, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { cbtRHFSchema, type CBTFormInput } from './cbt-form-schema';
@@ -10,6 +10,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { EmotionData } from '@/types';
+import { Loader2 } from 'lucide-react';
+
+type CBTFormState = {
+  message: string;
+  errors?: {
+    situation?: string[];
+    initialEmotions?: string[];
+    _form?: string[];
+  };
+  success?: boolean;
+};
+
+const initialFormState: CBTFormState = { message: '' };
 
 interface CBTFormProps {
   onSubmit: (data: CBTFormInput) => void;
@@ -51,7 +64,7 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
     },
   });
 
-  const { control, handleSubmit, formState } = form;
+  const { control, formState, getValues } = form;
   const current = useWatch({ control });
 
   // Redux auto-save integration
@@ -59,6 +72,41 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
     autoSaveDelay: 600, // Match the original debounce timing
     enableValidation: false, // Disable validation to avoid conflicts with RHF
   });
+
+  // Form action for useActionState
+  const formAction = useCallback(
+    async (_prevState: CBTFormState, _formData: FormData): Promise<CBTFormState> => {
+      try {
+        // Validate with RHF first
+        const isValid = await form.trigger();
+        if (!isValid) {
+          const errors: CBTFormState['errors'] = {};
+          if (formState.errors.situation?.message) {
+            errors.situation = [String(formState.errors.situation.message)];
+          }
+          return {
+            message: 'Please fix the validation errors.',
+            errors,
+            success: false,
+          };
+        }
+
+        // Get validated data and submit
+        const data = getValues();
+        onSubmit(data);
+        return { message: 'Draft saved successfully.', success: true };
+      } catch (error) {
+        return {
+          message: error instanceof Error ? error.message : 'An error occurred.',
+          errors: { _form: ['Failed to save draft. Please try again.'] },
+          success: false,
+        };
+      }
+    },
+    [form, formState.errors, getValues, onSubmit]
+  );
+
+  const [state, submitAction, isPending] = useActionState(formAction, initialFormState);
 
   // Auto-save to Redux on form changes
   useEffect(() => {
@@ -83,7 +131,7 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
 
   return (
     <Card className="space-y-6 p-4">
-      <form onSubmit={handleSubmit((data) => onSubmit(data))} className="space-y-6">
+      <form action={submitAction} className="space-y-6">
         <div>
           <label className="text-sm font-semibold" htmlFor="situation-input">
             Situation
@@ -97,17 +145,21 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
                 id="situation-input"
                 placeholder="Describe the situation..."
                 className="mt-2"
-                aria-invalid={!!formState.errors.situation}
-                aria-describedby={formState.errors.situation ? 'situation-error' : undefined}
+                aria-invalid={!!formState.errors.situation || !!state.errors?.situation}
+                aria-describedby={
+                  formState.errors.situation || state.errors?.situation
+                    ? 'situation-error'
+                    : undefined
+                }
                 onChange={(e) => {
                   field.onChange(e);
                 }}
               />
             )}
           />
-          {formState.errors.situation?.message && (
-            <p id="situation-error" className="mt-1 text-sm text-red-600" role="alert">
-              {String(formState.errors.situation.message)}
+          {(formState.errors.situation?.message || state.errors?.situation) && (
+            <p id="situation-error" className="mt-1 text-sm text-destructive" role="alert">
+              {String(formState.errors.situation?.message || state.errors?.situation?.[0])}
             </p>
           )}
         </div>
@@ -141,9 +193,30 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
           </div>
         </div>
 
+        {/* Form-level error display */}
+        {state.errors?._form && (
+          <p className="text-sm text-destructive" role="alert">
+            {state.errors._form[0]}
+          </p>
+        )}
+
+        {/* Success message */}
+        {state.success && state.message && (
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            {state.message}
+          </p>
+        )}
+
         <div className="flex justify-end gap-2">
-          <Button type="submit" disabled={!isSituationValid}>
-            Save Draft
+          <Button type="submit" disabled={!isSituationValid || isPending}>
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              'Save Draft'
+            )}
           </Button>
         </div>
       </form>

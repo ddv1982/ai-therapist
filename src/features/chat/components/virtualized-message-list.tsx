@@ -349,7 +349,6 @@ export interface VirtualizedMessageListProps {
   onCBTSendToChat?: () => void; // For triggering send to chat from final emotions step
   onCBTFinalEmotionsComplete?: (data: EmotionData) => void;
   onCBTActionComplete?: (data: ActionPlanData) => void;
-  onObsessionsCompulsionsComplete?: (data: ObsessionsCompulsionsData) => void;
   onUpdateMessageMetadata?: (
     sessionId: string,
     messageId: string,
@@ -634,7 +633,6 @@ function VirtualizedMessageListComponent({
   onCBTSendToChat,
   onCBTFinalEmotionsComplete,
   onCBTActionComplete,
-  onObsessionsCompulsionsComplete,
   onUpdateMessageMetadata,
   sessionId,
   scrollContainerRef: externalScrollRef,
@@ -658,12 +656,14 @@ function VirtualizedMessageListComponent({
     return filteredMessages.length > VIRTUAL_SCROLL_THRESHOLD;
   }, [enableVirtualization, filteredMessages.length]);
 
-  // Track last step message IDs for CBT components
+  // Track last component message IDs for CBT steps (exclude AI responses)
   const lastStepMessageId = useMemo(() => {
     const map = new Map<CBTStepType, string>();
     filteredMessages.forEach((message) => {
       const step = message.metadata?.step as CBTStepType | undefined;
-      if (step) {
+      // Only track component messages, not AI responses
+      // Component messages have IDs like "cbt:component:emotions"
+      if (step && message.id.includes(':component:')) {
         map.set(step, message.id);
       }
     });
@@ -714,7 +714,8 @@ function VirtualizedMessageListComponent({
       if (!rawStep || typeof rawStep !== 'string') return null;
 
       if (rawStep === 'obsessions-compulsions') {
-        if (!onObsessionsCompulsionsComplete) {
+        // Require onUpdateMessageMetadata to persist changes
+        if (!sessionId || !onUpdateMessageMetadata) {
           return null;
         }
 
@@ -726,20 +727,24 @@ function VirtualizedMessageListComponent({
         return (
           <ObsessionsCompulsionsFlow
             onComplete={async (data) => {
-              if (sessionId && onUpdateMessageMetadata) {
-                await onUpdateMessageMetadata(
-                  sessionId,
-                  message.id,
-                  {
-                    step: 'obsessions-compulsions',
-                    data,
-                    dismissed: false,
-                    dismissedReason: null,
-                  },
-                  { mergeStrategy: 'merge' }
-                );
+              const result = await onUpdateMessageMetadata(
+                sessionId,
+                message.id,
+                {
+                  step: 'obsessions-compulsions',
+                  data,
+                  dismissed: false,
+                  dismissedReason: null,
+                },
+                { mergeStrategy: 'merge' }
+              );
+              if (!result.success) {
+                showToast({
+                  type: 'error',
+                  title: t('saveFailedTitle'),
+                  message: result.error ?? t('generalRetry'),
+                });
               }
-              await onObsessionsCompulsionsComplete(data);
             }}
             onDismiss={() => handleDismissObsessionsFlow(message.id)}
             initialData={initialData}
@@ -865,7 +870,6 @@ function VirtualizedMessageListComponent({
       onCBTSendToChat,
       onCBTFinalEmotionsComplete,
       onCBTActionComplete,
-      onObsessionsCompulsionsComplete,
       onUpdateMessageMetadata,
       sessionId,
       handleDismissObsessionsFlow,
@@ -946,7 +950,6 @@ export const VirtualizedMessageList = memo(
         prevProps.maxVisible === nextProps.maxVisible &&
         prevProps.activeCBTStep === nextProps.activeCBTStep &&
         prevProps.onCBTStepNavigate === nextProps.onCBTStepNavigate &&
-        prevProps.onObsessionsCompulsionsComplete === nextProps.onObsessionsCompulsionsComplete &&
         prevProps.onUpdateMessageMetadata === nextProps.onUpdateMessageMetadata &&
         prevProps.sessionId === nextProps.sessionId &&
         prevProps.enableVirtualization === nextProps.enableVirtualization
@@ -1000,7 +1003,6 @@ export const VirtualizedMessageList = memo(
       prevProps.maxVisible === nextProps.maxVisible &&
       prevProps.activeCBTStep === nextProps.activeCBTStep &&
       prevProps.onCBTStepNavigate === nextProps.onCBTStepNavigate &&
-      prevProps.onObsessionsCompulsionsComplete === nextProps.onObsessionsCompulsionsComplete &&
       prevProps.onUpdateMessageMetadata === nextProps.onUpdateMessageMetadata &&
       prevProps.sessionId === nextProps.sessionId &&
       prevProps.enableVirtualization === nextProps.enableVirtualization

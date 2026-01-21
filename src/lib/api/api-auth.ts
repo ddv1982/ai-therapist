@@ -1,5 +1,4 @@
-import { auth, getAuth } from '@clerk/nextjs/server';
-import type { NextRequest } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { logger } from '@/lib/utils/logger';
 
 const TOKEN_RETRY_MAX_ATTEMPTS = 3;
@@ -70,16 +69,13 @@ export async function getTokenWithRetry(
 
 /**
  * Validate authentication for API routes using Clerk
- * Can be called with or without a request parameter (request param is ignored for Clerk)
- * Clerk's auth() function works in route handlers
+ * Uses auth() which is the correct function for App Router route handlers
  * Also retrieves the JWT token for passing to Convex
  */
-export async function validateApiAuth(request?: NextRequest): Promise<AuthValidationResult> {
-  // Use Clerk authentication
+export async function validateApiAuth(): Promise<AuthValidationResult> {
   try {
-    // Prefer request-bound auth (more reliable in route handlers),
-    // fall back to global auth() when request is unavailable
-    const authObj = request ? getAuth(request) : await auth();
+    // For App Router, always use auth() - it works in route handlers
+    const authObj = await auth();
     const userId = authObj.userId;
 
     if (!userId) {

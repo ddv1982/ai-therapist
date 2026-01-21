@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logger } from '@/lib/utils/logger';
 import { isDevelopment } from '@/config/env.public';
+import {
+  ErrorCode,
+  type AppError,
+  getHttpStatusForErrorCode,
+} from '@/lib/errors/error-codes';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -106,7 +111,7 @@ export function createValidationErrorResponse(
   requestId?: string
 ): NextResponse<ApiResponse> {
   return createErrorResponse('Validation failed', 400, {
-    code: 'VALIDATION_ERROR',
+    code: ErrorCode.VALIDATION_ERROR,
     details: validationError,
     suggestedAction: 'Please check your input data and try again',
     requestId,
@@ -118,7 +123,7 @@ export function createDatabaseErrorResponse(
   requestId?: string
 ): NextResponse<ApiResponse> {
   return createErrorResponse('Database operation failed', 500, {
-    code: 'DATABASE_ERROR',
+    code: ErrorCode.INTERNAL_ERROR,
     details: `Failed to ${operation}`,
     suggestedAction: 'Please try again later or contact support if the issue persists',
     requestId,
@@ -130,7 +135,7 @@ export function createAuthenticationErrorResponse(
   requestId?: string
 ): NextResponse<ApiResponse> {
   return createErrorResponse('Authentication required', 401, {
-    code: 'AUTHENTICATION_ERROR',
+    code: ErrorCode.UNAUTHENTICATED,
     details: authError,
     suggestedAction: 'Please verify your authentication and try again',
     requestId,
@@ -142,7 +147,7 @@ export function createNotFoundErrorResponse(
   requestId?: string
 ): NextResponse<ApiResponse> {
   return createErrorResponse(`${resource} not found`, 404, {
-    code: 'NOT_FOUND',
+    code: ErrorCode.NOT_FOUND,
     details: `The requested ${resource.toLowerCase()} does not exist or you don't have access to it`,
     suggestedAction: 'Please check the resource identifier and try again',
     requestId,
@@ -154,7 +159,7 @@ export function createForbiddenErrorResponse(
   requestId?: string
 ): NextResponse<ApiResponse> {
   return createErrorResponse('Access denied', 403, {
-    code: 'FORBIDDEN',
+    code: ErrorCode.FORBIDDEN,
     details: reason,
     suggestedAction: 'Please verify your permissions and try again',
     requestId,
@@ -163,7 +168,7 @@ export function createForbiddenErrorResponse(
 
 export function createRateLimitErrorResponse(requestId?: string): NextResponse<ApiResponse> {
   return createErrorResponse('Rate limit exceeded', 429, {
-    code: 'RATE_LIMIT_EXCEEDED',
+    code: ErrorCode.RATE_LIMITED,
     details: 'Too many requests made in a short period',
     suggestedAction: 'Please wait a moment before making another request',
     requestId,
@@ -178,9 +183,30 @@ export function createServerErrorResponse(
   logger.apiError('Server error', error, { requestId, ...context });
 
   return createErrorResponse('Internal server error', 500, {
-    code: 'INTERNAL_SERVER_ERROR',
+    code: ErrorCode.INTERNAL_ERROR,
     details: isDevelopment ? error.message : undefined,
     suggestedAction: 'Please try again later or contact support if the issue persists',
+    requestId,
+  });
+}
+
+/**
+ * Creates an error response from an AppError object.
+ * Uses the ErrorCode to determine the appropriate HTTP status code.
+ *
+ * @param appError - The AppError object
+ * @param requestId - Optional request ID for tracing
+ * @returns NextResponse with error details
+ */
+export function createAppErrorResponse(
+  appError: AppError,
+  requestId?: string
+): NextResponse<ApiResponse> {
+  const status = getHttpStatusForErrorCode(appError.code);
+
+  return createErrorResponse(appError.message, status, {
+    code: appError.code,
+    details: appError.details,
     requestId,
   });
 }

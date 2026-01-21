@@ -6,114 +6,118 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useCBTDataManager } from '@/hooks/therapy/use-cbt-data-manager';
 import type { CBTStepType, SituationData } from '@/types';
 import { useTranslations } from 'next-intl';
 import { CBTStepWrapper } from '@/features/therapy/components/cbt-step-wrapper';
+import { useDraftSaving } from '@/hooks/use-draft-saving';
+import { TIMING } from '@/constants/ui';
 
 interface SituationPromptProps {
-  onComplete?: (data: SituationData) => void;
-  className?: string;
+  value?: SituationData | null;
+  onChange?: (data: SituationData) => void;
+  onComplete: (data: SituationData) => void;
   onNavigateStep?: (step: CBTStepType) => void;
+  stepNumber?: number;
+  totalSteps?: number;
+  className?: string;
 }
 
-export function SituationPrompt({ onComplete, className, onNavigateStep }: SituationPromptProps) {
-  const t = useTranslations('cbt');
-  const { sessionData, sessionActions } = useCBTDataManager();
+const DEFAULT_SITUATION: SituationData = {
+  situation: '',
+  date: new Date().toISOString().split('T')[0],
+};
 
-  // Local state for UI interaction
+export function SituationPrompt({
+  value,
+  onChange,
+  onComplete,
+  onNavigateStep,
+  className,
+}: SituationPromptProps) {
+  const t = useTranslations('cbt');
+
+  const [localData, setLocalData] = useState<SituationData>(() => value ?? DEFAULT_SITUATION);
   const [selectedPrompt, setSelectedPrompt] = useState<string>('');
 
-  // Get current situation data
-  const currentSituation = sessionData?.situation?.situation || '';
-  const currentDate = sessionData?.situation?.date || new Date().toISOString().split('T')[0];
+  const { saveDraft } = useDraftSaving<SituationData>({
+    onSave: (data) => onChange?.(data),
+    debounceMs: TIMING.DEBOUNCE.DEFAULT,
+    enabled: !!onChange,
+  });
 
-  // Convert string date to Date object for DatePicker
-  const selectedDate = useMemo(() => {
-    if (!currentDate) return undefined;
-    const parts = currentDate.split('-');
-    if (parts.length !== 3) return undefined;
-    const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
-    const day = parseInt(parts[2], 10);
-    return new Date(year, month, day);
-  }, [currentDate]);
-
-  // Common situation prompts for quick selection
-  const situationPrompts = t.raw('situation.prompts') as string[];
-  // Rehydrate highlight if stored situation matches a quick prompt
   useEffect(() => {
-    // Always recompute highlight when source data changes
-    if (currentSituation && situationPrompts.includes(currentSituation)) {
-      setSelectedPrompt(currentSituation);
+    if (value) {
+      setLocalData(value);
+    }
+  }, [value]);
+
+  const selectedDate = useMemo(() => {
+    if (!localData.date) return undefined;
+    const parts = localData.date.split('-');
+    if (parts.length !== 3) return undefined;
+    return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+  }, [localData.date]);
+
+  const situationPrompts = t.raw('situation.prompts') as string[];
+
+  useEffect(() => {
+    if (localData.situation && situationPrompts.includes(localData.situation)) {
+      setSelectedPrompt(localData.situation);
     } else {
       setSelectedPrompt('');
     }
-  }, [currentSituation, situationPrompts]);
+  }, [localData.situation, situationPrompts]);
 
-  // Validation logic - keeps form functional without showing error messages
-  const isValid = currentSituation.trim().length >= 5;
+  const isValid = localData.situation.trim().length >= 5;
 
   const handlePromptSelect = useCallback(
     (prompt: string) => {
-      const situationData = { situation: prompt, date: currentDate };
-      sessionActions.updateSituation(situationData);
+      const updated = { ...localData, situation: prompt };
+      setLocalData(updated);
       setSelectedPrompt(prompt);
+      saveDraft(updated);
     },
-    [sessionActions, currentDate]
+    [localData, saveDraft]
   );
 
   const handleDescriptionChange = useCallback(
     (value: string) => {
-      const situationData = { situation: value, date: currentDate };
-      sessionActions.updateSituation(situationData);
-      setSelectedPrompt(''); // Clear selection when manually typing
+      const updated = { ...localData, situation: value };
+      setLocalData(updated);
+      setSelectedPrompt('');
+      saveDraft(updated);
     },
-    [sessionActions, currentDate]
+    [localData, saveDraft]
   );
 
   const handleDateChange = useCallback(
     (date: Date | undefined) => {
       if (date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const dateString = `${year}-${month}-${day}`;
-        const situationData = { situation: currentSituation, date: dateString };
-        sessionActions.updateSituation(situationData);
+        const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        const updated = { ...localData, date: dateString };
+        setLocalData(updated);
+        saveDraft(updated);
       }
     },
-    [sessionActions, currentSituation]
+    [localData, saveDraft]
   );
 
-  const handleNext = useCallback(async () => {
+  const handleNext = useCallback(() => {
     if (isValid) {
-      const situationData: SituationData = {
-        situation: currentSituation.trim(),
-        date: currentDate,
-      };
-
-      // Complete this step
-      sessionActions.updateSituation(situationData);
-
-      // Call parent completion handler if provided
-      if (onComplete) {
-        onComplete(situationData);
-      }
+      const trimmed: SituationData = { situation: localData.situation.trim(), date: localData.date };
+      onComplete(trimmed);
     }
-  }, [isValid, currentSituation, currentDate, sessionActions, onComplete]);
+  }, [isValid, localData, onComplete]);
 
   const handleKeyPress = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' && e.ctrlKey) {
         e.preventDefault();
-        void handleNext();
+        handleNext();
       }
     },
     [handleNext]
   );
-
-  const charCount = currentSituation.length;
 
   return (
     <CBTStepWrapper
@@ -127,7 +131,6 @@ export function SituationPrompt({ onComplete, className, onNavigateStep }: Situa
       onNavigateStep={onNavigateStep}
     >
       <div className="space-y-6">
-        {/* Date Selection */}
         <div className="flex items-center gap-3">
           <Calendar className="text-muted-foreground h-4 w-4" />
           <span className="text-muted-foreground text-sm">{t('situation.when')}</span>
@@ -142,7 +145,6 @@ export function SituationPrompt({ onComplete, className, onNavigateStep }: Situa
           </div>
         </div>
 
-        {/* Quick Prompts */}
         <div className="space-y-2">
           <p className="text-foreground text-sm font-semibold">{t('situation.quick')}</p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -169,20 +171,22 @@ export function SituationPrompt({ onComplete, className, onNavigateStep }: Situa
           </div>
         </div>
 
-        {/* Main Description */}
         <div className="space-y-2">
           <Textarea
             placeholder={t('situation.placeholder')}
-            value={currentSituation}
+            value={localData.situation}
             onChange={(e) => handleDescriptionChange(e.target.value)}
             onKeyPress={handleKeyPress}
             className="min-h-[120px] resize-none"
             maxLength={1000}
           />
-
           <div className="text-muted-foreground flex items-center justify-between text-sm">
-            <span>{charCount < 5 ? t('situation.moreDetails') : t('situation.lookingGood')}</span>
-            <span>{charCount}/1000</span>
+            <span>
+              {localData.situation.length < 5
+                ? t('situation.moreDetails')
+                : t('situation.lookingGood')}
+            </span>
+            <span>{localData.situation.length}/1000</span>
           </div>
         </div>
       </div>

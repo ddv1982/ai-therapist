@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Command,
@@ -28,6 +28,7 @@ interface CommandPaletteProps {
 export function CommandPalette({ onCBTOpen, onSettingsOpen, onApiKeysOpen }: CommandPaletteProps) {
   const t = useTranslations('ui');
   const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const { currentSessionId, setCurrentSession, selectionStatus } = useSession();
   const { clearMessages } = useChatSettings();
@@ -53,7 +54,9 @@ export function CommandPalette({ onCBTOpen, onSettingsOpen, onApiKeysOpen }: Com
 
   const handleSelect = (callback: () => void) => {
     setOpen(false);
-    callback();
+    startTransition(() => {
+      callback();
+    });
   };
 
   const createNewSession = () => {
@@ -87,7 +90,14 @@ export function CommandPalette({ onCBTOpen, onSettingsOpen, onApiKeysOpen }: Com
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl overflow-hidden p-0 shadow-2xl">
           <Command className="**:[[cmdk-group-heading]]:text-muted-foreground **:[[cmdk-group-heading]]:px-2 **:[[cmdk-group-heading]]:font-semibold">
-            <CommandInput placeholder={t('command.placeholder')} className="h-12" />
+            <div className="relative">
+              <CommandInput placeholder={t('command.placeholder')} className="h-12" />
+              {isPending && (
+                <div className="absolute top-1/2 right-3 -translate-y-1/2">
+                  <Loader2 className="text-muted-foreground h-4 w-4 animate-spin" />
+                </div>
+              )}
+            </div>
             <CommandList className="max-h-[400px] overflow-y-auto">
               <CommandEmpty>{t('command.noResults')}</CommandEmpty>
 

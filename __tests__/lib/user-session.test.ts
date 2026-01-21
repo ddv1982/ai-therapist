@@ -1,8 +1,4 @@
-import {
-  generateDeviceUserId,
-  getSingleUserInfo,
-  getDeviceUserInfo,
-} from '@/lib/auth/user-session';
+import { getSingleUserInfo } from '@/lib/auth/user-session';
 
 // Mock Request class for testing
 class MockRequest {
@@ -28,144 +24,6 @@ function createMockRequest(headers: Record<string, string> = {}): Request {
 }
 
 describe('User Session Management', () => {
-  describe('generateDeviceUserId', () => {
-    it('should generate consistent user ID for same request headers', () => {
-      const headers = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br',
-      };
-
-      const request1 = createMockRequest(headers);
-      const request2 = createMockRequest(headers);
-
-      const userId1 = generateDeviceUserId(request1);
-      const userId2 = generateDeviceUserId(request2);
-
-      expect(userId1).toBe(userId2);
-      expect(userId1).toMatch(/^device-user-[a-z0-9]+$/);
-    });
-
-    it('should generate different user IDs for different user agents', () => {
-      const request1 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
-        'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br',
-      });
-
-      const request2 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/537.36',
-        'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br',
-      });
-
-      const userId1 = generateDeviceUserId(request1);
-      const userId2 = generateDeviceUserId(request2);
-
-      expect(userId1).not.toBe(userId2);
-      expect(userId1).toMatch(/^device-user-[a-z0-9]+$/);
-      expect(userId2).toMatch(/^device-user-[a-z0-9]+$/);
-    });
-
-    it('should generate different user IDs for different languages', () => {
-      const request1 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
-        'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br',
-      });
-
-      const request2 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
-        'accept-language': 'es-ES,es;q=0.9',
-        'accept-encoding': 'gzip, deflate, br',
-      });
-
-      const userId1 = generateDeviceUserId(request1);
-      const userId2 = generateDeviceUserId(request2);
-
-      expect(userId1).not.toBe(userId2);
-    });
-
-    it('should generate different user IDs for different encoding', () => {
-      const request1 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
-        'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br',
-      });
-
-      const request2 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
-        'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate',
-      });
-
-      const userId1 = generateDeviceUserId(request1);
-      const userId2 = generateDeviceUserId(request2);
-
-      expect(userId1).not.toBe(userId2);
-    });
-
-    it('should handle missing headers gracefully', () => {
-      const request1 = createMockRequest({});
-      const request2 = createMockRequest({
-        'user-agent': undefined as any,
-        'accept-language': null as any,
-        'accept-encoding': '',
-      });
-
-      const userId1 = generateDeviceUserId(request1);
-      const userId2 = generateDeviceUserId(request2);
-
-      expect(userId1).toMatch(/^device-user-[a-z0-9]+$/);
-      expect(userId2).toMatch(/^device-user-[a-z0-9]+$/);
-      // Should be the same because empty strings are treated the same way
-      expect(userId1).toBe(userId2);
-    });
-
-    it('should generate valid user ID format', () => {
-      const request = createMockRequest({
-        'user-agent': 'Test Browser/1.0',
-        'accept-language': 'en-US',
-        'accept-encoding': 'gzip',
-      });
-
-      const userId = generateDeviceUserId(request);
-
-      expect(userId).toMatch(/^device-user-[a-z0-9]+$/);
-      expect(userId.length).toBeGreaterThan(12); // "device-user-" + hash
-    });
-
-    it('should handle special characters in headers', () => {
-      const request = createMockRequest({
-        'user-agent':
-          'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
-        'accept-encoding': 'gzip, deflate, br',
-      });
-
-      const userId = generateDeviceUserId(request);
-
-      expect(userId).toMatch(/^device-user-[a-z0-9]+$/);
-      expect(userId).not.toContain('undefined');
-      expect(userId).not.toContain('null');
-    });
-
-    it('should produce different results for edge case inputs', () => {
-      const requests = [
-        createMockRequest({ 'user-agent': '', 'accept-language': '', 'accept-encoding': '' }),
-        createMockRequest({ 'user-agent': ' ', 'accept-language': ' ', 'accept-encoding': ' ' }),
-        createMockRequest({ 'user-agent': 'a', 'accept-language': 'b', 'accept-encoding': 'c' }),
-      ];
-
-      const userIds = requests.map((request) => generateDeviceUserId(request));
-
-      // First two should be the same (empty vs spaces makes difference)
-      expect(userIds[0]).not.toBe(userIds[1]);
-      expect(userIds[1]).not.toBe(userIds[2]);
-      expect(userIds[0]).not.toBe(userIds[2]);
-    });
-  });
-
   describe('getSingleUserInfo', () => {
     it('should return consistent single user ID regardless of request', () => {
       const request1 = createMockRequest({
@@ -300,127 +158,7 @@ describe('User Session Management', () => {
     });
   });
 
-  describe('getDeviceUserInfo (deprecated)', () => {
-    it('should return device-specific user info', () => {
-      const request = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
-        'accept-language': 'en-US,en;q=0.9',
-        'accept-encoding': 'gzip, deflate, br',
-      });
-
-      const userInfo = getDeviceUserInfo(request);
-
-      expect(userInfo.userId).toMatch(/^device-user-[a-z0-9]+$/);
-      expect(userInfo.email).toMatch(/@local\.device$/);
-      expect(userInfo.name).toMatch(/User$/);
-    });
-
-    it('should generate different user info for different devices', () => {
-      const request1 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
-      });
-
-      const request2 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)',
-      });
-
-      const userInfo1 = getDeviceUserInfo(request1);
-      const userInfo2 = getDeviceUserInfo(request2);
-
-      expect(userInfo1.userId).not.toBe(userInfo2.userId);
-      expect(userInfo1.email).not.toBe(userInfo2.email);
-      expect(userInfo1.name).not.toBe(userInfo2.name);
-    });
-
-    it('should detect device types correctly for user names', () => {
-      const testCases = [
-        {
-          userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)',
-          expectedName: 'Mobile User',
-        },
-        {
-          userAgent: 'Mozilla/5.0 (iPad; CPU OS 14_7_1 like Mac OS X)',
-          expectedName: 'Tablet User',
-        },
-        {
-          userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-          expectedName: 'Computer User',
-        },
-        {
-          userAgent: 'SomeUnknownBot/1.0',
-          expectedName: 'Device User',
-        },
-      ];
-
-      testCases.forEach(({ userAgent, expectedName }) => {
-        const request = createMockRequest({ 'user-agent': userAgent });
-        const userInfo = getDeviceUserInfo(request);
-
-        expect(userInfo.name).toBe(expectedName);
-      });
-    });
-
-    it('should generate consistent email format', () => {
-      const request = createMockRequest({
-        'user-agent': 'Test Browser/1.0',
-      });
-
-      const userInfo = getDeviceUserInfo(request);
-
-      expect(userInfo.email).toMatch(/^device-user-[a-z0-9]+@local\.device$/);
-      expect(userInfo.email).toBe(`${userInfo.userId}@local.device`);
-    });
-
-    it('should handle empty user agent', () => {
-      const request = createMockRequest({
-        'user-agent': '',
-      });
-
-      const userInfo = getDeviceUserInfo(request);
-
-      expect(userInfo.userId).toMatch(/^device-user-[a-z0-9]+$/);
-      expect(userInfo.email).toMatch(/@local\.device$/);
-      expect(userInfo.name).toBe('Device User');
-    });
-
-    it('should return correct user info structure', () => {
-      const request = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
-      });
-
-      const userInfo = getDeviceUserInfo(request);
-
-      expect(userInfo).toHaveProperty('userId');
-      expect(userInfo).toHaveProperty('email');
-      expect(userInfo).toHaveProperty('name');
-
-      expect(typeof userInfo.userId).toBe('string');
-      expect(typeof userInfo.email).toBe('string');
-      expect(typeof userInfo.name).toBe('string');
-    });
-  });
-
   describe('Integration Tests', () => {
-    it('should demonstrate difference between single user and device user approaches', () => {
-      const request1 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
-      });
-
-      const request2 = createMockRequest({
-        'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X)',
-      });
-
-      // Single user approach - same user ID across devices
-      const singleUser1 = getSingleUserInfo(request1);
-      const singleUser2 = getSingleUserInfo(request2);
-      expect(singleUser1.userId).toBe(singleUser2.userId);
-
-      // Device user approach - different user IDs per device
-      const deviceUser1 = getDeviceUserInfo(request1);
-      const deviceUser2 = getDeviceUserInfo(request2);
-      expect(deviceUser1.userId).not.toBe(deviceUser2.userId);
-    });
-
     it('should maintain consistency within same session', () => {
       const headers = {
         'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/537.36',
@@ -433,19 +171,12 @@ describe('User Session Management', () => {
         .fill(0)
         .map(() => {
           const request = createMockRequest(headers);
-          return {
-            single: getSingleUserInfo(request),
-            device: getDeviceUserInfo(request),
-          };
+          return getSingleUserInfo(request);
         });
 
       // All single user calls should be identical
-      const singleUserIds = calls.map((call) => call.single.userId);
+      const singleUserIds = calls.map((call) => call.userId);
       expect(new Set(singleUserIds).size).toBe(1);
-
-      // All device user calls should be identical
-      const deviceUserIds = calls.map((call) => call.device.userId);
-      expect(new Set(deviceUserIds).size).toBe(1);
     });
 
     it('should handle edge cases gracefully', () => {
@@ -464,59 +195,9 @@ describe('User Session Management', () => {
 
         expect(() => {
           const singleUser = getSingleUserInfo(request);
-          const deviceUser = getDeviceUserInfo(request);
-
           expect(singleUser.userId).toBeTruthy();
-          expect(deviceUser.userId).toBeTruthy();
         }).not.toThrow();
       });
-    });
-  });
-
-  describe('Hash Algorithm Consistency', () => {
-    it('should generate consistent hashes for same input', () => {
-      const testString = 'Mozilla/5.0-en-US,en;q=0.9-gzip, deflate, br';
-
-      // Simulate the hash algorithm from generateDeviceUserId
-      const createHash = (str: string): number => {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-          const char = str.charCodeAt(i);
-          hash = (hash << 5) - hash + char;
-          hash = hash & hash; // Convert to 32bit integer
-        }
-        return Math.abs(hash);
-      };
-
-      const hash1 = createHash(testString);
-      const hash2 = createHash(testString);
-
-      expect(hash1).toBe(hash2);
-      expect(hash1).toBeGreaterThan(0);
-    });
-
-    it('should generate different hashes for different inputs', () => {
-      const createHash = (str: string): number => {
-        let hash = 0;
-        for (let i = 0; i < str.length; i++) {
-          const char = str.charCodeAt(i);
-          hash = (hash << 5) - hash + char;
-          hash = hash & hash;
-        }
-        return Math.abs(hash);
-      };
-
-      const inputs = [
-        'Mozilla/5.0-en-US-gzip',
-        'Mozilla/5.0-es-ES-gzip',
-        'Safari/537.36-en-US-deflate',
-        'Chrome/91.0-fr-FR-br',
-      ];
-
-      const hashes = inputs.map(createHash);
-      const uniqueHashes = new Set(hashes);
-
-      expect(uniqueHashes.size).toBe(inputs.length);
     });
   });
 });

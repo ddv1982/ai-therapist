@@ -141,7 +141,130 @@ Use `loading.tsx` per route; prefer skeletons from `src/components/ui`.
 - Snapshot only small, stable primitives.
 - Playwright for critical dialogs/menus flows.
 
+## React 19: Form actions with useActionState
+**✅ DO**: Use `useActionState` for server action forms with validation.
+```tsx
+'use client';
+
+import { useActionState, startTransition } from 'react';
+import { createSession } from '@/app/actions';
+
+type FormState = {
+  message: string;
+  errors?: { title?: string[] };
+};
+
+const initialState: FormState = { message: '' };
+
+export function CreateSessionForm() {
+  const [state, formAction, isPending] = useActionState(createSession, initialState);
+
+  return (
+    <form action={formAction} className="space-y-4">
+      <div>
+        <label htmlFor="title" className="text-sm font-medium">
+          Session Title
+        </label>
+        <input
+          id="title"
+          name="title"
+          required
+          className="w-full rounded-md border px-3 py-2"
+          aria-describedby={state.errors?.title ? 'title-error' : undefined}
+        />
+        {state.errors?.title && (
+          <p id="title-error" className="text-sm text-destructive">
+            {state.errors.title[0]}
+          </p>
+        )}
+      </div>
+      <button
+        type="submit"
+        disabled={isPending}
+        className="btn btn-primary w-full"
+      >
+        {isPending ? 'Creating...' : 'Create Session'}
+      </button>
+      {state.message && (
+        <p aria-live="polite" className="text-sm text-muted-foreground">
+          {state.message}
+        </p>
+      )}
+    </form>
+  );
+}
+```
+
+## React 19: Combining useOptimistic with useTransition
+**✅ DO**: Use both hooks for complex optimistic updates.
+```tsx
+'use client';
+
+import { useOptimistic, useTransition, startTransition } from 'react';
+
+export function MessageList({ messages, onSend }: Props) {
+  const [isPending, startSendTransition] = useTransition();
+  const [optimisticMessages, addOptimisticMessage] = useOptimistic(
+    messages,
+    (state, newMessage: Message) => [...state, { ...newMessage, pending: true }]
+  );
+
+  const handleSend = async (content: string) => {
+    const tempMessage = { id: crypto.randomUUID(), content, role: 'user' as const };
+    
+    startSendTransition(async () => {
+      addOptimisticMessage(tempMessage);
+      await onSend(content);
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      {optimisticMessages.map((msg) => (
+        <div
+          key={msg.id}
+          className={cn(
+            'rounded-lg p-3',
+            msg.pending && 'opacity-70'
+          )}
+        >
+          {msg.content}
+          {msg.pending && <span className="text-xs text-muted-foreground"> Sending...</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+## Pattern: Suspense boundaries for async components
+**✅ DO**: Use Suspense for async data loading.
+```tsx
+// app/(dashboard)/sessions/page.tsx
+import { Suspense } from 'react';
+import { SessionListSkeleton } from '@/components/skeletons';
+
+export default function SessionsPage() {
+  return (
+    <div className="container py-8">
+      <h1 className="text-2xl font-semibold">Your Sessions</h1>
+      <Suspense fallback={<SessionListSkeleton />}>
+        <SessionList />
+      </Suspense>
+    </div>
+  );
+}
+
+// SessionList is an async Server Component
+async function SessionList() {
+  const sessions = await getSessions();
+  return <SessionsClient initialSessions={sessions} />;
+}
+```
+
 ## Resources
-- Next.js App Router components
-- shadcn/ui + Tailwind v4
-- Radix UI accessibility
+- [Next.js App Router components](https://nextjs.org/docs/app/building-your-application/rendering/composition-patterns)
+- [React 19 useActionState](https://react.dev/reference/react/useActionState)
+- [React 19 useOptimistic](https://react.dev/reference/react/useOptimistic)
+- [shadcn/ui](https://ui.shadcn.com)
+- [Radix UI accessibility](https://www.radix-ui.com/docs/primitives/overview/accessibility)

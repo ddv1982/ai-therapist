@@ -5,7 +5,6 @@
 
 export interface ConvexUser {
   _id: string;
-  legacyId?: string;
   email: string;
   name?: string;
   currentSessionId?: string | null;
@@ -15,7 +14,6 @@ export interface ConvexUser {
 
 export interface ConvexSession {
   _id: string;
-  legacyId?: string;
   userId: string;
   title: string;
   messageCount: number;
@@ -28,7 +26,6 @@ export interface ConvexSession {
 
 export interface ConvexMessage {
   _id: string;
-  legacyId?: string;
   sessionId: string;
   role: string;
   content: string;
@@ -40,7 +37,6 @@ export interface ConvexMessage {
 
 export interface ConvexSessionReport {
   _id: string;
-  legacyId?: string;
   sessionId: string;
   reportContent: string;
   keyPoints?: unknown;
@@ -55,40 +51,6 @@ export interface ConvexSessionReport {
   recommendations?: unknown;
   analysisConfidence?: number;
   analysisVersion?: string;
-  createdAt: number;
-}
-
-export interface ConvexAuthConfig {
-  _id: string;
-  legacyId?: string;
-  secret: string;
-  backupCodes: string;
-  isSetup: boolean;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface ConvexTrustedDevice {
-  _id: string;
-  legacyId?: string;
-  deviceId: string;
-  name: string;
-  fingerprint: string;
-  ipAddress: string;
-  userAgent: string;
-  lastSeen: number;
-  trustedAt: number;
-  createdAt: number;
-}
-
-export interface ConvexAuthSession {
-  _id: string;
-  legacyId?: string;
-  sessionToken: string;
-  deviceId: string;
-  ipAddress: string;
-  expiresAt: number;
-  lastActivity: number;
   createdAt: number;
 }
 

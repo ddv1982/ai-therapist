@@ -114,7 +114,7 @@ export function withAuth<T = unknown>(
   ) => Promise<NextResponse<ApiResponse<T>>>
 ) {
   return withApiMiddleware<T>(async (request, baseContext, params) => {
-    const authResult = await validateApiAuth(request);
+    const authResult = await validateApiAuth();
     if (!authResult.isValid) {
       logger.warn('Unauthorized request', { ...baseContext, error: authResult.error });
       const unauthorized = createAuthenticationErrorResponse(
@@ -171,7 +171,7 @@ export function withAuthStreaming(
     const baseContext = toRequestContext(createRequestLogger(request), 'unknown');
     const startHighRes = performance.now();
     try {
-      const authResult = await validateApiAuth(request);
+      const authResult = await validateApiAuth();
       if (!authResult.isValid) {
         const unauthorized = new Response(
           JSON.stringify({ error: authResult.error || 'Authentication required' }),
@@ -369,7 +369,7 @@ export function withAuthAndRateLimit<T = unknown>(
     const requestContext = toRequestContext(createRequestLogger(request));
     const startHighRes = performance.now();
     try {
-      const authResult = await validateApiAuth(request);
+      const authResult = await validateApiAuth();
       if (!authResult.isValid) {
         const unauthorized = createAuthenticationErrorResponse(
           authResult.error || 'Authentication required',
@@ -535,7 +535,7 @@ export function withAuthAndRateLimitStreaming(
         }
       }
 
-      const authResult = await validateApiAuth(request);
+      const authResult = await validateApiAuth();
       if (!authResult.isValid) {
         const unauthorized = new Response(
           JSON.stringify({ error: authResult.error || 'Authentication required' }),

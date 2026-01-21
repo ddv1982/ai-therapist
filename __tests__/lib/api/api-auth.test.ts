@@ -1,4 +1,3 @@
-import type { NextRequest } from 'next/server';
 import {
   getTokenWithRetry,
   isTransientError,
@@ -108,7 +107,6 @@ describe('lib/api/api-auth.validateApiAuth', () => {
         userId: 'clerk_user_1',
         getToken: jest.fn().mockResolvedValue('mock_jwt_token'),
       }),
-      getAuth: jest.fn(),
     }));
     const { validateApiAuth } = await import('@/lib/api/api-auth');
     const res = await validateApiAuth();
@@ -120,7 +118,6 @@ describe('lib/api/api-auth.validateApiAuth', () => {
   it('returns isValid=false when no userId present', async () => {
     jest.doMock('@clerk/nextjs/server', () => ({
       auth: jest.fn().mockResolvedValue({ userId: null }),
-      getAuth: jest.fn(),
     }));
     const { validateApiAuth } = await import('@/lib/api/api-auth');
     const res = await validateApiAuth();
@@ -128,28 +125,25 @@ describe('lib/api/api-auth.validateApiAuth', () => {
     expect(res.error).toMatch(/unauthorized/i);
   });
 
-  it('uses request-bound getAuth(request) when provided', async () => {
+  it('always uses auth() for App Router route handlers', async () => {
+    const mockAuth = jest.fn().mockResolvedValue({
+      userId: 'auth_user',
+      getToken: jest.fn().mockResolvedValue('auth_token'),
+    });
     jest.doMock('@clerk/nextjs/server', () => ({
-      auth: jest.fn().mockResolvedValue({
-        userId: 'fallback',
-        getToken: jest.fn().mockResolvedValue('fallback_token'),
-      }),
-      getAuth: jest.fn(() => ({
-        userId: 'request_user',
-        getToken: jest.fn().mockResolvedValue('request_jwt_token'),
-      })),
+      auth: mockAuth,
     }));
     const { validateApiAuth } = await import('@/lib/api/api-auth');
-    const res = await validateApiAuth({} as unknown as NextRequest);
+    const res = await validateApiAuth();
     expect(res.isValid).toBe(true);
-    expect(res.clerkId).toBe('request_user');
-    expect(res.jwtToken).toBe('request_jwt_token');
+    expect(res.clerkId).toBe('auth_user');
+    expect(res.jwtToken).toBe('auth_token');
+    expect(mockAuth).toHaveBeenCalled();
   });
 
   it('handles non-Error exceptions', async () => {
     jest.doMock('@clerk/nextjs/server', () => ({
       auth: jest.fn().mockRejectedValue('string error'),
-      getAuth: jest.fn(),
     }));
     const { validateApiAuth } = await import('@/lib/api/api-auth');
     const res = await validateApiAuth();

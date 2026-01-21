@@ -119,9 +119,6 @@ export type {
 // UI types
 export type * from './ui';
 
-// Auth types
-export type * from './auth';
-
 // Database types
 export type * from './database';
 

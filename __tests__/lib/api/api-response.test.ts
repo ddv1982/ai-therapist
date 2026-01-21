@@ -63,15 +63,15 @@ describe('api-response helpers (with NextResponse mock from setup)', () => {
     const v = await (createValidationErrorResponse('bad') as any).json();
     expect(v.error.code).toBe('VALIDATION_ERROR');
     const d = await (createDatabaseErrorResponse('write') as any).json();
-    expect(d.error.code).toBe('DATABASE_ERROR');
+    expect(d.error.code).toBe('INTERNAL_ERROR'); // Database errors map to INTERNAL_ERROR
     const a = await (createAuthenticationErrorResponse('auth') as any).json();
-    expect(a.error.code).toBe('AUTHENTICATION_ERROR');
+    expect(a.error.code).toBe('UNAUTHENTICATED'); // Now uses consistent ErrorCode enum
     const n = await (createNotFoundErrorResponse('Thing') as any).json();
     expect(n.error.code).toBe('NOT_FOUND');
     const f = await (createForbiddenErrorResponse('no') as any).json();
     expect(f.error.code).toBe('FORBIDDEN');
     const r = await (createRateLimitErrorResponse('rid') as any).json();
-    expect(r.error.code).toBe('RATE_LIMIT_EXCEEDED');
+    expect(r.error.code).toBe('RATE_LIMITED'); // Now uses consistent ErrorCode enum
   });
 
   it('createServerErrorResponse masks details in production', async () => {

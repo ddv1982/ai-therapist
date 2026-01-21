@@ -398,22 +398,4 @@ export type PartialComponentProps<T, K extends keyof T> = Omit<T, K> & Partial<P
  */
 export type WithRequiredHandlers<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
-// ============================================================================
-// LEGACY SUPPORT (for backward compatibility)
-// ============================================================================
 
-/**
- * Legacy props interfaces (marked as deprecated, should be migrated)
- * @deprecated Use the new consolidated interfaces above
- */
-export type LegacyChatMessageProps = MessageComponentProps;
-
-/**
- * @deprecated Use SessionSidebarProps instead
- */
-export type LegacySessionSidebarProps = SessionSidebarProps;
-
-/**
- * @deprecated Use ChatSettingsProps instead
- */
-export type LegacySettingsPanelProps = SettingsPanelProps;

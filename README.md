@@ -4,6 +4,13 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ## 🚀 Recent Improvements
 
+### 🔄 Next.js 16 Proxy Migration (Jan 2026)
+
+- **Middleware → Proxy**: Migrated from `middleware.ts` to `proxy.ts` following Next.js 16 conventions
+- **Clerk Auth Fix**: Resolved 401 errors by moving proxy to `src/` directory for proper Clerk integration
+- **CSP Optimization**: API routes no longer receive unnecessary CSP headers (JSON responses don't need them)
+- **Constants Extraction**: Public routes centralized in `src/lib/constants/routes.ts`
+
 ### 🤖 AI SDK 6 Migration (Jan 2026)
 
 - **AI SDK 6**: Migrated from v5 to v6 with all breaking changes addressed
@@ -62,7 +69,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Prettier Auto-Format**: Consistent code formatting across the codebase
 - **Cleaner Codebase**: Removed custom auth endpoints and legacy TOTP service
 - **Latest Dependencies**: All packages upgraded to latest stable versions
-- **Robust Test Suite**: 2476 unit/integration tests across 171 suites + 96 E2E tests ensuring 100% stability.
+- **Robust Test Suite**: 2431 unit/integration tests across 168 suites + 96 E2E tests ensuring 100% stability.
 
 ## ✨ Features
 
@@ -277,7 +284,7 @@ Key variables required in `.env.local`:
 - **Managed Identity** - Secure handling of user credentials
 - **Multi-Factor Authentication** - Supported via Clerk
 - **Session Management** - Secure, persistent sessions
-- **Middleware Enforcement** - Next.js middleware enables CSRF protection and injects Clerk JWTs so every API route and streaming endpoint is authenticated before reaching Convex.
+- **Proxy Enforcement** - Next.js 16 proxy (formerly middleware) enables CSRF protection and injects Clerk JWTs so every API route and streaming endpoint is authenticated before reaching Convex.
 
 ### Data Protection
 

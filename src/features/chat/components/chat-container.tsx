@@ -97,7 +97,6 @@ export const ChatContainer = memo(function ChatContainer() {
           isStreaming={isLoading}
           isMobile={isMobile}
           sessionId={currentSession ?? undefined}
-          onObsessionsCompulsionsComplete={chatActions.handleObsessionsCompulsionsComplete}
           onUpdateMessageMetadata={controller.updateMessageMetadata}
         />
       )}

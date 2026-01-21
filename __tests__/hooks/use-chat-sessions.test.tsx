@@ -80,7 +80,9 @@ describe('useChatSessions', () => {
     expect(mockCreateSessionMutation).toHaveBeenCalledWith({ title: 'New Chat' });
     expect(selectSessionMock).toHaveBeenCalledWith('generated');
     expect(setCurrentSessionMock).toHaveBeenCalledWith('generated');
-    expect(loadMessages).toHaveBeenCalledWith('generated');
+    // Note: ensureActiveSession no longer calls loadMessages for new sessions
+    // to prevent race conditions where locally-added messages get cleared
+    expect(loadMessages).not.toHaveBeenCalled();
     expect(refetchSessionsMock).toHaveBeenCalled();
   });
 
