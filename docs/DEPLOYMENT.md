@@ -131,7 +131,7 @@ Production deployment on the main branch.
 1. **Ensure all tests pass locally:**
 
    ```bash
-   npm run qa:full
+   bun run qa:full
    ```
 
 2. **Create a release branch (for major releases):**
@@ -182,10 +182,10 @@ Convex functions are deployed separately:
 
 ```bash
 # Deploy to production Convex
-npm run convex:deploy
+bun run convex:deploy
 
 # Deploy to development Convex
-npm run convex:dev
+bun run convex:dev
 ```
 
 **Important:** Always deploy Convex functions before the Next.js app if there are schema changes.
@@ -262,7 +262,7 @@ Convex doesn't support automatic rollback. To rollback:
 
 2. Redeploy:
    ```bash
-   npm run convex:deploy
+   bun run convex:deploy
    ```
 
 ### Database Rollback
@@ -284,10 +284,10 @@ For data-related issues:
 
 ```bash
 # Check for type errors locally
-npx tsc --noEmit
+bunx tsc --noEmit
 
 # Fix issues and retry
-npm run build
+bun run build
 ```
 
 #### E2E Tests Timeout
@@ -296,10 +296,10 @@ The E2E tests require both Convex and Next.js servers:
 
 ```bash
 # Ensure Convex is running
-npx convex dev &
+bunx convex dev &
 
 # Then run E2E tests
-npm run test:e2e
+bun run test:e2e
 ```
 
 #### Environment Variables Not Loading
@@ -363,20 +363,20 @@ For deployment emergencies:
 
 ```bash
 # Full QA check
-npm run qa:full
+bun run qa:full
 
 # Analyze bundle size
-npm run analyze
+bun run analyze
 
 # Check environment
 ./scripts/check-env-parity.sh --verbose
 
 # Generate API types
-npm run api:types
+bun run api:types
 
 # Setup encryption
-npm run encryption:setup
+bun run encryption:setup
 
 # Run specific E2E test
-npm run test:e2e -- chat-flows.spec.ts
+bun run test:e2e -- chat-flows.spec.ts
 ```

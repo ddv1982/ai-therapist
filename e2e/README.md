@@ -6,16 +6,16 @@ End-to-end tests for the AI Therapist application using Playwright.
 
 ```bash
 # Run all E2E tests
-npm run test:e2e
+bun run test:e2e
 
 # Run in interactive UI mode (recommended for development)
-npm run test:e2e:ui
+bun run test:e2e:ui
 
 # Run specific test suite
-npm run test:e2e -- therapy-session.spec.ts
+bun run test:e2e -- critical-flows.spec.ts
 
 # Debug mode
-npm run test:e2e:debug
+bun run test:e2e:debug
 ```
 
 ## Test Philosophy
@@ -30,25 +30,60 @@ npm run test:e2e:debug
 - ❌ Don't write smoke tests with trivial assertions
 - ❌ Don't test non-deterministic AI responses
 
+## Authentication Behavior
+
+Tests run **without authentication**. The app uses Next.js 16 proxy with Clerk's `auth.protect()`, which redirects unauthenticated API requests to the sign-in page.
+
+**Expected behavior for unauthenticated requests:**
+- API requests → 307 redirect to `/sign-in` → 200 (HTML page)
+- Playwright follows redirects by default
+- Tests accept either auth redirect (200 HTML) OR error status (400/401/403/404)
+
+Use the helper functions in `fixtures/test-data.ts`:
+
+```typescript
+import { isAuthRedirect, isValidUnauthResponse } from './fixtures/test-data';
+
+// Check if response is an auth redirect
+if (isAuthRedirect(response)) {
+  // Response is 200 HTML (Clerk sign-in page)
+}
+
+// Valid response for unauthenticated requests
+expect(isValidUnauthResponse(response)).toBeTruthy();
+```
+
 ## Test Suites
 
-### Active Test Suites
+### Active Test Suites (96 tests total)
 
-1. **`health-smoke.spec.ts`**
+1. **`health-smoke.spec.ts`** (2 tests)
    - API health endpoint checks
    - Basic connectivity verification
-   - Fast, reliable health checks
 
-2. **`critical-flows.spec.ts`**
+2. **`critical-flows.spec.ts`** (28 tests)
    - Essential user flows
    - Authentication requirements
    - Navigation and routing
-   - Real assertions on behavior
+   - Security headers validation
 
-3. **`chat-flows.spec.ts`**
+3. **`chat-flows.spec.ts`** (32 tests)
    - Chat interface availability
-   - Basic chat functionality
-   - UI component checks
+   - Message validation
+   - Streaming responses
+   - Session management
+
+4. **`edge-cases.spec.ts`** (27 tests)
+   - Network interruption handling
+   - Session expiration recovery
+   - Rapid session switching
+   - Concurrent operations
+   - Browser events
+
+5. **`byok-api-keys.spec.ts`** (7 tests)
+   - BYOK API key handling
+   - Settings page behavior
+   - Key security validation
 
 ## Directory Structure
 
@@ -57,25 +92,11 @@ e2e/
 ├── health-smoke.spec.ts        # Health & connectivity checks
 ├── critical-flows.spec.ts      # Essential user flows
 ├── chat-flows.spec.ts          # Chat functionality
+├── edge-cases.spec.ts          # Edge case scenarios
+├── byok-api-keys.spec.ts       # BYOK feature tests
 ├── fixtures/                   # Test data & helpers
-│   └── test-data.ts           # Reusable test data
+│   └── test-data.ts           # Reusable test data & auth helpers
 └── screenshots/                # Test artifacts
-```
-
-## Test Data
-
-Reusable test data and fixtures:
-
-```typescript
-import { AuthPage } from './page-objects/auth.page';
-import { TherapySessionPage } from './page-objects/therapy-session.page';
-import { MemoryPage } from './page-objects/memory.page';
-import { SettingsPage } from './page-objects/settings.page';
-
-test('example', async ({ page }) => {
-  const authPage = new AuthPage(page);
-  await authPage.signIn('test@example.com', 'password');
-});
 ```
 
 ## Test Data Fixtures
@@ -83,27 +104,48 @@ test('example', async ({ page }) => {
 Reusable test data in `fixtures/test-data.ts`:
 
 ```typescript
-import { testUsers, testMessages, testMemoryData, generateTestEmail } from './fixtures/test-data';
+import {
+  testUsers,
+  testMessages,
+  testMemoryData,
+  generateTestEmail,
+  isAuthRedirect,
+  isValidUnauthResponse,
+} from './fixtures/test-data';
+```
+
+### Auth Helper Functions
+
+```typescript
+// Check if response is an auth redirect (200 HTML from Clerk sign-in)
+isAuthRedirect(response): boolean
+
+// Check if response is valid for unauthenticated request
+// Returns true for: auth redirect (200 HTML) OR 400/401/403/404
+isValidUnauthResponse(response): boolean
 ```
 
 ## Writing New Tests
 
 1. Determine which suite your test belongs to
-2. Use page objects for reusable logic
-3. Follow existing test patterns
-4. Use `data-testid` attributes for stable selectors
-5. Add proper waits (avoid `waitForTimeout`)
-6. Ensure tests are isolated and independent
+2. Follow existing test patterns
+3. Use `data-testid` attributes for stable selectors
+4. Add proper waits (avoid `waitForTimeout`)
+5. Ensure tests are isolated and independent
+6. Use `isValidUnauthResponse()` for unauthenticated API tests
 
 Example:
 
 ```typescript
-test('feature description', async ({ page }) => {
-  const sessionPage = new TherapySessionPage(page);
+import { isValidUnauthResponse } from './fixtures/test-data';
 
-  await sessionPage.gotoHome();
-  await sessionPage.sendMessage('Test message');
-  await sessionPage.verifyMessageVisible('Test message');
+test('feature description', async ({ request }) => {
+  const response = await request.post('/api/endpoint', {
+    data: { message: 'test' },
+  });
+
+  // Accept either auth redirect or error response
+  expect(isValidUnauthResponse(response)).toBeTruthy();
 });
 ```
 
@@ -112,7 +154,7 @@ test('feature description', async ({ page }) => {
 ### Interactive UI Mode (Recommended)
 
 ```bash
-npm run test:e2e:ui
+bun run test:e2e:ui
 ```
 
 Features:
@@ -126,7 +168,7 @@ Features:
 ### Debug Mode
 
 ```bash
-npm run test:e2e:debug
+bun run test:e2e:debug
 ```
 
 Add breakpoint in test:
@@ -153,10 +195,10 @@ Find in: `test-results/` directory
 ### ✅ Do
 
 - Use `data-testid` attributes for selectors
-- Use page objects for reusable logic
+- Use `isValidUnauthResponse()` for API tests without auth
 - Wait for elements properly (auto-wait or explicit)
 - Write isolated, independent tests
-- Handle both authenticated and unauthenticated states
+- Handle auth redirects gracefully
 - Use descriptive test names
 - Clean up after tests
 
@@ -171,16 +213,18 @@ Find in: `test-results/` directory
 
 ## Common Patterns
 
-### Authentication
+### Unauthenticated API Tests
 
 ```typescript
-const authPage = new AuthPage(page);
+import { isValidUnauthResponse, isAuthRedirect } from './fixtures/test-data';
 
-// Check if authenticated
-if (await authPage.isAuthenticated()) {
-  // Already signed in
-} else {
-  await authPage.signIn(email, password);
+// Check if unauthenticated request handled correctly
+const response = await request.get('/api/sessions');
+expect(isValidUnauthResponse(response)).toBeTruthy();
+
+// Or check specifically for auth redirect
+if (isAuthRedirect(response)) {
+  // Clerk redirected to sign-in page
 }
 ```
 
@@ -266,18 +310,14 @@ CI configuration:
 
 ## Documentation
 
-- **Full Guide**: `../docs/e2e-testing.md`
-- **Quick Reference**: `../docs/e2e-quick-reference.md`
-- **Test Summary**: `../docs/e2e-test-summary.md`
 - **Playwright Docs**: https://playwright.dev/
 
 ## Test Statistics
 
-- **Total Tests**: 120+ (360+ with browser variations)
-- **Test Suites**: 6 comprehensive suites
+- **Total Tests**: 96 (288 with browser variations across Chromium, Firefox, WebKit)
+- **Test Suites**: 5 comprehensive suites
 - **Coverage**: ~80% of critical user flows
-- **Lines of Code**: ~4,500 lines
-- **Execution Time**: ~7-8 minutes (parallel)
+- **Execution Time**: ~5-7 minutes (parallel)
 
 ## Contributing
 

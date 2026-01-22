@@ -49,19 +49,19 @@ For experienced developers, here's the fastest path:
 # 1. Clone and install
 git clone <repository-url>
 cd ai-therapist
-npm install
+bun install
 
 # 2. Set up environment (creates .env.local with prompts)
-npm run env:init
+bun run env:init
 
 # 3. Generate encryption key
-npm run encryption:setup
+bun run encryption:setup
 
 # 4. Start Convex backend (keep running in separate terminal)
-npm run convex:dev
+bun run convex:dev
 
 # 5. Start Next.js development server
-npm run dev
+bun run dev
 
 # 6. Open http://localhost:4000
 ```
@@ -80,7 +80,7 @@ cd ai-therapist
 ### Step 2: Install Dependencies
 
 ```bash
-npm install
+bun install
 ```
 
 This installs all required packages including:
@@ -112,7 +112,7 @@ This installs all required packages including:
 2. Create a new project (or use existing)
 3. Run the development server:
    ```bash
-   npm run convex:dev
+   bun run convex:dev
    ```
 4. Follow the prompts to authenticate and select your project
 5. The Convex URL will be saved automatically
@@ -131,7 +131,7 @@ Create a `.env.local` file in the project root:
 
 ```bash
 # Run the interactive setup script
-npm run env:init
+bun run env:init
 
 # Or create manually
 cp .env.example .env.local
@@ -164,7 +164,7 @@ LOG_LEVEL=debug
 ### Step 7: Generate Encryption Key
 
 ```bash
-npm run encryption:setup
+bun run encryption:setup
 ```
 
 This generates a secure 32-character encryption key for encrypting therapeutic message content.
@@ -174,7 +174,7 @@ This generates a secure 32-character encryption key for encrypting therapeutic m
 **Terminal 1 - Convex Backend:**
 
 ```bash
-npm run convex:dev
+bun run convex:dev
 ```
 
 Keep this running. It will hot-reload on schema/function changes.
@@ -182,7 +182,7 @@ Keep this running. It will hot-reload on schema/function changes.
 **Terminal 2 - Next.js Frontend:**
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 ### Step 9: Verify Setup
@@ -241,14 +241,14 @@ ai-therapist/
 3. **Run type check and lint before committing:**
 
    ```bash
-   npm run lint
-   npx tsc --noEmit
+   bun run lint
+   bunx tsc --noEmit
    ```
 
 4. **Run tests:**
 
    ```bash
-   npm test
+   bun run test
    ```
 
 5. **Commit with meaningful messages:**
@@ -268,7 +268,7 @@ The project uses:
 Code is automatically formatted on commit. To manually format:
 
 ```bash
-npm run format
+bun run format
 ```
 
 ---
@@ -283,7 +283,7 @@ npm run format
 
 ```bash
 # Regenerate Convex types
-npm run convex:dev
+bun run convex:dev
 # Press Ctrl+C after it syncs
 ```
 
@@ -305,7 +305,7 @@ npm run convex:dev
 **Solution:**
 
 ```bash
-npm run encryption:setup
+bun run encryption:setup
 # Restart the dev server
 ```
 
@@ -321,7 +321,7 @@ lsof -i :4000
 kill -9 <PID>
 
 # Or use a different port
-PORT=4001 npm run dev
+PORT=4001 bun run dev
 ```
 
 ### Convex Connection Issues
@@ -352,7 +352,7 @@ PORT=4001 npm run dev
 
 1. Ensure both Convex and Next.js servers are running
 2. Increase timeout in `playwright.config.ts`
-3. Run in headed mode to debug: `npm run test:e2e:headed`
+3. Run in headed mode to debug: `bun run test:e2e:headed`
 
 ---
 
@@ -396,32 +396,32 @@ Recommended settings (`.vscode/settings.json`):
 
 ```bash
 # Run all tests
-npm test
+bun run test
 
 # Run in watch mode (recommended during development)
-npm run test:watch
+bun run test:watch
 
 # Run with coverage report
-npm run test:coverage
+bun run test:coverage
 
 # Run specific test file
-npm test -- session-repository.test.ts
+bun run test -- session-repository.test.ts
 ```
 
 ### End-to-End Tests (Playwright)
 
 ```bash
 # Run all E2E tests (headless)
-npm run test:e2e
+bun run test:e2e
 
 # Run with UI (recommended for debugging)
-npm run test:e2e:ui
+bun run test:e2e:ui
 
 # Run in headed browser
-npm run test:e2e:headed
+bun run test:e2e:headed
 
 # Run specific test
-npm run test:e2e -- chat-flows.spec.ts
+bun run test:e2e -- chat-flows.spec.ts
 ```
 
 ### Full QA Suite
@@ -429,7 +429,7 @@ npm run test:e2e -- chat-flows.spec.ts
 Before submitting a PR, run the complete QA suite:
 
 ```bash
-npm run qa:full
+bun run qa:full
 ```
 
 This runs:
@@ -446,20 +446,20 @@ This runs:
 
 | Command                    | Description                          |
 | -------------------------- | ------------------------------------ |
-| `npm run dev`              | Start development server (port 4000) |
-| `npm run dev:local`        | Start on localhost only              |
-| `npm run build`            | Build for production                 |
-| `npm run lint`             | Run ESLint                           |
-| `npm run format`           | Format code with Prettier            |
-| `npm test`                 | Run unit tests                       |
-| `npm run test:coverage`    | Run tests with coverage              |
-| `npm run test:e2e`         | Run Playwright E2E tests             |
-| `npm run convex:dev`       | Start Convex development server      |
-| `npm run convex:deploy`    | Deploy Convex to production          |
-| `npm run encryption:setup` | Set up encryption key                |
-| `npm run api:types`        | Generate API TypeScript types        |
-| `npm run analyze`          | Analyze bundle size                  |
-| `npm run qa:full`          | Run full QA suite                    |
+| `bun run dev`              | Start development server (port 4000) |
+| `bun run dev:local`        | Start on localhost only              |
+| `bun run build`            | Build for production                 |
+| `bun run lint`             | Run ESLint                           |
+| `bun run format`           | Format code with Prettier            |
+| `bun run test`             | Run unit tests                       |
+| `bun run test:coverage`    | Run tests with coverage              |
+| `bun run test:e2e`         | Run Playwright E2E tests             |
+| `bun run convex:dev`       | Start Convex development server      |
+| `bun run convex:deploy`    | Deploy Convex to production          |
+| `bun run encryption:setup` | Set up encryption key                |
+| `bun run api:types`        | Generate API TypeScript types        |
+| `bun run analyze`          | Analyze bundle size                  |
+| `bun run qa:full`          | Run full QA suite                    |
 
 ---
 

@@ -506,6 +506,46 @@ stateDiagram-v2
 
 ---
 
+### CBT Draft Persistence
+
+The CBT diary uses a **single source of truth** architecture with automatic localStorage persistence via the `usePersistedCBTFlow` hook.
+
+**Location**: `src/features/therapy/cbt/hooks/use-persisted-cbt-flow.ts`
+
+#### Exported Utilities (callable outside React)
+
+```typescript
+// Check if there's a persisted draft in localStorage
+hasPersistedDraft(): boolean
+
+// Get the last saved timestamp from persisted draft
+getPersistedDraftTimestamp(): string | null
+
+// Clear the persisted draft from localStorage
+clearPersistedDraft(): void
+```
+
+#### Hook Options
+
+```typescript
+interface UsePersistedCBTFlowOptions {
+  skipHydration?: boolean;  // Skip loading from localStorage (for "Start Fresh")
+  onChange?: (data: CBTSessionData) => Promise<void> | void;
+}
+```
+
+#### When localStorage Draft is Cleared
+
+| Scenario | Trigger |
+|----------|---------|
+| Delete Draft | User clicks trash icon |
+| Start Fresh | User clicks "Start New" (skipHydration=true) |
+| Send to Chat | Successful send completes |
+| Flow Complete | User completes final step |
+| Hook Reset | `reset()` called |
+
+---
+
 ### Obsessions & Compulsions Domain Model
 
 ```mermaid
