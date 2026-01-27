@@ -183,10 +183,10 @@ describe('Memory System Core Functionality', () => {
       const prompt = buildMemoryEnhancedPrompt(memoryContext);
 
       // Should contain all key sections
-      expect(prompt).toContain('You are a compassionate, professional AI therapist');
+      expect(prompt).toContain('You are a compassionate, professional AI therapy assistant');
       expect(prompt).toContain('THERAPEUTIC MEMORY CONTEXT:');
       expect(prompt).toContain('Remember: Your primary role is to listen deeply');
-      expect(prompt).toContain('Response Guidelines:');
+      expect(prompt).toContain('## RESPONSE STRUCTURE');
 
       // Memory section should be properly inserted
       const memoryIndex = prompt.indexOf('THERAPEUTIC MEMORY CONTEXT:');

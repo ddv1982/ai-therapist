@@ -15,8 +15,8 @@ describe('buildTherapySystemPrompt localization', () => {
   it('returns a fully localized Dutch prompt without English remnants', () => {
     const prompt = buildTherapySystemPrompt('nl');
 
-    expect(prompt).toContain('Je bent een empathische, professionele AI-therapeut');
-    expect(prompt).not.toContain('You are a compassionate, professional AI therapist');
+    expect(prompt).toContain('Je bent een empathische, professionele AI-therapie-assistent');
+    expect(prompt).not.toContain('You are a compassionate, professional AI therapy assistant');
   });
 
   it('includes Dutch memory guidance when memory context is provided', () => {
