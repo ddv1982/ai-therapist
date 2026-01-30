@@ -1,12 +1,13 @@
 import { query, mutation, internalMutation } from './_generated/server';
 import { v } from 'convex/values';
 import { QUERY_LIMITS } from './constants';
+import { requireOwnership, requireUserAccess } from './lib/errors';
 import {
-  requireOwnership,
-  requireUserAccess,
-  ConvexAppError,
-  ErrorCode,
-} from './lib/errors';
+  ensureMessageCountShardsInitialized,
+  MESSAGE_COUNT_SHARDS,
+  getMessageCountForSession,
+  getMessageCountsByUser,
+} from './lib/message_counts';
 
 /** Paginated query for user sessions. Returns newest first. */
 export const listByUserPaginated = query({
@@ -31,8 +32,14 @@ export const listByUserPaginated = query({
         cursor: cursor || null,
       });
 
+    const counts = await getMessageCountsByUser(ctx, userId);
+    const page = result.page.map((session) => ({
+      ...session,
+      messageCount: counts.get(session._id) ?? 0,
+    }));
+
     return {
-      page: result.page,
+      page,
       continueCursor: result.continueCursor,
       isDone: result.isDone,
     };
@@ -44,11 +51,17 @@ export const listByUser = query({
   args: { userId: v.id('users') },
   handler: async (ctx, { userId }) => {
     await requireUserAccess(ctx, userId);
-    return await ctx.db
+    const sessions = await ctx.db
       .query('sessions')
       .withIndex('by_user_created', (q) => q.eq('userId', userId))
       .order('desc')
       .collect();
+
+    const counts = await getMessageCountsByUser(ctx, userId);
+    return sessions.map((session) => ({
+      ...session,
+      messageCount: counts.get(session._id) ?? 0,
+    }));
   },
 });
 
@@ -74,7 +87,11 @@ export const getWithMessagesAndReports = query({
       .query('sessionReports')
       .withIndex('by_session', (q) => q.eq('sessionId', sessionId))
       .collect();
-    return { session, messages, reports };
+    const sessionWithCount = {
+      ...session,
+      messageCount: messages.length,
+    };
+    return { session: sessionWithCount, messages, reports };
   },
 });
 
@@ -96,6 +113,8 @@ export const create = mutation({
       createdAt: now,
       updatedAt: now,
     });
+
+    await ensureMessageCountShardsInitialized(ctx, sessionId, user._id);
 
     // Update user's cached session count
     await ctx.db.patch(user._id, {
@@ -130,6 +149,14 @@ export const remove = mutation({
   handler: async (ctx, { sessionId }) => {
     const { user } = await requireOwnership(ctx, sessionId);
 
+    const shards = await ctx.db
+      .query('messageCountShards')
+      .withIndex('by_session', (q) => q.eq('sessionId', sessionId))
+      .collect();
+    for (const shard of shards) {
+      await ctx.db.delete(shard._id);
+    }
+
     const msgs = await ctx.db
       .query('messages')
       .withIndex('by_session_time', (q) => q.eq('sessionId', sessionId))
@@ -155,19 +182,6 @@ export const remove = mutation({
     });
 
     return { ok: true, deleted: true };
-  },
-});
-
-// Internal helper used by messages to adjust messageCount atomically
-export const _incrementMessageCount = internalMutation({
-  args: { sessionId: v.id('sessions'), delta: v.number() },
-  handler: async (ctx, { sessionId, delta }) => {
-    const s = await ctx.db.get(sessionId);
-    if (!s) throw new ConvexAppError(ErrorCode.NOT_FOUND, 'Session not found');
-    await ctx.db.patch(sessionId, {
-      messageCount: Math.max(0, (s.messageCount ?? 0) + delta),
-      updatedAt: Date.now(),
-    });
   },
 });
 
@@ -197,10 +211,56 @@ export const _initializeSessionCounts = internalMutation({
   },
 });
 
+/**
+ * Migration: Initialize message count shards for existing sessions.
+ * Run this once after deploying the sharded counter.
+ */
+export const _initializeMessageCountShards = internalMutation({
+  handler: async (ctx) => {
+    const sessions = await ctx.db.query('sessions').collect();
+    let sessionsUpdated = 0;
+
+    for (const session of sessions) {
+      const existing = await ctx.db
+        .query('messageCountShards')
+        .withIndex('by_session', (q) => q.eq('sessionId', session._id))
+        .first();
+
+      if (existing) continue;
+
+      const messages = await ctx.db
+        .query('messages')
+        .withIndex('by_session_time', (q) => q.eq('sessionId', session._id))
+        .collect();
+
+      const total = messages.length;
+      const base = Math.floor(total / MESSAGE_COUNT_SHARDS);
+      const remainder = total % MESSAGE_COUNT_SHARDS;
+      const now = Date.now();
+
+      for (let shard = 0; shard < MESSAGE_COUNT_SHARDS; shard += 1) {
+        const count = base + (shard < remainder ? 1 : 0);
+        await ctx.db.insert('messageCountShards', {
+          sessionId: session._id,
+          userId: session.userId,
+          shard,
+          count,
+          updatedAt: now,
+        });
+      }
+
+      sessionsUpdated += 1;
+    }
+
+    return { sessionsUpdated };
+  },
+});
+
 export const get = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
     const { session } = await requireOwnership(ctx, sessionId);
-    return session;
+    const messageCount = await getMessageCountForSession(ctx, sessionId);
+    return { ...session, messageCount };
   },
 });

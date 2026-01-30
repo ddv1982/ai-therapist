@@ -11,6 +11,7 @@
 import type * as constants from "../constants.js";
 import type * as http from "../http.js";
 import type * as lib_errors from "../lib/errors.js";
+import type * as lib_message_counts from "../lib/message_counts.js";
 import type * as messages from "../messages.js";
 import type * as reports from "../reports.js";
 import type * as sessions from "../sessions.js";
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   constants: typeof constants;
   http: typeof http;
   "lib/errors": typeof lib_errors;
+  "lib/message_counts": typeof lib_message_counts;
   messages: typeof messages;
   reports: typeof reports;
   sessions: typeof sessions;

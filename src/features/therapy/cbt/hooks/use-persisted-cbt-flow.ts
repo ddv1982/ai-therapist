@@ -4,9 +4,22 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCBTFlow, type CBTSessionData } from './use-cbt-flow';
 import type { CBTStepId } from '../flow/types';
 import { logger } from '@/lib/utils/logger';
+import {
+  ClientCryptoError,
+  decryptClientData,
+  encryptClientData,
+} from '@/lib/encryption/client-crypto';
 
 const STORAGE_KEY = 'cbt-flow-draft';
 const EMPTY_TIMESTAMP = new Date(0).toISOString();
+const STORAGE_VERSION = 1;
+
+interface EncryptedDraftPayload {
+  version: number;
+  encrypted: true;
+  payload: string;
+  lastModified: string;
+}
 
 /**
  * Check if there's a persisted draft in localStorage.
@@ -17,18 +30,22 @@ export function hasPersistedDraft(): boolean {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return false;
-    const data = JSON.parse(stored) as Partial<CBTSessionData>;
+    const data = JSON.parse(stored) as Partial<CBTSessionData> | EncryptedDraftPayload;
+    if ('encrypted' in data && data.encrypted) {
+      return Boolean(data.payload);
+    }
+    const legacy = data as Partial<CBTSessionData>;
     // Check if there's any meaningful data
     return !!(
-      data.situation ||
-      data.emotions ||
-      (data.thoughts && data.thoughts.length > 0) ||
-      data.coreBelief ||
-      data.challengeQuestions ||
-      data.rationalThoughts ||
-      data.schemaModes ||
-      data.actionPlan ||
-      data.finalEmotions
+      legacy.situation ||
+      legacy.emotions ||
+      (legacy.thoughts && legacy.thoughts.length > 0) ||
+      legacy.coreBelief ||
+      legacy.challengeQuestions ||
+      legacy.rationalThoughts ||
+      legacy.schemaModes ||
+      legacy.actionPlan ||
+      legacy.finalEmotions
     );
   } catch {
     return false;
@@ -43,9 +60,13 @@ export function getPersistedDraftTimestamp(): string | null {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return null;
-    const data = JSON.parse(stored) as Partial<CBTSessionData>;
-    return data.lastModified && data.lastModified !== EMPTY_TIMESTAMP
-      ? data.lastModified
+    const data = JSON.parse(stored) as Partial<CBTSessionData> | EncryptedDraftPayload;
+    if ('encrypted' in data && data.encrypted) {
+      return data.lastModified || null;
+    }
+    const legacy = data as Partial<CBTSessionData>;
+    return legacy.lastModified && legacy.lastModified !== EMPTY_TIMESTAMP
+      ? legacy.lastModified
       : null;
   } catch {
     return null;
@@ -70,24 +91,51 @@ export function clearPersistedDraft(): void {
 /**
  * Load persisted draft data from localStorage.
  */
-function loadPersistedData(): Partial<CBTSessionData> | undefined {
+async function loadPersistedData(): Promise<
+  | {
+      data?: Partial<CBTSessionData>;
+      needsMigration?: boolean;
+      error?: ClientCryptoError;
+    }
+  | undefined
+> {
   if (typeof window === 'undefined') return undefined;
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return undefined;
-    return JSON.parse(stored) as Partial<CBTSessionData>;
-  } catch {
-    return undefined;
+
+    const parsed = JSON.parse(stored) as Partial<CBTSessionData> | EncryptedDraftPayload;
+
+    if ('encrypted' in parsed && parsed.encrypted) {
+      const decrypted = await decryptClientData(parsed.payload);
+      const data = JSON.parse(decrypted) as Partial<CBTSessionData>;
+      return { data, needsMigration: false };
+    }
+
+    return { data: parsed as Partial<CBTSessionData>, needsMigration: true };
+  } catch (err) {
+    const error =
+      err instanceof ClientCryptoError
+        ? err
+        : new ClientCryptoError('Failed to decrypt stored draft', err as Error);
+    return { error };
   }
 }
 
 /**
  * Save session data to localStorage.
  */
-function savePersistedData(data: CBTSessionData): void {
+async function savePersistedData(data: CBTSessionData): Promise<void> {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const payload = await encryptClientData(JSON.stringify(data));
+    const envelope: EncryptedDraftPayload = {
+      version: STORAGE_VERSION,
+      encrypted: true,
+      payload,
+      lastModified: data.lastModified,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
   } catch (err) {
     logger.warn('Failed to save persisted draft', {
       component: 'usePersistedCBTFlow',
@@ -109,30 +157,63 @@ interface UsePersistedCBTFlowOptions {
  */
 export function usePersistedCBTFlow(options: UsePersistedCBTFlowOptions = {}) {
   const { skipHydration = false, onChange } = options;
-
-  // Track if we've done initial hydration
-  const hasHydratedRef = useRef(false);
+  const [initialData, setInitialData] = useState<Partial<CBTSessionData> | undefined>(undefined);
+  const [hydrationError, setHydrationError] = useState<string | null>(null);
+  const [migrationPending, setMigrationPending] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load initial data from localStorage (unless skipped)
-  const getInitialData = useCallback((): Partial<CBTSessionData> | undefined => {
-    if (skipHydration) return undefined;
-    return loadPersistedData();
-  }, [skipHydration]);
-
-  // Initialize the flow with persisted data
   const flow = useCBTFlow({
-    initialData: hasHydratedRef.current ? undefined : getInitialData(),
+    initialData,
     onChange,
   });
 
-  // Mark as hydrated after first render
   useEffect(() => {
-    if (!hasHydratedRef.current) {
-      hasHydratedRef.current = true;
+    if (skipHydration) {
       setIsHydrated(true);
+      return;
     }
-  }, []);
+
+    let isMounted = true;
+    const hydrate = async () => {
+      try {
+        const result = await loadPersistedData();
+        if (!isMounted) return;
+
+        if (result?.error) {
+          const message = result.error.message;
+          setHydrationError(message);
+          logger.error('Failed to decrypt persisted CBT draft', {
+            component: 'usePersistedCBTFlow',
+            error: result.error.message,
+          });
+          return;
+        }
+
+        if (result?.data) {
+          setInitialData(result.data);
+          setMigrationPending(Boolean(result.needsMigration));
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        const message =
+          err instanceof ClientCryptoError
+            ? err.message
+            : 'Unable to load your saved draft. You can clear and restart.';
+        setHydrationError(message);
+        logger.error('Failed to hydrate persisted CBT draft', {
+          component: 'usePersistedCBTFlow',
+          error: err instanceof Error ? err.message : 'unknown',
+        });
+      } finally {
+        if (isMounted) setIsHydrated(true);
+      }
+    };
+
+    void hydrate();
+    return () => {
+      isMounted = false;
+    };
+  }, [skipHydration]);
 
   // Auto-persist on session data changes
   const prevLastModifiedRef = useRef<string>(flow.sessionData.lastModified);
@@ -143,8 +224,17 @@ export function usePersistedCBTFlow(options: UsePersistedCBTFlowOptions = {}) {
     if (flow.sessionData.lastModified === EMPTY_TIMESTAMP) return;
 
     prevLastModifiedRef.current = flow.sessionData.lastModified;
-    savePersistedData(flow.sessionData);
+    void savePersistedData(flow.sessionData);
   }, [flow.sessionData, isHydrated]);
+
+  useEffect(() => {
+    if (!migrationPending) return;
+    if (!isHydrated) return;
+    if (flow.sessionData.lastModified === EMPTY_TIMESTAMP) return;
+
+    setMigrationPending(false);
+    void savePersistedData(flow.sessionData);
+  }, [migrationPending, isHydrated, flow.sessionData]);
 
   // Clear draft when flow is completed
   useEffect(() => {
@@ -157,6 +247,7 @@ export function usePersistedCBTFlow(options: UsePersistedCBTFlowOptions = {}) {
   const reset = useCallback(() => {
     clearPersistedDraft();
     flow.reset();
+    setHydrationError(null);
   }, [flow]);
 
   // Enhanced goToStep for navigation
@@ -172,6 +263,7 @@ export function usePersistedCBTFlow(options: UsePersistedCBTFlowOptions = {}) {
     reset,
     goToStep,
     isHydrated,
+    hydrationError,
   };
 }
 

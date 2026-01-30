@@ -40,8 +40,7 @@ export function getCSPHeader(nonce: string, isDev: boolean): string {
 
     // Script sources
     // Development: Allow unsafe-eval for hot reload, unsafe-inline for convenience
-    // Production: Use nonce-based CSP with unsafe-inline as fallback
-    // Note: Browsers that support nonces (CSP Level 2+) ignore unsafe-inline when nonce is present
+    // Production: Use nonce-based CSP for modern browsers only (no unsafe-inline fallback)
     'script-src': isDev
       ? [
           "'self'",
@@ -57,7 +56,6 @@ export function getCSPHeader(nonce: string, isDev: boolean): string {
       : [
           "'self'",
           `'nonce-${nonce}'`,
-          "'unsafe-inline'",
           'https://*.clerk.accounts.dev',
           'https://*.clerk.com',
           'https://challenges.cloudflare.com',
@@ -67,8 +65,7 @@ export function getCSPHeader(nonce: string, isDev: boolean): string {
         ],
 
     // Style sources
-    // Nonce-based with unsafe-inline fallback for older browsers
-    // unsafe-inline is still needed for some third-party styles (Clerk, reCAPTCHA)
+    // Nonce-based for modern browsers only (no unsafe-inline fallback)
     'style-src': isDev
       ? [
           "'self'",
@@ -82,7 +79,6 @@ export function getCSPHeader(nonce: string, isDev: boolean): string {
       : [
           "'self'",
           `'nonce-${nonce}'`,
-          "'unsafe-inline'",
           'https://*.clerk.accounts.dev',
           'https://*.clerk.com',
           'https://recaptcha.net',

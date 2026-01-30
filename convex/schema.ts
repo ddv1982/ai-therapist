@@ -55,6 +55,17 @@ export default defineSchema({
     createdAt: v.number(),
   }).index('by_session_time', ['sessionId', 'timestamp']),
 
+  messageCountShards: defineTable({
+    sessionId: v.id('sessions'),
+    userId: v.id('users'),
+    shard: v.number(),
+    count: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_session_shard', ['sessionId', 'shard'])
+    .index('by_session', ['sessionId'])
+    .index('by_user', ['userId']),
+
   sessionReports: defineTable({
     sessionId: v.id('sessions'),
     reportContent: v.string(),

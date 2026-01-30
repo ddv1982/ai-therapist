@@ -2,7 +2,7 @@
  * Tests for API Keys Management Hook
  *
  * Tests the useApiKeys hook functionality including:
- * - Key storage and retrieval from localStorage
+ * - Key storage and retrieval from sessionStorage
  * - Key validation with provider APIs
  * - Remember preference handling
  * - Error handling and loading states
@@ -33,7 +33,7 @@ jest.mock('@clerk/nextjs', () => ({
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
-// Mock localStorage
+// Mock storage
 let mockLocalStorage: Record<string, string> = {};
 
 // Wrapper component with provider
@@ -63,8 +63,8 @@ describe('useApiKeys', () => {
   });
 
   describe('initialization', () => {
-    it('loads existing keys from localStorage on mount when remember is true', async () => {
-      mockLocalStorage['byok_key_openai'] = 'sk-openai-key';
+    it('loads existing keys from sessionStorage on mount when remember is true', async () => {
+      mockLocalStorage['byok_session_openai'] = 'sk-openai-key';
       mockLocalStorage['byok_remember_openai'] = 'true';
 
       const { result } = renderHook(() => useApiKeys(), { wrapper });
@@ -78,7 +78,7 @@ describe('useApiKeys', () => {
     });
 
     it('does not load key if remember is false', async () => {
-      mockLocalStorage['byok_key_openai'] = 'sk-openai-key';
+      mockLocalStorage['byok_session_openai'] = 'sk-openai-key';
       // No remember flag set
 
       const { result } = renderHook(() => useApiKeys(), { wrapper });
@@ -114,7 +114,7 @@ describe('useApiKeys', () => {
     });
 
     it('returns true when key is configured', async () => {
-      mockLocalStorage['byok_key_openai'] = 'sk-test';
+      mockLocalStorage['byok_session_openai'] = 'sk-test';
       mockLocalStorage['byok_remember_openai'] = 'true';
 
       const { result } = renderHook(() => useApiKeys(), { wrapper });
@@ -128,7 +128,7 @@ describe('useApiKeys', () => {
   });
 
   describe('setKey', () => {
-    it('stores the key in state and localStorage when remember is true', async () => {
+    it('stores the key in state and sessionStorage when remember is true', async () => {
       const { result } = renderHook(() => useApiKeys(), { wrapper });
 
       await waitFor(() => {
@@ -140,7 +140,7 @@ describe('useApiKeys', () => {
       });
 
       expect(result.current.keys.openai).toBe('sk-test-key');
-      expect(mockLocalStorage['byok_key_openai']).toBe('sk-test-key');
+      expect(mockLocalStorage['byok_session_openai']).toBe('sk-test-key');
       expect(mockLocalStorage['byok_remember_openai']).toBe('true');
     });
 
@@ -156,13 +156,13 @@ describe('useApiKeys', () => {
       });
 
       expect(result.current.keys.openai).toBe('sk-test-key');
-      expect(mockLocalStorage['byok_key_openai']).toBeUndefined();
+      expect(mockLocalStorage['byok_session_openai']).toBeUndefined();
     });
   });
 
   describe('removeKey', () => {
-    it('removes the key from localStorage and state', async () => {
-      mockLocalStorage['byok_key_openai'] = 'sk-test';
+    it('removes the key from sessionStorage and state', async () => {
+      mockLocalStorage['byok_session_openai'] = 'sk-test';
       mockLocalStorage['byok_remember_openai'] = 'true';
 
       const { result } = renderHook(() => useApiKeys(), { wrapper });
@@ -175,7 +175,7 @@ describe('useApiKeys', () => {
         result.current.removeKey('openai');
       });
 
-      expect(mockLocalStorage['byok_key_openai']).toBeUndefined();
+      expect(mockLocalStorage['byok_session_openai']).toBeUndefined();
       expect(mockLocalStorage['byok_remember_openai']).toBeUndefined();
       expect(result.current.hasKey('openai')).toBe(false);
     });
@@ -183,7 +183,7 @@ describe('useApiKeys', () => {
 
   describe('isRemembered', () => {
     it('returns true when key is stored with remember flag', async () => {
-      mockLocalStorage['byok_key_openai'] = 'sk-test';
+      mockLocalStorage['byok_session_openai'] = 'sk-test';
       mockLocalStorage['byok_remember_openai'] = 'true';
 
       const { result } = renderHook(() => useApiKeys(), { wrapper });
@@ -218,7 +218,7 @@ describe('useApiKeys', () => {
     });
 
     it('can be toggled', async () => {
-      mockLocalStorage['byok_key_openai'] = 'sk-test';
+      mockLocalStorage['byok_session_openai'] = 'sk-test';
       mockLocalStorage['byok_remember_openai'] = 'true';
 
       const { result } = renderHook(() => useApiKeys(), { wrapper });
@@ -285,5 +285,3 @@ describe('validateOpenAIKey', () => {
     expect(result.error).toContain('Invalid');
   });
 });
-
-

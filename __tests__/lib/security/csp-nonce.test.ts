@@ -82,7 +82,7 @@ describe('CSP Nonce Generation', () => {
         const csp = getCSPHeader(nonce, false);
 
         expect(csp).not.toContain("'unsafe-eval'");
-        expect(csp).toContain("'unsafe-inline'"); // Still needed for styles
+        expect(csp).not.toContain("'unsafe-inline'");
       });
 
       it('includes nonce in script-src', () => {
@@ -225,7 +225,7 @@ describe('CSP Nonce Generation', () => {
   });
 
   describe('Security requirements', () => {
-    it('production CSP uses nonce-based security with fallback', () => {
+    it('production CSP uses nonce-based security', () => {
       const nonce = 'test-nonce-123';
       const csp = getCSPHeader(nonce, false);
 
@@ -237,10 +237,6 @@ describe('CSP Nonce Generation', () => {
 
       // Should include nonce for modern browsers (CSP Level 2+)
       expect(scriptSrc).toContain(`'nonce-${nonce}'`);
-
-      // Should include unsafe-inline as fallback for older browsers
-      // Modern browsers that support nonces will ignore unsafe-inline (CSP spec behavior)
-      expect(scriptSrc).toContain("'unsafe-inline'");
 
       // Should NOT include unsafe-eval in production
       expect(scriptSrc).not.toContain("'unsafe-eval'");

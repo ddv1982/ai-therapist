@@ -12,6 +12,18 @@ jest.mock('@/config/env.public', () => ({
   },
 }));
 
+const loggerWarn = jest.fn();
+const loggerInfo = jest.fn();
+
+jest.mock('@/lib/utils/logger', () => ({
+  logger: {
+    warn: (...args: unknown[]) => loggerWarn(...args),
+    info: (...args: unknown[]) => loggerInfo(...args),
+    error: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
+
 import {
   onRenderCallback,
   getPerformanceReport,
@@ -72,36 +84,27 @@ describe('Render Profiler', () => {
     });
 
     it('warns on very slow renders (>50ms)', () => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
       onRenderCallback('SlowComponent', 'mount', 55, 60, 0, 55);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('VERY SLOW RENDER'),
+      expect(loggerWarn).toHaveBeenCalledWith(
+        'Render profiler: very slow render detected',
         expect.any(Object)
       );
-      consoleSpy.mockRestore();
     });
 
     it('warns on slow renders (>16ms)', () => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
       onRenderCallback('ModerateComponent', 'update', 25, 30, 0, 25);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Slow render'),
+      expect(loggerWarn).toHaveBeenCalledWith(
+        'Render profiler: slow render detected',
         expect.any(Object)
       );
-      consoleSpy.mockRestore();
     });
 
     it('does not warn for fast renders', () => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
       onRenderCallback('FastComponent', 'update', 5, 8, 0, 5);
 
-      expect(consoleSpy).not.toHaveBeenCalled();
-      consoleSpy.mockRestore();
+      expect(loggerWarn).not.toHaveBeenCalled();
     });
 
     it('limits stored metrics to MAX_STORED_METRICS', () => {
@@ -204,38 +207,25 @@ describe('Render Profiler', () => {
 
   describe('logPerformanceSummary', () => {
     it('logs performance table with data', () => {
-      const consoleGroupSpy = jest.spyOn(console, 'group').mockImplementation();
-      const consoleTableSpy = jest.spyOn(console, 'table').mockImplementation();
-      const consoleGroupEndSpy = jest.spyOn(console, 'groupEnd').mockImplementation();
-
       onRenderCallback('TestComponent', 'mount', 10, 15, 0, 10);
 
       logPerformanceSummary();
 
-      expect(consoleGroupSpy).toHaveBeenCalledWith(expect.stringContaining('Performance Summary'));
-      expect(consoleTableSpy).toHaveBeenCalled();
-      expect(consoleGroupEndSpy).toHaveBeenCalled();
-
-      consoleGroupSpy.mockRestore();
-      consoleTableSpy.mockRestore();
-      consoleGroupEndSpy.mockRestore();
+      expect(loggerInfo).toHaveBeenCalledWith(
+        'Render profiler summary',
+        expect.objectContaining({ reports: expect.any(Array) })
+      );
     });
 
     it('logs no data message when empty', () => {
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
-
       logPerformanceSummary();
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No render data'));
-
-      consoleLogSpy.mockRestore();
+      expect(loggerInfo).toHaveBeenCalledWith('Render profiler has no data yet');
     });
   });
 
   describe('createOnRenderCallback', () => {
     it('creates callback with custom threshold', () => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
       const customCallback = createOnRenderCallback({ threshold: 5 });
 
       // This would be slow for 5ms threshold but not for default 16ms
@@ -246,8 +236,6 @@ describe('Render Profiler', () => {
       // at the default threshold, so we check it was called
       const report = getPerformanceReport('CustomThreshold');
       expect(report).not.toBeNull();
-
-      consoleSpy.mockRestore();
     });
 
     it('calls onSlowRender handler', () => {
@@ -426,6 +414,8 @@ describe('Render Profiler', () => {
 describe('Render Profiler (Disabled Mode)', () => {
   beforeEach(() => {
     jest.resetModules();
+    loggerWarn.mockClear();
+    loggerInfo.mockClear();
   });
 
   it('returns null/empty when profiling disabled', async () => {
@@ -453,15 +443,14 @@ describe('Render Profiler (Disabled Mode)', () => {
     expect(getAllReportsDisabled()).toEqual([]);
 
     // Should log disabled message
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
     logSummaryDisabled();
-    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('disabled'));
-    consoleLogSpy.mockRestore();
+    expect(loggerInfo).toHaveBeenCalledWith(
+      'Render profiler is disabled',
+      expect.objectContaining({ hint: expect.any(String) })
+    );
 
     // logBenchmarkResults should be no-op when disabled
-    const consoleGroupSpy = jest.spyOn(console, 'group').mockImplementation();
     logBenchmarkDisabled([]);
-    expect(consoleGroupSpy).not.toHaveBeenCalled();
-    consoleGroupSpy.mockRestore();
+    expect(loggerInfo).toHaveBeenCalled();
   });
 });

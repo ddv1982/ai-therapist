@@ -28,6 +28,7 @@
  */
 
 import { isDevelopment, publicEnv } from '@/config/env.public';
+import { logger } from '@/lib/utils/logger';
 
 // Only enable in development when explicitly opted in
 const ENABLE_PROFILING = isDevelopment && publicEnv.NEXT_PUBLIC_ENABLE_RENDER_PROFILING;
@@ -97,30 +98,22 @@ export function onRenderCallback(
   }
   metricsStore.set(id, stored);
 
-  // Warn about slow renders (console usage is intentional for profiler output)
+  // Warn about slow renders
   if (actualDuration > VERY_SLOW_RENDER_THRESHOLD_MS) {
-    // eslint-disable-next-line no-console -- Profiler intentionally logs to console
-    console.warn(
-      `[Render Profiler] 🐌 VERY SLOW RENDER: "${id}" took ${actualDuration.toFixed(2)}ms (${phase})`,
-      {
-        component: id,
-        phase,
-        actualDuration: `${actualDuration.toFixed(2)}ms`,
-        baseDuration: `${baseDuration.toFixed(2)}ms`,
-        recommendation: 'Consider memoizing this component or breaking it into smaller parts',
-      }
-    );
+    logger.warn('Render profiler: very slow render detected', {
+      component: id,
+      phase,
+      actualDurationMs: Number(actualDuration.toFixed(2)),
+      baseDurationMs: Number(baseDuration.toFixed(2)),
+      recommendation: 'Consider memoizing this component or breaking it into smaller parts',
+    });
   } else if (actualDuration > SLOW_RENDER_THRESHOLD_MS) {
-    // eslint-disable-next-line no-console -- Profiler intentionally logs to console
-    console.warn(
-      `[Render Profiler] ⚠️ Slow render: "${id}" took ${actualDuration.toFixed(2)}ms (${phase})`,
-      {
-        component: id,
-        phase,
-        actualDuration: `${actualDuration.toFixed(2)}ms`,
-        baseDuration: `${baseDuration.toFixed(2)}ms`,
-      }
-    );
+    logger.warn('Render profiler: slow render detected', {
+      component: id,
+      phase,
+      actualDurationMs: Number(actualDuration.toFixed(2)),
+      baseDurationMs: Number(baseDuration.toFixed(2)),
+    });
   }
 }
 
@@ -177,34 +170,27 @@ export function clearMetrics(): void {
  */
 export function logPerformanceSummary(): void {
   if (!ENABLE_PROFILING) {
-    // eslint-disable-next-line no-console -- Profiler intentionally logs to console
-    console.log(
-      '[Render Profiler] Profiling is disabled. Set NEXT_PUBLIC_ENABLE_RENDER_PROFILING=true to enable.'
-    );
+    logger.info('Render profiler is disabled', {
+      hint: 'Set NEXT_PUBLIC_ENABLE_RENDER_PROFILING=true to enable',
+    });
     return;
   }
 
   const reports = getAllPerformanceReports();
   if (reports.length === 0) {
-    // eslint-disable-next-line no-console -- Profiler intentionally logs to console
-    console.log('[Render Profiler] No render data collected yet.');
+    logger.info('Render profiler has no data yet');
     return;
   }
 
-  // eslint-disable-next-line no-console -- Profiler intentionally logs to console
-  console.group('[Render Profiler] Performance Summary');
-  // eslint-disable-next-line no-console -- Profiler intentionally logs to console
-  console.table(
-    reports.map((r) => ({
-      Component: r.component,
-      'Avg Render (ms)': r.averageRenderTime.toFixed(2),
-      'Max Render (ms)': r.maxRenderTime.toFixed(2),
-      'Render Count': r.renderCount,
-      'Slow Renders': r.slowRenderCount,
-    }))
-  );
-  // eslint-disable-next-line no-console -- Profiler intentionally logs to console
-  console.groupEnd();
+  logger.info('Render profiler summary', {
+    reports: reports.map((r) => ({
+      component: r.component,
+      averageRenderMs: Number(r.averageRenderTime.toFixed(2)),
+      maxRenderMs: Number(r.maxRenderTime.toFixed(2)),
+      renderCount: r.renderCount,
+      slowRenders: r.slowRenderCount,
+    })),
+  });
 }
 
 /**

@@ -54,12 +54,14 @@ export function CBTDiaryFlow({
     progress,
     isSaving,
     error,
+    hydrationError,
     goPrevious,
     goToStep,
     canGoBack,
     updateStep,
     completeStep,
     clearError,
+    reset,
   } = usePersistedCBTFlow({ skipHydration, onChange });
 
   const isDisabled = isSaving || isPending;
@@ -135,16 +137,31 @@ export function CBTDiaryFlow({
     );
   };
 
+  const renderHydrationError = () => {
+    if (!hydrationError) return null;
+    return (
+      <div className="border-destructive/20 bg-destructive/10 mb-4 flex items-center gap-2 rounded-md border p-3">
+        <AlertCircle className="text-destructive h-4 w-4 shrink-0" />
+        <div className="text-destructive text-sm">
+          <p className="font-medium">Saved draft could not be decrypted.</p>
+          <p className="text-destructive/80">You can clear the saved draft and start fresh.</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={reset}
+          className="text-destructive hover:bg-destructive/20 ml-auto h-6 px-2"
+        >
+          Clear draft
+        </Button>
+      </div>
+    );
+  };
+
   const renderBackButton = () => {
     if (!canGoBack) return null;
     return (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={goPrevious}
-        disabled={isDisabled}
-        className="mb-4"
-      >
+      <Button variant="ghost" size="sm" onClick={goPrevious} disabled={isDisabled} className="mb-4">
         <ChevronLeft className="mr-1 h-4 w-4" />
         {t('nav.back')}
       </Button>
@@ -260,6 +277,7 @@ export function CBTDiaryFlow({
   return (
     <div className={cn('space-y-4', className)}>
       {renderProgress()}
+      {renderHydrationError()}
       {renderError()}
       {renderBackButton()}
       {renderCurrentStep()}

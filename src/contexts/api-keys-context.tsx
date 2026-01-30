@@ -9,7 +9,15 @@
 
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  ReactNode,
+} from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { BYOK_OPENAI_MODEL } from '@/features/chat/lib/byok-helper';
 
@@ -17,8 +25,10 @@ export type Provider = 'openai';
 export const PROVIDERS: Provider[] = ['openai'];
 export const BYOK_MODEL = BYOK_OPENAI_MODEL;
 
-const STORAGE_PREFIX = 'byok_key_';
+const STORAGE_PREFIX = 'byok_session_';
 const REMEMBER_PREFIX = 'byok_remember_';
+const LEGACY_STORAGE_PREFIX = 'byok_key_';
+const LEGACY_REMEMBER_PREFIX = 'byok_remember_';
 const ACTIVE_KEY = 'byok_active';
 
 export interface ApiKeyState {
@@ -99,8 +109,16 @@ function getRememberKey(provider: Provider): string {
   return `${REMEMBER_PREFIX}${provider}`;
 }
 
+function getLegacyStorageKey(provider: Provider): string {
+  return `${LEGACY_STORAGE_PREFIX}${provider}`;
+}
+
+function getLegacyRememberKey(provider: Provider): string {
+  return `${LEGACY_REMEMBER_PREFIX}${provider}`;
+}
+
 function loadFromStorage(): { keys: ApiKeyState; remember: RememberState; isActive: boolean } {
-  if (typeof localStorage === 'undefined') {
+  if (typeof sessionStorage === 'undefined') {
     return { keys: {}, remember: {}, isActive: false };
   }
 
@@ -108,8 +126,22 @@ function loadFromStorage(): { keys: ApiKeyState; remember: RememberState; isActi
   const remember: RememberState = {};
 
   for (const provider of PROVIDERS) {
-    const key = localStorage.getItem(getStorageKey(provider));
-    const shouldRemember = localStorage.getItem(getRememberKey(provider)) === 'true';
+    let key = sessionStorage.getItem(getStorageKey(provider));
+    let shouldRemember = sessionStorage.getItem(getRememberKey(provider)) === 'true';
+
+    if (!key && typeof localStorage !== 'undefined') {
+      const legacyKey = localStorage.getItem(getLegacyStorageKey(provider));
+      const legacyRemember = localStorage.getItem(getLegacyRememberKey(provider)) === 'true';
+
+      if (legacyKey && legacyRemember) {
+        sessionStorage.setItem(getStorageKey(provider), legacyKey);
+        sessionStorage.setItem(getRememberKey(provider), 'true');
+        localStorage.removeItem(getLegacyStorageKey(provider));
+        localStorage.removeItem(getLegacyRememberKey(provider));
+        key = legacyKey;
+        shouldRemember = true;
+      }
+    }
 
     if (key && shouldRemember) {
       keys[provider] = key;
@@ -117,7 +149,15 @@ function loadFromStorage(): { keys: ApiKeyState; remember: RememberState; isActi
     }
   }
 
-  const isActive = localStorage.getItem(ACTIVE_KEY) === 'true';
+  let isActive = sessionStorage.getItem(ACTIVE_KEY) === 'true';
+  if (!isActive && typeof localStorage !== 'undefined') {
+    const legacyActive = localStorage.getItem(ACTIVE_KEY) === 'true';
+    if (legacyActive) {
+      sessionStorage.setItem(ACTIVE_KEY, 'true');
+      localStorage.removeItem(ACTIVE_KEY);
+      isActive = true;
+    }
+  }
 
   return { keys, remember, isActive };
 }
@@ -134,6 +174,22 @@ export function ApiKeysProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isAuthLoaded) return;
     if (!userId) {
+      setKeys({});
+      setRememberKeys({});
+      setIsActiveState(false);
+      try {
+        for (const provider of PROVIDERS) {
+          sessionStorage.removeItem(getStorageKey(provider));
+          sessionStorage.removeItem(getRememberKey(provider));
+          if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem(getLegacyStorageKey(provider));
+            localStorage.removeItem(getLegacyRememberKey(provider));
+          }
+        }
+        sessionStorage.removeItem(ACTIVE_KEY);
+      } catch {
+        // Ignore storage errors
+      }
       setIsLoading(false);
       return;
     }
@@ -167,9 +223,9 @@ export function ApiKeysProvider({ children }: { children: ReactNode }) {
     setIsActiveState(active);
     try {
       if (active) {
-        localStorage.setItem(ACTIVE_KEY, 'true');
+        sessionStorage.setItem(ACTIVE_KEY, 'true');
       } else {
-        localStorage.removeItem(ACTIVE_KEY);
+        sessionStorage.removeItem(ACTIVE_KEY);
       }
     } catch {
       // Ignore storage errors
@@ -190,11 +246,11 @@ export function ApiKeysProvider({ children }: { children: ReactNode }) {
         setRememberKeys((prev) => ({ ...prev, [provider]: remember }));
 
         if (remember) {
-          localStorage.setItem(getStorageKey(provider), key);
-          localStorage.setItem(getRememberKey(provider), 'true');
+          sessionStorage.setItem(getStorageKey(provider), key);
+          sessionStorage.setItem(getRememberKey(provider), 'true');
         } else {
-          localStorage.removeItem(getStorageKey(provider));
-          localStorage.removeItem(getRememberKey(provider));
+          sessionStorage.removeItem(getStorageKey(provider));
+          sessionStorage.removeItem(getRememberKey(provider));
         }
 
         return true;
@@ -216,9 +272,14 @@ export function ApiKeysProvider({ children }: { children: ReactNode }) {
       clearError();
 
       try {
-        localStorage.removeItem(getStorageKey(provider));
-        localStorage.removeItem(getRememberKey(provider));
-        localStorage.removeItem(ACTIVE_KEY);
+        sessionStorage.removeItem(getStorageKey(provider));
+        sessionStorage.removeItem(getRememberKey(provider));
+        sessionStorage.removeItem(ACTIVE_KEY);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem(getLegacyStorageKey(provider));
+          localStorage.removeItem(getLegacyRememberKey(provider));
+          localStorage.removeItem(ACTIVE_KEY);
+        }
 
         setKeys((prev) => {
           const newKeys = { ...prev };

@@ -3,6 +3,7 @@ import { v } from 'convex/values';
 import { QUERY_LIMITS } from './constants';
 import { messageMetadataValidator } from './validators';
 import { requireOwnership, ConvexAppError, ErrorCode } from './lib/errors';
+import { getMessageCountForSession, incrementMessageCount } from './lib/message_counts';
 
 /**
  * Paginated query for session messages. Uses cursor-based pagination for O(limit) performance.
@@ -54,8 +55,8 @@ export const listBySession = query({
 export const countBySession = query({
   args: { sessionId: v.id('sessions') },
   handler: async (ctx, { sessionId }) => {
-    const { session } = await requireOwnership(ctx, sessionId);
-    return session.messageCount ?? 0;
+    await requireOwnership(ctx, sessionId);
+    return await getMessageCountForSession(ctx, sessionId);
   },
 });
 
@@ -81,9 +82,10 @@ export const create = mutation({
       timestamp: timestamp ?? now,
       createdAt: now,
     });
-    await ctx.db.patch(sessionId, {
-      messageCount: (session.messageCount ?? 0) + 1,
-      updatedAt: now,
+    await incrementMessageCount(ctx, {
+      sessionId,
+      userId: session.userId,
+      delta: 1,
     });
     return await ctx.db.get(id);
   },
@@ -125,9 +127,10 @@ export const remove = mutation({
 
     // Update session message count if session still exists
     if (session) {
-      await ctx.db.patch(session._id, {
-        messageCount: Math.max(0, (session.messageCount ?? 0) - 1),
-        updatedAt: Date.now(),
+      await incrementMessageCount(ctx, {
+        sessionId: session._id,
+        userId: session.userId,
+        delta: -1,
       });
     }
 

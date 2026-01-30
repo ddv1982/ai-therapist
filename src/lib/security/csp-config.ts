@@ -181,33 +181,6 @@ export const CSP_EXCEPTIONS: CSPException[] = [
   },
 
   // ============================================================================
-  // INLINE CONTENT
-  // ============================================================================
-  {
-    source: "'unsafe-inline'",
-    directives: ['style-src'],
-    category: 'authentication',
-    reason: `Inline styles fallback. While we use nonce-based CSP, some third-party libraries (Clerk, reCAPTCHA) 
-may inject inline styles. Modern browsers with CSP Level 2+ support will use the nonce and ignore unsafe-inline.
-This serves as a fallback for older browsers.`,
-    devOnly: false,
-    reference:
-      'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/style-src',
-  },
-  {
-    source: "'unsafe-inline' (script-src)",
-    directives: ['script-src'],
-    category: 'authentication',
-    reason: `Script inline fallback for nonce-based CSP. In production, we use nonce-based CSP which takes 
-precedence over unsafe-inline in browsers that support CSP Level 2+. The unsafe-inline is kept as a 
-fallback for older browsers that don't support nonces. Scripts without valid nonces will be blocked 
-in modern browsers regardless of this directive.`,
-    devOnly: false,
-    reference:
-      'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src',
-  },
-
-  // ============================================================================
   // DATA URLS AND BLOBS
   // ============================================================================
   {
@@ -284,7 +257,6 @@ export const CSP_SUMMARY = {
     production: `
       - No 'unsafe-eval' allowed
       - Nonce-based script/style execution only
-      - 'unsafe-inline' kept as fallback but ignored by modern browsers
       - CSP violation reporting enabled to /api/csp-report
     `,
   },

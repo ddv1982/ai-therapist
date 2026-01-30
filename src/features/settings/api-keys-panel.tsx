@@ -6,7 +6,7 @@
  * Features:
  * - Add/remove API keys for OpenAI
  * - Activate/deactivate BYOK mode (uses GPT-5 Mini)
- * - "Remember my key" checkbox (opt-in localStorage storage)
+ * - "Remember my key" checkbox (session-only storage with confirmation)
  * - Clear security warning about browser storage
  *
  * @module api-keys-panel
@@ -20,13 +20,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useApiKeys, type Provider, PROVIDERS, BYOK_MODEL } from '@/hooks/use-api-keys';
 import {
-  useApiKeys,
-  type Provider,
-  PROVIDERS,
-  BYOK_MODEL,
-} from '@/hooks/use-api-keys';
-import { Loader2, Check, X, Key, AlertCircle, AlertTriangle, Eye, EyeOff, Zap, Power } from 'lucide-react';
+  Loader2,
+  Check,
+  X,
+  Key,
+  AlertCircle,
+  AlertTriangle,
+  Eye,
+  EyeOff,
+  Zap,
+  Power,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
 
@@ -74,6 +80,7 @@ interface KeyEntryState {
   validationError: string | null;
   showKey: boolean;
   remember: boolean;
+  rememberPending: boolean;
 }
 
 const initialKeyEntryState: KeyEntryState = {
@@ -83,6 +90,7 @@ const initialKeyEntryState: KeyEntryState = {
   validationError: null,
   showKey: false,
   remember: false,
+  rememberPending: false,
 };
 
 export function ApiKeysPanel({ open, onOpenChange }: ApiKeysPanelProps) {
@@ -98,7 +106,7 @@ export function ApiKeysPanel({ open, onOpenChange }: ApiKeysPanelProps) {
     isActive,
     setActive,
   } = useApiKeys();
-  
+
   const { showToast } = useToast();
 
   const [entryStates, setEntryStates] = useState<Record<Provider, KeyEntryState>>(() =>
@@ -108,15 +116,12 @@ export function ApiKeysPanel({ open, onOpenChange }: ApiKeysPanelProps) {
     )
   );
 
-  const updateEntryState = useCallback(
-    (provider: Provider, updates: Partial<KeyEntryState>) => {
-      setEntryStates((prev) => ({
-        ...prev,
-        [provider]: { ...prev[provider], ...updates },
-      }));
-    },
-    []
-  );
+  const updateEntryState = useCallback((provider: Provider, updates: Partial<KeyEntryState>) => {
+    setEntryStates((prev) => ({
+      ...prev,
+      [provider]: { ...prev[provider], ...updates },
+    }));
+  }, []);
 
   const startEditing = useCallback(
     (provider: Provider) => {
@@ -126,6 +131,7 @@ export function ApiKeysPanel({ open, onOpenChange }: ApiKeysPanelProps) {
         validationError: null,
         showKey: false,
         remember: isRemembered(provider),
+        rememberPending: false,
       });
     },
     [updateEntryState, isRemembered]
@@ -150,25 +156,47 @@ export function ApiKeysPanel({ open, onOpenChange }: ApiKeysPanelProps) {
 
   const handleRememberChange = useCallback(
     (provider: Provider, checked: boolean) => {
-      updateEntryState(provider, { remember: checked });
+      if (checked) {
+        updateEntryState(provider, { rememberPending: true });
+        return;
+      }
+      updateEntryState(provider, { remember: false, rememberPending: false });
     },
     [updateEntryState]
   );
 
-  const toggleShowKey = useCallback(
+  const confirmRemember = useCallback(
     (provider: Provider) => {
-      setEntryStates((prev) => ({
-        ...prev,
-        [provider]: { ...prev[provider], showKey: !prev[provider].showKey },
-      }));
+      updateEntryState(provider, { remember: true, rememberPending: false });
     },
-    []
+    [updateEntryState]
   );
+
+  const cancelRemember = useCallback(
+    (provider: Provider) => {
+      updateEntryState(provider, { remember: false, rememberPending: false });
+    },
+    [updateEntryState]
+  );
+
+  const toggleShowKey = useCallback((provider: Provider) => {
+    setEntryStates((prev) => ({
+      ...prev,
+      [provider]: { ...prev[provider], showKey: !prev[provider].showKey },
+    }));
+  }, []);
 
   const handleValidateAndSave = useCallback(
     async (provider: Provider) => {
       const state = entryStates[provider];
       const key = state.inputValue.trim();
+
+      if (state.rememberPending) {
+        updateEntryState(provider, {
+          validationError: 'Confirm key storage to remember this key.',
+        });
+        return;
+      }
 
       if (!key) {
         updateEntryState(provider, { validationError: 'Please enter an API key' });
@@ -220,7 +248,7 @@ export function ApiKeysPanel({ open, onOpenChange }: ApiKeysPanelProps) {
     setActive(newActive);
     showToast({
       title: newActive ? 'BYOK Activated' : 'BYOK Deactivated',
-      message: newActive 
+      message: newActive
         ? `Now using ${BYOK_MODEL} with your API key`
         : 'Switched back to default models',
       type: newActive ? 'success' : 'info',
@@ -256,9 +284,7 @@ export function ApiKeysPanel({ open, onOpenChange }: ApiKeysPanelProps) {
             </div>
             <div>
               <DialogTitle className="text-lg font-semibold">API Keys</DialogTitle>
-              <p className="text-muted-foreground text-sm">
-                Use your own OpenAI API key
-              </p>
+              <p className="text-muted-foreground text-sm">Use your own OpenAI API key</p>
             </div>
           </div>
         </DialogHeader>
@@ -282,6 +308,8 @@ export function ApiKeysPanel({ open, onOpenChange }: ApiKeysPanelProps) {
                   onCancelEditing={() => cancelEditing(config.id)}
                   onInputChange={(value) => handleInputChange(config.id, value)}
                   onRememberChange={(checked) => handleRememberChange(config.id, checked)}
+                  onConfirmRemember={() => confirmRemember(config.id)}
+                  onCancelRemember={() => cancelRemember(config.id)}
                   onToggleShowKey={() => toggleShowKey(config.id)}
                   onValidateAndSave={() => handleValidateAndSave(config.id)}
                   onRemoveKey={() => handleRemoveKey(config.id)}
@@ -297,7 +325,7 @@ export function ApiKeysPanel({ open, onOpenChange }: ApiKeysPanelProps) {
                         <p className="text-sm font-medium">
                           {isActive ? 'BYOK Active' : 'BYOK Inactive'}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {isActive
                             ? `Using ${BYOK_MODEL} for all conversations`
                             : 'Using default Groq models'}
@@ -365,6 +393,8 @@ interface ProviderCardProps {
   onCancelEditing: () => void;
   onInputChange: (value: string) => void;
   onRememberChange: (checked: boolean) => void;
+  onConfirmRemember: () => void;
+  onCancelRemember: () => void;
   onToggleShowKey: () => void;
   onValidateAndSave: () => void;
   onRemoveKey: () => void;
@@ -380,11 +410,21 @@ function ProviderCard({
   onCancelEditing,
   onInputChange,
   onRememberChange,
+  onConfirmRemember,
+  onCancelRemember,
   onToggleShowKey,
   onValidateAndSave,
   onRemoveKey,
 }: ProviderCardProps) {
-  const { isEditing, inputValue, isValidating, validationError, showKey, remember } = entryState;
+  const {
+    isEditing,
+    inputValue,
+    isValidating,
+    validationError,
+    showKey,
+    remember,
+    rememberPending,
+  } = entryState;
 
   return (
     <Card
@@ -420,9 +460,7 @@ function ProviderCard({
                   <span className="text-emerald-400">
                     {keyValue ? maskApiKey(keyValue, config.id) : 'Configured'}{' '}
                     <Check className="mb-0.5 inline h-3 w-3" />
-                    {isRemembered && (
-                      <span className="ml-1 text-xs text-amber-400">(saved)</span>
-                    )}
+                    {isRemembered && <span className="ml-1 text-xs text-amber-400">(session)</span>}
                   </span>
                 ) : (
                   'No key configured'
@@ -484,16 +522,41 @@ function ProviderCard({
             <div className="flex items-center space-x-2">
               <Checkbox
                 id={`${config.id}-remember`}
-                checked={remember}
+                checked={remember || rememberPending}
                 onCheckedChange={(checked) => onRememberChange(checked === true)}
               />
               <label
                 htmlFor={`${config.id}-remember`}
-                className="text-sm text-muted-foreground cursor-pointer"
+                className="text-muted-foreground cursor-pointer text-sm"
               >
-                Remember my key on this device
+                Remember my key for this session
               </label>
             </div>
+
+            <div className="border-border/60 bg-muted/40 text-muted-foreground flex items-start gap-2 rounded-md border p-2 text-xs">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" />
+              <div>
+                <p className="text-foreground/80 font-medium">Key storage notice</p>
+                <p>
+                  Stored in browser session storage. Clears when the tab closes. Still vulnerable to
+                  XSS.
+                </p>
+              </div>
+            </div>
+
+            {rememberPending && (
+              <div className="border-border/60 bg-muted/60 flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm">
+                <span>Store this key until the tab closes?</span>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={onConfirmRemember} className="h-7">
+                    Confirm & Remember
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={onCancelRemember} className="h-7">
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {validationError && (
               <p
