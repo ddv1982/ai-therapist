@@ -6,7 +6,6 @@
  * - not-found.tsx
  * - realistic-moon.tsx
  * - cbt-message.tsx
- * - session-analytics.tsx
  * - theme-toggle.tsx
  *
  * Strategy: Lazy load at component level, not here

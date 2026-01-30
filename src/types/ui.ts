@@ -48,9 +48,7 @@ export interface ErrorComponentProps {
  * Combined props for components with common state management
  */
 export interface StatefulComponentProps
-  extends ToggleComponentProps,
-    LoadingComponentProps,
-    ErrorComponentProps {}
+  extends ToggleComponentProps, LoadingComponentProps, ErrorComponentProps {}
 
 // ============================================================================
 // THERAPEUTIC MESSAGE COMPONENTS
@@ -165,10 +163,7 @@ export interface AIParametersProps {
  * Complete chat settings props (combining all configuration)
  */
 export interface ChatSettingsProps
-  extends ModelConfigProps,
-    ApiKeyProps,
-    AIParametersProps,
-    ToggleComponentProps {
+  extends ModelConfigProps, ApiKeyProps, AIParametersProps, ToggleComponentProps {
   showSettings: boolean;
   setShowSettings: (show: boolean) => void;
   onSave?: () => void;
@@ -193,9 +188,7 @@ export interface ResponsiveLayoutProps {
  * Sidebar component props
  */
 export interface SidebarProps
-  extends ToggleComponentProps,
-    ResponsiveLayoutProps,
-    ContainerComponentProps {
+  extends ToggleComponentProps, ResponsiveLayoutProps, ContainerComponentProps {
   showSidebar: boolean;
   setShowSidebar: (show: boolean) => void;
   position?: 'left' | 'right';
@@ -313,17 +306,6 @@ export interface ReportGenerationProps {
   isGenerating: boolean;
 }
 
-/**
- * Session analytics props
- */
-export interface SessionAnalyticsProps {
-  sessionId: string;
-  messageCount: number;
-  duration?: number;
-  keyInsights?: string[];
-  moodProgression?: number[];
-}
-
 // ============================================================================
 // COMPOSITE COMPONENT PROPS
 // ============================================================================
@@ -332,10 +314,7 @@ export interface SessionAnalyticsProps {
  * Main chat interface props (combining multiple concerns)
  */
 export interface ChatInterfaceProps
-  extends SessionListProps,
-    ChatSettingsProps,
-    ResponsiveLayoutProps,
-    MessageListProps {
+  extends SessionListProps, ChatSettingsProps, ResponsiveLayoutProps, MessageListProps {
   isStreaming: boolean;
   onSendMessage: (message: string) => void;
   onStopGeneration?: () => void;
@@ -397,5 +376,3 @@ export type PartialComponentProps<T, K extends keyof T> = Omit<T, K> & Partial<P
  * Props with required handlers
  */
 export type WithRequiredHandlers<T, K extends keyof T> = T & Required<Pick<T, K>>;
-
-
