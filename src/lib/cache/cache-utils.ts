@@ -497,5 +497,3 @@ export const cache = {
 
   health: () => cacheManager.getHealthInfo(),
 };
-
-export type { CacheDecoratorOptions } from './cache-decorators';
