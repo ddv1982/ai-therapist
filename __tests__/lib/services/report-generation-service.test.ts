@@ -1,5 +1,9 @@
 import { ReportGenerationService } from '@/features/therapy/lib/report-generation-service';
-import { generateSessionReport, extractStructuredAnalysis } from '@/lib/api/groq-client';
+import {
+  generateSessionReport,
+  extractStructuredAnalysis,
+  type ParsedAnalysis,
+} from '@/lib/api/groq-client';
 import {
   encryptSessionReportContent,
   encryptEnhancedAnalysisData,
@@ -11,7 +15,6 @@ import {
 import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/features/therapy/lib/parsers';
 import { supportsWebSearch, getModelDisplayName } from '@/ai/model-metadata';
 import { getReportPrompt } from '@/features/therapy/lib/therapy-prompts';
-import type { ParsedAnalysis } from '@/features/therapy/lib/analysis-schema';
 
 // Mocks
 jest.mock('@/lib/api/groq-client');

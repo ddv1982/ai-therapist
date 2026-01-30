@@ -1,10 +1,14 @@
 /**
- * Chat Service Types
- *
- * Shared types for chat service classes.
+ * Chat Service Types - Minimal shared types used by services
+ * Only includes types actually needed by message-persistence and metadata-manager
  */
 
 import type { MessageData } from '@/features/chat/messages/message';
+
+/**
+ * Message type used throughout chat system.
+ */
+export type Message = MessageData;
 
 /**
  * Result type for operations that can fail.
@@ -25,11 +29,6 @@ export function ok<T>(data: T): Result<T, never> {
 export function err<E>(error: E): Result<never, E> {
   return { success: false, error };
 }
-
-/**
- * Message type used throughout the chat system.
- */
-export type Message = MessageData;
 
 /**
  * Payload for creating a new message.
@@ -71,7 +70,7 @@ export interface MetadataUpdateOptions {
 }
 
 /**
- * Interface for the API client used by services.
+ * Interface for API client used by services.
  * This allows for easy mocking in tests.
  */
 export interface IChatApiClient {

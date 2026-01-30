@@ -4,7 +4,8 @@ import { memo, useMemo, useCallback, useRef, useEffect, type RefObject, Profiler
 import dynamic from 'next/dynamic';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { CheckCircle, Heart } from 'lucide-react';
-import { Message, type MessageData } from '@/features/chat/messages';
+import { Message } from '@/features/chat/messages/message';
+import type { MessageData } from '@/features/chat/messages/message';
 import type {
   SituationData,
   EmotionData,

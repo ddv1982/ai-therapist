@@ -4,6 +4,7 @@ import {
   extractStructuredAnalysis,
   type ReportMessage,
   type GenerationOptions,
+  type ParsedAnalysis,
 } from '@/lib/api/groq-client';
 import { ANALYSIS_EXTRACTION_PROMPT_TEXT } from '@/features/therapy/lib/therapy-prompts';
 import { getReportPrompt } from '@/features/therapy/lib/therapy-prompts';
@@ -21,7 +22,6 @@ import {
 import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/features/therapy/lib/parsers';
 import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
 import type { CBTStructuredAssessment } from '@/types';
-import type { ParsedAnalysis } from '@/features/therapy/lib/analysis-schema';
 
 interface ReportGenerationResult {
   reportContent: string;
