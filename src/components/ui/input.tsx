@@ -1,4 +1,4 @@
-import { type Ref } from 'react';
+import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
@@ -21,24 +21,24 @@ const inputVariants = cva(
 );
 
 export interface InputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
-    VariantProps<typeof inputVariants> {
-  ref?: Ref<HTMLInputElement>;
-}
+  extends
+    Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
+    VariantProps<typeof inputVariants> {}
 
 /**
  * Standard Input Component
  * Uses CVA for consistent variant and size management.
  */
-function Input({ className, variant, size, type, ref, ...props }: InputProps) {
-  return (
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, variant, size, type, ...props }, ref) => (
     <input
       type={type}
       className={cn(inputVariants({ variant, size, className }))}
       ref={ref}
       {...props}
     />
-  );
-}
+  )
+);
+Input.displayName = 'Input';
 
 export { Input, inputVariants };

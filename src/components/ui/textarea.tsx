@@ -1,4 +1,4 @@
-import { type Ref } from 'react';
+import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
@@ -21,23 +21,19 @@ const textareaVariants = cva(
 );
 
 export interface TextareaProps
-  extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'>,
-    VariantProps<typeof textareaVariants> {
-  ref?: Ref<HTMLTextAreaElement>;
-}
+  extends
+    Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'size'>,
+    VariantProps<typeof textareaVariants> {}
 
 /**
  * Standard Textarea Component
  * Uses CVA for consistency with Input component.
  */
-function Textarea({ className, variant, size, ref, ...props }: TextareaProps) {
-  return (
-    <textarea
-      className={cn(textareaVariants({ variant, size, className }))}
-      ref={ref}
-      {...props}
-    />
-  );
-}
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className, variant, size, ...props }, ref) => (
+    <textarea className={cn(textareaVariants({ variant, size, className }))} ref={ref} {...props} />
+  )
+);
+Textarea.displayName = 'Textarea';
 
 export { Textarea, textareaVariants };

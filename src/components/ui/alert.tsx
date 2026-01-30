@@ -1,4 +1,4 @@
-import { type Ref } from 'react';
+import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
@@ -8,9 +8,12 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: 'bg-background text-foreground border-border',
-        destructive: 'border-destructive/30 bg-destructive/10 text-destructive [&>svg]:text-destructive',
-        success: 'border-therapy-success/30 bg-therapy-success/10 text-therapy-success [&>svg]:text-therapy-success',
-        warning: 'border-therapy-warning/30 bg-therapy-warning/10 text-therapy-warning [&>svg]:text-therapy-warning',
+        destructive:
+          'border-destructive/30 bg-destructive/10 text-destructive [&>svg]:text-destructive',
+        success:
+          'border-therapy-success/30 bg-therapy-success/10 text-therapy-success [&>svg]:text-therapy-success',
+        warning:
+          'border-therapy-warning/30 bg-therapy-warning/10 text-therapy-warning [&>svg]:text-therapy-warning',
         info: 'border-therapy-info/30 bg-therapy-info/10 text-therapy-info [&>svg]:text-therapy-info',
         therapy: 'border-primary/30 bg-primary/10 text-primary [&>svg]:text-primary',
       },
@@ -22,37 +25,35 @@ const alertVariants = cva(
 );
 
 interface AlertProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof alertVariants> {
-  ref?: Ref<HTMLDivElement>;
-}
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {}
 
-function Alert({ className, variant, ref, ...props }: AlertProps) {
-  return (
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
+  ({ className, variant, ...props }, ref) => (
     <div ref={ref} role="alert" className={cn(alertVariants({ variant }), className)} {...props} />
-  );
-}
+  )
+);
+Alert.displayName = 'Alert';
 
-interface AlertTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
-  ref?: Ref<HTMLParagraphElement>;
-}
+interface AlertTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
 
-function AlertTitle({ className, ref, ...props }: AlertTitleProps) {
-  return (
+const AlertTitle = React.forwardRef<HTMLHeadingElement, AlertTitleProps>(
+  ({ className, ...props }, ref) => (
     <h5
       ref={ref}
       className={cn('mb-1 leading-none font-semibold tracking-tight', className)}
       {...props}
     />
-  );
-}
+  )
+);
+AlertTitle.displayName = 'AlertTitle';
 
-interface AlertDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {
-  ref?: Ref<HTMLParagraphElement>;
-}
+interface AlertDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {}
 
-function AlertDescription({ className, ref, ...props }: AlertDescriptionProps) {
-  return <div ref={ref} className={cn('text-sm [&_p]:leading-relaxed', className)} {...props} />;
-}
+const AlertDescription = React.forwardRef<HTMLParagraphElement, AlertDescriptionProps>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn('text-sm [&_p]:leading-relaxed', className)} {...props} />
+  )
+);
+AlertDescription.displayName = 'AlertDescription';
 
 export { Alert, AlertTitle, AlertDescription };

@@ -7,7 +7,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
+} from '@/features/therapy/components/ui/sheet';
 import { useCBT } from '@/contexts/cbt-context';
 const SituationPrompt = dynamic(() =>
   import('@/features/therapy/cbt/chat-components/situation-prompt').then((mod) => ({

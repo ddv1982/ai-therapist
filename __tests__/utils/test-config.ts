@@ -132,7 +132,6 @@ declare global {
       toHaveTherapeuticStructure(): R;
       toContainSecureToken(): R;
       toBeWithinEmotionRange(): R;
-      toHaveProperTableStructure(): R;
     }
   }
 }
@@ -237,23 +236,6 @@ expect.extend({
   /**
    * Validates therapeutic table structure
    */
-  toHaveProperTableStructure(received: string) {
-    const hasTable = received.includes('<table');
-    const hasTherapeuticClass = received.includes('therapeutic-table');
-    const hasResponsiveWrapper = received.includes('table-container');
-    const hasMobileLabels = received.includes('data-label=');
-
-    const isProperStructure =
-      hasTable && hasTherapeuticClass && hasResponsiveWrapper && hasMobileLabels;
-
-    return {
-      message: () =>
-        isProperStructure
-          ? 'Table has proper therapeutic structure'
-          : 'Expected table with therapeutic classes, responsive wrapper, and mobile labels',
-      pass: isProperStructure,
-    };
-  },
 });
 
 // =============================================================================

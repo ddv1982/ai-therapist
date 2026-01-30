@@ -26,7 +26,6 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        // Responsive tap targets per DS
         'bg-background group/calendar p-3 [--cell-size:2.75rem] md:[--cell-size:2.25rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent',
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
@@ -88,7 +87,6 @@ function Calendar({
         range_start: cn('bg-accent rounded-l-md', defaultClassNames.range_start),
         range_middle: cn('rounded-none', defaultClassNames.range_middle),
         range_end: cn('bg-accent rounded-r-md', defaultClassNames.range_end),
-        // Today cell: no fill by default; if selected, selected styles take precedence
         today: cn('rounded-md data-[selected=true]:rounded-none', defaultClassNames.today),
         outside: cn(
           'text-muted-foreground aria-selected:text-muted-foreground',
@@ -162,13 +160,9 @@ function CalendarDayButton({
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
       className={cn(
-        // Selected / range styling (use primary blue)
         'data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[range-middle=true]:bg-primary data-[range-middle=true]:text-primary-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground',
-        // Focus ring
         'group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px]',
-        // Layout & typography per DS
         'flex aspect-square h-auto w-full min-w-[--cell-size] flex-col gap-1 leading-none font-normal [&>span]:text-sm [&>span]:opacity-70',
-        // Subtle ring for today when not selected (avoid double green)
         !isSelected && modifiers.today && 'ring-primary/60 ring-1',
         defaultClassNames.day,
         className

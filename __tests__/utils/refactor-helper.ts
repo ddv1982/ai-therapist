@@ -109,12 +109,6 @@ export class TestRefactorHelper {
         canOptimize: true,
         description: 'Modal checks can use ComponentTestUtils.expectModalDialog',
       },
-      {
-        pattern: 'Table structure testing',
-        regex: /expect.*getByRole\('table'\)/g,
-        canOptimize: true,
-        description: 'Table tests can use ComponentTestUtils.expectTherapeuticTable',
-      },
     ];
 
     return patterns.map(({ pattern, regex, canOptimize, description }) => {

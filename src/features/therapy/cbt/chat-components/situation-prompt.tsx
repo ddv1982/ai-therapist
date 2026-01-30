@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DatePicker } from '@/features/therapy/cbt/components/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -104,7 +104,10 @@ export function SituationPrompt({
 
   const handleNext = useCallback(() => {
     if (isValid) {
-      const trimmed: SituationData = { situation: localData.situation.trim(), date: localData.date };
+      const trimmed: SituationData = {
+        situation: localData.situation.trim(),
+        date: localData.date,
+      };
       onComplete(trimmed);
     }
   }, [isValid, localData, onComplete]);

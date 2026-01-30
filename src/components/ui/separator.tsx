@@ -1,4 +1,4 @@
-import { type Ref } from 'react';
+import * as React from 'react';
 import * as SeparatorPrimitive from '@radix-ui/react-separator';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
@@ -30,31 +30,35 @@ const separatorVariants = cva('shrink-0 bg-border', {
   },
 });
 
-interface SeparatorProps extends VariantProps<typeof separatorVariants> {
-  ref?: Ref<React.ElementRef<typeof SeparatorPrimitive.Root>>;
-  className?: string;
-  decorative?: boolean;
-  orientation?: 'horizontal' | 'vertical';
-}
+interface SeparatorProps
+  extends
+    Omit<React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root>, 'orientation'>,
+    VariantProps<typeof separatorVariants> {}
 
-function Separator({
-  className,
-  orientation = 'horizontal',
-  decorative = true,
-  variant,
-  spacing,
-  ref,
-  ...props
-}: SeparatorProps) {
-  return (
-    <SeparatorPrimitive.Root
-      ref={ref}
-      decorative={decorative}
-      orientation={orientation}
-      className={cn(separatorVariants({ orientation, variant, spacing }), className)}
-      {...props}
-    />
-  );
-}
+const Separator = React.forwardRef<
+  React.ElementRef<typeof SeparatorPrimitive.Root>,
+  SeparatorProps
+>(
+  (
+    { className, orientation = 'horizontal', decorative = true, variant, spacing, ...props },
+    ref
+  ) => {
+    const resolvedOrientation = orientation ?? 'horizontal';
+
+    return (
+      <SeparatorPrimitive.Root
+        ref={ref}
+        decorative={decorative}
+        orientation={resolvedOrientation}
+        className={cn(
+          separatorVariants({ orientation: resolvedOrientation, variant, spacing }),
+          className
+        )}
+        {...props}
+      />
+    );
+  }
+);
+Separator.displayName = SeparatorPrimitive.Root.displayName;
 
 export { Separator, separatorVariants };

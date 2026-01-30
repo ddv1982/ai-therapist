@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { LanguageToggle } from '@/components/ui/language-switcher';
+import { LanguageToggle } from '@/features/chat/components/language-switcher';
 import { Plus, MessageSquare, Trash2, Sparkles, Brain, Globe, EyeOff, Key } from 'lucide-react';
 import { useChat } from '@/features/chat/context/chat-context';
 import { useTranslations } from 'next-intl';
@@ -17,16 +17,17 @@ import { ANALYTICAL_MODEL_ID, LOCAL_MODEL_ID } from '@/features/chat/config';
  * Refactored to use ChatContext for better maintainability.
  */
 export function ChatSidebar() {
-  const { state: chatState, actions: chatActions, modalActions, controller, byokActive } = useChat();
+  const {
+    state: chatState,
+    actions: chatActions,
+    modalActions,
+    controller,
+    byokActive,
+  } = useChat();
   const { settings } = useChatSettings();
   const translate = useTranslations('chat');
 
-  const {
-    showSidebar: open,
-    sessions,
-    currentSession: currentSessionId,
-    isMobile,
-  } = chatState;
+  const { showSidebar: open, sessions, currentSession: currentSessionId, isMobile } = chatState;
 
   const {
     setShowSidebar,
@@ -41,9 +42,7 @@ export function ChatSidebar() {
     deleteSession: onDeleteSession,
   } = controller;
 
-  const {
-    openApiKeysPanel: onApiKeysOpen,
-  } = modalActions;
+  const { openApiKeysPanel: onApiKeysOpen } = modalActions;
 
   const webSearchEnabled = settings.webSearchEnabled;
   const smartModelActive = !settings.webSearchEnabled && settings.model === ANALYTICAL_MODEL_ID;
@@ -211,7 +210,9 @@ export function ChatSidebar() {
             </button>
             <div className="group relative">
               <button
-                onClick={() => { void onToggleLocalModel(); }}
+                onClick={() => {
+                  void onToggleLocalModel();
+                }}
                 className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:outline-none ${
                   localModelActive
                     ? 'bg-violet-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.65)]'
@@ -249,7 +250,9 @@ export function ChatSidebar() {
                   }`}
                   aria-label={translate('sidebar.apiKeys')}
                   aria-pressed={byokActive}
-                  title={byokActive ? translate('sidebar.byokActive') : translate('sidebar.apiKeys')}
+                  title={
+                    byokActive ? translate('sidebar.byokActive') : translate('sidebar.apiKeys')
+                  }
                 >
                   <Key className="h-4 w-4" />
                 </button>

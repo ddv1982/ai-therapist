@@ -6,9 +6,13 @@ import { format } from 'date-fns';
 
 import { cn } from '@/lib/utils/helpers';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { Calendar } from '@/features/therapy/cbt/components/ui/calendar';
 import { useTranslations } from 'next-intl';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/features/therapy/cbt/components/ui/popover';
 
 export interface DatePickerProps {
   value?: Date;
@@ -49,7 +53,6 @@ export function DatePicker({
           aria-haspopup="dialog"
           aria-expanded={open}
           className={cn(
-            // DS: full width on mobile, natural on desktop up to 320px
             'h-10 w-full justify-start px-3 text-left font-normal md:w-[320px]',
             !value && 'text-muted-foreground',
             className
@@ -67,7 +70,6 @@ export function DatePicker({
         avoidCollisions
         collisionPadding={8}
         className={cn(
-          // Responsive sizing per shadcn + DS: avoid desktop scrollbar, allow mobile scroll
           'mx-2 max-h-[min(70vh,420px)] w-[min(92vw,360px)] overflow-auto rounded-lg border p-0 md:mx-0 md:w-[360px] md:overflow-visible'
         )}
       >
@@ -81,7 +83,6 @@ export function DatePicker({
               if (minDate && date < minDate) return true;
               return false;
             }}
-            // Responsive cell size: larger tap targets on mobile
             className="[--cell-size:2.75rem] md:[--cell-size:2.25rem]"
             initialFocus
           />

@@ -1,4 +1,4 @@
-import { type Ref } from 'react';
+import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
@@ -36,8 +36,7 @@ const therapyCardVariants = cva('therapy-card transition-all duration-200', {
 });
 
 interface TherapyCardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof therapyCardVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof therapyCardVariants> {
   title?: string;
   subtitle?: string;
   description?: string;
@@ -46,41 +45,39 @@ interface TherapyCardProps
   icon?: React.ReactNode;
   action?: React.ReactNode;
   children?: React.ReactNode;
-  ref?: Ref<HTMLDivElement>;
 }
 
-function TherapyCard({
-  className,
-  variant,
-  size,
-  elevation,
-  title,
-  subtitle,
-  description,
-  badge,
-  badgeVariant = 'therapy',
-  icon,
-  action,
-  children,
-  ref,
-  ...props
-}: TherapyCardProps) {
-  return (
+const TherapyCard = React.forwardRef<HTMLDivElement, TherapyCardProps>(
+  (
+    {
+      className,
+      variant,
+      size,
+      elevation,
+      title,
+      subtitle,
+      description,
+      badge,
+      badgeVariant = 'therapy',
+      icon,
+      action,
+      children,
+      ...props
+    },
+    ref
+  ) => (
     <Card
       ref={ref}
       className={cn(therapyCardVariants({ variant, size, elevation }), className)}
       {...props}
     >
-      {/* Header Section */}
       {(title || subtitle || badge || icon || action) && (
         <div className="mb-2 flex items-start justify-between">
           <div className="flex min-w-0 flex-1 items-start gap-2">
-            {/* Icon */}
             {icon && (
               <div className="bg-primary/10 text-primary flex-shrink-0 rounded p-1">{icon}</div>
             )}
 
-            {/* Title and Subtitle */}
             <div className="min-w-0 flex-1">
               <div className="mb-1 flex items-center gap-1">
                 {title && (
@@ -96,38 +93,40 @@ function TherapyCard({
             </div>
           </div>
 
-          {/* Action */}
           {action && <div className="ml-2 flex-shrink-0">{action}</div>}
         </div>
       )}
 
-      {/* Description */}
       {description && (
         <p className="text-muted-foreground mb-4 text-sm leading-relaxed">{description}</p>
       )}
 
-      {/* Content */}
       {children && <div className="therapy-card-content">{children}</div>}
     </Card>
-  );
-}
+  )
+);
+TherapyCard.displayName = 'TherapyCard';
 
 // Specialized variants for common therapy use cases
-function InsightCard({ ref, ...props }: Omit<TherapyCardProps, 'variant'>) {
-  return <TherapyCard ref={ref} variant="accent" badgeVariant="info" {...props} />;
-}
+const InsightCard = React.forwardRef<HTMLDivElement, Omit<TherapyCardProps, 'variant'>>(
+  (props, ref) => <TherapyCard ref={ref} variant="accent" badgeVariant="info" {...props} />
+);
+InsightCard.displayName = 'InsightCard';
 
-function ProgressCard({ ref, ...props }: Omit<TherapyCardProps, 'variant'>) {
-  return <TherapyCard ref={ref} variant="success" badgeVariant="success" {...props} />;
-}
+const ProgressCard = React.forwardRef<HTMLDivElement, Omit<TherapyCardProps, 'variant'>>(
+  (props, ref) => <TherapyCard ref={ref} variant="success" badgeVariant="success" {...props} />
+);
+ProgressCard.displayName = 'ProgressCard';
 
-function ConcernCard({ ref, ...props }: Omit<TherapyCardProps, 'variant'>) {
-  return <TherapyCard ref={ref} variant="warning" badgeVariant="warning" {...props} />;
-}
+const ConcernCard = React.forwardRef<HTMLDivElement, Omit<TherapyCardProps, 'variant'>>(
+  (props, ref) => <TherapyCard ref={ref} variant="warning" badgeVariant="warning" {...props} />
+);
+ConcernCard.displayName = 'ConcernCard';
 
-function ActionCard({ ref, ...props }: Omit<TherapyCardProps, 'variant'>) {
-  return <TherapyCard ref={ref} variant="primary" badgeVariant="therapy" {...props} />;
-}
+const ActionCard = React.forwardRef<HTMLDivElement, Omit<TherapyCardProps, 'variant'>>(
+  (props, ref) => <TherapyCard ref={ref} variant="primary" badgeVariant="therapy" {...props} />
+);
+ActionCard.displayName = 'ActionCard';
 
 export {
   TherapyCard,

@@ -696,32 +696,6 @@ export class ComponentTestUtils {
   }
 
   /**
-   * Check for therapeutic table rendering
-   */
-  static expectTherapeuticTable(headers: string[], data?: string[][]) {
-    // Check for table structure
-    expect(screen.getByRole('table')).toBeInTheDocument();
-
-    // Check headers
-    headers.forEach((header) => {
-      expect(screen.getByText(header)).toBeInTheDocument();
-    });
-
-    // Check data if provided
-    if (data) {
-      data.forEach((row) => {
-        row.forEach((cell) => {
-          expect(screen.getByText(cell)).toBeInTheDocument();
-        });
-      });
-    }
-
-    // Check for therapeutic enhancements
-    const table = screen.getByRole('table');
-    expect(table).toHaveClass('therapeutic-table');
-  }
-
-  /**
    * Check toast notification display
    */
   static expectToastMessage(
