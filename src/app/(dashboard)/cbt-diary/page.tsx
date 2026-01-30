@@ -12,7 +12,7 @@ import { DiaryHeader } from '@/features/therapy/cbt/components/diary-header';
 import { logger } from '@/lib/utils/logger';
 import { useCBT } from '@/contexts/cbt-context';
 import { useChatPersistence } from '@/features/chat/hooks/use-chat-persistence';
-import { useSelectSession } from '@/hooks';
+import { useSelectSession } from '@/hooks/use-select-session';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import { CBTDiaryFlow } from '@/features/therapy/cbt/components/cbt-diary-flow';
 import type { CBTSessionData } from '@/features/therapy/cbt/hooks/use-cbt-flow';
