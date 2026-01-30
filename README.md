@@ -4,6 +4,13 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ## 🚀 Recent Improvements
 
+### 🔐 Storage & Security Hardening (Jan 2026)
+
+- **Sharded Message Counters**: Added Convex sharded counters for high-volume message counts
+- **Encrypted CBT Drafts**: CBT draft content is now encrypted at rest in browser storage
+- **BYOK Session Storage**: “Remember my key” is session-only and requires confirmation
+- **CSP Tightening**: Production CSP is nonce-only (no `unsafe-inline` fallback)
+
 ### 🔄 Next.js 16 Proxy Migration (Jan 2026)
 
 - **Middleware → Proxy**: Migrated from `middleware.ts` to `proxy.ts` following Next.js 16 conventions
@@ -22,7 +29,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ### 🌙 Advanced AI Orchestration & UX (Dec 2025)
 
-- **Bring Your Own Key (BYOK)**: Integrated support for OpenAI `gpt-5-mini` using user-provided API keys, synchronized across sessions.
+- **Bring Your Own Key (BYOK)**: Integrated support for OpenAI `gpt-5-mini` using user-provided API keys (session-only storage with confirmation when remembered).
 - **Local AI Support**: Integration with **Ollama** for running models like `gemma3:4b` locally, ensuring maximum privacy.
 - **Dynamic UI Enhancements**: Implemented an astronomy-based **Realistic Moon** dashboard that reflects real-world lunar phases for a calming therapeutic atmosphere.
 - **Global Reach**: Added full **internationalization (i18n)** support with English and Dutch locales.
@@ -93,12 +100,12 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ### 🔒 Enterprise Security
 
-- **Bring Your Own Key (BYOK)** - Optional use of personal OpenAI keys for enhanced privacy and cost control
+- **Bring Your Own Key (BYOK)** - Optional use of personal OpenAI keys for enhanced privacy and cost control (session-only storage when remembered)
 - **Clerk Managed Authentication** - Secure, industry-standard identity management
 - **AES-256-GCM Encryption** - Field-level encryption for therapeutic message content
 - **Webhook Authentication** - Svix signature verification for Clerk events
 - **Cross-Device Sessions** - Seamless access across devices
-- **Database Transactions** - Race condition prevention with ACID compliance
+- **Sharded Counters** - Race condition protection for high-volume message counts
 - **HIPAA-Compliant Logging** - No sensitive data exposure
 - **Convex Hardening** - Convex functions run server-side only and validate ownership via Clerk-issued JWTs.
 - **AI SDK Session State** - Session selection is hydrated server-side through AI SDK actions, ensuring the active pointer cannot be tampered with in the browser.
@@ -243,7 +250,7 @@ The repository includes a `Makefile` for common tasks.
 - Client streaming uses `@ai-sdk/react` `useChat` to `/api/chat`.
 - **System Models**: Groq-based `gpt-oss-120b` and `gpt-oss-20b`.
 - **Local Models**: Native Ollama integration (defaults to `gemma3:4b`).
-- **BYOK (Bring Your Own Key)**: Support for user-provided OpenAI keys using `gpt-5-mini`.
+- **BYOK (Bring Your Own Key)**: Support for user-provided OpenAI keys using `gpt-5-mini` (session-only storage when remembered).
 - Reports use AI SDK 6 `generateText` with `Output.object()` for structured outputs.
 - Session context/state uses `@ai-sdk/rsc` (`SessionAI`) for hydration and server-authoritative selection.
 - Model definition source of truth: `src/ai/model-metadata.ts`.
@@ -253,7 +260,7 @@ The repository includes a `Makefile` for common tasks.
 - **🔍 Web Search Enabled**: `openai/gpt-oss-120b` with browser tools
 - **💬 Regular Chat**: `openai/gpt-oss-20b` for fast responses
 - **🏠 Private / Local**: `ollama/gemma3:4b` for on-device inference
-- **🔑 Personal Key**: `openai/gpt-5-mini` via BYOK synchronization
+- **🔑 Personal Key**: `openai/gpt-5-mini` via BYOK session storage
 
 ## 🔧 Configuration
 
@@ -289,6 +296,7 @@ Key variables required in `.env.local`:
 ### Data Protection
 
 - **Field-level Encryption** - Sensitive data encrypted at rest
+- **Encrypted CBT Drafts** - CBT draft content encrypted in browser storage
 - **Content Security Policy** - XSS prevention
 - **Signed Webhooks** - Verifiable server-to-server communication
 
