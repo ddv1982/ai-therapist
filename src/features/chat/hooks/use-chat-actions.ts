@@ -11,7 +11,6 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import type { ChatState } from '@/features/chat/hooks/use-chat-state';
 import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID, LOCAL_MODEL_ID } from '@/features/chat/config';
 
 /**
@@ -49,8 +48,8 @@ export interface ChatActions {
 }
 
 export interface UseChatActionsParams {
-  // State
-  chatState: ChatState;
+  // Refs
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 
   // Core actions from controller
   setInput: (value: string) => void;
@@ -87,7 +86,7 @@ export interface UseChatActionsParams {
  */
 export function useChatActions(params: UseChatActionsParams): ChatActions {
   const {
-    chatState,
+    textareaRef,
     setInput,
     sendMessage,
     createObsessionsCompulsionsTable,
@@ -236,8 +235,8 @@ export function useChatActions(params: UseChatActionsParams): ChatActions {
 
   const scrollToBottom = useCallback(() => {
     scrollToBottomFn();
-    setTimeout(() => chatState.textareaRef.current?.focus(), 50);
-  }, [scrollToBottomFn, chatState.textareaRef]);
+    setTimeout(() => textareaRef.current?.focus(), 50);
+  }, [scrollToBottomFn, textareaRef]);
 
   // Memoize the actions object to prevent unnecessary re-renders in consumers
   return useMemo(

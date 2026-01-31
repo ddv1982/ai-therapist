@@ -4,35 +4,12 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useChatActions, type UseChatActionsParams } from '@/features/chat/hooks/use-chat-actions';
-import { createRef } from 'react';
-import type { ChatState } from '@/features/chat/hooks/use-chat-state';
+import { createRef, type MutableRefObject } from 'react';
 import { DEFAULT_MODEL_ID, ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 
 describe('useChatActions', () => {
-  const createMockChatState = (overrides?: Partial<ChatState>): ChatState => ({
-    messages: [],
-    sessions: [],
-    currentSession: 'session-1',
-    input: '',
-    isLoading: false,
-    isMobile: false,
-    viewportHeight: '100vh',
-    isGeneratingReport: false,
-    memoryContext: {
-      hasMemory: false,
-      reportCount: 0,
-      lastReportDate: undefined,
-    },
-    textareaRef: createRef(),
-    messagesContainerRef: createRef(),
-    inputContainerRef: createRef(),
-    isNearBottom: true,
-    showSidebar: false,
-    ...overrides,
-  });
-
   const createMockParams = (overrides?: Partial<UseChatActionsParams>): UseChatActionsParams => ({
-    chatState: createMockChatState(),
+    textareaRef: createRef(),
     setInput: jest.fn(),
     sendMessage: jest.fn().mockResolvedValue(undefined),
     createObsessionsCompulsionsTable: jest.fn().mockResolvedValue({ success: true }),
@@ -228,10 +205,9 @@ describe('useChatActions', () => {
     const scrollToBottom = jest.fn();
     const textareaRef = createRef<HTMLTextAreaElement>();
     const mockTextarea = { focus: jest.fn() } as unknown as HTMLTextAreaElement;
-    (textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = mockTextarea;
+    (textareaRef as MutableRefObject<HTMLTextAreaElement | null>).current = mockTextarea;
 
-    const chatState = createMockChatState({ textareaRef });
-    const params = createMockParams({ scrollToBottom, chatState });
+    const params = createMockParams({ scrollToBottom, textareaRef });
     const { result } = renderHook(() => useChatActions(params));
 
     act(() => {
