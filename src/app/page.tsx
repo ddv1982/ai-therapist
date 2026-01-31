@@ -10,7 +10,7 @@ import { useInputFooterHeight } from '@/hooks/use-input-footer-height';
 import { ChatSidebar } from '@/features/chat/components/dashboard/chat-sidebar';
 import { ChatHeader } from '@/features/chat/components/chat-header';
 import { ChatContainer } from '@/features/chat/components/chat-container';
-import { ChatControls } from '@/features/chat/components/chat-controls';
+import { ChatComposer } from '@/features/chat/components/chat-composer';
 import { ChatProvider, useChat } from '@/features/chat/context/chat-context';
 
 const MemoryManagementModal = dynamic(
@@ -34,10 +34,13 @@ const ApiKeysPanel = dynamic(
 );
 
 function ChatPageInner() {
-  const { state: chatState, modals, modalActions, controller } = useChat();
+  const { state: chatState, actions: chatActions, modals, modalActions, controller } = useChat();
   const t = useTranslations('chat');
 
   useInputFooterHeight(controller.inputContainerRef, controller.messagesContainerRef);
+
+  const { input, isLoading, isMobile, inputContainerRef, textareaRef } = chatState;
+  const { handleInputChange, handleKeyDown, handleFormSubmit } = chatActions;
 
   const chatUIBridge: ChatUIBridge = useMemo(
     () => ({
@@ -88,7 +91,17 @@ function ChatPageInner() {
 
           <ChatContainer />
 
-          <ChatControls />
+          <ChatComposer
+            input={input}
+            isLoading={Boolean(isLoading)}
+            isMobile={isMobile}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onSubmit={handleFormSubmit}
+            onStop={controller.stopGenerating}
+            inputContainerRef={inputContainerRef}
+            textareaRef={textareaRef}
+          />
         </main>
 
         <MobileDebugInfo />
