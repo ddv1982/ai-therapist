@@ -6,7 +6,7 @@ import {
   ErrorCodeToHttpStatus,
   ErrorCodeToMessage,
   type AppError,
-} from '../error-codes';
+} from '@/lib/errors/error-codes';
 
 describe('ErrorCode', () => {
   describe('error code values', () => {
@@ -124,7 +124,11 @@ describe('createAppError', () => {
   });
 
   it('should create an AppError with details', () => {
-    const error = createAppError(ErrorCode.VALIDATION_ERROR, 'Invalid email', 'Email format is incorrect');
+    const error = createAppError(
+      ErrorCode.VALIDATION_ERROR,
+      'Invalid email',
+      'Email format is incorrect'
+    );
 
     expect(error).toEqual({
       code: ErrorCode.VALIDATION_ERROR,

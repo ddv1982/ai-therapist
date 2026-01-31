@@ -5,9 +5,9 @@ import { useTranslations } from 'next-intl';
 import { ChevronLeft, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { usePersistedCBTFlow } from '../hooks/use-persisted-cbt-flow';
-import type { CBTSessionData } from '../hooks/use-cbt-flow';
-import type { CBTStepId } from '../flow/types';
+import { usePersistedCBTFlow } from '@/features/therapy/cbt/hooks/use-persisted-cbt-flow';
+import type { CBTSessionData } from '@/features/therapy/cbt/hooks/use-cbt-flow';
+import type { CBTStepId } from '@/features/therapy/cbt/flow/types';
 import type {
   SituationData,
   EmotionData,
@@ -19,15 +19,15 @@ import type {
   ActionPlanData,
 } from '@/types';
 
-import { SituationPrompt } from '../chat-components/situation-prompt';
-import { EmotionScale } from '../chat-components/emotion-scale';
-import { ThoughtRecord } from '../chat-components/thought-record';
-import { CoreBelief } from '../chat-components/core-belief';
-import { ChallengeQuestions } from '../chat-components/challenge-questions';
-import { RationalThoughts } from '../chat-components/rational-thoughts';
-import { SchemaModes } from '../chat-components/schema-modes';
-import { ActionPlan } from '../chat-components/action-plan';
-import { FinalEmotionReflection } from '../chat-components/final-emotion-reflection';
+import { SituationPrompt } from '@/features/therapy/cbt/chat-components/situation-prompt';
+import { EmotionScale } from '@/features/therapy/cbt/chat-components/emotion-scale';
+import { ThoughtRecord } from '@/features/therapy/cbt/chat-components/thought-record';
+import { CoreBelief } from '@/features/therapy/cbt/chat-components/core-belief';
+import { ChallengeQuestions } from '@/features/therapy/cbt/chat-components/challenge-questions';
+import { RationalThoughts } from '@/features/therapy/cbt/chat-components/rational-thoughts';
+import { SchemaModes } from '@/features/therapy/cbt/chat-components/schema-modes';
+import { ActionPlan } from '@/features/therapy/cbt/chat-components/action-plan';
+import { FinalEmotionReflection } from '@/features/therapy/cbt/chat-components/final-emotion-reflection';
 
 interface CBTDiaryFlowProps {
   /** Skip loading from localStorage (for "Start Fresh" scenario) */

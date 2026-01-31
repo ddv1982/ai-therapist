@@ -50,7 +50,6 @@ export default [
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-floating-promises': 'error',
-      'no-restricted-imports': ['warn', { patterns: ['../*'] }],
       '@typescript-eslint/naming-convention': [
         'error',
         { selector: 'typeLike', format: ['PascalCase'] },
@@ -63,6 +62,18 @@ export default [
       // Enforce structured logging - use logger instead of console
       // Allow specific console.* calls only with eslint-disable-next-line
       'no-console': 'error',
+    },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['warn', { patterns: ['../*'] }],
+    },
+  },
+  {
+    files: ['src/app/api/health/route.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
     },
   },
   {

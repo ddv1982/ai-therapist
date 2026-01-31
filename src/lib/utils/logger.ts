@@ -9,7 +9,7 @@
  * @version 1.0.0
  */
 
-import { generateRequestId } from '../auth/crypto-secure';
+import { generateRequestId } from '@/lib/auth/crypto-secure';
 import { publicEnv, isDevelopment, isTest } from '@/config/env.public';
 
 // ============================================================================

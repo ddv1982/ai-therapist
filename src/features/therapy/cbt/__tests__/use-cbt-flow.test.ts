@@ -2,7 +2,7 @@ import {
   hasStepData,
   computeStartingStep,
   type CBTSessionData,
-} from '../hooks/use-cbt-flow';
+} from '@/features/therapy/cbt/hooks/use-cbt-flow';
 import type { EmotionData, ActionPlanData } from '@/types';
 
 // Helper to create valid EmotionData for tests
@@ -160,7 +160,11 @@ describe('use-cbt-flow helpers', () => {
         coreBelief: { coreBeliefText: 'belief', coreBeliefCredibility: 5 },
         challengeQuestions: { challengeQuestions: [{ question: 'q', answer: 'a' }] },
         rationalThoughts: { rationalThoughts: [{ thought: 'rational', confidence: 5 }] },
-        schemaModes: { selectedModes: [{ id: 'mode', name: 'Mode', description: '', selected: true, intensity: 5 }] },
+        schemaModes: {
+          selectedModes: [
+            { id: 'mode', name: 'Mode', description: '', selected: true, intensity: 5 },
+          ],
+        },
         actionPlan: createActionPlanData({ newBehaviors: 'behaviors' }),
         finalEmotions: createEmotionData({ joy: 3 }),
       });

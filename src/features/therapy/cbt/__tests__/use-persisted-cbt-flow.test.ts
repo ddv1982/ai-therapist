@@ -2,7 +2,7 @@ import {
   hasPersistedDraft,
   getPersistedDraftTimestamp,
   clearPersistedDraft,
-} from '../hooks/use-persisted-cbt-flow';
+} from '@/features/therapy/cbt/hooks/use-persisted-cbt-flow';
 
 const STORAGE_KEY = 'cbt-flow-draft';
 

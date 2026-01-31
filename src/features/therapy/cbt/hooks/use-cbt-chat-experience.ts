@@ -14,8 +14,11 @@ import {
   type CBTFlowState,
   type CBTStepId,
   type CBTSessionSnapshot,
-} from '../flow';
-import { buildMarkdownSummary, buildSummaryCardFromState } from '../flow/summary';
+} from '@/features/therapy/cbt/flow';
+import {
+  buildMarkdownSummary,
+  buildSummaryCardFromState,
+} from '@/features/therapy/cbt/flow/summary';
 import type {
   SituationData,
   EmotionData,

@@ -9,7 +9,7 @@ import type {
   SchemaModesData,
   ActionPlanData,
 } from '@/types';
-import { CBT_STEP_ORDER, type CBTStepId } from '../flow/types';
+import { CBT_STEP_ORDER, type CBTStepId } from '@/features/therapy/cbt/flow/types';
 
 export interface CBTSessionData {
   situation: SituationData | null;

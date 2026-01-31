@@ -81,7 +81,7 @@ export {
   generateSecureHex,
   generateRequestId,
   generateSessionToken,
-} from '../auth/crypto-secure';
+} from '@/lib/auth/crypto-secure';
 
 export function isLocalhost(host: string): boolean {
   if (!host) return false;

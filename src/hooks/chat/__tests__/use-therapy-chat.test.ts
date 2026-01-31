@@ -66,7 +66,7 @@ jest.mock('@/lib/utils', () => ({
 }));
 
 // Import after mocks are set up
-import { useTherapyChat, type UseTherapyChatOptions } from '../use-therapy-chat';
+import { useTherapyChat, type UseTherapyChatOptions } from '@/hooks/chat/use-therapy-chat';
 
 describe('useTherapyChat', () => {
   beforeEach(() => {
@@ -168,10 +168,7 @@ describe('useTherapyChat', () => {
         await result.current.reload();
       });
 
-      expect(logger.warn).toHaveBeenCalledWith(
-        'No user message to reload',
-        expect.any(Object)
-      );
+      expect(logger.warn).toHaveBeenCalledWith('No user message to reload', expect.any(Object));
     });
   });
 

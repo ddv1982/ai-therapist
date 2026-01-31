@@ -6,7 +6,7 @@
  * This test ensures both copies remain in sync.
  */
 
-import { ErrorCode as SrcErrorCode } from '../error-codes';
+import { ErrorCode as SrcErrorCode } from '@/lib/errors/error-codes';
 // Note: We import the Convex version by reading the file values directly
 // since Convex files may have different module resolution
 
@@ -27,7 +27,7 @@ describe('ErrorCode enum sync', () => {
 
   it('should have all expected error codes in src/lib/errors/error-codes.ts', () => {
     const srcCodes = Object.keys(SrcErrorCode);
-    
+
     for (const code of expectedErrorCodes) {
       expect(srcCodes).toContain(code);
       expect(SrcErrorCode[code as keyof typeof SrcErrorCode]).toBe(code);
@@ -51,7 +51,7 @@ describe('ErrorCode enum sync', () => {
    */
   it('should match the documented ErrorCode contract for Convex sync', () => {
     const srcCodeKeys = Object.keys(SrcErrorCode).sort();
-    
+
     // Document the expected keys - if this changes, update convex/lib/errors.ts
     const expectedKeys = [
       'CONFLICT',
@@ -67,7 +67,7 @@ describe('ErrorCode enum sync', () => {
     ];
 
     expect(srcCodeKeys).toEqual(expectedKeys);
-    
+
     // Verify each key maps to itself (string enum pattern)
     for (const key of expectedKeys) {
       expect(SrcErrorCode[key as keyof typeof SrcErrorCode]).toBe(key);

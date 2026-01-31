@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useCBTFlow, type CBTSessionData } from './use-cbt-flow';
-import type { CBTStepId } from '../flow/types';
+import { useCBTFlow, type CBTSessionData } from '@/features/therapy/cbt/hooks/use-cbt-flow';
+import type { CBTStepId } from '@/features/therapy/cbt/flow/types';
 import { logger } from '@/lib/utils/logger';
 import {
   ClientCryptoError,

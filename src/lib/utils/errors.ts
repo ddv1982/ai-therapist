@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { logger } from './logger';
-import { RequestContext } from '../api/api-middleware';
+import { RequestContext } from '@/lib/api/api-middleware';
 import {
   createServerErrorResponse,
   createValidationErrorResponse,

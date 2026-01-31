@@ -6,7 +6,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { useChatPersistence } from '../use-chat-persistence';
+import { useChatPersistence } from '@/features/chat/hooks/use-chat-persistence';
 import { MessagePersistenceService } from '@/features/chat/lib/message-persistence.service';
 
 // Mock dependencies
