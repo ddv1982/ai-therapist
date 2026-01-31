@@ -2,7 +2,7 @@
 
 import { memo, useMemo, useCallback, useRef, useEffect, type RefObject, Profiler } from 'react';
 import dynamic from 'next/dynamic';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useVirtualizer, type Virtualizer } from '@tanstack/react-virtual';
 import { CheckCircle, Heart } from 'lucide-react';
 import { Message } from '@/features/chat/messages/message';
 import type { MessageData } from '@/features/chat/messages/message';
@@ -34,6 +34,21 @@ const VIRTUAL_SCROLL_THRESHOLD = 50; // Use virtual scrolling when messages exce
 const ESTIMATED_MESSAGE_HEIGHT = 120; // Default estimated height for regular messages
 const ESTIMATED_CBT_STEP_HEIGHT = 350; // Larger height for CBT step components
 const OVERSCAN_COUNT = 5; // Number of items to render outside visible area
+
+const getMessageContainerClassName = (isMobile: boolean) =>
+  `max-w-4xl mx-auto ${isMobile ? 'space-y-3 pb-6' : 'space-y-6 pb-12'}`;
+
+const scrollToLastMessage = <T extends Element>(
+  virtualizer: Virtualizer<T, Element>,
+  messageCount: number,
+  behavior: 'auto' | 'smooth'
+) => {
+  if (messageCount <= 0) return;
+  virtualizer.scrollToIndex(messageCount - 1, {
+    align: 'end',
+    behavior,
+  });
+};
 
 const SituationPrompt = dynamic(() =>
   import('@/features/therapy/cbt/chat-components/situation-prompt').then((mod) => ({
@@ -167,6 +182,32 @@ function renderCompletedStepSummary(
   if (!config) return null;
 
   const title = config.metadata.title.defaultText;
+  const content = getCompletedStepContent(step, sessionData);
+
+  return (
+    <Card className="border-muted/50 bg-muted/30 border">
+      <CardHeader className="flex flex-row items-center gap-2 py-3">
+        <CheckCircle className="text-primary h-4 w-4" />
+        <CardTitle className="text-foreground text-sm font-semibold">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 pt-0">
+        {content.length > 0 ? content : <p className="text-muted-foreground text-sm">Completed.</p>}
+        {onNavigate && isFinalStep ? (
+          <div className="flex justify-end pt-2">
+            <Button variant="ghost" size="sm" onClick={() => onNavigate(step)}>
+              Edit step
+            </Button>
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+function getCompletedStepContent(
+  step: CBTStepType,
+  sessionData: CBTChatFlowSessionData | undefined
+): React.ReactNode[] {
   const content: React.ReactNode[] = [];
 
   switch (step) {
@@ -198,20 +239,16 @@ function renderCompletedStepSummary(
       break;
     case 'thoughts': {
       const thoughts = sessionData?.thoughtData ?? [];
-      if (thoughts.length > 0) {
-        content.push(
-          <ul
-            key="thoughts"
-            className="text-muted-foreground list-inside list-disc space-y-1 text-sm"
-          >
-            {thoughts.map((thought, index) => (
-              <li key={`${thought.thought}-${index}`}>
-                {thought.thought} ({thought.credibility}/10)
-              </li>
-            ))}
-          </ul>
-        );
-      }
+      const list = renderBulletList(
+        thoughts,
+        (thought, index) => (
+          <li key={`${thought.thought}-${index}`}>
+            {thought.thought} ({thought.credibility}/10)
+          </li>
+        ),
+        'text-muted-foreground list-inside list-disc space-y-1 text-sm'
+      );
+      if (list) content.push(list);
       break;
     }
     case 'core-belief': {
@@ -244,20 +281,16 @@ function renderCompletedStepSummary(
     }
     case 'rational-thoughts': {
       const rational = sessionData?.rationalThoughtsData?.rationalThoughts ?? [];
-      if (rational.length > 0) {
-        content.push(
-          <ul
-            key="rational"
-            className="text-muted-foreground list-inside list-disc space-y-1 text-sm"
-          >
-            {rational.map((thought, index) => (
-              <li key={`${thought.thought}-${index}`}>
-                {thought.thought} ({thought.confidence}/10)
-              </li>
-            ))}
-          </ul>
-        );
-      }
+      const list = renderBulletList(
+        rational,
+        (thought, index) => (
+          <li key={`${thought.thought}-${index}`}>
+            {thought.thought} ({thought.confidence}/10)
+          </li>
+        ),
+        'text-muted-foreground list-inside list-disc space-y-1 text-sm'
+      );
+      if (list) content.push(list);
       break;
     }
     case 'schema-modes': {
@@ -312,24 +345,7 @@ function renderCompletedStepSummary(
       break;
   }
 
-  return (
-    <Card className="border-muted/50 bg-muted/30 border">
-      <CardHeader className="flex flex-row items-center gap-2 py-3">
-        <CheckCircle className="text-primary h-4 w-4" />
-        <CardTitle className="text-foreground text-sm font-semibold">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2 pt-0">
-        {content.length > 0 ? content : <p className="text-muted-foreground text-sm">Completed.</p>}
-        {onNavigate && isFinalStep ? (
-          <div className="flex justify-end pt-2">
-            <Button variant="ghost" size="sm" onClick={() => onNavigate(step)}>
-              Edit step
-            </Button>
-          </div>
-        ) : null}
-      </CardContent>
-    </Card>
-  );
+  return content;
 }
 
 export interface VirtualizedMessageListProps {
@@ -412,6 +428,60 @@ function filterVisibleMessages(messages: MessageData[]): MessageData[] {
 
     return true;
   });
+}
+
+function renderBulletList<T>(
+  items: T[],
+  renderItem: (item: T, index: number) => React.ReactNode,
+  className: string
+) {
+  if (items.length === 0) return null;
+  return <ul className={className}>{items.map(renderItem)}</ul>;
+}
+
+function getLastStepMessageId(messages: MessageData[]) {
+  const map = new Map<CBTStepType, string>();
+  messages.forEach((message) => {
+    const step = message.metadata?.step as CBTStepType | undefined;
+    if (step && message.id.includes(':component:')) {
+      map.set(step, message.id);
+    }
+  });
+  return map;
+}
+
+function renderStepComponent(
+  Component: React.ComponentType<any>,
+  onComplete?: (data: any) => void,
+  extraProps: Record<string, unknown> = {}
+) {
+  if (!onComplete) return null;
+  return <Component onComplete={onComplete} {...extraProps} />;
+}
+
+function shouldUseVirtualization(
+  enableVirtualization: boolean | undefined,
+  messageCount: number
+): boolean {
+  if (enableVirtualization === false) return false;
+  if (enableVirtualization === true) return true;
+  return messageCount > VIRTUAL_SCROLL_THRESHOLD;
+}
+
+function renderMessageItem(
+  message: MessageData,
+  isLastMessage: boolean,
+  isStreaming: boolean,
+  renderCBTComponent: (message: MessageData) => React.ReactNode
+) {
+  return (
+    <MemoizedMessageItem
+      message={message}
+      isLastMessage={isLastMessage}
+      isStreaming={isStreaming}
+      renderCBTComponent={renderCBTComponent}
+    />
+  );
 }
 
 /**
@@ -497,12 +567,8 @@ function VirtualMessageListInner({
     messageCountRef.current = messages.length;
 
     if (hasNewMessages && messages.length > 0) {
-      // Scroll to bottom when new messages arrive
       requestAnimationFrame(() => {
-        virtualizer.scrollToIndex(messages.length - 1, {
-          align: 'end',
-          behavior: 'smooth',
-        });
+        scrollToLastMessage(virtualizer, messages.length, 'smooth');
       });
     }
   }, [messages.length, virtualizer]);
@@ -510,15 +576,9 @@ function VirtualMessageListInner({
   // Auto-scroll during streaming updates
   useEffect(() => {
     if (isStreaming && messages.length > 0) {
-      const scrollToEnd = () => {
-        virtualizer.scrollToIndex(messages.length - 1, {
-          align: 'end',
-          behavior: 'auto',
-        });
-      };
-
-      // Use RAF for smooth streaming updates
-      const rafId = requestAnimationFrame(scrollToEnd);
+      const rafId = requestAnimationFrame(() => {
+        scrollToLastMessage(virtualizer, messages.length, 'auto');
+      });
       return () => cancelAnimationFrame(rafId);
     }
   }, [isStreaming, messages.length, virtualizer, messages[messages.length - 1]?.content]);
@@ -526,7 +586,7 @@ function VirtualMessageListInner({
   const virtualItems = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
 
-  const containerClassName = `max-w-4xl mx-auto ${isMobile ? 'space-y-3 pb-6' : 'space-y-6 pb-12'}`;
+  const containerClassName = getMessageContainerClassName(isMobile);
 
   return (
     <div
@@ -554,12 +614,7 @@ function VirtualMessageListInner({
               transform: `translateY(${virtualRow.start}px)`,
             }}
           >
-            <MemoizedMessageItem
-              message={message}
-              isLastMessage={isLastMessage}
-              isStreaming={isStreaming}
-              renderCBTComponent={renderCBTComponent}
-            />
+            {renderMessageItem(message, isLastMessage, isStreaming, renderCBTComponent)}
           </div>
         );
       })}
@@ -591,10 +646,7 @@ function SimpleMessageList({
     return messages.slice(-maxVisible);
   }, [messages, maxVisible]);
 
-  const containerClassName = useMemo(
-    () => `max-w-4xl mx-auto ${isMobile ? 'space-y-3 pb-6' : 'space-y-6 pb-12'}`,
-    [isMobile]
-  );
+  const containerClassName = useMemo(() => getMessageContainerClassName(isMobile), [isMobile]);
 
   return (
     <div className={containerClassName}>
@@ -603,12 +655,7 @@ function SimpleMessageList({
 
         return (
           <div key={message.id}>
-            <MemoizedMessageItem
-              message={message}
-              isLastMessage={isLastMessage}
-              isStreaming={isStreaming}
-              renderCBTComponent={renderCBTComponent}
-            />
+            {renderMessageItem(message, isLastMessage, isStreaming, renderCBTComponent)}
           </div>
         );
       })}
@@ -650,25 +697,14 @@ function VirtualizedMessageListComponent({
   const filteredMessages = useMemo(() => filterVisibleMessages(messages), [messages]);
 
   // Determine whether to use virtualization
-  const shouldVirtualize = useMemo(() => {
-    if (enableVirtualization === false) return false;
-    if (enableVirtualization === true) return true;
-    // Auto-detect based on message count
-    return filteredMessages.length > VIRTUAL_SCROLL_THRESHOLD;
-  }, [enableVirtualization, filteredMessages.length]);
+  const shouldVirtualize = useMemo(
+    () => shouldUseVirtualization(enableVirtualization, filteredMessages.length),
+    [enableVirtualization, filteredMessages.length]
+  );
 
   // Track last component message IDs for CBT steps (exclude AI responses)
   const lastStepMessageId = useMemo(() => {
-    const map = new Map<CBTStepType, string>();
-    filteredMessages.forEach((message) => {
-      const step = message.metadata?.step as CBTStepType | undefined;
-      // Only track component messages, not AI responses
-      // Component messages have IDs like "cbt:component:emotions"
-      if (step && message.id.includes(':component:')) {
-        map.set(step, message.id);
-      }
-    });
-    return map;
+    return getLastStepMessageId(filteredMessages);
   }, [filteredMessages]);
 
   const handleDismissObsessionsFlow = useCallback(
@@ -704,6 +740,47 @@ function VirtualizedMessageListComponent({
     [sessionId, onUpdateMessageMetadata, showToast, t]
   );
 
+  const renderObsessionsFlow = useCallback(
+    (message: MessageData) => {
+      if (!sessionId || !onUpdateMessageMetadata) {
+        return null;
+      }
+
+      const metadata = (message.metadata as Record<string, unknown> | undefined) ?? undefined;
+      const sessionFlowData = metadata?.sessionData as ObsessionsCompulsionsData | undefined;
+      const storedData = metadata?.data as ObsessionsCompulsionsData | undefined;
+      const initialData = storedData ?? sessionFlowData;
+
+      return (
+        <ObsessionsCompulsionsFlow
+          onComplete={async (data) => {
+            const result = await onUpdateMessageMetadata(
+              sessionId,
+              message.id,
+              {
+                step: 'obsessions-compulsions',
+                data,
+                dismissed: false,
+                dismissedReason: null,
+              },
+              { mergeStrategy: 'merge' }
+            );
+            if (!result.success) {
+              showToast({
+                type: 'error',
+                title: t('saveFailedTitle'),
+                message: result.error ?? t('generalRetry'),
+              });
+            }
+          }}
+          onDismiss={() => handleDismissObsessionsFlow(message.id)}
+          initialData={initialData}
+        />
+      );
+    },
+    [handleDismissObsessionsFlow, onUpdateMessageMetadata, sessionId, showToast, t]
+  );
+
   // Function to render CBT components based on step
   const renderCBTComponent = useCallback(
     (message: MessageData) => {
@@ -714,43 +791,15 @@ function VirtualizedMessageListComponent({
 
       if (!rawStep || typeof rawStep !== 'string') return null;
 
+      const stepProps = {
+        stepNumber,
+        totalSteps,
+        onNavigateStep: onCBTStepNavigate,
+      };
+      const navigateStepProps = { onNavigateStep: onCBTStepNavigate };
+
       if (rawStep === 'obsessions-compulsions') {
-        // Require onUpdateMessageMetadata to persist changes
-        if (!sessionId || !onUpdateMessageMetadata) {
-          return null;
-        }
-
-        const metadata = (message.metadata as Record<string, unknown> | undefined) ?? undefined;
-        const sessionFlowData = metadata?.sessionData as ObsessionsCompulsionsData | undefined;
-        const storedData = metadata?.data as ObsessionsCompulsionsData | undefined;
-        const initialData = storedData ?? sessionFlowData;
-
-        return (
-          <ObsessionsCompulsionsFlow
-            onComplete={async (data) => {
-              const result = await onUpdateMessageMetadata(
-                sessionId,
-                message.id,
-                {
-                  step: 'obsessions-compulsions',
-                  data,
-                  dismissed: false,
-                  dismissedReason: null,
-                },
-                { mergeStrategy: 'merge' }
-              );
-              if (!result.success) {
-                showToast({
-                  type: 'error',
-                  title: t('saveFailedTitle'),
-                  message: result.error ?? t('generalRetry'),
-                });
-              }
-            }}
-            onDismiss={() => handleDismissObsessionsFlow(message.id)}
-            initialData={initialData}
-          />
-        );
+        return renderObsessionsFlow(message);
       }
 
       const step = rawStep as CBTStepType;
@@ -772,86 +821,38 @@ function VirtualizedMessageListComponent({
 
       switch (step) {
         case 'situation':
-          return onCBTSituationComplete ? (
-            <SituationPrompt
-              onComplete={onCBTSituationComplete}
-              onNavigateStep={onCBTStepNavigate}
-            />
-          ) : null;
+          return renderStepComponent(SituationPrompt, onCBTSituationComplete, navigateStepProps);
 
         case 'emotions':
-          return onCBTEmotionComplete ? (
-            <EmotionScale onComplete={onCBTEmotionComplete} onNavigateStep={onCBTStepNavigate} />
-          ) : null;
+          return renderStepComponent(EmotionScale, onCBTEmotionComplete, navigateStepProps);
 
         case 'thoughts':
-          return onCBTThoughtComplete ? (
-            <ThoughtRecord
-              onComplete={onCBTThoughtComplete}
-              stepNumber={stepNumber}
-              totalSteps={totalSteps}
-              onNavigateStep={onCBTStepNavigate}
-            />
-          ) : null;
+          return renderStepComponent(ThoughtRecord, onCBTThoughtComplete, stepProps);
 
         case 'core-belief':
-          return onCBTCoreBeliefComplete ? (
-            <CoreBelief
-              onComplete={onCBTCoreBeliefComplete}
-              stepNumber={stepNumber}
-              totalSteps={totalSteps}
-              onNavigateStep={onCBTStepNavigate}
-            />
-          ) : null;
+          return renderStepComponent(CoreBelief, onCBTCoreBeliefComplete, stepProps);
 
         case 'challenge-questions':
-          return onCBTChallengeQuestionsComplete ? (
-            <ChallengeQuestions
-              onComplete={onCBTChallengeQuestionsComplete}
-              stepNumber={stepNumber}
-              totalSteps={totalSteps}
-              onNavigateStep={onCBTStepNavigate}
-            />
-          ) : null;
-
-        case 'rational-thoughts':
-          return onCBTRationalThoughtsComplete ? (
-            <RationalThoughts
-              onComplete={onCBTRationalThoughtsComplete}
-              stepNumber={stepNumber}
-              totalSteps={totalSteps}
-              onNavigateStep={onCBTStepNavigate}
-            />
-          ) : null;
-
-        case 'schema-modes':
-          return onCBTSchemaModesComplete ? (
-            <SchemaModes
-              onComplete={onCBTSchemaModesComplete}
-              stepNumber={stepNumber}
-              totalSteps={totalSteps}
-              onNavigateStep={onCBTStepNavigate}
-            />
-          ) : null;
-
-        case 'final-emotions':
-          return (
-            <FinalEmotionReflection
-              onComplete={onCBTFinalEmotionsComplete}
-              onSendToChat={onCBTSendToChat}
-              onNavigateStep={onCBTStepNavigate}
-            />
+          return renderStepComponent(
+            ChallengeQuestions,
+            onCBTChallengeQuestionsComplete,
+            stepProps
           );
 
+        case 'rational-thoughts':
+          return renderStepComponent(RationalThoughts, onCBTRationalThoughtsComplete, stepProps);
+
+        case 'schema-modes':
+          return renderStepComponent(SchemaModes, onCBTSchemaModesComplete, stepProps);
+
+        case 'final-emotions':
+          return renderStepComponent(FinalEmotionReflection, onCBTFinalEmotionsComplete, {
+            onSendToChat: onCBTSendToChat,
+            ...navigateStepProps,
+          });
+
         case 'actions':
-          return onCBTActionComplete ? (
-            <ActionPlan
-              onComplete={onCBTActionComplete}
-              stepNumber={stepNumber}
-              totalSteps={totalSteps}
-              onNavigateStep={onCBTStepNavigate}
-            />
-          ) : null;
+          return renderStepComponent(ActionPlan, onCBTActionComplete, stepProps);
 
         default:
           return renderCompletedStepSummary(step, sessionData, onCBTStepNavigate, isFinalStep);
@@ -871,9 +872,7 @@ function VirtualizedMessageListComponent({
       onCBTSendToChat,
       onCBTFinalEmotionsComplete,
       onCBTActionComplete,
-      onUpdateMessageMetadata,
-      sessionId,
-      handleDismissObsessionsFlow,
+      renderObsessionsFlow,
     ]
   );
 
@@ -896,16 +895,7 @@ function VirtualizedMessageListComponent({
     />
   );
 
-  // Wrap with React Profiler if profiling is enabled
-  if (ENABLE_PROFILING) {
-    return (
-      <Profiler id="VirtualizedMessageList" onRender={onRenderCallback}>
-        {listContent}
-      </Profiler>
-    );
-  }
-
-  return listContent;
+  return wrapWithProfiler(listContent);
 }
 
 const TypingIndicator = memo(function TypingIndicator() {
@@ -941,73 +931,86 @@ function getMessageDigest(message: MessageData): string {
   return `${message.id}:${contentKey}:${stepKey}`;
 }
 
+function areNonMessagePropsEqual(
+  prevProps: VirtualizedMessageListProps,
+  nextProps: VirtualizedMessageListProps
+): boolean {
+  return (
+    prevProps.isStreaming === nextProps.isStreaming &&
+    prevProps.isMobile === nextProps.isMobile &&
+    prevProps.maxVisible === nextProps.maxVisible &&
+    prevProps.activeCBTStep === nextProps.activeCBTStep &&
+    prevProps.onCBTStepNavigate === nextProps.onCBTStepNavigate &&
+    prevProps.onUpdateMessageMetadata === nextProps.onUpdateMessageMetadata &&
+    prevProps.sessionId === nextProps.sessionId &&
+    prevProps.enableVirtualization === nextProps.enableVirtualization
+  );
+}
+
+function areMessageWindowsEqual(
+  prevMessages: MessageData[],
+  nextMessages: MessageData[],
+  windowSize: number
+): boolean {
+  if (windowSize <= 0) return true;
+  const prevSliceStart = Math.max(prevMessages.length - windowSize, 0);
+  const nextSliceStart = Math.max(nextMessages.length - windowSize, 0);
+  if (prevMessages.length - prevSliceStart !== nextMessages.length - nextSliceStart) {
+    return false;
+  }
+  const prevDigests = new Array(windowSize);
+  const nextDigests = new Array(windowSize);
+  for (let i = 0; i < windowSize; i += 1) {
+    const prevMessage = prevMessages[prevSliceStart + i];
+    const nextMessage = nextMessages[nextSliceStart + i];
+    if (!prevMessage || !nextMessage) {
+      return false;
+    }
+    if (prevMessage.id !== nextMessage.id) {
+      return false;
+    }
+    prevDigests[i] = getMessageDigest(prevMessage);
+    nextDigests[i] = getMessageDigest(nextMessage);
+  }
+  for (let i = 0; i < prevDigests.length; i += 1) {
+    if (prevDigests[i] !== nextDigests[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function wrapWithProfiler(content: React.ReactNode) {
+  if (!ENABLE_PROFILING) return content;
+  return (
+    <Profiler id="VirtualizedMessageList" onRender={onRenderCallback}>
+      {content}
+    </Profiler>
+  );
+}
+
 export const VirtualizedMessageList = memo(
   VirtualizedMessageListComponent,
   (prevProps, nextProps) => {
     if (prevProps.messages === nextProps.messages) {
-      return (
-        prevProps.isStreaming === nextProps.isStreaming &&
-        prevProps.isMobile === nextProps.isMobile &&
-        prevProps.maxVisible === nextProps.maxVisible &&
-        prevProps.activeCBTStep === nextProps.activeCBTStep &&
-        prevProps.onCBTStepNavigate === nextProps.onCBTStepNavigate &&
-        prevProps.onUpdateMessageMetadata === nextProps.onUpdateMessageMetadata &&
-        prevProps.sessionId === nextProps.sessionId &&
-        prevProps.enableVirtualization === nextProps.enableVirtualization
-      );
+      return areNonMessagePropsEqual(prevProps, nextProps);
     }
 
     if (prevProps.messages.length !== nextProps.messages.length) {
       return false;
     }
 
-    const equalWindow = (windowSize: number) => {
-      if (windowSize <= 0) return true;
-      const prevSliceStart = Math.max(prevProps.messages.length - windowSize, 0);
-      const nextSliceStart = Math.max(nextProps.messages.length - windowSize, 0);
-      if (
-        prevProps.messages.length - prevSliceStart !==
-        nextProps.messages.length - nextSliceStart
-      ) {
-        return false;
-      }
-      const prevDigests = new Array(windowSize);
-      const nextDigests = new Array(windowSize);
-      for (let i = 0; i < windowSize; i += 1) {
-        const prevMessage = prevProps.messages[prevSliceStart + i];
-        const nextMessage = nextProps.messages[nextSliceStart + i];
-        if (!prevMessage || !nextMessage) {
-          return false;
-        }
-        if (prevMessage.id !== nextMessage.id) {
-          return false;
-        }
-        prevDigests[i] = getMessageDigest(prevMessage);
-        nextDigests[i] = getMessageDigest(nextMessage);
-      }
-      for (let i = 0; i < prevDigests.length; i += 1) {
-        if (prevDigests[i] !== nextDigests[i]) {
-          return false;
-        }
-      }
-      return true;
-    };
-
     const prevVisible = prevProps.maxVisible ?? 50;
     const nextVisible = nextProps.maxVisible ?? 50;
-    if (!equalWindow(prevVisible)) return false;
-    if (prevVisible !== nextVisible && !equalWindow(nextVisible)) return false;
+    if (!areMessageWindowsEqual(prevProps.messages, nextProps.messages, prevVisible)) return false;
+    if (
+      prevVisible !== nextVisible &&
+      !areMessageWindowsEqual(prevProps.messages, nextProps.messages, nextVisible)
+    ) {
+      return false;
+    }
 
-    return (
-      prevProps.isStreaming === nextProps.isStreaming &&
-      prevProps.isMobile === nextProps.isMobile &&
-      prevProps.maxVisible === nextProps.maxVisible &&
-      prevProps.activeCBTStep === nextProps.activeCBTStep &&
-      prevProps.onCBTStepNavigate === nextProps.onCBTStepNavigate &&
-      prevProps.onUpdateMessageMetadata === nextProps.onUpdateMessageMetadata &&
-      prevProps.sessionId === nextProps.sessionId &&
-      prevProps.enableVirtualization === nextProps.enableVirtualization
-    );
+    return areNonMessagePropsEqual(prevProps, nextProps);
   }
 );
 

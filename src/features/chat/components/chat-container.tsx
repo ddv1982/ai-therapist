@@ -18,6 +18,16 @@ import { formatMemoryInfo } from '@/features/chat/lib/memory-utils';
 import { useChat } from '@/features/chat/context/chat-context';
 import { useTranslations } from 'next-intl';
 
+const getChatContainerClassName = (isMobile: boolean, messageCount: number) => {
+  const baseClasses = 'custom-scrollbar relative flex-1 overflow-y-auto';
+  const mobileClasses = isMobile
+    ? messageCount === 0
+      ? 'prevent-bounce p-2 pb-0'
+      : 'prevent-bounce p-3 pb-0'
+    : 'p-3 sm:p-6';
+  return `${baseClasses} ${mobileClasses}`;
+};
+
 /**
  * Component that renders the chat messages container.
  * Includes system banner, messages list, empty state, and scroll-to-bottom button.
@@ -39,15 +49,10 @@ export const ChatContainer = memo(function ChatContainer() {
   } = chatState;
 
   // Memoize container className computation
-  const containerClassName = useMemo(() => {
-    const baseClasses = 'custom-scrollbar relative flex-1 overflow-y-auto';
-    const mobileClasses = isMobile
-      ? messages.length === 0
-        ? 'prevent-bounce p-2 pb-0'
-        : 'prevent-bounce p-3 pb-0'
-      : 'p-3 sm:p-6';
-    return `${baseClasses} ${mobileClasses}`;
-  }, [isMobile, messages.length]);
+  const containerClassName = useMemo(
+    () => getChatContainerClassName(isMobile, messages.length),
+    [isMobile, messages.length]
+  );
 
   // Memoize container style
   const containerStyle = useMemo(
