@@ -47,11 +47,12 @@ export const ChatContainer = memo(function ChatContainer() {
     messagesContainerRef,
     textareaRef,
   } = chatState;
+  const messageCount = messages.length;
 
   // Memoize container className computation
   const containerClassName = useMemo(
-    () => getChatContainerClassName(isMobile, messages.length),
-    [isMobile, messages.length]
+    () => getChatContainerClassName(isMobile, messageCount),
+    [isMobile, messageCount]
   );
 
   // Memoize container style
@@ -87,14 +88,14 @@ export const ChatContainer = memo(function ChatContainer() {
     >
       <SystemBanner
         hasMemory={memoryContext.hasMemory}
-        messageCount={messages.length}
+        messageCount={messageCount}
         isMobile={isMobile}
         onManageMemory={modalActions.openMemoryModal}
         formatText={formatMemoryInfo}
         contextInfo={memoryContext}
       />
 
-      {messages.length === 0 ? (
+      {messageCount === 0 ? (
         <ChatEmptyState isMobile={isMobile} translate={translate} />
       ) : (
         <ChatMessageList
