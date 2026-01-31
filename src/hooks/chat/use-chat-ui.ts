@@ -66,7 +66,7 @@ export interface ChatUIActions {
 
 /**
  * Combined hook for all chat UI concerns.
- * Merges functionality from useChatUiState and useChatViewport.
+ * Consolidates UI state, refs, and viewport handling.
  *
  * @returns Object containing UI state, refs, and actions
  *

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, createElement, ReactNode } from 'react';
+import { useCallback } from 'react';
 import { apiClient } from '@/lib/api/client';
 import { logger } from '@/lib/utils/logger';
 import {
@@ -96,31 +96,4 @@ export function useCBTChatBridge() {
     sendSessionSummary,
     sendEmotionComparison,
   };
-}
-
-interface CBTSessionContextType {
-  sessionId?: string;
-  setSessionId?: (id: string) => void;
-}
-
-const CBTSessionContext = createContext<CBTSessionContextType>({});
-
-export function CBTSessionProvider({
-  children,
-  sessionId,
-  setSessionId,
-}: {
-  children: ReactNode;
-  sessionId?: string;
-  setSessionId?: (id: string) => void;
-}) {
-  return createElement(
-    CBTSessionContext.Provider,
-    { value: { sessionId, setSessionId } },
-    children
-  );
-}
-
-export function useCBTSession() {
-  return useContext(CBTSessionContext);
 }
