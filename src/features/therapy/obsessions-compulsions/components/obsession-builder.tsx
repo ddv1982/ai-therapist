@@ -54,6 +54,42 @@ export function ObsessionBuilder({
 }: ObsessionBuilderProps) {
   const isObsessionStep = builderState.step === 'obsession';
   const isEdit = builderState.mode === 'edit';
+  const stepTitle = isObsessionStep ? text.obsessionStepTitle : text.compulsionStepTitle;
+  const stepSubtitle = isObsessionStep ? text.obsessionStepSubtitle : text.compulsionStepSubtitle;
+
+  const formContent = isObsessionStep ? (
+    <ObsessionForm
+      form={obsessionForm}
+      errors={errors}
+      onChange={onObsessionChange}
+      intensityLabel={text.intensityLabel}
+      triggersPlaceholder={text.triggersPlaceholder}
+      descriptionPlaceholder={text.obsessionPlaceholder}
+    />
+  ) : (
+    <CompulsionForm
+      form={compulsionForm}
+      errors={errors}
+      onChange={onCompulsionChange}
+      frequencyLabel={text.frequencyLabel}
+      durationLabel={text.durationLabel}
+      reliefLabel={text.reliefLabel}
+      durationUnit={text.durationUnit}
+      descriptionPlaceholder={text.compulsionPlaceholder}
+    />
+  );
+
+  const primaryLabel = isObsessionStep
+    ? text.continueLabel
+    : isEdit
+      ? text.updatePair
+      : text.savePair;
+  const PrimaryIcon = isObsessionStep ? ArrowRight : isSaving ? Loader2 : Save;
+  const primaryIconClass = isSaving && !isObsessionStep ? 'h-4 w-4 animate-spin' : 'h-4 w-4';
+  const primaryAction = isObsessionStep ? onNext : onSavePair;
+
+  const secondaryLabel = isObsessionStep ? text.cancelLabel : text.backLabel;
+  const secondaryAction = isObsessionStep ? onCancel : () => onSetStep('obsession');
 
   return (
     <Card className="border-primary/20 bg-card p-5">
@@ -61,7 +97,7 @@ export function ObsessionBuilder({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-              {isObsessionStep ? text.obsessionStepTitle : text.compulsionStepTitle}
+              {stepTitle}
             </span>
             {isEdit && (
               <span className="text-muted-foreground rounded border px-2 py-0.5 text-xs">
@@ -69,73 +105,27 @@ export function ObsessionBuilder({
               </span>
             )}
           </div>
-          <p className="text-muted-foreground text-sm">
-            {isObsessionStep ? text.obsessionStepSubtitle : text.compulsionStepSubtitle}
-          </p>
+          <p className="text-muted-foreground text-sm">{stepSubtitle}</p>
         </div>
       </div>
 
       <div className="space-y-6">
-        {isObsessionStep ? (
-          <ObsessionForm
-            form={obsessionForm}
-            errors={errors}
-            onChange={onObsessionChange}
-            intensityLabel={text.intensityLabel}
-            triggersPlaceholder={text.triggersPlaceholder}
-            descriptionPlaceholder={text.obsessionPlaceholder}
-          />
-        ) : (
-          <CompulsionForm
-            form={compulsionForm}
-            errors={errors}
-            onChange={onCompulsionChange}
-            frequencyLabel={text.frequencyLabel}
-            durationLabel={text.durationLabel}
-            reliefLabel={text.reliefLabel}
-            durationUnit={text.durationUnit}
-            descriptionPlaceholder={text.compulsionPlaceholder}
-          />
-        )}
+        {formContent}
 
         <div className="flex items-center justify-between">
-          {isObsessionStep ? (
-            <Button variant="ghost" size="sm" onClick={onCancel} disabled={isSaving}>
-              {text.cancelLabel}
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onSetStep('obsession')}
-              disabled={isSaving}
-            >
-              <ArrowLeft className="mr-1 h-4 w-4" />
-              {text.backLabel}
-            </Button>
-          )}
+          <Button variant="ghost" size="sm" onClick={secondaryAction} disabled={isSaving}>
+            {!isObsessionStep && <ArrowLeft className="mr-1 h-4 w-4" />}
+            {secondaryLabel}
+          </Button>
 
           <Button
             size="sm"
-            onClick={isObsessionStep ? onNext : onSavePair}
+            onClick={primaryAction}
             disabled={isSaving}
             className="flex items-center gap-2"
           >
-            {isObsessionStep ? (
-              <>
-                <span>{text.continueLabel}</span>
-                <ArrowRight className="h-4 w-4" />
-              </>
-            ) : (
-              <>
-                <span>{isEdit ? text.updatePair : text.savePair}</span>
-                {isSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-              </>
-            )}
+            <span>{primaryLabel}</span>
+            <PrimaryIcon className={primaryIconClass} />
           </Button>
         </div>
       </div>
