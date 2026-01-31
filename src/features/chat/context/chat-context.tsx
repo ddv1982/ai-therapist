@@ -3,7 +3,11 @@
 import { createContext, useContext, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useTherapyChat } from '@/hooks/chat/use-therapy-chat';
 import { useChatUI } from '@/hooks/chat/use-chat-ui';
-import { useChatModals, type ChatModalsState, type ChatModalsActions } from '@/features/chat/hooks/use-chat-modals';
+import {
+  useChatModals,
+  type ChatModalsState,
+  type ChatModalsActions,
+} from '@/features/chat/hooks/use-chat-modals';
 import { useChatSessions } from '@/hooks/chat/use-chat-sessions';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import { useMemoryContext } from '@/hooks/use-memory-context';
@@ -61,34 +65,20 @@ export interface ChatActions {
 }
 
 /**
- * Controller interface for backward compatibility.
- * Provides the same API as the old useChatController.
+ * Controller interface kept for compatibility with existing consumers.
+ * Trimmed to the fields currently used by the app.
  */
 export interface ChatController {
-  messages: MessageData[];
-  sessions: UiSession[];
   currentSession: string | null;
-  input: string;
   isLoading: boolean;
-  isMobile: boolean;
-  viewportHeight: string;
-  isGeneratingReport: boolean;
-  memoryContext: MemoryContextInfo;
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-  messagesContainerRef: React.RefObject<HTMLDivElement | null>;
   inputContainerRef: React.RefObject<HTMLDivElement | null>;
-  isNearBottom: boolean;
-  scrollToBottom: (force?: boolean, delay?: number) => void;
-  setInput: (value: string) => void;
-  sendMessage: () => Promise<void>;
+  messagesContainerRef: React.RefObject<HTMLDivElement | null>;
+  setShowSidebar: (value: boolean) => void;
+  generateReport: () => Promise<void>;
   stopGenerating: () => void;
   startNewSession: () => void;
   deleteSession: (sessionId: string) => Promise<void>;
-  loadSessions: () => Promise<void>;
   setCurrentSessionAndSync: (sessionId: string) => Promise<void>;
-  generateReport: () => Promise<void>;
-  setShowSidebar: (value: boolean) => void;
-  showSidebar: boolean;
   addMessageToChat: (message: {
     content: string;
     role: 'user' | 'assistant';
@@ -103,7 +93,6 @@ export interface ChatController {
     metadata: Record<string, unknown>,
     options?: { mergeStrategy?: 'merge' | 'replace' }
   ) => Promise<{ success: boolean; error?: string }>;
-  createObsessionsCompulsionsTable: () => Promise<{ success: boolean; error?: string }>;
   setMemoryContext: (info: MemoryContextInfo) => void;
 }
 
@@ -233,7 +222,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           .map((m) => ({
             role: m.role,
             content: m.content,
-            timestamp: (m.timestamp instanceof Date ? m.timestamp : new Date(m.timestamp)).toISOString(),
+            timestamp: (m.timestamp instanceof Date
+              ? m.timestamp
+              : new Date(m.timestamp)
+            ).toISOString(),
           })),
         model: settings.model,
       });
@@ -341,7 +333,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         // Update with real database ID
         const dbId = response.data?.id;
         if (dbId && dbId !== tempId) {
-          therapyChat.setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...m, id: dbId } : m)));
+          therapyChat.setMessages((prev) =>
+            prev.map((m) => (m.id === tempId ? { ...m, id: dbId } : m))
+          );
         }
 
         return { success: true };
@@ -399,7 +393,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     error?: string;
   }> => {
     let sessionId: string;
-    
+
     try {
       sessionId = await ensureActiveSession();
     } catch (error) {
@@ -417,9 +411,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       lastModified: new Date().toISOString(),
     };
 
-    const { formatObsessionsCompulsionsForChat } = await import(
-      '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions'
-    );
+    const { formatObsessionsCompulsionsForChat } =
+      await import('@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions');
     const tableContent = formatObsessionsCompulsionsForChat(baseData);
 
     const result = await addMessageToChat({
@@ -448,63 +441,35 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   }, [ensureActiveSession, addMessageToChat]);
 
-  // Build the controller object for backward compatibility
+  // Build the controller object for compatibility with existing consumers
   const controller: ChatController = useMemo(
     () => ({
-      messages: therapyChat.messages,
-      sessions,
       currentSession,
-      input: therapyChat.input,
       isLoading: therapyChat.isLoading,
-      isMobile,
-      viewportHeight,
-      isGeneratingReport,
-      memoryContext,
-      textareaRef,
       messagesContainerRef,
       inputContainerRef,
-      isNearBottom,
-      scrollToBottom,
-      setInput: (value: string) => therapyChat.setInput(value),
-      sendMessage,
       stopGenerating,
       startNewSession,
       deleteSession,
-      loadSessions,
       setCurrentSessionAndSync,
       generateReport,
       setShowSidebar,
-      showSidebar,
       addMessageToChat,
       updateMessageMetadata,
-      createObsessionsCompulsionsTable,
       setMemoryContext,
     }),
     [
-      therapyChat,
-      sessions,
       currentSession,
-      isMobile,
-      viewportHeight,
-      isGeneratingReport,
-      memoryContext,
-      textareaRef,
       messagesContainerRef,
       inputContainerRef,
-      isNearBottom,
-      scrollToBottom,
-      sendMessage,
       stopGenerating,
       startNewSession,
       deleteSession,
-      loadSessions,
       setCurrentSessionAndSync,
       generateReport,
       setShowSidebar,
-      showSidebar,
       addMessageToChat,
       updateMessageMetadata,
-      createObsessionsCompulsionsTable,
       setMemoryContext,
     ]
   );
