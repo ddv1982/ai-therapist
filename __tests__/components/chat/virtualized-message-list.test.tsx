@@ -1,11 +1,11 @@
 import { screen } from '@testing-library/react';
 import { ComponentTestUtils } from '__tests__/utils/test-utilities';
+import { ChatMessageList } from '@/features/chat/components/chat-message-list/chat-message-list';
 import {
-  VirtualizedMessageList,
   VIRTUAL_SCROLL_THRESHOLD,
   ESTIMATED_MESSAGE_HEIGHT,
   ESTIMATED_CBT_STEP_HEIGHT,
-} from '@/features/chat/components/virtualized-message-list';
+} from '@/features/chat/components/chat-message-list/virtual-lists';
 import type { MessageData } from '@/features/chat/messages/message';
 
 function makeMsg(
@@ -31,13 +31,13 @@ function makeManyMessages(count: number, role: 'user' | 'assistant' = 'user'): M
   return msgs;
 }
 
-describe('VirtualizedMessageList', () => {
+describe('ChatMessageList', () => {
   describe('basic rendering', () => {
     test('renders messages with user role', () => {
       const msgs = [makeMsg('1', 'user', 'Hello'), makeMsg('2', 'assistant', 'Hi there')];
 
       ComponentTestUtils.renderWithProviders(
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={msgs}
           isStreaming={false}
           isMobile={false}
@@ -53,7 +53,7 @@ describe('VirtualizedMessageList', () => {
       const msgs = makeManyMessages(60, 'user');
 
       ComponentTestUtils.renderWithProviders(
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={msgs}
           isStreaming={false}
           isMobile={false}
@@ -71,7 +71,7 @@ describe('VirtualizedMessageList', () => {
       const msgs = makeManyMessages(5, 'user');
 
       ComponentTestUtils.renderWithProviders(
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={msgs}
           isStreaming={false}
           isMobile={false}
@@ -109,7 +109,7 @@ describe('VirtualizedMessageList', () => {
 
       // With virtualization disabled, should use simple rendering
       ComponentTestUtils.renderWithProviders(
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={msgs}
           isStreaming={false}
           isMobile={false}
@@ -133,7 +133,7 @@ describe('VirtualizedMessageList', () => {
       ];
 
       ComponentTestUtils.renderWithProviders(
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={msgs}
           isStreaming={false}
           isMobile={false}
@@ -158,7 +158,7 @@ describe('VirtualizedMessageList', () => {
       ];
 
       ComponentTestUtils.renderWithProviders(
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={msgs}
           isStreaming={true}
           isMobile={false}
@@ -173,7 +173,7 @@ describe('VirtualizedMessageList', () => {
       const msgs = [makeMsg('1', 'user', 'Hello'), makeMsg('2', 'assistant', '')];
 
       ComponentTestUtils.renderWithProviders(
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={msgs}
           isStreaming={false}
           isMobile={false}
@@ -190,7 +190,7 @@ describe('VirtualizedMessageList', () => {
       const msgs = [makeMsg('1', 'user', 'Hello')];
 
       const { container } = ComponentTestUtils.renderWithProviders(
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={msgs}
           isStreaming={false}
           isMobile={true}
@@ -207,7 +207,7 @@ describe('VirtualizedMessageList', () => {
       const msgs = [makeMsg('1', 'user', 'Hello')];
 
       const { container } = ComponentTestUtils.renderWithProviders(
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={msgs}
           isStreaming={false}
           isMobile={false}
@@ -232,7 +232,7 @@ describe('VirtualizedMessageList', () => {
       ];
 
       ComponentTestUtils.renderWithProviders(
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={msgs}
           isStreaming={false}
           isMobile={false}
@@ -246,16 +246,16 @@ describe('VirtualizedMessageList', () => {
 
   describe('memoization', () => {
     test('component exports memo wrapper', () => {
-      expect(VirtualizedMessageList).toBeDefined();
+      expect(ChatMessageList).toBeDefined();
       // Memo-wrapped components have specific properties
-      expect(typeof VirtualizedMessageList).toBe('object');
+      expect(typeof ChatMessageList).toBe('object');
     });
   });
 
   describe('empty state', () => {
     test('renders nothing when messages array is empty', () => {
       ComponentTestUtils.renderWithProviders(
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={[]}
           isStreaming={false}
           isMobile={false}

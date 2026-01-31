@@ -27,8 +27,8 @@ jest.mock('@/features/chat/components/dashboard/chat-empty-state', () => ({
   ChatEmptyState: () => <div data-testid="empty-state">Empty State</div>,
 }));
 
-jest.mock('@/features/chat/components/virtualized-message-list', () => ({
-  VirtualizedMessageList: () => <div data-testid="message-list">Message List</div>,
+jest.mock('@/features/chat/components/chat-message-list/chat-message-list', () => ({
+  ChatMessageList: () => <div data-testid="message-list">Message List</div>,
 }));
 
 jest.mock('@/components/ui/button', () => ({

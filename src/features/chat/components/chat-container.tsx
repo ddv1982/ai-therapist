@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowDown } from 'lucide-react';
 import { SystemBanner } from '@/features/chat/components/system-banner';
 import { ChatEmptyState } from '@/features/chat/components/dashboard/chat-empty-state';
-import { VirtualizedMessageList } from '@/features/chat/components/virtualized-message-list';
+import { ChatMessageList } from '@/features/chat/components/chat-message-list/chat-message-list';
 import { formatMemoryInfo } from '@/features/chat/lib/memory-utils';
 import { useChat } from '@/features/chat/context/chat-context';
 import { useTranslations } from 'next-intl';
@@ -97,7 +97,7 @@ export const ChatContainer = memo(function ChatContainer() {
       {messages.length === 0 ? (
         <ChatEmptyState isMobile={isMobile} translate={translate} />
       ) : (
-        <VirtualizedMessageList
+        <ChatMessageList
           messages={messages}
           isStreaming={isLoading}
           isMobile={isMobile}
