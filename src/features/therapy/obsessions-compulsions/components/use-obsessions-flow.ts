@@ -78,9 +78,22 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
     setCompulsionForm(DEFAULT_COMPULSION_FORM);
   }, []);
 
+  const clearErrors = useCallback(() => {
+    setErrors({});
+  }, []);
+
   const setStep = useCallback((step: BuilderStep) => {
     setBuilderState((prev) => ({ ...prev, step }));
   }, []);
+
+  const buildUpdatedData = useCallback(
+    (obsessions: ObsessionData[], compulsions: CompulsionData[]) => ({
+      obsessions,
+      compulsions,
+      lastModified: new Date().toISOString(),
+    }),
+    []
+  );
 
   const handleChange = useCallback(
     async (nextData: ObsessionsCompulsionsData) => {
@@ -120,15 +133,36 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
     setErrors(next);
   }, []);
 
+  const applyValidation = useCallback(
+    (issues: Record<string, string>) => {
+      if (Object.keys(issues).length > 0) {
+        setFieldErrors(issues);
+        return false;
+      }
+      clearErrors();
+      return true;
+    },
+    [clearErrors, setFieldErrors]
+  );
+
   const updateBuilderState = useCallback((next: BuilderState) => {
     setBuilderState(next);
     setErrors({});
   }, []);
 
-  const beginAdd = useCallback(() => {
+  const resetBuilderClosed = useCallback(() => {
+    resetForms();
+    updateBuilderState({ mode: 'closed', step: 'obsession', editingIndex: null });
+  }, [resetForms, updateBuilderState]);
+
+  const resetBuilderAdd = useCallback(() => {
     resetForms();
     updateBuilderState({ mode: 'add', step: 'obsession', editingIndex: null });
   }, [resetForms, updateBuilderState]);
+
+  const beginAdd = useCallback(() => {
+    resetBuilderAdd();
+  }, [resetBuilderAdd]);
 
   const editPair = useCallback(
     (index: number) => {
@@ -159,11 +193,7 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
     async (index: number) => {
       const nextObsessions = data.obsessions.filter((_, i) => i !== index);
       const nextCompulsions = data.compulsions.filter((_, i) => i !== index);
-      const updated: ObsessionsCompulsionsData = {
-        obsessions: nextObsessions,
-        compulsions: nextCompulsions,
-        lastModified: new Date().toISOString(),
-      };
+      const updated = buildUpdatedData(nextObsessions, nextCompulsions);
 
       setData(updated);
 
@@ -171,11 +201,9 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
       const noPairsRemain = updated.obsessions.length === 0;
 
       if (noPairsRemain) {
-        resetForms();
-        updateBuilderState({ mode: 'add', step: 'obsession', editingIndex: null });
+        resetBuilderAdd();
       } else if (isEditingTarget) {
-        resetForms();
-        updateBuilderState({ mode: 'closed', step: 'obsession', editingIndex: null });
+        resetBuilderClosed();
       } else if (
         builderState.mode === 'edit' &&
         builderState.editingIndex !== null &&
@@ -190,7 +218,15 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
 
       await handleChange(updated);
     },
-    [builderState, data, handleChange, resetForms, updateBuilderState]
+    [
+      builderState,
+      buildUpdatedData,
+      data,
+      handleChange,
+      resetBuilderAdd,
+      resetBuilderClosed,
+      updateBuilderState,
+    ]
   );
 
   const savePair = useCallback(async () => {
@@ -199,10 +235,7 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
     const currentCompulsionForm = compulsionFormRef.current;
 
     const compulsionErrors = validateCompulsion(currentCompulsionForm);
-    if (Object.keys(compulsionErrors).length > 0) {
-      setFieldErrors(compulsionErrors);
-      return;
-    }
+    if (!applyValidation(compulsionErrors)) return;
 
     const now = new Date().toISOString();
     const index =
@@ -241,23 +274,18 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
       nextCompulsions.push(compulsionRecord);
     }
 
-    const updated: ObsessionsCompulsionsData = {
-      obsessions: nextObsessions,
-      compulsions: nextCompulsions,
-      lastModified: now,
-    };
+    const updated = buildUpdatedData(nextObsessions, nextCompulsions);
 
-    resetForms();
-    updateBuilderState({ mode: 'closed', step: 'obsession', editingIndex: null });
+    resetBuilderClosed();
     await handleChange(updated);
   }, [
+    applyValidation,
     builderState,
+    buildUpdatedData,
     data,
     handleChange,
-    resetForms,
-    updateBuilderState,
     validateCompulsion,
-    setFieldErrors,
+    resetBuilderClosed,
   ]);
 
   const goToCompulsionStep = useCallback(() => setStep('compulsion'), [setStep]);
@@ -266,18 +294,13 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
     // Read from ref to get latest value (avoids stale closure)
     const currentObsessionForm = obsessionFormRef.current;
     const issues = validateObsession(currentObsessionForm);
-    if (Object.keys(issues).length > 0) {
-      setFieldErrors(issues);
-      return;
-    }
-    setFieldErrors({});
+    if (!applyValidation(issues)) return;
     goToCompulsionStep();
-  }, [goToCompulsionStep, validateObsession, setFieldErrors]);
+  }, [applyValidation, goToCompulsionStep, validateObsession]);
 
   const dismiss = useCallback(() => {
-    resetForms();
-    updateBuilderState({ mode: 'closed', step: 'obsession', editingIndex: null });
-  }, [resetForms, updateBuilderState]);
+    resetBuilderClosed();
+  }, [resetBuilderClosed]);
 
   const derived = useMemo(
     () => ({
