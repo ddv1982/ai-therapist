@@ -1,5 +1,5 @@
-import type { ObsessionFormState } from './types';
-import { ObsessionsFormSection } from './obsessions-form-section';
+import type { ObsessionFormState } from '@/features/therapy/obsessions-compulsions/components/types';
+import { ObsessionsFormSection } from '@/features/therapy/obsessions-compulsions/components/obsessions-form-section';
 
 interface ObsessionFormProps {
   form: ObsessionFormState;

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import type { ObsessionsCompulsionsData } from '@/types';
-import { MetricTile } from './metric-tile';
+import { MetricTile } from '@/features/therapy/obsessions-compulsions/components/metric-tile';
 
 interface FeedListProps {
   data: ObsessionsCompulsionsData;
@@ -42,10 +42,7 @@ export function FeedList({ data, onEdit, onDelete, texts }: FeedListProps) {
                     {texts.pairLabel} {index + 1}
                   </div>
                   <div className="space-y-2">
-                    <div className="text-foreground flex items-center gap-2 text-lg font-semibold">
-                      <span aria-hidden>🧠</span>
-                      <span>{texts.obsessionLabel}</span>
-                    </div>
+                    <SectionHeading icon="🧠" label={texts.obsessionLabel} />
                     <p className="text-foreground/90 text-sm leading-relaxed">
                       {obsession.obsession}
                     </p>
@@ -59,57 +56,23 @@ export function FeedList({ data, onEdit, onDelete, texts }: FeedListProps) {
                         value={new Date(obsession.createdAt).toLocaleDateString()}
                       />
                       {obsession.triggers.length > 0 && (
-                        <div className="border-muted/30 bg-background/40 rounded-lg border px-3 py-2">
-                          <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-                            {texts.triggersLabel}
-                          </span>
-                          <div className="mt-1 flex flex-wrap gap-1.5">
-                            {obsession.triggers.map((trigger) => (
-                              <Badge
-                                key={trigger}
-                                variant="secondary"
-                                className="text-xs font-medium"
-                              >
-                                {trigger}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
+                        <TriggerBadges label={texts.triggersLabel} values={obsession.triggers} />
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 sm:self-start">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-1"
-                    onClick={() => onEdit(index)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    {texts.editAction}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="flex items-center gap-1"
-                    onClick={() => onDelete(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    {texts.deleteAction}
-                  </Button>
-                </div>
+                <PairActions
+                  onEdit={() => onEdit(index)}
+                  onDelete={() => onDelete(index)}
+                  editLabel={texts.editAction}
+                  deleteLabel={texts.deleteAction}
+                />
               </div>
 
               {compulsion && (
                 <div className="space-y-3">
-                  <div className="text-foreground flex items-center gap-2 text-lg font-semibold">
-                    <span aria-hidden>🔁</span>
-                    <span>{texts.compulsionLabel}</span>
-                  </div>
+                  <SectionHeading icon="🔁" label={texts.compulsionLabel} />
                   <p className="text-foreground/90 text-sm leading-relaxed">
                     {compulsion.compulsion}
                   </p>
@@ -127,6 +90,76 @@ export function FeedList({ data, onEdit, onDelete, texts }: FeedListProps) {
           </Card>
         );
       })}
+    </div>
+  );
+}
+
+interface SectionHeadingProps {
+  icon: string;
+  label: string;
+}
+
+function SectionHeading({ icon, label }: SectionHeadingProps) {
+  return (
+    <div className="text-foreground flex items-center gap-2 text-lg font-semibold">
+      <span aria-hidden>{icon}</span>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+interface PairActionsProps {
+  onEdit: () => void;
+  onDelete: () => void;
+  editLabel: string;
+  deleteLabel: string;
+}
+
+function PairActions({ onEdit, onDelete, editLabel, deleteLabel }: PairActionsProps) {
+  return (
+    <div className="flex items-center gap-2 sm:self-start">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="flex items-center gap-1"
+        onClick={onEdit}
+      >
+        <Pencil className="h-4 w-4" />
+        {editLabel}
+      </Button>
+      <Button
+        type="button"
+        variant="destructive"
+        size="sm"
+        className="flex items-center gap-1"
+        onClick={onDelete}
+      >
+        <Trash2 className="h-4 w-4" />
+        {deleteLabel}
+      </Button>
+    </div>
+  );
+}
+
+interface TriggerBadgesProps {
+  label: string;
+  values: string[];
+}
+
+function TriggerBadges({ label, values }: TriggerBadgesProps) {
+  return (
+    <div className="border-muted/30 bg-background/40 rounded-lg border px-3 py-2">
+      <span className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
+        {label}
+      </span>
+      <div className="mt-1 flex flex-wrap gap-1.5">
+        {values.map((value) => (
+          <Badge key={value} variant="secondary" className="text-xs font-medium">
+            {value}
+          </Badge>
+        ))}
+      </div>
     </div>
   );
 }

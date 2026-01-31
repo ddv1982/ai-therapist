@@ -1,9 +1,13 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Loader2, Save } from 'lucide-react';
-import type { BuilderState, ObsessionFormState, CompulsionFormState } from './types';
-import { ObsessionForm } from './obsession-form';
-import { CompulsionForm } from './compulsion-form';
+import type {
+  BuilderState,
+  ObsessionFormState,
+  CompulsionFormState,
+} from '@/features/therapy/obsessions-compulsions/components/types';
+import { ObsessionForm } from '@/features/therapy/obsessions-compulsions/components/obsession-form';
+import { CompulsionForm } from '@/features/therapy/obsessions-compulsions/components/compulsion-form';
 
 interface ObsessionBuilderProps {
   builderState: BuilderState;

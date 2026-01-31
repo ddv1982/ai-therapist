@@ -1,8 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import type { ObsessionData, CompulsionData, ObsessionsCompulsionsData } from '@/types';
-import { DEFAULT_COMPULSION_FORM, DEFAULT_OBSESSION_FORM } from './defaults';
-import type { BuilderState, ObsessionFormState, CompulsionFormState, BuilderStep } from './types';
+import {
+  DEFAULT_COMPULSION_FORM,
+  DEFAULT_OBSESSION_FORM,
+} from '@/features/therapy/obsessions-compulsions/components/defaults';
+import type {
+  BuilderState,
+  ObsessionFormState,
+  CompulsionFormState,
+  BuilderStep,
+} from '@/features/therapy/obsessions-compulsions/components/types';
 
 interface UseObsessionsFlowOptions {
   initialData?: ObsessionsCompulsionsData;

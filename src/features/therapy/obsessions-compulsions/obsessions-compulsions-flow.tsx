@@ -7,9 +7,9 @@ import { Card } from '@/components/ui/card';
 import { List, Trash2, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ObsessionsCompulsionsData } from '@/types';
-import { useObsessionsFlow } from './components/use-obsessions-flow';
-import { ObsessionBuilder } from './components/obsession-builder';
-import { FeedList } from './components/feed-list';
+import { useObsessionsFlow } from '@/features/therapy/obsessions-compulsions/components/use-obsessions-flow';
+import { ObsessionBuilder } from '@/features/therapy/obsessions-compulsions/components/obsession-builder';
+import { FeedList } from '@/features/therapy/obsessions-compulsions/components/feed-list';
 
 interface ObsessionsCompulsionsFlowProps {
   onComplete: (data: ObsessionsCompulsionsData) => void;

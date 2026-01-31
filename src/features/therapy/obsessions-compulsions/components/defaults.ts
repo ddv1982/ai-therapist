@@ -1,4 +1,7 @@
-import type { ObsessionFormState, CompulsionFormState } from './types';
+import type {
+  ObsessionFormState,
+  CompulsionFormState,
+} from '@/features/therapy/obsessions-compulsions/components/types';
 
 export const DEFAULT_OBSESSION_FORM: ObsessionFormState = {
   obsession: '',
