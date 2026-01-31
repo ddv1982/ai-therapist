@@ -5,7 +5,7 @@
 import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import { ChatContainer } from '@/features/chat/components/chat-container';
-import type { ChatState } from '@/features/chat/hooks/use-chat-state';
+import type { ChatState } from '@/features/chat/context/chat-context';
 import { useChat } from '@/features/chat/context/chat-context';
 
 // Mock the context

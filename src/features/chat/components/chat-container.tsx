@@ -8,7 +8,7 @@
 
 'use client';
 
-import { memo, useMemo, useCallback } from 'react';
+import { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowDown } from 'lucide-react';
 import { SystemBanner } from '@/features/chat/components/system-banner';
@@ -50,29 +50,15 @@ export const ChatContainer = memo(function ChatContainer() {
   const messageCount = messages.length;
 
   // Memoize container className computation
-  const containerClassName = useMemo(
-    () => getChatContainerClassName(isMobile, messageCount),
-    [isMobile, messageCount]
-  );
-
-  // Memoize container style
-  const containerStyle = useMemo(
-    () => ({
-      minHeight: 0,
-      WebkitOverflowScrolling: 'touch' as const,
-      overscrollBehavior: 'contain' as const,
-      scrollPaddingBottom: isMobile
-        ? `calc(var(--input-h, 0px) + env(safe-area-inset-bottom) + 12px)`
-        : undefined,
-    }),
-    [isMobile]
-  );
-
-  // Memoize scroll button click handler
-  const handleScrollButtonClick = useCallback(() => {
-    chatActions.scrollToBottom();
-    setTimeout(() => textareaRef.current?.focus(), 50);
-  }, [chatActions, textareaRef]);
+  const containerClassName = getChatContainerClassName(isMobile, messageCount);
+  const containerStyle = {
+    minHeight: 0,
+    WebkitOverflowScrolling: 'touch' as const,
+    overscrollBehavior: 'contain' as const,
+    scrollPaddingBottom: isMobile
+      ? `calc(var(--input-h, 0px) + env(safe-area-inset-bottom) + 12px)`
+      : undefined,
+  };
 
   return (
     <div
@@ -110,7 +96,10 @@ export const ChatContainer = memo(function ChatContainer() {
       <div className="pointer-events-none sticky bottom-3 flex justify-center">
         {!isNearBottom && (
           <Button
-            onClick={handleScrollButtonClick}
+            onClick={() => {
+              chatActions.scrollToBottom();
+              setTimeout(() => textareaRef.current?.focus(), 50);
+            }}
             variant="glass"
             size="sm"
             className="pointer-events-auto gap-2 rounded-full px-3 py-1"
