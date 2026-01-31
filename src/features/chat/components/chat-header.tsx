@@ -9,13 +9,13 @@
 
 'use client';
 
-import { useMemo, useCallback } from 'react';
-import dynamic from 'next/dynamic';
+import { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Menu, X, Brain, List } from 'lucide-react';
 import { getIconButtonSize } from '@/lib/ui/design-tokens';
 import { useTranslations } from 'next-intl';
 import { useChat } from '@/features/chat/context/chat-context';
+import { UserButton } from '@clerk/nextjs';
 
 /**
  * Main chat header component.
@@ -28,14 +28,7 @@ export function ChatHeader() {
   const { state, actions, controller, modelLabel } = useChat();
   const t = useTranslations('chat');
 
-  const {
-    showSidebar,
-    isGeneratingReport,
-    isLoading,
-    isMobile,
-    currentSession,
-    messages,
-  } = state;
+  const { showSidebar, isGeneratingReport, isLoading, isMobile, currentSession, messages } = state;
 
   const hasActiveSession = Boolean(currentSession);
   const hasMessages = messages.length > 0;
@@ -43,19 +36,6 @@ export function ChatHeader() {
   const onToggleSidebar = useCallback(
     () => controller.setShowSidebar(!showSidebar),
     [controller, showSidebar]
-  );
-
-  const UserMenu = useMemo(
-    () =>
-      dynamic(() => import('./user-menu'), {
-        ssr: false,
-        loading: () => (
-          <a href="/profile" className="text-sm underline">
-            Profile
-          </a>
-        ),
-      }),
-    []
   );
 
   return (
@@ -136,7 +116,7 @@ export function ChatHeader() {
             <List className="relative z-10 h-4 w-4" />
           </Button>
           <div className="ml-1">
-            <UserMenu />
+            <UserButton afterSignOutUrl="/sign-in" />
           </div>
         </div>
       </div>
