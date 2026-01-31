@@ -2,22 +2,24 @@
 
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import {
-  SituationPrompt,
-  EmotionScale,
-  ThoughtRecord,
-  CoreBelief,
-  ChallengeQuestions,
-  RationalThoughts,
-  FinalEmotionReflection,
-  ActionPlan,
-  type SituationData,
-  type EmotionData,
-  type ThoughtData,
-  type ActionPlanData,
-  type CoreBeliefData,
-} from './index';
-import type { ChallengeQuestionsData, RationalThoughtsData, CBTStepType } from '@/types';
+import { SituationPrompt } from '@/features/therapy/cbt/chat-components/situation-prompt';
+import { EmotionScale } from '@/features/therapy/cbt/chat-components/emotion-scale';
+import { ThoughtRecord } from '@/features/therapy/cbt/chat-components/thought-record';
+import { CoreBelief } from '@/features/therapy/cbt/chat-components/core-belief';
+import { ChallengeQuestions } from '@/features/therapy/cbt/chat-components/challenge-questions';
+import { RationalThoughts } from '@/features/therapy/cbt/chat-components/rational-thoughts';
+import { FinalEmotionReflection } from '@/features/therapy/cbt/chat-components/final-emotion-reflection';
+import { ActionPlan } from '@/features/therapy/cbt/chat-components/action-plan';
+import type {
+  ActionPlanData,
+  CBTStepType,
+  ChallengeQuestionsData,
+  CoreBeliefData,
+  EmotionData,
+  RationalThoughtsData,
+  SituationData,
+  ThoughtData,
+} from '@/types';
 
 interface CBTMessageProps {
   step: CBTStepType;
