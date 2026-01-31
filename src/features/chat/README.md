@@ -12,6 +12,5 @@ Core owners
 
 Hook responsibilities
 
-- `src/features/chat/hooks/use-chat-actions.ts`: User action handlers and model toggles.
 - `src/features/chat/hooks/use-chat-modals.ts`: Memory/API key modal state.
 - `src/features/chat/hooks/use-chat-persistence.ts`: Load/save chat messages.
