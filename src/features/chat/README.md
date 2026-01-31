@@ -14,3 +14,11 @@ Hook responsibilities
 
 - `src/features/chat/hooks/use-chat-modals.ts`: Memory/API key modal state.
 - `src/features/chat/hooks/use-chat-persistence.ts`: Load/save chat messages.
+
+Data flow
+
+- `src/app/page.tsx` provides `ChatProvider` and mounts header/container/composer.
+- `src/features/chat/context/chat-context.tsx` owns state + actions and exposes the public chat API.
+- `src/features/chat/components/chat-container.tsx` renders system banner/empty state and owns scroll affordance.
+- `src/features/chat/components/chat-message-list/chat-message-list.tsx` renders messages and virtualization.
+- `src/features/chat/components/chat-composer.tsx` sends input through chat actions and controller hooks.
