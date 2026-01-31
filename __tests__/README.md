@@ -26,7 +26,6 @@ This document outlines the comprehensive test architecture modernization impleme
 __tests__/
 ├── utils/
 │   ├── test-utilities.ts      # Core utilities and factories
-│   ├── test-templates.ts      # Standardized test patterns
 │   ├── test-config.ts         # Global configuration and matchers
 │   └── test-validation.test.ts # Utility validation suite
 ├── setup.ts                   # Unified setup integration

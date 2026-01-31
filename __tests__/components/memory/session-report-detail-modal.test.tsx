@@ -122,9 +122,7 @@ describe('SessionReportDetailModal', () => {
 
   describe('Modal rendering', () => {
     it('should render modal with correct title', async () => {
-      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />, {
-        withReduxProvider: false, // This component doesn't need Redux
-      });
+      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />);
 
       expect(screen.getByText('Test Therapy Session')).toBeInTheDocument();
       expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -135,9 +133,7 @@ describe('SessionReportDetailModal', () => {
         () => new Promise(() => {}) // Never resolves
       );
 
-      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />, {
-        withReduxProvider: false,
-      });
+      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />);
 
       expect(screen.getByText('Loading full session report...')).toBeInTheDocument();
       // Skip testing for loading-spinner testid as component might use different loading indicator
@@ -145,10 +141,7 @@ describe('SessionReportDetailModal', () => {
 
     it('should not render when closed', () => {
       ComponentTestUtils.renderWithProviders(
-        <SessionReportDetailModal {...defaultProps} open={false} />,
-        {
-          withReduxProvider: false,
-        }
+        <SessionReportDetailModal {...defaultProps} open={false} />
       );
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -157,9 +150,7 @@ describe('SessionReportDetailModal', () => {
 
   describe('Data loading', () => {
     it('should load session report detail on open', async () => {
-      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />, {
-        withReduxProvider: false,
-      });
+      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />);
 
       expect(mockMemoryUtils.getSessionReportDetail).toHaveBeenCalledWith(
         'report-1',
@@ -172,9 +163,7 @@ describe('SessionReportDetailModal', () => {
     });
 
     it('should display session content when loaded', async () => {
-      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />, {
-        withReduxProvider: false,
-      });
+      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />);
 
       await waitFor(() => {
         // Check for the unique content text instead of the title (which appears twice)
@@ -186,10 +175,7 @@ describe('SessionReportDetailModal', () => {
 
     it('should not load data when modal is closed', () => {
       ComponentTestUtils.renderWithProviders(
-        <SessionReportDetailModal {...defaultProps} open={false} />,
-        {
-          withReduxProvider: false,
-        }
+        <SessionReportDetailModal {...defaultProps} open={false} />
       );
 
       expect(mockMemoryUtils.getSessionReportDetail).not.toHaveBeenCalled();
@@ -197,10 +183,7 @@ describe('SessionReportDetailModal', () => {
 
     it('should reload data when reportInfo changes', async () => {
       const { rerender } = ComponentTestUtils.renderWithProviders(
-        <SessionReportDetailModal {...defaultProps} />,
-        {
-          withReduxProvider: false,
-        }
+        <SessionReportDetailModal {...defaultProps} />
       );
 
       expect(mockMemoryUtils.getSessionReportDetail).toHaveBeenCalledTimes(1);
@@ -220,9 +203,7 @@ describe('SessionReportDetailModal', () => {
     it('should show error message when loading fails', async () => {
       mockMemoryUtils.getSessionReportDetail.mockResolvedValue(null);
 
-      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />, {
-        withReduxProvider: false,
-      });
+      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('Unable to Load Content')).toBeInTheDocument();
@@ -233,9 +214,7 @@ describe('SessionReportDetailModal', () => {
     it('should show error when API throws exception', async () => {
       mockMemoryUtils.getSessionReportDetail.mockRejectedValue(new Error('API Error'));
 
-      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />, {
-        withReduxProvider: false,
-      });
+      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('Unable to Load Content')).toBeInTheDocument();
@@ -246,9 +225,7 @@ describe('SessionReportDetailModal', () => {
     it('should show retry button on error', async () => {
       mockMemoryUtils.getSessionReportDetail.mockResolvedValue(null);
 
-      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />, {
-        withReduxProvider: false,
-      });
+      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('Try Again')).toBeInTheDocument();
@@ -262,10 +239,7 @@ describe('SessionReportDetailModal', () => {
       const onOpenChange = jest.fn();
 
       ComponentTestUtils.renderWithProviders(
-        <SessionReportDetailModal {...defaultProps} onOpenChange={onOpenChange} />,
-        {
-          withReduxProvider: false,
-        }
+        <SessionReportDetailModal {...defaultProps} onOpenChange={onOpenChange} />
       );
 
       await waitFor(() => {
@@ -278,10 +252,7 @@ describe('SessionReportDetailModal', () => {
       const onOpenChange = jest.fn();
 
       ComponentTestUtils.renderWithProviders(
-        <SessionReportDetailModal {...defaultProps} onOpenChange={onOpenChange} />,
-        {
-          withReduxProvider: false,
-        }
+        <SessionReportDetailModal {...defaultProps} onOpenChange={onOpenChange} />
       );
 
       await waitFor(() => {
@@ -297,9 +268,7 @@ describe('SessionReportDetailModal', () => {
       mockMemoryUtils.getSessionReportDetail.mockResolvedValueOnce(null);
       const user = userEvent.setup();
 
-      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />, {
-        withReduxProvider: false,
-      });
+      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />);
 
       await waitFor(() => {
         expect(screen.getByText('Try Again')).toBeInTheDocument();
@@ -324,10 +293,7 @@ describe('SessionReportDetailModal', () => {
       const user = userEvent.setup();
 
       ComponentTestUtils.renderWithProviders(
-        <SessionReportDetailModal {...defaultProps} onOpenChange={onOpenChange} />,
-        {
-          withReduxProvider: false,
-        }
+        <SessionReportDetailModal {...defaultProps} onOpenChange={onOpenChange} />
       );
 
       await waitFor(() => {
@@ -344,10 +310,7 @@ describe('SessionReportDetailModal', () => {
   describe('State management', () => {
     it('should reset state when modal closes', async () => {
       const { rerender } = ComponentTestUtils.renderWithProviders(
-        <SessionReportDetailModal {...defaultProps} />,
-        {
-          withReduxProvider: false,
-        }
+        <SessionReportDetailModal {...defaultProps} />
       );
 
       await waitFor(() => {
@@ -366,10 +329,7 @@ describe('SessionReportDetailModal', () => {
 
     it('should handle null reportInfo gracefully', () => {
       ComponentTestUtils.renderWithProviders(
-        <SessionReportDetailModal {...defaultProps} reportInfo={null} />,
-        {
-          withReduxProvider: false,
-        }
+        <SessionReportDetailModal {...defaultProps} reportInfo={null} />
       );
 
       expect(screen.getByText('No session report selected')).toBeInTheDocument();
@@ -379,9 +339,7 @@ describe('SessionReportDetailModal', () => {
 
   describe('Accessibility', () => {
     it('should have proper dialog role and labeling', async () => {
-      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />, {
-        withReduxProvider: false,
-      });
+      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />);
 
       const dialog = screen.getByRole('dialog');
       expect(dialog).toBeInTheDocument();
@@ -390,9 +348,7 @@ describe('SessionReportDetailModal', () => {
 
     it('should focus management work correctly', async () => {
       const user = userEvent.setup();
-      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />, {
-        withReduxProvider: false,
-      });
+      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />);
 
       // Modal should be focusable
       const dialog = screen.getByRole('dialog');
@@ -406,9 +362,7 @@ describe('SessionReportDetailModal', () => {
 
   describe('Mobile responsiveness', () => {
     it('should render with mobile-appropriate classes', () => {
-      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />, {
-        withReduxProvider: false,
-      });
+      ComponentTestUtils.renderWithProviders(<SessionReportDetailModal {...defaultProps} />);
 
       const dialogContent = screen.getByRole('dialog');
       expect(dialogContent).toHaveClass('max-w-5xl');
