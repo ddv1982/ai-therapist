@@ -48,11 +48,6 @@ export const languageModels: Record<string, LanguageModel> = {
   ...(localOllamaModel ? { [MODEL_IDS.local]: baseLanguageModels[MODEL_IDS.local] } : {}),
 };
 
-// Direct access to models with proper typing
-export const model = {
-  languageModel: (modelId: ModelID) => languageModels[modelId],
-};
-
 // TypeScript types for model IDs
 export type ModelID = keyof typeof languageModels;
 
@@ -63,7 +58,7 @@ export const MODELS = Object.keys(languageModels) as ModelID[];
 export const defaultModel: ModelID = MODEL_IDS.default as ModelID;
 
 // Helper function to check Ollama availability
-export type OllamaHealthStatus =
+type OllamaHealthStatus =
   | 'ok'
   | 'not_configured'
   | 'http_error'
@@ -71,7 +66,7 @@ export type OllamaHealthStatus =
   | 'network_error'
   | 'model_missing';
 
-export interface OllamaHealthResult {
+interface OllamaHealthResult {
   ok: boolean;
   status: OllamaHealthStatus;
   message: string;

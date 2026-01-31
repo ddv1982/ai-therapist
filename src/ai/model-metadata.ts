@@ -7,16 +7,13 @@ export const MODEL_IDS = {
   byok: 'openai/gpt-5-mini',
 } as const;
 
-export type ModelIdentifier = (typeof MODEL_IDS)[keyof typeof MODEL_IDS];
+type ModelIdentifier = (typeof MODEL_IDS)[keyof typeof MODEL_IDS];
 
 /** System model keys (excluding BYOK) */
 export const SYSTEM_MODEL_KEYS = ['default', 'analytical', 'local'] as const;
 
-/** BYOK model key */
-export const BYOK_MODEL_KEY = 'byok' as const;
-
 /** Type for system model keys */
-export type SystemModelKey = (typeof SYSTEM_MODEL_KEYS)[number];
+type SystemModelKey = (typeof SYSTEM_MODEL_KEYS)[number];
 
 /** Type for system model identifiers (values) */
 export type SystemModelIdentifier = (typeof MODEL_IDS)[SystemModelKey];

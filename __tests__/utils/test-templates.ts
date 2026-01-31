@@ -169,32 +169,23 @@ export class ComponentTestTemplate {
   }
 
   /**
-   * Complete component test suite with Redux support
+   * Complete component test suite with common providers
    */
   static createTestSuite(
     componentName: string,
     ComponentToTest: (props: any) => ReactElement,
     defaultProps: any = {},
-    customTests: Array<{ name: string; test: () => void }> = [],
-    options: {
-      needsRedux?: boolean;
-      needsAuth?: boolean;
-      needsDatabase?: boolean;
-    } = {}
+    customTests: Array<{ name: string; test: () => void }> = []
   ) {
-    const { needsRedux = true } = options;
-
     describe(`${componentName} Component`, () => {
       // Setup common test environment
       ComponentTestUtils.setupComponentTest();
 
       describe('Basic Rendering', () => {
         it('should render without crashing', () => {
-          const renderFn = needsRedux
-            ? ComponentTestUtils.renderWithRedux
-            : ComponentTestUtils.renderWithProviders;
-
-          const result = renderFn(React.createElement(ComponentToTest, defaultProps));
+          const result = ComponentTestUtils.renderWithProviders(
+            React.createElement(ComponentToTest, defaultProps)
+          );
           expect(result.container).toBeInTheDocument();
         });
 

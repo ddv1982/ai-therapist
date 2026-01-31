@@ -522,15 +522,6 @@ Would you like to explore what specifically concerns you about this presentation
  */
 export class ComponentTestUtils {
   /**
-   * Create test store - Redux removed, use React Query instead
-   * @deprecated Redux has been removed. Use React Query providers instead.
-   */
-  static createTestStore(_preloadedState?: any) {
-    // Redux removed - this is kept for backwards compatibility but does nothing
-    return null;
-  }
-
-  /**
    * Setup common component mocks that cause "Element type is invalid" errors
    */
   static setupCommonMocks() {
@@ -594,15 +585,6 @@ export class ComponentTestUtils {
     }
 
     return render(ui, { wrapper: AllProviders, ...renderOptions });
-  }
-
-  /**
-   * Simplified render function specifically for Redux components
-   * @deprecated Redux removed. Use renderWithCBT or plain render with React Query providers.
-   */
-  static renderWithRedux(ui: ReactElement, _initialState?: any): RenderResult {
-    // Redux removed - just render without provider
-    return render(ui);
   }
 
   /**
@@ -968,13 +950,6 @@ export class TestSetupUtils {
 }
 
 /**
- * @deprecated Redux removed. Create mock stores are no longer needed.
- */
-export function createMockCBTStore(_overrides: any = {}) {
-  return null;
-}
-
-/**
  * Render with CBT context (Redux removed, using ChatUIProvider only)
  */
 export function renderWithCBT(ui: ReactElement, _options: { state?: any } = {}) {
@@ -989,18 +964,3 @@ export function renderWithCBT(ui: ReactElement, _options: { state?: any } = {}) 
 
   return render(ui, { wrapper });
 }
-
-// =============================================================================
-// EXPORTS
-// =============================================================================
-
-const TestUtilities = {
-  MockFactory,
-  TherapeuticDataFactory,
-  ComponentTestUtils,
-  SecurityTestUtils,
-  PerformanceTestUtils,
-  TestSetupUtils,
-};
-
-export default TestUtilities;

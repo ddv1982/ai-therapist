@@ -28,7 +28,6 @@ __tests__/
 │   ├── test-utilities.ts      # Core utilities and factories
 │   ├── test-templates.ts      # Standardized test patterns
 │   ├── test-config.ts         # Global configuration and matchers
-│   ├── refactor-helper.ts     # Migration analysis tools
 │   └── test-validation.test.ts # Utility validation suite
 ├── setup.ts                   # Unified setup integration
 ├── components/                # Component test suites
@@ -282,45 +281,6 @@ TestSetupUtils.setupWithMocks({
 
 // 3. Generate test suite
 ComponentTestTemplate.createTestSuite('NewComponent', NewComponent, defaultProps);
-```
-
-### For Existing Tests
-
-Use the automated refactoring helper:
-
-```bash
-# Generate optimization analysis
-node __tests__/utils/refactor-helper.ts
-
-# Generate migration scripts
-node __tests__/utils/refactor-helper.ts --generate-scripts
-```
-
-## 🔍 Analysis Tools
-
-### Test Refactoring Helper
-
-**Purpose**: Automated analysis and migration assistance
-
-**Features**:
-
-- **Pattern Detection**: Identifies 23 types of duplicate patterns
-- **Mock Complexity Analysis**: Quantifies setup complexity reduction potential
-- **Performance Issue Detection**: Finds potential bottlenecks
-- **Migration Script Generation**: Automated refactoring suggestions
-
-**Usage**:
-
-```typescript
-import { TestRefactorHelper } from './utils/refactor-helper';
-
-// Analyze specific file
-const analysis = TestRefactorHelper.analyzeTestFile('./components/ui/toast.test.tsx');
-console.log(`Optimization potential: ${analysis.optimizationPotential}%`);
-
-// Generate comprehensive report
-const report = TestRefactorHelper.generateOptimizationReport();
-console.log(report);
 ```
 
 ### Performance Monitoring

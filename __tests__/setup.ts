@@ -12,20 +12,6 @@
 // Import unified test configuration (auto-initializes)
 import './utils/test-config';
 
-// Export utilities for convenient imports in test files
-export {
-  MockFactory,
-  TherapeuticDataFactory,
-  ComponentTestUtils,
-  SecurityTestUtils,
-  PerformanceTestUtils,
-  TestSetupUtils,
-} from './utils/test-utilities';
-
-export { ComponentTestTemplate, APITestTemplate } from './utils/test-templates';
-
-export { TestPerformanceMonitor, TestDataValidator, TestCleanup } from './utils/test-config';
-
 // Global test configuration message
 console.log('🧪 Unified Test Architecture Loaded - 23 optimization patterns active');
 
