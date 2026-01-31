@@ -84,6 +84,15 @@ export class ObsessionsExportManager {
   }
 
   /**
+   * Export as plain text file
+   */
+  exportAsTextFile(options: ObsessionsExportOptions): void {
+    const textContent = this.exportAsText(options);
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    this.downloadBlob(blob, `${options.filename || 'obsessions-compulsions'}.txt`);
+  }
+
+  /**
    * Download blob as file
    */
   private downloadBlob(blob: Blob, filename: string): void {
@@ -176,16 +185,7 @@ export function useObsessionsExportActions(
 
     try {
       const manager = new ObsessionsExportManager(data, content);
-      const textContent = manager.exportAsText({ format: 'text' });
-      const blob = new Blob([textContent], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'obsessions-compulsions.txt';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      manager.exportAsTextFile({ format: 'text' });
       options.onSuccess?.('text');
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Export failed');

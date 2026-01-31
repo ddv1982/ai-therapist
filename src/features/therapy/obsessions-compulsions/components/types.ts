@@ -19,8 +19,3 @@ export interface CompulsionFormState {
   duration: number;
   reliefLevel: number;
 }
-
-export interface FlowTexts {
-  validation: Record<string, string>;
-  labels: Record<string, string>;
-}

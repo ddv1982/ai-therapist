@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import type { ObsessionData, CompulsionData, ObsessionsCompulsionsData } from '@/types';
 import {
   DEFAULT_COMPULSION_FORM,
@@ -28,6 +27,14 @@ const createInitialBuilderState = (hasEntries: boolean): BuilderState => ({
   step: 'obsession',
   editingIndex: null,
 });
+
+const createFallbackId = () =>
+  `ocd-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+
+const createId = () =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : createFallbackId();
 
 export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOptions) {
   const [data, setData] = useState<ObsessionsCompulsionsData>(initialData ?? EMPTY_DATA);
@@ -252,7 +259,7 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
     const existingCompulsion = data.compulsions[index];
 
     const obsessionRecord: ObsessionData = {
-      id: existingObsession?.id ?? uuidv4(),
+      id: existingObsession?.id ?? createId(),
       obsession: currentObsessionForm.obsession.trim(),
       intensity: currentObsessionForm.intensity,
       triggers: currentObsessionForm.triggers
@@ -263,7 +270,7 @@ export function useObsessionsFlow({ initialData, onChange }: UseObsessionsFlowOp
     };
 
     const compulsionRecord: CompulsionData = {
-      id: existingCompulsion?.id ?? uuidv4(),
+      id: existingCompulsion?.id ?? createId(),
       compulsion: currentCompulsionForm.compulsion.trim(),
       frequency: currentCompulsionForm.frequency,
       duration: currentCompulsionForm.duration,
