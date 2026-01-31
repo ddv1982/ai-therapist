@@ -430,6 +430,37 @@ function filterVisibleMessages(messages: MessageData[]): MessageData[] {
   });
 }
 
+function getVisibleMessages(messages: MessageData[], maxVisible: number) {
+  if (messages.length <= maxVisible) return messages;
+  return messages.slice(-maxVisible);
+}
+
+function shouldShowTypingIndicator(
+  message: MessageData,
+  isLastMessage: boolean,
+  isStreaming: boolean
+) {
+  return isStreaming && isLastMessage && message.role === 'assistant' && message.content === '';
+}
+
+function renderMessageContent(
+  message: MessageData,
+  renderCBTComponent: (message: MessageData) => React.ReactNode
+) {
+  const metadata = message.metadata as Record<string, unknown> | undefined;
+  if (metadata?.step) {
+    return (
+      <div role="article" aria-label={`CBT ${metadata.step} step`}>
+        {renderCBTComponent(message)}
+      </div>
+    );
+  }
+  if (message.content) {
+    return <Message message={message} />;
+  }
+  return null;
+}
+
 function renderBulletList<T>(
   items: T[],
   renderItem: (item: T, index: number) => React.ReactNode,
@@ -450,6 +481,12 @@ function getLastStepMessageId(messages: MessageData[]) {
   return map;
 }
 
+function getObsessionsFlowInitialData(metadata?: Record<string, unknown>) {
+  const sessionFlowData = metadata?.sessionData as ObsessionsCompulsionsData | undefined;
+  const storedData = metadata?.data as ObsessionsCompulsionsData | undefined;
+  return storedData ?? sessionFlowData;
+}
+
 function renderStepComponent(
   Component: React.ComponentType<any>,
   onComplete?: (data: any) => void,
@@ -457,6 +494,45 @@ function renderStepComponent(
 ) {
   if (!onComplete) return null;
   return <Component onComplete={onComplete} {...extraProps} />;
+}
+
+function getVirtualRowStyle(start: number) {
+  return {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    width: '100%',
+    transform: `translateY(${start}px)`,
+  };
+}
+
+function getVirtualContainerStyle(totalSize: number) {
+  return {
+    height: `${totalSize}px`,
+    width: '100%',
+    position: 'relative' as const,
+  };
+}
+
+function getStepContext(
+  rawStep: string,
+  activeCBTStep: CBTStepType | 'complete' | undefined,
+  messageId: string,
+  lastStepMessageId: Map<CBTStepType, string>
+) {
+  const step = rawStep as CBTStepType;
+  const isFinalStep = step === 'final-emotions';
+  const isActive = activeCBTStep && step === activeCBTStep;
+  const allowCompletedSummary = !activeCBTStep;
+  const isLatestForStep = messageId === lastStepMessageId.get(step);
+
+  return {
+    step,
+    isFinalStep,
+    isActive,
+    allowCompletedSummary,
+    isLatestForStep,
+  };
 }
 
 function shouldUseVirtualization(
@@ -499,24 +575,12 @@ const MemoizedMessageItem = memo(
     isStreaming: boolean;
     renderCBTComponent: (message: MessageData) => React.ReactNode;
   }) {
-    const metadata = message.metadata as Record<string, unknown> | undefined;
-    const isAssistantMessage = message.role === 'assistant';
-    const shouldShowTypingIndicator =
-      isStreaming && isLastMessage && isAssistantMessage && message.content === '';
-
-    // For CBT steps, wrap with article role since CBT components don't have one
-    // For regular messages, Message component already provides article with aria-label
-    const content = metadata?.step ? (
-      <div role="article" aria-label={`CBT ${metadata.step} step`}>
-        {renderCBTComponent(message)}
-      </div>
-    ) : message.content ? (
-      <Message message={message} />
-    ) : null;
+    const showTypingIndicator = shouldShowTypingIndicator(message, isLastMessage, isStreaming);
+    const content = renderMessageContent(message, renderCBTComponent);
 
     return (
       <>
-        {shouldShowTypingIndicator && <TypingIndicator />}
+        {showTypingIndicator && <TypingIndicator />}
         {content}
       </>
     );
@@ -589,14 +653,7 @@ function VirtualMessageListInner({
   const containerClassName = getMessageContainerClassName(isMobile);
 
   return (
-    <div
-      className={containerClassName}
-      style={{
-        height: `${totalSize}px`,
-        width: '100%',
-        position: 'relative',
-      }}
-    >
+    <div className={containerClassName} style={getVirtualContainerStyle(totalSize)}>
       {virtualItems.map((virtualRow) => {
         const message = messages[virtualRow.index];
         const isLastMessage = virtualRow.index === messages.length - 1;
@@ -606,13 +663,7 @@ function VirtualMessageListInner({
             key={virtualRow.key}
             data-index={virtualRow.index}
             ref={virtualizer.measureElement}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              transform: `translateY(${virtualRow.start}px)`,
-            }}
+            style={getVirtualRowStyle(virtualRow.start)}
           >
             {renderMessageItem(message, isLastMessage, isStreaming, renderCBTComponent)}
           </div>
@@ -640,10 +691,7 @@ function SimpleMessageList({
 }) {
   // For conversations with many messages without virtualization, only render the most recent
   const visibleMessages = useMemo(() => {
-    if (messages.length <= maxVisible) {
-      return messages;
-    }
-    return messages.slice(-maxVisible);
+    return getVisibleMessages(messages, maxVisible);
   }, [messages, maxVisible]);
 
   const containerClassName = useMemo(() => getMessageContainerClassName(isMobile), [isMobile]);
@@ -747,9 +795,7 @@ function VirtualizedMessageListComponent({
       }
 
       const metadata = (message.metadata as Record<string, unknown> | undefined) ?? undefined;
-      const sessionFlowData = metadata?.sessionData as ObsessionsCompulsionsData | undefined;
-      const storedData = metadata?.data as ObsessionsCompulsionsData | undefined;
-      const initialData = storedData ?? sessionFlowData;
+      const initialData = getObsessionsFlowInitialData(metadata);
 
       return (
         <ObsessionsCompulsionsFlow
@@ -802,11 +848,8 @@ function VirtualizedMessageListComponent({
         return renderObsessionsFlow(message);
       }
 
-      const step = rawStep as CBTStepType;
-      const isFinalStep = step === 'final-emotions';
-      const isActive = activeCBTStep && step === activeCBTStep;
-      const allowCompletedSummary = !activeCBTStep;
-      const isLatestForStep = message.id === lastStepMessageId.get(step);
+      const { step, isFinalStep, isActive, allowCompletedSummary, isLatestForStep } =
+        getStepContext(rawStep, activeCBTStep, message.id, lastStepMessageId);
 
       if (!isLatestForStep) {
         return null;
