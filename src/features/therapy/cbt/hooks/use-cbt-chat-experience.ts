@@ -132,4 +132,3 @@ export function useCBTChatExperience(): UseCBTChatExperienceReturn {
 }
 
 // Backward compatibility export
-export const useCBTChatFlow = useCBTChatExperience;
