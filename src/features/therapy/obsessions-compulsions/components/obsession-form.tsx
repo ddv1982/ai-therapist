@@ -1,10 +1,5 @@
-import { Textarea } from '@/components/ui/textarea';
-import { Slider } from '@/components/ui/slider';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import type { ObsessionFormState } from './types';
+import { ObsessionsFormSection } from './obsessions-form-section';
 
 interface ObsessionFormProps {
   form: ObsessionFormState;
@@ -27,45 +22,34 @@ export function ObsessionForm({
     onChange((prev) => ({ ...prev, ...partial }));
 
   return (
-    <div className="space-y-4">
-      <div>
-        <Textarea
-          value={form.obsession}
-          onChange={(event) => update({ obsession: event.target.value })}
-          placeholder={descriptionPlaceholder}
-          className={cn('min-h-[100px]', errors.obsession && 'border-destructive')}
-        />
-        {errors.obsession && (
-          <div className="text-destructive mt-1 flex items-center gap-1 text-xs">
-            <AlertCircle className="h-3 w-3" />
-            {errors.obsession}
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-4 sm:flex-row">
-        <div className="flex-1">
-          <Label className="text-muted-foreground text-xs">
-            {intensityLabel}: {form.intensity}/10
-          </Label>
-          <Slider
-            value={[form.intensity]}
-            onValueChange={([value]) => update({ intensity: value })}
-            min={1}
-            max={10}
-            step={1}
-            className="mt-1 w-full"
-          />
-        </div>
-        <div className="flex-1">
-          <Input
-            value={form.triggers}
-            onChange={(event) => update({ triggers: event.target.value })}
-            placeholder={triggersPlaceholder}
-            className="text-sm"
-          />
-        </div>
-      </div>
-    </div>
+    <ObsessionsFormSection
+      textarea={{
+        value: form.obsession,
+        onChange: (value) => update({ obsession: value }),
+        placeholder: descriptionPlaceholder,
+        error: errors.obsession,
+      }}
+      fieldsClassName="flex flex-col gap-4 sm:flex-row"
+      fields={[
+        {
+          kind: 'slider',
+          label: `${intensityLabel}: ${form.intensity}/10`,
+          value: form.intensity,
+          onChange: (value) => update({ intensity: value }),
+          min: 1,
+          max: 10,
+          step: 1,
+          showError: false,
+        },
+        {
+          kind: 'input',
+          value: form.triggers,
+          onChange: (value) => update({ triggers: value }),
+          placeholder: triggersPlaceholder,
+          className: 'text-sm',
+          showError: false,
+        },
+      ]}
+    />
   );
 }
