@@ -67,7 +67,7 @@ export default [
   {
     files: ['src/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': ['warn', { patterns: ['../*'] }],
+      'no-restricted-imports': ['error', { patterns: ['../*'] }],
     },
   },
   {
