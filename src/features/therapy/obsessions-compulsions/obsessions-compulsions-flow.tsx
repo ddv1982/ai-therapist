@@ -111,34 +111,16 @@ export function ObsessionsCompulsionsFlow({
 
   return (
     <div className={cn('mx-auto max-w-5xl space-y-8', className)}>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <List className="text-primary h-5 w-5" />
-            <h1 className="text-2xl font-semibold tracking-tight">{t('title')}</h1>
-          </div>
-          <p className="text-muted-foreground max-w-2xl text-sm">{t('subtitle')}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {builderState.mode === 'closed' && hasPairs && (
-            <Button size="sm" className="flex items-center gap-2" onClick={beginAdd}>
-              <Plus className="h-4 w-4" />
-              {t('addPairButton')}
-            </Button>
-          )}
-          {onDismiss && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-muted-foreground hover:text-destructive flex items-center gap-1"
-              onClick={handleDismiss}
-            >
-              <Trash2 className="h-4 w-4" />
-              {t('removeBlock')}
-            </Button>
-          )}
-        </div>
-      </div>
+      <FlowHeader
+        title={t('title')}
+        subtitle={t('subtitle')}
+        showAdd={builderState.mode === 'closed' && hasPairs}
+        onAdd={beginAdd}
+        addLabel={t('addPairButton')}
+        showRemove={Boolean(onDismiss)}
+        onRemove={handleDismiss}
+        removeLabel={t('removeBlock')}
+      />
 
       {isBuilderOpen && (
         <ObsessionBuilder
@@ -158,22 +140,93 @@ export function ObsessionsCompulsionsFlow({
       )}
 
       {emptyStateVisible && (
-        <Card className="border-muted/60 bg-card/40 border-dashed p-6 text-center">
-          <div className="bg-primary/10 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
-            <List className="text-primary h-6 w-6" />
-          </div>
-          <h3 className="mb-1 text-base font-semibold">{t('emptyState.title')}</h3>
-          <p className="text-muted-foreground mb-4 text-sm">{t('emptyState.subtitle')}</p>
-          <Button onClick={beginAdd} size="sm" className="mx-auto flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            {t('start')}
-          </Button>
-        </Card>
+        <EmptyStateCard
+          title={t('emptyState.title')}
+          subtitle={t('emptyState.subtitle')}
+          startLabel={t('start')}
+          onStart={beginAdd}
+        />
       )}
 
       {hasPairs && (
         <FeedList data={data} onEdit={editPair} onDelete={handleDeletePair} texts={feedText} />
       )}
     </div>
+  );
+}
+
+interface FlowHeaderProps {
+  title: string;
+  subtitle: string;
+  showAdd: boolean;
+  onAdd: () => void;
+  addLabel: string;
+  showRemove: boolean;
+  onRemove: () => void;
+  removeLabel: string;
+}
+
+function FlowHeader({
+  title,
+  subtitle,
+  showAdd,
+  onAdd,
+  addLabel,
+  showRemove,
+  onRemove,
+  removeLabel,
+}: FlowHeaderProps) {
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="space-y-2">
+        <div className="flex items-center gap-3">
+          <List className="text-primary h-5 w-5" />
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+        </div>
+        <p className="text-muted-foreground max-w-2xl text-sm">{subtitle}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        {showAdd && (
+          <Button size="sm" className="flex items-center gap-2" onClick={onAdd}>
+            <Plus className="h-4 w-4" />
+            {addLabel}
+          </Button>
+        )}
+        {showRemove && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-muted-foreground hover:text-destructive flex items-center gap-1"
+            onClick={onRemove}
+          >
+            <Trash2 className="h-4 w-4" />
+            {removeLabel}
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface EmptyStateCardProps {
+  title: string;
+  subtitle: string;
+  startLabel: string;
+  onStart: () => void;
+}
+
+function EmptyStateCard({ title, subtitle, startLabel, onStart }: EmptyStateCardProps) {
+  return (
+    <Card className="border-muted/60 bg-card/40 border-dashed p-6 text-center">
+      <div className="bg-primary/10 mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
+        <List className="text-primary h-6 w-6" />
+      </div>
+      <h3 className="mb-1 text-base font-semibold">{title}</h3>
+      <p className="text-muted-foreground mb-4 text-sm">{subtitle}</p>
+      <Button onClick={onStart} size="sm" className="mx-auto flex items-center gap-2">
+        <Plus className="h-4 w-4" />
+        {startLabel}
+      </Button>
+    </Card>
   );
 }
