@@ -158,8 +158,7 @@ exports[`ChatEmptyState matches snapshot for desktop 1`] = `
           New Moon
            • 
           0
-          %
-           
+          % 
           Illum.
         </span>
         <p
@@ -338,8 +337,7 @@ exports[`ChatEmptyState matches snapshot for mobile 1`] = `
           New Moon
            • 
           0
-          %
-           
+          % 
           Illum.
         </span>
         <p

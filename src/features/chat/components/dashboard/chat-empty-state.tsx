@@ -4,6 +4,28 @@ import { useState, useEffect, useMemo } from 'react';
 import { getMoonPhase, type MoonPhaseName } from '@/lib/astronomy/moon';
 import { RealisticMoon } from './realistic-moon';
 
+const PHASE_TRANSLATION_KEYS: Record<MoonPhaseName, string> = {
+  'New Moon': 'moon.phase.new',
+  'Waxing Crescent': 'moon.phase.waxing_crescent',
+  'First Quarter': 'moon.phase.first_quarter',
+  'Waxing Gibbous': 'moon.phase.waxing_gibbous',
+  'Full Moon': 'moon.phase.full',
+  'Waning Gibbous': 'moon.phase.waning_gibbous',
+  'Last Quarter': 'moon.phase.last_quarter',
+  'Waning Crescent': 'moon.phase.waning_crescent',
+};
+
+const PHASE_QUOTE_KEYS: Record<MoonPhaseName, string> = {
+  'New Moon': 'moon.quote.new',
+  'Waxing Crescent': 'moon.quote.waxing_crescent',
+  'First Quarter': 'moon.quote.first_quarter',
+  'Waxing Gibbous': 'moon.quote.waxing_gibbous',
+  'Full Moon': 'moon.quote.full',
+  'Waning Gibbous': 'moon.quote.waning_gibbous',
+  'Last Quarter': 'moon.quote.last_quarter',
+  'Waning Crescent': 'moon.quote.waning_crescent',
+};
+
 interface ChatEmptyStateProps {
   isMobile: boolean;
   translate: (key: string) => string;
@@ -19,33 +41,8 @@ export function ChatEmptyState({ isMobile, translate }: ChatEmptyStateProps) {
   // Calculate moon phase once on mount
   const moonPhase = useMemo(() => getMoonPhase(new Date()), []);
 
-  const getPhaseTranslation = (name: MoonPhaseName) => {
-    const keyMap: Record<MoonPhaseName, string> = {
-      'New Moon': 'moon.phase.new',
-      'Waxing Crescent': 'moon.phase.waxing_crescent',
-      'First Quarter': 'moon.phase.first_quarter',
-      'Waxing Gibbous': 'moon.phase.waxing_gibbous',
-      'Full Moon': 'moon.phase.full',
-      'Waning Gibbous': 'moon.phase.waning_gibbous',
-      'Last Quarter': 'moon.phase.last_quarter',
-      'Waning Crescent': 'moon.phase.waning_crescent',
-    };
-    return translate(keyMap[name] || 'moon.phase.new');
-  };
-
-  const getPhaseQuote = (name: MoonPhaseName) => {
-    const quoteKeyMap: Record<MoonPhaseName, string> = {
-      'New Moon': 'moon.quote.new',
-      'Waxing Crescent': 'moon.quote.waxing_crescent',
-      'First Quarter': 'moon.quote.first_quarter',
-      'Waxing Gibbous': 'moon.quote.waxing_gibbous',
-      'Full Moon': 'moon.quote.full',
-      'Waning Gibbous': 'moon.quote.waning_gibbous',
-      'Last Quarter': 'moon.quote.last_quarter',
-      'Waning Crescent': 'moon.quote.waning_crescent',
-    };
-    return translate(quoteKeyMap[name] || 'moon.quote.new');
-  };
+  const phaseTranslation = translate(PHASE_TRANSLATION_KEYS[moonPhase.name] ?? 'moon.phase.new');
+  const phaseQuote = translate(PHASE_QUOTE_KEYS[moonPhase.name] ?? 'moon.quote.new');
 
   // Prevent hydration mismatch by only rendering moon after client mount
   if (!mounted) {
@@ -77,13 +74,12 @@ export function ChatEmptyState({ isMobile, translate }: ChatEmptyStateProps) {
 
           {/* Phase Label */}
           <span className="text-muted-foreground/70 text-xs font-medium tracking-widest uppercase">
-            {getPhaseTranslation(moonPhase.name)} • {moonPhase.illumination}%{' '}
-            {translate('moon.illumination')}
+            {phaseTranslation} • {moonPhase.illumination}% {translate('moon.illumination')}
           </span>
 
           {/* Spiritual Quote */}
           <p className="animate-fade-in text-primary/70 animation-delay-300 mt-6 max-w-lg px-6 text-center text-base leading-relaxed font-light italic">
-            "{getPhaseQuote(moonPhase.name)}"
+            "{phaseQuote}"
           </p>
         </div>
 

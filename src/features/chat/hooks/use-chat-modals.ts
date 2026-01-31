@@ -82,35 +82,35 @@ export interface UseChatModalsReturn {
  * ```
  */
 export function useChatModals(): UseChatModalsReturn {
-  const [showMemoryModal, setShowMemoryModal] = useState(false);
-  const [showApiKeysPanel, setShowApiKeysPanel] = useState(false);
+  const [modals, setModals] = useState<ChatModalsState>({
+    showMemoryModal: false,
+    showApiKeysPanel: false,
+  });
+
+  const setShowMemoryModal = useCallback((show: boolean) => {
+    setModals((prev) => ({ ...prev, showMemoryModal: show }));
+  }, []);
+
+  const setShowApiKeysPanel = useCallback((show: boolean) => {
+    setModals((prev) => ({ ...prev, showApiKeysPanel: show }));
+  }, []);
 
   const openMemoryModal = useCallback(() => {
     setShowMemoryModal(true);
-  }, []);
+  }, [setShowMemoryModal]);
 
   const closeMemoryModal = useCallback(() => {
     setShowMemoryModal(false);
-  }, []);
+  }, [setShowMemoryModal]);
 
   const openApiKeysPanel = useCallback(() => {
     setShowApiKeysPanel(true);
-  }, []);
+  }, [setShowApiKeysPanel]);
 
   const closeApiKeysPanel = useCallback(() => {
     setShowApiKeysPanel(false);
-  }, []);
+  }, [setShowApiKeysPanel]);
 
-  // Memoize the modals state object
-  const modals = useMemo(
-    () => ({
-      showMemoryModal,
-      showApiKeysPanel,
-    }),
-    [showMemoryModal, showApiKeysPanel]
-  );
-
-  // Memoize the actions object (callbacks are already stable)
   const actions = useMemo(
     () => ({
       openMemoryModal,
@@ -123,8 +123,10 @@ export function useChatModals(): UseChatModalsReturn {
     [
       openMemoryModal,
       closeMemoryModal,
+      setShowMemoryModal,
       openApiKeysPanel,
       closeApiKeysPanel,
+      setShowApiKeysPanel,
     ]
   );
 
