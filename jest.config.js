@@ -74,7 +74,7 @@ const customJestConfig = {
     '^@ai-sdk/rsc$': '<rootDir>/__tests__/__mocks__/@ai-sdk/rsc.js',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(jspdf|canvas|@ai-sdk|ai|streamdown|react-markdown|remark-gfm|vfile|unist-util-.*|bail|is-plain-obj|uuid|@clerk))',
+    'node_modules/(?!(jspdf|canvas|@ai-sdk|ai|streamdown|react-markdown|remark-gfm|vfile|unist-util-.*|bail|is-plain-obj|@clerk))',
   ],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   globals: {

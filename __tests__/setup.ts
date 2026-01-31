@@ -29,11 +29,6 @@ export { TestPerformanceMonitor, TestDataValidator, TestCleanup } from './utils/
 // Global test configuration message
 console.log('🧪 Unified Test Architecture Loaded - 23 optimization patterns active');
 
-// Mock uuid for tests
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'mock-uuid-1234'),
-}));
-
 // Mock Clerk modules for api-auth.ts
 jest.mock('@clerk/nextjs/server', () => ({
   getAuth: jest.fn(() =>
