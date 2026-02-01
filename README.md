@@ -98,6 +98,14 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Session Reports** - AI-generated insights and progress tracking
 - **Web Search Integration** - Real-time access to therapeutic resources
 
+### 📓 CBT Diary
+
+#### Localization
+
+- Dutch CBT session reports use consistent Dutch schema mode terminology (no English terms).
+- CBT exports (markdown/text) respect the active locale for labels and section headings.
+- CBT summaries shown in chat/diary reflect localized schema mode names when Dutch is selected.
+
 ### 🔒 Enterprise Security
 
 - **Bring Your Own Key (BYOK)** - Optional use of personal OpenAI keys for enhanced privacy and cost control (session-only storage when remembered)

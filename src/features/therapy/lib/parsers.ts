@@ -13,6 +13,7 @@ import type {
   SchemaReflectionCategory,
 } from '@/types';
 import { safeParseFromMatch } from '@/lib/utils/helpers';
+import type { SupportedLocale } from '@/lib/cbt/schema-mode-localization';
 
 export type { CBTStructuredAssessment, ParsedCBTData } from '@/types';
 
@@ -847,34 +848,86 @@ export function hasCBTData(messages: MessageLike[]): boolean {
 // SUMMARY GENERATION
 // ========================================
 
-export function generateCBTSummary(cbtData: CBTStructuredAssessment): string {
+const SUMMARY_LABELS: Record<SupportedLocale, Record<string, string>> = {
+  en: {
+    situation: 'Situation',
+    initialEmotions: 'Initial Emotions',
+    automaticThoughts: 'Automatic Thoughts',
+    automaticThoughtsSuffix: 'identified',
+    coreBelief: 'Core Belief',
+    credibility: 'credibility',
+    schemaModes: 'Active Schema Modes',
+    schemaModesSuffix: 'modes identified',
+    emotionalProgress: 'Emotional Progress',
+    emotionalProgressSuffix: 'emotions showed significant changes',
+  },
+  nl: {
+    situation: 'Situatie',
+    initialEmotions: 'Beginemoties',
+    automaticThoughts: 'Automatische gedachten',
+    automaticThoughtsSuffix: 'geïdentificeerd',
+    coreBelief: 'Kernopvatting',
+    credibility: 'geloofwaardigheid',
+    schemaModes: 'Actieve schema-modi',
+    schemaModesSuffix: 'modi geïdentificeerd',
+    emotionalProgress: 'Emotionele voortgang',
+    emotionalProgressSuffix: 'emoties met duidelijke veranderingen',
+  },
+};
+
+const EMOTION_LABELS_NL: Record<string, string> = {
+  fear: 'Angst',
+  anger: 'Boosheid',
+  sadness: 'Verdriet',
+  joy: 'Blijdschap',
+  anxiety: 'Onrust',
+  shame: 'Schaamte',
+  guilt: 'Schuld',
+};
+
+function getEmotionLabel(key: string, locale: SupportedLocale): string {
+  if (locale === 'nl') {
+    return EMOTION_LABELS_NL[key] ?? key;
+  }
+  return key;
+}
+
+export function generateCBTSummary(
+  cbtData: CBTStructuredAssessment,
+  locale: SupportedLocale = 'en'
+): string {
+  const labels = SUMMARY_LABELS[locale];
   const sections: string[] = [];
   if (cbtData.situation) {
-    sections.push(`**Situation**: ${cbtData.situation.description} (${cbtData.situation.date})`);
+    sections.push(
+      `**${labels.situation}**: ${cbtData.situation.description} (${cbtData.situation.date})`
+    );
   }
   if (cbtData.emotions?.initial) {
     const emotionList = Object.entries(cbtData.emotions.initial)
       .filter(([, value]) => value > 0)
-      .map(([emotion, value]) => `${emotion}: ${value}/10`)
+      .map(([emotion, value]) => `${getEmotionLabel(emotion, locale)}: ${value}/10`)
       .join(', ');
-    sections.push(`**Initial Emotions**: ${emotionList}`);
+    sections.push(`**${labels.initialEmotions}**: ${emotionList}`);
   }
   if (cbtData.thoughts?.automaticThoughts.length) {
     sections.push(
-      `**Automatic Thoughts**: ${cbtData.thoughts.automaticThoughts.length} identified`
+      `**${labels.automaticThoughts}**: ${cbtData.thoughts.automaticThoughts.length} ${labels.automaticThoughtsSuffix}`
     );
   }
   if (cbtData.coreBeliefs) {
     sections.push(
-      `**Core Belief**: "${cbtData.coreBeliefs.belief}" (${cbtData.coreBeliefs.credibility}/10 credibility)`
+      `**${labels.coreBelief}**: "${cbtData.coreBeliefs.belief}" (${cbtData.coreBeliefs.credibility}/10 ${labels.credibility})`
     );
   }
   if (cbtData.schemaModes?.length) {
-    sections.push(`**Active Schema Modes**: ${cbtData.schemaModes.length} modes identified`);
+    sections.push(
+      `**${labels.schemaModes}**: ${cbtData.schemaModes.length} ${labels.schemaModesSuffix}`
+    );
   }
   if (cbtData.emotionComparison?.changes.length) {
     sections.push(
-      `**Emotional Progress**: ${cbtData.emotionComparison.changes.length} emotions showed significant changes`
+      `**${labels.emotionalProgress}**: ${cbtData.emotionComparison.changes.length} ${labels.emotionalProgressSuffix}`
     );
   }
   return sections.join('\n\n');

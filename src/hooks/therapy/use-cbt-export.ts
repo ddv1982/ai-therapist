@@ -1,6 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
+import { useLocale } from 'next-intl';
 import { CBTFormData } from '@/types';
-import { exportCBTDiary, CBTExportFormat, generateFileName } from '@/lib/cbt/export-utils';
+import {
+  exportCBTDiary,
+  CBTExportFormat,
+  generateFileName,
+  getExportLocaleStrings,
+} from '@/lib/cbt/export-utils';
+import type { Locale } from '@/i18n/routing';
 
 interface UseCBTExportOptions {
   onSuccess?: (format: CBTExportFormat, filename: string) => void;
@@ -21,6 +28,7 @@ interface UseCBTExportReturn {
 
 export function useCBTExport(options: UseCBTExportOptions = {}): UseCBTExportReturn {
   const { onSuccess, onError } = options;
+  const locale = useLocale() as Locale;
 
   const [isExporting, setIsExporting] = useState(false);
   const [exportingFormat, setExportingFormat] = useState<CBTExportFormat | null>(null);
@@ -60,7 +68,12 @@ export function useCBTExport(options: UseCBTExportOptions = {}): UseCBTExportRet
         await new Promise((resolve) => setTimeout(resolve, 300));
 
         // Perform the export
-        await exportCBTDiary(format, formData, markdownContent);
+        await exportCBTDiary(
+          format,
+          formData,
+          markdownContent,
+          getExportLocaleStrings(locale)
+        );
 
         // Generate filename for success callback
         const filename = generateFileName(format, formData.date);
@@ -85,7 +98,7 @@ export function useCBTExport(options: UseCBTExportOptions = {}): UseCBTExportRet
         setExportingFormat(null);
       }
     },
-    [onSuccess, onError]
+    [locale, onSuccess, onError]
   );
 
   const clearError = useCallback(() => {

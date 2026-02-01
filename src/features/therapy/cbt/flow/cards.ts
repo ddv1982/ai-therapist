@@ -2,7 +2,8 @@ import type { CBTSessionSummaryData } from '@/features/therapy/components/cbt-se
 export type { CBTSessionSummaryData } from '@/features/therapy/components/cbt-session-summary-card';
 import type { EmotionData, ThoughtData } from '@/types';
 import { CBT_STEP_ORDER, type CBTFlowContext, type CBTFlowState, type CBTStepId } from './types';
-import { buildSummaryCardFromState } from './summary';
+import { buildSummaryCardFromState, buildTherapeuticWrapper } from './summary';
+import type { SupportedLocale } from '@/lib/cbt/schema-mode-localization';
 import { CBT_STEP_CONFIG } from './config';
 
 const CARD_PREFIX = '<!-- CBT_SUMMARY_CARD:';
@@ -142,8 +143,18 @@ export function buildStepCard(stepId: CBTStepId, context: CBTFlowContext): strin
   }
 }
 
-export function buildSessionSummaryCard(state: CBTFlowState): string {
-  return toCardString(buildSummaryCardFromState(state));
+/**
+ * Build the session summary card with dual format:
+ * - Human-readable therapeutic wrapper (visible if user reviews chat)
+ * - Machine-readable JSON card (for AI analysis)
+ */
+export function buildSessionSummaryCard(
+  state: CBTFlowState,
+  locale: SupportedLocale = 'en'
+): string {
+  const wrapper = buildTherapeuticWrapper(state, locale);
+  const machineCard = toCardString(buildSummaryCardFromState(state, locale));
+  return `${wrapper}\n\n${machineCard}`;
 }
 
 export function buildEmotionComparisonCard(initial: EmotionData, final: EmotionData): string {

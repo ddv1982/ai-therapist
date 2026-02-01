@@ -26,14 +26,33 @@ const isPublicRoute = createRouteMatcher([...PUBLIC_ROUTES]);
  */
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   // Protect non-public routes FIRST (before any other logic)
-  if (!isPublicRoute(req)) {
-    await auth.protect();
-  }
+  const authResult: unknown = !isPublicRoute(req) ? await auth.protect() : null;
+  const authResponse: NextResponse | undefined =
+    authResult instanceof Response ? (authResult as NextResponse) : undefined;
 
   // API routes: let Clerk handle response internally (no CSP needed for JSON)
   // This ensures Clerk's session context is properly forwarded to route handlers
   if (req.nextUrl.pathname.startsWith('/api')) {
-    return;
+    if (authResponse) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            message: 'Authentication required',
+            code: 'UNAUTHENTICATED',
+            details: 'Authentication required',
+            suggestedAction: 'Please sign in and try again',
+          },
+          meta: { timestamp: new Date().toISOString() },
+        },
+        { status: 401 }
+      );
+    }
+    return NextResponse.next();
+  }
+
+  if (authResponse) {
+    return authResponse;
   }
 
   // Page routes: add CSP headers for browser security

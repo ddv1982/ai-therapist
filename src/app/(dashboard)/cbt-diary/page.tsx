@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Brain } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,7 @@ import { sendToChat } from '@/features/therapy/cbt/utils/send-to-chat';
 import { sessionKeys } from '@/lib/queries/sessions';
 import { useSession } from '@/contexts/session-context';
 import { useApiKeys } from '@/hooks/use-api-keys';
+import type { Locale } from '@/i18n/routing';
 
 function CBTDiaryPageContent() {
   const router = useRouter();
@@ -33,6 +34,7 @@ function CBTDiaryPageContent() {
   const { showToast } = useToast();
   const t = useTranslations('cbt');
   const toastT = useTranslations('toast');
+  const locale = useLocale() as Locale;
   const { selectSession } = useSelectSession();
   const queryClient = useQueryClient();
   const { keys, isActive: byokActive } = useApiKeys();
@@ -163,6 +165,7 @@ function CBTDiaryPageContent() {
         contextualMessages: [],
         model: (await import('@/features/chat/config')).ANALYTICAL_MODEL_ID,
         byokKey,
+        locale,
       });
 
       await selectSession(sessionId);
@@ -205,6 +208,7 @@ function CBTDiaryPageContent() {
     cbt,
     byokKey,
     queryClient,
+    locale,
   ]);
 
   return (

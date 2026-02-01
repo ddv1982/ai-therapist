@@ -51,6 +51,10 @@ function useFormatter() {
   };
 }
 
+function useLocale() {
+  return 'en';
+}
+
 function NextIntlClientProvider({ children }) {
   return children;
 }
@@ -63,6 +67,7 @@ function defineRouting(config) {
 const nextIntlMock = {
   useTranslations,
   useFormatter,
+  useLocale,
   NextIntlClientProvider,
   defineRouting,
 };
@@ -70,5 +75,6 @@ const nextIntlMock = {
 module.exports = nextIntlMock;
 module.exports.useTranslations = useTranslations;
 module.exports.useFormatter = useFormatter;
+module.exports.useLocale = useLocale;
 module.exports.NextIntlClientProvider = NextIntlClientProvider;
 module.exports.defineRouting = defineRouting;

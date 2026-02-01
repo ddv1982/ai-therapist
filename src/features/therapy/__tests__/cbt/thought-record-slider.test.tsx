@@ -33,6 +33,7 @@ translator.raw = (key: string) => {
 jest.mock('next-intl', () => ({
   __esModule: true,
   useTranslations: () => translator,
+  useLocale: () => 'en',
 }));
 
 jest.mock('@/features/therapy/components/cbt-step-wrapper', () => ({

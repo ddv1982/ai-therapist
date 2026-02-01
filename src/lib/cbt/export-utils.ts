@@ -1,4 +1,8 @@
 import { CBTFormData, type SchemaReflectionData } from '@/types';
+import {
+  localizeSchemaMode,
+  type SupportedLocale,
+} from '@/lib/cbt/schema-mode-localization';
 
 // Export format types
 export type CBTExportFormat = 'json' | 'markdown' | 'text';
@@ -11,6 +15,7 @@ export interface CBTExportData {
 
 // Localizable strings used across exports
 export interface ExportLocaleStrings {
+  locale?: SupportedLocale;
   diaryTitle: string;
   deepReflectionSuffix: string;
   dateLabel: string;
@@ -45,11 +50,13 @@ export interface ExportLocaleStrings {
   originalThoughtCredibilityLabel: string;
   newBehaviorsTitle: string;
   noNewBehaviors: string;
+  notSpecifiedLabel: string;
   footerNote: string;
   exportedFooter: (date: string) => string;
 }
 
 const defaultExportStrings: ExportLocaleStrings = {
+  locale: 'en',
   diaryTitle: 'CBT Diary Entry',
   deepReflectionSuffix: 'with Deep Reflection',
   dateLabel: 'Date:',
@@ -84,10 +91,82 @@ const defaultExportStrings: ExportLocaleStrings = {
   originalThoughtCredibilityLabel: 'Original Thought Credibility:',
   newBehaviorsTitle: 'New Behaviors',
   noNewBehaviors: '[No new behaviors identified]',
+  notSpecifiedLabel: '[Not specified]',
   footerNote:
     'This reflection is a tool for self-awareness and growth. Be patient and compassionate with yourself throughout this process.',
   exportedFooter: (date: string) => `Exported from AI Therapist CBT Diary on ${date}`,
 };
+
+const nlExportStrings: ExportLocaleStrings = {
+  locale: 'nl',
+  diaryTitle: 'CGT-dagboeknotitie',
+  deepReflectionSuffix: 'met diepte-reflectie',
+  dateLabel: 'Datum:',
+  exportDateLabel: 'Exportdatum:',
+  situationTitle: 'Situatiecontext',
+  noSituation: '[Geen situatie beschreven]',
+  initialEmotionsTitle: 'Beginemoties',
+  emotionsSubtitle: 'Emotionele intensiteit (1-10)',
+  noEmotions: '[Geen emoties beoordeeld]',
+  automaticThoughtsTitle: 'Automatische gedachten',
+  automaticThoughtsSubtitle: 'Denkpatronen en geloofwaardigheid (1-10)',
+  noThoughts: '[Geen gedachten ingevuld]',
+  coreSchemaTitle: 'Kernopvatting',
+  credibilityLabel: 'Geloofwaardigheid',
+  coreBeliefLabel: 'Kernopvatting',
+  noCoreBelief: '[Geen kernopvatting geïdentificeerd]',
+  behavioralPatternsTitle: 'Gedragspatronen',
+  confirmingBehaviors: 'Bevestigend gedrag:',
+  avoidantBehaviors: 'Vermijdend gedrag:',
+  overridingBehaviors: 'Compensatiegedrag:',
+  activeSchemaModesTitle: 'Actieve schema-modi',
+  noSchemaModes: '[Geen schema-modi geselecteerd]',
+  schemaReflectionTitle: 'Schema-reflectie inzichten',
+  personalAssessmentTitle: 'Persoonlijke beoordeling',
+  reflectionQuestionsTitle: 'Reflectievragen',
+  responseLabel: 'Antwoord:',
+  rationalThoughtsTitle: 'Rationele gedachten',
+  rationalSubtitle: 'Vertrouwen (1-10)',
+  noRationalThoughts: '[Geen rationele gedachten ontwikkeld]',
+  finalReflectionTitle: 'Eindreflectie',
+  updatedEmotionsTitle: 'Bijgewerkte emoties',
+  originalThoughtCredibilityLabel: 'Geloofwaardigheid oorspronkelijke gedachte:',
+  newBehaviorsTitle: 'Nieuwe gedragingen',
+  noNewBehaviors: '[Geen nieuwe gedragingen geïdentificeerd]',
+  notSpecifiedLabel: '[Niet gespecificeerd]',
+  footerNote:
+    'Deze reflectie is een hulpmiddel voor zelfinzicht en groei. Wees geduldig en mild voor jezelf tijdens dit proces.',
+  exportedFooter: (date: string) => `Geëxporteerd uit AI Therapist CGT-dagboek op ${date}`,
+};
+
+const EMOTION_LABELS_NL: Record<string, string> = {
+  fear: 'Angst',
+  anger: 'Boosheid',
+  sadness: 'Verdriet',
+  joy: 'Blijdschap',
+  anxiety: 'Onrust',
+  shame: 'Schaamte',
+  guilt: 'Schuld',
+};
+
+function resolveLocale(strings: ExportLocaleStrings): SupportedLocale {
+  return strings.locale ?? 'en';
+}
+
+function getLocaleDateLabel(locale: SupportedLocale): string {
+  return locale === 'nl' ? 'nl-NL' : 'en-US';
+}
+
+function getEmotionLabel(key: string, locale: SupportedLocale): string {
+  if (locale === 'nl') {
+    return EMOTION_LABELS_NL[key] ?? key;
+  }
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+export function getExportLocaleStrings(locale: SupportedLocale): ExportLocaleStrings {
+  return locale === 'nl' ? nlExportStrings : defaultExportStrings;
+}
 
 // File naming utility
 export function generateFileName(format: CBTExportFormat, date?: string): string {
@@ -119,7 +198,8 @@ export function downloadFile(content: string | Blob, filename: string, mimeType:
 
 // Format emotions for display
 export function formatEmotionsForExport(
-  emotions: CBTFormData['initialEmotions']
+  emotions: CBTFormData['initialEmotions'],
+  locale: SupportedLocale = 'en'
 ): Array<{ name: string; intensity: number }> {
   const formatted = Object.entries(emotions)
     .filter(
@@ -127,7 +207,7 @@ export function formatEmotionsForExport(
         key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0
     )
     .map(([key, value]) => ({
-      name: key.charAt(0).toUpperCase() + key.slice(1),
+      name: getEmotionLabel(key, locale),
       intensity: value as number,
     }));
 
@@ -172,7 +252,8 @@ export function exportAsMarkdown(
     try {
       // If markdownContent is provided (from chat), use it; otherwise generate from formData
       const strings = { ...defaultExportStrings, ...(localeStrings || {}) };
-      const content = markdownContent || generateMarkdownFromFormData(formData, strings);
+      const locale = resolveLocale(strings);
+      const content = markdownContent || generateMarkdownFromFormData(formData, strings, locale);
       const filename = generateFileName('markdown');
 
       downloadFile(content, filename, 'text/markdown');
@@ -184,7 +265,11 @@ export function exportAsMarkdown(
 }
 
 // Generate markdown from form data (for modal export)
-function generateMarkdownFromFormData(formData: CBTFormData, strings: ExportLocaleStrings): string {
+function generateMarkdownFromFormData(
+  formData: CBTFormData,
+  strings: ExportLocaleStrings,
+  locale: SupportedLocale
+): string {
   type OptionalReflectionFields = { schemaReflection?: SchemaReflectionData };
   const formWithOptionalReflection = formData as CBTFormData & OptionalReflectionFields;
   type OptionalBehaviorFields = Partial<{
@@ -199,7 +284,7 @@ function generateMarkdownFromFormData(formData: CBTFormData, strings: ExportLoca
         ([key, value]) =>
           key !== 'other' && key !== 'otherIntensity' && typeof value === 'number' && value > 0
       )
-      .map(([key, value]) => `- ${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}/10`)
+      .map(([key, value]) => `- ${getEmotionLabel(key, locale)}: ${value}/10`)
       .join('\n');
 
     if (emotions.other && emotions.otherIntensity && emotions.otherIntensity > 0) {
@@ -223,7 +308,12 @@ function generateMarkdownFromFormData(formData: CBTFormData, strings: ExportLoca
 
   const selectedModes = formData.schemaModes
     .filter((mode) => mode.selected)
-    .map((mode) => `- [x] ${mode.name} *(${mode.description})*`)
+    .map((mode) => {
+      const localized = localizeSchemaMode(mode, locale, 'ui');
+      const name = localized.name ?? mode.name;
+      const description = localized.description ?? mode.description ?? '';
+      return `- [x] ${name} *(${description})*`;
+    })
     .join('\n');
 
   const hasReflectionContent = Boolean(
@@ -235,7 +325,7 @@ function generateMarkdownFromFormData(formData: CBTFormData, strings: ExportLoca
   return `# 🌟 ${strings.diaryTitle} ${hasReflectionContent ? strings.deepReflectionSuffix : ''}
 
 **${strings.dateLabel}** ${formData.date}
-**${strings.exportDateLabel}** ${new Date().toLocaleDateString()}
+**${strings.exportDateLabel}** ${new Date().toLocaleDateString(getLocaleDateLabel(locale))}
 
 ---
 
@@ -264,9 +354,9 @@ ${formatThoughts(formData.automaticThoughts) || strings.noThoughts}
 **${strings.coreBeliefLabel}** ${formData.coreBeliefText || strings.noCoreBelief}
 
 ### ${strings.behavioralPatternsTitle}
-- **${strings.confirmingBehaviors}** ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}
-- **${strings.avoidantBehaviors}** ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}  
-- **${strings.overridingBehaviors}** ${behaviorPatterns.overridingBehaviors || '[Not specified]'}
+- **${strings.confirmingBehaviors}** ${behaviorPatterns.confirmingBehaviors || strings.notSpecifiedLabel}
+- **${strings.avoidantBehaviors}** ${behaviorPatterns.avoidantBehaviors || strings.notSpecifiedLabel}  
+- **${strings.overridingBehaviors}** ${behaviorPatterns.overridingBehaviors || strings.notSpecifiedLabel}
 
 ### ${strings.activeSchemaModesTitle}
 ${selectedModes || strings.noSchemaModes}
@@ -326,7 +416,7 @@ ${formData.newBehaviors || strings.noNewBehaviors}
 
 *${strings.footerNote}*
 
-**${strings.exportedFooter(new Date().toLocaleDateString())}**`;
+**${strings.exportedFooter(new Date().toLocaleDateString(getLocaleDateLabel(locale)))}**`;
 }
 
 // Text Export (plain text version)
@@ -337,11 +427,20 @@ export function exportAsText(
   return new Promise((resolve, reject) => {
     try {
       const s = { ...defaultExportStrings, ...(localeStrings || {}) };
-      const initialEmotions = formatEmotionsForExport(formData.initialEmotions);
-      const finalEmotions = formatEmotionsForExport(formData.finalEmotions);
+      const locale = resolveLocale(s);
+      const initialEmotions = formatEmotionsForExport(formData.initialEmotions, locale);
+      const finalEmotions = formatEmotionsForExport(formData.finalEmotions, locale);
       const validThoughts = formData.automaticThoughts.filter((t) => t.thought.trim());
       const rationalThoughts = formData.rationalThoughts.filter((t) => t.thought.trim());
-      const selectedModes = formData.schemaModes.filter((mode) => mode.selected);
+      const selectedModes = formData.schemaModes
+        .filter((mode) => mode.selected)
+        .map((mode) => {
+          const localized = localizeSchemaMode(mode, locale, 'ui');
+          return {
+            name: localized.name ?? mode.name,
+            description: localized.description ?? mode.description ?? '',
+          };
+        });
       type OptionalBehaviorFields = Partial<{
         confirmingBehaviors: string;
         avoidantBehaviors: string;
@@ -355,7 +454,7 @@ export function exportAsText(
 ${'='.repeat(50)}
 
 ${s.dateLabel} ${formData.date}
-${s.exportDateLabel} ${new Date().toLocaleDateString()}
+${s.exportDateLabel} ${new Date().toLocaleDateString(getLocaleDateLabel(locale))}
 
 ${s.situationTitle.toUpperCase()}
 ${'-'.repeat(20)}
@@ -375,9 +474,9 @@ ${formData.coreBeliefText || s.noCoreBelief}
 
 ${s.behavioralPatternsTitle.toUpperCase()}
 ${'-'.repeat(20)}
-${s.confirmingBehaviors} ${behaviorPatterns.confirmingBehaviors || '[Not specified]'}
-${s.avoidantBehaviors} ${behaviorPatterns.avoidantBehaviors || '[Not specified]'}
-${s.overridingBehaviors} ${behaviorPatterns.overridingBehaviors || '[Not specified]'}
+${s.confirmingBehaviors} ${behaviorPatterns.confirmingBehaviors || s.notSpecifiedLabel}
+${s.avoidantBehaviors} ${behaviorPatterns.avoidantBehaviors || s.notSpecifiedLabel}
+${s.overridingBehaviors} ${behaviorPatterns.overridingBehaviors || s.notSpecifiedLabel}
 
 ${s.activeSchemaModesTitle.toUpperCase()}
 ${'-'.repeat(20)}
@@ -411,7 +510,7 @@ ${s.responseLabel} ${q.answer}`
     : ''
 }
 
-${s.rationalThoughtsTitle.toUpperCase()} (with confidence 1-10)
+${s.rationalThoughtsTitle.toUpperCase()} (${s.rationalSubtitle.toLowerCase()})
 ${'-'.repeat(20)}
 ${rationalThoughts.map((t) => `"${t.thought}" (${t.confidence}/10)`).join('\n') || s.noRationalThoughts}
 
@@ -428,7 +527,7 @@ ${formData.newBehaviors || s.noNewBehaviors}
 ${'='.repeat(50)}
 ${s.footerNote}
 
-${s.exportedFooter(new Date().toLocaleDateString())}`;
+${s.exportedFooter(new Date().toLocaleDateString(getLocaleDateLabel(locale)))}`;
 
       const filename = generateFileName('text');
       downloadFile(textContent, filename, 'text/plain');

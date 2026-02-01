@@ -41,7 +41,12 @@ describe('buildTherapySystemPrompt localization', () => {
   });
 
   it('returns localized report prompts for each supported locale', () => {
-    expect(getReportPrompt('nl')).toContain('# Instructies Therapeutisch Sessierapport');
-    expect(getReportPrompt('en')).toContain('# Therapeutic Session Report Instructions');
+    const nlPrompt = getReportPrompt('nl');
+    const enPrompt = getReportPrompt('en');
+
+    expect(nlPrompt).toContain('# Sessierapport Genereren');
+    expect(nlPrompt).toContain('Gebruik uitsluitend Nederlands');
+    expect(nlPrompt).toContain('kwetsbare kind-modus');
+    expect(enPrompt).toContain('# Session Report Generation');
   });
 });

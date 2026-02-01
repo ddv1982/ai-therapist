@@ -160,6 +160,11 @@ export const POST = withValidationAndParams(
 export const GET = withAuth(async (request: NextRequest, context, params) => {
   try {
     const { sessionId } = (await params) as { sessionId: string };
+    logger.info('Messages GET handler invoked', {
+      apiEndpoint: '/api/sessions/[sessionId]/messages',
+      requestId: context.requestId,
+      sessionId,
+    });
     const convex = getAuthenticatedConvexClient(context.jwtToken);
 
     const { valid } = await verifySessionOwnership(

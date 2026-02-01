@@ -16,6 +16,7 @@ jest.mock('@/features/chat/context/chat-context', () => ({
 // Mock translations
 jest.mock('next-intl', () => ({
   useTranslations: () => jest.fn((key) => key),
+  useLocale: () => 'en',
 }));
 
 // Mock the child components

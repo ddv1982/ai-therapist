@@ -20,6 +20,7 @@ import {
   calculateContextualConfidence,
 } from '@/features/therapy/lib/validators';
 import { parseAllCBTData, hasCBTData, generateCBTSummary } from '@/features/therapy/lib/parsers';
+import { replaceSchemaModeNamesInText } from '@/lib/cbt/schema-mode-localization';
 import { getModelDisplayName, supportsWebSearch } from '@/ai/model-metadata';
 import type { CBTStructuredAssessment } from '@/types';
 
@@ -301,11 +302,19 @@ export class ReportGenerationService {
       return supportsWebSearch(this.reportModelId) ? `${base} (Deep Analysis)` : base;
     })();
 
+    const localizedMessages =
+      locale === 'nl'
+        ? messages.map((message) => ({
+            ...message,
+            content: replaceSchemaModeNamesInText(message.content, locale),
+          }))
+        : messages;
+
     logger.info('Report generation started', {
       sessionId,
       modelUsed: this.reportModelId,
       modelDisplayName: modelDisplay,
-      messageCount: messages.length,
+      messageCount: localizedMessages.length,
     });
 
     // Check for CBT data in messages
@@ -314,12 +323,12 @@ export class ReportGenerationService {
     let cbtSummary = '';
     let dataSource = 'none';
 
-    const hasCBTContent = hasCBTData(messages);
+    const hasCBTContent = hasCBTData(localizedMessages);
 
     if (hasCBTContent) {
       devLog('CBT data detected in messages, parsing structured information...');
-      cbtData = parseAllCBTData(messages);
-      cbtSummary = generateCBTSummary(cbtData);
+      cbtData = parseAllCBTData(localizedMessages);
+      cbtSummary = generateCBTSummary(cbtData, locale);
       dataSource = 'parsed';
 
       logger.info('CBT data extracted from messages', {
@@ -337,12 +346,12 @@ export class ReportGenerationService {
     logger.info('Generating session report with AI model', {
       sessionId,
       modelUsed: this.reportModelId,
-      messageCount: messages.length,
+      messageCount: localizedMessages.length,
     });
 
     const reportPrompt = getReportPrompt(locale);
     const completion = await generateSessionReport(
-      messages,
+      localizedMessages,
       reportPrompt,
       this.modelOrId,
       this.getReportGenerationOptions()
@@ -355,7 +364,7 @@ export class ReportGenerationService {
     // Process structured analysis
     const parsedAnalysis = await this.processStructuredAnalysis(
       completion,
-      messages,
+      localizedMessages,
       hasCBTContent
     );
 

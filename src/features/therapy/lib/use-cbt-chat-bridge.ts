@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { useLocale } from 'next-intl';
 import { apiClient } from '@/lib/api/client';
 import { logger } from '@/lib/utils/logger';
 import {
@@ -15,12 +16,14 @@ import {
   type CBTStepId,
 } from '@/features/therapy/cbt/flow';
 import type { EmotionData } from '@/types';
+import type { Locale } from '@/i18n/routing';
 
 export interface SendStepOptions {
   onlyIfExists?: boolean;
 }
 
 export function useCBTChatBridge() {
+  const locale = useLocale() as Locale;
   const sendChatMessage = useCallback(async (content: string, sessionId?: string) => {
     if (!sessionId) {
       logger.warn('CBT data send attempted without active session', {
@@ -75,10 +78,10 @@ export function useCBTChatBridge() {
 
   const sendSessionSummary = useCallback(
     async (state: CBTFlowState, sessionId?: string) => {
-      const card = buildSessionSummaryCard(state);
+      const card = buildSessionSummaryCard(state, locale);
       return sendChatMessage(card, sessionId);
     },
-    [sendChatMessage]
+    [locale, sendChatMessage]
   );
 
   const sendEmotionComparison = useCallback(

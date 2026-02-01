@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useCallback, useState } from 'react';
+import { useLocale } from 'next-intl';
 import { logger } from '@/lib/utils/logger';
 import { useCBT, type CBTDraft } from '@/contexts/cbt-context';
 import { cbtFormSchema } from '@/features/therapy/cbt/form-schema';
@@ -33,6 +34,7 @@ import { buildMarkdownSummary } from '@/features/therapy/cbt/flow/summary';
 import { generateUUID } from '@/lib/utils';
 import { type CBTStepId } from '@/features/therapy/cbt/flow';
 import { useDraftSaving } from '@/hooks/use-draft-saving';
+import type { Locale } from '@/i18n/routing';
 
 import {
   asEmotionData,
@@ -207,6 +209,7 @@ export interface UseCBTDataManagerReturn {
 }
 
 export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCBTDataManagerReturn {
+  const locale = useLocale() as Locale;
   const {
     sessionId,
     autoSaveDelay = 1000,
@@ -713,15 +716,15 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
 
       generateSummary: (): string => {
         if (!flowState) return '';
-        return buildMarkdownSummary(flowState);
+        return buildMarkdownSummary(flowState, locale);
       },
 
       getFormattedOutput: (): string => {
         if (!flowState) return '';
-        return buildSessionSummaryCard(flowState);
+        return buildSessionSummaryCard(flowState, locale);
       },
     }),
-    [currentDraft, flowState]
+    [currentDraft, flowState, locale]
   );
 
   return {

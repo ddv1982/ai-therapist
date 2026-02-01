@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useReducer } from 'react';
+import { useLocale } from 'next-intl';
 import type { CBTSessionSummaryData } from '@/features/therapy/components/cbt-session-summary-card';
 import { generateUUID } from '@/lib/utils/helpers';
 import {
@@ -19,6 +20,7 @@ import {
   buildMarkdownSummary,
   buildSummaryCardFromState,
 } from '@/features/therapy/cbt/flow/summary';
+import type { Locale } from '@/i18n/routing';
 import type {
   SituationData,
   EmotionData,
@@ -72,6 +74,7 @@ type StepMap = {
 };
 
 export function useCBTChatExperience(): UseCBTChatExperienceReturn {
+  const locale = useLocale() as Locale;
   const [flowState, dispatch] = useReducer(transition, undefined, createInitialState);
 
   const isActive = flowState.status !== 'idle';
@@ -110,10 +113,13 @@ export function useCBTChatExperience(): UseCBTChatExperienceReturn {
     [completeStep]
   );
 
-  const generateFinalSummary = useCallback(() => buildMarkdownSummary(flowState), [flowState]);
+  const generateFinalSummary = useCallback(
+    () => buildMarkdownSummary(flowState, locale),
+    [flowState, locale]
+  );
   const generateTherapeuticSummaryCard = useCallback(
-    () => buildSummaryCardFromState(flowState),
-    [flowState]
+    () => buildSummaryCardFromState(flowState, locale),
+    [flowState, locale]
   );
 
   return {

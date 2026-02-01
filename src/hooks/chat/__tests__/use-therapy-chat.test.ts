@@ -58,6 +58,7 @@ jest.mock('@/components/ui/toast', () => ({
 
 jest.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => 'en',
 }));
 
 let uuidCounter = 0;

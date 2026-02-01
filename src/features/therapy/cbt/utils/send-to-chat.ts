@@ -5,6 +5,7 @@ import { logger } from '@/lib/utils/logger';
 import type { SessionData } from '@/lib/queries/sessions';
 import { buildSessionSummaryCard, type CBTFlowState } from '@/features/therapy/cbt/flow';
 import { createBYOKHeaders, getEffectiveModelId } from '@/features/chat/lib/byok-helper';
+import type { Locale } from '@/i18n/routing';
 
 export interface SendToChatParams {
   title: string;
@@ -12,6 +13,7 @@ export interface SendToChatParams {
   contextualMessages: { role: 'user' | 'assistant'; content: string; timestamp: string }[];
   model?: string;
   byokKey?: string | null;
+  locale?: Locale;
 }
 
 export interface SendToChatResult {
@@ -50,8 +52,9 @@ export async function sendToChat({
   contextualMessages,
   model = ANALYTICAL_MODEL_ID,
   byokKey,
+  locale = 'en',
 }: SendToChatParams): Promise<SendToChatResult> {
-  const summaryCard = buildSessionSummaryCard(flowState);
+  const summaryCard = buildSessionSummaryCard(flowState, locale);
   const now = Date.now();
   let sessionId: string | null = null;
 
