@@ -359,7 +359,7 @@ describe('CSP Configuration', () => {
       // Should reference key files
       const files = Object.keys(CSP_SUMMARY.relatedFiles);
       expect(files.some((f) => f.includes('csp-nonce'))).toBe(true);
-      expect(files.some((f) => f.includes('middleware'))).toBe(true);
+      expect(files.some((f) => f.includes('proxy'))).toBe(true);
     });
   });
 

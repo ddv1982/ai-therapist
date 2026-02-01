@@ -11,47 +11,48 @@ const customJestConfig = {
   testEnvironment: 'jest-environment-jsdom',
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/', '<rootDir>/e2e/'],
   collectCoverageFrom: [
-    // Focus coverage on server logic, libs, and store where tests exist
+    // ============================================
+    // INCLUDED PATHS
+    // ============================================
+
+    // Core business logic (server-side libraries)
     'src/lib/**/*.{ts,tsx}',
-    'src/store/**/*.{ts,tsx}',
-    // Exclude Next.js app routes (integration tested separately)
-    '!src/app/**',
-    // Exclude low-ROI or unimplemented files from coverage calculation
-    '!src/lib/index.ts',
-    '!src/lib/design-tokens.ts',
-    '!src/lib/model-utils.ts',
-    '!src/lib/theme-context.ts',
-    '!src/lib/therapy/use-cbt-chat-bridge.ts',
-    '!src/lib/therapy/cbt-data-parser.ts',
-    '!src/lib/utils/performance-utils.tsx',
-    '!src/lib/utils/logger.ts',
-    '!src/lib/utils/error-utils.ts',
-    '!src/lib/utils/error-reporter.ts',
-    '!src/lib/api/with-route.ts',
+
+    // ============================================
+    // INFRASTRUCTURE EXCLUSIONS (low ROI or tested separately)
+    // ============================================
+
+    // Caching infrastructure - browser-only utilities, tested via integration tests
+    '!src/lib/cache/**',
+
+    // Client-side encryption - browser-only Web Crypto API, requires browser environment
+    '!src/lib/encryption/client-crypto.ts',
+
+    // External API client - thin wrapper around Groq API, tested via E2E
     '!src/lib/api/groq-client.ts',
+
+    // Logger utility - environment-dependent logging with side effects
+    '!src/lib/utils/logger.ts',
+
+    // Encryption utilities - requires ENCRYPTION_KEY environment variable; tested indirectly via crypto-secure.test.ts
     '!src/lib/auth/crypto-utils.ts',
-    '!src/lib/reports/fallback-analysis.ts',
-    '!src/lib/chat/message-encryption.ts',
-    '!src/lib/chat/session-service.ts',
-    '!src/lib/chat/title-generator.ts',
-    '!src/lib/auth/device-fingerprint.ts',
-    '!src/lib/therapy/index.ts',
-    '!src/store/index.ts',
-    '!src/store/slices/chat-api.ts',
-    '!src/lib/utils/cbt-draft-utils.ts',
-    '!src/lib/cbt/export-utils.ts',
+
+    // ============================================
+    // STANDARD EXCLUSIONS (boilerplate / test files)
+    // ============================================
+
+    // Next.js app routes (integration/E2E tested separately)
+    '!src/app/**',
+
+    // Type definitions
     '!**/*.d.ts',
+
+    // Dependencies
     '!**/node_modules/**',
+
+    // Test files
     '!src/**/*.test.{ts,tsx}',
     '!__tests__/**/*',
-    // Exclusions for infrastructure or browser-only utilities not under test
-    '!src/lib/cache/**',
-    '!src/lib/database/**',
-    '!src/lib/encryption/client-crypto.ts',
-    '!src/lib/ui/react-markdown-processor.tsx',
-    '!src/lib/utils/graceful-degradation.ts',
-    '!src/lib/utils/request-deduplication.ts',
-    '!src/lib/utils/storage-management.ts',
   ],
   coverageThreshold: {
     global: {

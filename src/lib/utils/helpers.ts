@@ -11,7 +11,7 @@
 import React, { lazy, ComponentType, LazyExoticComponent } from 'react';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { logger } from './logger';
+import { logger } from '@/lib/utils/logger';
 import { isDevelopment } from '@/config/env.public';
 
 // ============================================================================

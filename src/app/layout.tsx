@@ -47,6 +47,10 @@ export const viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Read headers early to get CSP nonce for all render paths
+  const headerStore = await headers();
+  const cspNonce = headerStore.get('x-csp-nonce') ?? undefined;
+
   // If essential public env is missing, render a lightweight fallback layout
   const pk = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   const convexUrlEnv = process.env.NEXT_PUBLIC_CONVEX_URL;
@@ -81,7 +85,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
   // Prefer the cookie locale when present; fall back to next-intl detection
   // Read from header (set in middleware) instead of cookies() - much faster!
-  const headerStore = await headers();
   const cookieLocale = headerStore.get('x-locale');
   const detected = await getLocale();
 
@@ -115,7 +118,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="bg-background font-sans antialiased">
         <SessionAIProvider>
           <NextIntlClientProvider locale={resolvedLocale} messages={messages}>
-            <RootProviders>{children}</RootProviders>
+            <RootProviders nonce={cspNonce}>{children}</RootProviders>
           </NextIntlClientProvider>
         </SessionAIProvider>
       </body>

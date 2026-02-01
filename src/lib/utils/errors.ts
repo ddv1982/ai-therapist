@@ -4,7 +4,7 @@
  */
 
 import { NextResponse } from 'next/server';
-import { logger } from './logger';
+import { logger } from '@/lib/utils/logger';
 import { RequestContext } from '@/lib/api/api-middleware';
 import {
   createServerErrorResponse,

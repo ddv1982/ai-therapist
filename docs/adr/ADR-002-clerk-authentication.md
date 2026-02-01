@@ -40,10 +40,10 @@ Key Clerk features utilized:
 
 ### Implementation Details
 
-**Next.js Middleware** (authentication enforcement):
+**Next.js 16 Proxy** (authentication enforcement):
 
 ```typescript
-// middleware.ts
+// proxy.ts
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/api/chat(.*)']);

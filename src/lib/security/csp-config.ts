@@ -6,9 +6,7 @@
  * reason for its inclusion.
  *
  * @see src/lib/security/csp-nonce.ts - Actual CSP header generation
- * @see middleware.ts - Where CSP headers are applied
- * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
- */
+ * @see proxy.ts - Where CSP headers are applied
 
 /**
  * CSP Exception Categories
@@ -273,6 +271,42 @@ export const CSP_SUMMARY = {
   ],
 
   /**
+   * Allowed CSP Exceptions (Production)
+   *
+   * These are the currently allowed third-party sources in production.
+   * Review this list when adding new integrations.
+   */
+  allowedExceptions: {
+    authentication: [
+      'https://*.clerk.accounts.dev - Clerk dev authentication domain',
+      'https://*.clerk.com - Clerk production authentication',
+    ],
+    captcha: [
+      'https://recaptcha.net - Google reCAPTCHA service',
+      'https://www.recaptcha.net - Google reCAPTCHA (www subdomain)',
+      'https://www.gstatic.com - Google static assets CDN',
+      'https://challenges.cloudflare.com - Cloudflare Turnstile',
+    ],
+    fonts: ['https://fonts.gstatic.com - Google Fonts CDN'],
+    backend: [
+      'https://api.groq.com - Groq AI API for therapy responses',
+      'https://convex.cloud - Convex backend-as-a-service',
+    ],
+    analytics: ['https://clerk-telemetry.com - Clerk anonymous telemetry'],
+  },
+
+  /**
+   * Development-only Exceptions
+   *
+   * These exceptions are ONLY applied in development mode and NEVER in production.
+   */
+  developmentOnlyExceptions: [
+    "'unsafe-eval' - Required for Next.js Fast Refresh hot reloading",
+    "'unsafe-inline' - Allowed for development convenience",
+    'ws: - WebSocket for hot module replacement',
+  ],
+
+  /**
    * How to add new exceptions
    */
   addingExceptions: `
@@ -289,7 +323,7 @@ export const CSP_SUMMARY = {
    */
   relatedFiles: {
     'src/lib/security/csp-nonce.ts': 'CSP header generation and nonce creation',
-    'middleware.ts': 'Where CSP headers are applied to responses',
+    'src/proxy.ts': 'Where CSP headers are applied to responses (Next.js 16)',
     'src/app/api/csp-report/route.ts': 'CSP violation reporting endpoint',
     'src/lib/security/csp-violations.ts': 'In-memory violation storage for dev',
     'src/lib/security/nonce.ts': 'Server component nonce utilities',

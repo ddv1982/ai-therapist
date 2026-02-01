@@ -29,27 +29,23 @@ import {
   generateUUID, // Add this
 } from '@/lib/utils/helpers';
 import { logger } from '@/lib/utils/logger';
+import { reloadPublicEnvForTesting } from '@/config/env.public';
+import { setTestNodeEnv, setupLoggerSpies } from '@tests/utils/test-utilities';
 
-// Mock logger
-jest.mock('@/lib/utils/logger', () => ({
-  logger: {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-  },
-}));
-
-// Mock config
-jest.mock('@/config/env.public', () => ({
-  isDevelopment: true,
-  getPublicEnv: jest.fn(() => ({ NODE_ENV: 'development' })),
-}));
+let restoreEnv: (() => void) | undefined;
 
 describe('helpers utils', () => {
   beforeEach(() => {
+    restoreEnv = setTestNodeEnv('development', reloadPublicEnvForTesting);
     jest.clearAllMocks();
     jest.useRealTimers();
+    setupLoggerSpies(logger);
+  });
+
+  afterEach(() => {
+    restoreEnv?.();
+    restoreEnv = undefined;
+    jest.restoreAllMocks();
   });
 
   describe('cn', () => {

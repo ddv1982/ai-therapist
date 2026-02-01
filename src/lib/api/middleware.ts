@@ -90,6 +90,11 @@ export function withApiMiddleware<T = unknown>(
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
       const rid = requestContext.requestId || 'unknown';
+      logger.apiError(requestContext.url || 'unknown', err, {
+        requestId: rid,
+        method: requestContext.method,
+        userAgent: requestContext.userAgent,
+      });
       const resp = createServerErrorResponse(err, rid, requestContext) as NextResponse<
         ApiResponse<T>
       >;

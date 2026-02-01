@@ -19,38 +19,22 @@ import {
   resetServiceCircuitBreaker,
 } from '@/lib/utils/errors';
 import { logger } from '@/lib/utils/logger';
+import { setTestNodeEnv, setupLoggerSpies } from '@tests/utils/test-utilities';
 
-// Mock logger
-jest.mock('@/lib/utils/logger', () => ({
-  logger: {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    apiError: jest.fn(),
-  },
-}));
-
-// Mock config
-jest.mock('@/config/env.public', () => ({
-  __esModule: true,
-  getPublicEnv: () => ({ NODE_ENV: 'development' }),
-  isDevelopment: true,
-}));
-
-// Mock api-response
-// jest.mock('@/lib/api/api-response', () => ({
-//   __esModule: true,
-//   createServerErrorResponse: jest.fn().mockImplementation(() => ({ status: 500, json: async () => ({}) })),
-//   createValidationErrorResponse: jest.fn().mockImplementation(() => ({ status: 400, json: async () => ({}) })),
-//   createForbiddenErrorResponse: jest.fn().mockImplementation(() => ({ status: 403, json: async () => ({}) })),
-//   createAuthenticationErrorResponse: jest.fn().mockImplementation(() => ({ status: 401, json: async () => ({}) })),
-// }));
+let restoreEnv: (() => void) | undefined;
 
 describe('errors utils', () => {
   beforeEach(() => {
+    restoreEnv = setTestNodeEnv('development');
     jest.clearAllMocks();
     jest.useRealTimers();
+    setupLoggerSpies(logger, { includeApiError: true });
+  });
+
+  afterEach(() => {
+    restoreEnv?.();
+    restoreEnv = undefined;
+    jest.restoreAllMocks();
   });
 
   describe('reportClientError', () => {

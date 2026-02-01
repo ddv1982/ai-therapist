@@ -13,6 +13,7 @@
 import * as React from 'react';
 import {
   render,
+  renderHook,
   RenderOptions,
   RenderResult,
   screen,
@@ -33,6 +34,16 @@ declare global {
 import { jest } from '@jest/globals';
 import type { AuthValidationResult } from '@/lib/api/api-auth';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
+import type { logger as AppLogger } from '@/lib/utils/logger';
+
+// =============================================================================
+// CONTEXT PROVIDER IMPORTS FOR TEST PROVIDERS
+// =============================================================================
+
+import { ToastProvider, useToast, type Toast } from '@/components/ui/toast';
+import { ChatSettingsProvider } from '@/contexts/chat-settings-context';
+import { CBTProvider } from '@/contexts/cbt-context';
+import { SessionProvider } from '@/contexts/session-context';
 
 // =============================================================================
 // MOCK FACTORIES AND CONFIGURATIONS
@@ -338,10 +349,31 @@ Would you like to explore what specifically concerns you about this presentation
  */
 export class ComponentTestUtils {
   /**
-   * Enhanced render function with common providers (Redux removed)
+   * Enhanced render function with all required context providers.
+   *
+   * This method wraps the component with TestProviders which includes:
+   * - ToastProvider
+   * - ChatSettingsProvider
+   * - CBTProvider
+   * - SessionProvider
+   *
+   * Use this when testing components that depend on context hooks.
+   *
+   * @param ui - The React element to render
+   * @param options - Optional render options
+   * @returns The render result with all provider contexts available
+   *
+   * @example
+   * import { ComponentTestUtils } from '@tests/utils/test-utilities';
+   * import { CBTForm } from '@/features/therapy/cbt/cbt-form';
+   *
+   * const { getByTestId } = ComponentTestUtils.renderWithProviders(<CBTForm />);
+   * expect(getByTestId('cbt-form')).toBeInTheDocument();
+   *
+   * @deprecated Consider using the standalone `renderWithProviders` function for new tests
    */
   static renderWithProviders(ui: ReactElement, options: RenderOptions = {}): RenderResult {
-    return render(ui, options);
+    return renderWithProviders(ui, options);
   }
 
   /**
@@ -400,6 +432,106 @@ export class ComponentTestUtils {
   }
 }
 
+type ToastInput = Omit<Toast, 'id'>;
+
+interface ToastHarnessProps {
+  includePersistent?: boolean;
+  includeCustomDuration?: boolean;
+  includeRemove?: boolean;
+  onShow?: (toast: ToastInput) => void;
+  onRemove?: (id: string) => void;
+}
+
+export function ToastTestHarness({
+  includePersistent = true,
+  includeCustomDuration = true,
+  includeRemove = true,
+  onShow,
+  onRemove,
+}: ToastHarnessProps) {
+  const { showToast, removeToast, toasts } = useToast();
+
+  const handleShow = (toast: ToastInput) => {
+    onShow?.(toast);
+    showToast(toast);
+  };
+
+  const handleRemove = () => {
+    const targetId = toasts[0]?.id;
+    if (!targetId) return;
+    onRemove?.(targetId);
+    removeToast(targetId);
+  };
+
+  return React.createElement(
+    'div',
+    null,
+    React.createElement(
+      'button',
+      {
+        'data-testid': 'show-success',
+        onClick: () => handleShow({ type: 'success', message: 'Success message!' }),
+      },
+      'Show Success'
+    ),
+    React.createElement(
+      'button',
+      {
+        'data-testid': 'show-error',
+        onClick: () =>
+          handleShow({ type: 'error', message: 'Error message!', title: 'Error Title' }),
+      },
+      'Show Error'
+    ),
+    React.createElement(
+      'button',
+      {
+        'data-testid': 'show-warning',
+        onClick: () => handleShow({ type: 'warning', message: 'Warning message!' }),
+      },
+      'Show Warning'
+    ),
+    React.createElement(
+      'button',
+      {
+        'data-testid': 'show-info',
+        onClick: () => handleShow({ type: 'info', message: 'Info message!' }),
+      },
+      'Show Info'
+    ),
+    includePersistent
+      ? React.createElement(
+          'button',
+          {
+            'data-testid': 'show-persistent',
+            onClick: () =>
+              handleShow({ type: 'info', message: 'Persistent message!', duration: 0 }),
+          },
+          'Show Persistent'
+        )
+      : null,
+    includeCustomDuration
+      ? React.createElement(
+          'button',
+          {
+            'data-testid': 'show-custom-duration',
+            onClick: () =>
+              handleShow({ type: 'success', message: 'Custom duration!', duration: 1000 }),
+          },
+          'Show Custom Duration'
+        )
+      : null,
+    includeRemove
+      ? React.createElement(
+          'button',
+          { 'data-testid': 'remove-toast', onClick: handleRemove },
+          'Remove First Toast'
+        )
+      : null,
+    React.createElement('div', { 'data-testid': 'toast-count' }, toasts.length)
+  );
+}
+
 // =============================================================================
 // SECURITY TESTING UTILITIES
 // =============================================================================
@@ -408,6 +540,118 @@ export class ComponentTestUtils {
  * Security-focused testing utilities
  * Provides reusable security test scenarios
  */
+// =============================================================================
+// TEST PROVIDERS WRAPPER
+// =============================================================================
+
+/**
+ * Props for the TestProviders component
+ */
+interface TestProvidersProps {
+  /** Child components to be wrapped by providers */
+  children: ReactNode;
+}
+
+/**
+ * Unified test providers wrapper component.
+ *
+ * Combines all required context providers for testing hooks and components that depend on:
+ * - ToastProvider (useToast hook)
+ * - ChatSettingsProvider (useChatSettings hook)
+ * - CBTProvider (useCBT hook)
+ * - SessionProvider (useSession hook)
+ *
+ * Provider nesting order (outer to inner):
+ * 1. ToastProvider - no dependencies
+ * 2. ChatSettingsProvider - no dependencies
+ * 3. CBTProvider - no dependencies
+ * 4. SessionProvider - depends on @ai-sdk/rsc (mocked in test environment)
+ *
+ * @example
+ * // Using with renderHook
+ * const { result } = renderHook(() => useCBT(), { wrapper: TestProviders });
+ *
+ * @example
+ * // Using with render
+ * const { getByTestId } = render(<CBTForm />, { wrapper: TestProviders });
+ */
+export function TestProviders({ children }: TestProvidersProps) {
+  // Using React.createElement instead of JSX because this is a .ts file
+  return React.createElement(
+    ToastProvider,
+    null,
+    React.createElement(
+      ChatSettingsProvider,
+      null,
+      React.createElement(
+        CBTProvider,
+        null,
+        React.createElement(SessionProvider, null, children)
+      )
+    )
+  );
+}
+
+// =============================================================================
+// RENDER UTILITIES WITH PROVIDERS
+// =============================================================================
+
+/**
+ * Render a hook with all context providers automatically wrapped.
+ *
+ * Convenience wrapper around React Testing Library's `renderHook` that automatically
+ * uses the `TestProviders` wrapper. Use this when testing hooks that depend on
+ * context providers like useToast, useChatSettings, useCBT, or useSession.
+ *
+ * @param hook - The hook function to test
+ * @param options - Optional renderHook options (excluding 'wrapper')
+ * @returns The renderHook result with all provider contexts available
+ *
+ * @example
+ * import { renderHookWithProviders } from '@tests/utils/test-utilities';
+ * import { useCBT } from '@/contexts/cbt-context';
+ *
+ * const { result } = renderHookWithProviders(() => useCBT());
+ * expect(result.current.currentStep).toBe(1);
+ */
+export function renderHookWithProviders<T>(
+  hook: () => T,
+  options?: Omit<RenderOptions, 'wrapper'>
+) {
+  return renderHook(hook, {
+    wrapper: TestProviders,
+    ...options,
+  });
+}
+
+/**
+ * Render a React element with all context providers automatically wrapped.
+ *
+ * Convenience wrapper around React Testing Library's `render` that automatically
+ * uses the `TestProviders` wrapper. Use this when testing components that depend on
+ * context hooks like useToast, useChatSettings, useCBT, or useSession.
+ *
+ * @param ui - The React element to render
+ * @param options - Optional render options (excluding 'wrapper')
+ * @returns The render result with all provider contexts available
+ *
+ * @example
+ * import { renderWithProviders } from '@tests/utils/test-utilities';
+ * import { CBTForm } from '@/features/therapy/cbt/cbt-form';
+ *
+ * const { getByTestId } = renderWithProviders(<CBTForm />);
+ * expect(getByTestId('cbt-form')).toBeInTheDocument();
+ */
+export function renderWithProviders(
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'>
+): RenderResult {
+  return render(ui, {
+    wrapper: TestProviders,
+    ...options,
+  });
+}
+
 // =============================================================================
 // TEST SETUP AND TEARDOWN UTILITIES
 // =============================================================================
@@ -498,6 +742,31 @@ export class TestSetupUtils {
       jest.setTimeout(timeout);
     });
   }
+}
+
+type LoggerLike = typeof AppLogger;
+
+export function setupLoggerSpies(target: LoggerLike, options: { includeApiError?: boolean } = {}) {
+  jest.spyOn(target, 'info').mockImplementation(() => {});
+  jest.spyOn(target, 'warn').mockImplementation(() => {});
+  jest.spyOn(target, 'error').mockImplementation(() => {});
+  jest.spyOn(target, 'debug').mockImplementation(() => {});
+
+  if (options.includeApiError) {
+    jest.spyOn(target, 'apiError').mockImplementation(() => {});
+  }
+}
+
+export function setTestNodeEnv(nodeEnv: string, reload?: () => void) {
+  const mutableEnv = process.env as Record<string, string | undefined>;
+  const original = mutableEnv.NODE_ENV;
+  mutableEnv.NODE_ENV = nodeEnv;
+  reload?.();
+
+  return () => {
+    mutableEnv.NODE_ENV = original;
+    reload?.();
+  };
 }
 
 /**

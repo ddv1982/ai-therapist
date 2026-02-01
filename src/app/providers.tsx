@@ -16,9 +16,10 @@ import { SkipLinks } from '@/components/layout/skip-links';
 
 interface RootProvidersProps {
   children: ReactNode;
+  nonce?: string;
 }
 
-export function RootProviders({ children }: RootProvidersProps) {
+export function RootProviders({ children, nonce }: RootProvidersProps) {
   const clerkPublishableKey = publicEnv.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   if (!clerkPublishableKey) {
@@ -26,7 +27,7 @@ export function RootProviders({ children }: RootProvidersProps) {
   }
 
   return (
-    <ClerkProvider publishableKey={clerkPublishableKey}>
+    <ClerkProvider publishableKey={clerkPublishableKey} nonce={nonce}>
       <QueryProvider>
         <SessionProvider>
           <ApiKeysProvider>

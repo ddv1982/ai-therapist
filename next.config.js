@@ -41,7 +41,7 @@ const nextConfig = {
   },
   outputFileTracingRoot: path.resolve(new URL('.', import.meta.url).pathname),
   async headers() {
-    // Note: CSP headers are now managed by middleware.ts with nonce support
+    // Note: CSP headers are now managed by proxy.ts with nonce support (Next.js 16)
     // These headers serve as fallback and include non-CSP security headers
     const securityHeaders = [
       {
