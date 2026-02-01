@@ -59,7 +59,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Webhook Synchronization**: Automatic user sync from Clerk to Convex via webhooks
 - **Enhanced Security**: Enterprise-grade authentication infrastructure
 - **Message Encryption Preserved**: AES-256-GCM encryption protects therapeutic data
-- **Server-Only Convex Access**: Middleware now issues Clerk JWTs to API routes which in turn call Convex via an authenticated HTTP client; direct browser access to Convex is disabled.
+- **Server-Only Convex Access**: The Next.js proxy enforces Clerk auth; API routes fetch Clerk JWTs and call Convex via an authenticated HTTP client; direct browser access to Convex is disabled.
 - **Convex Authorization Guards**: Every Convex query and mutation now verifies `ctx.auth` ownership so data cannot be enumerated with forged parameters.
 
 ### 🔁 AI SDK Session Orchestration
@@ -76,7 +76,7 @@ A modern therapeutic AI application providing compassionate mental health suppor
 - **Prettier Auto-Format**: Consistent code formatting across the codebase
 - **Cleaner Codebase**: Removed custom auth endpoints and legacy TOTP service
 - **Latest Dependencies**: All packages upgraded to latest stable versions
-- **Robust Test Suite**: 2431 unit/integration tests across 168 suites + 96 E2E tests ensuring 100% stability.
+- **Robust Test Suite**: Jest unit/integration + Playwright E2E (run `bun run qa:full` for full verification).
 
 ## ✨ Features
 
@@ -143,39 +143,26 @@ A modern therapeutic AI application providing compassionate mental health suppor
 2. **Set up Clerk** (Required)
    - Go to [clerk.com](https://clerk.com) and create a new application
    - Copy your API keys from the Clerk dashboard
-   - Configure webhook: Add endpoint at `/api/webhooks/clerk` with signing secret
+   - Configure webhook: Add endpoint at `<CONVEX_URL>/clerk-webhook` (local: `http://127.0.0.1:6790/clerk-webhook`) with signing secret
 
 3. **Set up Convex** (Required)
    - Go to [convex.dev](https://convex.dev) and create a new project
-   - Run `bunx convex dev` to get your local development URL
+   - Run `bun run convex:dev` (or `bunx convex dev`) to get your local development URL
+   - Use that URL for the Clerk webhook endpoint (`/clerk-webhook`)
 
-4. **Set up environment**
+4. **Set up environment** (or run `bun run env:init` to scaffold `.env.local`)
 
 ```bash
-# Create .env.local and add your keys
-cat > .env.local <<'EOF'
-# Clerk Authentication (required)
-CLERK_SECRET_KEY=your_clerk_secret_key
-CLERK_WEBHOOK_SECRET=your_clerk_webhook_secret
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-
-# Convex Backend (required)
-CONVEX_URL=http://127.0.0.1:6790/?d=...
-NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:6790/?d=...
-
-# AI & Encryption (required)
-GROQ_API_KEY=your_groq_api_key_here
-ENCRYPTION_KEY=your_32_character_encryption_key_here
-
-# Local AI (optional)
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL_ID=gemma3:4b
-
-# Local-only opts
-RATE_LIMIT_DISABLED=true
-CACHE_ENABLED=true
-EOF
+cp .env.local.example .env.local
+# Or: bun run env:init
 ```
+
+Update these values in `.env.local`:
+
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`
+- `CONVEX_URL`, `NEXT_PUBLIC_CONVEX_URL`
+- `GROQ_API_KEY` (optional unless using Groq system models)
+- `ENCRYPTION_KEY` (generate in the next step)
 
 5. **Generate encryption key**
 
@@ -268,14 +255,14 @@ The repository includes a `Makefile` for common tasks.
 
 Key variables required in `.env.local`:
 
-- `GROQ_API_KEY`: AI inference
+- `GROQ_API_KEY`: AI inference for Groq system models (optional for BYOK/local)
 - `NEXT_PUBLIC_CONVEX_URL` & `CONVEX_URL`: Backend connection
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` & `CLERK_SECRET_KEY`: Authentication
-- `ENCRYPTION_KEY`: 32-char key for field-level encryption
+- `ENCRYPTION_KEY`: 32-byte base64 key for field-level encryption
 
 ### API Key Setup
 
-- Server-side only via `GROQ_API_KEY` (never sent to client).
+- Groq system models use `GROQ_API_KEY` server-side (never sent to client); BYOK uses the user key; local uses `OLLAMA_BASE_URL`.
 - Encryption keys generated via `bun run encryption:generate`.
 
 ## 📱 Mobile Experience
@@ -291,7 +278,7 @@ Key variables required in `.env.local`:
 - **Managed Identity** - Secure handling of user credentials
 - **Multi-Factor Authentication** - Supported via Clerk
 - **Session Management** - Secure, persistent sessions
-- **Proxy Enforcement** - Next.js 16 proxy (formerly middleware) enables CSRF protection and injects Clerk JWTs so every API route and streaming endpoint is authenticated before reaching Convex.
+- **Proxy Enforcement** - Next.js 16 proxy (formerly middleware) enforces Clerk auth and injects Clerk JWTs so every API route and streaming endpoint is authenticated before reaching Convex.
 
 ### Data Protection
 
