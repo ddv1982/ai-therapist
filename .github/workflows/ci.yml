@@ -145,40 +145,20 @@ jobs:
           include-hidden-files: true
           retention-days: 1
 
-  # Job 4: Bundle Size Monitoring (PRs only)
+  # Job 4: Bundle Size Monitoring
   bundle-size:
     name: Bundle Size
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck]
-    if: github.event_name == 'pull_request'
+    needs: [build]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Cache bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: ${{ runner.os }}-bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build and analyze bundle
-        run: bun run build
-        env:
-          ANALYZE: false
+          name: nextjs-build
+          path: .next/
 
       - name: Get bundle stats
         id: bundle-stats
@@ -197,13 +177,27 @@ jobs:
             echo "total_size=${TOTAL_KB}KB" >> $GITHUB_OUTPUT
             echo "js_size=${JS_KB}KB" >> $GITHUB_OUTPUT
             echo "css_size=${CSS_KB}KB" >> $GITHUB_OUTPUT
+            
+            # Also save to file for artifact
+            echo "Total Static: ${TOTAL_KB}KB" > bundle-stats.txt
+            echo "JavaScript: ${JS_KB}KB" >> bundle-stats.txt
+            echo "CSS: ${CSS_KB}KB" >> bundle-stats.txt
           else
             echo "total_size=N/A" >> $GITHUB_OUTPUT
             echo "js_size=N/A" >> $GITHUB_OUTPUT
             echo "css_size=N/A" >> $GITHUB_OUTPUT
+            echo "Build artifacts not found" > bundle-stats.txt
           fi
 
+      - name: Upload bundle stats
+        uses: actions/upload-artifact@v6
+        with:
+          name: bundle-stats
+          path: bundle-stats.txt
+          retention-days: 30
+
       - name: Comment bundle size on PR
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v8
         with:
           script: |
