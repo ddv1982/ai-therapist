@@ -79,8 +79,12 @@
   --letter-spacing-wide: 0.011em;
 
   /* Backgrounds */
-  --background-image-app-subtle: radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.05) 0%, transparent 50%);
-  --background-image-sidebar-gradient: linear-gradient(180deg, transparent 0%, hsl(var(--accent) / 0.03) 100%), radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 50%);
+  --background-image-app-subtle:
+    radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.05) 0%, transparent 50%);
+  --background-image-sidebar-gradient:
+    linear-gradient(180deg, transparent 0%, hsl(var(--accent) / 0.03) 100%),
+    radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.05) 0%, transparent 50%);
   --color-sidebar: var(--sidebar-background);
 
   /* Glassmorphism */
@@ -116,36 +120,77 @@
   --animate-pulse-therapy: pulse-therapy 2s ease-in-out infinite;
 
   @keyframes accordion-down {
-    from { height: 0; }
-    to { height: var(--radix-accordion-content-height); }
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
   }
   @keyframes accordion-up {
-    from { height: var(--radix-accordion-content-height); }
-    to { height: 0; }
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
   }
   @keyframes fade-in {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @keyframes slide-in {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
   @keyframes slide-up {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @keyframes slide-down {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @keyframes shimmer {
-    from { backgroundPosition: 0 0; }
-    to { backgroundPosition: -200% 0; }
+    from {
+      backgroundposition: 0 0;
+    }
+    to {
+      backgroundposition: -200% 0;
+    }
   }
   @keyframes pulse-therapy {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.02); }
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.02);
+    }
   }
 }
 

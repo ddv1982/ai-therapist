@@ -278,7 +278,12 @@ test.describe('Edge Case Scenarios', () => {
       expect(isValidUnauthResponse(session2)).toBeTruthy();
 
       // If successful (not auth redirect), data should be different objects
-      if (!isAuthRedirect(session1) && !isAuthRedirect(session2) && session1.ok() && session2.ok()) {
+      if (
+        !isAuthRedirect(session1) &&
+        !isAuthRedirect(session2) &&
+        session1.ok() &&
+        session2.ok()
+      ) {
         const data1 = await session1.json();
         const data2 = await session2.json();
         // Should be separate responses

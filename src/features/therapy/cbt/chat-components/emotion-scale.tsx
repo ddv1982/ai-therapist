@@ -72,9 +72,19 @@ export function EmotionScale({
     () => [
       { key: 'fear', label: t('emotions.labels.fear'), emoji: '😨', color: EMOTION_COLORS.fear },
       { key: 'anger', label: t('emotions.labels.anger'), emoji: '😠', color: EMOTION_COLORS.anger },
-      { key: 'sadness', label: t('emotions.labels.sadness'), emoji: '😢', color: EMOTION_COLORS.sadness },
+      {
+        key: 'sadness',
+        label: t('emotions.labels.sadness'),
+        emoji: '😢',
+        color: EMOTION_COLORS.sadness,
+      },
       { key: 'joy', label: t('emotions.labels.joy'), emoji: '😊', color: EMOTION_COLORS.joy },
-      { key: 'anxiety', label: t('emotions.labels.anxiety'), emoji: '😰', color: EMOTION_COLORS.anxiety },
+      {
+        key: 'anxiety',
+        label: t('emotions.labels.anxiety'),
+        emoji: '😰',
+        color: EMOTION_COLORS.anxiety,
+      },
       { key: 'shame', label: t('emotions.labels.shame'), emoji: '😳', color: EMOTION_COLORS.shame },
       { key: 'guilt', label: t('emotions.labels.guilt'), emoji: '😔', color: EMOTION_COLORS.guilt },
     ],
@@ -178,7 +188,9 @@ export function EmotionScale({
                       ? 'ring-primary bg-primary/5 border-primary/30 ring-2'
                       : 'hover:border-primary/20 bg-muted/30'
                   )}
-                  onClick={() => !isSelected && handleEmotionChange(emotion.key as keyof EmotionData, 5)}
+                  onClick={() =>
+                    !isSelected && handleEmotionChange(emotion.key as keyof EmotionData, 5)
+                  }
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -279,7 +291,9 @@ export function EmotionScale({
                             💭
                           </div>
                           <div>
-                            <h4 className="text-foreground text-sm font-semibold">{localData.other}</h4>
+                            <h4 className="text-foreground text-sm font-semibold">
+                              {localData.other}
+                            </h4>
                             <p className="text-muted-foreground text-sm">
                               {getIntensityLabel(localData.otherIntensity || 0)}
                             </p>

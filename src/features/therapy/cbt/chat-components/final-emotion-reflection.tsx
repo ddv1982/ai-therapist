@@ -57,7 +57,9 @@ export function FinalEmotionReflection({
   const [localFinal, setLocalFinal] = useState<EmotionData>(
     () => value || initialData || sessionData?.actionPlan?.finalEmotions || defaultEmotions
   );
-  const [showCustom, setShowCustom] = useState(() => Boolean(value?.other ?? initialData?.other ?? localFinal.other));
+  const [showCustom, setShowCustom] = useState(() =>
+    Boolean(value?.other ?? initialData?.other ?? localFinal.other)
+  );
 
   useEffect(() => {
     const data = value ?? initialData;

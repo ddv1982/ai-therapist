@@ -90,7 +90,9 @@ export const ChatComposer = memo(function ChatComposer({
               aria-label={t('main.stopGenerating')}
               aria-busy={isLoading}
             >
-              <Loader2 className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} relative z-10 animate-spin`} />
+              <Loader2
+                className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} relative z-10 animate-spin`}
+              />
             </Button>
           ) : (
             <Button

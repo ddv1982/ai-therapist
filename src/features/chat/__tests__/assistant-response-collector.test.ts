@@ -27,7 +27,8 @@ describe('AssistantResponseCollector', () => {
   const mockConvexClient = { mutation: mutationMock } as const;
 
   it('appends chunks with limit and marks truncation', async () => {
-    const { AssistantResponseCollector } = await import('@/features/chat/lib/assistant-response-collector');
+    const { AssistantResponseCollector } =
+      await import('@/features/chat/lib/assistant-response-collector');
     const c = new AssistantResponseCollector(
       's1',
       { valid: true } as any,
@@ -43,7 +44,8 @@ describe('AssistantResponseCollector', () => {
   });
 
   it('persists when ownership is valid and updates model id', async () => {
-    const { AssistantResponseCollector } = await import('@/features/chat/lib/assistant-response-collector');
+    const { AssistantResponseCollector } =
+      await import('@/features/chat/lib/assistant-response-collector');
     const c = new AssistantResponseCollector(
       's1',
       { valid: true } as any,
@@ -63,7 +65,8 @@ describe('AssistantResponseCollector', () => {
   });
 
   it('does not persist when sessionId missing or ownership invalid', async () => {
-    const { AssistantResponseCollector } = await import('@/features/chat/lib/assistant-response-collector');
+    const { AssistantResponseCollector } =
+      await import('@/features/chat/lib/assistant-response-collector');
     const c1 = new AssistantResponseCollector(
       undefined as any,
       { valid: true } as any,

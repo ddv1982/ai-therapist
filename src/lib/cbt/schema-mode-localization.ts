@@ -78,7 +78,10 @@ const SCHEMA_MODE_TEXT_REPLACEMENTS_NL: Array<{ pattern: RegExp; replacement: st
     pattern: /\b(The )?Detached Self-Soother( Mode)?\b/gi,
     replacement: 'afstandelijke zelftrooster-modus',
   },
-  { pattern: /\b(The )?Detached Protector( Mode)?\b/gi, replacement: 'afstandelijke zelftrooster-modus' },
+  {
+    pattern: /\b(The )?Detached Protector( Mode)?\b/gi,
+    replacement: 'afstandelijke zelftrooster-modus',
+  },
   { pattern: /\b(The )?Healthy Adult( Mode)?\b/gi, replacement: 'gezonde volwassene-modus' },
 ];
 
@@ -135,10 +138,7 @@ export function localizeSchemaMode(
   };
 }
 
-export function replaceSchemaModeNamesInText(
-  content: string,
-  locale: SupportedLocale
-): string {
+export function replaceSchemaModeNamesInText(content: string, locale: SupportedLocale): string {
   if (locale !== 'nl') return content;
   return SCHEMA_MODE_TEXT_REPLACEMENTS_NL.reduce(
     (acc, { pattern, replacement }) => acc.replace(pattern, replacement),

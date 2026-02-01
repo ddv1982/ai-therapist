@@ -1,6 +1,6 @@
 /**
  * Tests for BYOK Helper functions
- * 
+ *
  * Note: BYOK keys are now only extracted from headers for security.
  * Body extraction was removed to prevent API keys from being logged.
  */

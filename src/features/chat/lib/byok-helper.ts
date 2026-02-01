@@ -24,13 +24,18 @@ export function extractBYOKKey(headers: Headers): string | null {
 /**
  * Create BYOK headers object for fetch requests
  */
-export function createBYOKHeaders(byokKey: string | null | undefined): Record<string, string> | undefined {
+export function createBYOKHeaders(
+  byokKey: string | null | undefined
+): Record<string, string> | undefined {
   return byokKey ? { [BYOK_HEADER_NAME]: byokKey } : undefined;
 }
 
 /**
  * Get effective model ID based on BYOK status
  */
-export function getEffectiveModelId(byokKey: string | null | undefined, defaultModelId: string): string {
+export function getEffectiveModelId(
+  byokKey: string | null | undefined,
+  defaultModelId: string
+): string {
   return byokKey ? MODEL_IDS.byok : defaultModelId;
 }

@@ -16,8 +16,16 @@ export async function streamChatCompletion(params: {
   telemetry?: boolean | Partial<TelemetrySettings>;
   providerOptions?: SharedV2ProviderOptions;
 }) {
-  const { model, system, messages, maxOutputTokens, tools, toolChoice, telemetry, providerOptions } =
-    params;
+  const {
+    model,
+    system,
+    messages,
+    maxOutputTokens,
+    tools,
+    toolChoice,
+    telemetry,
+    providerOptions,
+  } = params;
 
   const args: Parameters<typeof streamText>[0] = {
     model,

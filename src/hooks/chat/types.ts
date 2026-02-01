@@ -55,10 +55,7 @@ export interface UseTherapyChatReturn {
   /** Handle input value change */
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => void;
   /** Handle form submission */
-  handleSubmit: (
-    e?: React.FormEvent<HTMLFormElement>,
-    options?: HandleSubmitOptions
-  ) => void;
+  handleSubmit: (e?: React.FormEvent<HTMLFormElement>, options?: HandleSubmitOptions) => void;
   /** Set the input value directly */
   setInput: React.Dispatch<React.SetStateAction<string>>;
   /** Set messages directly (supports functional updates) */

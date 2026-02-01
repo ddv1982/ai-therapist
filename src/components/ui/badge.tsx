@@ -7,18 +7,23 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-transparent bg-primary text-primary-foreground shadow-apple-sm hover:bg-primary/80',
+        default:
+          'border-transparent bg-primary text-primary-foreground shadow-apple-sm hover:bg-primary/80',
         secondary:
           'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
         destructive:
           'border-transparent bg-destructive text-destructive-foreground shadow-apple-sm hover:bg-destructive/80',
         outline: 'text-foreground border-border bg-transparent',
         // Therapeutic variants using CSS tokens
-        accent: 'border-transparent bg-accent text-accent-foreground shadow-apple-sm hover:bg-accent/80',
-        success: 'border-transparent bg-therapy-success text-white shadow-apple-sm hover:opacity-90',
-        warning: 'border-transparent bg-therapy-warning text-white shadow-apple-sm hover:opacity-90',
+        accent:
+          'border-transparent bg-accent text-accent-foreground shadow-apple-sm hover:bg-accent/80',
+        success:
+          'border-transparent bg-therapy-success text-white shadow-apple-sm hover:opacity-90',
+        warning:
+          'border-transparent bg-therapy-warning text-white shadow-apple-sm hover:opacity-90',
         info: 'border-transparent bg-therapy-info text-white shadow-apple-sm hover:opacity-90',
-        therapy: 'border-transparent bg-gradient-to-r from-primary to-accent text-white shadow-apple-md',
+        therapy:
+          'border-transparent bg-gradient-to-r from-primary to-accent text-white shadow-apple-md',
       },
       size: {
         default: 'h-6 px-2 text-xs',
@@ -34,8 +39,7 @@ const badgeVariants = cva(
 );
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, size, ...props }: BadgeProps) {
   return <div className={cn(badgeVariants({ variant, size }), className)} {...props} />;

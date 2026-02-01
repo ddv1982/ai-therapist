@@ -3,7 +3,9 @@ import { renderWithProviders, ToastTestHarness } from '@tests/utils/test-utiliti
 
 describe('Toast ARIA roles', () => {
   it('uses role=alert assertive for error and role=status polite for info', async () => {
-    renderWithProviders(<ToastTestHarness includePersistent={false} includeCustomDuration={false} />);
+    renderWithProviders(
+      <ToastTestHarness includePersistent={false} includeCustomDuration={false} />
+    );
 
     fireEvent.click(screen.getByTestId('show-error'));
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());

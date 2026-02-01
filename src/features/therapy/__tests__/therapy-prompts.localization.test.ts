@@ -1,4 +1,7 @@
-import { buildTherapySystemPrompt, type MemoryContext } from '@/features/therapy/lib/therapy-prompts';
+import {
+  buildTherapySystemPrompt,
+  type MemoryContext,
+} from '@/features/therapy/lib/therapy-prompts';
 import { getReportPrompt, getTherapySystemPrompt } from '@/features/therapy/lib/therapy-prompts';
 
 describe('buildTherapySystemPrompt localization', () => {

@@ -583,11 +583,7 @@ export function TestProviders({ children }: TestProvidersProps) {
     React.createElement(
       ChatSettingsProvider,
       null,
-      React.createElement(
-        CBTProvider,
-        null,
-        React.createElement(SessionProvider, null, children)
-      )
+      React.createElement(CBTProvider, null, React.createElement(SessionProvider, null, children))
     )
   );
 }

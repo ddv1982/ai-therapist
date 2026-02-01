@@ -529,20 +529,20 @@ clearPersistedDraft(): void
 
 ```typescript
 interface UsePersistedCBTFlowOptions {
-  skipHydration?: boolean;  // Skip loading from localStorage (for "Start Fresh")
+  skipHydration?: boolean; // Skip loading from localStorage (for "Start Fresh")
   onChange?: (data: CBTSessionData) => Promise<void> | void;
 }
 ```
 
 #### When localStorage Draft is Cleared
 
-| Scenario | Trigger |
-|----------|---------|
-| Delete Draft | User clicks trash icon |
-| Start Fresh | User clicks "Start New" (skipHydration=true) |
-| Send to Chat | Successful send completes |
-| Flow Complete | User completes final step |
-| Hook Reset | `reset()` called |
+| Scenario      | Trigger                                      |
+| ------------- | -------------------------------------------- |
+| Delete Draft  | User clicks trash icon                       |
+| Start Fresh   | User clicks "Start New" (skipHydration=true) |
+| Send to Chat  | Successful send completes                    |
+| Flow Complete | User completes final step                    |
+| Hook Reset    | `reset()` called                             |
 
 ---
 

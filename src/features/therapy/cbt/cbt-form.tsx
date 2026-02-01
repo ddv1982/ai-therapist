@@ -158,7 +158,7 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
             )}
           />
           {(formState.errors.situation?.message || state.errors?.situation) && (
-            <p id="situation-error" className="mt-1 text-sm text-destructive" role="alert">
+            <p id="situation-error" className="text-destructive mt-1 text-sm" role="alert">
               {String(formState.errors.situation?.message || state.errors?.situation?.[0])}
             </p>
           )}
@@ -195,14 +195,14 @@ export function CBTForm({ onSubmit, defaultValues, onDraftChange }: CBTFormProps
 
         {/* Form-level error display */}
         {state.errors?._form && (
-          <p className="text-sm text-destructive" role="alert">
+          <p className="text-destructive text-sm" role="alert">
             {state.errors._form[0]}
           </p>
         )}
 
         {/* Success message */}
         {state.success && state.message && (
-          <p className="text-sm text-muted-foreground" aria-live="polite">
+          <p className="text-muted-foreground text-sm" aria-live="polite">
             {state.message}
           </p>
         )}

@@ -115,8 +115,17 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
         placeholderIdRef.current = null;
       }
 
-      logger.error('Chat error', { component: 'useTherapyChat', sessionId: sessionIdRef.current ?? undefined }, err);
-      showToast({ type: 'error', title: t('messageNotSentTitle'), message: t('messageNotSentBody'), duration: 6000 });
+      logger.error(
+        'Chat error',
+        { component: 'useTherapyChat', sessionId: sessionIdRef.current ?? undefined },
+        err
+      );
+      showToast({
+        type: 'error',
+        title: t('messageNotSentTitle'),
+        message: t('messageNotSentBody'),
+        duration: 6000,
+      });
       externalOnError?.(err);
     },
     onFinish: async ({ message }) => {
@@ -129,16 +138,26 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
         if (placeholderId) {
           setMessagesState((prev) =>
             prev.map((existing) =>
-              existing.id === placeholderId ? { ...existing, content: textContent, modelUsed: actualModelId } : existing
+              existing.id === placeholderId
+                ? { ...existing, content: textContent, modelUsed: actualModelId }
+                : existing
             )
           );
         }
 
         const sid = sessionIdRef.current;
         if (sid && trimmedContent.length > 0) {
-          const result = await saveMessage({ role: 'assistant', content: trimmedContent, modelUsed: actualModelId });
+          const result = await saveMessage({
+            role: 'assistant',
+            content: trimmedContent,
+            modelUsed: actualModelId,
+          });
           if (!result.success) {
-            logger.error('Failed to persist assistant message', { component: 'useTherapyChat', sessionId: sid, error: result.error });
+            logger.error('Failed to persist assistant message', {
+              component: 'useTherapyChat',
+              sessionId: sid,
+              error: result.error,
+            });
           }
         }
 
@@ -151,11 +170,18 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
   });
 
   const setMessages = useCallback(
-    (newMessages: MessageData[] | ((prev: MessageData[]) => MessageData[])) => setMessagesState(newMessages),
+    (newMessages: MessageData[] | ((prev: MessageData[]) => MessageData[])) =>
+      setMessagesState(newMessages),
     []
   );
-  const setInput: React.Dispatch<React.SetStateAction<string>> = useCallback((value) => setInputState(value), []);
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => setInputState(e.target.value), []);
+  const setInput: React.Dispatch<React.SetStateAction<string>> = useCallback(
+    (value) => setInputState(value),
+    []
+  );
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => setInputState(e.target.value),
+    []
+  );
 
   const loadSessionMessages = useCallback(async () => {
     if (!hasSession) {
@@ -166,7 +192,11 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
     if (result.success) {
       setMessagesState(result.messages);
     } else {
-      logger.error('Failed to load session messages', { component: 'useTherapyChat', sessionId: sessionIdRef.current ?? undefined, error: result.error });
+      logger.error('Failed to load session messages', {
+        component: 'useTherapyChat',
+        sessionId: sessionIdRef.current ?? undefined,
+        error: result.error,
+      });
     }
   }, [hasSession, loadMessages]);
 
@@ -177,7 +207,14 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
   }, []);
 
   const handleSubmit = useCallback(
-    async (e?: React.FormEvent<HTMLFormElement>, submitOptions?: { experimental_attachments?: FileList | undefined; sessionId?: string; ensureSession?: () => Promise<string> }) => {
+    async (
+      e?: React.FormEvent<HTMLFormElement>,
+      submitOptions?: {
+        experimental_attachments?: FileList | undefined;
+        sessionId?: string;
+        ensureSession?: () => Promise<string>;
+      }
+    ) => {
       e?.preventDefault();
       const trimmedInput = input.trim();
       if (!trimmedInput || isLoading) return;
@@ -188,12 +225,24 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
         try {
           effectiveSessionId = await submitOptions.ensureSession();
         } catch (err) {
-          logger.error('Failed to ensure session', { component: 'useTherapyChat' }, err instanceof Error ? err : new Error(String(err)));
-          showToast({ type: 'error', title: t('messageNotSentTitle'), message: t('messageNotSentBody'), duration: 6000 });
+          logger.error(
+            'Failed to ensure session',
+            { component: 'useTherapyChat' },
+            err instanceof Error ? err : new Error(String(err))
+          );
+          showToast({
+            type: 'error',
+            title: t('messageNotSentTitle'),
+            message: t('messageNotSentBody'),
+            duration: 6000,
+          });
           return;
         }
       }
-      const effectiveHasSession = effectiveSessionId !== null && effectiveSessionId !== undefined && effectiveSessionId.length > 0;
+      const effectiveHasSession =
+        effectiveSessionId !== null &&
+        effectiveSessionId !== undefined &&
+        effectiveSessionId.length > 0;
 
       setIsLoading(true);
       setError(undefined);
@@ -209,8 +258,17 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
           await apiClient.postMessage(effectiveSessionId, { role: 'user', content: trimmedInput });
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : 'Failed to persist message';
-          logger.error('Failed to persist user message', { component: 'useTherapyChat', sessionId: effectiveSessionId, error: errorMessage });
-          showToast({ type: 'error', title: t('messageNotSavedTitle'), message: t('messageNotSavedBody'), duration: 6000 });
+          logger.error('Failed to persist user message', {
+            component: 'useTherapyChat',
+            sessionId: effectiveSessionId,
+            error: errorMessage,
+          });
+          showToast({
+            type: 'error',
+            title: t('messageNotSavedTitle'),
+            message: t('messageNotSavedBody'),
+            duration: 6000,
+          });
           setMessagesState((prev) => prev.filter((msg) => msg.id !== userMessage.id));
           setInputState(trimmedInput);
           setIsLoading(false);
@@ -227,15 +285,26 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
           { role: 'user', parts: [{ type: 'text', text: trimmedInput }] },
           {
             headers: createBYOKHeaders(byokKeyRef.current),
-            body: { sessionId: effectiveSessionId, webSearchEnabled, selectedModel: modelRef.current, state: {} },
+            body: {
+              sessionId: effectiveSessionId,
+              webSearchEnabled,
+              selectedModel: modelRef.current,
+              state: {},
+            },
           }
         );
       } catch (err) {
-        setMessagesState((prev) => prev.filter((msg) => msg.id !== userMessage.id && msg.id !== placeholder.id));
+        setMessagesState((prev) =>
+          prev.filter((msg) => msg.id !== userMessage.id && msg.id !== placeholder.id)
+        );
         placeholderIdRef.current = null;
         setIsLoading(false);
         setError(err instanceof Error ? err : new Error(String(err)));
-        logger.error('Error sending message to AI', { component: 'useTherapyChat', sessionId: effectiveSessionId ?? undefined }, err instanceof Error ? err : new Error(String(err)));
+        logger.error(
+          'Error sending message to AI',
+          { component: 'useTherapyChat', sessionId: effectiveSessionId ?? undefined },
+          err instanceof Error ? err : new Error(String(err))
+        );
       }
     },
     [input, isLoading, showToast, t, sendAiMessage, webSearchEnabled]
@@ -250,7 +319,11 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
       if (hasSession && message.role === 'user') {
         const result = await saveMessage({ role: message.role, content: message.content });
         if (!result.success) {
-          logger.error('Failed to persist appended message', { component: 'useTherapyChat', sessionId: sessionIdRef.current ?? undefined, error: result.error });
+          logger.error('Failed to persist appended message', {
+            component: 'useTherapyChat',
+            sessionId: sessionIdRef.current ?? undefined,
+            error: result.error,
+          });
         }
       }
     },
@@ -269,7 +342,9 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
     const messagesAfterUser = messages.slice(lastUserMessageIndex + 1);
     const lastAssistantIndex = messagesAfterUser.findIndex((m) => m.role === 'assistant');
     if (lastAssistantIndex !== -1) {
-      setMessagesState((prev) => prev.filter((_, idx) => idx !== lastUserMessageIndex + 1 + lastAssistantIndex));
+      setMessagesState((prev) =>
+        prev.filter((_, idx) => idx !== lastUserMessageIndex + 1 + lastAssistantIndex)
+      );
     }
 
     setIsLoading(true);
@@ -284,7 +359,12 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
         { role: 'user', parts: [{ type: 'text', text: lastUserMessage.content }] },
         {
           headers: createBYOKHeaders(byokKeyRef.current),
-          body: { sessionId: sessionIdRef.current, webSearchEnabled, selectedModel: modelRef.current, state: {} },
+          body: {
+            sessionId: sessionIdRef.current,
+            webSearchEnabled,
+            selectedModel: modelRef.current,
+            state: {},
+          },
         }
       );
     } catch (err) {
@@ -292,7 +372,11 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
       placeholderIdRef.current = null;
       setIsLoading(false);
       setError(err instanceof Error ? err : new Error(String(err)));
-      logger.error('Error reloading message', { component: 'useTherapyChat', sessionId: sessionIdRef.current ?? undefined }, err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        'Error reloading message',
+        { component: 'useTherapyChat', sessionId: sessionIdRef.current ?? undefined },
+        err instanceof Error ? err : new Error(String(err))
+      );
     }
   }, [messages, sendAiMessage, webSearchEnabled]);
 
@@ -300,7 +384,10 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
     try {
       void stopAi?.();
     } catch (err) {
-      logger.debug('Stop operation failed', { component: 'useTherapyChat', error: err instanceof Error ? err.message : 'unknown' });
+      logger.debug('Stop operation failed', {
+        component: 'useTherapyChat',
+        error: err instanceof Error ? err.message : 'unknown',
+      });
     }
     const placeholderId = placeholderIdRef.current;
     if (placeholderId) {
@@ -317,7 +404,21 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
     }
   }, [sessionId]);
 
-  return { messages, input, isLoading, error, handleInputChange, handleSubmit, setInput, setMessages, reload, stop, clearSession, loadSessionMessages, append };
+  return {
+    messages,
+    input,
+    isLoading,
+    error,
+    handleInputChange,
+    handleSubmit,
+    setInput,
+    setMessages,
+    reload,
+    stop,
+    clearSession,
+    loadSessionMessages,
+    append,
+  };
 }
 
 export default useTherapyChat;

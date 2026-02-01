@@ -146,10 +146,7 @@ export function ActionPlan({
 
   // Form action for useActionState
   const formAction = useCallback(
-    async (
-      _prevState: ActionPlanFormState,
-      _formData: FormData
-    ): Promise<ActionPlanFormState> => {
+    async (_prevState: ActionPlanFormState, _formData: FormData): Promise<ActionPlanFormState> => {
       try {
         if (!actionData.newBehaviors.trim()) {
           return {

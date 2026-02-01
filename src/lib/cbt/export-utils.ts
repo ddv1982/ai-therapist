@@ -1,8 +1,5 @@
 import { CBTFormData, type SchemaReflectionData } from '@/types';
-import {
-  localizeSchemaMode,
-  type SupportedLocale,
-} from '@/lib/cbt/schema-mode-localization';
+import { localizeSchemaMode, type SupportedLocale } from '@/lib/cbt/schema-mode-localization';
 
 // Export format types
 export type CBTExportFormat = 'json' | 'markdown' | 'text';
@@ -318,8 +315,8 @@ function generateMarkdownFromFormData(
 
   const hasReflectionContent = Boolean(
     formWithOptionalReflection.schemaReflection?.enabled &&
-      (formWithOptionalReflection.schemaReflection.selfAssessment.trim() ||
-        formWithOptionalReflection.schemaReflection.questions.some((q) => q.answer.trim()))
+    (formWithOptionalReflection.schemaReflection.selfAssessment.trim() ||
+      formWithOptionalReflection.schemaReflection.questions.some((q) => q.answer.trim()))
   );
 
   return `# 🌟 ${strings.diaryTitle} ${hasReflectionContent ? strings.deepReflectionSuffix : ''}

@@ -1,9 +1,6 @@
 import type { CBTSessionSummaryData } from '@/features/therapy/components/cbt-session-summary-card';
 import type { ActionPlanData, EmotionData, ThoughtData } from '@/types';
-import {
-  type SupportedLocale,
-  localizeSchemaMode,
-} from '@/lib/cbt/schema-mode-localization';
+import { type SupportedLocale, localizeSchemaMode } from '@/lib/cbt/schema-mode-localization';
 import { CBT_STEP_CONFIG } from './config';
 import { CBT_STEP_ORDER, type CBTFlowContext, type CBTFlowState, type CBTStepId } from './types';
 
@@ -187,10 +184,7 @@ export function buildSummaryCardFromState(
   };
 }
 
-export function buildMarkdownSummary(
-  state: CBTFlowState,
-  locale: SupportedLocale = 'en'
-): string {
+export function buildMarkdownSummary(state: CBTFlowState, locale: SupportedLocale = 'en'): string {
   const { context } = state;
   const labels = SUMMARY_LABELS[locale];
   const dateLabel = toIsoDateLabel(state.startedAt, locale);
@@ -347,9 +341,7 @@ export function buildTherapeuticWrapper(
   } else if (context.thoughts && context.thoughts.length > 0) {
     const topThought = [...context.thoughts].sort((a, b) => b.credibility - a.credibility)[0];
     const truncated =
-      topThought.thought.length > 80
-        ? topThought.thought.slice(0, 77) + '...'
-        : topThought.thought;
+      topThought.thought.length > 80 ? topThought.thought.slice(0, 77) + '...' : topThought.thought;
     lines.push(
       `**${labels.keyThought}:** "${truncated}" (${topThought.credibility}/10 ${labels.credibility})`
     );

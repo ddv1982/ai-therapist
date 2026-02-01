@@ -1,4 +1,8 @@
-import { checkMemoryContext, getMemoryManagementData, deleteMemory } from '@/features/chat/lib/memory-utils';
+import {
+  checkMemoryContext,
+  getMemoryManagementData,
+  deleteMemory,
+} from '@/features/chat/lib/memory-utils';
 import { apiClient } from '@/lib/api/client';
 import { deleteMemoryAction } from '@/features/chat/actions/memory-actions';
 
@@ -307,9 +311,7 @@ describe('memory-utils', () => {
     });
 
     it('handles network errors during deletion', async () => {
-      (deleteMemoryAction as jest.Mock).mockRejectedValueOnce(
-        new Error('Network error')
-      );
+      (deleteMemoryAction as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
       const result = await deleteMemory({ type: 'specific', sessionIds: ['s1'] });
 

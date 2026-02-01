@@ -64,16 +64,16 @@ export async function createSessionAction(options: CreateSessionOptions) {
     });
 
     revalidatePath('/');
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       data: {
         id: session._id,
         title: session.title,
         createdAt: new Date(session.createdAt).toISOString(),
         updatedAt: new Date(session.updatedAt).toISOString(),
         messageCount: session.messageCount ?? 0,
-      }
+      },
     };
   } catch (error) {
     logger.error('Failed to create session via Server Action', { error });
@@ -100,7 +100,7 @@ export async function deleteSessionAction(sessionId: string) {
     // 3. Clear Cache & Revalidate
     await SessionCache.invalidate(sessionId);
     revalidatePath('/');
-    
+
     return { success: true };
   } catch (error) {
     logger.error('Failed to delete session via Server Action', { error, sessionId });

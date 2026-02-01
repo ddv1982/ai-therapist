@@ -134,7 +134,8 @@ export function useChatPersistence(sessionId: string | null): UseChatPersistence
 
       return { messages, success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error loading messages';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error loading messages';
       logger.error(
         'Error loading messages',
         {
@@ -201,7 +202,8 @@ export function useChatPersistence(sessionId: string | null): UseChatPersistence
 
         return { success: true, savedMessage };
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error saving message';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error saving message';
         logger.error(
           'Error saving message',
           {

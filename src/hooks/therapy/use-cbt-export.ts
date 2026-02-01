@@ -68,12 +68,7 @@ export function useCBTExport(options: UseCBTExportOptions = {}): UseCBTExportRet
         await new Promise((resolve) => setTimeout(resolve, 300));
 
         // Perform the export
-        await exportCBTDiary(
-          format,
-          formData,
-          markdownContent,
-          getExportLocaleStrings(locale)
-        );
+        await exportCBTDiary(format, formData, markdownContent, getExportLocaleStrings(locale));
 
         // Generate filename for success callback
         const filename = generateFileName(format, formData.date);

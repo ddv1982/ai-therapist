@@ -468,35 +468,44 @@ This runs:
 The app uses the Next.js 16 Proxy (`src/proxy.ts`) to enforce auth, set CSP headers, and resolve locale.
 
 ### Quick checks
+
 - DevTools → Network → main document request: confirm `content-security-policy`, `x-content-type-options`, `x-frame-options`, `x-locale`, and `x-csp-nonce`.
 - CSP failures show console errors like `Refused to execute inline script...`.
 - Optional Clerk debug logs:
   ```ts
-  clerkMiddleware((auth, req) => {
-    // ...existing logic
-  }, { debug: true })
+  clerkMiddleware(
+    (auth, req) => {
+      // ...existing logic
+    },
+    { debug: true }
+  );
   ```
 
 ### CSP headers
+
 - `curl -I http://localhost:4000/dashboard` to inspect `Content-Security-Policy`.
 - Dev should include `'unsafe-eval'`/`'unsafe-inline'`; prod should include `'nonce-<value>'` for `script-src`/`style-src`.
 
 ### CSP nonce checks
+
 - Refresh and confirm `nonce-...` changes per request in the CSP header.
 - Nonces should appear on `<script>`/`<style>` tags that need them. Do **not** add nonce to `<html>`/`<head>` (causes hydration mismatches).
 - If missing: ensure `proxy.ts` sets `x-csp-nonce` and `layout.tsx` passes it to `RootProviders`.
 
 ### Auth routing
+
 - `PUBLIC_ROUTES` in `proxy.ts` controls unauthenticated access.
 - Unauthenticated `/dashboard` should redirect to `/sign-in?redirect_url=...`.
 - `config.matcher` must include `/(api|trpc)(.*)` for API routes.
 
 ### CSP violation reporting
+
 - `POST /api/csp-report` accepts reports in all environments.
 - `GET/DELETE /api/csp-report` are dev-only (404 in production).
 - Logs include `CSP Violation detected` entries.
 
 ### Common issues
+
 - Inline scripts blocked: verify nonce on needed scripts/styles and ensure dev uses `unsafe-inline`.
 - Redirect loop: confirm `/sign-in` and `/sign-up` are public and clear cookies.
 - Locale not persisting: verify `NEXT_LOCALE` cookie and `x-locale` header.
@@ -504,6 +513,7 @@ The app uses the Next.js 16 Proxy (`src/proxy.ts`) to enforce auth, set CSP head
 - API routes not protected: ensure `config.matcher` includes `/(api|trpc)(.*)`.
 
 ### HSTS header
+
 - `Strict-Transport-Security` is sent by the proxy, but browsers only honor it on HTTPS. On local `http://`, it may have no effect.
 
 ---

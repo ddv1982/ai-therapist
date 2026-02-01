@@ -128,7 +128,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
 
     // Check if user has provided their own API key (BYOK) - check early to affect model selection
     const byokApiKey = extractBYOKKey(req.headers);
-    
+
     logger.info('BYOK header check', {
       apiEndpoint: '/api/chat',
       requestId: context.requestId,
@@ -144,7 +144,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       preferredModel: normalized.data.model,
       webSearchEnabled: effectiveWebSearch,
     });
-    
+
     // Determine which model to use
     let effectiveModelId: string;
     let modelToUse;
@@ -273,7 +273,12 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
       });
 
     if (!normalized.data.sessionId) {
-      attachResponseHeaders(uiResponse as Response, context.requestId, effectiveModelId, toolChoiceHeader);
+      attachResponseHeaders(
+        uiResponse as Response,
+        context.requestId,
+        effectiveModelId,
+        toolChoiceHeader
+      );
       return uiResponse as Response;
     }
 
@@ -294,7 +299,12 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     }
 
     await persistFromClonedStreamUtil(uiResponse as Response, collector);
-    attachResponseHeaders(uiResponse as Response, context.requestId, effectiveModelId, toolChoiceHeader);
+    attachResponseHeaders(
+      uiResponse as Response,
+      context.requestId,
+      effectiveModelId,
+      toolChoiceHeader
+    );
     return uiResponse as Response;
   } catch (error) {
     // Use ChatError response system for consistent error handling

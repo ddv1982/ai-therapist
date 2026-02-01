@@ -35,6 +35,7 @@ bun run test:e2e:debug
 Tests run **without authentication**. The app uses Next.js 16 proxy with Clerk's `auth.protect()`, which redirects unauthenticated API requests to the sign-in page.
 
 **Expected behavior for unauthenticated requests:**
+
 - API requests → 307 redirect to `/sign-in` → 200 (HTML page)
 - Playwright follows redirects by default
 - Tests accept either auth redirect (200 HTML) OR error status (400/401/403/404)

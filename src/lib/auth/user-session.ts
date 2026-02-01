@@ -49,5 +49,3 @@ export function getSingleUserInfo(request: Request) {
     currentDevice: deviceType,
   };
 }
-
-

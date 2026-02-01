@@ -60,10 +60,7 @@ export function createAssistantPlaceholder(): MessageData {
  * @param fallback - Optional fallback model ID
  * @returns The model ID or fallback if not found
  */
-export function getModelIdFromMetadata(
-  message: UIMessage,
-  fallback?: string
-): string | undefined {
+export function getModelIdFromMetadata(message: UIMessage, fallback?: string): string | undefined {
   const meta = message.metadata as { modelId?: unknown } | undefined;
   if (meta && typeof meta.modelId === 'string' && meta.modelId.length > 0) {
     return meta.modelId;
