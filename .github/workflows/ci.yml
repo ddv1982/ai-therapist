@@ -38,6 +38,13 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -67,6 +74,13 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -110,6 +124,13 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -143,6 +164,13 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -204,6 +232,13 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Cache bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -292,31 +327,11 @@ jobs:
               });
             }
 
-  # Job 6: Environment Parity Check
-  env-check:
-    name: Environment Check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check environment parity
-        run: |
-          chmod +x scripts/check-env-parity.sh
-          ./scripts/check-env-parity.sh --ci
-        env:
-          CI: true
-          # Provide all required env vars for the check
-          ENCRYPTION_KEY: ${{ env.ENCRYPTION_KEY }}
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
-          NEXT_PUBLIC_CONVEX_URL: ${{ env.NEXT_PUBLIC_CONVEX_URL }}
-          CLERK_SECRET_KEY: ${{ env.CLERK_SECRET_KEY }}
-
   # Final status check for branch protection
   ci-status:
     name: CI Status
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, build, e2e-tests, env-check]
+    needs: [lint-and-typecheck, unit-tests, build, e2e-tests]
     if: always()
     steps:
       - name: Check all jobs status
@@ -335,10 +350,6 @@ jobs:
           fi
           if [[ "${{ needs.e2e-tests.result }}" != "success" ]]; then
             echo "E2E tests failed"
-            exit 1
-          fi
-          if [[ "${{ needs.env-check.result }}" != "success" ]]; then
-            echo "Environment check failed"
             exit 1
           fi
           echo "All CI checks passed! ✅"

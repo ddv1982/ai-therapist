@@ -29,6 +29,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",
+    "ci:check": "BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true eslint . && tsc --noEmit && prettier --check . && jest",
     "qa:smoke": "openapi-typescript docs/api.yaml -o src/types/api.generated.ts && BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true eslint . && tsc --noEmit && jest",
     "qa:full": "CI=1 openapi-typescript docs/api.yaml -o src/types/api.generated.ts && CI=1 BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true eslint . && CI=1 tsc --noEmit && CI=1 jest --coverage && playwright install --with-deps || true && CI=1 playwright test && node scripts/print-coverage-summary.mjs",
     "analyze": "ANALYZE=true next build",

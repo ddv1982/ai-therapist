@@ -40,6 +40,8 @@ const nextServer = {
  */
 export default defineConfig({
   testDir: './e2e',
+  /* In CI without Convex, only run health-smoke tests */
+  testMatch: process.env.CI ? 'health-smoke.spec.ts' : '**/*.spec.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

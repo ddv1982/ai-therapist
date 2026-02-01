@@ -1,11 +1,7 @@
 name: Lighthouse CI
 
 on:
-  pull_request:
-    branches:
-      - main
-      - develop
-  # Allow manual runs
+  # Manual runs only - requires working Convex/Clerk secrets
   workflow_dispatch:
 
 jobs:
