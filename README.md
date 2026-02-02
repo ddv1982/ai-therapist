@@ -4,9 +4,23 @@ A modern therapeutic AI application providing compassionate mental health suppor
 
 ## 🚀 Recent Improvements
 
+### 🧹 Codebase Cleanup & CBT Localization (Feb 2026)
+
+<details>
+<summary>Click to expand</summary>
+
+- **Localized CBT Reports**: Dutch CBT session reports now use consistent Dutch terminology throughout
+- **Localized CBT Exports**: Markdown/text exports respect the active locale for labels and headings
+- **Removed Unused Code**: Pruned deprecated test helpers, unused hooks, and legacy utilities
+- **Consolidated Test Utilities**: Unified test infrastructure with CSP nonce handling
+- **Simplified Chat Architecture**: Removed unused chat actions, state hooks, and UI utilities
+- **Cleaner API Surface**: Dropped unused API hooks and report queries
+
+</details>
+
 ### 🔄 CI/CD Pipeline Improvements (Feb 2026)
 
-<details open>
+<details>
 <summary>Click to expand</summary>
 
 - **Streamlined CI**: Removed E2E tests from CI (require real Clerk credentials)
