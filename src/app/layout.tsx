@@ -47,11 +47,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const convexUrlEnv = process.env.NEXT_PUBLIC_CONVEX_URL;
   if (!pk || !convexUrlEnv) {
     return (
-      <html
-        lang={routing.defaultLocale}
-        data-scroll-behavior="smooth"
-        suppressHydrationWarning
-      >
+      <html lang={routing.defaultLocale} data-scroll-behavior="smooth" suppressHydrationWarning>
         <head>
           <meta
             name="viewport"
@@ -87,11 +83,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Load messages for the resolved locale
   const messages = await getMessages({ locale: resolvedLocale });
   return (
-    <html
-      lang={resolvedLocale}
-      data-scroll-behavior="smooth"
-      suppressHydrationWarning
-    >
+    <html lang={resolvedLocale} data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <meta
           name="viewport"

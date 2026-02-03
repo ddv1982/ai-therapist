@@ -9,8 +9,4 @@
 export { cache } from './cache-utils';
 
 // API-specific caching implementations
-export {
-  SessionCache,
-  MessageCache,
-  CacheHealthMonitor,
-} from './api-cache';
+export { SessionCache, MessageCache, CacheHealthMonitor } from './api-cache';

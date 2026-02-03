@@ -41,9 +41,7 @@ export type {
 } from './domains/therapy';
 
 // Therapy Domain - CBT constants and utility functions (values)
-export {
-  createInitialCBTFormData,
-} from './domains/therapy';
+export { createInitialCBTFormData } from './domains/therapy';
 
 // ============================================================================
 // EXISTING TYPE EXPORTS (Kept in place)

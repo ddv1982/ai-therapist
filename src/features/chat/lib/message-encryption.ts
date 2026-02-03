@@ -89,7 +89,6 @@ export function decryptMessages(
   return encryptedMessages.map((message) => decryptMessage(message));
 }
 
-
 /**
  * Encrypt session report content
  */
@@ -111,7 +110,6 @@ export function decryptSessionReportContent(encryptedReportContent: string): str
     return '[Report content unavailable]';
   }
 }
-
 
 /**
  * Check if content appears to be encrypted (basic heuristic)

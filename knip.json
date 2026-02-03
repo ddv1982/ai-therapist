@@ -16,11 +16,7 @@
     "e2e/**/*.{ts,tsx}",
     "scripts/**/*.{js,ts}"
   ],
-  "ignore": [
-    "convex/_generated/**",
-    "src/types/api.generated.ts",
-    "**/*.d.ts"
-  ],
+  "ignore": ["convex/_generated/**", "src/types/api.generated.ts", "**/*.d.ts"],
   "ignoreDependencies": ["katex", "tailwindcss"],
   "next": true,
   "jest": true,

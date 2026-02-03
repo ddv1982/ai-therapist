@@ -412,6 +412,5 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
   };
 }
 
-
 // Re-export types for convenience
 export type { UseTherapyChatOptions, UseTherapyChatReturn } from './types';

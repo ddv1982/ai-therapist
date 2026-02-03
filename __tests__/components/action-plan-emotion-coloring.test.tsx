@@ -77,10 +77,7 @@ describe('Action Plan Emotion Coloring', () => {
 
     it('should show muted for no change', () => {
       render(
-        <EmotionDisplay
-          initialEmotions={{ fear: 5, joy: 5 }}
-          finalEmotions={{ fear: 5, joy: 5 }}
-        />
+        <EmotionDisplay initialEmotions={{ fear: 5, joy: 5 }} finalEmotions={{ fear: 5, joy: 5 }} />
       );
 
       const fearChange = screen.getByTestId('fear-change');

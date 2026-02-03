@@ -107,10 +107,7 @@ export class SessionCache {
    * Invalidate all session-related caches
    */
   static async invalidateAll(sessionId: string) {
-    const patterns = [
-      CACHE_KEYS.SESSION(sessionId),
-      `messages:${sessionId}*`,
-    ];
+    const patterns = [CACHE_KEYS.SESSION(sessionId), `messages:${sessionId}*`];
 
     let totalDeleted = 0;
     for (const pattern of patterns) {
