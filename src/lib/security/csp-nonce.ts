@@ -161,7 +161,7 @@ export function getCSPHeader(nonce: string, isDev: boolean): string {
  *
  * @see https://w3c.github.io/reporting/
  */
-export function getReportToHeader(): string {
+function getReportToHeader(): string {
   const reportGroup = {
     group: 'csp-endpoint',
     max_age: 10886400, // 126 days

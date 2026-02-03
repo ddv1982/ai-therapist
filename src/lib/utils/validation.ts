@@ -131,7 +131,7 @@ export function validateRequest<T>(
 }
 
 // Simple message schema for report generation (only needs role and content)
-export const reportMessageSchema = z.object({
+const reportMessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
   content: z
     .string()
@@ -200,13 +200,3 @@ export const sanitizeInput = {
       .replace(/\//g, '&#x2F;');
   },
 };
-
-// Type exports for validated data
-export type ChatRequestInput = z.infer<typeof chatRequestSchema>;
-export type ChatMessageInput = z.infer<typeof chatMessageSchema>;
-export type CreateSessionInput = z.infer<typeof createSessionSchema>;
-export type MessageInput = z.infer<typeof messageSchema>;
-export type SessionIdInput = z.infer<typeof sessionIdSchema>;
-export type ReportGenerationInput = z.infer<typeof reportGenerationSchema>;
-export type ApiKeyInput = z.infer<typeof apiKeySchema>;
-export type ModelSettingsInput = z.infer<typeof modelSettingsSchema>;

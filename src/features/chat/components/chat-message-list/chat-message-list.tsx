@@ -22,7 +22,7 @@ import {
   shouldUseVirtualization,
 } from '@/features/chat/components/chat-message-list/virtual-lists';
 
-export interface ChatMessageListProps {
+interface ChatMessageListProps {
   messages: MessageData[];
   isStreaming: boolean;
   isMobile: boolean;
@@ -73,8 +73,19 @@ function areNonMessagePropsEqual(prevProps: ChatMessageListProps, nextProps: Cha
     prevProps.maxVisible === nextProps.maxVisible &&
     prevProps.activeCBTStep === nextProps.activeCBTStep &&
     prevProps.onCBTStepNavigate === nextProps.onCBTStepNavigate &&
+    prevProps.onCBTSituationComplete === nextProps.onCBTSituationComplete &&
+    prevProps.onCBTEmotionComplete === nextProps.onCBTEmotionComplete &&
+    prevProps.onCBTThoughtComplete === nextProps.onCBTThoughtComplete &&
+    prevProps.onCBTCoreBeliefComplete === nextProps.onCBTCoreBeliefComplete &&
+    prevProps.onCBTChallengeQuestionsComplete === nextProps.onCBTChallengeQuestionsComplete &&
+    prevProps.onCBTRationalThoughtsComplete === nextProps.onCBTRationalThoughtsComplete &&
+    prevProps.onCBTSchemaModesComplete === nextProps.onCBTSchemaModesComplete &&
+    prevProps.onCBTSendToChat === nextProps.onCBTSendToChat &&
+    prevProps.onCBTFinalEmotionsComplete === nextProps.onCBTFinalEmotionsComplete &&
+    prevProps.onCBTActionComplete === nextProps.onCBTActionComplete &&
     prevProps.onUpdateMessageMetadata === nextProps.onUpdateMessageMetadata &&
     prevProps.sessionId === nextProps.sessionId &&
+    prevProps.scrollContainerRef === nextProps.scrollContainerRef &&
     prevProps.enableVirtualization === nextProps.enableVirtualization
   );
 }

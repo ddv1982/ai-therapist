@@ -77,7 +77,7 @@ if (typeof global.crypto === 'undefined') {
  * Global mock setup for commonly used modules
  * Applied automatically across all test files
  */
-export function setupGlobalMocks() {
+function setupGlobalMocks() {
   // Mock Next.js router
   jest.mock('next/router', () => ({
     useRouter: jest.fn(() => ({
@@ -384,7 +384,7 @@ export class TestDataValidator {
 /**
  * Global cleanup utilities
  */
-export class TestCleanup {
+class TestCleanup {
   /**
    * Clean up after all tests
    */
@@ -434,7 +434,7 @@ export class TestCleanup {
 /**
  * Initialize global test configuration
  */
-export function initializeTestConfig() {
+function initializeTestConfig() {
   setupGlobalMocks();
   TestSetupUtils.setupTestEnvironment();
 

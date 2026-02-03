@@ -68,7 +68,7 @@ export enum ApiErrorCode {
  * Descriptions and recommendations for each error code
  * Used for documentation and error recovery guidance
  */
-export const ErrorCodeDescriptions: Record<
+const ErrorCodeDescriptions: Record<
   ApiErrorCode,
   {
     description: string;

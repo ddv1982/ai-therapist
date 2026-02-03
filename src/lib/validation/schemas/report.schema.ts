@@ -15,7 +15,6 @@ import { messageRoleSchema } from './message.schema';
 // ============================================================================
 
 export const severityLevels = ['low', 'moderate', 'high'] as const;
-export type SeverityLevel = (typeof severityLevels)[number];
 
 export const severityLevelSchema = z.enum(severityLevels);
 
@@ -24,7 +23,6 @@ export const severityLevelSchema = z.enum(severityLevels);
 // ============================================================================
 
 export const relevanceLevels = ['low', 'medium', 'high'] as const;
-export type RelevanceLevel = (typeof relevanceLevels)[number];
 
 export const relevanceLevelSchema = z.enum(relevanceLevels);
 
@@ -41,8 +39,6 @@ export const keyPointSchema = z.object({
   relevance: relevanceLevelSchema,
 });
 
-export type KeyPoint = z.infer<typeof keyPointSchema>;
-
 export const keyPointsSchema = z.array(keyPointSchema).max(50);
 
 // ============================================================================
@@ -57,8 +53,6 @@ export const therapeuticInsightSchema = z.object({
   insight: z.string().min(1).max(2000),
   confidence: z.number().min(0).max(100),
 });
-
-export type TherapeuticInsight = z.infer<typeof therapeuticInsightSchema>;
 
 export const therapeuticInsightsSchema = z.array(therapeuticInsightSchema).max(50);
 
@@ -76,8 +70,6 @@ export const patternIdentifiedSchema = z.object({
   severity: severityLevelSchema,
 });
 
-export type PatternIdentified = z.infer<typeof patternIdentifiedSchema>;
-
 export const patternsIdentifiedSchema = z.array(patternIdentifiedSchema).max(50);
 
 // ============================================================================
@@ -92,8 +84,6 @@ export const actionItemSchema = z.object({
   priority: relevanceLevelSchema,
   timeframe: z.string().max(100).optional(),
 });
-
-export type ActionItem = z.infer<typeof actionItemSchema>;
 
 export const actionItemsSchema = z.array(actionItemSchema).max(20);
 
@@ -113,8 +103,6 @@ export const cognitiveDistortionSchema = z.object({
   frequency: z.number().min(0).max(10),
   therapeuticPriority: relevanceLevelSchema,
 });
-
-export type CognitiveDistortionInput = z.infer<typeof cognitiveDistortionSchema>;
 
 export const cognitiveDistortionsSchema = z.array(cognitiveDistortionSchema).max(20).optional();
 
@@ -141,8 +129,6 @@ export const schemaAnalysisSchema = z
   })
   .optional();
 
-export type SchemaAnalysisInput = z.infer<typeof schemaAnalysisSchema>;
-
 // ============================================================================
 // THERAPEUTIC FRAMEWORK SCHEMA
 // ============================================================================
@@ -157,8 +143,6 @@ export const therapeuticFrameworkApplicationSchema = z.object({
   rationale: z.string().max(2000),
   priority: z.number().int().min(1).max(5),
 });
-
-export type TherapeuticFrameworkApplication = z.infer<typeof therapeuticFrameworkApplicationSchema>;
 
 export const therapeuticFrameworksSchema = z
   .array(therapeuticFrameworkApplicationSchema)
@@ -180,8 +164,6 @@ export const recommendationSchema = z.object({
   expectedOutcome: z.string().max(1000).optional(),
 });
 
-export type RecommendationInput = z.infer<typeof recommendationSchema>;
-
 export const recommendationsSchema = z.array(recommendationSchema).max(20).optional();
 
 // ============================================================================
@@ -199,8 +181,6 @@ export const reportMessageSchema = z.object({
     .max(50000, 'Message content too long'),
 });
 
-export type ReportMessage = z.infer<typeof reportMessageSchema>;
-
 // ============================================================================
 // REPORT GENERATION SCHEMA
 // ============================================================================
@@ -217,8 +197,6 @@ export const reportGenerationSchema = z.object({
   model: z.string().min(1).max(100).optional(),
   reportStyle: z.enum(['client_friendly', 'clinical_notes']).optional(),
 });
-
-export type ReportGenerationInput = z.infer<typeof reportGenerationSchema>;
 
 // ============================================================================
 // FULL SESSION REPORT SCHEMA
@@ -244,5 +222,3 @@ export const sessionReportSchema = z.object({
   analysisVersion: z.string().max(50).optional(),
   createdAt: z.number().int().positive(),
 });
-
-export type SessionReportInput = z.infer<typeof sessionReportSchema>;

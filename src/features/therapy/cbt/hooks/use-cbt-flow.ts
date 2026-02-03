@@ -24,9 +24,9 @@ export interface CBTSessionData {
   lastModified: string;
 }
 
-export type SessionDataField = keyof Omit<CBTSessionData, 'lastModified'>;
+type SessionDataField = keyof Omit<CBTSessionData, 'lastModified'>;
 
-export const STEP_TO_FIELD_MAP: Record<CBTStepId, SessionDataField> = {
+const STEP_TO_FIELD_MAP: Record<CBTStepId, SessionDataField> = {
   situation: 'situation',
   emotions: 'emotions',
   thoughts: 'thoughts',
@@ -358,5 +358,3 @@ export function useCBTFlow({ initialData, onChange }: UseCBTFlowOptions = {}) {
     clearError,
   };
 }
-
-export type UseCBTFlowReturn = ReturnType<typeof useCBTFlow>;

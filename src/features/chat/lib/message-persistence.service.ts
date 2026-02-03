@@ -176,15 +176,3 @@ export class MessagePersistenceService {
     return id.startsWith('temp-');
   }
 }
-
-/**
- * Factory function to create a MessagePersistenceService with the default API client.
- *
- * @param apiClient - The API client to use
- * @returns A configured MessagePersistenceService instance
- */
-export function createMessagePersistenceService(
-  apiClient: IChatApiClient
-): MessagePersistenceService {
-  return new MessagePersistenceService({ apiClient });
-}

@@ -41,7 +41,7 @@ const defaultToastMessages: ToastMessages = {
   reportIssueButtonLabel: 'Report this issue',
 };
 
-export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
+class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
   static contextType = ToastContext;
   private resetTimeoutId: number | null = null;
 
@@ -296,7 +296,6 @@ export class ErrorBoundaryBase extends Component<ErrorBoundaryProps, State> {
   }
 }
 
-// Higher-order component wrapper for easier usage
 type PublicErrorBoundaryProps = ErrorBoundaryProps;
 
 export function ErrorBoundary(props: PublicErrorBoundaryProps) {
@@ -310,37 +309,4 @@ export function ErrorBoundary(props: PublicErrorBoundaryProps) {
   };
   const mergedMessages = { ...translations, ...props.toastMessages };
   return <ErrorBoundaryBase {...props} toastMessages={mergedMessages} />;
-}
-
-export function withErrorBoundary<P extends object>(
-  Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<PublicErrorBoundaryProps, 'children'>
-) {
-  const WrappedComponent = (props: P) => (
-    <ErrorBoundary {...(errorBoundaryProps ?? {})}>
-      <Component {...props} />
-    </ErrorBoundary>
-  );
-
-  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
-
-  return WrappedComponent;
-}
-
-// React Hook for error boundaries in functional components
-export function useErrorHandler() {
-  return (error: Error, errorInfo?: ErrorInfo) => {
-    // Log error with structured logging
-    logger.error(
-      'Error caught by useErrorHandler hook',
-      {
-        component: 'useErrorHandler',
-        componentStack: errorInfo?.componentStack,
-      },
-      error
-    );
-
-    // Throw the error to trigger the nearest error boundary
-    throw error;
-  };
 }

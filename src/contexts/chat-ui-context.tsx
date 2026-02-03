@@ -82,11 +82,3 @@ export function useChatUI(): ChatUIBridge {
 
   return context;
 }
-
-/**
- * Hook to check if chat UI bridge is available
- */
-export function useChatUIAvailable(): boolean {
-  const context = useContext(ChatUIContext);
-  return context !== null;
-}

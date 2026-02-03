@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { createInitialCBTFormData, type CBTFormData as ConsolidatedCBTFormData } from '@/types';
 
 // Zod schema aligned with consolidated CBT types
 export const cbtRHFSchema = z.object({
@@ -56,7 +55,3 @@ export const cbtRHFSchema = z.object({
 });
 
 export type CBTFormInput = z.infer<typeof cbtRHFSchema>;
-
-export function getDefaultCBTValues(): ConsolidatedCBTFormData {
-  return createInitialCBTFormData();
-}

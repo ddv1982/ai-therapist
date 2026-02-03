@@ -67,15 +67,6 @@ export {
   sendMessageSchema,
   messageSchema,
   messagesQuerySchema,
-  // Types
-  type TherapeuticFramework,
-  type EmotionalTone,
-  type MessageRole,
-  type MessageContent,
-  type MessageMetadata,
-  type SendMessageInput,
-  type MessageInput,
-  type MessagesQueryInput,
 } from './message.schema';
 
 // ============================================================================
@@ -92,13 +83,6 @@ export {
   updateSessionSchema,
   sessionIdSchema,
   sessionSchema,
-  // Types
-  type SessionStatus,
-  type SessionTitle,
-  type CreateSessionInput,
-  type UpdateSessionInput,
-  type SessionIdInput,
-  type SessionInput,
 } from './session.schema';
 
 // ============================================================================
@@ -130,18 +114,4 @@ export {
   reportMessageSchema,
   reportGenerationSchema,
   sessionReportSchema,
-  // Types
-  type SeverityLevel,
-  type RelevanceLevel,
-  type KeyPoint,
-  type TherapeuticInsight,
-  type PatternIdentified,
-  type ActionItem,
-  type CognitiveDistortionInput,
-  type SchemaAnalysisInput,
-  type TherapeuticFrameworkApplication,
-  type RecommendationInput,
-  type ReportMessage,
-  type ReportGenerationInput,
-  type SessionReportInput,
 } from './report.schema';

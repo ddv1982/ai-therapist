@@ -19,7 +19,6 @@ function asText(value: string | Buffer): string {
 }
 
 export const THERAPY_SYSTEM_PROMPT = asText(THERAPY_SYSTEM_PROMPT_EN);
-export const REPORT_GENERATION_PROMPT = asText(REPORT_PROMPT_EN);
 export { ANALYSIS_EXTRACTION_PROMPT_TEXT };
 
 const EN_MEMORY_ANCHOR = 'Remember: Your primary role is to listen deeply';

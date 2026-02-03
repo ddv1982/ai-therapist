@@ -1,14 +1,7 @@
 import { z } from 'zod';
 import { DEFAULT_MODEL_ID } from '@/features/chat/config';
 
-export const chatMessageSchema = z.object({
-  role: z.enum(['user', 'assistant', 'system']),
-  content: z.string().min(1),
-  id: z.string().optional(),
-  createdAt: z.string().optional(),
-});
-
-export const chatRequestSchema = z.object({
+const chatRequestSchema = z.object({
   // Accept Convex document IDs (non-UUID). Keep loose string validation.
   sessionId: z.string().min(1).optional(),
   message: z
@@ -23,8 +16,7 @@ export const chatRequestSchema = z.object({
   context: z.object({}).passthrough().optional(),
 });
 
-export type ChatRequest = z.infer<typeof chatRequestSchema>;
-export type ChatMessage = z.infer<typeof chatMessageSchema>;
+type ChatRequest = z.infer<typeof chatRequestSchema>;
 
 export function normalizeChatRequest(
   input: unknown

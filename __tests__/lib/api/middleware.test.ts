@@ -6,7 +6,6 @@ import {
   withValidationAndParams,
   withRateLimitUnauthenticated,
   withAuthAndRateLimit,
-  withAuthStreaming,
   withAuthAndRateLimitStreaming,
 } from '@/lib/api/middleware';
 import { z } from 'zod';
@@ -329,45 +328,6 @@ describe('Middleware Tests', () => {
       const wrapped = withAuthAndRateLimit(mockHandler);
       const res = await wrapped(req, { params: Promise.resolve({}) });
       expect(res.status).toBe(500);
-    });
-  });
-
-  describe('withAuthStreaming', () => {
-    it('should handle successful streaming request', async () => {
-      const streamHandler = jest.fn().mockResolvedValue(new Response('stream'));
-      const wrapped = withAuthStreaming(streamHandler);
-      const res = await wrapped(req, { params: Promise.resolve({}) });
-
-      expect(res.status).toBe(200);
-      expect(streamHandler).toHaveBeenCalled();
-    });
-
-    it('should return 401 for invalid auth in streaming', async () => {
-      (validateApiAuth as jest.Mock).mockResolvedValue({ isValid: false });
-      const streamHandler = jest.fn();
-      const wrapped = withAuthStreaming(streamHandler);
-      const res = await wrapped(req, { params: Promise.resolve({}) });
-
-      expect(res.status).toBe(401);
-      expect(streamHandler).not.toHaveBeenCalled();
-    });
-
-    it('should handle errors in streaming handler', async () => {
-      const streamHandler = jest.fn().mockRejectedValue(new Error('Stream error'));
-      const wrapped = withAuthStreaming(streamHandler);
-      const res = await wrapped(req, { params: Promise.resolve({}) });
-
-      expect(res.status).toBe(500);
-    });
-
-    it('should use fallback user info on session error', async () => {
-      (getSingleUserInfo as jest.Mock).mockImplementation(() => {
-        throw new Error('No session');
-      });
-      const streamHandler = jest.fn().mockResolvedValue(new Response('ok'));
-      const wrapped = withAuthStreaming(streamHandler);
-      await wrapped(req, { params: Promise.resolve({}) });
-      expect(streamHandler).toHaveBeenCalled();
     });
   });
 
@@ -714,21 +674,6 @@ describe('Middleware Tests', () => {
       await promise1;
 
       expect(res2.status).toBe(429);
-    });
-  });
-
-  describe('withAuthStreaming - fallback user info edge cases', () => {
-    it('should rethrow error when fallback user info also fails', async () => {
-      (getSingleUserInfo as jest.Mock).mockImplementationOnce(() => {
-        throw new Error('Primary error');
-      });
-
-      const streamHandler = jest.fn().mockResolvedValue(new Response('ok'));
-      const wrapped = withAuthStreaming(streamHandler);
-      const res = await wrapped(req, { params: Promise.resolve({}) });
-
-      // Should still succeed with fallback
-      expect(res.status).toBe(200);
     });
   });
 

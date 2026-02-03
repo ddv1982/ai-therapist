@@ -52,7 +52,7 @@ const STEP_INDEX: Record<CBTStepId, number> = CBT_STEP_ORDER.reduce(
   {} as Record<CBTStepId, number>
 );
 
-export function createInitialContext(): CBTFlowContext {
+function createInitialContext(): CBTFlowContext {
   return {};
 }
 
@@ -68,7 +68,7 @@ export function createInitialState(): CBTFlowState {
   };
 }
 
-export function getStepIndex(stepId: CBTStepId): number {
+function getStepIndex(stepId: CBTStepId): number {
   return STEP_INDEX[stepId] ?? -1;
 }
 
@@ -77,7 +77,7 @@ export function getStepNumber(stepId: CBTStepId): number {
   return index >= 0 ? index + 1 : 1;
 }
 
-export function getNextStepId(stepId: CBTStepId): CBTStepId | undefined {
+function getNextStepId(stepId: CBTStepId): CBTStepId | undefined {
   const index = getStepIndex(stepId);
   if (index < 0) return undefined;
   return CBT_STEP_ORDER[index + 1];
@@ -264,10 +264,6 @@ export function selectTimelineMessages(state: CBTFlowState): CBTFlowMessageDescr
   }
 
   return messages;
-}
-
-export function selectIsComplete(state: CBTFlowState): boolean {
-  return state.status === 'complete';
 }
 
 export function selectCurrentStep(state: CBTFlowState): CBTStepId | 'complete' {

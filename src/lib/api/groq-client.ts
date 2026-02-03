@@ -1,8 +1,6 @@
-import { generateText, Output, convertToModelMessages, streamText } from 'ai';
-import type { UIMessage, LanguageModel } from 'ai';
-import { groq } from '@ai-sdk/groq';
-import { languageModels, type ModelID } from '@/ai/providers';
-import { supportsWebSearch } from '@/ai/model-metadata';
+import { generateText, Output } from 'ai';
+import type { LanguageModel } from 'ai';
+import { languageModels } from '@/ai/providers';
 import { z } from 'zod';
 import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 
@@ -105,18 +103,10 @@ export const parsedAnalysisSchema = z.object({
 });
 
 export type ParsedAnalysis = z.infer<typeof parsedAnalysisSchema>;
-export type CognitiveDistortion = z.infer<typeof cognitiveDistortionSchema>;
-export type SchemaAnalysis = z.infer<typeof schemaAnalysisSchema>;
-export type SessionOverview = z.infer<typeof sessionOverviewSchema>;
 
 // Simplified message type for report generation (only needs role and content)
 export interface ReportMessage {
   role: 'user' | 'assistant';
-  content: string;
-}
-
-export interface AIMessage {
-  role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
@@ -189,55 +179,4 @@ export const extractStructuredAnalysis = async (
   });
 
   return result.output;
-};
-
-// Browser search function using direct Groq integration
-export const streamTextWithBrowserSearch = async (
-  messages: AIMessage[],
-  systemPrompt: string,
-  modelId: string = ANALYTICAL_MODEL_ID
-) => {
-  // Ensure we're using a supported model for browser search
-  const isModelID = (m: string): m is ModelID =>
-    Object.prototype.hasOwnProperty.call(languageModels, m);
-  if (!isModelID(modelId) || !supportsWebSearch(modelId)) {
-    throw new Error('Browser search is only supported for models with web search capability');
-  }
-
-  const uiMessages: Array<Omit<UIMessage, 'id'>> = messages.map((message) => ({
-    role: message.role,
-    parts: [{ type: 'text', text: message.content }],
-  }));
-
-  try {
-    // Use direct Groq model instance with browser search tool
-    const modelMessages = await convertToModelMessages(uiMessages);
-
-    const result = streamText({
-      model: languageModels[modelId],
-      system: systemPrompt,
-      messages: modelMessages,
-      tools: {
-        browser_search: groq.tools.browserSearch({}),
-      },
-      toolChoice: 'auto', // Let the model decide when to use web search
-    });
-
-    return result;
-  } catch (error) {
-    // Use structured logger; avoid console noise
-    try {
-      const { logger } = await import('@/lib/utils/logger');
-      logger.error('Browser search failed', { module: 'groq-client' }, error as Error);
-    } catch {}
-
-    // Fallback: Use regular text generation without browser search
-    const fallbackResult = streamText({
-      model: languageModels[modelId],
-      system: systemPrompt,
-      messages: await convertToModelMessages(uiMessages),
-    });
-
-    return fallbackResult;
-  }
 };

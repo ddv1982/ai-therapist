@@ -8,7 +8,7 @@
 import { MODEL_IDS } from '@/ai/model-metadata';
 
 /** Header name for BYOK API key */
-export const BYOK_HEADER_NAME = 'X-BYOK-Key';
+const BYOK_HEADER_NAME = 'X-BYOK-Key';
 
 /** OpenAI model name used for BYOK (without provider prefix) */
 export const BYOK_OPENAI_MODEL = 'gpt-5-mini';

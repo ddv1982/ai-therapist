@@ -169,15 +169,6 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
     },
   });
 
-  const setMessages = useCallback(
-    (newMessages: MessageData[] | ((prev: MessageData[]) => MessageData[])) =>
-      setMessagesState(newMessages),
-    []
-  );
-  const setInput: React.Dispatch<React.SetStateAction<string>> = useCallback(
-    (value) => setInputState(value),
-    []
-  );
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => setInputState(e.target.value),
     []
@@ -411,8 +402,8 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
     error,
     handleInputChange,
     handleSubmit,
-    setInput,
-    setMessages,
+    setInput: setInputState,
+    setMessages: setMessagesState,
     reload,
     stop,
     clearSession,
@@ -421,7 +412,6 @@ export function useTherapyChat(options: UseTherapyChatOptions): UseTherapyChatRe
   };
 }
 
-export default useTherapyChat;
 
 // Re-export types for convenience
 export type { UseTherapyChatOptions, UseTherapyChatReturn } from './types';

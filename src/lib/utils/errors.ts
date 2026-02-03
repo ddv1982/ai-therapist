@@ -164,7 +164,7 @@ function recordErrorMetricProxy(
 // THERAPEUTIC ERROR PATTERNS
 // ============================================================================
 
-export const TherapeuticErrorPatterns = {
+const TherapeuticErrorPatterns = {
   SESSION_NOT_FOUND: {
     message: 'Session not found or access denied',
     category: 'permission' as ErrorCategory,
@@ -724,7 +724,7 @@ export class ServiceCircuitBreaker {
   }
 }
 
-export const circuitBreaker = new ServiceCircuitBreaker();
+const circuitBreaker = new ServiceCircuitBreaker();
 
 export async function withAIFallback<T>(
   operation: () => Promise<T>,

@@ -19,8 +19,6 @@
  * ```
  */
 
-import type { ConvexHttpClient } from 'convex/browser';
-
 /**
  * Mock query function type
  */
@@ -286,7 +284,7 @@ export const createMockResponses = {
 };
 
 // Mock document types that mirror the Convex types
-export interface MockUserDoc {
+interface MockUserDoc {
   _id: string;
   _creationTime: number;
   clerkId: string;
@@ -295,7 +293,7 @@ export interface MockUserDoc {
   imageUrl?: string;
 }
 
-export interface MockSessionDoc {
+interface MockSessionDoc {
   _id: string;
   _creationTime: number;
   userId: string;
@@ -306,7 +304,7 @@ export interface MockSessionDoc {
   status?: string;
 }
 
-export interface MockMessageDoc {
+interface MockMessageDoc {
   _id: string;
   _creationTime: number;
   sessionId: string;
@@ -316,7 +314,7 @@ export interface MockMessageDoc {
   metadata?: Record<string, unknown>;
 }
 
-export interface MockReportDoc {
+interface MockReportDoc {
   _id: string;
   _creationTime: number;
   sessionId: string;
@@ -327,62 +325,8 @@ export interface MockReportDoc {
   actionItems: string[];
 }
 
-export interface MockSessionBundle {
+interface MockSessionBundle {
   session: MockSessionDoc;
   messages: MockMessageDoc[];
   reports: MockReportDoc[];
-}
-
-/**
- * Helper to cast mock client to ConvexHttpClient for type compatibility
- */
-export function asMockConvexClient(mock: MockConvexClient): ConvexHttpClient {
-  return mock as unknown as ConvexHttpClient;
-}
-
-/**
- * Creates a sequence of mock responses for a query
- *
- * @example
- * ```typescript
- * mockQuery
- *   .mockImplementation(createQuerySequence([
- *     { api: 'users.getByClerkId', response: mockUser },
- *     { api: 'sessions.list', response: [mockSession1, mockSession2] },
- *   ]));
- * ```
- */
-export function createQuerySequence(
-  responses: Array<{ api: string; response: unknown }>
-): (api: string) => Promise<unknown> {
-  let callIndex = 0;
-
-  return (api: string): Promise<unknown> => {
-    const expected = responses[callIndex];
-    callIndex++;
-
-    if (!expected) {
-      return Promise.resolve(null);
-    }
-
-    if (expected.api !== api) {
-      throw new Error(`Query sequence mismatch: expected ${expected.api}, got ${api}`);
-    }
-
-    return Promise.resolve(expected.response);
-  };
-}
-
-/**
- * Creates a delayed response for testing async behavior
- */
-export function withDelay<T>(response: T, delayMs: number): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(response), delayMs));
-}
-
-/**
- * Creates a mock that throws an error
- */
-export function createErrorResponse(message: string): Promise<never> {
-  return Promise.reject(new Error(message));
 }

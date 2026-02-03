@@ -158,27 +158,6 @@ export interface CBTFormData {
   originalThoughtCredibility: number;
 }
 
-/**
- * CBT session state management
- */
-export interface CBTSessionState {
-  sessionId: string | null;
-  currentStep: string;
-  isActive: boolean;
-  isComplete: boolean;
-  lastModified: string | null;
-
-  // Step data
-  situation: SituationData | null;
-  emotions: EmotionData | null;
-  thoughts: ThoughtData[];
-  coreBeliefs: CoreBeliefData | null;
-  challengeQuestions: ChallengeQuestionData[];
-  rationalThoughts: RationalThoughtData[];
-  schemaModes: SchemaModeData[];
-  actionPlan: ActionPlanData | null;
-}
-
 // =============================================================================
 // UTILITY & HELPER TYPES
 // =============================================================================
@@ -218,36 +197,9 @@ export type CBTStepType =
   | 'actions'
   | 'complete';
 
-/**
- * Generic CBT step data container
- */
-export interface CBTStepData<T = unknown> {
-  id: string;
-  type: CBTStepType;
-  data: T;
-  completed: boolean;
-  lastModified: string;
-}
-
 // =============================================================================
 // PARSING & EXTRACTION TYPES (Simplified)
 // =============================================================================
-
-/**
- * Unified CBT data extraction result
- */
-export interface CBTExtractionResult {
-  situation: SituationData | null;
-  emotions: EmotionData | null;
-  thoughts: ThoughtData[] | null;
-  coreBeliefs: CoreBeliefData | null;
-  challengeQuestions: ChallengeQuestionData[] | null;
-  rationalThoughts: RationalThoughtData[] | null;
-  schemaModes: SchemaModeData[] | null;
-  actionPlan: ActionPlanData | null;
-  confidence: number;
-  rawContent: string;
-}
 
 /**
  * Obsessions and Compulsions data structures
@@ -286,19 +238,6 @@ export interface ParsedCBTData {
   parsingErrors: string[];
 }
 
-/**
- * CBT export data structure
- */
-export interface CBTExportData {
-  sessionId: string;
-  exportDate: string;
-  sessionData: CBTSessionState;
-  metadata: {
-    version: string;
-    format: string;
-  };
-}
-
 // =============================================================================
 // CONSTANTS & DEFAULTS
 // =============================================================================
@@ -306,7 +245,7 @@ export interface CBTExportData {
 /**
  * Default schema modes based on Schema Therapy
  */
-export const DEFAULT_SCHEMA_MODES: SchemaMode[] = [
+const DEFAULT_SCHEMA_MODES: SchemaMode[] = [
   {
     id: 'vulnerable-child',
     name: 'The Vulnerable Child',
@@ -354,7 +293,7 @@ export const DEFAULT_SCHEMA_MODES: SchemaMode[] = [
 /**
  * Default challenge questions for CBT work
  */
-export const DEFAULT_CHALLENGE_QUESTIONS: ChallengeQuestionData[] = [
+const DEFAULT_CHALLENGE_QUESTIONS: ChallengeQuestionData[] = [
   {
     question: 'What evidence supports this thought?',
     answer: '',
@@ -384,7 +323,7 @@ export const DEFAULT_CHALLENGE_QUESTIONS: ChallengeQuestionData[] = [
 /**
  * Creates initial empty emotion data
  */
-export const createEmptyEmotionData = (): EmotionData => ({
+const createEmptyEmotionData = (): EmotionData => ({
   fear: 0,
   anger: 0,
   sadness: 0,

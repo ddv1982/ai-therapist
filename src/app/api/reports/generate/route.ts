@@ -19,7 +19,7 @@ export const maxDuration = 300;
 export const POST = withAuth(async (request: NextRequest, context: AuthenticatedRequestContext) => {
   try {
     const convex = getAuthenticatedConvexClient(context.jwtToken);
-    const { REPORT_MODEL_ID } = await import('@/features/chat/config');
+    const { ANALYTICAL_MODEL_ID } = await import('@/features/chat/config');
 
     // Check for BYOK key - user's own OpenAI API key
     const byokApiKey = extractBYOKKey(request.headers);
@@ -37,8 +37,8 @@ export const POST = withAuth(async (request: NextRequest, context: Authenticated
         modelUsed: effectiveModelId,
       });
     } else {
-      modelToUse = languageModels[REPORT_MODEL_ID as keyof typeof languageModels];
-      effectiveModelId = REPORT_MODEL_ID;
+      modelToUse = languageModels[ANALYTICAL_MODEL_ID as keyof typeof languageModels];
+      effectiveModelId = ANALYTICAL_MODEL_ID;
     }
 
     logger.info('Report generation request received', {

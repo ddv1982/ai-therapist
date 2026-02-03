@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
@@ -8,14 +7,6 @@ import { routing, type Locale } from '@/i18n/routing';
 import { RootProviders } from '@/app/providers';
 import { SessionAIProvider } from '@/app/ai/session-ai';
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-  preload: true, // Preload font for faster render
-  fallback: ['system-ui', 'arial'],
-  adjustFontFallback: true, // Show fallback while loading
-});
 export const metadata: Metadata = {
   title: 'Therapist AI - Compassionate AI Therapy Support',
   description:
@@ -58,7 +49,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     return (
       <html
         lang={routing.defaultLocale}
-        className={inter.variable}
         data-scroll-behavior="smooth"
         suppressHydrationWarning
       >
@@ -99,7 +89,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       lang={resolvedLocale}
-      className={inter.variable}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >

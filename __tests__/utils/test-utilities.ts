@@ -31,7 +31,6 @@ declare global {
     };
   }
 }
-import { jest } from '@jest/globals';
 import type { AuthValidationResult } from '@/lib/api/api-auth';
 import { ChatUIProvider, type ChatUIBridge } from '@/contexts/chat-ui-context';
 import type { logger as AppLogger } from '@/lib/utils/logger';
@@ -575,7 +574,7 @@ interface TestProvidersProps {
  * // Using with render
  * const { getByTestId } = render(<CBTForm />, { wrapper: TestProviders });
  */
-export function TestProviders({ children }: TestProvidersProps) {
+function TestProviders({ children }: TestProvidersProps) {
   // Using React.createElement instead of JSX because this is a .ts file
   return React.createElement(
     ToastProvider,

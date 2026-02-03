@@ -56,7 +56,6 @@ export const messageDesignSystem = {
 
 // Type definitions
 export type MessageRole = 'user' | 'assistant';
-export type MessageVariant = keyof typeof messageVariants;
 
 /**
  * Get design tokens for a specific message role

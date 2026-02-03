@@ -14,7 +14,6 @@ import { z } from 'zod';
 // ============================================================================
 
 export const sessionStatuses = ['active', 'completed'] as const;
-export type SessionStatus = (typeof sessionStatuses)[number];
 
 export const sessionStatusSchema = z.enum(sessionStatuses);
 
@@ -36,8 +35,6 @@ export const sessionTitleSchema = z
   .max(200, 'Session title too long (max 200 characters)')
   .transform((title) => title.trim());
 
-export type SessionTitle = z.infer<typeof sessionTitleSchema>;
-
 // ============================================================================
 // CREATE SESSION SCHEMA
 // ============================================================================
@@ -48,8 +45,6 @@ export type SessionTitle = z.infer<typeof sessionTitleSchema>;
 export const createSessionSchema = z.object({
   title: sessionTitleSchema,
 });
-
-export type CreateSessionInput = z.infer<typeof createSessionSchema>;
 
 // ============================================================================
 // UPDATE SESSION SCHEMA
@@ -70,8 +65,6 @@ export const updateSessionSchema = z
     message: 'At least one field must be provided for update',
   });
 
-export type UpdateSessionInput = z.infer<typeof updateSessionSchema>;
-
 // ============================================================================
 // SESSION ID SCHEMA
 // ============================================================================
@@ -82,8 +75,6 @@ export type UpdateSessionInput = z.infer<typeof updateSessionSchema>;
 export const sessionIdSchema = z.object({
   id: z.string().min(1, 'Session ID cannot be empty'),
 });
-
-export type SessionIdInput = z.infer<typeof sessionIdSchema>;
 
 // ============================================================================
 // FULL SESSION SCHEMA
@@ -104,5 +95,3 @@ export const sessionSchema = z.object({
   createdAt: z.number().int().positive(),
   updatedAt: z.number().int().positive(),
 });
-
-export type SessionInput = z.infer<typeof sessionSchema>;

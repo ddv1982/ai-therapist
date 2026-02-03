@@ -138,7 +138,7 @@ export interface LogContext {
   [key: string]: unknown;
 }
 
-export interface LogEntry {
+interface LogEntry {
   level: LogLevel;
   message: string;
   context?: LogContext;
@@ -505,35 +505,4 @@ export function createRequestLogger(
     method: req.method,
     url: req.url,
   };
-}
-
-// Helper for safely logging objects with potential circular references
-export function safeStringify(obj: unknown, maxDepth = 3): string {
-  const seen = new WeakSet();
-
-  function stringify(value: unknown, depth = 0): unknown {
-    if (depth > maxDepth) return '[Max depth reached]';
-    if (value === null) return null;
-    if (typeof value !== 'object') return value;
-    if (seen.has(value)) return '[Circular reference]';
-
-    seen.add(value);
-
-    if (Array.isArray(value)) {
-      return value.map((item) => stringify(item, depth + 1));
-    }
-
-    const result: Record<string, unknown> = {};
-    for (const [key, val] of Object.entries(value)) {
-      result[key] = stringify(val, depth + 1);
-    }
-
-    return result;
-  }
-
-  try {
-    return JSON.stringify(stringify(obj));
-  } catch {
-    return '[Failed to stringify object]';
-  }
 }

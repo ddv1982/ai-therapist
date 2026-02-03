@@ -34,7 +34,7 @@ export interface Metric {
 /**
  * Performance thresholds for alerting
  */
-export const PERFORMANCE_THRESHOLDS = {
+const PERFORMANCE_THRESHOLDS = {
   API_LATENCY_WARNING: 500, // ms
   API_LATENCY_CRITICAL: 1000, // ms
   DATABASE_QUERY_WARNING: 200, // ms

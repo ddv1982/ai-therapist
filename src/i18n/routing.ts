@@ -10,5 +10,3 @@ export const routing = defineRouting({
 
 // Export types for backwards compatibility with existing code
 export type Locale = (typeof routing.locales)[number];
-export const locales = routing.locales;
-export const defaultLocale = routing.defaultLocale;

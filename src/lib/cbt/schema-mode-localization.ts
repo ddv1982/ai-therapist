@@ -95,7 +95,7 @@ function normalizeSchemaModeKey(value: string): string {
   return normalized;
 }
 
-export function getSchemaModeLabel(
+function getSchemaModeLabel(
   modeId: string,
   locale: SupportedLocale,
   style: SchemaModeLabelStyle = 'report'
@@ -107,7 +107,7 @@ export function getSchemaModeLabel(
   return style === 'ui' ? entry.nlUi : entry.nl;
 }
 
-export function getSchemaModeDescription(
+function getSchemaModeDescription(
   modeId: string,
   locale: SupportedLocale
 ): string | undefined {
