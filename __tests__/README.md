@@ -136,7 +136,7 @@ expect(message.content).toHaveTherapeuticStructure();
 ### Jest Configuration Enhancements
 
 ```javascript
-// Enhanced jest.config.js optimizations
+// Enhanced jest.config.ts optimizations
 module.exports = createJestConfig({
   // ... existing config
 

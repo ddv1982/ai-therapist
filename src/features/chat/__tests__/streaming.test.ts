@@ -8,7 +8,7 @@ const {
   collectStreamToString,
 } = require('@/features/chat/lib/streaming');
 
-// Mock ai.streamText from jest.setup.js already returns a Response-like object
+// Mock ai.streamText from jest.setup.ts already returns a Response-like object
 const { streamText } = jest.requireMock('ai');
 
 class TestReadableStream {

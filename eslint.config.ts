@@ -1,12 +1,85 @@
+import path from 'node:path';
+import type { Linter, Rule } from 'eslint';
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import reactPerfPlugin from 'eslint-plugin-react-perf';
-import unicornPlugin from 'eslint-plugin-unicorn';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import prettierConfig from 'eslint-config-prettier';
 
-/** @type {import('eslint').Linter.Config[]} */
-export default [
+const ignoredFilenames = new Set([
+  'index.js',
+  'index.mjs',
+  'index.cjs',
+  'index.ts',
+  'index.tsx',
+  'index.jsx',
+  'index.vue',
+]);
+
+const kebabCaseRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const filenameCaseRule: Rule.RuleModule = {
+  meta: {
+    type: 'suggestion',
+    docs: {
+      description: 'Enforce kebab-case filenames',
+    },
+    schema: [],
+    messages: {
+      kebabCase: 'Filename "{{name}}" should be kebab-case.',
+      extension: 'File extension "{{extension}}" should be lowercase.',
+    },
+  },
+  create(context) {
+    const physicalFilename = context.physicalFilename ?? context.getFilename();
+    if (physicalFilename === '<input>' || physicalFilename === '<text>') {
+      return {};
+    }
+
+    const basename = path.basename(physicalFilename);
+    if (ignoredFilenames.has(basename)) {
+      return {};
+    }
+
+    const extension = path.extname(basename);
+    const filename = path.basename(basename, extension);
+    const primaryName = filename.split('.')[0] ?? filename;
+    const match = /^(_+)?(.*)$/.exec(primaryName);
+    const coreName = match?.[2] ?? primaryName;
+
+    return {
+      Program(node) {
+        if (extension && extension !== extension.toLowerCase()) {
+          context.report({
+            node,
+            messageId: 'extension',
+            data: { extension },
+          });
+        }
+
+        if (!coreName) {
+          return;
+        }
+
+        if (!kebabCaseRegex.test(coreName)) {
+          context.report({
+            node,
+            messageId: 'kebabCase',
+            data: { name: basename },
+          });
+        }
+      },
+    };
+  },
+};
+
+const localPlugin = {
+  rules: {
+    'filename-case': filenameCaseRule,
+  },
+};
+
+const config: Linter.Config[] = [
   {
     ignores: [
       'node_modules/**',
@@ -24,7 +97,13 @@ export default [
     ],
   },
   {
-    files: ['__tests__/**/*.{ts,tsx}', 'e2e/**/*.{ts,tsx}', 'convex/**/*.ts', 'scripts/**/*.js'],
+    files: [
+      '__tests__/**/*.{ts,tsx}',
+      'e2e/**/*.{ts,tsx}',
+      'convex/**/*.ts',
+      'scripts/**/*.js',
+      'scripts/**/*.ts',
+    ],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-require-imports': 'off',
@@ -45,7 +124,7 @@ export default [
       '@typescript-eslint': tsPlugin,
       'react-hooks': reactHooksPlugin,
       'react-perf': reactPerfPlugin,
-      unicorn: unicornPlugin,
+      local: localPlugin,
     },
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
@@ -55,7 +134,7 @@ export default [
         { selector: 'typeLike', format: ['PascalCase'] },
         { selector: 'enumMember', format: ['PascalCase', 'UPPER_CASE'] },
       ],
-      'unicorn/filename-case': ['warn', { cases: { kebabCase: true } }],
+      'local/filename-case': 'warn',
       'react-perf/jsx-no-new-object-as-prop': 'off',
       'react-perf/jsx-no-new-function-as-prop': 'off',
       'react-perf/jsx-no-new-array-as-prop': 'off',
@@ -109,7 +188,14 @@ export default [
     },
   },
   {
-    files: ['scripts/**/*.js', 'jest.setup.js', 'jest.config.js', '*.config.js'],
+    files: [
+      'scripts/**/*.js',
+      'scripts/**/*.ts',
+      'jest.setup.ts',
+      'jest.config.ts',
+      '*.config.js',
+      '*.config.ts',
+    ],
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
@@ -123,8 +209,10 @@ export default [
     files: ['convex/**/*.ts'],
     rules: {
       // Convex doesn't allow hyphens in filenames (only alphanumeric, underscores, periods)
-      'unicorn/filename-case': 'off',
+      'local/filename-case': 'off',
     },
   },
   prettierConfig,
 ];
+
+export default config;

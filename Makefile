@@ -76,7 +76,6 @@ setup: $(STAMP_NODE) env encryption-ok $(API_TYPES) playwright ## Intelligent se
 		sleep 2; \
 		trap "echo \"🛑 Stopping Next.js and Convex...\"; $(MAKE) -s next-stop >/dev/null 2>&1 || true; kill $$CONVEX_PID 2>/dev/null || true; $(MAKE) -s convex-stop >/dev/null 2>&1 || true" INT TERM EXIT; \
 		echo "🌐 Starting Next dev..."; \
-		CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} \
 		$(BUN) run dev; \
 	'
 
@@ -92,7 +91,6 @@ dev: ## Start dev (Convex + Next; Ctrl+C cleanly stops both)
 		sleep 2; \
 		trap "echo \"🛑 Stopping Next.js and Convex...\"; $(MAKE) -s next-stop >/dev/null 2>&1 || true; kill $$CONVEX_PID 2>/dev/null || true; $(MAKE) -s convex-stop >/dev/null 2>&1 || true" INT TERM EXIT; \
 		echo "🌐 Starting Next dev..."; \
-		CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} \
 		$(BUN) run dev; \
 	'
 
@@ -103,7 +101,7 @@ build: install ## Build for production
 	@$(MAKE) next-build
 
 next-build: ## Always run the Next.js build
-	@CORS_ALLOWED_ORIGIN=$${CORS_ALLOWED_ORIGIN:-$$(node scripts/ensure-cors-origin.js)} $(BUN) run build
+	@$(BUN) run build
 
 # ----- Setup building blocks -----
 
@@ -185,15 +183,7 @@ $(API_TYPES): $(API_SPEC)
 	@$(BUN) run -s api:types >/dev/null 2>&1 && echo "✅ done"
 
 encryption-ok:
-	@printf "🔎 Checking encryption... "
-	@if grep -q '^ENCRYPTION_KEY=' $(ENV_FILE) 2>/dev/null; then \
-		echo "✅ configured"; \
-	else \
-		echo "⚠️  missing - generating..."; \
-		KEY=$$($(BUN) run -s encryption:generate); \
-		echo "ENCRYPTION_KEY=\"$$KEY\"" >> $(ENV_FILE); \
-		echo "✅ encryption key added to $(ENV_FILE)"; \
-	fi
+	@$(BUN) run encryption:setup
 
 # ----- Cleanup -----
 

@@ -101,6 +101,16 @@ function setupGlobalMocks() {
     useSearchParams: jest.fn(() => new URLSearchParams()),
   }));
 
+  // Mock Next.js Link to a simple anchor to avoid ESM runtime issues in tests
+  jest.mock('next/link', () => {
+    const React = require('react');
+    return {
+      __esModule: true,
+      default: ({ href, children, ...props }: any) =>
+        React.createElement('a', { href, ...props }, children),
+    };
+  });
+
   // Mock Lucide React icons globally
   jest.mock('lucide-react', () => MockFactory.createLucideIconMocks());
 

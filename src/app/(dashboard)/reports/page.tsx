@@ -21,7 +21,9 @@ export default function ReportsPage() {
             <div className="bg-muted mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
               <FileText className="text-muted-foreground h-8 w-8" />
             </div>
-            <CardTitle className="text-xl font-semibold">{t('comingSoon.title')}</CardTitle>
+            <h2 className="text-xl leading-none font-semibold tracking-tight">
+              {t('comingSoon.title')}
+            </h2>
             <CardDescription className="text-base">{t('comingSoon.desc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 text-center">

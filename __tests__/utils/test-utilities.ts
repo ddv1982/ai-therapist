@@ -66,6 +66,10 @@ export class MockFactory {
         React.createElement('div', { 'data-testid': 'menu-icon', className, ...props }),
       FileText: ({ className, ...props }: any) =>
         React.createElement('div', { 'data-testid': 'filetext-icon', className, ...props }),
+      Calendar: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'calendar-icon', className, ...props }),
+      ArrowRight: ({ className, ...props }: any) =>
+        React.createElement('div', { 'data-testid': 'arrow-right-icon', className, ...props }),
       Brain: ({ className, ...props }: any) =>
         React.createElement('div', { 'data-testid': 'brain-icon', className, ...props }),
       Sparkles: ({ className, ...props }: any) =>

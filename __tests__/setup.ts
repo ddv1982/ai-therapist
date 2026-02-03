@@ -36,16 +36,3 @@ jest.mock('@clerk/nextjs', () => ({
   UserButton: () => null,
   UserProfile: () => null,
 }));
-
-// Ensure X-Request-Id exists in tests for API middleware
-if (typeof global.Headers !== 'undefined') {
-  const OriginalHeaders = global.Headers;
-  global.Headers = class TestHeaders extends OriginalHeaders {
-    constructor(init?: HeadersInit) {
-      super(init);
-      if (!this.get('x-request-id')) {
-        this.set('x-request-id', 'test-request');
-      }
-    }
-  };
-}
