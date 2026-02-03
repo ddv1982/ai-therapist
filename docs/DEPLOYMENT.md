@@ -141,7 +141,6 @@ Production deployment on the main branch.
    ```
 
 3. **Update version (if applicable):**
-
    - Edit `package.json` and bump the `version` field
 
 4. **Push changes and create PR:**

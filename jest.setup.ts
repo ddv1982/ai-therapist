@@ -169,9 +169,15 @@ jest.mock(
   () => {
     return {
       zodResolver: (schema: any, _schemaOptions: any, resolverOptions: any) => {
-        return async (values: unknown, _ctx: unknown, options: { shouldUseNativeValidation?: boolean }) => {
+        return async (
+          values: unknown,
+          _ctx: unknown,
+          options: { shouldUseNativeValidation?: boolean }
+        ) => {
           try {
-            const parsed = await (schema.parseAsync ? schema.parseAsync(values) : schema.parse(values));
+            const parsed = await (schema.parseAsync
+              ? schema.parseAsync(values)
+              : schema.parse(values));
             if (options && options.shouldUseNativeValidation) {
               // no-op in tests
             }
@@ -180,7 +186,9 @@ jest.mock(
             const issues = (e && (e.issues || e.errors)) || [];
             const errors: Record<string, { message: string; type: string }> = {};
             for (const issue of issues) {
-              const path = Array.isArray(issue.path) ? issue.path.join('.') : String(issue.path || '');
+              const path = Array.isArray(issue.path)
+                ? issue.path.join('.')
+                : String(issue.path || '');
               if (!errors[path]) errors[path] = { message: issue.message, type: issue.code };
             }
             return { values: {}, errors };
@@ -276,7 +284,9 @@ jest.mock('streamdown', () => {
           )
         );
       } else {
-        elements.push(React.createElement('p', { key: `p-${elements.length}` }, block.replace(/\n/g, ' ')));
+        elements.push(
+          React.createElement('p', { key: `p-${elements.length}` }, block.replace(/\n/g, ' '))
+        );
       }
     }
     return React.createElement('div', { className }, elements);
