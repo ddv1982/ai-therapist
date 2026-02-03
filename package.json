@@ -13,16 +13,18 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0 --port 4000",
     "start:local": "next start --hostname localhost --port 4000",
-    "lint": "BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true eslint .",
+    "lint": "eslint .",
     "knip": "knip",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy",
     "api:types": "openapi-typescript docs/api.yaml -o src/types/api.generated.ts",
-    "encryption:generate": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\"",
-    "env:init": "node scripts/setup-env-local.js",
-    "i18n:types": "node scripts/generate-i18n-types.js",
+    "encryption:generate": "bun scripts/encryption-generate.ts",
+    "encryption:setup": "bun scripts/encryption-setup.ts",
+    "env:init": "bun scripts/setup-env-local.ts",
+    "env:check": "bun scripts/check-env-parity.ts",
+    "i18n:types": "bun scripts/generate-i18n-types.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -30,13 +32,24 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",
-    "ci:check": "BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true eslint . && tsc --noEmit && prettier --check . && jest",
-    "qa:smoke": "openapi-typescript docs/api.yaml -o src/types/api.generated.ts && BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true eslint . && tsc --noEmit && jest",
-    "qa:full": "CI=1 openapi-typescript docs/api.yaml -o src/types/api.generated.ts && CI=1 BASELINE_BROWSER_MAPPING_IGNORE_OLD_DATA=true eslint . && CI=1 tsc --noEmit && CI=1 jest --coverage && playwright install --with-deps || true && CI=1 playwright test && node scripts/print-coverage-summary.mjs",
+    "baseline:update": "bun add -d baseline-browser-mapping@latest",
+    "ci:check": "eslint . && tsc --noEmit && prettier --check . && jest",
+    "qa:smoke": "openapi-typescript docs/api.yaml -o src/types/api.generated.ts && eslint . && tsc --noEmit && jest",
+    "qa:full": "CI=1 openapi-typescript docs/api.yaml -o src/types/api.generated.ts && CI=1 eslint . && CI=1 tsc --noEmit && CI=1 jest --coverage && playwright install --with-deps || true && CI=1 playwright test && bun scripts/print-coverage-summary.ts",
     "analyze": "ANALYZE=true next build",
     "analyze:server": "ANALYZE=true BUNDLE_ANALYZE=server next build",
     "analyze:browser": "ANALYZE=true BUNDLE_ANALYZE=browser next build",
     "prepare": "husky"
+  },
+  "browserslist": {
+    "production": [
+      "baseline widely available on 2025-12-01"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "dependencies": {
     "@ai-sdk/groq": "^3.0.19",
@@ -90,11 +103,11 @@
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "autoprefixer": "^10.4.24",
+    "baseline-browser-mapping": "^2.9.19",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-perf": "^3.3.3",
-    "eslint-plugin-unicorn": "^62.0.0",
     "husky": "^9.1.7",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^30.2.0",
@@ -105,7 +118,11 @@
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.1.18",
+    "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "web-streams-polyfill": "^4.2.0"
+  },
+  "overrides": {
+    "baseline-browser-mapping": "^2.9.19"
   }
 }

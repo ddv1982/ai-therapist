@@ -22,7 +22,7 @@ This guide will help you get the AI Therapist application running locally in und
 | Tool    | Version | Check Command    | Installation                                         |
 | ------- | ------- | ---------------- | ---------------------------------------------------- |
 | Node.js | 24+     | `node --version` | [nodejs.org](https://nodejs.org) or `nvm install 24` |
-| npm     | 10+     | `npm --version`  | Comes with Node.js                                   |
+| Bun     | 1.2+    | `bun --version`  | [bun.sh](https://bun.sh)                             |
 | Git     | 2.40+   | `git --version`  | [git-scm.com](https://git-scm.com)                   |
 
 ### Required Accounts
@@ -51,7 +51,7 @@ git clone <repository-url>
 cd ai-therapist
 bun install
 
-# 2. Set up environment (creates .env.local with prompts)
+# 2. Set up environment (creates .env.local from template)
 bun run env:init
 
 # 3. Generate encryption key
@@ -130,11 +130,11 @@ This installs all required packages including:
 Create a `.env.local` file in the project root:
 
 ```bash
-# Run the interactive setup script
+# Run the setup script (creates .env.local from .env.local.example)
 bun run env:init
 
 # Or create manually
-cp .env.example .env.local
+cp .env.local.example .env.local
 ```
 
 Required environment variables:
@@ -167,7 +167,7 @@ LOG_LEVEL=debug
 bun run encryption:setup
 ```
 
-This generates a secure 32-character encryption key for encrypting therapeutic message content.
+This generates a secure 32-byte (base64) encryption key for encrypting therapeutic message content.
 
 ### Step 8: Start Development Servers
 
@@ -330,7 +330,7 @@ PORT=4001 bun run dev
 
 **Solutions:**
 
-1. Ensure `npm run convex:dev` is running
+1. Ensure `bun run convex:dev` is running
 2. Check `.env.local` has correct CONVEX_URL
 3. Run `npx convex dev` to re-authenticate
 

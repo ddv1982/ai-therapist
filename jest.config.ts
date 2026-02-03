@@ -1,13 +1,13 @@
 import nextJest from 'next/jest.js';
 
 const createJestConfig = nextJest({
-  // Provide the path to your Next.js app to load next.config.js and .env files
+  // Provide the path to your Next.js app to load next.config.ts and .env files
   dir: './',
 });
 
 // Add any custom config to be passed to Jest
 const customJestConfig = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js', '<rootDir>/__tests__/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts', '<rootDir>/__tests__/setup.ts'],
   testEnvironment: 'jest-environment-jsdom',
   testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/', '<rootDir>/e2e/'],
   collectCoverageFrom: [
@@ -70,9 +70,9 @@ const customJestConfig = {
     '^@tests/(.*)$': '<rootDir>/__tests__/$1',
     // Mock static assets
     '\\.(css|less|sass|scss|png|jpg|jpeg|gif|webp|svg)$': 'identity-obj-proxy',
-    '^next-intl$': '<rootDir>/__tests__/__mocks__/next-intl.js',
-    '^next-intl/routing$': '<rootDir>/__tests__/__mocks__/next-intl.js',
-    '^@ai-sdk/rsc$': '<rootDir>/__tests__/__mocks__/@ai-sdk/rsc.js',
+    '^next-intl$': '<rootDir>/__tests__/__mocks__/next-intl.ts',
+    '^next-intl/routing$': '<rootDir>/__tests__/__mocks__/next-intl.ts',
+    '^@ai-sdk/rsc$': '<rootDir>/__tests__/__mocks__/@ai-sdk/rsc.ts',
   },
   transformIgnorePatterns: [
     'node_modules/(?!(jspdf|canvas|@ai-sdk|ai|streamdown|react-markdown|remark-gfm|vfile|unist-util-.*|bail|is-plain-obj|@clerk))',

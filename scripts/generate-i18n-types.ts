@@ -1,13 +1,12 @@
-#!/usr/bin/env node
-
+#!/usr/bin/env bun
 /**
  * Generates TypeScript types from translation JSON files
  * Provides autocomplete and type safety for translation keys
  */
 
-import { readFileSync, writeFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
@@ -15,15 +14,15 @@ const projectRoot = join(__dirname, '..');
 /**
  * Recursively generates TypeScript type definitions from nested objects
  */
-function generateTypeFromObject(obj, indent = 0) {
+function generateTypeFromObject(obj: Record<string, unknown>, indent = 0): string {
   const indentStr = '  '.repeat(indent);
-  const lines = [];
+  const lines: string[] = [];
 
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       // Nested object
       lines.push(`${indentStr}${JSON.stringify(key)}: {`);
-      lines.push(generateTypeFromObject(value, indent + 1));
+      lines.push(generateTypeFromObject(value as Record<string, unknown>, indent + 1));
       lines.push(`${indentStr}}`);
     } else if (Array.isArray(value)) {
       // Array of strings
@@ -40,14 +39,14 @@ function generateTypeFromObject(obj, indent = 0) {
 /**
  * Flattens nested object to dot notation paths for IntlMessages type
  */
-function flattenKeys(obj, prefix = '') {
-  const keys = [];
+function flattenKeys(obj: Record<string, unknown>, prefix = ''): string[] {
+  const keys: string[] = [];
 
   for (const [key, value] of Object.entries(obj)) {
     const path = prefix ? `${prefix}.${key}` : key;
 
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      keys.push(...flattenKeys(value, path));
+      keys.push(...flattenKeys(value as Record<string, unknown>, path));
     } else {
       keys.push(path);
     }
@@ -56,12 +55,12 @@ function flattenKeys(obj, prefix = '') {
   return keys;
 }
 
-function generateTypes() {
+function generateTypes(): void {
   console.log('Generating i18n types from en.json...\n');
 
   // Read English messages (source of truth)
   const messagesPath = join(projectRoot, 'src', 'i18n', 'messages', 'en.json');
-  const messages = JSON.parse(readFileSync(messagesPath, 'utf-8'));
+  const messages = JSON.parse(readFileSync(messagesPath, 'utf-8')) as Record<string, unknown>;
 
   // Generate nested interface
   const nestedType = generateTypeFromObject(messages, 1);
@@ -73,7 +72,7 @@ function generateTypes() {
   // Generate TypeScript declaration file
   const typeDefinition = `/**
  * Auto-generated translation types from en.json
- * Run 'npm run i18n:types' to regenerate
+ * Run 'bun run i18n:types' to regenerate
  * 
  * @generated
  * DO NOT EDIT MANUALLY

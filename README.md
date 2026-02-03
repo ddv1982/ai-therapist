@@ -17,8 +17,8 @@ AI-powered mental health support with enterprise-grade security and professional
 bun install
 
 # 2. Set up environment
-cp .env.local.example .env.local
-bun run encryption:generate  # Copy output to ENCRYPTION_KEY in .env.local
+bun run env:init
+bun run encryption:setup
 
 # 3. Configure services
 # - Clerk: Create app at clerk.com, add keys to .env.local

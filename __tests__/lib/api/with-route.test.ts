@@ -4,7 +4,7 @@ import {
   withRateLimitUnauthenticated,
 } from '@/lib/api/api-middleware';
 
-// Use global NextResponse mock from jest.setup.js
+// Use global NextResponse mock from jest.setup.ts
 const { NextResponse } = jest.requireMock('next/server');
 
 jest.mock('@/lib/api/api-auth', () => ({

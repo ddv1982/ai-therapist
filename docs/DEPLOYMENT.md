@@ -19,9 +19,9 @@ This document outlines the deployment process for the AI Therapist application, 
 ### Required Tools
 
 - **Node.js** 24+ (`node --version`)
-- **npm** 10+ (`npm --version`)
+- **Bun** 1.2+ (`bun --version`)
 - **Git** 2.40+ (`git --version`)
-- **Convex CLI** (`npx convex --version`)
+- **Convex CLI** (`bunx convex --version`)
 
 ### Required Accounts
 
@@ -58,16 +58,16 @@ The application requires the following environment variables to run:
 
 ### Setting Up Environment
 
-1. **Copy the example configuration:**
+1. **Initialize the environment file:**
 
    ```bash
-   cp .env.example .env.local
+   bun run env:init
    ```
 
 2. **Generate encryption key:**
 
    ```bash
-   npm run encryption:generate
+   bun run encryption:setup
    ```
 
 3. **Configure Clerk:**
@@ -79,7 +79,7 @@ The application requires the following environment variables to run:
      ```
 
 4. **Configure Convex:**
-   - Run `npx convex dev` to set up Convex
+   - Run `bun run convex:dev` to set up Convex
    - Copy the deployment URL:
      ```env
      NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
@@ -87,7 +87,7 @@ The application requires the following environment variables to run:
 
 5. **Validate configuration:**
    ```bash
-   ./scripts/check-env-parity.sh --verbose
+   bun run env:check -- --verbose
    ```
 
 ---
@@ -100,10 +100,10 @@ Local development environment for active development.
 
 ```bash
 # Start development server
-npm run dev
+bun run dev
 
 # Or with local-only binding
-npm run dev:local
+bun run dev:local
 ```
 
 ### Staging (Preview)
@@ -141,10 +141,7 @@ Production deployment on the main branch.
    ```
 
 3. **Update version (if applicable):**
-
-   ```bash
-   npm version patch|minor|major
-   ```
+   - Edit `package.json` and bump the `version` field
 
 4. **Push changes and create PR:**
 
@@ -296,7 +293,7 @@ The E2E tests require both Convex and Next.js servers:
 
 ```bash
 # Ensure Convex is running
-bunx convex dev &
+bun run convex:dev &
 
 # Then run E2E tests
 bun run test:e2e
@@ -308,7 +305,7 @@ bun run test:e2e
 2. Verify variable names (must match exactly)
 3. Run validation script:
    ```bash
-   ./scripts/check-env-parity.sh --verbose
+   bun run env:check -- --verbose
    ```
 
 #### Clerk Authentication Errors
@@ -369,7 +366,7 @@ bun run qa:full
 bun run analyze
 
 # Check environment
-./scripts/check-env-parity.sh --verbose
+bun run env:check -- --verbose
 
 # Generate API types
 bun run api:types

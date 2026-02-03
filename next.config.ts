@@ -1,6 +1,7 @@
-/** @type {import('next').NextConfig} */
+import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
 import bundleAnalyzer from '@next/bundle-analyzer';
+import path from 'node:path';
 
 const withNextIntl = createNextIntlPlugin({
   requestConfig: './i18n/request.ts',
@@ -19,14 +20,10 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-import path from 'path';
-
-const isDevelopment = process.env.NODE_ENV === 'development';
-
-const nextConfig = {
+const nextConfig: NextConfig = {
   serverExternalPackages: [],
   devIndicators: false,
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config, { dev }) => {
     if (dev) {
       config.devtool = false;
       // Use in-memory cache in development to avoid pack-file serialization overhead

@@ -1,10 +1,150 @@
 import '@testing-library/jest-dom';
 
+if (typeof global.Headers === 'undefined') {
+  class BasicHeaders {
+    private map = new Map<string, string>();
+
+    constructor(init?: HeadersInit) {
+      if (!init) return;
+      if (Array.isArray(init)) {
+        for (const [key, value] of init) {
+          this.set(String(key), String(value));
+        }
+      } else if (init instanceof BasicHeaders) {
+        for (const [key, value] of init.entries()) {
+          this.set(key, value);
+        }
+      } else if (typeof init === 'object') {
+        for (const [key, value] of Object.entries(init)) {
+          this.set(key, String(value));
+        }
+      }
+    }
+
+    get(name: string) {
+      return this.map.get(name.toLowerCase()) ?? null;
+    }
+
+    set(name: string, value: string) {
+      this.map.set(name.toLowerCase(), String(value));
+    }
+
+    append(name: string, value: string) {
+      const key = name.toLowerCase();
+      const existing = this.map.get(key);
+      this.map.set(key, existing ? `${existing}, ${value}` : String(value));
+    }
+
+    has(name: string) {
+      return this.map.has(name.toLowerCase());
+    }
+
+    forEach(callback: (value: string, key: string) => void) {
+      for (const [key, value] of this.map.entries()) {
+        callback(value, key);
+      }
+    }
+
+    entries() {
+      return this.map.entries();
+    }
+
+    [Symbol.iterator]() {
+      return this.entries();
+    }
+  }
+
+  global.Headers = BasicHeaders as unknown as typeof global.Headers;
+}
+
+if (typeof global.Request === 'undefined') {
+  class BasicRequest {
+    url: string;
+    method: string;
+    headers: Headers;
+    body?: BodyInit | null;
+
+    constructor(input: string, init?: RequestInit) {
+      this.url = input;
+      this.method = init?.method ?? 'GET';
+      this.headers = new global.Headers(init?.headers as HeadersInit);
+      this.body = init?.body ?? null;
+    }
+  }
+  global.Request = BasicRequest as unknown as typeof global.Request;
+}
+
+if (typeof global.Response === 'undefined') {
+  class BasicResponse {
+    headers: Headers;
+    status: number;
+    ok: boolean;
+    body?: BodyInit | null;
+
+    constructor(body?: BodyInit | null, init?: ResponseInit) {
+      this.body = body ?? null;
+      this.status = init?.status ?? 200;
+      this.headers = new global.Headers(init?.headers as HeadersInit);
+      this.ok = this.status >= 200 && this.status < 300;
+    }
+
+    static json(data: unknown, init?: ResponseInit) {
+      const headers = new global.Headers(init?.headers as HeadersInit);
+      if (!headers.has('content-type')) {
+        headers.set('content-type', 'application/json');
+      }
+      return new BasicResponse(JSON.stringify(data), { ...init, headers });
+    }
+
+    async json() {
+      if (!this.body) return null;
+      if (typeof this.body === 'string') {
+        return JSON.parse(this.body);
+      }
+      return this.body;
+    }
+
+    async text() {
+      if (this.body === null || this.body === undefined) return '';
+      return typeof this.body === 'string' ? this.body : JSON.stringify(this.body);
+    }
+  }
+  global.Response = BasicResponse as unknown as typeof global.Response;
+}
+
+// Provide a consistent Next.js server mock for tests expecting NextResponse.json
+jest.mock('next/server', () => {
+  const BaseRequest = global.Request as typeof Request;
+  const BaseResponse = global.Response as typeof Response;
+
+  class MockNextRequest extends BaseRequest {}
+
+  class MockNextResponse extends BaseResponse {
+    static json(data: unknown, init?: ResponseInit) {
+      const headers = new global.Headers(init?.headers as HeadersInit);
+      if (!headers.has('content-type')) {
+        headers.set('content-type', 'application/json');
+      }
+      return new MockNextResponse(JSON.stringify(data), { ...init, headers });
+    }
+  }
+
+  return {
+    __esModule: true,
+    NextRequest: MockNextRequest,
+    NextResponse: MockNextResponse,
+  };
+});
+
+if (!process.env.ENCRYPTION_KEY) {
+  process.env.ENCRYPTION_KEY = 'test-encryption-key-32-chars-long-for-tests!';
+}
+
 // Polyfill getComputedStyle to avoid jsdom "Not implemented" when a pseudo-element argument is provided
 if (typeof window !== 'undefined' && typeof window.getComputedStyle === 'function') {
   const __originalGetComputedStyle = window.getComputedStyle.bind(window);
   Object.defineProperty(window, 'getComputedStyle', {
-    value: (elt) => {
+    value: (elt: Element) => {
       try {
         // Ignore the second pseudoElt argument to prevent jsdom from throwing
         return __originalGetComputedStyle(elt);
@@ -28,8 +168,12 @@ jest.mock(
   '@hookform/resolvers/zod',
   () => {
     return {
-      zodResolver: (schema, _schemaOptions, resolverOptions) => {
-        return async (values, _ctx, options) => {
+      zodResolver: (schema: any, _schemaOptions: any, resolverOptions: any) => {
+        return async (
+          values: unknown,
+          _ctx: unknown,
+          options: { shouldUseNativeValidation?: boolean }
+        ) => {
           try {
             const parsed = await (schema.parseAsync
               ? schema.parseAsync(values)
@@ -38,9 +182,9 @@ jest.mock(
               // no-op in tests
             }
             return { values: resolverOptions && resolverOptions.raw ? values : parsed, errors: {} };
-          } catch (e) {
+          } catch (e: any) {
             const issues = (e && (e.issues || e.errors)) || [];
-            const errors = {};
+            const errors: Record<string, { message: string; type: string }> = {};
             for (const issue of issues) {
               const path = Array.isArray(issue.path)
                 ? issue.path.join('.')
@@ -81,7 +225,7 @@ jest.mock('ai', () => ({
   streamText: jest.fn(() => ({
     toTextStreamResponse: jest.fn(() => new Response('test response')),
   })),
-  convertToModelMessages: jest.fn((messages) => messages),
+  convertToModelMessages: jest.fn((messages: unknown) => messages),
 }));
 
 // Polyfill web streams for Node test environment
@@ -98,8 +242,8 @@ if (!global.WritableStream) {
 
 // Mock AI SDK Groq Provider
 jest.mock('@ai-sdk/groq', () => ({
-  groq: jest.fn((modelId) => ({ modelId })),
-  createGroq: jest.fn(() => (modelId) => ({ modelId })),
+  groq: jest.fn((modelId: string) => ({ modelId })),
+  createGroq: jest.fn(() => (modelId: string) => ({ modelId })),
 }));
 
 // Mock AI SDK React
@@ -117,7 +261,7 @@ jest.mock('@ai-sdk/react', () => ({
 // Mock Streamdown to avoid ESM transform issues and keep tests fast
 jest.mock('streamdown', () => {
   const React = require('react');
-  function SimpleMarkdown({ children, className }) {
+  function SimpleMarkdown({ children, className }: { children: any; className?: string }) {
     if (!children) return null;
     const text = String(children);
     // Very lightweight markdown handling for tests:
@@ -126,15 +270,17 @@ jest.mock('streamdown', () => {
     // - Split paragraphs by double newlines
     const stripped = text.replace(/\*\*(.*?)\*\*/g, '$1');
     const blocks = stripped.split(/\n\n+/);
-    const elements = [];
+    const elements: React.ReactElement[] = [];
     for (const block of blocks) {
       const lines = block.split(/\n/);
-      if (lines.every((l) => l.trim().startsWith('- '))) {
+      if (lines.every((line) => line.trim().startsWith('- '))) {
         elements.push(
           React.createElement(
             'ul',
             { key: `ul-${elements.length}` },
-            lines.map((l, i) => React.createElement('li', { key: `li-${i}` }, l.trim().slice(2)))
+            lines.map((line, index) =>
+              React.createElement('li', { key: `li-${index}` }, line.trim().slice(2))
+            )
           )
         );
       } else {
@@ -168,7 +314,7 @@ Object.defineProperty(global, 'crypto', {
       }
       return uuid;
     },
-    getRandomValues: (array) => {
+    getRandomValues: (array: Uint8Array) => {
       // Use Math.random for testing (crypto would use secure random in real environment)
       for (let i = 0; i < array.length; i++) {
         array[i] = Math.floor(Math.random() * 256);
@@ -186,7 +332,7 @@ Object.defineProperty(global, 'crypto', {
 });
 
 // Allow crypto to be temporarily overridden in tests
-global.mockCrypto = (mockImplementation) => {
+(global as any).mockCrypto = (mockImplementation: any) => {
   Object.defineProperty(global, 'crypto', {
     value: mockImplementation,
     writable: true,
@@ -194,10 +340,11 @@ global.mockCrypto = (mockImplementation) => {
   });
 };
 
-global.restoreCrypto = () => {
+(global as any).restoreCrypto = () => {
   Object.defineProperty(global, 'crypto', {
     value: {
       randomUUID: () => {
+        // Generate a proper UUID v4 for testing
         const hex = '0123456789abcdef';
         let uuid = '';
         for (let i = 0; i < 36; i++) {
@@ -213,7 +360,8 @@ global.restoreCrypto = () => {
         }
         return uuid;
       },
-      getRandomValues: (array) => {
+      getRandomValues: (array: Uint8Array) => {
+        // Use Math.random for testing (crypto would use secure random in real environment)
         for (let i = 0; i < array.length; i++) {
           array[i] = Math.floor(Math.random() * 256);
         }
@@ -229,173 +377,3 @@ global.restoreCrypto = () => {
     configurable: true,
   });
 };
-
-// Mock environment variables
-process.env.ENCRYPTION_KEY =
-  process.env.ENCRYPTION_KEY || 'test-encryption-key-32-chars-long-for-testing';
-process.env.CSRF_SECRET = process.env.CSRF_SECRET || 'test-csrf-secret-for-testing';
-process.env.NEXTAUTH_SECRET =
-  process.env.NEXTAUTH_SECRET || 'test-nextauth-secret-32-characters-long!!!!';
-process.env.NEXTAUTH_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-process.env.NODE_ENV = 'test';
-// Ensure rate limiting is enabled by default in tests (individual suites may override)
-process.env.RATE_LIMIT_DISABLED = 'false';
-
-const REQUIRED_ENV_DEFAULTS = {
-  NEXTAUTH_SECRET: 'test-nextauth-secret-32-characters-long!!!!',
-  NEXTAUTH_URL: 'http://localhost:3000',
-  ENCRYPTION_KEY: 'test-encryption-key-32-chars-long-for-testing',
-  NEXT_PUBLIC_CONVEX_URL: 'http://127.0.0.1:4000',
-};
-
-beforeEach(() => {
-  for (const [key, value] of Object.entries(REQUIRED_ENV_DEFAULTS)) {
-    if (!process.env[key]) {
-      process.env[key] = value;
-    }
-  }
-});
-
-// Mock Next.js specific classes
-jest.mock('next/server', () => ({
-  NextRequest: jest.fn().mockImplementation((url, init) => ({
-    url,
-    method: init?.method || 'GET',
-    headers: new Headers(init?.headers || {}),
-    cookies: {
-      get: (key) => {
-        const cookieHeader =
-          (init?.headers && (init.headers['cookie'] || init.headers['Cookie'])) || '';
-        if (!cookieHeader) return undefined;
-        const map = new Map(
-          String(cookieHeader)
-            .split(/;\s*/)
-            .filter(Boolean)
-            .map((p) => p.split('='))
-        );
-        const value = map.get(key);
-        return value ? { name: key, value } : undefined;
-      },
-      set: jest.fn(),
-      delete: jest.fn(),
-    },
-    nextUrl: { pathname: new URL(url).pathname, host: new URL(url).host },
-    json: jest.fn(),
-    text: jest.fn(),
-    clone: jest.fn(),
-  })),
-  NextResponse: {
-    json: (data, init) => {
-      const initial = init || {};
-      const headerMap = new Map(Object.entries(initial.headers || {}));
-      // Provide a DOM-like Headers API subset used by our code/tests
-      const headers = {
-        _map: headerMap,
-        get: (key) => headerMap.get(key),
-        set: (key, value) => headerMap.set(key, String(value)),
-        has: (key) => headerMap.has(key),
-        delete: (key) => headerMap.delete(key),
-        entries: () => headerMap.entries(),
-      };
-      const body = JSON.stringify(data);
-      return {
-        status: initial.status || 200,
-        headers,
-        body,
-        json: async () => data,
-        text: async () => body,
-        cookies: { set: jest.fn(), delete: jest.fn() },
-      };
-    },
-    next: () => ({ type: 'next', cookies: { set: jest.fn(), delete: jest.fn() } }),
-    redirect: (_url, _status) => ({
-      type: 'redirect',
-      cookies: { set: jest.fn(), delete: jest.fn() },
-    }),
-  },
-}));
-
-// Mock standard Request/Response for compatibility
-global.Request = class MockRequest {
-  constructor(url, options = {}) {
-    this._url = url;
-    this.method = options.method || 'GET';
-    this.headers = new Map(Object.entries(options.headers || {}));
-  }
-
-  get url() {
-    return this._url;
-  }
-
-  get(name) {
-    return this.headers.get(name);
-  }
-};
-
-global.Response = class MockResponse {
-  constructor(body, init = {}) {
-    this.body = body;
-    this.status = init.status || 200;
-    this.headers = new Map(Object.entries(init.headers || {}));
-  }
-
-  static json(data, init) {
-    return new MockResponse(JSON.stringify(data), init);
-  }
-};
-
-// Mock Buffer if not available
-if (typeof Buffer === 'undefined') {
-  global.Buffer = require('buffer').Buffer;
-}
-
-// Mock Canvas and jsPDF dependencies
-global.HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
-  fillRect: jest.fn(),
-  clearRect: jest.fn(),
-  getImageData: jest.fn(() => ({ data: new Array(4) })),
-  putImageData: jest.fn(),
-  createImageData: jest.fn(() => ({ data: new Array(4) })),
-  setTransform: jest.fn(),
-  drawImage: jest.fn(),
-  save: jest.fn(),
-  fillText: jest.fn(),
-  restore: jest.fn(),
-  beginPath: jest.fn(),
-  moveTo: jest.fn(),
-  lineTo: jest.fn(),
-  closePath: jest.fn(),
-  stroke: jest.fn(),
-  translate: jest.fn(),
-  scale: jest.fn(),
-  rotate: jest.fn(),
-  arc: jest.fn(),
-  fill: jest.fn(),
-  measureText: jest.fn(() => ({ width: 0 })),
-  transform: jest.fn(),
-  rect: jest.fn(),
-  clip: jest.fn(),
-}));
-
-global.HTMLCanvasElement.prototype.toDataURL = jest.fn(() => 'data:image/png;base64,test');
-global.HTMLCanvasElement.prototype.getImageData = jest.fn(() => ({ data: new Array(4) }));
-
-// Removed jsPDF mocks (PDF export removed)
-
-// Suppress console warnings in tests
-global.console = {
-  ...console,
-  warn: jest.fn(),
-  error: jest.fn(),
-};
-
-// Polyfill ResizeObserver for components that rely on it (e.g., Radix UI)
-if (typeof global.ResizeObserver === 'undefined') {
-  class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-  // @ts-ignore
-  global.ResizeObserver = ResizeObserver;
-}
