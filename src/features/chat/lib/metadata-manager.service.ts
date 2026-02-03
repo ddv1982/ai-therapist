@@ -37,11 +37,6 @@ export interface MetadataManagerConfig {
 }
 
 /**
- * Callback type for state update notifications.
- */
-export type MetadataUpdateCallback = (messageId: string, metadata: Record<string, unknown>) => void;
-
-/**
  * Service class for managing message metadata operations.
  * Handles queuing, retries, and persistence of metadata updates.
  */
@@ -342,14 +337,4 @@ export class MetadataManager {
   getRetryCount(messageId: string): number {
     return this.pendingUpdates.get(messageId)?.retries ?? 0;
   }
-}
-
-/**
- * Factory function to create a MetadataManager with the default API client.
- *
- * @param apiClient - The API client to use
- * @returns A configured MetadataManager instance
- */
-export function createMetadataManager(apiClient: IChatApiClient): MetadataManager {
-  return new MetadataManager({ apiClient });
 }

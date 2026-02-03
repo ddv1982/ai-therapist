@@ -24,33 +24,37 @@ if (typeof window !== 'undefined' && typeof window.getComputedStyle === 'functio
 }
 
 // Ensure Zod v4 compatibility with @hookform/resolvers by mocking the resolver
-jest.mock('@hookform/resolvers/zod', () => {
-  return {
-    zodResolver: (schema, _schemaOptions, resolverOptions) => {
-      return async (values, _ctx, options) => {
-        try {
-          const parsed = await (schema.parseAsync
-            ? schema.parseAsync(values)
-            : schema.parse(values));
-          if (options && options.shouldUseNativeValidation) {
-            // no-op in tests
+jest.mock(
+  '@hookform/resolvers/zod',
+  () => {
+    return {
+      zodResolver: (schema, _schemaOptions, resolverOptions) => {
+        return async (values, _ctx, options) => {
+          try {
+            const parsed = await (schema.parseAsync
+              ? schema.parseAsync(values)
+              : schema.parse(values));
+            if (options && options.shouldUseNativeValidation) {
+              // no-op in tests
+            }
+            return { values: resolverOptions && resolverOptions.raw ? values : parsed, errors: {} };
+          } catch (e) {
+            const issues = (e && (e.issues || e.errors)) || [];
+            const errors = {};
+            for (const issue of issues) {
+              const path = Array.isArray(issue.path)
+                ? issue.path.join('.')
+                : String(issue.path || '');
+              if (!errors[path]) errors[path] = { message: issue.message, type: issue.code };
+            }
+            return { values: {}, errors };
           }
-          return { values: resolverOptions && resolverOptions.raw ? values : parsed, errors: {} };
-        } catch (e) {
-          const issues = (e && (e.issues || e.errors)) || [];
-          const errors = {};
-          for (const issue of issues) {
-            const path = Array.isArray(issue.path)
-              ? issue.path.join('.')
-              : String(issue.path || '');
-            if (!errors[path]) errors[path] = { message: issue.message, type: issue.code };
-          }
-          return { values: {}, errors };
-        }
-      };
-    },
-  };
-});
+        };
+      },
+    };
+  },
+  { virtual: true }
+);
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({

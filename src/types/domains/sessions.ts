@@ -57,22 +57,3 @@ export interface Session {
     messages?: number;
   };
 }
-
-export interface CreateSessionRequest {
-  /**
-   * @description Session title
-   * @example Managing Anxiety and Stress
-   */
-  title: string;
-}
-
-export interface CurrentSessionResponse {
-  currentSession?: Session | null;
-}
-
-export interface SessionSuccessResponse {
-  /** @example true */
-  success?: boolean;
-  /** @example Session deleted successfully */
-  message?: string;
-}

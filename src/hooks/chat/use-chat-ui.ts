@@ -225,5 +225,3 @@ export function useChatUI(): { state: ChatUIState; refs: ChatUIRefs; actions: Ch
 
   return { state, refs, actions };
 }
-
-export default useChatUI;

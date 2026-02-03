@@ -4,9 +4,9 @@ import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import { Slider } from '@/components/ui/slider';
 
-export type SliderType = 'credibility' | 'confidence' | 'intensity' | 'generic';
+type SliderType = 'credibility' | 'confidence' | 'intensity' | 'generic';
 
-export interface TherapySliderProps {
+interface TherapySliderProps {
   /** The label text displayed above the slider */
   label: string;
   /** Current slider value */
@@ -133,5 +133,3 @@ export const TherapySlider: React.FC<TherapySliderProps> = ({
     </div>
   );
 };
-
-export default TherapySlider;

@@ -6,7 +6,6 @@ export type MessageDoc = Doc<'messages'>;
 export type SessionReportDoc = Doc<'sessionReports'>;
 
 export type SessionId = Id<'sessions'>;
-export type UserId = Id<'users'>;
 
 export interface SessionBundle {
   session: SessionDoc;

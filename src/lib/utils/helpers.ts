@@ -78,9 +78,6 @@ export function generateSessionTitle(): string {
 export {
   generateSecureUUID as generateUUID,
   generateSecureRandomString,
-  generateSecureHex,
-  generateRequestId,
-  generateSessionToken,
 } from '@/lib/auth/crypto-secure';
 
 export function isLocalhost(host: string): boolean {

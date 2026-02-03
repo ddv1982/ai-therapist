@@ -28,6 +28,7 @@ interface UseMetadataQueueProps {
 export function useMetadataQueue({ onMessageUpdated }: UseMetadataQueueProps) {
   const pendingMetadataRef = useRef(new Map<string, PendingMetadataEntry>());
   const pendingFlushRef = useRef(new Set<string>());
+  const pendingFlushTimeoutsRef = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 
   const flushPendingMetadata = useCallback(
     async (messageId: string) => {
@@ -37,6 +38,11 @@ export function useMetadataQueue({ onMessageUpdated }: UseMetadataQueueProps) {
       if (pendingFlushRef.current.has(messageId)) return;
 
       pendingFlushRef.current.add(messageId);
+      const pendingTimeout = pendingFlushTimeoutsRef.current.get(messageId);
+      if (pendingTimeout) {
+        clearTimeout(pendingTimeout);
+        pendingFlushTimeoutsRef.current.delete(messageId);
+      }
 
       try {
         const response = await apiClient.patchMessageMetadata(pending.sessionId, messageId, {
@@ -114,9 +120,15 @@ export function useMetadataQueue({ onMessageUpdated }: UseMetadataQueueProps) {
 
   const schedulePendingFlush = useCallback(
     (messageId: string, delayMs = 60) => {
-      setTimeout(() => {
+      const existingTimeout = pendingFlushTimeoutsRef.current.get(messageId);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+      const timeoutId = setTimeout(() => {
+        pendingFlushTimeoutsRef.current.delete(messageId);
         void flushPendingMetadata(messageId);
       }, delayMs);
+      pendingFlushTimeoutsRef.current.set(messageId, timeoutId);
     },
     [flushPendingMetadata]
   );
@@ -141,6 +153,11 @@ export function useMetadataQueue({ onMessageUpdated }: UseMetadataQueueProps) {
   const transferPendingMetadata = useCallback(
     (tempId: string, finalId: string) => {
       const pending = pendingMetadataRef.current.get(tempId);
+      const pendingTimeout = pendingFlushTimeoutsRef.current.get(tempId);
+      if (pendingTimeout) {
+        clearTimeout(pendingTimeout);
+        pendingFlushTimeoutsRef.current.delete(tempId);
+      }
       if (pending) {
         pendingMetadataRef.current.delete(tempId);
         pendingMetadataRef.current.set(finalId, {
@@ -155,6 +172,8 @@ export function useMetadataQueue({ onMessageUpdated }: UseMetadataQueueProps) {
   const clearQueue = useCallback(() => {
     pendingMetadataRef.current.clear();
     pendingFlushRef.current.clear();
+    pendingFlushTimeoutsRef.current.forEach((timeoutId) => clearTimeout(timeoutId));
+    pendingFlushTimeoutsRef.current.clear();
   }, []);
 
   // Process queue for existing messages
@@ -174,8 +193,11 @@ export function useMetadataQueue({ onMessageUpdated }: UseMetadataQueueProps) {
   // Cleanup on unmount
   useEffect(() => {
     const pendingFlushAtEffectTime = pendingFlushRef.current;
+    const pendingTimeoutsAtEffectTime = pendingFlushTimeoutsRef.current;
     return () => {
       pendingFlushAtEffectTime.clear();
+      pendingTimeoutsAtEffectTime.forEach((timeoutId) => clearTimeout(timeoutId));
+      pendingTimeoutsAtEffectTime.clear();
     };
   }, []);
 

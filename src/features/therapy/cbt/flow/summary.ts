@@ -2,7 +2,7 @@ import type { CBTSessionSummaryData } from '@/features/therapy/components/cbt-se
 import type { ActionPlanData, EmotionData, ThoughtData } from '@/types';
 import { type SupportedLocale, localizeSchemaMode } from '@/lib/cbt/schema-mode-localization';
 import { CBT_STEP_CONFIG } from './config';
-import { CBT_STEP_ORDER, type CBTFlowContext, type CBTFlowState, type CBTStepId } from './types';
+import { type CBTFlowContext, type CBTFlowState, type CBTStepId } from './types';
 
 const EMOTION_LABELS_NL: Record<string, string> = {
   fear: 'Angst',
@@ -256,7 +256,7 @@ export function buildMarkdownSummary(state: CBTFlowState, locale: SupportedLocal
  * Compute emotion changes between initial and final states.
  * Returns an array of emotions that changed, with direction and magnitude.
  */
-export function computeEmotionDelta(
+function computeEmotionDelta(
   state: CBTFlowState,
   locale: SupportedLocale = 'en'
 ): Array<{ emotion: string; initial: number; final: number; change: number }> {
@@ -367,16 +367,4 @@ export function buildTherapeuticWrapper(
   lines.push(`*${labels.wrapperFooter}*`);
 
   return lines.join('\n');
-}
-
-export function deriveCompletedSteps(state: CBTFlowState): CBTStepId[] {
-  return state.completedSteps;
-}
-
-export function derivePendingStep(state: CBTFlowState): CBTStepId | 'complete' {
-  return state.currentStepId;
-}
-
-export function deriveTimelineOrder(): readonly CBTStepId[] {
-  return CBT_STEP_ORDER;
 }

@@ -1,10 +1,9 @@
 import { useState, useCallback } from 'react';
 import { ObsessionsCompulsionsData } from '@/types';
-import { parseObsessionsCompulsionsFromMarkdown } from '@/features/therapy/obsessions-compulsions/utils/format-obsessions-compulsions';
 
 export type ObsessionsExportFormat = 'json' | 'markdown' | 'text';
 
-export interface ObsessionsExportOptions {
+interface ObsessionsExportOptions {
   format: ObsessionsExportFormat;
   filename?: string;
 }
@@ -12,7 +11,7 @@ export interface ObsessionsExportOptions {
 /**
  * Export obsessions and compulsions data in various formats
  */
-export class ObsessionsExportManager {
+class ObsessionsExportManager {
   private data: ObsessionsCompulsionsData;
   private content: string;
 
@@ -105,16 +104,6 @@ export class ObsessionsExportManager {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }
-}
-
-/**
- * Create export manager from message content
- */
-export function createObsessionsExportManager(content: string): ObsessionsExportManager | null {
-  const data = parseObsessionsCompulsionsFromMarkdown(content);
-  if (!data) return null;
-
-  return new ObsessionsExportManager(data, content);
 }
 
 /**

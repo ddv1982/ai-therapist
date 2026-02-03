@@ -48,7 +48,7 @@ export interface CBTFlowState {
   context: CBTFlowContext;
 }
 
-export interface CBTStepMessages {
+interface CBTStepMessages {
   component: {
     translationKey: string;
     defaultText: string;
@@ -59,7 +59,7 @@ export interface CBTStepMessages {
   };
 }
 
-export interface CBTStepMetadata {
+interface CBTStepMetadata {
   title: {
     translationKey: string;
     defaultText: string;

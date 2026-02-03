@@ -39,7 +39,7 @@ export const therapeuticFrameworkValidator = v.union(
 
 /**
  * Extended therapeutic frameworks including ACT and DBT
- * Mirrors: therapeuticFrameworkIdSchema in therapy-metadata.ts
+ * Used for metadata payloads beyond the core message schema.
  */
 export const therapeuticFrameworkIdValidator = v.union(
   v.literal('CBT'),
@@ -207,7 +207,7 @@ export const relevanceLevelValidator = v.union(
 
 /**
  * Urgency level validator
- * Mirrors: urgencyLevelSchema in therapy-metadata.ts
+ * Mirrors: recommendationSchema.urgency in report.schema.ts
  */
 export const urgencyLevelValidator = v.union(
   v.literal('immediate'),

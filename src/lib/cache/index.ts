@@ -6,23 +6,7 @@
  */
 
 // Core caching utilities
-export { cacheManager, cache } from './cache-utils';
+export { cache } from './cache-utils';
 
 // API-specific caching implementations
-export {
-  SessionCache,
-  MessageCache,
-  CBTDataCache,
-  ReportCache,
-  UserSessionCache,
-  AuthConfigCache,
-  DeviceCache,
-  TherapyPromptCache,
-  CacheWarmer,
-  CacheHealthMonitor,
-  CACHE_TTL,
-  CACHE_KEYS,
-} from './api-cache';
-
-// Types
-export type { CacheOptions, CacheStats, CacheKeyOptions } from './cache-utils';
+export { SessionCache, MessageCache, CacheHealthMonitor } from './api-cache';

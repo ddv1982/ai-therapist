@@ -100,7 +100,6 @@ export function getPublicEnv(): PublicEnv {
 }
 
 export let isDevelopment = publicEnv.NODE_ENV === 'development';
-export let isProduction = publicEnv.NODE_ENV === 'production';
 export let isTest = publicEnv.NODE_ENV === 'test';
 
 export function reloadPublicEnvForTesting(): void {
@@ -111,6 +110,5 @@ export function reloadPublicEnvForTesting(): void {
   }
   publicEnv = parsePublicEnv();
   isDevelopment = publicEnv.NODE_ENV === 'development';
-  isProduction = publicEnv.NODE_ENV === 'production';
   isTest = publicEnv.NODE_ENV === 'test';
 }

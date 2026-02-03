@@ -54,16 +54,6 @@ export interface ConvexSessionReport {
   createdAt: number;
 }
 
-// Helper type for session with populated messages
-export interface ConvexSessionWithMessages extends ConvexSession {
-  messages?: ConvexMessage[];
-}
-
-// Helper type for session with populated reports
-export interface ConvexSessionWithReports extends ConvexSession {
-  reports?: ConvexSessionReport[];
-}
-
 // Helper type for session with both messages and reports
 export interface ConvexSessionWithMessagesAndReports extends ConvexSession {
   messages?: ConvexMessage[];

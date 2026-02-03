@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { logger } from '@/lib/utils/logger';
 import { isDevelopment } from '@/config/env.public';
-import { ErrorCode, type AppError, getHttpStatusForErrorCode } from '@/lib/errors/error-codes';
+import { ErrorCode } from '@/lib/errors/error-codes';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -186,27 +186,6 @@ export function createServerErrorResponse(
   });
 }
 
-/**
- * Creates an error response from an AppError object.
- * Uses the ErrorCode to determine the appropriate HTTP status code.
- *
- * @param appError - The AppError object
- * @param requestId - Optional request ID for tracing
- * @returns NextResponse with error details
- */
-export function createAppErrorResponse(
-  appError: AppError,
-  requestId?: string
-): NextResponse<ApiResponse> {
-  const status = getHttpStatusForErrorCode(appError.code);
-
-  return createErrorResponse(appError.message, status, {
-    code: appError.code,
-    details: appError.details,
-    requestId,
-  });
-}
-
 export function isSuccessResponse<T>(response: unknown): response is ApiResponse<T> {
   if (!response || typeof response !== 'object' || response === null) {
     return false;
@@ -227,7 +206,7 @@ export function isErrorResponse(response: unknown): response is ApiResponse {
   return (response as { success: boolean }).success === false;
 }
 
-export const apiResponseSchema = z.object({
+const apiResponseSchema = z.object({
   success: z.boolean(),
   data: z.any().optional(),
   error: z

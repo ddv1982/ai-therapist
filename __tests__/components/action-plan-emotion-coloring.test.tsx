@@ -4,31 +4,6 @@
  */
 
 import { render, screen } from '@testing-library/react';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
-
-// Mock Redux store
-const mockStore = configureStore({
-  reducer: {
-    session: (state = { sessions: [], currentSession: null }) => state,
-  },
-});
-
-// Mock the CBT data manager hook
-jest.mock('@/hooks/therapy/use-cbt-data-manager', () => ({
-  useCBTDataManager: () => ({
-    sessionData: {
-      actionPlan: { finalEmotions: { fear: 0, anger: 0, sadness: 0, joy: 0 } },
-      lastModified: null,
-    },
-    actionActions: { updateActionPlan: jest.fn() },
-  }),
-}));
-
-// Test wrapper
-const TestWrapper = ({ children }: { children: React.ReactNode }) => (
-  <Provider store={mockStore}>{children}</Provider>
-);
 
 // Simple emotion change color logic for testing
 function getEmotionChangeColor(initialValue: number, finalValue: number, isPositive: boolean) {
@@ -69,11 +44,7 @@ function EmotionDisplay({ initialEmotions, finalEmotions }: any) {
 describe('Action Plan Emotion Coloring', () => {
   describe('Emotion Change Logic', () => {
     it('should show green for joy increases', () => {
-      render(
-        <TestWrapper>
-          <EmotionDisplay initialEmotions={{ joy: 2 }} finalEmotions={{ joy: 7 }} />
-        </TestWrapper>
-      );
+      render(<EmotionDisplay initialEmotions={{ joy: 2 }} finalEmotions={{ joy: 7 }} />);
 
       const joyChange = screen.getByTestId('joy-change');
       expect(joyChange).toHaveClass('text-green-500');
@@ -81,11 +52,7 @@ describe('Action Plan Emotion Coloring', () => {
     });
 
     it('should show red for joy decreases', () => {
-      render(
-        <TestWrapper>
-          <EmotionDisplay initialEmotions={{ joy: 7 }} finalEmotions={{ joy: 2 }} />
-        </TestWrapper>
-      );
+      render(<EmotionDisplay initialEmotions={{ joy: 7 }} finalEmotions={{ joy: 2 }} />);
 
       const joyChange = screen.getByTestId('joy-change');
       expect(joyChange).toHaveClass('text-red-500');
@@ -93,11 +60,7 @@ describe('Action Plan Emotion Coloring', () => {
     });
 
     it('should show red for fear increases', () => {
-      render(
-        <TestWrapper>
-          <EmotionDisplay initialEmotions={{ fear: 2 }} finalEmotions={{ fear: 7 }} />
-        </TestWrapper>
-      );
+      render(<EmotionDisplay initialEmotions={{ fear: 2 }} finalEmotions={{ fear: 7 }} />);
 
       const fearChange = screen.getByTestId('fear-change');
       expect(fearChange).toHaveClass('text-red-500');
@@ -105,11 +68,7 @@ describe('Action Plan Emotion Coloring', () => {
     });
 
     it('should show green for fear decreases', () => {
-      render(
-        <TestWrapper>
-          <EmotionDisplay initialEmotions={{ fear: 7 }} finalEmotions={{ fear: 2 }} />
-        </TestWrapper>
-      );
+      render(<EmotionDisplay initialEmotions={{ fear: 7 }} finalEmotions={{ fear: 2 }} />);
 
       const fearChange = screen.getByTestId('fear-change');
       expect(fearChange).toHaveClass('text-green-500');
@@ -118,12 +77,7 @@ describe('Action Plan Emotion Coloring', () => {
 
     it('should show muted for no change', () => {
       render(
-        <TestWrapper>
-          <EmotionDisplay
-            initialEmotions={{ fear: 5, joy: 5 }}
-            finalEmotions={{ fear: 5, joy: 5 }}
-          />
-        </TestWrapper>
+        <EmotionDisplay initialEmotions={{ fear: 5, joy: 5 }} finalEmotions={{ fear: 5, joy: 5 }} />
       );
 
       const fearChange = screen.getByTestId('fear-change');

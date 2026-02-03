@@ -26,7 +26,7 @@ interface UseCBTExportReturn {
   clearError: () => void;
 }
 
-export function useCBTExport(options: UseCBTExportOptions = {}): UseCBTExportReturn {
+function useCBTExport(options: UseCBTExportOptions = {}): UseCBTExportReturn {
   const { onSuccess, onError } = options;
   const locale = useLocale() as Locale;
 

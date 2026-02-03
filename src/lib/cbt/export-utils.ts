@@ -176,7 +176,7 @@ export function generateFileName(format: CBTExportFormat, date?: string): string
 }
 
 // Trigger file download
-export function downloadFile(content: string | Blob, filename: string, mimeType: string): void {
+function downloadFile(content: string | Blob, filename: string, mimeType: string): void {
   const blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
 

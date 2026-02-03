@@ -52,5 +52,3 @@ export const envDefaults = {
   REDIS_PORT: 6_379,
   REDIS_DB: 0,
 } as const;
-
-export type EnvDefaults = typeof envDefaults;

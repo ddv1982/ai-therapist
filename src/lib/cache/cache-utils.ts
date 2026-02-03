@@ -15,7 +15,7 @@
 
 import { logger } from '@/lib/utils/logger';
 
-export interface CacheOptions {
+interface CacheOptions {
   ttl?: number; // Time to live in seconds
   prefix?: string; // Key prefix for namespacing
   serialize?: boolean; // Whether to serialize data (default: true)
@@ -23,7 +23,7 @@ export interface CacheOptions {
   fallback?: unknown; // Fallback value when cache miss
 }
 
-export interface CacheStats {
+interface CacheStats {
   hits: number;
   misses: number;
   errors: number;
@@ -31,7 +31,7 @@ export interface CacheStats {
   hitRate: number;
 }
 
-export interface CacheKeyOptions {
+interface CacheKeyOptions {
   sessionId?: string;
   userId?: string;
   endpoint?: string;
@@ -174,7 +174,8 @@ class CacheManager {
       current.misses++;
     }
 
-    current.hitRate = current.hits / (current.totalRequests - current.errors);
+    const eligibleRequests = current.totalRequests - current.errors;
+    current.hitRate = eligibleRequests > 0 ? current.hits / eligibleRequests : 0;
     this.stats.set(key, current);
   }
 
@@ -457,7 +458,7 @@ class CacheManager {
 }
 
 // Export singleton instance
-export const cacheManager = new CacheManager();
+const cacheManager = new CacheManager();
 
 // Export utility functions
 export const cache = {

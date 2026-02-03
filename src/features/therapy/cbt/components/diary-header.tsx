@@ -77,5 +77,3 @@ export function DiaryHeader({ isMobile, isCBTActive, cbtCurrentStep, onBack }: D
     </div>
   );
 }
-
-export default DiaryHeader;

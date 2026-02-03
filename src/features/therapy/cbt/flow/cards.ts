@@ -1,7 +1,6 @@
 import type { CBTSessionSummaryData } from '@/features/therapy/components/cbt-session-summary-card';
-export type { CBTSessionSummaryData } from '@/features/therapy/components/cbt-session-summary-card';
 import type { EmotionData, ThoughtData } from '@/types';
-import { CBT_STEP_ORDER, type CBTFlowContext, type CBTFlowState, type CBTStepId } from './types';
+import { type CBTFlowContext, type CBTFlowState, type CBTStepId } from './types';
 import { buildSummaryCardFromState, buildTherapeuticWrapper } from './summary';
 import type { SupportedLocale } from '@/lib/cbt/schema-mode-localization';
 import { CBT_STEP_CONFIG } from './config';
@@ -163,13 +162,4 @@ export function buildEmotionComparisonCard(initial: EmotionData, final: EmotionD
     finalEmotions: emotionList(final),
     completedSteps: ['Emotional Progress Tracking'],
   });
-}
-
-export function collectCompletedStepCards(context: CBTFlowContext): string[] {
-  const cards: string[] = [];
-  for (const stepId of CBT_STEP_ORDER) {
-    const card = buildStepCard(stepId, context);
-    if (card) cards.push(card);
-  }
-  return cards;
 }

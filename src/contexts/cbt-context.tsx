@@ -266,6 +266,3 @@ export function useCBT() {
   }
   return context;
 }
-
-// Compatibility export for existing code
-export const useCBTState = useCBT;

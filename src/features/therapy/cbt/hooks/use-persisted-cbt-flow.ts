@@ -266,5 +266,3 @@ export function usePersistedCBTFlow(options: UsePersistedCBTFlowOptions = {}) {
     hydrationError,
   };
 }
-
-export type UsePersistedCBTFlowReturn = ReturnType<typeof usePersistedCBTFlow>;

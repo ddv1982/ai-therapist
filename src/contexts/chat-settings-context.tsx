@@ -130,9 +130,3 @@ export function useChatSettings() {
   }
   return context;
 }
-
-// Selector hooks for compatibility
-export const selectChatSettings = (context: ChatContextValue) => context.settings;
-export const selectIsStreaming = (context: ChatContextValue) => context.isStreaming;
-export const selectCurrentInput = (context: ChatContextValue) => context.currentInput;
-export const selectError = (context: ChatContextValue) => context.error;

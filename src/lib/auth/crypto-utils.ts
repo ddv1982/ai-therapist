@@ -1,5 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync, pbkdf2 } from 'crypto';
-import { promisify } from 'util';
+import { createCipheriv, createDecipheriv, randomBytes, pbkdf2Sync } from 'crypto';
 import { env } from '@/config/env';
 
 /**
@@ -12,13 +11,10 @@ const IV_LENGTH = 16;
 const SALT_LENGTH = 32;
 const TAG_LENGTH = 16;
 
-// Promisified async version of pbkdf2
-const pbkdf2Async = promisify(pbkdf2);
-
 /**
  * Generate a secure encryption key for production use
  */
-export function generateSecureEncryptionKey(): string {
+function generateSecureEncryptionKey(): string {
   // Generate 256-bit (32 bytes) random key and encode as base64
   const keyBytes = randomBytes(32);
   return keyBytes.toString('base64');
@@ -27,7 +23,7 @@ export function generateSecureEncryptionKey(): string {
 /**
  * Validate encryption key format and strength
  */
-export function validateEncryptionKey(key: string): { valid: boolean; error?: string } {
+function validateEncryptionKey(key: string): { valid: boolean; error?: string } {
   if (!key) {
     return { valid: false, error: 'Encryption key is required' };
   }
@@ -102,13 +98,6 @@ function deriveKey(masterKey: Buffer, salt: Buffer): Buffer {
 }
 
 /**
- * Derive key from master key using PBKDF2 (asynchronous version)
- */
-async function deriveKeyAsync(masterKey: Buffer, salt: Buffer): Promise<Buffer> {
-  return pbkdf2Async(masterKey, salt, ITERATIONS, KEY_LENGTH, 'sha256');
-}
-
-/**
  * Encrypt sensitive data (like TOTP secrets)
  */
 export function encryptSensitiveData(plaintext: string): string {
@@ -153,84 +142,3 @@ export function decryptSensitiveData(encryptedData: string): string {
 
   return decrypted;
 }
-
-/**
- * Encrypt sensitive data asynchronously (for better performance in bulk operations)
- */
-export async function encryptSensitiveDataAsync(plaintext: string): Promise<string> {
-  const masterKey = getEncryptionKey();
-  const salt = randomBytes(SALT_LENGTH);
-  const iv = randomBytes(IV_LENGTH);
-  const key = await deriveKeyAsync(masterKey, salt);
-
-  const cipher = createCipheriv(ALGORITHM, key, iv);
-
-  let encrypted = cipher.update(plaintext, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-
-  const tag = cipher.getAuthTag();
-
-  // Combine salt + iv + tag + encrypted data
-  const combined = Buffer.concat([salt, iv, tag, Buffer.from(encrypted, 'hex')]);
-
-  return combined.toString('base64');
-}
-
-/**
- * Decrypt sensitive data asynchronously (for better performance in bulk operations)
- */
-export async function decryptSensitiveDataAsync(encryptedData: string): Promise<string> {
-  const masterKey = getEncryptionKey();
-  const combined = Buffer.from(encryptedData, 'base64');
-
-  // Extract components
-  const salt = combined.subarray(0, SALT_LENGTH);
-  const iv = combined.subarray(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
-  const tag = combined.subarray(SALT_LENGTH + IV_LENGTH, SALT_LENGTH + IV_LENGTH + TAG_LENGTH);
-  const encrypted = combined.subarray(SALT_LENGTH + IV_LENGTH + TAG_LENGTH);
-
-  const key = await deriveKeyAsync(masterKey, salt);
-
-  const decipher = createDecipheriv(ALGORITHM, key, iv);
-  decipher.setAuthTag(tag);
-
-  let decrypted = decipher.update(encrypted, undefined, 'utf8');
-  decrypted += decipher.final('utf8');
-
-  return decrypted;
-}
-
-/**
- * Backup code interface for type safety
- */
-interface BackupCode {
-  code: string;
-  used: boolean;
-  usedAt?: Date;
-}
-
-/**
- * Encrypt backup codes array
- */
-export function encryptBackupCodes(backupCodes: BackupCode[]): string {
-  return encryptSensitiveData(JSON.stringify(backupCodes));
-}
-
-/**
- * Decrypt backup codes array
- */
-export function decryptBackupCodes(encryptedBackupCodes: string): BackupCode[] {
-  const decrypted = decryptSensitiveData(encryptedBackupCodes);
-  return JSON.parse(decrypted);
-}
-
-/**
- * Generate a cryptographically secure encryption key for environment setup
- * This is a utility function for initial setup - the key should be stored securely
- */
-export function generateEncryptionKey(): string {
-  return randomBytes(32).toString('base64');
-}
-
-// Re-export backup code generation from consolidated crypto module
-export { generateBackupCodes } from './crypto-secure';

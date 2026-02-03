@@ -47,7 +47,7 @@ import {
 
 // Removed Redux selectors - now using CBT context directly
 
-export interface CBTSessionView {
+interface CBTSessionView {
   sessionId: string | null;
   situation: SituationData | null;
   emotions: EmotionData | null;
@@ -762,7 +762,3 @@ export function useCBTDataManager(options: UseCBTDataManagerOptions = {}): UseCB
     saveFormData,
   };
 }
-
-export const useUnifiedCBT = useCBTDataManager;
-export type UseUnifiedCBTOptions = UseCBTDataManagerOptions;
-export type UseUnifiedCBTReturn = UseCBTDataManagerReturn;

@@ -20,7 +20,7 @@ const cardVariants = cva('rounded-lg transition-all duration-base ease-out-smoot
   },
 });
 
-export interface CardProps
+interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof cardVariants> {}
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
@@ -84,19 +84,4 @@ const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
 );
 CardContent.displayName = 'CardContent';
 
-interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={cn('flex items-center p-6 pt-0', className)} // 24px padding, no top padding
-        {...props}
-      />
-    );
-  }
-);
-CardFooter.displayName = 'CardFooter';
-
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants };
+export { Card, CardHeader, CardTitle, CardDescription, CardContent };

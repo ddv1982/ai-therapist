@@ -2,7 +2,6 @@
 export {
   withApiMiddleware,
   withAuth,
-  withAuthStreaming,
   withValidation,
   withValidationAndParams,
   withRateLimitUnauthenticated,
@@ -11,6 +10,3 @@ export {
   type RequestContext,
   type AuthenticatedRequestContext,
 } from '@/lib/api/middleware';
-
-// Re-export error handlers
-export { errorHandlers } from '@/lib/api/middleware/error-handlers';

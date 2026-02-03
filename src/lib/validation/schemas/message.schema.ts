@@ -14,7 +14,6 @@ import { z } from 'zod';
 // ============================================================================
 
 export const therapeuticFrameworks = ['CBT', 'Schema', 'ERP', 'General'] as const;
-export type TherapeuticFramework = (typeof therapeuticFrameworks)[number];
 
 export const therapeuticFrameworkSchema = z.enum(therapeuticFrameworks);
 
@@ -23,7 +22,6 @@ export const therapeuticFrameworkSchema = z.enum(therapeuticFrameworks);
 // ============================================================================
 
 export const emotionalTones = ['positive', 'negative', 'neutral', 'mixed'] as const;
-export type EmotionalTone = (typeof emotionalTones)[number];
 
 export const emotionalToneSchema = z.enum(emotionalTones);
 
@@ -32,7 +30,6 @@ export const emotionalToneSchema = z.enum(emotionalTones);
 // ============================================================================
 
 export const messageRoles = ['user', 'assistant'] as const;
-export type MessageRole = (typeof messageRoles)[number];
 
 export const messageRoleSchema = z.enum(messageRoles);
 
@@ -53,8 +50,6 @@ export const messageContentSchema = z
   .min(1, 'Message cannot be empty')
   .max(10000, 'Message too long (max 10,000 characters)')
   .transform((content) => content.trim());
-
-export type MessageContent = z.infer<typeof messageContentSchema>;
 
 // ============================================================================
 // MESSAGE METADATA SCHEMA
@@ -79,8 +74,6 @@ export const messageMetadataSchema = z
   .strict()
   .optional();
 
-export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
-
 // ============================================================================
 // SEND MESSAGE SCHEMA
 // ============================================================================
@@ -95,8 +88,6 @@ export const sendMessageSchema = z.object({
   sessionId: z.string().min(1, 'Session ID cannot be empty'),
   metadata: messageMetadataSchema,
 });
-
-export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 
 // ============================================================================
 // FULL MESSAGE SCHEMA
@@ -117,8 +108,6 @@ export const messageSchema = z.object({
   createdAt: z.number().int().positive(),
 });
 
-export type MessageInput = z.infer<typeof messageSchema>;
-
 // ============================================================================
 // MESSAGE QUERY SCHEMA
 // ============================================================================
@@ -133,5 +122,3 @@ export const messagesQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50).optional(),
 });
-
-export type MessagesQueryInput = z.infer<typeof messagesQuerySchema>;

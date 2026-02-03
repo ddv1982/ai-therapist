@@ -81,4 +81,4 @@ export const Message = memo(MessageComponent, (prevProps, nextProps) => {
 });
 
 // Export types for external use
-export type { MessageData, MessageProps };
+export type { MessageData };
