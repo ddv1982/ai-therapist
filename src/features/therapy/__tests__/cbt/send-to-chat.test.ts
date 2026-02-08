@@ -4,7 +4,7 @@ import type { CBTFlowState } from '@/features/therapy/cbt/flow/types';
 jest.mock('@/lib/api/client', () => ({
   apiClient: {
     createSession: jest.fn(),
-    generateReportDetailed: jest.fn(),
+    generateReportFromContext: jest.fn(),
     postMessage: jest.fn(),
     deleteSession: jest.fn(),
   },
@@ -106,7 +106,7 @@ describe('sendToChat', () => {
       success: true,
       data: { id: 'session-123' },
     });
-    (apiClient.generateReportDetailed as jest.Mock).mockResolvedValue({
+    (apiClient.generateReportFromContext as jest.Mock).mockResolvedValue({
       success: true,
       reportContent: 'analysis',
     });
@@ -134,12 +134,13 @@ describe('sendToChat', () => {
     expect(result).toEqual({ sessionId: 'session-123' });
     expect(apiClient.createSession).toHaveBeenCalledWith({ title: 'CBT Summary' });
 
-    expect(apiClient.generateReportDetailed).toHaveBeenCalledWith(
+    expect(apiClient.generateReportFromContext).toHaveBeenCalledWith(
       expect.objectContaining({ sessionId: 'session-123', model: 'openai/gpt-oss-120b' }),
       expect.objectContaining({ headers: undefined })
     );
 
-    const messagesArg = (apiClient.generateReportDetailed as jest.Mock).mock.calls[0][0].messages;
+    const messagesArg = (apiClient.generateReportFromContext as jest.Mock).mock.calls[0][0]
+      .contextualMessages;
     expect(messagesArg[0].content).toContain('CBT_SUMMARY_CARD');
     expect(messagesArg).toHaveLength(2);
 
@@ -152,7 +153,7 @@ describe('sendToChat', () => {
   });
 
   it('throws when report generation fails', async () => {
-    (apiClient.generateReportDetailed as jest.Mock).mockResolvedValue({ success: false });
+    (apiClient.generateReportFromContext as jest.Mock).mockResolvedValue({ success: false });
 
     await expect(
       sendToChat({
@@ -163,5 +164,18 @@ describe('sendToChat', () => {
     ).rejects.toThrow('Failed to generate session report');
 
     expect(apiClient.deleteSession).toHaveBeenCalledWith('session-123');
+  });
+
+  it('always sends at least the generated summary context to report generation', async () => {
+    await sendToChat({
+      title: 'Summary only',
+      flowState: sampleFlowState(),
+      contextualMessages: [],
+    });
+
+    const payload = (apiClient.generateReportFromContext as jest.Mock).mock.calls[0][0];
+    expect(payload.sessionId).toBe('session-123');
+    expect(payload.contextualMessages).toHaveLength(1);
+    expect(payload.contextualMessages[0].content).toContain('CBT_SUMMARY_CARD');
   });
 });

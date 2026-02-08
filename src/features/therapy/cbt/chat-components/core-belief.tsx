@@ -59,7 +59,10 @@ export function CoreBelief({
   const { sessionData, beliefActions } = useCBTDataManager();
   const skipNextRehydrateRef = useRef<boolean>(false);
 
-  const coreBelifsData = value ? [value] : sessionData?.coreBeliefs;
+  const coreBeliefsData = useMemo(
+    () => (value ? [value] : sessionData?.coreBeliefs),
+    [value, sessionData?.coreBeliefs]
+  );
   const defaultBeliefData: CoreBeliefData = {
     coreBeliefText: '',
     coreBeliefCredibility: 5,
@@ -68,12 +71,12 @@ export function CoreBelief({
   const [beliefData, setBeliefData] = useState<CoreBeliefData>(() => {
     if (value) return value;
     if (initialData) return initialData;
-    return coreBelifsData && coreBelifsData.length > 0 ? coreBelifsData[0] : defaultBeliefData;
+    return coreBeliefsData && coreBeliefsData.length > 0 ? coreBeliefsData[0] : defaultBeliefData;
   });
 
   const beliefPrompts = useMemo(() => (t.raw('coreBelief.prompts') as string[]) || [], [t]);
   const initialBeliefText =
-    value?.coreBeliefText ?? initialData?.coreBeliefText ?? coreBelifsData?.[0]?.coreBeliefText;
+    value?.coreBeliefText ?? initialData?.coreBeliefText ?? coreBeliefsData?.[0]?.coreBeliefText;
   const {
     selected: selectedPrompt,
     setSelected: setSelectedPrompt,
@@ -96,7 +99,7 @@ export function CoreBelief({
   useEffect(() => {
     if (value !== undefined) return;
 
-    const source = coreBelifsData && coreBelifsData.length > 0 ? coreBelifsData[0] : null;
+    const source = coreBeliefsData && coreBeliefsData.length > 0 ? coreBeliefsData[0] : null;
     if (!source) return;
 
     setSelectedPrompt(matchPrompt(source.coreBeliefText));
@@ -119,7 +122,7 @@ export function CoreBelief({
             : (prev.coreBeliefCredibility ?? 5),
       };
     });
-  }, [coreBelifsData, value, matchPrompt, setSelectedPrompt]);
+  }, [coreBeliefsData, value, matchPrompt, setSelectedPrompt]);
 
   const handleBeliefChange = useCallback(
     (value: string) => {
@@ -146,7 +149,7 @@ export function CoreBelief({
         } catch {}
       }
     },
-    [beliefData, saveDraft]
+    [beliefData, saveDraft, setSelectedPrompt]
   );
 
   const handleCredibilityChange = useCallback(

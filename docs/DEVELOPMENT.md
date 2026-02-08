@@ -218,6 +218,11 @@ ai-therapist/
 │   │   ├── chat/         # Chat utilities
 │   │   ├── security/     # Security helpers
 │   │   └── therapy/      # Therapeutic analysis
+│   ├── server/           # Modular monolith server layers
+│   │   ├── interface/    # HTTP adapter layer
+│   │   ├── application/  # Use-case orchestration layer
+│   │   ├── domain/       # Pure business rules + state transitions
+│   │   └── infrastructure/ # Convex/Clerk/cache/AI adapters
 │   └── types/            # TypeScript type definitions
 ├── convex/               # Convex backend functions
 │   ├── schema.ts         # Database schema
@@ -245,6 +250,8 @@ ai-therapist/
    bunx tsc --noEmit
    ```
 
+   `bun run lint` is strict and fails on warnings (`--max-warnings=0`).
+
 4. **Run tests:**
 
    ```bash
@@ -270,6 +277,25 @@ Formatting is not auto-written by hooks. To manually format:
 ```bash
 bun run format
 ```
+
+### Server Layering Rules
+
+For new server-side code, follow the `src/server` boundaries:
+
+1. `interface` may import `application` only.
+2. `application` may import `domain` and `infrastructure`.
+3. `domain` must stay dependency-light and import `domain` only.
+4. `infrastructure` must not import `interface` or `application`.
+
+Boundary checks are enforced in lint and architecture tests.
+
+### Session/Report API Behavior Notes
+
+- `POST /api/sessions/current` updates only the current-session pointer and does not mutate lifecycle status.
+- `POST /api/sessions/{sessionId}/resume` is the explicit lifecycle transition endpoint for resuming sessions.
+- `POST /api/reports/generate` is server-authoritative (loads persisted session messages).
+- `POST /api/reports/generate-context` accepts caller-provided contextual messages and is part of the public API.
+- Report model selection defaults to analytical model; valid `model` overrides are accepted unless a BYOK key is present, in which case BYOK model selection is authoritative.
 
 ---
 

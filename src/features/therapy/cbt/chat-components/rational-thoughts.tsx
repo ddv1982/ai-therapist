@@ -154,14 +154,15 @@ export function RationalThoughts({
 
       // Clear selection when manually typing (unless it matches exactly)
       if (field === 'thought') {
-        const updatedSelectedPrompts = [...selectedPrompts];
-        if (updatedSelectedPrompts[index] !== value) {
-          updatedSelectedPrompts[index] = '';
-          setSelectedPrompts(updatedSelectedPrompts);
-        }
+        setSelectedPrompts((prev) => {
+          if (prev[index] === value) return prev;
+          const next = [...prev];
+          next[index] = '';
+          return next;
+        });
       }
     },
-    [thoughtsData, selectedPrompts, saveDraft]
+    [thoughtsData, saveDraft, setSelectedPrompts]
   );
 
   const addThought = useCallback(() => {
@@ -181,7 +182,7 @@ export function RationalThoughts({
       setSelectedPrompts((prev) => [...prev, '']);
       setFocusedIndex(thoughtsData.rationalThoughts.length);
     }
-  }, [thoughtsData, updateOptimisticThoughts, saveDraft]);
+  }, [thoughtsData, updateOptimisticThoughts, saveDraft, setSelectedPrompts]);
 
   const removeThought = useCallback(
     (index: number) => {
@@ -204,7 +205,7 @@ export function RationalThoughts({
         });
       }
     },
-    [thoughtsData, updateOptimisticThoughts, saveDraft]
+    [thoughtsData, updateOptimisticThoughts, saveDraft, setSelectedPrompts]
   );
 
   const handlePromptSelect = useCallback(
@@ -218,9 +219,11 @@ export function RationalThoughts({
       saveDraft(updated);
 
       // Highlight
-      const updatedSelectedPrompts = [...selectedPrompts];
-      updatedSelectedPrompts[index] = prompt;
-      setSelectedPrompts(updatedSelectedPrompts);
+      setSelectedPrompts((prev) => {
+        const next = [...prev];
+        next[index] = prompt;
+        return next;
+      });
 
       // Focus target textarea and move caret
       setFocusedIndex(index);
@@ -233,7 +236,7 @@ export function RationalThoughts({
         } catch {}
       }
     },
-    [selectedPrompts, thoughtsData, saveDraft]
+    [thoughtsData, saveDraft, setSelectedPrompts]
   );
 
   const handleSubmit = useCallback(() => {

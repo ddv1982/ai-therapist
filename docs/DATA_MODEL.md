@@ -843,7 +843,7 @@ const memory = await service.getMemoryContext('clerk_user_123', 5, 'current-sess
 
 1. **Fetch Session Data**: Retrieve all messages from Convex
 2. **Parse CBT Data**: Extract structured CBT information from conversation
-3. **AI Analysis**: Generate therapeutic insights via Groq with analytical model
+3. **AI Analysis**: Generate therapeutic insights with the configured analytical model
 4. **Structure Extraction**: Parse AI response into components
 5. **Encryption**: Encrypt sensitive report content
 6. **Persistence**: Save to Convex sessionReports table
@@ -870,7 +870,7 @@ interface SessionReport {
 }
 ```
 
-**AI Model Used**: `mixtral-8x7b-32768` (analytical model for detailed analysis)
+**AI Model Policy**: analytical model is sourced from `MODEL_IDS.analytical` (currently `openai/gpt-oss-120b`). If a BYOK key is present, BYOK model selection takes precedence over explicit model overrides.
 
 ---
 
@@ -878,16 +878,18 @@ interface SessionReport {
 
 ### Authentication & Sessions
 
-| Endpoint                                | Method | Auth     | Description                         | Middleware                |
-| --------------------------------------- | ------ | -------- | ----------------------------------- | ------------------------- |
-| `/api/sessions`                         | GET    | Required | List user sessions with pagination  | `withAuth`                |
-| `/api/sessions`                         | POST   | Required | Create new therapy session          | `withAuth`                |
-| `/api/sessions/current`                 | GET    | Required | Get currently active session        | `withAuth`                |
-| `/api/sessions/:id`                     | GET    | Required | Get session with messages & reports | `withAuth`                |
-| `/api/sessions/:id`                     | PATCH  | Required | Update session title/status         | `withValidationAndParams` |
-| `/api/sessions/:id`                     | DELETE | Required | Delete session and all messages     | `withAuth`                |
-| `/api/sessions/:id/messages`            | GET    | Required | List messages in session            | `withAuth`                |
-| `/api/sessions/:id/messages/:messageId` | DELETE | Required | Delete specific message             | `withAuth`                |
+| Endpoint                                | Method | Auth     | Description                                                  | Middleware                |
+| --------------------------------------- | ------ | -------- | ------------------------------------------------------------ | ------------------------- |
+| `/api/sessions`                         | GET    | Required | List user sessions with pagination                           | `withAuth`                |
+| `/api/sessions`                         | POST   | Required | Create new therapy session                                   | `withAuth`                |
+| `/api/sessions/current`                 | GET    | Required | Get currently active session                                 | `withAuth`                |
+| `/api/sessions/current`                 | POST   | Required | Update current-session pointer only (does not change status) | `withValidation`          |
+| `/api/sessions/:id`                     | GET    | Required | Get session with messages & reports                          | `withAuth`                |
+| `/api/sessions/:id`                     | PATCH  | Required | Update session title/status                                  | `withValidationAndParams` |
+| `/api/sessions/:id`                     | DELETE | Required | Delete session and all messages                              | `withAuth`                |
+| `/api/sessions/:id/resume`              | POST   | Required | Explicitly resume a session lifecycle to `active`            | `withAuth`                |
+| `/api/sessions/:id/messages`            | GET    | Required | List messages in session                                     | `withAuth`                |
+| `/api/sessions/:id/messages/:messageId` | DELETE | Required | Delete specific message                                      | `withAuth`                |
 
 ### Chat & AI
 
@@ -917,12 +919,15 @@ interface SessionReport {
 
 ### Reports & Memory
 
-| Endpoint                | Method | Auth     | Description                        | Middleware |
-| ----------------------- | ------ | -------- | ---------------------------------- | ---------- |
-| `/api/reports`          | GET    | Required | List session reports for user      | `withAuth` |
-| `/api/reports/generate` | POST   | Required | Generate AI-powered session report | `withAuth` |
-| `/api/reports/memory`   | GET    | Required | Get memory context for continuity  | `withAuth` |
-| `/api/reports/memory`   | DELETE | Required | Clear memory (specific/recent/all) | `withAuth` |
+| Endpoint                        | Method | Auth     | Description                                                    | Middleware |
+| ------------------------------- | ------ | -------- | -------------------------------------------------------------- | ---------- |
+| `/api/reports`                  | GET    | Required | List session reports for user                                  | `withAuth` |
+| `/api/reports/generate`         | POST   | Required | Generate AI-powered session report from persisted session data | `withAuth` |
+| `/api/reports/generate-context` | POST   | Required | Generate report from caller-provided contextual message set    | `withAuth` |
+| `/api/reports/memory`           | GET    | Required | Get memory context for continuity                              | `withAuth` |
+| `/api/reports/memory`           | DELETE | Required | Clear memory (specific/recent/all)                             | `withAuth` |
+
+Report generation model selection uses analytical default unless overridden with a valid model; BYOK keys override both and force the BYOK model path.
 
 **Memory Query Parameters**:
 
@@ -1039,7 +1044,7 @@ sequenceDiagram
     participant UI
     participant Store
     participant API
-    participant Groq
+    participant LLM
     participant Convex
 
     User->>UI: Types message
@@ -1167,18 +1172,18 @@ sequenceDiagram
     participant User
     participant UI
     participant API
-    participant Groq
+    participant LLM
     participant Parser
     participant Convex
 
     User->>UI: Requests report
-    UI->>API: POST /api/reports/generate
-    API->>Convex: Fetch session messages
+    UI->>API: POST /api/reports/generate (or /api/reports/generate-context)
+    API->>Convex: Fetch session messages / verify ownership
     Convex-->>API: Messages array
     API->>Parser: Parse CBT data from messages
     Parser-->>API: Structured CBT data
-    API->>Groq: Generate therapeutic insights
-    Groq-->>API: AI-generated report
+    API->>LLM: Generate therapeutic insights
+    LLM-->>API: AI-generated report
     API->>Parser: Extract structured insights
     Parser-->>API: Report components
     API->>Convex: Save sessionReport
@@ -1247,7 +1252,7 @@ All data queries implement user-level isolation to ensure users only access thei
 ```typescript
 // All queries now filter by userId
 reports.listRecent({ userId, limit, excludeSessionId }); // User's reports only
-sessions.listByUser({ userId, limit, offset }); // User's sessions only
+sessions.listByUserPaginated({ userId, numItems, cursor }); // User's sessions only
 messages.listBySession({ sessionId }); // Verified session ownership
 ```
 
@@ -1263,14 +1268,14 @@ MemoryManagementService.deleteMemory(clerkId, sessionIds, limit, excludeSessionI
 **Implementation Pattern**:
 
 1. API route receives authenticated request via `withAuth` middleware
-2. Extract `clerkId` from `context.userInfo` (guaranteed by `withAuth`)
+2. Extract canonical identity from `context.principal.clerkId`
 3. Pass `clerkId` to service layer
 4. Service resolves Clerk ID to Convex user ID via `users.getByClerkId`
 5. Query Convex with resolved `userId` for data isolation
 
 **Middleware**:
 
-- `withAuth` - Automatically validates auth and populates `context.userInfo` with clerkId
+- `withAuth` - Automatically validates auth and populates `context.principal` with canonical identity
 - `withApiMiddleware` - No auth validation (use for public endpoints only)
 
 **Example Flow**:
@@ -1278,7 +1283,7 @@ MemoryManagementService.deleteMemory(clerkId, sessionIds, limit, excludeSessionI
 ```typescript
 // API Route
 export const GET = withAuth(async (request, context) => {
-  const clerkId = context.userInfo.clerkId || context.userInfo.userId;
+  const clerkId = context.principal.clerkId;
   const data = await service.getData(clerkId);
   return createSuccessResponse(data);
 });

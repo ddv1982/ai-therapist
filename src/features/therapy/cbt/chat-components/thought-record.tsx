@@ -148,18 +148,19 @@ export function ThoughtRecord({
       saveDraft(updatedThoughts);
 
       // Clear selection when manually typing (unless it matches exactly)
-      const updatedSelectedPrompts = [...selectedPrompts];
-      if (updatedSelectedPrompts[index] !== newThought) {
-        updatedSelectedPrompts[index] = '';
-        setSelectedPrompts(updatedSelectedPrompts);
-      }
+      setSelectedPrompts((prev) => {
+        if (prev[index] === newThought) return prev;
+        const next = [...prev];
+        next[index] = '';
+        return next;
+      });
 
       // Clear errors for this thought
       const newErrors = [...errors];
       newErrors[index] = '';
       setErrors(newErrors);
     },
-    [thoughts, errors, selectedPrompts, saveDraft]
+    [thoughts, errors, saveDraft, setSelectedPrompts]
   );
 
   const handleCredibilityChange = useCallback(
@@ -182,9 +183,11 @@ export function ThoughtRecord({
       saveDraft(updated);
 
       // Highlight the chosen prompt for the active thought
-      const updatedSelectedPrompts = [...selectedPrompts];
-      updatedSelectedPrompts[index] = prompt;
-      setSelectedPrompts(updatedSelectedPrompts);
+      setSelectedPrompts((prev) => {
+        const next = [...prev];
+        next[index] = prompt;
+        return next;
+      });
 
       // Move focus to the targeted textarea to make the change visible
       setFocusedThoughtIndex(index);
@@ -198,7 +201,7 @@ export function ThoughtRecord({
         } catch {}
       }
     },
-    [thoughts, selectedPrompts, saveDraft]
+    [thoughts, saveDraft, setSelectedPrompts]
   );
 
   const addThought = useCallback(() => {
@@ -216,7 +219,7 @@ export function ThoughtRecord({
       setFocusedThoughtIndex(thoughts.length);
       skipNextRehydrateRef.current = true;
     }
-  }, [thoughts.length, updateOptimisticThoughts]);
+  }, [thoughts.length, updateOptimisticThoughts, setSelectedPrompts]);
 
   const removeThought = useCallback(
     (index: number) => {
@@ -236,7 +239,7 @@ export function ThoughtRecord({
         skipNextRehydrateRef.current = true;
       }
     },
-    [thoughts.length, updateOptimisticThoughts]
+    [thoughts.length, updateOptimisticThoughts, setSelectedPrompts]
   );
 
   const validateThoughts = useCallback(() => {

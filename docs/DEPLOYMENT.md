@@ -165,7 +165,12 @@ Production deployment on the main branch.
 7. **Verify deployment:**
    - Check production URL
    - Verify health endpoint: `curl https://your-domain.com/api/health`
-   - Run smoke tests
+   - Run smoke tests, including:
+     - `GET /api/sessions/current`
+     - `POST /api/sessions/current` (pointer update only)
+     - `POST /api/sessions/{sessionId}/resume`
+     - `POST /api/reports/generate`
+     - `POST /api/reports/generate-context`
 
 8. **Tag release:**
    ```bash
@@ -186,6 +191,22 @@ bun run convex:dev
 ```
 
 **Important:** Always deploy Convex functions before the Next.js app if there are schema changes.
+
+### Data Migration Runbook (Session Reports `userId`)
+
+When deploying schema updates that require `sessionReports.userId` backfill:
+
+1. Deploy Convex schema + write-path changes first.
+2. Run the resumable backfill in batches until completion:
+
+```bash
+bun run reports:backfill-user-ids
+```
+
+3. Re-run the backfill command until `isDone: true` and no remaining records without `userId`.
+4. Deploy read-path changes that depend on `by_user_created` indexing only after backfill is complete.
+
+This staged rollout avoids mixed-read behavior and keeps report endpoints consistent during migration.
 
 ---
 
@@ -221,6 +242,12 @@ Configure these secrets in GitHub repository settings:
 | `CODECOV_TOKEN`                     | No       | For coverage uploads  |
 
 \*Uses mock values if not provided
+
+### Report Model Selection in Production
+
+- Default behavior uses the analytical model configured by `MODEL_IDS.analytical`.
+- Valid request-level `model` overrides are honored for report generation routes.
+- If a BYOK key is supplied, BYOK model selection is authoritative and overrides request-level model choice.
 
 ---
 

@@ -14,15 +14,16 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
   const radius = 100;
   const center = 100;
   const prefersReducedMotion = useReducedMotion();
+  const phaseFraction = phase.fraction;
+  const phaseIllumination = phase.illumination;
 
-  const isWaxing = phase.fraction <= 0.5;
-  const illumFraction = phase.illumination / 100;
+  const isWaxing = phaseFraction <= 0.5;
+  const illumFraction = phaseIllumination / 100;
 
   // Calculate the SVG path for the lit portion
   const litPath = useMemo(() => {
-    const { fraction, illumination } = phase;
-    const p = fraction;
-    const illumFrac = illumination / 100;
+    const p = phaseFraction;
+    const illumFrac = phaseIllumination / 100;
     const waxing = p <= 0.5;
     const terminatorX = radius * (1 - 2 * illumFrac);
     const rx = Math.abs(terminatorX);
@@ -40,12 +41,12 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
               A ${radius} ${radius} 0 0 ${outerSweep} ${center} 0
               A ${rx} ${radius} 0 0 ${termSweep} ${center} ${center * 2}`;
     }
-  }, [phase.fraction, phase.illumination]);
+  }, [phaseFraction, phaseIllumination]);
 
   // Stars for atmosphere
   const stars = useMemo(() => {
     const starCount = 12;
-    const seed = Math.floor(phase.fraction * 1000);
+    const seed = Math.floor(phaseFraction * 1000);
     return Array.from({ length: starCount }, (_, i) => {
       const angle = ((seed + i * 137.508) % 360) * (Math.PI / 180);
       const distance = 70 + ((seed + i * 43) % 25);
@@ -56,7 +57,7 @@ export function RealisticMoon({ phase, size = 200, className = '' }: RealisticMo
         delay: i * 0.3,
       };
     });
-  }, [phase.fraction]);
+  }, [phaseFraction]);
 
   return (
     <div
