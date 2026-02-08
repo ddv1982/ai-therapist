@@ -8,57 +8,31 @@ import {
 } from '@/lib/api/api-response';
 import { MemoryManagementService } from '@/features/chat/lib/memory-management-service';
 import { getAuthenticatedConvexClient } from '@/lib/convex/http-client';
+import { ErrorCode } from '@/lib/errors/error-codes';
+import type { MemoryData, MemoryManageData, DeleteResponseData } from '@/types';
 
-type MemoryContextEntry = {
-  sessionTitle: string;
-  sessionDate: string;
-  reportDate: string;
-  content: string;
-  summary: string;
-};
-
-type MemoryStats = {
-  totalReportsFound: number;
-  successfullyDecrypted: number;
-  failedDecryptions: number;
-};
-
-type MemoryData = {
-  memoryContext: MemoryContextEntry[];
-  reportCount: number;
-  stats: MemoryStats;
-};
-
-type MemoryReportDetail = {
-  id: string;
-  sessionId: string;
-  sessionTitle: string;
-  sessionDate: string;
-  reportDate: string;
-  contentPreview: string;
-  keyInsights: string[];
-  hasEncryptedContent: boolean;
-  reportSize: number;
-  fullContent?: string;
-  structuredCBTData?: unknown;
-};
-
-type MemoryManageData = {
-  memoryDetails: MemoryReportDetail[];
-  reportCount: number;
-  stats: {
-    totalReportsFound: number;
-    successfullyProcessed: number;
-    failedDecryptions: number;
-    hasMemory: boolean;
-  };
-};
-
-type DeleteResponseData = {
-  deletedCount: number;
-  message: string;
-  deletionType: 'specific' | 'recent' | 'all-except-current' | 'all';
-};
+function parseIntParam<T>(
+  raw: string | null,
+  name: string,
+  requestId: string,
+  min: number,
+  max: number
+) {
+  if (raw === null) return { ok: true as const, value: undefined as number | undefined };
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    return {
+      ok: false as const,
+      response: createErrorResponse(`Invalid ${name} query parameter`, 400, {
+        code: ErrorCode.INVALID_INPUT,
+        details: `${name} must be an integer between ${min} and ${max}`,
+        suggestedAction: `Provide a valid \`${name}\` value in the query string`,
+        requestId,
+      }) as import('next/server').NextResponse<ApiResponse<T>>,
+    };
+  }
+  return { ok: true as const, value: parsed };
+}
 
 /**
  * GET /api/reports/memory
@@ -79,7 +53,17 @@ export const GET = withAuth<MemoryData | MemoryManageData>(
       const clerkId = context.principal.clerkId;
 
       const { searchParams } = new URL(request.url);
-      const limit = parseInt(searchParams.get('limit') || '5', 10);
+      const limitParsed = parseIntParam<MemoryData | MemoryManageData>(
+        searchParams.get('limit'),
+        'limit',
+        context.requestId,
+        1,
+        20
+      );
+      if (!limitParsed.ok) {
+        return limitParsed.response;
+      }
+      const limit = limitParsed.value ?? 5;
       const excludeSessionId = searchParams.get('excludeSessionId');
       const manage = searchParams.get('manage') === 'true';
       const includeFullContent = searchParams.get('includeFullContent') === 'true';
@@ -110,7 +94,7 @@ export const GET = withAuth<MemoryData | MemoryManageData>(
 
       return createErrorResponse('Failed to retrieve memory context', 500, {
         requestId: context.requestId,
-      }) as import('next/server').NextResponse<ApiResponse<MemoryData>>;
+      }) as import('next/server').NextResponse<ApiResponse<MemoryData | MemoryManageData>>;
     }
   }
 );
@@ -133,9 +117,17 @@ export const DELETE = withAuth<DeleteResponseData>(
       const clerkId = context.principal.clerkId;
 
       const { searchParams } = new URL(request.url);
-      const limit = searchParams.get('limit')
-        ? parseInt(searchParams.get('limit')!, 10)
-        : undefined;
+      const limitParsed = parseIntParam<DeleteResponseData>(
+        searchParams.get('limit'),
+        'limit',
+        context.requestId,
+        1,
+        1000
+      );
+      if (!limitParsed.ok) {
+        return limitParsed.response;
+      }
+      const limit = limitParsed.value;
       const excludeSessionId = searchParams.get('excludeSessionId');
       const sessionIdsParam = searchParams.get('sessionIds');
       const sessionIds = sessionIdsParam ? sessionIdsParam.split(',') : undefined;

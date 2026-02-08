@@ -10,7 +10,6 @@ jest.mock('@/lib/convex/http-client', () => ({
   api: {
     sessions: {
       getWithMessagesAndReports: 'sessions.getWithMessagesAndReports',
-      listByUser: 'sessions.listByUser',
       countByUser: 'sessions.countByUser',
     },
     users: {
@@ -19,7 +18,7 @@ jest.mock('@/lib/convex/http-client', () => ({
   },
   anyApi: {
     sessions: {
-      listByUser: 'sessions.listByUser',
+      listByUserPaginated: 'sessions.listByUserPaginated',
       countByUser: 'sessions.countByUser',
     },
     users: {
@@ -134,52 +133,71 @@ describe('session-repository - branch coverage', () => {
     it('returns all sessions for user', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user123' })
-        .mockResolvedValueOnce([{ _id: 'session1', userId: 'user123' }])
+        .mockResolvedValueOnce({
+          page: [{ _id: 'session1', userId: 'user123' }],
+          continueCursor: null,
+          isDone: true,
+        })
         .mockResolvedValueOnce(1);
 
-      const result = await getUserSessions('clerk123');
+      const result = await getUserSessions('clerk123', { limit: 1 });
 
-      expect(result.pagination.limit).toBe(1); // Returns actual count
-      expect(result.pagination.offset).toBe(0);
+      expect(result.pagination.limit).toBe(1);
+      expect(result.pagination.nextCursor).toBeNull();
       expect(result.pagination.hasMore).toBe(false);
     });
 
     it('returns pagination metadata correctly', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user123' })
-        .mockResolvedValueOnce([
-          { _id: 'session1', userId: 'user123' },
-          { _id: 'session2', userId: 'user123' },
-        ])
+        .mockResolvedValueOnce({
+          page: [
+            { _id: 'session1', userId: 'user123' },
+            { _id: 'session2', userId: 'user123' },
+          ],
+          continueCursor: 'cursor-2',
+          isDone: false,
+        })
         .mockResolvedValueOnce(2);
 
-      const result = await getUserSessions('clerk123');
+      const result = await getUserSessions('clerk123', { limit: 2 });
 
       expect(result.pagination.limit).toBe(2);
       expect(result.pagination.total).toBe(2);
-      expect(result.pagination.hasMore).toBe(false);
+      expect(result.pagination.hasMore).toBe(true);
+      expect(result.pagination.nextCursor).toBe('cursor-2');
     });
 
     it('sets hasMore to false when at end', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user123' })
-        .mockResolvedValueOnce([{ _id: 'session1', userId: 'user123' }])
+        .mockResolvedValueOnce({
+          page: [{ _id: 'session1', userId: 'user123' }],
+          continueCursor: 'cursor-ignored',
+          isDone: true,
+        })
         .mockResolvedValueOnce(1);
 
-      const result = await getUserSessions('clerk123', { limit: 10, offset: 0 });
+      const result = await getUserSessions('clerk123', { limit: 10, cursor: 'cursor-1' });
 
       expect(result.pagination.hasMore).toBe(false);
+      expect(result.pagination.nextCursor).toBeNull();
     });
 
-    it('ignores custom offset (not supported in all-sessions query)', async () => {
+    it('returns nextCursor when another page exists', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user123' })
-        .mockResolvedValueOnce([{ _id: 'session2', userId: 'user123' }])
+        .mockResolvedValueOnce({
+          page: [{ _id: 'session2', userId: 'user123' }],
+          continueCursor: 'cursor-next',
+          isDone: false,
+        })
         .mockResolvedValueOnce(5);
 
-      const result = await getUserSessions('clerk123', { offset: 10 });
+      const result = await getUserSessions('clerk123', { cursor: 'cursor-10' });
 
-      expect(result.pagination.offset).toBe(0); // Always returns from beginning
+      expect(result.pagination.nextCursor).toBe('cursor-next');
+      expect(result.pagination.hasMore).toBe(true);
     });
   });
 

@@ -5,6 +5,7 @@
 import { logger } from '@/lib/utils/logger';
 import { apiClient } from '@/lib/api/client';
 import { deleteMemoryAction, type DeletionMode } from '@/features/chat/actions/memory-actions';
+import type { MemoryData, MemoryManageData, MemoryReportDetail, DeleteResponseData } from '@/types';
 
 export interface MemoryContextInfo {
   hasMemory: boolean;
@@ -12,19 +13,7 @@ export interface MemoryContextInfo {
   lastReportDate?: string;
 }
 
-export interface MemoryDetailInfo {
-  id: string;
-  sessionId: string;
-  sessionTitle: string;
-  sessionDate: string;
-  reportDate: string;
-  contentPreview: string;
-  keyInsights: string[];
-  hasEncryptedContent: boolean;
-  reportSize: number;
-  fullContent?: string; // Optional full content for detail view
-  structuredCBTData?: unknown; // Optional structured CBT data from therapeutic insights
-}
+export type MemoryDetailInfo = MemoryReportDetail;
 
 export interface SessionReportDetail {
   id: string;
@@ -38,23 +27,20 @@ export interface SessionReportDetail {
   structuredCBTData?: unknown; // Add structured CBT data from therapeutic insights
 }
 
-export interface MemoryManagementResponse {
+export interface MemoryManagementResponse extends MemoryManageData {
   success: boolean;
-  memoryDetails: MemoryDetailInfo[];
-  reportCount: number;
-  stats: {
-    totalReportsFound: number;
-    successfullyProcessed: number;
-    failedDecryptions: number;
-    hasMemory: boolean;
-  };
 }
 
-export interface MemoryDeletionResponse {
+export interface MemoryDeletionResponse extends DeleteResponseData {
   success: boolean;
-  deletedCount: number;
-  message: string;
-  deletionType: 'specific' | 'recent' | 'all-except-current' | 'all';
+}
+
+function isMemoryContextResponse(data: MemoryData | MemoryManageData): data is MemoryData {
+  return 'memoryContext' in data;
+}
+
+function isMemoryManagementResponse(data: MemoryData | MemoryManageData): data is MemoryManageData {
+  return 'memoryDetails' in data;
 }
 
 /**
@@ -68,15 +54,11 @@ export async function checkMemoryContext(sessionId?: string): Promise<MemoryCont
     }
     params.set('limit', '3');
 
-    const raw = await apiClient.getMemoryReports<unknown>(params);
-
-    // Support both standardized ApiResponse<T> and legacy plain responses
-    const data =
-      raw && typeof raw === 'object' && 'data' in raw
-        ? (raw as { data: { memoryContext?: Array<{ reportDate: string }> } }).data
-        : raw;
-    const memoryList =
-      (data && (data as { memoryContext?: Array<{ reportDate: string }> }).memoryContext) || [];
+    const raw = await apiClient.getMemoryReports(params);
+    if (!raw.success || !raw.data || !isMemoryContextResponse(raw.data)) {
+      return { hasMemory: false, reportCount: 0 };
+    }
+    const memoryList = raw.data.memoryContext;
     if (Array.isArray(memoryList) && memoryList.length > 0) {
       const sortedMemory = memoryList.sort(
         (a: { reportDate: string }, b: { reportDate: string }) =>
@@ -131,17 +113,21 @@ export async function getMemoryManagementData(
   }
 
   try {
-    const raw = await apiClient.getMemoryReports<unknown>(params);
-
-    const payload =
-      raw && typeof raw === 'object' && 'data' in raw
-        ? (raw as { success?: boolean; data: MemoryManagementResponse }).data
-        : raw;
-    const success =
-      raw && typeof raw === 'object' && 'success' in raw
-        ? Boolean((raw as { success: boolean }).success)
-        : true;
-    return { success, ...(payload as Omit<MemoryManagementResponse, 'success'>) };
+    const raw = await apiClient.getMemoryReports(params);
+    if (!raw.success || !raw.data || !isMemoryManagementResponse(raw.data)) {
+      return {
+        success: false,
+        memoryDetails: [],
+        reportCount: 0,
+        stats: {
+          totalReportsFound: 0,
+          successfullyProcessed: 0,
+          failedDecryptions: 0,
+          hasMemory: false,
+        },
+      };
+    }
+    return { success: true, ...raw.data };
   } catch (error) {
     const status = (error as { status?: number })?.status;
 
@@ -234,35 +220,23 @@ export async function getSessionReportDetail(
   });
 
   try {
-    const raw = await apiClient.getMemoryReports<unknown>(params);
+    const raw = await apiClient.getMemoryReports(params);
 
     logger.reportOperation('Session report API response received', reportId, {
       status: 200,
     });
 
-    const data =
-      raw && typeof raw === 'object' && 'data' in raw
-        ? (raw as { data: { memoryDetails?: MemoryDetailInfo[]; reportCount?: number } }).data
-        : raw;
+    const data = raw.data;
     logger.reportOperation('Session report data processed', reportId, {
-      success:
-        raw && typeof raw === 'object' && 'success' in raw
-          ? (raw as { success: boolean }).success
-            ? 'true'
-            : 'false'
-          : 'true',
+      success: raw.success ? 'true' : 'false',
       memoryDetailsCount:
-        (data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails?.length || 0,
-      hasMemoryDetails: !!(data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails
-        ? 'true'
-        : 'false',
+        raw.success && data && isMemoryManagementResponse(data) ? data.memoryDetails.length : 0,
+      hasMemoryDetails: raw.success && data && isMemoryManagementResponse(data) ? 'true' : 'false',
     });
 
-    if ((data as { memoryDetails?: MemoryDetailInfo[] })?.memoryDetails) {
+    if (raw.success && data && isMemoryManagementResponse(data)) {
       // Find the specific report
-      const report = (data as { memoryDetails: MemoryDetailInfo[] }).memoryDetails.find(
-        (r: MemoryDetailInfo) => r.id === reportId
-      );
+      const report = data.memoryDetails.find((r: MemoryDetailInfo) => r.id === reportId);
       logger.reportOperation('Session report located', reportId, {
         reportFound: !!report ? 'true' : 'false',
         hasFullContent: !!(report as MemoryDetailInfo)?.fullContent ? 'true' : 'false',
@@ -304,8 +278,8 @@ export async function getSessionReportDetail(
     } else {
       logger.warn('Session report API response unsuccessful or no memoryDetails', {
         operation: 'getSessionReportDetail',
-        success: (data as { success?: boolean })?.success,
-        hasMemoryDetails: !!(data as { memoryDetails?: unknown })?.memoryDetails,
+        success: raw.success,
+        hasMemoryDetails: false,
       });
     }
   } catch (error) {

@@ -38,6 +38,7 @@ erDiagram
     Users ||--o{ Sessions : "owns"
     Sessions ||--o{ Messages : "contains"
     Sessions ||--o{ SessionReports : "generates"
+    Users ||--o{ SessionReports : "owns"
 
     Users {
         id _id PK "Convex ID"
@@ -73,6 +74,7 @@ erDiagram
 
     SessionReports {
         id _id PK "Convex ID"
+        id userId FK "References Users._id"
         id sessionId FK "References Sessions._id"
         string reportContent "Full report text"
         any keyPoints "JSON array"
@@ -189,6 +191,7 @@ erDiagram
 | Column                | Type                 | Constraints | Description                            |
 | --------------------- | -------------------- | ----------- | -------------------------------------- |
 | \_id                  | Id<'sessionReports'> | PRIMARY KEY | Convex-generated unique identifier     |
+| userId                | Id<'users'>          | FOREIGN KEY | Owner of the report                    |
 | sessionId             | Id<'sessions'>       | FOREIGN KEY | Associated session                     |
 | reportContent         | string               | REQUIRED    | Full formatted report text             |
 | keyPoints             | any                  | REQUIRED    | JSON array of key discussion points    |
@@ -208,9 +211,12 @@ erDiagram
 **Indexes**:
 
 - `by_session`: Index on [sessionId] for session report lookups
+- `by_session_created`: Composite index on [sessionId, createdAt] for ordered session report reads
+- `by_user_created`: Composite index on [userId, createdAt] for cross-session memory reads
 
 **Relationships**:
 
+- N:1 with Users (many reports belong to one user)
 - N:1 with Sessions (many reports can be generated for one session)
 
 **Business Rules**:

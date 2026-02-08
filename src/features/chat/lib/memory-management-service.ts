@@ -3,62 +3,18 @@ import { anyApi } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 import { decryptSessionReportContent } from '@/features/chat/lib/message-encryption';
 import type { ConvexSessionReport, ConvexUser } from '@/types/convex';
+import type {
+  MemoryContextEntry,
+  MemoryData,
+  MemoryReportDetail,
+  MemoryManageData,
+  DeleteResponseData,
+} from '@/types';
 
 type ConvexSessionReportWithSession = ConvexSessionReport & {
   sessionTitle?: string;
   sessionStartedAt?: number;
 };
-
-interface MemoryContextEntry {
-  sessionTitle: string;
-  sessionDate: string;
-  reportDate: string;
-  content: string;
-  summary: string;
-}
-
-interface MemoryStats {
-  totalReportsFound: number;
-  successfullyDecrypted: number;
-  failedDecryptions: number;
-}
-
-interface MemoryData {
-  memoryContext: MemoryContextEntry[];
-  reportCount: number;
-  stats: MemoryStats;
-}
-
-interface MemoryReportDetail {
-  id: string;
-  sessionId: string;
-  sessionTitle: string;
-  sessionDate: string;
-  reportDate: string;
-  contentPreview: string;
-  keyInsights: string[];
-  hasEncryptedContent: boolean;
-  reportSize: number;
-  fullContent?: string;
-  structuredCBTData?: unknown;
-}
-
-interface MemoryManageData {
-  memoryDetails: MemoryReportDetail[];
-  reportCount: number;
-  stats: {
-    totalReportsFound: number;
-    successfullyProcessed: number;
-    failedDecryptions: number;
-    hasMemory: boolean;
-  };
-}
-
-interface DeleteMemoryData {
-  deletedCount: number;
-  message: string;
-  deletionType: 'specific' | 'recent' | 'all-except-current' | 'all';
-}
 
 export class MemoryManagementService {
   constructor(private readonly client: ConvexHttpClient) {}
@@ -349,8 +305,15 @@ export class MemoryManagementService {
 
           if (report.therapeuticInsights && typeof report.therapeuticInsights === 'object') {
             const insights = report.therapeuticInsights as Record<string, unknown>;
-            if (insights.structuredAssessment) {
-              reportDetail.structuredCBTData = insights.structuredAssessment;
+            if (
+              insights.structuredAssessment &&
+              typeof insights.structuredAssessment === 'object' &&
+              !Array.isArray(insights.structuredAssessment)
+            ) {
+              reportDetail.structuredCBTData = insights.structuredAssessment as Record<
+                string,
+                unknown
+              >;
             }
           }
         }
@@ -392,7 +355,7 @@ export class MemoryManagementService {
     sessionIds?: string[],
     limit?: number,
     excludeSessionId?: string | null
-  ): Promise<DeleteMemoryData> {
+  ): Promise<DeleteResponseData> {
     logger.info('Memory deletion request received');
 
     const client = this.client;

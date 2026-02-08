@@ -21,16 +21,16 @@ type VerifySessionOptions = { includeMessages?: boolean };
 
 export interface PaginationOptions {
   limit?: number;
-  offset?: number;
+  cursor?: string;
 }
 
 export interface PaginatedResult<T> {
   items: T[];
   pagination: {
     limit: number;
-    offset: number;
     total: number;
     hasMore: boolean;
+    nextCursor: string | null;
   };
 }
 
@@ -99,6 +99,11 @@ export async function getUserSessions(
   options: PaginationOptions = {},
   client?: ConvexHttpClient
 ): Promise<PaginatedResult<SessionDoc>> {
+  const requestedLimit = options.limit;
+  const normalizedLimit =
+    typeof requestedLimit === 'number' && Number.isFinite(requestedLimit)
+      ? Math.max(1, Math.min(Math.floor(requestedLimit), 100))
+      : 50;
   const convex = client ?? getConvexHttpClient();
   const user = await convex.query(api.users.getByClerkId, { clerkId });
   const userDoc = user ? assertUserDoc(user) : null;
@@ -106,27 +111,37 @@ export async function getUserSessions(
     return {
       items: [],
       pagination: {
-        limit: options.limit ?? 50,
-        offset: options.offset ?? 0,
+        limit: normalizedLimit,
         total: 0,
         hasMore: false,
+        nextCursor: null,
       },
     };
 
   const [sessions, total] = await Promise.all([
-    convex.query(anyApi.sessions.listByUser, { userId: userDoc._id }),
+    convex.query(anyApi.sessions.listByUserPaginated, {
+      userId: userDoc._id,
+      numItems: normalizedLimit,
+      cursor: options.cursor,
+    }),
     convex.query(api.sessions.countByUser, { userId: userDoc._id }),
   ]);
 
-  const items = assertSessionArray(sessions);
+  const items = assertSessionArray((sessions as { page?: unknown })?.page ?? []);
+  const continueCursor =
+    typeof (sessions as { continueCursor?: unknown })?.continueCursor === 'string'
+      ? (sessions as { continueCursor: string }).continueCursor
+      : null;
+  const isDone = Boolean((sessions as { isDone?: unknown })?.isDone);
+  const hasMore = !isDone && continueCursor !== null;
 
   return {
     items,
     pagination: {
-      limit: items.length,
-      offset: 0,
+      limit: normalizedLimit,
       total,
-      hasMore: false,
+      hasMore,
+      nextCursor: hasMore ? continueCursor : null,
     },
   };
 }

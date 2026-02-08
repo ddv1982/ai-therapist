@@ -105,20 +105,54 @@ export const GET = withAuth(async (request, context) => {
     logger.debug('Fetching sessions', context);
     const convex = getAuthenticatedConvexClient(context.jwtToken);
 
-    // Extract pagination parameters from query string
+    // Extract cursor pagination parameters from query string
     const url = new URL(request.url);
-    const limit = url.searchParams.get('limit')
-      ? parseInt(url.searchParams.get('limit')!, 10)
-      : undefined;
-    const offset = url.searchParams.get('offset')
-      ? parseInt(url.searchParams.get('offset')!, 10)
-      : undefined;
+    const limitParam = url.searchParams.get('limit');
+    const cursorParam = url.searchParams.get('cursor');
+    const offsetParam = url.searchParams.get('offset');
+
+    if (offsetParam !== null) {
+      return createErrorResponse('Offset pagination is no longer supported', 400, {
+        code: ErrorCode.INVALID_INPUT,
+        details: 'Use cursor-based pagination with `cursor` instead of `offset`',
+        suggestedAction: 'Remove `offset` and use the `nextCursor` from a previous response',
+        requestId: context.requestId,
+      });
+    }
+
+    let limit: number | undefined;
+    if (limitParam !== null) {
+      const parsedLimit = Number.parseInt(limitParam, 10);
+      if (!Number.isFinite(parsedLimit) || parsedLimit < 1 || parsedLimit > 100) {
+        return createErrorResponse('Invalid limit query parameter', 400, {
+          code: ErrorCode.INVALID_INPUT,
+          details: 'limit must be an integer between 1 and 100',
+          suggestedAction: 'Provide a valid `limit` value in the query string',
+          requestId: context.requestId,
+        });
+      }
+      limit = parsedLimit;
+    }
+
+    let cursor: string | undefined;
+    if (cursorParam !== null) {
+      const trimmedCursor = cursorParam.trim();
+      if (!trimmedCursor) {
+        return createErrorResponse('Invalid cursor query parameter', 400, {
+          code: ErrorCode.INVALID_INPUT,
+          details: 'cursor cannot be empty',
+          suggestedAction: 'Use `nextCursor` from a previous /api/sessions response',
+          requestId: context.requestId,
+        });
+      }
+      cursor = trimmedCursor;
+    }
 
     const result = await getUserSessions(
       context.principal.clerkId,
       {
         limit,
-        offset,
+        cursor,
       },
       convex
     );

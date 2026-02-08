@@ -57,3 +57,27 @@ export interface Session {
     messages?: number;
   };
 }
+
+export interface SessionListPagination {
+  /**
+   * @description Maximum number of sessions requested for this page
+   */
+  limit: number;
+  /**
+   * @description Total number of sessions available for the authenticated user
+   */
+  total: number;
+  /**
+   * @description Whether another page exists after this response
+   */
+  hasMore: boolean;
+  /**
+   * @description Cursor to request the next page; null when there are no more pages
+   */
+  nextCursor: string | null;
+}
+
+export interface SessionListResponse {
+  items: Session[];
+  pagination: SessionListPagination;
+}

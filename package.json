@@ -104,7 +104,6 @@
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
     "autoprefixer": "^10.4.24",
-    "baseline-browser-mapping": "^2.9.19",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -119,7 +118,6 @@
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4.1.18",
-    "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "web-streams-polyfill": "^4.2.0"
   },

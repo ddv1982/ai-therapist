@@ -25,6 +25,7 @@ describe('memory-utils', () => {
   describe('checkMemoryContext', () => {
     it('returns memory info when reports exist', async () => {
       (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
         data: {
           memoryContext: [{ reportDate: '2023-12-01' }, { reportDate: '2023-11-15' }],
         },
@@ -39,6 +40,7 @@ describe('memory-utils', () => {
 
     it('excludes session ID when provided', async () => {
       (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
         data: { memoryContext: [] },
       });
 
@@ -52,6 +54,7 @@ describe('memory-utils', () => {
 
     it('returns no memory when empty array', async () => {
       (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
         data: { memoryContext: [] },
       });
 
@@ -62,15 +65,15 @@ describe('memory-utils', () => {
       expect(result.lastReportDate).toBeUndefined();
     });
 
-    it('handles legacy plain response format', async () => {
+    it('returns no memory when response envelope is malformed', async () => {
       (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
         memoryContext: [{ reportDate: '2023-11-01' }],
       });
 
       const result = await checkMemoryContext();
 
-      expect(result.hasMemory).toBe(true);
-      expect(result.reportCount).toBe(1);
+      expect(result.hasMemory).toBe(false);
+      expect(result.reportCount).toBe(0);
     });
 
     it('returns no memory on fetch error', async () => {
@@ -95,6 +98,7 @@ describe('memory-utils', () => {
 
     it('sorts reports by date descending', async () => {
       (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
         data: {
           memoryContext: [
             { reportDate: '2023-10-15' },
@@ -111,6 +115,7 @@ describe('memory-utils', () => {
 
     it('handles null memoryContext', async () => {
       (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
         data: { memoryContext: null },
       });
 
@@ -123,6 +128,7 @@ describe('memory-utils', () => {
   describe('getMemoryManagementData', () => {
     it('fetches memory management data with defaults', async () => {
       (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
         data: {
           memoryDetails: [],
           reportCount: 0,
@@ -145,6 +151,7 @@ describe('memory-utils', () => {
 
     it('uses sessionId when provided', async () => {
       (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
         data: {
           memoryDetails: [],
           reportCount: 0,
@@ -189,7 +196,10 @@ describe('memory-utils', () => {
         },
       };
 
-      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({ data: mockData });
+      (apiClient.getMemoryReports as jest.Mock).mockResolvedValueOnce({
+        success: true,
+        data: mockData,
+      });
 
       const result = await getMemoryManagementData();
 

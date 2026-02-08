@@ -290,7 +290,7 @@ export function getApiData<T>(resp: ApiResponse<T>): T {
 
 export interface TherapeuticSessionResponse {
   sessionId: string;
-  status: 'active' | 'completed' | 'paused';
+  status: 'active' | 'completed';
   messageCount: number;
   duration?: number;
   insights?: string[];

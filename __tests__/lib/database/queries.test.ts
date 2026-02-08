@@ -16,7 +16,7 @@ jest.mock('@/lib/convex/http-client', () => ({
   },
   anyApi: {
     sessions: {
-      listByUser: 'sessions.listByUser',
+      listByUserPaginated: 'sessions.listByUserPaginated',
       countByUser: 'sessions.countByUser',
     },
     users: {
@@ -191,18 +191,24 @@ describe('database queries type safety', () => {
     const session = buildSessionDoc();
     mockQuery
       .mockResolvedValueOnce(user)
-      .mockResolvedValueOnce([session]) // listByUser result
+      .mockResolvedValueOnce({
+        page: [session],
+        continueCursor: 'cursor_1',
+        isDone: true,
+      }) // listByUserPaginated result
       .mockResolvedValueOnce(1); // countByUser result
 
-    const result = await queries.getUserSessions(user.clerkId ?? '');
+    const result = await queries.getUserSessions(user.clerkId ?? '', {
+      limit: 1,
+    });
 
     expect(result.items).toHaveLength(1);
     expect(result.items[0]._id).toBe(session._id);
     expect(result.pagination).toEqual({
-      limit: 1, // Returns actual item count
-      offset: 0,
+      limit: 1,
       total: 1,
       hasMore: false,
+      nextCursor: null,
     });
   });
 });

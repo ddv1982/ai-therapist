@@ -11,7 +11,19 @@
 export type { StreamingStage, ChatMessage } from './domains/chat';
 
 // Sessions Domain - Session management and operations
-export type { Session } from './domains/sessions';
+export type { Session, SessionListPagination, SessionListResponse } from './domains/sessions';
+
+// Memory Domain - Cross-session memory reports and management
+export type {
+  MemoryContextEntry,
+  MemoryStats,
+  MemoryData,
+  MemoryReportDetail,
+  MemoryManagementStats,
+  MemoryManageData,
+  MemoryDeleteType,
+  DeleteResponseData,
+} from './domains/memory';
 
 // Therapy Domain - CBT and therapeutic tools (types)
 export type {

@@ -22,7 +22,6 @@ jest.mock('@/lib/convex/http-client', () => ({
   api: {
     sessions: {
       getWithMessagesAndReports: 'sessions.getWithMessagesAndReports',
-      listByUser: 'sessions.listByUser',
       countByUser: 'sessions.countByUser',
     },
     users: {
@@ -31,7 +30,7 @@ jest.mock('@/lib/convex/http-client', () => ({
   },
   anyApi: {
     sessions: {
-      listByUser: 'sessions.listByUser',
+      listByUserPaginated: 'sessions.listByUserPaginated',
       countByUser: 'sessions.countByUser',
     },
     users: {
@@ -118,7 +117,11 @@ describe('session-repository - edge cases', () => {
     it('handles getUserSessions call', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user1' })
-        .mockResolvedValueOnce([{ _id: 'session1', userId: 'user1' }])
+        .mockResolvedValueOnce({
+          page: [{ _id: 'session1', userId: 'user1' }],
+          continueCursor: null,
+          isDone: true,
+        })
         .mockResolvedValueOnce(1);
 
       const result = await getUserSessions('clerk1');
@@ -154,7 +157,11 @@ describe('session-repository - edge cases', () => {
     it('handles count query failure gracefully', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user1' })
-        .mockResolvedValueOnce([{ _id: 'session1', userId: 'user1' }])
+        .mockResolvedValueOnce({
+          page: [{ _id: 'session1', userId: 'user1' }],
+          continueCursor: null,
+          isDone: true,
+        })
         .mockRejectedValueOnce(new Error('Count query failed'));
 
       await expect(getUserSessions('clerk1')).rejects.toThrow('Count query failed');
@@ -275,7 +282,11 @@ describe('session-repository - edge cases', () => {
     it('handles user with zero sessions', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user1' })
-        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce({
+          page: [],
+          continueCursor: null,
+          isDone: true,
+        })
         .mockResolvedValueOnce(0);
 
       const result = await getUserSessions('clerk1');
@@ -294,7 +305,11 @@ describe('session-repository - edge cases', () => {
 
       mockQuery
         .mockResolvedValueOnce({ _id: 'user1' })
-        .mockResolvedValueOnce(manySessions)
+        .mockResolvedValueOnce({
+          page: manySessions,
+          continueCursor: 'cursor-next',
+          isDone: false,
+        })
         .mockResolvedValueOnce(1000);
 
       const result = await getUserSessions('clerk1');
@@ -324,13 +339,17 @@ describe('session-repository - edge cases', () => {
     it('handles user with unicode email/name', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user1' })
-        .mockResolvedValueOnce([
-          {
-            _id: 'session1',
-            userId: 'user1',
-            title: '日本語セッション 🌟',
-          },
-        ])
+        .mockResolvedValueOnce({
+          page: [
+            {
+              _id: 'session1',
+              userId: 'user1',
+              title: '日本語セッション 🌟',
+            },
+          ],
+          continueCursor: null,
+          isDone: true,
+        })
         .mockResolvedValueOnce(1);
 
       const result = await getUserSessions('clerk_日本語');

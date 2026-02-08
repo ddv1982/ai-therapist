@@ -1,5 +1,11 @@
-import type { Session } from '@/types';
-import type { ChatMessage } from '@/types';
+import type {
+  Session,
+  SessionListResponse,
+  ChatMessage,
+  MemoryData,
+  MemoryManageData,
+  DeleteResponseData,
+} from '@/types';
 import type { ApiResponse, PaginatedResponse } from '@/lib/api/api-response';
 
 async function parseJsonSafe(response: Response) {
@@ -133,8 +139,17 @@ export class ApiClient {
   // Token refresh removed; DB-backed session cookie handles auth.
 
   // Sessions
-  async listSessions(): Promise<ApiResponse<PaginatedResponse<Session>>> {
-    return this.request<ApiResponse<PaginatedResponse<Session>>>('/api/sessions');
+  async listSessions(params?: {
+    limit?: number;
+    cursor?: string;
+  }): Promise<ApiResponse<SessionListResponse>> {
+    const qs = new URLSearchParams();
+    if (typeof params?.limit === 'number') qs.set('limit', String(params.limit));
+    if (typeof params?.cursor === 'string' && params.cursor.trim().length > 0) {
+      qs.set('cursor', params.cursor.trim());
+    }
+    const path = `/api/sessions${qs.toString() ? `?${qs.toString()}` : ''}`;
+    return this.request<ApiResponse<SessionListResponse>>(path);
   }
 
   async createSession(body: { title: string }): Promise<ApiResponse<Session>> {
@@ -234,14 +249,23 @@ export class ApiClient {
   }
 
   // Memory Management
-  async getMemoryReports<T>(params?: string | URLSearchParams): Promise<T> {
+  async getMemoryReports(
+    params?: string | URLSearchParams
+  ): Promise<ApiResponse<MemoryData | MemoryManageData>> {
     const qs = params ? (typeof params === 'string' ? params : params.toString()) : '';
-    return this.request<T>(`/api/reports/memory${qs ? `?${qs}` : ''}`);
+    return this.request<ApiResponse<MemoryData | MemoryManageData>>(
+      `/api/reports/memory${qs ? `?${qs}` : ''}`
+    );
   }
 
-  async deleteMemoryReports<T>(params?: string | URLSearchParams): Promise<T> {
+  async deleteMemoryReports(
+    params?: string | URLSearchParams
+  ): Promise<ApiResponse<DeleteResponseData>> {
     const qs = params ? (typeof params === 'string' ? params : params.toString()) : '';
-    return this.request<T>(`/api/reports/memory${qs ? `?${qs}` : ''}`, { method: 'DELETE' });
+    return this.request<ApiResponse<DeleteResponseData>>(
+      `/api/reports/memory${qs ? `?${qs}` : ''}`,
+      { method: 'DELETE' }
+    );
   }
 
   // Single session

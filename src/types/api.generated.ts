@@ -62,18 +62,23 @@ export interface paths {
         };
         /**
          * Retrieve all chat sessions
-         * @description Gets a list of all chat sessions with message counts and metadata
+         * @description Gets a cursor-paginated list of chat sessions with message counts and metadata.
          */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Maximum number of sessions to return (default 50) */
+                    limit?: number;
+                    /** @description Cursor from a previous response to request the next page */
+                    cursor?: string;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
             };
             requestBody?: never;
             responses: {
-                /** @description List of sessions */
+                /** @description Cursor-paginated list of sessions */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["X-Request-Id"];
@@ -83,10 +88,11 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: components["schemas"]["Session"][];
+                            data?: components["schemas"]["SessionsListData"];
                         };
                     };
                 };
+                400: components["responses"]["BadRequest"];
                 500: components["responses"]["InternalServerError"];
             };
         };
@@ -708,7 +714,13 @@ export interface paths {
                         "X-Request-Id": components["headers"]["X-Request-Id"];
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["MemoryData"] | components["schemas"]["MemoryManageData"];
+                        };
+                    };
                 };
                 500: components["responses"]["InternalServerError"];
             };
@@ -738,7 +750,13 @@ export interface paths {
                         "X-Request-Id": components["headers"]["X-Request-Id"];
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["DeleteResponseData"];
+                        };
+                    };
                 };
                 500: components["responses"]["InternalServerError"];
             };
@@ -1024,6 +1042,32 @@ export interface components {
                 messages?: number;
             };
         };
+        SessionsPagination: {
+            /**
+             * @description Maximum number of sessions requested for this page
+             * @example 50
+             */
+            limit: number;
+            /**
+             * @description Total number of sessions available for the authenticated user
+             * @example 128
+             */
+            total: number;
+            /**
+             * @description Whether there is another page after this response
+             * @example true
+             */
+            hasMore: boolean;
+            /**
+             * @description Cursor to request the next page, null when no additional pages exist
+             * @example session_cursor_eyJpZCI6InNlc3Npb24ifQ
+             */
+            nextCursor: string | null;
+        };
+        SessionsListData: {
+            items: components["schemas"]["Session"][];
+            pagination: components["schemas"]["SessionsPagination"];
+        };
         SessionReport: {
             /**
              * Format: uuid
@@ -1052,6 +1096,59 @@ export interface components {
              * @description Report generation timestamp
              */
             createdAt?: string;
+        };
+        MemoryContextEntry: {
+            sessionTitle: string;
+            /** Format: date */
+            sessionDate: string;
+            /** Format: date */
+            reportDate: string;
+            content: string;
+            summary: string;
+        };
+        MemoryStats: {
+            totalReportsFound: number;
+            successfullyDecrypted: number;
+            failedDecryptions: number;
+        };
+        MemoryData: {
+            memoryContext: components["schemas"]["MemoryContextEntry"][];
+            reportCount: number;
+            stats: components["schemas"]["MemoryStats"];
+        };
+        MemoryReportDetail: {
+            id: string;
+            sessionId: string;
+            sessionTitle: string;
+            /** Format: date */
+            sessionDate: string;
+            /** Format: date */
+            reportDate: string;
+            contentPreview: string;
+            keyInsights: string[];
+            hasEncryptedContent: boolean;
+            reportSize: number;
+            fullContent?: string;
+            structuredCBTData?: {
+                [key: string]: unknown;
+            };
+        };
+        MemoryManagementStats: {
+            totalReportsFound: number;
+            successfullyProcessed: number;
+            failedDecryptions: number;
+            hasMemory: boolean;
+        };
+        MemoryManageData: {
+            memoryDetails: components["schemas"]["MemoryReportDetail"][];
+            reportCount: number;
+            stats: components["schemas"]["MemoryManagementStats"];
+        };
+        DeleteResponseData: {
+            deletedCount: number;
+            message: string;
+            /** @enum {string} */
+            deletionType: "specific" | "recent" | "all-except-current" | "all";
         };
         ModelConfig: {
             /**

@@ -1,9 +1,9 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ApiResponse, PaginatedResponse } from '@/lib/api/api-response';
+import type { ApiResponse } from '@/lib/api/api-response';
 import { isApiResponse } from '@/lib/api/api-response';
-import type { Session } from '@/types';
+import type { Session, SessionListResponse } from '@/types';
 import { apiClient } from '@/lib/api/client';
 
 export interface SessionData {
@@ -23,7 +23,7 @@ type CreateSessionResponse = SessionData;
 
 // Exported pure transform helpers for testing and reuse
 export function transformFetchSessionsResponse(
-  response: ApiResponse<PaginatedResponse<Session>>
+  response: ApiResponse<SessionListResponse | Session[]>
 ): SessionData[] {
   let sessions: Session[] = [];
 

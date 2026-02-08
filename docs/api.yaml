@@ -95,12 +95,27 @@ paths:
   /sessions:
     get:
       summary: Retrieve all chat sessions
-      description: Gets a list of all chat sessions with message counts and metadata
+      description: Gets a cursor-paginated list of chat sessions with message counts and metadata.
       tags:
         - Sessions
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Maximum number of sessions to return (default 50)
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Cursor from a previous response to request the next page
       responses:
         200:
-          description: List of sessions
+          description: Cursor-paginated list of sessions
           headers:
             X-Request-Id:
               $ref: '#/components/headers/X-Request-Id'
@@ -113,9 +128,9 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Session'
+                    $ref: '#/components/schemas/SessionsListData'
+        400:
+          $ref: '#/components/responses/BadRequest'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -690,6 +705,18 @@ paths:
           headers:
             X-Request-Id:
               $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/MemoryData'
+                      - $ref: '#/components/schemas/MemoryManageData'
         500:
           $ref: '#/components/responses/InternalServerError'
     delete:
@@ -720,6 +747,16 @@ paths:
           headers:
             X-Request-Id:
               $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/DeleteResponseData'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -990,6 +1027,45 @@ components:
               description: Number of messages in this session
               example: 12
 
+    SessionsPagination:
+      type: object
+      required:
+        - limit
+        - total
+        - hasMore
+        - nextCursor
+      properties:
+        limit:
+          type: integer
+          description: Maximum number of sessions requested for this page
+          example: 50
+        total:
+          type: integer
+          description: Total number of sessions available for the authenticated user
+          example: 128
+        hasMore:
+          type: boolean
+          description: Whether there is another page after this response
+          example: true
+        nextCursor:
+          type: string
+          nullable: true
+          description: Cursor to request the next page, null when no additional pages exist
+          example: 'session_cursor_eyJpZCI6InNlc3Npb24ifQ'
+
+    SessionsListData:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Session'
+        pagination:
+          $ref: '#/components/schemas/SessionsPagination'
+
     SessionReport:
       type: object
       required:
@@ -1029,6 +1105,147 @@ components:
           type: string
           format: date-time
           description: Report generation timestamp
+
+    MemoryContextEntry:
+      type: object
+      required:
+        - sessionTitle
+        - sessionDate
+        - reportDate
+        - content
+        - summary
+      properties:
+        sessionTitle:
+          type: string
+        sessionDate:
+          type: string
+          format: date
+        reportDate:
+          type: string
+          format: date
+        content:
+          type: string
+        summary:
+          type: string
+
+    MemoryStats:
+      type: object
+      required:
+        - totalReportsFound
+        - successfullyDecrypted
+        - failedDecryptions
+      properties:
+        totalReportsFound:
+          type: integer
+        successfullyDecrypted:
+          type: integer
+        failedDecryptions:
+          type: integer
+
+    MemoryData:
+      type: object
+      required:
+        - memoryContext
+        - reportCount
+        - stats
+      properties:
+        memoryContext:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemoryContextEntry'
+        reportCount:
+          type: integer
+        stats:
+          $ref: '#/components/schemas/MemoryStats'
+
+    MemoryReportDetail:
+      type: object
+      required:
+        - id
+        - sessionId
+        - sessionTitle
+        - sessionDate
+        - reportDate
+        - contentPreview
+        - keyInsights
+        - hasEncryptedContent
+        - reportSize
+      properties:
+        id:
+          type: string
+        sessionId:
+          type: string
+        sessionTitle:
+          type: string
+        sessionDate:
+          type: string
+          format: date
+        reportDate:
+          type: string
+          format: date
+        contentPreview:
+          type: string
+        keyInsights:
+          type: array
+          items:
+            type: string
+        hasEncryptedContent:
+          type: boolean
+        reportSize:
+          type: integer
+        fullContent:
+          type: string
+        structuredCBTData:
+          type: object
+          additionalProperties: true
+
+    MemoryManagementStats:
+      type: object
+      required:
+        - totalReportsFound
+        - successfullyProcessed
+        - failedDecryptions
+        - hasMemory
+      properties:
+        totalReportsFound:
+          type: integer
+        successfullyProcessed:
+          type: integer
+        failedDecryptions:
+          type: integer
+        hasMemory:
+          type: boolean
+
+    MemoryManageData:
+      type: object
+      required:
+        - memoryDetails
+        - reportCount
+        - stats
+      properties:
+        memoryDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemoryReportDetail'
+        reportCount:
+          type: integer
+        stats:
+          $ref: '#/components/schemas/MemoryManagementStats'
+
+    DeleteResponseData:
+      type: object
+      required:
+        - deletedCount
+        - message
+        - deletionType
+      properties:
+        deletedCount:
+          type: integer
+        message:
+          type: string
+        deletionType:
+          type: string
+          enum: [specific, recent, all-except-current, all]
 
     ModelConfig:
       type: object
