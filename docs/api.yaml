@@ -1065,7 +1065,7 @@ components:
         id:
           type: string
           description: Unique identifier for the message (Convex document ID)
-          example: 'msg-123e4567-e89b-12d3-a456-426614174000'
+          example: 'k97h2m4n6p8q1r3s5t7v9x2y4z'
         role:
           type: string
           enum: [user, assistant]
