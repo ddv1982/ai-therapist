@@ -291,7 +291,6 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
       responses:
         200:
           description: Session details
@@ -320,7 +319,6 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
       requestBody:
         required: true
         content:
@@ -368,9 +366,8 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
-          description: UUID of the session to delete
-          example: '123e4567-e89b-12d3-a456-426614174000'
+          description: Convex session document identifier to delete
+          example: 'j57d6p8h9n2x3q4r5s6t7u8v9w'
       responses:
         200:
           description: Session deleted successfully
@@ -412,7 +409,6 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
       responses:
         200:
           description: Session resumed
@@ -453,8 +449,7 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
-          description: UUID of the session
+          description: Convex session document identifier
         - name: page
           in: query
           required: false
@@ -524,8 +519,7 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
-          description: UUID of the session
+          description: Convex session document identifier
       requestBody:
         required: true
         content:
@@ -579,7 +573,6 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
         - name: messageId
           in: path
           required: true
@@ -669,7 +662,7 @@ paths:
               properties:
                 sessionId:
                   type: string
-                  format: uuid
+                  description: Convex session document identifier
                 model:
                   type: string
                   description: Optional model override
@@ -733,7 +726,7 @@ paths:
               properties:
                 sessionId:
                   type: string
-                  format: uuid
+                  description: Convex session document identifier
                 contextualMessages:
                   type: array
                   minItems: 1
@@ -1071,8 +1064,7 @@ components:
       properties:
         id:
           type: string
-          format: uuid
-          description: Unique identifier for the message
+          description: Unique identifier for the message (Convex document ID)
           example: 'msg-123e4567-e89b-12d3-a456-426614174000'
         role:
           type: string
@@ -1212,12 +1204,10 @@ components:
       properties:
         id:
           type: string
-          format: uuid
-          description: Unique report identifier
+          description: Unique report identifier (Convex document ID)
         sessionId:
           type: string
-          format: uuid
-          description: Associated session ID
+          description: Associated session identifier (Convex document ID)
         keyPoints:
           type: string
           description: JSON string of key discussion points
@@ -1435,8 +1425,7 @@ components:
           description: Array of conversation messages
         sessionId:
           type: string
-          format: uuid
-          description: Optional session ID for context
+          description: Optional session identifier for context (Convex document ID)
         model:
           type: string
           description: AI model to use
@@ -1484,8 +1473,7 @@ components:
       properties:
         sessionId:
           type: string
-          format: uuid
-          description: Session to generate report for
+          description: Session identifier to generate report for (Convex document ID)
         messages:
           type: array
           items:

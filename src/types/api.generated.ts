@@ -323,8 +323,8 @@ export interface paths {
                 header?: never;
                 path: {
                     /**
-                     * @description UUID of the session to delete
-                     * @example 123e4567-e89b-12d3-a456-426614174000
+                     * @description Convex session document identifier to delete
+                     * @example j57d6p8h9n2x3q4r5s6t7u8v9w
                      */
                     sessionId: string;
                 };
@@ -488,7 +488,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    /** @description UUID of the session */
+                    /** @description Convex session document identifier */
                     sessionId: string;
                 };
                 cookie?: never;
@@ -534,7 +534,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description UUID of the session */
+                    /** @description Convex session document identifier */
                     sessionId: string;
                 };
                 cookie?: never;
@@ -700,7 +700,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** Format: uuid */
+                        /** @description Convex session document identifier */
                         sessionId: string;
                         /** @description Optional model override */
                         model?: string;
@@ -771,7 +771,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** Format: uuid */
+                        /** @description Convex session document identifier */
                         sessionId: string;
                         contextualMessages: {
                             /** @enum {string} */
@@ -1108,8 +1108,7 @@ export interface components {
     schemas: {
         Message: {
             /**
-             * Format: uuid
-             * @description Unique identifier for the message
+             * @description Unique identifier for the message (Convex document ID)
              * @example msg-123e4567-e89b-12d3-a456-426614174000
              */
             id?: string;
@@ -1221,15 +1220,9 @@ export interface components {
             pagination: components["schemas"]["SessionsPagination"];
         };
         SessionReport: {
-            /**
-             * Format: uuid
-             * @description Unique report identifier
-             */
+            /** @description Unique report identifier (Convex document ID) */
             id: string;
-            /**
-             * Format: uuid
-             * @description Associated session ID
-             */
+            /** @description Associated session identifier (Convex document ID) */
             sessionId: string;
             /** @description JSON string of key discussion points */
             keyPoints?: string;
@@ -1337,10 +1330,7 @@ export interface components {
                 role?: "user" | "assistant";
                 content?: string;
             }[];
-            /**
-             * Format: uuid
-             * @description Optional session ID for context
-             */
+            /** @description Optional session identifier for context (Convex document ID) */
             sessionId?: string;
             /**
              * @description AI model to use
@@ -1373,10 +1363,7 @@ export interface components {
             title: string;
         };
         EmailReportRequest: {
-            /**
-             * Format: uuid
-             * @description Session to generate report for
-             */
+            /** @description Session identifier to generate report for (Convex document ID) */
             sessionId: string;
             /** @description Session messages */
             messages: components["schemas"]["Message"][];

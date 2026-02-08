@@ -253,7 +253,7 @@ export class ApiClient {
     );
   }
 
-  // Internal reports (contextual CBT export flow)
+  // Contextual reports API (CBT export flow)
   async generateReportFromContext(
     body: {
       sessionId: string;
