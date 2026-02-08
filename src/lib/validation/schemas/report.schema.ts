@@ -179,6 +179,7 @@ export const reportMessageSchema = z.object({
     .string()
     .min(1, 'Message content cannot be empty')
     .max(50000, 'Message content too long'),
+  timestamp: z.string().datetime().optional(),
 });
 
 // ============================================================================
@@ -188,15 +189,26 @@ export const reportMessageSchema = z.object({
 /**
  * Schema for report generation requests
  */
-export const reportGenerationSchema = z.object({
-  sessionId: z.string().min(1, 'Session ID cannot be empty'),
-  messages: z
-    .array(reportMessageSchema)
-    .min(1, 'At least one message is required')
-    .max(1000, 'Too many messages (max 1000)'),
-  model: z.string().min(1).max(100).optional(),
-  reportStyle: z.enum(['client_friendly', 'clinical_notes']).optional(),
-});
+export const reportGenerationSchema = z
+  .object({
+    sessionId: z.string().min(1, 'Session ID cannot be empty'),
+    model: z.string().min(1).max(100).optional(),
+  })
+  .strict();
+
+/**
+ * Schema for internal report generation with explicit context messages
+ */
+export const reportGenerationWithContextSchema = z
+  .object({
+    sessionId: z.string().min(1, 'Session ID cannot be empty'),
+    contextualMessages: z
+      .array(reportMessageSchema)
+      .min(1, 'At least one message is required')
+      .max(1000, 'Too many messages (max 1000)'),
+    model: z.string().min(1).max(100).optional(),
+  })
+  .strict();
 
 // ============================================================================
 // FULL SESSION REPORT SCHEMA

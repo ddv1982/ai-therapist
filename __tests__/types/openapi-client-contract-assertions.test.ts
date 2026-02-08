@@ -11,6 +11,18 @@ import type {
   ClientGetMemoryReportsMatchesReverse,
   ClientDeleteMemoryReportsMatches,
   ClientDeleteMemoryReportsMatchesReverse,
+  ResumeSessionPost200Assignable,
+  ResumeSessionPost200ReverseAssignable,
+  ClientResumeSessionMatches,
+  ClientResumeSessionMatchesReverse,
+  ReportsGeneratePost200Assignable,
+  ReportsGeneratePost200ReverseAssignable,
+  ReportsGenerateContextPost200Assignable,
+  ReportsGenerateContextPost200ReverseAssignable,
+  ClientGenerateReportDetailedMatches,
+  ClientGenerateReportDetailedMatchesReverse,
+  ClientGenerateReportFromContextMatches,
+  ClientGenerateReportFromContextMatchesReverse,
 } from '@/types/openapi-client-contract-assertions';
 import type {
   SessionListPagination,
@@ -34,7 +46,19 @@ describe('OpenAPI client contract assertions', () => {
       | ClientGetMemoryReportsMatches
       | ClientGetMemoryReportsMatchesReverse
       | ClientDeleteMemoryReportsMatches
-      | ClientDeleteMemoryReportsMatchesReverse;
+      | ClientDeleteMemoryReportsMatchesReverse
+      | ResumeSessionPost200Assignable
+      | ResumeSessionPost200ReverseAssignable
+      | ClientResumeSessionMatches
+      | ClientResumeSessionMatchesReverse
+      | ReportsGeneratePost200Assignable
+      | ReportsGeneratePost200ReverseAssignable
+      | ReportsGenerateContextPost200Assignable
+      | ReportsGenerateContextPost200ReverseAssignable
+      | ClientGenerateReportDetailedMatches
+      | ClientGenerateReportDetailedMatchesReverse
+      | ClientGenerateReportFromContextMatches
+      | ClientGenerateReportFromContextMatchesReverse;
 
     type ExportedDomainTypes =
       | SessionListPagination

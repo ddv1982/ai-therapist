@@ -38,11 +38,10 @@ async function selectSessionAction(sessionId: string | null) {
     if (sessionId) {
       const convexSessionId = assertSessionId(sessionId);
       await convex.query(api.sessions.get, { sessionId: convexSessionId });
-      await convex.mutation(api.sessions.update, { sessionId: convexSessionId, status: 'active' });
       statusStream.update({
         phase: 'persisting',
         sessionId,
-        message: 'Persisting selection securely',
+        message: 'Persisting session pointer securely',
       });
     } else {
       statusStream.update({

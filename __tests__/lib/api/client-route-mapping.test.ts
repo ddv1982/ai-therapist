@@ -46,6 +46,7 @@ describe('ApiClient route mapping', () => {
 
     await client.listSessions();
     await client.createSession({ title: 'Session' });
+    await client.resumeSession('sess-123');
     await client.deleteSession('sess-123');
     await client.listMessages('sess-123', { page: 2, limit: 10 });
     await client.postMessage('sess-123', { role: 'user', content: 'hello' });
@@ -53,7 +54,11 @@ describe('ApiClient route mapping', () => {
       metadata: { source: 'test' },
       mergeStrategy: 'merge',
     });
-    await client.generateReportDetailed({ sessionId: 'sess-123', messages: [] });
+    await client.generateReportDetailed({ sessionId: 'sess-123' });
+    await client.generateReportFromContext({
+      sessionId: 'sess-123',
+      contextualMessages: [{ role: 'user', content: 'summary' }],
+    });
     await client.getMemoryReports();
     await client.deleteMemoryReports();
     await client.getSessionById('sess-123');

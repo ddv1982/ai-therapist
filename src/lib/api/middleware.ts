@@ -25,6 +25,8 @@ import {
   setRateLimitHeaders,
 } from '@/lib/api/middleware/request-utils';
 import { env } from '@/config/env';
+import type { Principal } from '@/server/domain/auth/principal';
+import { resolvePrincipal } from '@/server/application/auth/resolve-principal';
 
 export interface RequestContext {
   requestId: string;
@@ -36,12 +38,8 @@ export interface RequestContext {
   [key: string]: unknown;
 }
 
-export interface AuthenticatedPrincipal {
-  clerkId: string;
-}
-
 export interface AuthenticatedRequestContext extends RequestContext {
-  principal: AuthenticatedPrincipal;
+  principal: Principal;
   userInfo: ReturnType<typeof getSingleUserInfo>;
   jwtToken?: string;
 }
@@ -61,17 +59,13 @@ function createFallbackUserInfo(req: NextRequest): ReturnType<typeof getSingleUs
   };
 }
 
-function resolveClerkId(authResult: { clerkId?: string; userId?: string }): string | null {
-  return authResult.clerkId ?? authResult.userId ?? null;
-}
-
 function buildAuthenticatedContext(
   request: NextRequest,
   baseContext: RequestContext,
   authResult: { jwtToken?: string; clerkId?: string; userId?: string }
 ): AuthenticatedRequestContext {
-  const clerkId = resolveClerkId(authResult);
-  if (!clerkId) {
+  const principal = resolvePrincipal(authResult);
+  if (!principal) {
     throw new Error('Authentication succeeded but no canonical clerkId was provided');
   }
 
@@ -84,7 +78,7 @@ function buildAuthenticatedContext(
 
   return {
     ...baseContext,
-    principal: { clerkId },
+    principal,
     userInfo,
     jwtToken: authResult.jwtToken,
   };
@@ -168,8 +162,8 @@ export function withAuth<T = unknown>(
 ) {
   return withApiMiddleware<T>(async (request, baseContext, params) => {
     const authResult = await validateApiAuth();
-    const clerkId = resolveClerkId(authResult);
-    if (!authResult.isValid || !clerkId) {
+    const principal = resolvePrincipal(authResult);
+    if (!authResult.isValid || !principal) {
       logger.warn('Unauthorized request', { ...baseContext, error: authResult.error });
       const unauthorized = createAuthenticationErrorResponse(
         authResult.error || 'Authentication required',
@@ -331,8 +325,8 @@ export function withAuthAndRateLimit<T = unknown>(
     const startHighRes = performance.now();
     try {
       const authResult = await validateApiAuth();
-      const clerkId = resolveClerkId(authResult);
-      if (!authResult.isValid || !clerkId) {
+      const principal = resolvePrincipal(authResult);
+      if (!authResult.isValid || !principal) {
         const unauthorized = createAuthenticationErrorResponse(
           authResult.error || 'Authentication required',
           requestContext.requestId
@@ -492,8 +486,8 @@ export function withAuthAndRateLimitStreaming(
       }
 
       const authResult = await validateApiAuth();
-      const clerkId = resolveClerkId(authResult);
-      if (!authResult.isValid || !clerkId) {
+      const principal = resolvePrincipal(authResult);
+      if (!authResult.isValid || !principal) {
         const unauthorized = createAuthenticationErrorResponse(
           authResult.error || 'Authentication required',
           baseContext.requestId

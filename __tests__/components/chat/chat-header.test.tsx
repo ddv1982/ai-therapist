@@ -31,6 +31,7 @@ describe('ChatHeader', () => {
   const mockState = {
     showSidebar: false,
     isGeneratingReport: false,
+    isSessionReadyForReport: true,
     isLoading: false,
     isMobile: false,
     currentSession: null,
@@ -69,5 +70,23 @@ describe('ChatHeader', () => {
     const btn = screen.getByLabelText('Toggle session sidebar');
     fireEvent.click(btn);
     expect(mockController.setShowSidebar).toHaveBeenCalledWith(true);
+  });
+
+  test('disables report button when session is not ready', () => {
+    (useChat as jest.Mock).mockReturnValue({
+      state: {
+        ...mockState,
+        currentSession: 'sess-1',
+        isSessionReadyForReport: false,
+      },
+      actions: mockActions,
+      controller: mockController,
+      modelLabel: 'GPT-OSS 20B',
+    });
+
+    renderWithIntl(<ChatHeader />);
+
+    const reportButton = screen.getByTitle('Generate session report');
+    expect(reportButton).toBeDisabled();
   });
 });

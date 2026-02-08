@@ -514,60 +514,22 @@ describe('Report Validation Schemas', () => {
     it('accepts valid generation request', () => {
       const result = reportGenerationSchema.safeParse({
         sessionId: 'session-123',
-        messages: [
-          { role: 'user', content: 'Hello' },
-          { role: 'assistant', content: 'Hi there!' },
-        ],
         model: 'gpt-4',
-        reportStyle: 'clinical_notes',
       });
       expect(result.success).toBe(true);
     });
 
-    it('requires at least one message', () => {
+    it('rejects unknown fields from legacy payloads', () => {
       const result = reportGenerationSchema.safeParse({
         sessionId: 'session-123',
-        messages: [],
+        messages: [{ role: 'user', content: 'legacy' }],
       });
       expect(result.success).toBe(false);
-    });
-
-    it('limits messages to 1000', () => {
-      const messages = Array(1001)
-        .fill(null)
-        .map(() => ({
-          role: 'user' as const,
-          content: 'Test',
-        }));
-      const result = reportGenerationSchema.safeParse({
-        sessionId: 'session-123',
-        messages,
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('validates reportStyle enum', () => {
-      expect(
-        reportGenerationSchema.safeParse({
-          sessionId: 'test',
-          messages: [{ role: 'user', content: 'test' }],
-          reportStyle: 'client_friendly',
-        }).success
-      ).toBe(true);
-
-      expect(
-        reportGenerationSchema.safeParse({
-          sessionId: 'test',
-          messages: [{ role: 'user', content: 'test' }],
-          reportStyle: 'invalid',
-        }).success
-      ).toBe(false);
     });
 
     it('handles optional fields', () => {
       const result = reportGenerationSchema.safeParse({
         sessionId: 'session-123',
-        messages: [{ role: 'user', content: 'Hello' }],
       });
       expect(result.success).toBe(true);
     });

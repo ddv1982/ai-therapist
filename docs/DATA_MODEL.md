@@ -616,8 +616,8 @@ interface Session {
 }
 
 interface SessionReport {
-  id: string; // UUID
-  sessionId: string; // UUID
+  id: string; // Convex document ID
+  sessionId: string; // Convex session document ID
   keyPoints?: string; // JSON string
   therapeuticInsights: string;
   patternsIdentified?: string; // JSON string

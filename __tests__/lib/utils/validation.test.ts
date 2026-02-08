@@ -480,7 +480,6 @@ describe('validation', () => {
     it('accepts valid report generation request', () => {
       const result = reportGenerationSchema.safeParse({
         sessionId: 'sess-123',
-        messages: [{ role: 'user', content: 'Hello' }],
       });
       expect(result.success).toBe(true);
     });
@@ -488,28 +487,15 @@ describe('validation', () => {
     it('accepts with optional model', () => {
       const result = reportGenerationSchema.safeParse({
         sessionId: 'sess-123',
-        messages: [{ role: 'assistant', content: 'Hi' }],
         model: 'gpt-4',
       });
       expect(result.success).toBe(true);
     });
 
-    it('rejects empty messages array', () => {
+    it('rejects unknown fields from legacy payloads', () => {
       const result = reportGenerationSchema.safeParse({
         sessionId: 'sess-123',
-        messages: [],
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects more than 1000 messages', () => {
-      const messages = Array.from({ length: 1001 }, () => ({
-        role: 'user' as const,
-        content: 'Test',
-      }));
-      const result = reportGenerationSchema.safeParse({
-        sessionId: 'sess-123',
-        messages,
+        messages: [{ role: 'user', content: 'legacy' }],
       });
       expect(result.success).toBe(false);
     });

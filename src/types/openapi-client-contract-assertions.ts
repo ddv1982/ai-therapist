@@ -2,6 +2,7 @@ import type { ApiResponse } from '@/lib/api/api-response';
 import type { ApiClient } from '@/lib/api/client';
 import type { paths } from '@/types/api.generated';
 import type {
+  Session,
   SessionListResponse,
   MemoryData,
   MemoryManageData,
@@ -67,4 +68,84 @@ export type ClientDeleteMemoryReportsMatches = Assert<
 >;
 export type ClientDeleteMemoryReportsMatchesReverse = Assert<
   IsAssignable<ApiResponse<DeleteResponseData>, ClientDeleteMemoryReportsReturn>
+>;
+
+type ResumeSessionPost200 =
+  paths['/sessions/{sessionId}/resume']['post']['responses'][200]['content']['application/json'];
+type ExpectedResumeSessionPost200 = {
+  success?: boolean;
+  data?: Session;
+};
+export type ResumeSessionPost200Assignable = Assert<
+  IsAssignable<ResumeSessionPost200, ExpectedResumeSessionPost200>
+>;
+export type ResumeSessionPost200ReverseAssignable = Assert<
+  IsAssignable<ExpectedResumeSessionPost200, ResumeSessionPost200>
+>;
+
+type ClientResumeSessionReturn = Awaited<ReturnType<ApiClient['resumeSession']>>;
+export type ClientResumeSessionMatches = Assert<
+  IsAssignable<ClientResumeSessionReturn, ApiResponse<Session>>
+>;
+export type ClientResumeSessionMatchesReverse = Assert<
+  IsAssignable<ApiResponse<Session>, ClientResumeSessionReturn>
+>;
+
+type ReportGenerationResponseSchema = {
+  reportContent?: string;
+  modelUsed?: string;
+  modelDisplayName?: string;
+  cbtDataSource?: string;
+  cbtDataAvailable?: boolean;
+};
+type ReportGenerationResponse = {
+  reportContent: string;
+  modelUsed: string;
+  modelDisplayName: string;
+  cbtDataSource: string;
+  cbtDataAvailable: boolean;
+};
+
+type ReportsGeneratePost200 =
+  paths['/reports/generate']['post']['responses'][200]['content']['application/json'];
+type ExpectedReportsGeneratePost200 = {
+  success?: boolean;
+  data?: ReportGenerationResponseSchema;
+};
+export type ReportsGeneratePost200Assignable = Assert<
+  IsAssignable<ReportsGeneratePost200, ExpectedReportsGeneratePost200>
+>;
+export type ReportsGeneratePost200ReverseAssignable = Assert<
+  IsAssignable<ExpectedReportsGeneratePost200, ReportsGeneratePost200>
+>;
+
+type ReportsGenerateContextPost200 =
+  paths['/reports/generate-context']['post']['responses'][200]['content']['application/json'];
+type ExpectedReportsGenerateContextPost200 = {
+  success?: boolean;
+  data?: ReportGenerationResponseSchema;
+};
+export type ReportsGenerateContextPost200Assignable = Assert<
+  IsAssignable<ReportsGenerateContextPost200, ExpectedReportsGenerateContextPost200>
+>;
+export type ReportsGenerateContextPost200ReverseAssignable = Assert<
+  IsAssignable<ExpectedReportsGenerateContextPost200, ReportsGenerateContextPost200>
+>;
+
+type ClientGenerateReportDetailedReturn = Awaited<ReturnType<ApiClient['generateReportDetailed']>>;
+export type ClientGenerateReportDetailedMatches = Assert<
+  IsAssignable<ClientGenerateReportDetailedReturn, ApiResponse<ReportGenerationResponse>>
+>;
+export type ClientGenerateReportDetailedMatchesReverse = Assert<
+  IsAssignable<ApiResponse<ReportGenerationResponse>, ClientGenerateReportDetailedReturn>
+>;
+
+type ClientGenerateReportFromContextReturn = Awaited<
+  ReturnType<ApiClient['generateReportFromContext']>
+>;
+export type ClientGenerateReportFromContextMatches = Assert<
+  IsAssignable<ClientGenerateReportFromContextReturn, ApiResponse<ReportGenerationResponse>>
+>;
+export type ClientGenerateReportFromContextMatchesReverse = Assert<
+  IsAssignable<ApiResponse<ReportGenerationResponse>, ClientGenerateReportFromContextReturn>
 >;

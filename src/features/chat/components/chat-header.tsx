@@ -28,18 +28,27 @@ export function ChatHeader() {
   const { state, actions, controller, modelLabel } = useChat();
   const t = useTranslations('chat');
 
-  const { showSidebar, isGeneratingReport, isLoading, isMobile, currentSession, messages } = state;
+  const {
+    showSidebar,
+    isGeneratingReport,
+    isSessionReadyForReport,
+    isLoading,
+    isMobile,
+    currentSession,
+    messages,
+  } = state;
   const messageCount = messages.length;
 
   const hasActiveSession = Boolean(currentSession);
   const hasMessages = messageCount > 0;
+  const canGenerateReport = isSessionReadyForReport && !isGeneratingReport;
 
   const containerClassName = `${isMobile ? 'p-3' : 'p-6'} bg-card/50 relative flex-shrink-0 shadow-[0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-md`;
   const leftGroupClassName = `flex items-center ${isMobile ? 'gap-3' : 'gap-4'}`;
   const rightGroupClassName = `flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`;
   const iconButtonClassName = `${getIconButtonSize('large')} tap-transparent`;
   const iconClassName = 'relative z-10 h-4 w-4';
-  const reportButtonClassName = `${iconButtonClassName} ${isGeneratingReport ? 'pointer-events-none' : ''} text-foreground`;
+  const reportButtonClassName = `${iconButtonClassName} text-foreground`;
   const reportIcon = isGeneratingReport ? (
     <div className="relative z-10 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent opacity-100" />
   ) : (
@@ -79,9 +88,9 @@ export function ChatHeader() {
               variant="ghost"
               size="sm"
               onClick={controller.generateReport}
-              // Avoid disabled to keep spinner fully opaque; block clicks via pointer-events
+              disabled={!canGenerateReport}
               className={reportButtonClassName}
-              aria-disabled={isGeneratingReport}
+              aria-disabled={!canGenerateReport}
               title={t('main.generateReport')}
             >
               {reportIcon}

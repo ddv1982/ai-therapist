@@ -19,8 +19,9 @@ function parseIntParam<T>(
   max: number
 ) {
   if (raw === null) return { ok: true as const, value: undefined as number | undefined };
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+  const parsed = Number(raw);
+  const isStrictInteger = /^\d+$/.test(raw) && Number.isSafeInteger(parsed);
+  if (!isStrictInteger || parsed < min || parsed > max) {
     return {
       ok: false as const,
       response: createErrorResponse(`Invalid ${name} query parameter`, 400, {

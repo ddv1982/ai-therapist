@@ -180,7 +180,7 @@ export interface paths {
         put?: never;
         /**
          * Set current active session
-         * @description Marks the specified session as current by updating its updatedAt and status to active.
+         * @description Sets the authenticated user's current session pointer without mutating session lifecycle state.
          */
         post: {
             parameters: {
@@ -192,13 +192,13 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** Format: uuid */
+                        /** @description Convex session document identifier */
                         sessionId: string;
                     };
                 };
             };
             responses: {
-                /** @description Session marked as current */
+                /** @description Current session pointer updated */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["X-Request-Id"];
@@ -208,6 +208,11 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
+                            data?: {
+                                /** @example true */
+                                success?: boolean;
+                                session?: components["schemas"]["Session"];
+                            };
                         };
                     };
                 };
@@ -403,6 +408,63 @@ export interface paths {
                 500: components["responses"]["InternalServerError"];
             };
         };
+        trace?: never;
+    };
+    "/sessions/{sessionId}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume a completed session
+         * @description Explicit lifecycle command that sets the specified session back to active and sets the current session pointer.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session resumed */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Session"];
+                        };
+                    };
+                };
+                /** @description Session not found */
+                404: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                500: components["responses"]["InternalServerError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/sessions/{sessionId}/messages": {
@@ -626,7 +688,7 @@ export interface paths {
         put?: never;
         /**
          * Generate session report (detailed)
-         * @description Generates a therapeutic report from session messages and returns the raw report content.
+         * @description Generates a therapeutic report from server-side session history and returns the raw report content.
          */
         post: {
             parameters: {
@@ -640,10 +702,81 @@ export interface paths {
                     "application/json": {
                         /** Format: uuid */
                         sessionId: string;
-                        messages: {
+                        /** @description Optional model override */
+                        model?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Generated report content */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                reportContent?: string;
+                                modelUsed?: string;
+                                modelDisplayName?: string;
+                                cbtDataSource?: string;
+                                cbtDataAvailable?: boolean;
+                            };
+                        };
+                    };
+                };
+                400: components["responses"]["BadRequest"];
+                /** @description Session has no reportable messages */
+                422: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                500: components["responses"]["InternalServerError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/generate-context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate session report from provided context
+         * @description Generates a therapeutic report using authenticated session ownership and caller-provided contextual messages.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        sessionId: string;
+                        contextualMessages: {
                             /** @enum {string} */
-                            role?: "user" | "assistant";
-                            content?: string;
+                            role: "user" | "assistant";
+                            content: string;
                             /** Format: date-time */
                             timestamp?: string;
                         }[];
@@ -674,6 +807,26 @@ export interface paths {
                     };
                 };
                 400: components["responses"]["BadRequest"];
+                /** @description Session not found or access denied */
+                404: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Session has no reportable messages */
+                422: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
                 500: components["responses"]["InternalServerError"];
             };
         };
@@ -994,9 +1147,8 @@ export interface components {
         };
         Session: {
             /**
-             * Format: uuid
-             * @description Unique session identifier
-             * @example 123e4567-e89b-12d3-a456-426614174000
+             * @description Unique session identifier (Convex document ID)
+             * @example j57d6p8h9n2x3q4r5s6t7u8v9w
              */
             id: string;
             /**

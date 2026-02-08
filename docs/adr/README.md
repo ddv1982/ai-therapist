@@ -56,12 +56,13 @@ What other options were considered and why were they rejected?
 
 ## Index
 
-| ADR                                               | Title                     | Status   | Date       |
-| ------------------------------------------------- | ------------------------- | -------- | ---------- |
-| [ADR-001](./ADR-001-convex-backend.md)            | Convex Backend            | Accepted | 2024-11-25 |
-| [ADR-002](./ADR-002-clerk-authentication.md)      | Clerk Authentication      | Accepted | 2024-11-25 |
-| [ADR-003](./ADR-003-component-architecture.md)    | Component Architecture    | Accepted | 2024-11-25 |
-| [ADR-004](./ADR-004-error-tracking-evaluation.md) | Error Tracking Evaluation | Accepted | 2024-11-25 |
+| ADR                                                 | Title                       | Status   | Date       |
+| --------------------------------------------------- | --------------------------- | -------- | ---------- |
+| [ADR-001](./ADR-001-convex-backend.md)              | Convex Backend              | Accepted | 2024-11-25 |
+| [ADR-002](./ADR-002-clerk-authentication.md)        | Clerk Authentication        | Accepted | 2024-11-25 |
+| [ADR-003](./ADR-003-component-architecture.md)      | Component Architecture      | Accepted | 2024-11-25 |
+| [ADR-004](./ADR-004-error-tracking-evaluation.md)   | Error Tracking Evaluation   | Accepted | 2024-11-25 |
+| [ADR-005](./ADR-005-modular-monolith-boundaries.md) | Modular Monolith Boundaries | Accepted | 2026-02-08 |
 
 ## Guidelines
 

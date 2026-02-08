@@ -7,10 +7,6 @@ jest.mock('@/lib/convex/http-client', () => ({
   api: { users: { ensureByClerkId: {} } },
 }));
 
-jest.mock('@/lib/auth/user-session', () => ({
-  getSingleUserInfo: () => ({ email: 'u@test', name: 'U', currentDevice: 'Computer' }),
-}));
-
 describe('user-repository.ensureUserExists', () => {
   beforeEach(() => {
     jest.clearAllMocks();

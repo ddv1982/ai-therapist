@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import {
+  reportGenerationSchema,
+  reportGenerationWithContextSchema,
+} from '@/lib/validation/schemas/report.schema';
 
 // Chat API validation schemas
 // Note: sessionId accepts Convex document IDs (non-UUID strings), not just UUIDs
@@ -130,24 +134,7 @@ export function validateRequest<T>(
   }
 }
 
-// Simple message schema for report generation (only needs role and content)
-const reportMessageSchema = z.object({
-  role: z.enum(['user', 'assistant']),
-  content: z
-    .string()
-    .min(1, 'Message content cannot be empty')
-    .max(50000, 'Message content too long'),
-});
-
-// Session report generation validation schema
-export const reportGenerationSchema = z.object({
-  sessionId: z.string().min(1, 'Session ID cannot be empty'),
-  messages: z
-    .array(reportMessageSchema)
-    .min(1, 'At least one message is required')
-    .max(1000, 'Too many messages (max 1000)'),
-  model: z.string().min(1, 'Model name required').max(100, 'Model name too long').optional(),
-});
+export { reportGenerationSchema, reportGenerationWithContextSchema };
 
 // API key validation schema
 export const apiKeySchema = z.object({

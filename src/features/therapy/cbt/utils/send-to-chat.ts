@@ -74,10 +74,10 @@ export async function sendToChat({
     ) as SessionData;
     sessionId = createdSession.id;
 
-    const reportResponse = await apiClient.generateReportDetailed(
+    const reportResponse = await apiClient.generateReportFromContext(
       {
         sessionId,
-        messages: reportMessages,
+        contextualMessages: reportMessages,
         model: effectiveModelId,
       },
       { headers }

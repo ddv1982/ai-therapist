@@ -202,7 +202,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
     post:
       summary: Set current active session
-      description: Marks the specified session as current by updating its updatedAt and status to active.
+      description: Sets the authenticated user's current session pointer without mutating session lifecycle state.
       tags:
         - Sessions
       requestBody:
@@ -215,10 +215,10 @@ paths:
               properties:
                 sessionId:
                   type: string
-                  format: uuid
+                  description: Convex session document identifier
       responses:
         200:
-          description: Session marked as current
+          description: Current session pointer updated
           headers:
             X-Request-Id:
               $ref: '#/components/headers/X-Request-Id'
@@ -230,6 +230,14 @@ paths:
                   success:
                     type: boolean
                     example: true
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      session:
+                        $ref: '#/components/schemas/Session'
         400:
           $ref: '#/components/responses/BadRequest'
         404:
@@ -380,6 +388,47 @@ paths:
                   message:
                     type: string
                     example: 'Session deleted successfully'
+        404:
+          description: Session not found
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /sessions/{sessionId}/resume:
+    post:
+      summary: Resume a completed session
+      description: Explicit lifecycle command that sets the specified session back to active and sets the current session pointer.
+      tags:
+        - Sessions
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Session resumed
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Session'
         404:
           description: Session not found
           headers:
@@ -606,7 +655,7 @@ paths:
   /reports/generate:
     post:
       summary: Generate session report (detailed)
-      description: Generates a therapeutic report from session messages and returns the raw report content.
+      description: Generates a therapeutic report from server-side session history and returns the raw report content.
       tags:
         - Reports
       requestBody:
@@ -617,27 +666,14 @@ paths:
               type: object
               required:
                 - sessionId
-                - messages
               properties:
                 sessionId:
                   type: string
                   format: uuid
-                messages:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      role:
-                        type: string
-                        enum: [user, assistant]
-                      content:
-                        type: string
-                      timestamp:
-                        type: string
-                        format: date-time
                 model:
                   type: string
                   description: Optional model override
+              additionalProperties: false
       responses:
         200:
           description: Generated report content
@@ -667,6 +703,108 @@ paths:
                         type: boolean
         400:
           $ref: '#/components/responses/BadRequest'
+        422:
+          description: Session has no reportable messages
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /reports/generate-context:
+    post:
+      summary: Generate session report from provided context
+      description: Generates a therapeutic report using authenticated session ownership and caller-provided contextual messages.
+      tags:
+        - Reports
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sessionId
+                - contextualMessages
+              properties:
+                sessionId:
+                  type: string
+                  format: uuid
+                contextualMessages:
+                  type: array
+                  minItems: 1
+                  maxItems: 1000
+                  items:
+                    type: object
+                    required:
+                      - role
+                      - content
+                    properties:
+                      role:
+                        type: string
+                        enum: [user, assistant]
+                      content:
+                        type: string
+                        minLength: 1
+                        maxLength: 50000
+                      timestamp:
+                        type: string
+                        format: date-time
+                model:
+                  type: string
+                  description: Optional model override
+              additionalProperties: false
+      responses:
+        200:
+          description: Generated report content
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      reportContent:
+                        type: string
+                      modelUsed:
+                        type: string
+                      modelDisplayName:
+                        type: string
+                      cbtDataSource:
+                        type: string
+                      cbtDataAvailable:
+                        type: boolean
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          description: Session not found or access denied
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        422:
+          description: Session has no reportable messages
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -985,9 +1123,8 @@ components:
       properties:
         id:
           type: string
-          format: uuid
-          description: Unique session identifier
-          example: '123e4567-e89b-12d3-a456-426614174000'
+          description: Unique session identifier (Convex document ID)
+          example: 'j57d6p8h9n2x3q4r5s6t7u8v9w'
         userId:
           type: string
           description: Canonical authenticated user identifier (Clerk user ID)

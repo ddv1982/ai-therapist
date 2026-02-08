@@ -1,8 +1,6 @@
 import path from 'node:path';
-import type { Linter, Rule } from 'eslint';
-import tsParser from '@typescript-eslint/parser';
-import tsPlugin from '@typescript-eslint/eslint-plugin';
-import reactPerfPlugin from 'eslint-plugin-react-perf';
+import type { ESLint, Linter, Rule } from 'eslint';
+import tseslint from 'typescript-eslint';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import prettierConfig from 'eslint-config-prettier';
 
@@ -73,7 +71,7 @@ const filenameCaseRule: Rule.RuleModule = {
   },
 };
 
-const localPlugin = {
+const localPlugin: ESLint.Plugin = {
   rules: {
     'filename-case': filenameCaseRule,
   },
@@ -97,23 +95,9 @@ const config: Linter.Config[] = [
     ],
   },
   {
-    files: [
-      '__tests__/**/*.{ts,tsx}',
-      'e2e/**/*.{ts,tsx}',
-      'convex/**/*.ts',
-      'scripts/**/*.js',
-      'scripts/**/*.ts',
-    ],
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
-      '@typescript-eslint/no-namespace': 'off',
-    },
-  },
-  {
     files: ['**/*.{ts,tsx,js,jsx}'],
     languageOptions: {
-      parser: tsParser,
+      parser: tseslint.parser,
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
@@ -121,9 +105,8 @@ const config: Linter.Config[] = [
       },
     },
     plugins: {
-      '@typescript-eslint': tsPlugin,
-      'react-hooks': reactHooksPlugin,
-      'react-perf': reactPerfPlugin,
+      '@typescript-eslint': tseslint.plugin as ESLint.Plugin,
+      'react-hooks': reactHooksPlugin as ESLint.Plugin,
       local: localPlugin,
     },
     rules: {
@@ -135,9 +118,8 @@ const config: Linter.Config[] = [
         { selector: 'enumMember', format: ['PascalCase', 'UPPER_CASE'] },
       ],
       'local/filename-case': 'warn',
-      'react-perf/jsx-no-new-object-as-prop': 'off',
-      'react-perf/jsx-no-new-function-as-prop': 'off',
-      'react-perf/jsx-no-new-array-as-prop': 'off',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       // Enforce structured logging - use logger instead of console
       // Allow specific console.* calls only with eslint-disable-next-line
       'no-console': 'error',
@@ -146,7 +128,75 @@ const config: Linter.Config[] = [
   {
     files: ['src/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': ['error', { patterns: ['../*'] }],
+      'no-restricted-imports': [
+        'error',
+        { patterns: ['../*', '@/server/infrastructure', '@/server/infrastructure/*'] },
+      ],
+    },
+  },
+  {
+    // Application layer: restrict interface access, but ALLOW infrastructure
+    // (per ADR-005: "Infrastructure must only be imported by application layer")
+    // Note: this block fully overrides the src/** no-restricted-imports rule above
+    files: ['src/server/application/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        { patterns: ['../*', '@/server/interface', '@/server/interface/*'] },
+      ],
+    },
+  },
+  {
+    files: ['src/server/interface/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            '../*',
+            '@/server/domain',
+            '@/server/domain/*',
+            '@/server/infrastructure',
+            '@/server/infrastructure/*',
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/server/domain/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            '../*',
+            '@/server/interface',
+            '@/server/interface/*',
+            '@/server/application',
+            '@/server/application/*',
+            '@/server/infrastructure',
+            '@/server/infrastructure/*',
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/server/infrastructure/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            '../*',
+            '@/server/interface',
+            '@/server/interface/*',
+            '@/server/application',
+            '@/server/application/*',
+          ],
+        },
+      ],
     },
   },
   {
@@ -166,9 +216,6 @@ const config: Linter.Config[] = [
       'max-lines': ['warn', { max: 360, skipBlankLines: true, skipComments: true }],
       'max-lines-per-function': ['warn', { max: 320, skipBlankLines: true, skipComments: true }],
       complexity: ['warn', 25],
-      'react-perf/jsx-no-new-object-as-prop': 'off',
-      'react-perf/jsx-no-new-function-as-prop': 'off',
-      'react-perf/jsx-no-new-array-as-prop': 'off',
     },
   },
   {
@@ -182,7 +229,7 @@ const config: Linter.Config[] = [
     },
   },
   {
-    files: ['src/types/api.generated.ts', 'src/types/api/**', 'src/types/api/*.ts'],
+    files: ['src/types/api.generated.ts', 'src/types/api/**'],
     rules: {
       '@typescript-eslint/naming-convention': 'off',
     },
@@ -197,10 +244,11 @@ const config: Linter.Config[] = [
       '*.config.ts',
     ],
     rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-namespace': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
-      'import/no-anonymous-default-export': 'off',
       // Scripts can use console
       'no-console': 'off',
     },
@@ -208,6 +256,9 @@ const config: Linter.Config[] = [
   {
     files: ['convex/**/*.ts'],
     rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      '@typescript-eslint/no-namespace': 'off',
       // Convex doesn't allow hyphens in filenames (only alphanumeric, underscores, periods)
       'local/filename-case': 'off',
     },

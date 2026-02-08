@@ -35,6 +35,7 @@ export interface ChatState {
   messages: MessageData[];
   isLoading: boolean;
   isGeneratingReport: boolean;
+  isSessionReadyForReport: boolean;
   sessions: UiSession[];
   currentSession: string | null;
   input: string;
@@ -114,7 +115,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const toastT = useTranslations('toast');
   const { showToast } = useToast();
   const { keys: apiKeys, isActive: byokActive, setActive: setByokActive } = useApiKeys();
-  const { currentSessionId } = useSession();
+  const { currentSessionId, selectionStatus } = useSession();
 
   // Get BYOK key if active
   const byokKey = byokActive ? (apiKeys.openai ?? null) : null;
@@ -207,26 +208,16 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   // Store loadSessions in ref for onFinish callback
   loadSessionsRef.current = loadSessions;
 
-  // Report generation
-  const generateReportRef = useRef<(() => Promise<void>) | undefined>(undefined);
+  const isSessionReadyForReport =
+    Boolean(currentSession) && selectionStatus.phase === 'idle' && !isGeneratingReport;
 
   const generateReport = useCallback(async () => {
-    if (!currentSession || therapyChat.messages.length === 0) return;
+    if (!currentSession || !isSessionReadyForReport) return;
     setIsGeneratingReport(true);
 
     try {
       const result = await apiClient.generateReportDetailed({
         sessionId: currentSession,
-        messages: therapyChat.messages
-          .filter((m) => !m.content.startsWith('📊 **Session Report**'))
-          .map((m) => ({
-            role: m.role,
-            content: m.content,
-            timestamp: (m.timestamp instanceof Date
-              ? m.timestamp
-              : new Date(m.timestamp)
-            ).toISOString(),
-          })),
         model: settings.model,
       });
 
@@ -258,13 +249,61 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         } catch {
           // Ignore persistence errors for reports
         }
+      } else {
+        logger.error('Invalid report generation response payload', {
+          component: 'ChatProvider',
+          operation: 'generateReport',
+          sessionId: currentSession,
+        });
+        showToast({
+          type: 'error',
+          title: toastT('issueReportFailedTitle'),
+          message: toastT('generalRetry'),
+        });
       }
+    } catch (error) {
+      const apiError = error as Error & { status?: number; body?: unknown };
+      const body = apiError.body as { error?: { code?: string; message?: string } } | undefined;
+      const isNoMessagesError =
+        apiError.status === 422 && body?.error?.code === 'NO_REPORTABLE_MESSAGES';
+
+      if (isNoMessagesError) {
+        showToast({
+          type: 'info',
+          title: toastT('noCbtSessionTitle'),
+          message: 'No reportable messages found for this session yet.',
+        });
+        return;
+      }
+
+      logger.error(
+        'Report generation failed',
+        {
+          component: 'ChatProvider',
+          operation: 'generateReport',
+          sessionId: currentSession,
+          status: apiError.status,
+        },
+        apiError
+      );
+      showToast({
+        type: 'error',
+        title: toastT('sendFailedTitle'),
+        message: body?.error?.message || toastT('sendFailedBody'),
+      });
     } finally {
       setIsGeneratingReport(false);
     }
-  }, [currentSession, therapyChat, settings.model, loadSessions, setIsGeneratingReport]);
-
-  generateReportRef.current = generateReport;
+  }, [
+    currentSession,
+    isSessionReadyForReport,
+    settings.model,
+    loadSessions,
+    setIsGeneratingReport,
+    therapyChat,
+    showToast,
+    toastT,
+  ]);
 
   // Send message handler
   const sendMessage = useCallback(async () => {
@@ -460,6 +499,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       currentSession,
+      therapyChat.isLoading,
       messagesContainerRef,
       inputContainerRef,
       stopGenerating,
@@ -485,6 +525,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       isMobile,
       viewportHeight,
       isGeneratingReport,
+      isSessionReadyForReport,
       memoryContext,
       textareaRef,
       messagesContainerRef,
@@ -501,6 +542,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       isMobile,
       viewportHeight,
       isGeneratingReport,
+      isSessionReadyForReport,
       memoryContext,
       textareaRef,
       messagesContainerRef,

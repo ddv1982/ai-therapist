@@ -129,15 +129,9 @@ describe('Validation Functions', () => {
   });
 
   describe('reportGenerationSchema', () => {
-    const validMessage = {
-      role: 'user' as const,
-      content: 'Test message',
-    };
-
     it('should validate report generation request', () => {
       const validRequest = {
         sessionId: '123e4567-e89b-12d3-a456-426614174000',
-        messages: [validMessage],
         model: 'openai/gpt-oss-120b',
       };
 
@@ -148,7 +142,6 @@ describe('Validation Functions', () => {
     it('should reject empty session ID', () => {
       const invalidRequest = {
         sessionId: '',
-        messages: [validMessage],
       };
 
       const result = validateRequest(reportGenerationSchema, invalidRequest);
@@ -158,17 +151,14 @@ describe('Validation Functions', () => {
       }
     });
 
-    it('should reject empty messages array', () => {
+    it('should reject legacy messages payload field', () => {
       const invalidRequest = {
         sessionId: '123e4567-e89b-12d3-a456-426614174000',
-        messages: [],
+        messages: [{ role: 'user', content: 'legacy' }],
       };
 
       const result = validateRequest(reportGenerationSchema, invalidRequest);
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain('At least one message is required');
-      }
     });
   });
   // Edge case testing enhancements

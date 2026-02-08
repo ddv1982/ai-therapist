@@ -5,16 +5,15 @@ import { withAuth, withValidation } from '@/lib/api/api-middleware';
 import { createSuccessResponse, createErrorResponse } from '@/lib/api/api-response';
 import { z } from 'zod';
 import type { ConvexUser, ConvexSession } from '@/types/convex';
+import { setCurrentSessionPointer } from '@/server/application/sessions/set-current-session';
 
 export const GET = withAuth(async (_request, context) => {
   try {
     logger.debug('Fetching current active session', context);
     const convex = getAuthenticatedConvexClient(context.jwtToken);
 
-    // Use Clerk ID as the primary user identity
     const clerkId = context.principal.clerkId;
 
-    // Find the user and honor persisted currentSessionId pointer if present
     const user = (await convex.query(anyApi.users.getByClerkId, { clerkId })) as ConvexUser | null;
 
     let currentSession: ConvexSession | null = null;
@@ -49,20 +48,22 @@ export const GET = withAuth(async (_request, context) => {
       return createSuccessResponse({ currentSession: null }, { requestId: context.requestId });
     }
 
-    // Return session info without all messages (for performance)
     const sessionInfo = {
       id: currentSession._id,
+      userId: clerkId,
       title: currentSession.title,
+      status: currentSession.status,
       startedAt: new Date(currentSession.startedAt),
       updatedAt: new Date(currentSession.updatedAt),
-      status: currentSession.status,
-      messageCount: currentSession.messageCount,
+      endedAt: currentSession.endedAt ? new Date(currentSession.endedAt) : null,
+      createdAt: new Date(currentSession.createdAt),
+      _count: { messages: currentSession.messageCount ?? 0 },
     };
 
     logger.info('Current session found', {
       ...context,
       sessionId: currentSession._id,
-      messageCount: currentSession.messageCount,
+      messageCount: currentSession.messageCount ?? 0,
     });
 
     return createSuccessResponse({ currentSession: sessionInfo }, { requestId: context.requestId });
@@ -75,32 +76,50 @@ export const GET = withAuth(async (_request, context) => {
   }
 });
 
-const setCurrentSessionSchema = z.object({ sessionId: z.string() });
+const setCurrentSessionSchema = z.object({ sessionId: z.string().min(1) });
 
 export const POST = withValidation(
   setCurrentSessionSchema,
   async (_request: NextRequest, context, validated) => {
     try {
-      logger.debug('Setting current active session', context);
+      logger.debug('Setting current session pointer', context);
       const { sessionId } = validated;
       const convex = getAuthenticatedConvexClient(context.jwtToken);
 
-      // Update the session's updatedAt to mark it as current
-      const session = (await convex.mutation(anyApi.sessions.update, {
-        sessionId,
-        status: 'active',
-      })) as ConvexSession;
+      const session = await setCurrentSessionPointer(context.principal, sessionId, convex);
 
-      await convex.mutation(anyApi.users.setCurrentSession, { sessionId });
-      logger.info('Current session updated', {
+      if (!session) {
+        return createErrorResponse('Session not found or access denied', 404, {
+          requestId: context.requestId,
+        });
+      }
+
+      logger.info('Current session pointer updated', {
         ...context,
         sessionId: session._id,
       });
 
-      return createSuccessResponse({ success: true, session }, { requestId: context.requestId });
+      const mappedSession = {
+        id: session._id,
+        userId: context.principal.clerkId,
+        title: session.title,
+        status: session.status,
+        startedAt: new Date(session.startedAt),
+        updatedAt: new Date(session.updatedAt),
+        endedAt: session.endedAt ? new Date(session.endedAt) : null,
+        _count: { messages: session.messageCount ?? 0 },
+      };
+
+      return createSuccessResponse(
+        { success: true, session: mappedSession },
+        { requestId: context.requestId }
+      );
     } catch (error) {
       const err = error as Error;
-      if (typeof err.message === 'string' && err.message.includes('Record to update not found')) {
+      if (
+        typeof err.message === 'string' &&
+        (err.message.includes('Record to update not found') || err.message.includes('Invalid ID'))
+      ) {
         return createErrorResponse('Session not found or access denied', 404, {
           requestId: context.requestId,
         });

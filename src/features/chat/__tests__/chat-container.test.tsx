@@ -54,6 +54,7 @@ describe('ChatContainer', () => {
     isMobile: false,
     viewportHeight: '100vh',
     isGeneratingReport: false,
+    isSessionReadyForReport: true,
     memoryContext: {
       hasMemory: false,
       reportCount: 0,

@@ -165,6 +165,12 @@ export class ApiClient {
     });
   }
 
+  async resumeSession(sessionId: string): Promise<ApiResponse<Session>> {
+    return this.request<ApiResponse<Session>>(`/api/sessions/${sessionId}/resume`, {
+      method: 'POST',
+    });
+  }
+
   // Messages
   async listMessages(
     sessionId: string,
@@ -215,7 +221,6 @@ export class ApiClient {
   async generateReportDetailed(
     body: {
       sessionId: string;
-      messages: ChatMessage[];
       model?: string;
     },
     options?: { headers?: Record<string, string> }
@@ -239,6 +244,46 @@ export class ApiClient {
       }>
     >(
       '/api/reports/generate',
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+        headers: options?.headers,
+      },
+      300000
+    );
+  }
+
+  // Internal reports (contextual CBT export flow)
+  async generateReportFromContext(
+    body: {
+      sessionId: string;
+      contextualMessages: Array<{
+        role: 'user' | 'assistant';
+        content: string;
+        timestamp?: string;
+      }>;
+      model?: string;
+    },
+    options?: { headers?: Record<string, string> }
+  ): Promise<
+    ApiResponse<{
+      reportContent: string;
+      modelUsed: string;
+      modelDisplayName: string;
+      cbtDataSource: string;
+      cbtDataAvailable: boolean;
+    }>
+  > {
+    return this.request<
+      ApiResponse<{
+        reportContent: string;
+        modelUsed: string;
+        modelDisplayName: string;
+        cbtDataSource: string;
+        cbtDataAvailable: boolean;
+      }>
+    >(
+      '/api/reports/generate-context',
       {
         method: 'POST',
         body: JSON.stringify(body),

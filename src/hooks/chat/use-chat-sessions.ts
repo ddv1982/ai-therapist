@@ -53,9 +53,11 @@ export function useChatSessions(options: UseChatSessionsOptions) {
   const setCurrentSessionAndLoad = useCallback(
     async (sessionId: string) => {
       await persistSessionSelection(sessionId);
-      await loadMessages(sessionId);
+      // Message loading is centralized in the currentSessionId effect below.
+      // Calling loadMessages here can race with a stale closure and overwrite the
+      // newly-selected session on first click.
     },
-    [persistSessionSelection, loadMessages]
+    [persistSessionSelection]
   );
 
   const clearCurrentSession = useCallback(async () => {

@@ -334,10 +334,19 @@ describe('ApiClient', () => {
       it('generateReportDetailed calls POST /api/reports/generate', async () => {
         await client.generateReportDetailed({
           sessionId: 'sess-123',
-          messages: [],
         });
         const calls = (global.fetch as jest.Mock).mock.calls;
         expect(calls[0][0]).toBe('/api/api/reports/generate');
+        expect(calls[0][1].method).toBe('POST');
+      });
+
+      it('generateReportFromContext calls POST /api/reports/generate-context', async () => {
+        await client.generateReportFromContext({
+          sessionId: 'sess-123',
+          contextualMessages: [{ role: 'user', content: 'summary' }],
+        });
+        const calls = (global.fetch as jest.Mock).mock.calls;
+        expect(calls[0][0]).toBe('/api/api/reports/generate-context');
         expect(calls[0][1].method).toBe('POST');
       });
     });

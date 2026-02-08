@@ -27,12 +27,15 @@ export const GET = withAuth(async (req: NextRequest, context) => {
     const url = new URL(req.url);
     const queryType = url.searchParams.get('type') as MetricType | null;
     const windowRaw = url.searchParams.get('window');
-    const window = windowRaw === null ? 5 : Number.parseInt(windowRaw, 10);
+    const parsedWindow = windowRaw === null ? 5 : Number(windowRaw);
+    const hasStrictWindow =
+      windowRaw === null || (/^\d+$/.test(windowRaw) && Number.isSafeInteger(parsedWindow));
+    const window = parsedWindow;
     const endpoint = url.searchParams.get('endpoint');
     const format = url.searchParams.get('format') || 'metrics';
 
     // Validate window parameter
-    if (!Number.isFinite(window) || window < 1 || window > 1440) {
+    if (!hasStrictWindow || !Number.isFinite(window) || window < 1 || window > 1440) {
       return createErrorResponse('Invalid window parameter', 400, {
         code: 'INVALID_INPUT',
         details: 'Window must be an integer between 1 and 1440 minutes',
