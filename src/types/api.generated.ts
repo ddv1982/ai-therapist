@@ -219,7 +219,39 @@ export interface paths {
                 500: components["responses"]["InternalServerError"];
             };
         };
-        delete?: never;
+        /**
+         * Clear current active session
+         * @description Clears the authenticated user's current session pointer.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current session pointer cleared */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** @example true */
+                                success?: boolean;
+                            };
+                        };
+                    };
+                };
+                500: components["responses"]["InternalServerError"];
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -232,7 +264,42 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get session details
+         * @description Retrieves a session and associated messages/reports for the authenticated user.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session details */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Session not found */
+                404: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                500: components["responses"]["InternalServerError"];
+            };
+        };
         put?: never;
         post?: never;
         /**
@@ -284,7 +351,52 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update session
+         * @description Updates title, status, or endedAt on an existing session.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sessionId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        title?: string;
+                        status?: string;
+                        /** Format: date-time */
+                        endedAt?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Session updated */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                400: components["responses"]["BadRequest"];
+                /** @description Session not found */
+                404: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                500: components["responses"]["InternalServerError"];
+            };
+        };
         trace?: never;
     };
     "/sessions/{sessionId}/messages": {
@@ -390,6 +502,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions/{sessionId}/messages/{messageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update message metadata
+         * @description Updates metadata for a specific message in a session.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sessionId: string;
+                    messageId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        metadata?: {
+                            [key: string]: unknown;
+                        };
+                        /** @enum {string} */
+                        mergeStrategy?: "merge" | "replace";
+                    };
+                };
+            };
+            responses: {
+                /** @description Message metadata updated */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Message"];
+                        };
+                    };
+                };
+                400: components["responses"]["BadRequest"];
+                404: components["responses"]["BadRequest"];
+                500: components["responses"]["InternalServerError"];
+            };
+        };
+        trace?: never;
+    };
     "/reports": {
         parameters: {
             query?: never;
@@ -397,83 +569,20 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
-         * Generate session report
-         * @description Generates a therapeutic analysis report for a completed session using AI.
-         *     The report includes key insights, patterns, and recommendations.
+         * List generated reports
+         * @description Retrieves generated session reports for the authenticated user.
          */
-        post: {
+        get: {
             parameters: {
                 query?: never;
                 header?: never;
                 path?: never;
                 cookie?: never;
             };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /**
-                         * Format: uuid
-                         * @description UUID of the session
-                         */
-                        sessionId: string;
-                        /** @description Array of messages from the session */
-                        messages: components["schemas"]["Message"][];
-                    };
-                };
-            };
+            requestBody?: never;
             responses: {
-                /** @description Generated report */
-                200: {
-                    headers: {
-                        /** @description Correlation ID for tracing this request */
-                        "X-Request-Id"?: string;
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SessionReport"];
-                    };
-                };
-                400: components["responses"]["BadRequest"];
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/reports/send": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Generate and email session report
-         * @description Generates a therapeutic session report and sends it via email in HTML format.
-         *     Supports multiple email service configurations including SMTP and console logging.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["EmailReportRequest"];
-                };
-            };
-            responses: {
-                /** @description Report sent successfully */
+                /** @description Reports list */
                 200: {
                     headers: {
                         /** @description Correlation ID for tracing this request */
@@ -484,8 +593,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @example Report generated and sent successfully */
-                            message?: string;
+                            data?: components["schemas"]["SessionReport"][];
                         };
                     };
                 };
@@ -493,6 +601,8 @@ export interface paths {
                 500: components["responses"]["InternalServerError"];
             };
         };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -562,6 +672,77 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/memory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retrieve memory context reports
+         * @description Returns recent reports for cross-session therapeutic memory.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    excludeSessionId?: string;
+                    manage?: boolean;
+                    includeFullContent?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Memory context response */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                500: components["responses"]["InternalServerError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        /**
+         * Delete memory context reports
+         * @description Deletes reports from memory context with filtering options.
+         */
+        delete: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    excludeSessionId?: string;
+                    sessionIds?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Memory deletion response */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                500: components["responses"]["InternalServerError"];
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -667,7 +848,41 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Error endpoint status
+         * @description Returns a lightweight status response for client error reporting endpoint checks.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Endpoint status */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["X-Request-Id"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** Format: date-time */
+                                timestamp?: string;
+                                /** @example ok */
+                                status?: string;
+                            };
+                        };
+                    };
+                };
+                500: components["responses"]["InternalServerError"];
+            };
+        };
         put?: never;
         /**
          * Report client-side error
@@ -707,384 +922,6 @@ export interface paths {
                         };
                     };
                 };
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Logout and revoke session
-         * @description Revokes the current auth session and clears the auth cookie.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Logout successful */
-                200: {
-                    headers: {
-                        "X-Request-Id": components["headers"]["X-Request-Id"];
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                        };
-                    };
-                };
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/session": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Check session status
-         * @description Returns whether the client is authenticated and whether TOTP setup/verification are needed.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Session status */
-                200: {
-                    headers: {
-                        "X-Request-Id": components["headers"]["X-Request-Id"];
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                isAuthenticated?: boolean;
-                                needsSetup?: boolean;
-                                needsVerification?: boolean;
-                            };
-                        };
-                    };
-                };
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        put?: never;
-        post?: never;
-        /**
-         * Revoke current session (logout)
-         * @description Deletes current session and clears the cookie.
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Success */
-                200: {
-                    headers: {
-                        "X-Request-Id": components["headers"]["X-Request-Id"];
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                        };
-                    };
-                };
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/devices": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List trusted devices and backup codes count */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Device list and backup code info */
-                200: {
-                    headers: {
-                        "X-Request-Id": components["headers"]["X-Request-Id"];
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                devices?: Record<string, never>[];
-                                backupCodesCount?: number;
-                            };
-                        };
-                    };
-                };
-                401: components["responses"]["BadRequest"];
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        put?: never;
-        /**
-         * Device management operation (disabled)
-         * @description For security, device management mutations are restricted. Returns a standardized error.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                400: components["responses"]["BadRequest"];
-            };
-        };
-        /** Revoke a trusted device */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        deviceId: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Device revoked */
-                200: {
-                    headers: {
-                        "X-Request-Id": components["headers"]["X-Request-Id"];
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                        };
-                    };
-                };
-                400: components["responses"]["BadRequest"];
-                404: components["responses"]["BadRequest"];
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/diagnostics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * TOTP diagnostics
-         * @description Returns server time and current token for diagnostics (development/support tooling).
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Diagnostic data */
-                200: {
-                    headers: {
-                        "X-Request-Id": components["headers"]["X-Request-Id"];
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                serverTime?: string;
-                                serverTimestamp?: number;
-                                currentValidToken?: string;
-                            };
-                        };
-                    };
-                };
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        put?: never;
-        /** Validate a specific token in diagnostics mode */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        token: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Validation result */
-                200: {
-                    headers: {
-                        "X-Request-Id": components["headers"]["X-Request-Id"];
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                providedTokenValid?: boolean;
-                            };
-                        };
-                    };
-                };
-                400: components["responses"]["BadRequest"];
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/mobile-debug": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Mobile debugging info
-         * @description Returns network, device, and TOTP setup status for mobile debugging.
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Debug info */
-                200: {
-                    headers: {
-                        "X-Request-Id": components["headers"]["X-Request-Id"];
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: Record<string, never>;
-                        };
-                    };
-                };
-                500: components["responses"]["InternalServerError"];
-            };
-        };
-        put?: never;
-        /** Validate token with client time for mobile debugging */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        token?: string;
-                        clientTime?: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description Debug result */
-                200: {
-                    headers: {
-                        "X-Request-Id": components["headers"]["X-Request-Id"];
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: Record<string, never>;
-                        };
-                    };
-                };
-                400: components["responses"]["BadRequest"];
                 500: components["responses"]["InternalServerError"];
             };
         };

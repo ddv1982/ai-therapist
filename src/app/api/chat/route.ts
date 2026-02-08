@@ -11,7 +11,10 @@ import { normalizeChatRequest, buildForwardedMessages } from '@/features/chat/li
 import { selectModelAndTools } from '@/features/chat/lib/model-selector';
 import { extractBYOKKey, BYOK_OPENAI_MODEL } from '@/features/chat/lib/byok-helper';
 import { logger } from '@/lib/utils/logger';
-import { withAuthAndRateLimitStreaming } from '@/lib/api/api-middleware';
+import {
+  withAuthAndRateLimitStreaming,
+  type AuthenticatedRequestContext,
+} from '@/lib/api/api-middleware';
 import { createErrorResponse } from '@/lib/api/api-response';
 import { env } from '@/config/env';
 import { ChatError, MessageValidationError, getChatErrorResponse } from '@/lib/errors/chat-errors';
@@ -115,7 +118,7 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     const providedSessionId = normalized.data.sessionId;
     const ownership = await resolveSessionOwnership(
       providedSessionId,
-      (context.userInfo as unknown as { clerkId?: string }).clerkId ?? context.userInfo.userId,
+      context.principal.clerkId,
       convex
     );
     const history =
@@ -410,7 +413,7 @@ async function buildSystemPrompt(req: NextRequest, hasWebSearch: boolean): Promi
 }
 
 function createStreamErrorHandler(params: {
-  context: { requestId: string; userInfo: { userId: string } };
+  context: Pick<AuthenticatedRequestContext, 'requestId' | 'principal'>;
   systemPrompt: string;
   modelId: string;
   webSearchEnabled: boolean;
@@ -420,8 +423,7 @@ function createStreamErrorHandler(params: {
     const errorContext = {
       apiEndpoint: '/api/chat',
       requestId: context.requestId,
-      userId:
-        (context.userInfo as unknown as { clerkId?: string }).clerkId ?? context.userInfo.userId,
+      userId: context.principal.clerkId,
       webSearchEnabled,
       modelId,
     };

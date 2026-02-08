@@ -2,7 +2,12 @@ import type { ConvexHttpClient } from 'convex/browser';
 import { anyApi } from '@/lib/convex/http-client';
 import { logger } from '@/lib/utils/logger';
 import { decryptSessionReportContent } from '@/features/chat/lib/message-encryption';
-import type { ConvexSessionReport, ConvexSession, ConvexUser } from '@/types/convex';
+import type { ConvexSessionReport, ConvexUser } from '@/types/convex';
+
+type ConvexSessionReportWithSession = ConvexSessionReport & {
+  sessionTitle?: string;
+  sessionStartedAt?: number;
+};
 
 interface MemoryContextEntry {
   sessionTitle: string;
@@ -149,13 +154,15 @@ export class MemoryManagementService {
       };
     }
 
-    const reports = await client.query(anyApi.reports.listRecent, {
+    const reports = await client.query(anyApi.reports.listRecentWithSession, {
       userId: convexUser._id,
       limit: Math.min(limit, 10),
       excludeSessionId: excludeSessionId || undefined,
     });
 
-    const convexReports = Array.isArray(reports) ? (reports as ConvexSessionReport[]) : [];
+    const convexReports = Array.isArray(reports)
+      ? (reports as ConvexSessionReportWithSession[])
+      : [];
 
     logger.info('Found session reports for memory processing', {
       reportCount: convexReports.length,
@@ -177,13 +184,10 @@ export class MemoryManagementService {
           decryptedContent
         );
 
-        const session = await client.query(anyApi.sessions.get, { sessionId: report.sessionId });
-        const convexSession = session as ConvexSession | null;
-
         memoryContext.push({
-          sessionTitle: convexSession?.title ?? 'Session',
-          sessionDate: convexSession
-            ? new Date(convexSession.startedAt).toISOString().split('T')[0]
+          sessionTitle: report.sessionTitle ?? 'Session',
+          sessionDate: report.sessionStartedAt
+            ? new Date(report.sessionStartedAt).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0],
           reportDate: new Date(report.createdAt).toISOString().split('T')[0],
           content: decryptedContent,
@@ -263,13 +267,15 @@ export class MemoryManagementService {
       };
     }
 
-    const limited = await client.query(anyApi.reports.listRecent, {
+    const limited = await client.query(anyApi.reports.listRecentWithSession, {
       userId: convexUser._id,
       limit: Math.min(limit, 20),
       excludeSessionId: excludeSessionId || undefined,
     });
 
-    const limitedReports = Array.isArray(limited) ? (limited as ConvexSessionReport[]) : [];
+    const limitedReports = Array.isArray(limited)
+      ? (limited as ConvexSessionReportWithSession[])
+      : [];
 
     logger.info('Found session reports for memory management', {
       reportCount: limitedReports.length,
@@ -322,15 +328,12 @@ export class MemoryManagementService {
           }
         }
 
-        const session = await client.query(anyApi.sessions.get, { sessionId: report.sessionId });
-        const convexSession = session as ConvexSession | null;
-
         const reportDetail: MemoryReportDetail = {
           id: String(report._id),
           sessionId: String(report.sessionId),
-          sessionTitle: convexSession?.title ?? 'Session',
-          sessionDate: convexSession
-            ? new Date(convexSession.startedAt).toISOString().split('T')[0]
+          sessionTitle: report.sessionTitle ?? 'Session',
+          sessionDate: report.sessionStartedAt
+            ? new Date(report.sessionStartedAt).toISOString().split('T')[0]
             : new Date().toISOString().split('T')[0],
           reportDate: new Date(report.createdAt).toISOString().split('T')[0],
           contentPreview,
@@ -400,15 +403,10 @@ export class MemoryManagementService {
       throw new Error('User not found');
     }
 
-    const sessions = await client.query(anyApi.sessions.listByUser, { userId: convexUser._id });
-    const convexSessions = Array.isArray(sessions) ? (sessions as ConvexSession[]) : [];
-    const allReports: ConvexSessionReport[] = [];
-
-    for (const s of convexSessions) {
-      const rs = await client.query(anyApi.reports.listBySession, { sessionId: s._id });
-      const sessionReports = Array.isArray(rs) ? (rs as ConvexSessionReport[]) : [];
-      for (const r of sessionReports) allReports.push(r);
-    }
+    const reports = await client.query(anyApi.reports.listByUserWithSession, {
+      userId: convexUser._id,
+    });
+    const allReports = Array.isArray(reports) ? (reports as ConvexSessionReportWithSession[]) : [];
 
     let toDelete: string[] = [];
     let deletionDescription = '';

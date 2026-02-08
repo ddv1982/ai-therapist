@@ -102,7 +102,7 @@ This installs all required packages including:
 
 5. Configure webhook:
    - Go to **Webhooks** in Clerk dashboard
-   - Add endpoint: `http://localhost:4000/api/webhooks/clerk` (for local) or your production URL
+   - Add endpoint: `<your-convex-deployment-url>/clerk-webhook` (for local dev use your local Convex URL)
    - Select events: `user.created`, `user.updated`, `user.deleted`
    - Copy the **Signing Secret** (`CLERK_WEBHOOK_SECRET`)
 

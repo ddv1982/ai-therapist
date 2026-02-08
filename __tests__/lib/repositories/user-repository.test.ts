@@ -6,12 +6,16 @@ jest.mock('@/lib/convex/http-client', () => ({
 }));
 
 jest.mock('@/lib/auth/user-session', () => ({
-  getSingleUserInfo: () => ({ userId: 'legacy', email: 'u@test', name: 'U' }),
+  getSingleUserInfo: () => ({ email: 'u@test', name: 'U', currentDevice: 'Computer' }),
 }));
 
 describe('user-repository.ensureUserExists', () => {
   it('returns true on successful ensure', async () => {
-    const ok = await ensureUserExists({ userId: 'legacy', email: 'u@test', name: 'U' } as any);
+    const ok = await ensureUserExists({
+      clerkId: 'clerk_legacy',
+      email: 'u@test',
+      name: 'U',
+    } as any);
     expect(ok).toBe(true);
   });
 
@@ -22,7 +26,7 @@ describe('user-repository.ensureUserExists', () => {
       api: { users: { ensureByClerkId: {} } },
     }));
     const { ensureUserExists: ensure2 } = await import('@/lib/repositories/user-repository');
-    const ok = await ensure2({ userId: 'legacy', email: 'u@test', name: 'U' } as any);
+    const ok = await ensure2({ clerkId: 'clerk_legacy', email: 'u@test', name: 'U' } as any);
     expect(ok).toBe(false);
   });
 });

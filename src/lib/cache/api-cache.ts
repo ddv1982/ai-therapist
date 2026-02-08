@@ -185,7 +185,8 @@ export class CacheHealthMonitor {
     const stats = cache.getStats();
 
     return {
-      redis: health.redis,
+      backend: health.backend,
+      shared: health.shared,
       totalKeys: health.totalKeys,
       stats: stats instanceof Map ? Object.fromEntries(stats) : stats,
       cacheTypes: {

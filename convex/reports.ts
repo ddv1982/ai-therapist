@@ -89,14 +89,14 @@ export const listRecent = query({
 
     const limit_clamped = Math.max(0, Math.min(limit, QUERY_LIMITS.MAX_REPORTS_PER_REQUEST));
 
-    // Fetch reports for each session using indexed queries (not full table scan!)
-    // Use the new compound index 'by_session_created' for sorted results
+    // Fetch only the per-session top-N to avoid loading full report histories.
+    // This bounds query volume while preserving globally-correct top-N results.
     const reportPromises = sessionsToQuery.map((session) =>
       ctx.db
         .query('sessionReports')
         .withIndex('by_session_created', (q) => q.eq('sessionId', session._id))
         .order('desc') // Most recent first
-        .collect()
+        .take(limit_clamped)
     );
 
     const reportsPerSession = await Promise.all(reportPromises);
@@ -104,5 +104,109 @@ export const listRecent = query({
 
     // Sort all reports by creation time (descending) and apply limit
     return allUserReports.sort((a, b) => b.createdAt - a.createdAt).slice(0, limit_clamped);
+  },
+});
+
+export const listRecentWithSession = query({
+  args: {
+    userId: v.id('users'),
+    limit: v.number(),
+    excludeSessionId: v.optional(v.id('sessions')),
+  },
+  handler: async (ctx, { userId, limit, excludeSessionId }) => {
+    await requireUserAccess(ctx, userId);
+
+    const userSessions = await ctx.db
+      .query('sessions')
+      .withIndex('by_user_created', (q) => q.eq('userId', userId))
+      .collect();
+
+    const sessionsToQuery = excludeSessionId
+      ? userSessions.filter((s) => s._id !== excludeSessionId)
+      : userSessions;
+
+    const sessionMeta = new Map(
+      sessionsToQuery.map((session) => [
+        session._id,
+        {
+          sessionTitle: session.title,
+          sessionStartedAt: session.startedAt,
+          sessionEndedAt: session.endedAt ?? null,
+        },
+      ])
+    );
+
+    const limit_clamped = Math.max(0, Math.min(limit, QUERY_LIMITS.MAX_REPORTS_PER_REQUEST));
+
+    const reportPromises = sessionsToQuery.map((session) =>
+      ctx.db
+        .query('sessionReports')
+        .withIndex('by_session_created', (q) => q.eq('sessionId', session._id))
+        .order('desc')
+        .take(limit_clamped)
+    );
+
+    const reportsPerSession = await Promise.all(reportPromises);
+    const allUserReports = reportsPerSession.flat();
+
+    return allUserReports
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, limit_clamped)
+      .map((report) => ({
+        ...report,
+        sessionTitle: sessionMeta.get(report.sessionId)?.sessionTitle,
+        sessionStartedAt: sessionMeta.get(report.sessionId)?.sessionStartedAt,
+        sessionEndedAt: sessionMeta.get(report.sessionId)?.sessionEndedAt,
+      }));
+  },
+});
+
+export const listByUserWithSession = query({
+  args: {
+    userId: v.id('users'),
+    excludeSessionId: v.optional(v.id('sessions')),
+  },
+  handler: async (ctx, { userId, excludeSessionId }) => {
+    await requireUserAccess(ctx, userId);
+
+    const userSessions = await ctx.db
+      .query('sessions')
+      .withIndex('by_user_created', (q) => q.eq('userId', userId))
+      .collect();
+
+    const sessionsToQuery = excludeSessionId
+      ? userSessions.filter((s) => s._id !== excludeSessionId)
+      : userSessions;
+
+    const sessionMeta = new Map(
+      sessionsToQuery.map((session) => [
+        session._id,
+        {
+          sessionTitle: session.title,
+          sessionStartedAt: session.startedAt,
+          sessionEndedAt: session.endedAt ?? null,
+        },
+      ])
+    );
+
+    const reportPromises = sessionsToQuery.map((session) =>
+      ctx.db
+        .query('sessionReports')
+        .withIndex('by_session_created', (q) => q.eq('sessionId', session._id))
+        .order('desc')
+        .collect()
+    );
+
+    const reportsPerSession = await Promise.all(reportPromises);
+    const allUserReports = reportsPerSession.flat();
+
+    return allUserReports
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .map((report) => ({
+        ...report,
+        sessionTitle: sessionMeta.get(report.sessionId)?.sessionTitle,
+        sessionStartedAt: sessionMeta.get(report.sessionId)?.sessionStartedAt,
+        sessionEndedAt: sessionMeta.get(report.sessionId)?.sessionEndedAt,
+      }));
   },
 });

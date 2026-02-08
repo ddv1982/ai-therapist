@@ -127,13 +127,17 @@ describe('Middleware Tests', () => {
     mockHandler = jest.fn().mockResolvedValue(NextResponse.json({ success: true }));
 
     // Default mock implementations
-    (validateApiAuth as jest.Mock).mockResolvedValue({ isValid: true });
+    (validateApiAuth as jest.Mock).mockResolvedValue({ isValid: true, clerkId: 'clerk-default' });
     (getSingleUserInfo as jest.Mock).mockReturnValue({
-      userId: 'user-123',
       email: 'test@example.com',
+      name: 'Test User',
+      currentDevice: 'Computer',
     });
     (getRateLimiter as jest.Mock).mockReturnValue({
       checkRateLimit: jest.fn().mockResolvedValue({ allowed: true }),
+      getStatus: jest
+        .fn()
+        .mockReturnValue({ count: 1, remaining: 99, resetTime: Date.now() + 1000 }),
     });
   });
 
@@ -196,13 +200,14 @@ describe('Middleware Tests', () => {
       expect(capturingHandler).toHaveBeenCalled();
       const contextArgs = capturingHandler.mock.calls[0][1];
       expect(contextArgs.userInfo).toBeDefined();
-      expect(contextArgs.userInfo.userId).toBe('therapeutic-ai-user');
+      expect(contextArgs.userInfo.currentDevice).toBe('Device');
+      expect(contextArgs.principal.clerkId).toBe('clerk-default');
     });
 
-    it('should merge clerkId if present in authResult', async () => {
+    it('should expose canonical clerkId in principal', async () => {
       (validateApiAuth as jest.Mock).mockResolvedValue({
         isValid: true,
-        userId: 'clerk_123',
+        clerkId: 'clerk_123',
       });
 
       const capturingHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
@@ -212,7 +217,7 @@ describe('Middleware Tests', () => {
 
       expect(capturingHandler).toHaveBeenCalled();
       const contextArgs = capturingHandler.mock.calls[0][1];
-      expect(contextArgs.userInfo.clerkId).toBe('clerk_123');
+      expect(contextArgs.principal.clerkId).toBe('clerk_123');
     });
   });
 
@@ -317,10 +322,16 @@ describe('Middleware Tests', () => {
     it('should fail when rate limit exceeded', async () => {
       (getRateLimiter as jest.Mock).mockReturnValue({
         checkRateLimit: jest.fn().mockResolvedValue({ allowed: false, retryAfter: 5 }),
+        getStatus: jest
+          .fn()
+          .mockReturnValue({ count: 1, remaining: 99, resetTime: Date.now() + 1 }),
       });
       const wrapped = withAuthAndRateLimit(mockHandler);
       const res = await wrapped(req, { params: Promise.resolve({}) });
       expect(res.status).toBe(429);
+      const body = await res.json();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('RATE_LIMIT_EXCEEDED');
     });
 
     it('should handle errors', async () => {
@@ -337,12 +348,18 @@ describe('Middleware Tests', () => {
     it('should return 429 when global rate limit exceeded', async () => {
       (getRateLimiter as jest.Mock).mockReturnValue({
         checkRateLimit: jest.fn().mockResolvedValue({ allowed: false }),
+        getStatus: jest
+          .fn()
+          .mockReturnValue({ count: 1, remaining: 99, resetTime: Date.now() + 1000 }),
       });
 
       const wrapped = withAuthAndRateLimitStreaming(streamHandler);
       const res = await wrapped(req, { params: Promise.resolve({}) });
 
       expect(res.status).toBe(429);
+      const body = await res.json();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('RATE_LIMIT_EXCEEDED');
     });
 
     it('should return 401 when auth fails', async () => {
@@ -350,6 +367,9 @@ describe('Middleware Tests', () => {
       const wrapped = withAuthAndRateLimitStreaming(streamHandler);
       const res = await wrapped(req, { params: Promise.resolve({}) });
       expect(res.status).toBe(401);
+      const body = await res.json();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('UNAUTHENTICATED');
     });
 
     it('should handle internal error', async () => {
@@ -357,6 +377,9 @@ describe('Middleware Tests', () => {
       const wrapped = withAuthAndRateLimitStreaming(mockHandler);
       const res = await wrapped(req, { params: Promise.resolve({}) });
       expect(res.status).toBe(500);
+      const body = await res.json();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('INTERNAL_ERROR');
     });
   });
 
@@ -378,7 +401,7 @@ describe('Middleware Tests', () => {
     it('should handle auth with clerkId in authResult', async () => {
       (validateApiAuth as jest.Mock).mockResolvedValue({
         isValid: true,
-        userId: 'clerk-user-123',
+        clerkId: 'clerk-user-123',
       });
 
       const capturingHandler = jest.fn().mockResolvedValue(NextResponse.json({ ok: true }));
@@ -387,7 +410,7 @@ describe('Middleware Tests', () => {
 
       expect(capturingHandler).toHaveBeenCalled();
       const context = capturingHandler.mock.calls[0][1];
-      expect(context.userInfo.clerkId).toBe('clerk-user-123');
+      expect(context.principal.clerkId).toBe('clerk-user-123');
     });
 
     it('should detect mobile user agent in fallback user info', async () => {

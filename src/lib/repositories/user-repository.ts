@@ -14,20 +14,20 @@ import { logger } from '@/lib/utils/logger';
  * Ensure a user exists in the database, creating if necessary
  */
 export async function ensureUserExists(
-  userInfo: ReturnType<typeof getSingleUserInfo>,
+  userInfo: ReturnType<typeof getSingleUserInfo> & { clerkId: string },
   client?: ConvexHttpClient
 ): Promise<boolean> {
   try {
     const convex = client ?? getConvexHttpClient();
     await convex.mutation(api.users.ensureByClerkId, {
-      clerkId: (userInfo as unknown as { clerkId?: string }).clerkId ?? '',
+      clerkId: userInfo.clerkId,
       email: userInfo.email,
       name: userInfo.name,
     });
     return true;
   } catch (error) {
     logger.databaseError('ensure user exists', toError(error), {
-      userId: (userInfo as unknown as { clerkId?: string }).clerkId ?? userInfo.userId,
+      userId: userInfo.clerkId,
     });
     return false;
   }

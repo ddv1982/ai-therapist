@@ -228,8 +228,112 @@ paths:
                 $ref: '#/components/schemas/Error'
         500:
           $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Clear current active session
+      description: Clears the authenticated user's current session pointer.
+      tags:
+        - Sessions
+      responses:
+        200:
+          description: Current session pointer cleared
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+        500:
+          $ref: '#/components/responses/InternalServerError'
 
   /sessions/{sessionId}:
+    get:
+      summary: Get session details
+      description: Retrieves a session and associated messages/reports for the authenticated user.
+      tags:
+        - Sessions
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Session details
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+        404:
+          description: Session not found
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      summary: Update session
+      description: Updates title, status, or endedAt on an existing session.
+      tags:
+        - Sessions
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                status:
+                  type: string
+                endedAt:
+                  type: string
+                  format: date-time
+                  nullable: true
+      responses:
+        200:
+          description: Session updated
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          description: Session not found
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          $ref: '#/components/responses/InternalServerError'
     delete:
       summary: Delete a chat session
       description: Permanently deletes a chat session and all associated messages
@@ -399,106 +503,69 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /reports:
-    post:
-      summary: Generate session report
-      description: |
-        Generates a therapeutic analysis report for a completed session using AI.
-        The report includes key insights, patterns, and recommendations.
+  /sessions/{sessionId}/messages/{messageId}:
+    patch:
+      summary: Update message metadata
+      description: Updates metadata for a specific message in a session.
       tags:
-        - Reports
+        - Messages
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - sessionId
-                - messages
               properties:
-                sessionId:
+                metadata:
+                  type: object
+                  additionalProperties: true
+                mergeStrategy:
                   type: string
-                  format: uuid
-                  description: UUID of the session
-                messages:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Message'
-                  description: Array of messages from the session
-            examples:
-              report_request:
-                summary: Generate report
-                value:
-                  sessionId: '123e4567-e89b-12d3-a456-426614174000'
-                  messages:
-                    - role: user
-                      content: "I've been feeling overwhelmed lately"
-                      sessionId: '123e4567-e89b-12d3-a456-426614174000'
-                    - role: assistant
-                      content: "I hear that you're feeling overwhelmed..."
-                      sessionId: '123e4567-e89b-12d3-a456-426614174000'
+                  enum: [merge, replace]
       responses:
         200:
-          description: Generated report
+          description: Message metadata updated
           headers:
             X-Request-Id:
-              description: Correlation ID for tracing this request
-              schema:
-                type: string
+              $ref: '#/components/headers/X-Request-Id'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SessionReport'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Message'
         400:
+          $ref: '#/components/responses/BadRequest'
+        404:
           $ref: '#/components/responses/BadRequest'
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /reports/send:
-    post:
-      summary: Generate and email session report
-      description: |
-        Generates a therapeutic session report and sends it via email in HTML format.
-        Supports multiple email service configurations including SMTP and console logging.
+  /reports:
+    get:
+      summary: List generated reports
+      description: Retrieves generated session reports for the authenticated user.
       tags:
         - Reports
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EmailReportRequest'
-            examples:
-              smtp_email:
-                summary: Send via SMTP
-                value:
-                  sessionId: '123e4567-e89b-12d3-a456-426614174000'
-                  emailAddress: 'user@example.com'
-                  messages:
-                    - role: user
-                      content: 'I need help with anxiety'
-                      sessionId: '123e4567-e89b-12d3-a456-426614174000'
-                  emailConfig:
-                    service: 'smtp'
-                    smtpHost: 'smtp.gmail.com'
-                    smtpUser: 'your-email@gmail.com'
-                    smtpPass: 'your-app-password'
-                    fromEmail: 'therapist@example.com'
-              console_log:
-                summary: Console logging (testing)
-                value:
-                  sessionId: '123e4567-e89b-12d3-a456-426614174000'
-                  emailAddress: 'test@example.com'
-                  messages:
-                    - role: user
-                      content: 'Test message'
-                      sessionId: '123e4567-e89b-12d3-a456-426614174000'
-                  emailConfig:
-                    service: 'console'
       responses:
         200:
-          description: Report sent successfully
+          description: Reports list
           headers:
             X-Request-Id:
               description: Correlation ID for tracing this request
@@ -512,9 +579,10 @@ paths:
                   success:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: 'Report generated and sent successfully'
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SessionReport'
         400:
           $ref: '#/components/responses/BadRequest'
         500:
@@ -584,6 +652,74 @@ paths:
                         type: boolean
         400:
           $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /reports/memory:
+    get:
+      summary: Retrieve memory context reports
+      description: Returns recent reports for cross-session therapeutic memory.
+      tags:
+        - Reports
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 20
+        - name: excludeSessionId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: manage
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: includeFullContent
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: Memory context response
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      summary: Delete memory context reports
+      description: Deletes reports from memory context with filtering options.
+      tags:
+        - Reports
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: excludeSessionId
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: sessionIds
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Memory deletion response
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -666,6 +802,36 @@ paths:
                     hasGroqApiKey: false
 
   /errors:
+    get:
+      summary: Error endpoint status
+      description: Returns a lightweight status response for client error reporting endpoint checks.
+      tags:
+        - Environment
+      responses:
+        200:
+          description: Endpoint status
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/X-Request-Id'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                      status:
+                        type: string
+                        example: 'ok'
+        500:
+          $ref: '#/components/responses/InternalServerError'
     post:
       summary: Report client-side error
       description: Receives client error reports (message, stack) and logs them with request context. Returns standardized success response.
@@ -704,286 +870,6 @@ paths:
                       message:
                         type: string
                         example: 'Error logged successfully'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-
-  /auth/logout:
-    post:
-      summary: Logout and revoke session
-      description: Revokes the current auth session and clears the auth cookie.
-      tags:
-        - Sessions
-      responses:
-        200:
-          description: Logout successful
-          headers:
-            X-Request-Id:
-              $ref: '#/components/headers/X-Request-Id'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-        500:
-          $ref: '#/components/responses/InternalServerError'
-
-  /auth/session:
-    get:
-      summary: Check session status
-      description: Returns whether the client is authenticated and whether TOTP setup/verification are needed.
-      tags:
-        - Sessions
-      responses:
-        200:
-          description: Session status
-          headers:
-            X-Request-Id:
-              $ref: '#/components/headers/X-Request-Id'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      isAuthenticated:
-                        type: boolean
-                      needsSetup:
-                        type: boolean
-                      needsVerification:
-                        type: boolean
-        500:
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      summary: Revoke current session (logout)
-      description: Deletes current session and clears the cookie.
-      tags:
-        - Sessions
-      responses:
-        200:
-          description: Success
-          headers:
-            X-Request-Id:
-              $ref: '#/components/headers/X-Request-Id'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-        500:
-          $ref: '#/components/responses/InternalServerError'
-
-  /auth/devices:
-    get:
-      summary: List trusted devices and backup codes count
-      tags:
-        - Sessions
-      responses:
-        200:
-          description: Device list and backup code info
-          headers:
-            X-Request-Id:
-              $ref: '#/components/headers/X-Request-Id'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      devices:
-                        type: array
-                        items:
-                          type: object
-                      backupCodesCount:
-                        type: integer
-        401:
-          $ref: '#/components/responses/BadRequest'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-    delete:
-      summary: Revoke a trusted device
-      tags:
-        - Sessions
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [deviceId]
-              properties:
-                deviceId:
-                  type: string
-      responses:
-        200:
-          description: Device revoked
-          headers:
-            X-Request-Id:
-              $ref: '#/components/headers/X-Request-Id'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-        400:
-          $ref: '#/components/responses/BadRequest'
-        404:
-          $ref: '#/components/responses/BadRequest'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-    post:
-      summary: Device management operation (disabled)
-      description: For security, device management mutations are restricted. Returns a standardized error.
-      tags:
-        - Sessions
-      responses:
-        400:
-          $ref: '#/components/responses/BadRequest'
-
-  /auth/diagnostics:
-    get:
-      summary: TOTP diagnostics
-      description: Returns server time and current token for diagnostics (development/support tooling).
-      tags:
-        - Sessions
-      responses:
-        200:
-          description: Diagnostic data
-          headers:
-            X-Request-Id:
-              $ref: '#/components/headers/X-Request-Id'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      serverTime:
-                        type: string
-                      serverTimestamp:
-                        type: integer
-                      currentValidToken:
-                        type: string
-        500:
-          $ref: '#/components/responses/InternalServerError'
-    post:
-      summary: Validate a specific token in diagnostics mode
-      tags:
-        - Sessions
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [token]
-              properties:
-                token:
-                  type: string
-      responses:
-        200:
-          description: Validation result
-          headers:
-            X-Request-Id:
-              $ref: '#/components/headers/X-Request-Id'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-                    properties:
-                      providedTokenValid:
-                        type: boolean
-        400:
-          $ref: '#/components/responses/BadRequest'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-
-  /auth/mobile-debug:
-    get:
-      summary: Mobile debugging info
-      description: Returns network, device, and TOTP setup status for mobile debugging.
-      tags:
-        - Sessions
-      responses:
-        200:
-          description: Debug info
-          headers:
-            X-Request-Id:
-              $ref: '#/components/headers/X-Request-Id'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-        500:
-          $ref: '#/components/responses/InternalServerError'
-    post:
-      summary: Validate token with client time for mobile debugging
-      tags:
-        - Sessions
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                token:
-                  type: string
-                clientTime:
-                  type: number
-      responses:
-        200:
-          description: Debug result
-          headers:
-            X-Request-Id:
-              $ref: '#/components/headers/X-Request-Id'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    type: object
-        400:
-          $ref: '#/components/responses/BadRequest'
         500:
           $ref: '#/components/responses/InternalServerError'
 

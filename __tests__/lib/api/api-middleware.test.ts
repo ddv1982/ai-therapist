@@ -11,15 +11,22 @@ import { z } from 'zod';
 const { NextResponse } = jest.requireMock('next/server');
 
 jest.mock('@/lib/api/api-auth', () => ({
-  validateApiAuth: jest.fn(async () => ({ isValid: true })),
+  validateApiAuth: jest.fn(async () => ({ isValid: true, clerkId: 'u1' })),
 }));
 
 jest.mock('@/lib/auth/user-session', () => ({
-  getSingleUserInfo: jest.fn(() => ({ userId: 'u1', deviceId: 'd1' })),
+  getSingleUserInfo: jest.fn(() => ({
+    email: 'user@example.com',
+    name: 'User',
+    currentDevice: 'Computer',
+  })),
 }));
 
 jest.mock('@/lib/api/rate-limiter', () => ({
-  getRateLimiter: jest.fn(() => ({ checkRateLimit: jest.fn(async () => ({ allowed: true })) })),
+  getRateLimiter: jest.fn(() => ({
+    checkRateLimit: jest.fn(async () => ({ allowed: true })),
+    getStatus: jest.fn(() => ({ count: 1, remaining: 9, resetTime: Date.now() + 1000 })),
+  })),
 }));
 
 describe('api-middleware wrappers', () => {

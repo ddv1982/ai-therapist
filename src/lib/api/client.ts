@@ -248,47 +248,6 @@ export class ApiClient {
   async getSessionById(sessionId: string): Promise<ApiResponse<Session>> {
     return this.request<ApiResponse<Session>>(`/api/sessions/${sessionId}`);
   }
-
-  // Auth/session status
-  async getSessionStatus(): Promise<
-    ApiResponse<{
-      isAuthenticated: boolean;
-      needsSetup: boolean;
-      needsVerification: boolean;
-      device?: { name: string; deviceId: string };
-    }>
-  > {
-    return this.request<
-      ApiResponse<{
-        isAuthenticated: boolean;
-        needsSetup: boolean;
-        needsVerification: boolean;
-        device?: { name: string; deviceId: string };
-      }>
-    >('/api/auth/session');
-  }
-
-  async revokeCurrentSession(): Promise<ApiResponse<{ success: true }>> {
-    return this.request<ApiResponse<{ success: true }>>('/api/auth/session', { method: 'DELETE' });
-  }
-
-  async logout(): Promise<ApiResponse<{ success: true }>> {
-    return this.request<ApiResponse<{ success: true }>>('/api/auth/logout', { method: 'POST' });
-  }
-
-  // Devices
-  async listDevices(): Promise<ApiResponse<{ devices: unknown[]; backupCodesCount: number }>> {
-    return this.request<ApiResponse<{ devices: unknown[]; backupCodesCount: number }>>(
-      '/api/auth/devices'
-    );
-  }
-
-  async revokeDevice(deviceId: string): Promise<ApiResponse<{ success: true }>> {
-    return this.request<ApiResponse<{ success: true }>>('/api/auth/devices', {
-      method: 'DELETE',
-      body: JSON.stringify({ deviceId }),
-    });
-  }
 }
 
 export const apiClient = new ApiClient('');

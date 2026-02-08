@@ -32,7 +32,7 @@ export const PATCH = withValidationAndParams(
       // Verify session belongs to this user
       const { valid } = await verifySessionOwnership(
         sessionId,
-        (context.userInfo as { clerkId?: string }).clerkId ?? '',
+        context.principal.clerkId,
         {},
         convex
       );
@@ -59,13 +59,13 @@ export const PATCH = withValidationAndParams(
         requestId: context.requestId,
         sessionId,
         updatedFields: Object.keys(validatedData),
-        userId: context.userInfo.userId,
+        userId: context.principal.clerkId,
       });
 
       const convexSession = updated as ConvexSession;
       const mapped = {
         id: String(convexSession._id),
-        userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
+        userId: context.principal.clerkId,
         title: convexSession.title,
         status: convexSession.status,
         startedAt: new Date(convexSession.startedAt),
@@ -90,11 +90,7 @@ export const GET = withAuth(async (_request, context, params) => {
       return createErrorResponse('Invalid session ID', 400, { requestId: context.requestId });
     }
 
-    const session = await getSessionWithMessages(
-      sessionId,
-      (context.userInfo as { clerkId?: string }).clerkId ?? '',
-      convex
-    );
+    const session = await getSessionWithMessages(sessionId, context.principal.clerkId, convex);
 
     if (!session) {
       return createNotFoundErrorResponse('Session', context.requestId);
@@ -105,12 +101,12 @@ export const GET = withAuth(async (_request, context, params) => {
       requestId: context.requestId,
       sessionId,
       messageCount: sessionData.messages?.length ?? 0,
-      userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      userId: context.principal.clerkId,
     });
 
     const mapped = {
       id: String(sessionData._id),
-      userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      userId: context.principal.clerkId,
       title: sessionData.title,
       status: sessionData.status,
       startedAt: new Date(sessionData.startedAt),
@@ -168,7 +164,7 @@ export const DELETE = withAuth(async (_request, context, params) => {
     // Verify session belongs to this user before deleting
     const { valid } = await verifySessionOwnership(
       sessionId,
-      (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      context.principal.clerkId,
       {},
       convex
     );
@@ -181,7 +177,7 @@ export const DELETE = withAuth(async (_request, context, params) => {
     logger.info('Session deleted successfully', {
       requestId: context.requestId,
       sessionId,
-      userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      userId: context.principal.clerkId,
     });
 
     return createSuccessResponse({ success: true }, { requestId: context.requestId });

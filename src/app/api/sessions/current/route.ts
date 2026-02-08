@@ -12,7 +12,7 @@ export const GET = withAuth(async (_request, context) => {
     const convex = getAuthenticatedConvexClient(context.jwtToken);
 
     // Use Clerk ID as the primary user identity
-    const clerkId = (context.userInfo as { clerkId?: string }).clerkId ?? '';
+    const clerkId = context.principal.clerkId;
 
     // Find the user and honor persisted currentSessionId pointer if present
     const user = (await convex.query(anyApi.users.getByClerkId, { clerkId })) as ConvexUser | null;

@@ -22,7 +22,7 @@ export const PATCH = withValidationAndParams(
 
       const { valid } = await verifySessionOwnership(
         sessionId,
-        (context.userInfo as { clerkId?: string }).clerkId ?? '',
+        context.principal.clerkId,
         {},
         convex
       );

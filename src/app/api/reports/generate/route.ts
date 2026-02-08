@@ -66,11 +66,10 @@ export const POST = withAuth(async (request: NextRequest, context: Authenticated
     const { sessionId, messages } = validation.data;
 
     // Verify session ownership before generating report
-    const userInfo = context.userInfo as { userId: string; clerkId?: string };
-    const clerkId = userInfo.clerkId || userInfo.userId;
-    const hasAccess = await verifySessionOwnership(sessionId, clerkId, {}, convex);
+    const clerkId = context.principal.clerkId;
+    const { valid } = await verifySessionOwnership(sessionId, clerkId, {}, convex);
 
-    if (!hasAccess) {
+    if (!valid) {
       logger.warn('Unauthorized report generation attempt', {
         ...context,
         sessionId,

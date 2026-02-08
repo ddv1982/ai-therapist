@@ -37,6 +37,14 @@ const nextConfig: NextConfig = {
     return config;
   },
   outputFileTracingRoot: path.resolve(new URL('.', import.meta.url).pathname),
+  async rewrites() {
+    return [
+      {
+        source: '/apple-touch-icon-precomposed.png',
+        destination: '/apple-touch-icon.png',
+      },
+    ];
+  },
   async headers() {
     // Note: CSP headers are now managed by proxy.ts with nonce support (Next.js 16)
     // These headers serve as fallback and include non-CSP security headers

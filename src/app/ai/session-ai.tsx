@@ -71,12 +71,13 @@ async function selectSessionAction(sessionId: string | null) {
 async function requireConvexContext() {
   const authResult = await validateApiAuth();
 
-  if (!authResult.isValid || !authResult.jwtToken || !authResult.userId) {
+  const clerkId = authResult.clerkId ?? authResult.userId;
+  if (!authResult.isValid || !authResult.jwtToken || !clerkId) {
     throw new Error(authResult.error ?? 'Unauthorized');
   }
 
   const convex = getAuthenticatedConvexClient(authResult.jwtToken);
-  const user = await convex.query(api.users.getByClerkId, { clerkId: authResult.userId });
+  const user = await convex.query(api.users.getByClerkId, { clerkId });
 
   if (!user) {
     throw new Error('User record not found');

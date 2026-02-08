@@ -76,9 +76,7 @@ type DeleteResponseData = {
 export const GET = withAuth<MemoryData | MemoryManageData>(
   async (request: NextRequest, context: AuthenticatedRequestContext) => {
     try {
-      // Get clerkId from authenticated context (guaranteed to exist via withAuth)
-      const userInfo = context.userInfo as { userId: string; clerkId?: string };
-      const clerkId = userInfo.clerkId || userInfo.userId;
+      const clerkId = context.principal.clerkId;
 
       const { searchParams } = new URL(request.url);
       const limit = parseInt(searchParams.get('limit') || '5', 10);
@@ -132,9 +130,7 @@ export const GET = withAuth<MemoryData | MemoryManageData>(
 export const DELETE = withAuth<DeleteResponseData>(
   async (request: NextRequest, context: AuthenticatedRequestContext) => {
     try {
-      // Get clerkId from authenticated context (guaranteed to exist via withAuth)
-      const userInfo = context.userInfo as { userId: string; clerkId?: string };
-      const clerkId = userInfo.clerkId || userInfo.userId;
+      const clerkId = context.principal.clerkId;
 
       const { searchParams } = new URL(request.url);
       const limit = searchParams.get('limit')

@@ -18,11 +18,11 @@ export const POST = withValidation(
 
       // Deduplicate session creation to prevent double-clicks creating multiple sessions
       const session = (await deduplicateRequest(
-        (context.userInfo as { clerkId?: string }).clerkId ?? '',
+        context.principal.clerkId,
         'create_session',
         async () => {
           const user = (await convex.mutation(anyApi.users.ensureByClerkId, {
-            clerkId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
+            clerkId: context.principal.clerkId,
             email: context.userInfo.email,
             name: context.userInfo.name,
           })) as ConvexUser;
@@ -38,13 +38,13 @@ export const POST = withValidation(
       logger.info('Session created successfully', {
         requestId: context.requestId,
         sessionId: session._id,
-        userId: context.userInfo.userId,
+        userId: context.principal.clerkId,
       });
 
       // Cache the new session data
       await SessionCache.set(session._id, {
         id: session._id,
-        userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
+        userId: context.principal.clerkId,
         title: session.title,
         status: session.status as 'active' | 'inactive' | 'archived',
         createdAt: new Date(session.createdAt),
@@ -53,7 +53,7 @@ export const POST = withValidation(
 
       const mapped = {
         id: session._id,
-        userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
+        userId: context.principal.clerkId,
         title: session.title,
         status: session.status,
         startedAt: new Date(session.startedAt),
@@ -84,7 +84,7 @@ export const GET = withAuth(async (request, context) => {
       : undefined;
 
     const result = await getUserSessions(
-      (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      context.principal.clerkId,
       {
         limit,
         offset,
@@ -93,7 +93,7 @@ export const GET = withAuth(async (request, context) => {
     );
     const mapped = (Array.isArray(result.items) ? result.items : []).map((s: ConvexSession) => ({
       id: s._id,
-      userId: (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      userId: context.principal.clerkId,
       title: s.title,
       status: s.status,
       startedAt: new Date(s.startedAt),

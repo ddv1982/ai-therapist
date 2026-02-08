@@ -6,13 +6,9 @@ const mockMutation = jest.fn();
 jest.mock('@/lib/convex/http-client', () => ({
   anyApi: {
     reports: {
-      listRecent: 'reports.listRecent',
-      listBySession: 'reports.listBySession',
+      listRecentWithSession: 'reports.listRecentWithSession',
+      listByUserWithSession: 'reports.listByUserWithSession',
       removeMany: 'reports.removeMany',
-    },
-    sessions: {
-      get: 'sessions.get',
-      listByUser: 'sessions.listByUser',
     },
     users: {
       getByClerkId: 'users.getByClerkId',
@@ -63,17 +59,14 @@ describe('MemoryManagementService', () => {
             _id: 'report1',
             sessionId: 'session1',
             reportContent: 'content1',
+            sessionTitle: 'Test Session',
+            sessionStartedAt: 500000,
             keyPoints: ['point1', 'point2'],
             therapeuticInsights: { primaryInsights: ['insight1'] },
             patternsIdentified: ['pattern1'],
             createdAt: 1000000,
           },
-        ])
-        .mockResolvedValueOnce({
-          _id: 'session1',
-          title: 'Test Session',
-          startedAt: 500000,
-        });
+        ]);
 
       const result = await service.getMemoryContext('test-clerk-id', 5, null);
 
@@ -111,7 +104,7 @@ describe('MemoryManagementService', () => {
 
       await service.getMemoryContext('test-clerk-id', 3, null);
 
-      expect(mockQuery).toHaveBeenCalledWith('reports.listRecent', {
+      expect(mockQuery).toHaveBeenCalledWith('reports.listRecentWithSession', {
         userId: 'user1',
         limit: 3,
         excludeSessionId: undefined,
@@ -128,7 +121,7 @@ describe('MemoryManagementService', () => {
 
       await service.getMemoryContext('test-clerk-id', 50, null);
 
-      expect(mockQuery).toHaveBeenCalledWith('reports.listRecent', {
+      expect(mockQuery).toHaveBeenCalledWith('reports.listRecentWithSession', {
         userId: 'user1',
         limit: 10,
         excludeSessionId: undefined,
@@ -145,10 +138,42 @@ describe('MemoryManagementService', () => {
 
       await service.getMemoryContext('test-clerk-id', 5, 'exclude123');
 
-      expect(mockQuery).toHaveBeenCalledWith('reports.listRecent', {
+      expect(mockQuery).toHaveBeenCalledWith('reports.listRecentWithSession', {
         userId: 'user1',
         limit: 5,
         excludeSessionId: 'exclude123',
+      });
+    });
+
+    it('avoids per-report session queries by using batched report metadata', async () => {
+      mockQuery
+        .mockResolvedValueOnce({ _id: 'user1', clerkId: 'test-clerk-id', email: 'test@test.com' })
+        .mockResolvedValueOnce([
+          {
+            _id: 'report1',
+            sessionId: 'session1',
+            reportContent: 'content1',
+            sessionTitle: 'Session 1',
+            sessionStartedAt: 1000,
+            createdAt: 2000,
+          },
+          {
+            _id: 'report2',
+            sessionId: 'session2',
+            reportContent: 'content2',
+            sessionTitle: 'Session 2',
+            sessionStartedAt: 1500,
+            createdAt: 2500,
+          },
+        ]);
+
+      await service.getMemoryContext('test-clerk-id', 10, null);
+
+      expect(mockQuery).toHaveBeenCalledTimes(2);
+      expect(mockQuery).toHaveBeenNthCalledWith(2, 'reports.listRecentWithSession', {
+        userId: 'user1',
+        limit: 10,
+        excludeSessionId: undefined,
       });
     });
   });
@@ -162,15 +187,12 @@ describe('MemoryManagementService', () => {
             _id: 'report1',
             sessionId: 'session1',
             reportContent: 'content1',
+            sessionTitle: 'Test Session',
+            sessionStartedAt: 500000,
             keyPoints: ['point1'],
             createdAt: 1000000,
           },
-        ])
-        .mockResolvedValueOnce({
-          _id: 'session1',
-          title: 'Test Session',
-          startedAt: 500000,
-        });
+        ]);
 
       const result = await service.getMemoryManagement('test-clerk-id', 5, null, false);
 
@@ -187,10 +209,11 @@ describe('MemoryManagementService', () => {
             _id: 'report1',
             sessionId: 'session1',
             reportContent: 'content1',
+            sessionTitle: 'Test',
+            sessionStartedAt: 500000,
             createdAt: 1000000,
           },
-        ])
-        .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
+        ]);
 
       const result = await service.getMemoryManagement('test-clerk-id', 5, null, true);
 
@@ -205,10 +228,11 @@ describe('MemoryManagementService', () => {
             _id: 'report1',
             sessionId: 'session1',
             reportContent: 'encrypted_fail',
+            sessionTitle: 'Test',
+            sessionStartedAt: 500000,
             createdAt: 1000000,
           },
-        ])
-        .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
+        ]);
 
       const result = await service.getMemoryManagement('test-clerk-id', 5, null, false);
 
@@ -221,7 +245,6 @@ describe('MemoryManagementService', () => {
     it('deletes specific sessions', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user1' }) // getByClerkId
-        .mockResolvedValueOnce([{ _id: 'session1' }]) // listByUser
         .mockResolvedValueOnce([
           { _id: 'report1', sessionId: 'session1' },
           { _id: 'report2', sessionId: 'session2' },
@@ -240,7 +263,6 @@ describe('MemoryManagementService', () => {
     it('deletes recent N reports', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user1' }) // getByClerkId
-        .mockResolvedValueOnce([{ _id: 'session1' }]) // listByUser
         .mockResolvedValueOnce([
           { _id: 'report1', sessionId: 'session1', createdAt: 3000 },
           { _id: 'report2', sessionId: 'session1', createdAt: 2000 },
@@ -260,7 +282,6 @@ describe('MemoryManagementService', () => {
     it('deletes all except current session', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user1' }) // getByClerkId
-        .mockResolvedValueOnce([{ _id: 'session1' }]) // listByUser
         .mockResolvedValueOnce([
           { _id: 'report1', sessionId: 'session1' },
           { _id: 'report2', sessionId: 'session2' },
@@ -276,7 +297,6 @@ describe('MemoryManagementService', () => {
     it('deletes all memory', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user1' }) // getByClerkId
-        .mockResolvedValueOnce([{ _id: 'session1' }]) // listByUser
         .mockResolvedValueOnce([
           { _id: 'report1', sessionId: 'session1' },
           { _id: 'report2', sessionId: 'session2' },
@@ -298,8 +318,7 @@ describe('MemoryManagementService', () => {
     it('handles zero reports to delete', async () => {
       mockQuery
         .mockResolvedValueOnce({ _id: 'user123' }) // getByClerkId
-        .mockResolvedValueOnce([]) // listByUser returns empty
-        .mockResolvedValueOnce([]); // listBySession returns empty
+        .mockResolvedValueOnce([]); // listByUserWithSession returns empty
 
       const result = await service.deleteMemory('clerk123');
 
@@ -317,6 +336,8 @@ describe('MemoryManagementService', () => {
             _id: 'report1',
             sessionId: 'session1',
             reportContent: 'content1',
+            sessionTitle: 'Test',
+            sessionStartedAt: 500000,
             keyPoints: ['point1', 'point2', 'point3', 'point4'],
             therapeuticInsights: {
               primaryInsights: ['insight1', 'insight2'],
@@ -325,8 +346,7 @@ describe('MemoryManagementService', () => {
             patternsIdentified: ['pattern1', 'pattern2'],
             createdAt: 1000000,
           },
-        ])
-        .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
+        ]);
 
       const result = await service.getMemoryContext('test-clerk-id', 5, null);
 
@@ -345,10 +365,11 @@ describe('MemoryManagementService', () => {
             _id: 'report1',
             sessionId: 'session1',
             reportContent: longContent,
+            sessionTitle: 'Test',
+            sessionStartedAt: 500000,
             createdAt: 1000000,
           },
-        ])
-        .mockResolvedValueOnce({ _id: 'session1', title: 'Test', startedAt: 500000 });
+        ]);
 
       const result = await service.getMemoryContext('test-clerk-id', 5, null);
 

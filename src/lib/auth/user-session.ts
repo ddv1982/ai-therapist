@@ -33,6 +33,12 @@ function getDeviceTypeFromUserAgent(userAgent: string): string {
  * Used in API middleware to retrieve the authenticated user's information
  * In route handlers, Clerk's auth() function provides the current user context
  */
+export interface RequestUserInfo {
+  email: string;
+  name: string;
+  currentDevice: string;
+}
+
 export function getSingleUserInfo(request: Request) {
   const userAgent = request.headers.get('user-agent') || '';
   const deviceType = getDeviceTypeFromUserAgent(userAgent);
@@ -42,10 +48,8 @@ export function getSingleUserInfo(request: Request) {
   // The actual Clerk user ID is resolved via validateApiAuth() in api-auth.ts
 
   return {
-    // Placeholder - actual userId comes from validateApiAuth()
-    userId: 'therapeutic-ai-user',
     email: 'user@therapeutic-ai.local',
     name: 'Therapeutic AI User',
     currentDevice: deviceType,
-  };
+  } satisfies RequestUserInfo;
 }

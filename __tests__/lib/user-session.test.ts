@@ -25,7 +25,7 @@ function createMockRequest(headers: Record<string, string> = {}): Request {
 
 describe('User Session Management', () => {
   describe('getSingleUserInfo', () => {
-    it('should return consistent single user ID regardless of request', () => {
+    it('should return consistent profile defaults regardless of request', () => {
       const request1 = createMockRequest({
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0',
       });
@@ -37,8 +37,7 @@ describe('User Session Management', () => {
       const userInfo1 = getSingleUserInfo(request1);
       const userInfo2 = getSingleUserInfo(request2);
 
-      expect(userInfo1.userId).toBe(userInfo2.userId);
-      expect(userInfo1.userId).toBe('therapeutic-ai-user');
+      expect(userInfo1).toEqual(userInfo2);
       expect(userInfo1.email).toBe('user@therapeutic-ai.local');
       expect(userInfo1.name).toBe('Therapeutic AI User');
     });
@@ -55,7 +54,6 @@ describe('User Session Management', () => {
         const userInfo = getSingleUserInfo(request);
 
         expect(userInfo.currentDevice).toBe('Mobile');
-        expect(userInfo.userId).toBe('therapeutic-ai-user');
       });
     });
 
@@ -73,7 +71,6 @@ describe('User Session Management', () => {
         // These user agents should be detected as Tablet since they don't contain
         // "Mobile", "Android", or "iPhone" (which would trigger Mobile detection first)
         expect(userInfo.currentDevice).toBe('Tablet');
-        expect(userInfo.userId).toBe('therapeutic-ai-user');
       });
     });
 
@@ -89,7 +86,6 @@ describe('User Session Management', () => {
         const userInfo = getSingleUserInfo(request);
 
         expect(userInfo.currentDevice).toBe('Computer');
-        expect(userInfo.userId).toBe('therapeutic-ai-user');
       });
     });
 
@@ -101,7 +97,6 @@ describe('User Session Management', () => {
         const userInfo = getSingleUserInfo(request);
 
         expect(userInfo.currentDevice).toBe('Device');
-        expect(userInfo.userId).toBe('therapeutic-ai-user');
       });
     });
 
@@ -110,7 +105,6 @@ describe('User Session Management', () => {
       const userInfo = getSingleUserInfo(request);
 
       expect(userInfo.currentDevice).toBe('Device');
-      expect(userInfo.userId).toBe('therapeutic-ai-user');
       expect(userInfo.email).toBe('user@therapeutic-ai.local');
       expect(userInfo.name).toBe('Therapeutic AI User');
     });
@@ -136,7 +130,6 @@ describe('User Session Management', () => {
 
       // Should be Mobile because "Android" is checked before "Tablet" in the detection logic
       expect(userInfo.currentDevice).toBe('Mobile');
-      expect(userInfo.userId).toBe('therapeutic-ai-user');
     });
 
     it('should return correct user info structure', () => {
@@ -146,12 +139,10 @@ describe('User Session Management', () => {
 
       const userInfo = getSingleUserInfo(request);
 
-      expect(userInfo).toHaveProperty('userId');
       expect(userInfo).toHaveProperty('email');
       expect(userInfo).toHaveProperty('name');
       expect(userInfo).toHaveProperty('currentDevice');
 
-      expect(typeof userInfo.userId).toBe('string');
       expect(typeof userInfo.email).toBe('string');
       expect(typeof userInfo.name).toBe('string');
       expect(typeof userInfo.currentDevice).toBe('string');
@@ -174,9 +165,11 @@ describe('User Session Management', () => {
           return getSingleUserInfo(request);
         });
 
-      // All single user calls should be identical
-      const singleUserIds = calls.map((call) => call.userId);
-      expect(new Set(singleUserIds).size).toBe(1);
+      // All calls should return the same baseline identity info
+      const emails = calls.map((call) => call.email);
+      const names = calls.map((call) => call.name);
+      expect(new Set(emails).size).toBe(1);
+      expect(new Set(names).size).toBe(1);
     });
 
     it('should handle edge cases gracefully', () => {
@@ -195,7 +188,8 @@ describe('User Session Management', () => {
 
         expect(() => {
           const singleUser = getSingleUserInfo(request);
-          expect(singleUser.userId).toBeTruthy();
+          expect(singleUser.email).toBeTruthy();
+          expect(singleUser.name).toBeTruthy();
         }).not.toThrow();
       });
     });

@@ -9,7 +9,7 @@ const PUBLIC_ROUTES = [
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/health(.*)',
-  '/api/webhook(.*)',
+  '/clerk-webhook(.*)',
 ] as const;
 
 const isPublicRoute = createRouteMatcher([...PUBLIC_ROUTES]);

@@ -36,7 +36,12 @@ export interface RequestContext {
   [key: string]: unknown;
 }
 
+export interface AuthenticatedPrincipal {
+  clerkId: string;
+}
+
 export interface AuthenticatedRequestContext extends RequestContext {
+  principal: AuthenticatedPrincipal;
   userInfo: ReturnType<typeof getSingleUserInfo>;
   jwtToken?: string;
 }
@@ -50,11 +55,54 @@ function createFallbackUserInfo(req: NextRequest): ReturnType<typeof getSingleUs
   else if (ua.includes('Windows') || ua.includes('Mac') || ua.includes('Linux'))
     deviceType = 'Computer';
   return {
-    userId: 'therapeutic-ai-user',
     email: 'user@therapeutic-ai.local',
     name: 'Therapeutic AI User',
     currentDevice: deviceType,
   };
+}
+
+function resolveClerkId(authResult: { clerkId?: string; userId?: string }): string | null {
+  return authResult.clerkId ?? authResult.userId ?? null;
+}
+
+function buildAuthenticatedContext(
+  request: NextRequest,
+  baseContext: RequestContext,
+  authResult: { jwtToken?: string; clerkId?: string; userId?: string }
+): AuthenticatedRequestContext {
+  const clerkId = resolveClerkId(authResult);
+  if (!clerkId) {
+    throw new Error('Authentication succeeded but no canonical clerkId was provided');
+  }
+
+  let userInfo: ReturnType<typeof getSingleUserInfo>;
+  try {
+    userInfo = getSingleUserInfo(request);
+  } catch {
+    userInfo = createFallbackUserInfo(request);
+  }
+
+  return {
+    ...baseContext,
+    principal: { clerkId },
+    userInfo,
+    jwtToken: authResult.jwtToken,
+  };
+}
+
+function createRateLimitResponse<T>(
+  requestId: string,
+  details: string,
+  retryAfter: string
+): NextResponse<ApiResponse<T>> {
+  const response = createErrorResponse('Rate limit exceeded', 429, {
+    code: 'RATE_LIMIT_EXCEEDED',
+    details,
+    suggestedAction: 'Please wait a moment before making another request',
+    requestId,
+  }) as NextResponse<ApiResponse<T>>;
+  response.headers.set('Retry-After', retryAfter);
+  return response;
 }
 
 export function withApiMiddleware<T = unknown>(
@@ -120,7 +168,8 @@ export function withAuth<T = unknown>(
 ) {
   return withApiMiddleware<T>(async (request, baseContext, params) => {
     const authResult = await validateApiAuth();
-    if (!authResult.isValid) {
+    const clerkId = resolveClerkId(authResult);
+    if (!authResult.isValid || !clerkId) {
       logger.warn('Unauthorized request', { ...baseContext, error: authResult.error });
       const unauthorized = createAuthenticationErrorResponse(
         authResult.error || 'Authentication required',
@@ -130,30 +179,10 @@ export function withAuth<T = unknown>(
       return unauthorized as NextResponse<ApiResponse<T>>;
     }
 
-    let userInfo: ReturnType<typeof getSingleUserInfo> & { clerkId?: string };
-    try {
-      userInfo = getSingleUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
-        clerkId?: string;
-      };
-    } catch {
-      userInfo = createFallbackUserInfo(request) as ReturnType<typeof getSingleUserInfo> & {
-        clerkId?: string;
-      };
-    }
-    const authWithId = authResult as unknown as { userId?: string };
-    const mergedUserInfo = authWithId?.userId
-      ? { ...userInfo, clerkId: authWithId.userId }
-      : userInfo;
-
-    const authenticatedContext: AuthenticatedRequestContext = {
-      ...(baseContext as RequestContext),
-      userInfo: mergedUserInfo,
-      jwtToken: authResult.jwtToken,
-    } as AuthenticatedRequestContext;
+    const authenticatedContext = buildAuthenticatedContext(request, baseContext, authResult);
     logger.info('Authenticated request', {
       ...baseContext,
-      userId: (mergedUserInfo as { userId?: string } | undefined)?.userId,
-      clerkId: (mergedUserInfo as { clerkId?: string } | undefined)?.clerkId,
+      clerkId: authenticatedContext.principal.clerkId,
     });
 
     const res = await handler(request, authenticatedContext, params);
@@ -265,18 +294,11 @@ export function withRateLimitUnauthenticated<T = unknown>(
       const result = await limiter.checkRateLimit(clientIP, bucket);
       if (!result.allowed) {
         const retryAfter = String(result.retryAfter || Math.ceil(windowMs / 1000));
-        const body = {
-          success: false,
-          error: {
-            message: 'Rate limit exceeded',
-            code: 'RATE_LIMIT_EXCEEDED',
-            details: 'Too many requests made in a short period',
-            suggestedAction: 'Please wait a moment before making another request',
-          },
-          meta: { timestamp: new Date().toISOString(), requestId: context.requestId },
-        } as const;
-        const headers = { 'Retry-After': retryAfter } as Record<string, string>;
-        return NextResponse.json(body, { status: 429, headers }) as NextResponse<ApiResponse<T>>;
+        return createRateLimitResponse<T>(
+          context.requestId,
+          'Too many requests made in a short period',
+          retryAfter
+        );
       }
     }
 
@@ -284,8 +306,10 @@ export function withRateLimitUnauthenticated<T = unknown>(
     const response = await handler(request, context, params);
 
     // Add rate limit headers to successful responses
-    const status = limiter.getStatus(clientIP, bucket);
-    setRateLimitHeaders(response, status, maxRequests);
+    try {
+      const status = limiter.getStatus(clientIP, bucket);
+      setRateLimitHeaders(response, status, maxRequests);
+    } catch {}
 
     return response;
   });
@@ -307,7 +331,8 @@ export function withAuthAndRateLimit<T = unknown>(
     const startHighRes = performance.now();
     try {
       const authResult = await validateApiAuth();
-      if (!authResult.isValid) {
+      const clerkId = resolveClerkId(authResult);
+      if (!authResult.isValid || !clerkId) {
         const unauthorized = createAuthenticationErrorResponse(
           authResult.error || 'Authentication required',
           requestContext.requestId
@@ -325,49 +350,42 @@ export function withAuthAndRateLimit<T = unknown>(
         const result = await limiter.checkRateLimit(clientIP, 'api');
         if (!result.allowed) {
           const retryAfter = String(result.retryAfter || Math.ceil(windowMs / 1000));
-          const limited = NextResponse.json(
-            {
-              success: false,
-              error: {
-                message: 'Rate limit exceeded',
-                code: 'RATE_LIMIT_EXCEEDED',
-                details: 'Too many requests made in a short period',
-                suggestedAction: 'Please wait a moment before making another request',
-              },
-              meta: { timestamp: new Date().toISOString(), requestId: requestContext.requestId },
-            },
-            { status: 429, headers: { 'Retry-After': retryAfter } }
-          ) as NextResponse<ApiResponse<T>>;
+          const limited = createRateLimitResponse<T>(
+            requestContext.requestId,
+            'Too many requests made in a short period',
+            retryAfter
+          );
           const durationMs = Math.round(performance.now() - startHighRes);
           setResponseHeaders(limited, requestContext.requestId, durationMs);
           return limited;
         }
       }
 
-      const userInfo = getSingleUserInfo(request);
-      const authenticatedContext: AuthenticatedRequestContext = {
-        ...requestContext,
-        userInfo,
-        jwtToken: authResult.jwtToken,
-      } as AuthenticatedRequestContext;
+      const authenticatedContext = buildAuthenticatedContext(request, requestContext, authResult);
       const res = await handler(request, authenticatedContext, routeParams?.params);
       const durationMs = Math.round(performance.now() - startHighRes);
       setResponseHeaders(res, authenticatedContext.requestId, durationMs);
 
       // Add rate limit headers to successful responses
       const maxRequests = options.maxRequests ?? env.API_MAX_REQS;
-      const status = limiter.getStatus(clientIP, 'api');
-      setRateLimitHeaders(res, status, maxRequests);
+      try {
+        const status = limiter.getStatus(clientIP, 'api');
+        setRateLimitHeaders(res, status, maxRequests);
+      } catch {}
 
       return res;
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      const resp = NextResponse.json(
-        { success: false, error: { message: err.message } },
-        { status: 500 }
+      const resp = createServerErrorResponse(
+        err,
+        requestContext.requestId,
+        requestContext
       ) as NextResponse<ApiResponse<T>>;
       const durationMs = Math.round(performance.now() - startHighRes);
       setResponseHeaders(resp, requestContext.requestId, durationMs);
+      try {
+        recordEndpointError(requestContext.method, requestContext.url);
+      } catch {}
       return resp;
     }
   };
@@ -459,10 +477,11 @@ export function withAuthAndRateLimitStreaming(
       if (!rateLimitDisabled && env.NODE_ENV !== 'development') {
         const inflightEarly = inflightCounters.get(clientIPForEarly)?.count ?? 0;
         if (inflightEarly >= maxConcurrentEarly) {
-          const earlyTooMany = new Response('Too many concurrent requests. Please wait.', {
-            status: 429,
-            headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' },
-          });
+          const earlyTooMany = createRateLimitResponse<unknown>(
+            baseContext.requestId || 'unknown',
+            'Too many concurrent requests. Please wait.',
+            '1'
+          );
           const durationMs = Math.round(performance.now() - startHighRes);
           setResponseHeaders(earlyTooMany, baseContext.requestId || 'unknown', durationMs);
           try {
@@ -473,10 +492,11 @@ export function withAuthAndRateLimitStreaming(
       }
 
       const authResult = await validateApiAuth();
-      if (!authResult.isValid) {
-        const unauthorized = new Response(
-          JSON.stringify({ error: authResult.error || 'Authentication required' }),
-          { status: 401, headers: { 'Content-Type': 'application/json' } }
+      const clerkId = resolveClerkId(authResult);
+      if (!authResult.isValid || !clerkId) {
+        const unauthorized = createAuthenticationErrorResponse(
+          authResult.error || 'Authentication required',
+          baseContext.requestId
         );
         const durationMs = Math.round(performance.now() - startHighRes);
         setResponseHeaders(unauthorized, baseContext.requestId || 'unknown', durationMs);
@@ -491,10 +511,11 @@ export function withAuthAndRateLimitStreaming(
           const retryAfter = String(
             globalResult.retryAfter || Math.ceil(env.CHAT_WINDOW_MS / 1000)
           );
-          const limited = new Response('Rate limit exceeded. Please try again later.', {
-            status: 429,
-            headers: { 'Content-Type': 'text/plain', 'Retry-After': retryAfter },
-          });
+          const limited = createRateLimitResponse<unknown>(
+            baseContext.requestId || 'unknown',
+            'Too many requests made in a short period',
+            retryAfter
+          );
           const durationMs = Math.round(performance.now() - startHighRes);
           setResponseHeaders(limited, baseContext.requestId || 'unknown', durationMs);
           try {
@@ -514,10 +535,11 @@ export function withAuthAndRateLimitStreaming(
           streamingCounters.set(clientIP, { count: 1, resetTime: now + windowMs });
         } else if (entry.count >= maxRequests) {
           const retryAfter = Math.max(1, Math.ceil((entry.resetTime - now) / 1000));
-          const streamingLimited = new Response('Rate limit exceeded. Please try again later.', {
-            status: 429,
-            headers: { 'Content-Type': 'text/plain', 'Retry-After': String(retryAfter) },
-          });
+          const streamingLimited = createRateLimitResponse<unknown>(
+            baseContext.requestId || 'unknown',
+            'Too many requests made in a short period',
+            String(retryAfter)
+          );
           const durationMs = Math.round(performance.now() - startHighRes);
           setResponseHeaders(streamingLimited, baseContext.requestId || 'unknown', durationMs);
           try {
@@ -530,10 +552,11 @@ export function withAuthAndRateLimitStreaming(
 
         const currentInflight = inflightCounters.get(clientIP)?.count ?? 0;
         if (currentInflight >= maxConcurrent) {
-          const tooMany = new Response('Too many concurrent requests. Please wait.', {
-            status: 429,
-            headers: { 'Content-Type': 'text/plain', 'Retry-After': '1' },
-          });
+          const tooMany = createRateLimitResponse<unknown>(
+            baseContext.requestId || 'unknown',
+            'Too many concurrent requests. Please wait.',
+            '1'
+          );
           const durationMs = Math.round(performance.now() - startHighRes);
           setResponseHeaders(tooMany, baseContext.requestId || 'unknown', durationMs);
           try {
@@ -545,23 +568,26 @@ export function withAuthAndRateLimitStreaming(
         didIncrement = true;
       }
 
-      const mergedUserInfo = getSingleUserInfo(request);
-      const authenticatedContext: AuthenticatedRequestContext = {
-        requestId: baseContext.requestId || 'unknown',
-        method: baseContext.method,
-        url: baseContext.url,
-        userAgent: baseContext.userAgent,
-        userInfo: mergedUserInfo,
-        jwtToken: authResult.jwtToken,
-      } as const;
+      const authenticatedContext = buildAuthenticatedContext(
+        request,
+        {
+          requestId: baseContext.requestId || 'unknown',
+          method: baseContext.method,
+          url: baseContext.url,
+          userAgent: baseContext.userAgent,
+        },
+        authResult
+      );
       const response = await handler(request, authenticatedContext, routeParams?.params);
       const durationMs = Math.round(performance.now() - startHighRes);
       setResponseHeaders(response, authenticatedContext.requestId, durationMs);
 
       // Add rate limit headers to successful streaming responses
       const limiter = getRateLimiter();
-      const status = limiter.getStatus(clientIP, 'chat');
-      setRateLimitHeaders(response, status, maxRequests);
+      try {
+        const status = limiter.getStatus(clientIP, 'chat');
+        setRateLimitHeaders(response, status, maxRequests);
+      } catch {}
 
       try {
         recordEndpointSuccess(authenticatedContext.method, authenticatedContext.url);
@@ -569,10 +595,7 @@ export function withAuthAndRateLimitStreaming(
       return response;
     } catch (error) {
       const err = error instanceof Error ? error : new Error('Unknown error');
-      const resp = new Response(
-        JSON.stringify({ error: err.message, requestId: baseContext.requestId || 'unknown' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
+      const resp = createServerErrorResponse(err, baseContext.requestId || 'unknown', baseContext);
       const durationMs = Math.round(performance.now() - startHighRes);
       setResponseHeaders(resp, baseContext.requestId || 'unknown', durationMs);
       try {

@@ -438,12 +438,14 @@ class CacheManager {
    * Get cache health information
    */
   async getHealthInfo(): Promise<{
-    redis: boolean;
+    backend: 'memory';
+    shared: boolean;
     stats: Map<string, CacheStats>;
     totalKeys: number;
   }> {
     return {
-      redis: false,
+      backend: 'memory',
+      shared: false,
       stats: new Map(this.stats),
       totalKeys: this.storage.size,
     };

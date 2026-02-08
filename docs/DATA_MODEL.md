@@ -7,7 +7,7 @@
 1. [Overview](#overview)
 2. [Database Layer (Convex)](#database-layer-convex)
 3. [Service/Domain Layer](#servicedomain-layer)
-4. [UI/State Layer (Redux)](#uistate-layer-redux)
+4. [UI/State Layer (Context + Query)](#uistate-layer-context--query)
 5. [API Endpoints Reference](#api-endpoints-reference)
 6. [Complete System Architecture](#complete-system-architecture)
 7. [Data Flow Patterns](#data-flow-patterns)
@@ -23,7 +23,7 @@ The AI Therapist application implements a **three-layer data architecture**:
 
 1. **Database Layer** - Persistent storage using Convex with real-time sync
 2. **Service/Domain Layer** - Business logic, API contracts, and domain models
-3. **UI/State Layer** - Redux state management and component-level data
+3. **UI/State Layer** - React Context, TanStack Query, and component-level state
 
 This document provides a comprehensive map of all data structures, their relationships, and how data flows through the system.
 
@@ -642,27 +642,27 @@ interface ChatRequest {
 
 ---
 
-## UI/State Layer (Redux)
+## UI/State Layer (Context + Query)
 
-### Redux Store Architecture
+### Context and Query Architecture
 
 ```mermaid
 graph LR
-    Store[Redux Store] --> Sessions[sessions-slice]
-    Store --> Chat[chat-slice]
-    Store --> CBT[cbt-slice]
-    Store --> SessionsAPI[sessions-api]
-    Store --> ChatAPI[chat-api]
+    Store[React Context Providers] --> Sessions[SessionContext]
+    Store --> Chat[Chat Context + Hooks]
+    Store --> CBT[CBT Flow Hooks]
+    Store --> SessionsAPI[TanStack Query Sessions]
+    Store --> ChatAPI[TanStack Query Messages]
 
     Sessions --> State1[Session State]
     Chat --> State2[Chat State]
     CBT --> State3[CBT State]
 
-    SessionsAPI --> RTK1[RTK Query Cache]
-    ChatAPI --> RTK2[RTK Query Cache]
+    SessionsAPI --> RTK1[TanStack Query Cache]
+    ChatAPI --> RTK2[TanStack Query Cache]
 ```
 
-### Sessions Slice
+### Session Context State
 
 ```typescript
 interface SessionsState {
@@ -683,7 +683,7 @@ interface SessionsState {
 
 ---
 
-### Chat Slice
+### Chat UI State
 
 ```typescript
 interface ChatState {
@@ -708,7 +708,7 @@ interface ChatState {
 
 ---
 
-### CBT Slice
+### CBT Flow State
 
 ```typescript
 interface CBTState {
@@ -955,7 +955,7 @@ interface SessionReport {
 graph TB
     subgraph "Client Layer"
         UI[React Components]
-        Store[Redux Store]
+        Store[Context Providers]
         Hooks[Custom Hooks]
     end
 
@@ -965,7 +965,7 @@ graph TB
         MessagesAPI[/api/sessions/:id/messages]
         ReportsAPI[/api/reports]
         ModelsAPI[/api/models]
-        AuthAPI[/api/auth/*]
+        MemoryAPI[/api/reports/memory]
     end
 
     subgraph "Service Layer"
@@ -979,7 +979,7 @@ graph TB
 
     subgraph "Data Layer"
         Convex[(Convex Database)]
-        Cache[Redis Cache]
+        Cache[In-Memory Cache]
     end
 
     subgraph "External Services"
@@ -1060,7 +1060,7 @@ sequenceDiagram
 
 **Key Steps**:
 
-1. User input captured in Redux (`chat-slice`)
+1. User input captured in React state and feature hooks
 2. Streaming request initiated to `/api/chat`
 3. Groq AI streams response chunks
 4. UI updates in real-time via SSE
@@ -1148,7 +1148,7 @@ sequenceDiagram
 
 **Caching Strategy**:
 
-- Sessions cached in Redis (5 min TTL)
+- Sessions cached in-memory (5 min TTL)
 - Messages cached per session (3 min TTL)
 - Cache invalidated on mutations
 
@@ -1333,7 +1333,7 @@ graph TD
 
     API[api.generated.ts] --> Index
 
-    Store[Redux Store] --> Index
+    Store[Context Providers] --> Index
     Components[React Components] --> Index
     Services[Domain Services] --> Index
 ```
@@ -1454,14 +1454,14 @@ export const update = mutation({
 
 ### Caching Strategy
 
-| Data Type       | Cache Location | TTL          | Invalidation             |
-| --------------- | -------------- | ------------ | ------------------------ |
-| Sessions        | Redis          | 5 min        | On session mutation      |
-| Messages        | Redis          | 3 min        | On message create/delete |
-| Session Reports | Redis          | 10 min       | On report generation     |
-| User Profile    | Redux Store    | Session      | On auth change           |
-| CBT Drafts      | localStorage   | Persistent   | On completion/deletion   |
-| AI Models       | Memory         | App lifetime | None                     |
+| Data Type       | Cache Location  | TTL          | Invalidation             |
+| --------------- | --------------- | ------------ | ------------------------ |
+| Sessions        | In-memory cache | 5 min        | On session mutation      |
+| Messages        | In-memory cache | 3 min        | On message create/delete |
+| Session Reports | In-memory cache | 10 min       | On report generation     |
+| User Profile    | Context state   | Session      | On auth change           |
+| CBT Drafts      | localStorage    | Persistent   | On completion/deletion   |
+| AI Models       | Memory          | App lifetime | None                     |
 
 ### Query Optimization
 

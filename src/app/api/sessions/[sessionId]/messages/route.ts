@@ -43,7 +43,7 @@ export const POST = withValidationAndParams(
 
       const { valid } = await verifySessionOwnership(
         sessionId,
-        (context.userInfo as { clerkId?: string }).clerkId ?? '',
+        context.principal.clerkId,
         {},
         convex
       );
@@ -169,7 +169,7 @@ export const GET = withAuth(async (request: NextRequest, context, params) => {
 
     const { valid } = await verifySessionOwnership(
       sessionId,
-      (context.userInfo as { clerkId?: string }).clerkId ?? '',
+      context.principal.clerkId,
       {},
       convex
     );

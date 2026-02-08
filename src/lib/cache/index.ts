@@ -1,5 +1,5 @@
 /**
- * Redis Caching System - Main Export
+ * In-Memory Caching System - Main Export
  *
  * Centralized export for all caching utilities, decorators, and implementations
  * for the AI Therapist application.

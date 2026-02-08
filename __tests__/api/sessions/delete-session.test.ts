@@ -11,11 +11,8 @@ jest.mock('@/lib/api/api-middleware', () => {
   const withAuth = (handler: any) => async (req: any, routeParams?: any) => {
     const ctx = {
       requestId: 'test-request-id',
-      userInfo: {
-        userId: 'legacy-user',
+      principal: {
         clerkId: 'clerk_test_user',
-        email: 't@example.com',
-        name: 'T',
       },
       jwtToken: 'mock_jwt_token',
     };
