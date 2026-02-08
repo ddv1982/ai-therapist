@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Commit message validation: Enforce conventional commits format
+# Commit message validation: Enforce Conventional Commits format
 # See: https://www.conventionalcommits.org/
 
 commit_msg_file=$1

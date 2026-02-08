@@ -1,5 +1,6 @@
-import { query, mutation } from './_generated/server';
+import { query, mutation, internalMutation } from './_generated/server';
 import { v } from 'convex/values';
+import type { Doc } from './_generated/dataModel';
 import { QUERY_LIMITS } from './constants';
 import { requireOwnership, requireUserAccess } from './lib/errors';
 import {
@@ -12,6 +13,8 @@ import {
   therapeuticFrameworksValidator,
   recommendationsValidator,
 } from './validators';
+
+type SessionReportDoc = Doc<'sessionReports'>;
 
 export const listBySession = query({
   args: { sessionId: v.id('sessions') },
@@ -42,10 +45,11 @@ export const create = mutation({
     analysisVersion: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireOwnership(ctx, args.sessionId);
+    const { user } = await requireOwnership(ctx, args.sessionId);
     const now = Date.now();
     const id = await ctx.db.insert('sessionReports', {
       ...args,
+      userId: user._id,
       createdAt: now,
     });
     return await ctx.db.get(id);
@@ -76,34 +80,34 @@ export const listRecent = query({
   },
   handler: async (ctx, { userId, limit, excludeSessionId }) => {
     await requireUserAccess(ctx, userId);
-    // PERFORMANCE FIX: Use indexed queries instead of full table scan
-    // Get user's sessions (indexed query - efficient)
-    const userSessions = await ctx.db
-      .query('sessions')
-      .withIndex('by_user_created', (q) => q.eq('userId', userId))
-      .collect();
-
-    const sessionsToQuery = excludeSessionId
-      ? userSessions.filter((s) => s._id !== excludeSessionId)
-      : userSessions;
-
     const limit_clamped = Math.max(0, Math.min(limit, QUERY_LIMITS.MAX_REPORTS_PER_REQUEST));
+    if (limit_clamped === 0) return [];
 
-    // Fetch only the per-session top-N to avoid loading full report histories.
-    // This bounds query volume while preserving globally-correct top-N results.
-    const reportPromises = sessionsToQuery.map((session) =>
-      ctx.db
-        .query('sessionReports')
-        .withIndex('by_session_created', (q) => q.eq('sessionId', session._id))
-        .order('desc') // Most recent first
-        .take(limit_clamped)
+    const filtered: SessionReportDoc[] = [];
+    let cursor: string | null = null;
+    const batchSize = Math.max(
+      25,
+      Math.min(QUERY_LIMITS.MAX_REPORTS_PER_REQUEST, limit_clamped * 2)
     );
 
-    const reportsPerSession = await Promise.all(reportPromises);
-    const allUserReports = reportsPerSession.flat();
+    while (filtered.length < limit_clamped) {
+      const page = await ctx.db
+        .query('sessionReports')
+        .withIndex('by_user_created', (q) => q.eq('userId', userId))
+        .order('desc')
+        .paginate({ numItems: batchSize, cursor });
 
-    // Sort all reports by creation time (descending) and apply limit
-    return allUserReports.sort((a, b) => b.createdAt - a.createdAt).slice(0, limit_clamped);
+      for (const report of page.page) {
+        if (excludeSessionId && report.sessionId === excludeSessionId) continue;
+        filtered.push(report);
+        if (filtered.length >= limit_clamped) break;
+      }
+
+      if (page.isDone) break;
+      cursor = page.continueCursor;
+    }
+
+    return filtered.slice(0, limit_clamped);
   },
 });
 
@@ -115,49 +119,54 @@ export const listRecentWithSession = query({
   },
   handler: async (ctx, { userId, limit, excludeSessionId }) => {
     await requireUserAccess(ctx, userId);
-
-    const userSessions = await ctx.db
-      .query('sessions')
-      .withIndex('by_user_created', (q) => q.eq('userId', userId))
-      .collect();
-
-    const sessionsToQuery = excludeSessionId
-      ? userSessions.filter((s) => s._id !== excludeSessionId)
-      : userSessions;
-
-    const sessionMeta = new Map(
-      sessionsToQuery.map((session) => [
-        session._id,
-        {
-          sessionTitle: session.title,
-          sessionStartedAt: session.startedAt,
-          sessionEndedAt: session.endedAt ?? null,
-        },
-      ])
-    );
-
     const limit_clamped = Math.max(0, Math.min(limit, QUERY_LIMITS.MAX_REPORTS_PER_REQUEST));
+    if (limit_clamped === 0) return [];
 
-    const reportPromises = sessionsToQuery.map((session) =>
-      ctx.db
-        .query('sessionReports')
-        .withIndex('by_session_created', (q) => q.eq('sessionId', session._id))
-        .order('desc')
-        .take(limit_clamped)
+    const reports: SessionReportDoc[] = [];
+    let cursor: string | null = null;
+    const batchSize = Math.max(
+      25,
+      Math.min(QUERY_LIMITS.MAX_REPORTS_PER_REQUEST, limit_clamped * 2)
     );
 
-    const reportsPerSession = await Promise.all(reportPromises);
-    const allUserReports = reportsPerSession.flat();
+    while (reports.length < limit_clamped) {
+      const page = await ctx.db
+        .query('sessionReports')
+        .withIndex('by_user_created', (q) => q.eq('userId', userId))
+        .order('desc')
+        .paginate({ numItems: batchSize, cursor });
 
-    return allUserReports
-      .sort((a, b) => b.createdAt - a.createdAt)
-      .slice(0, limit_clamped)
-      .map((report) => ({
-        ...report,
-        sessionTitle: sessionMeta.get(report.sessionId)?.sessionTitle,
-        sessionStartedAt: sessionMeta.get(report.sessionId)?.sessionStartedAt,
-        sessionEndedAt: sessionMeta.get(report.sessionId)?.sessionEndedAt,
-      }));
+      for (const report of page.page) {
+        if (excludeSessionId && report.sessionId === excludeSessionId) continue;
+        reports.push(report);
+        if (reports.length >= limit_clamped) break;
+      }
+
+      if (page.isDone) break;
+      cursor = page.continueCursor;
+    }
+
+    const sessionIds = [...new Set(reports.map((report) => report.sessionId))];
+    const sessions = await Promise.all(sessionIds.map((sessionId) => ctx.db.get(sessionId)));
+    const sessionMeta = new Map(
+      sessions
+        .filter((session): session is NonNullable<typeof session> => Boolean(session))
+        .map((session) => [
+          session._id,
+          {
+            sessionTitle: session.title,
+            sessionStartedAt: session.startedAt,
+            sessionEndedAt: session.endedAt ?? null,
+          },
+        ])
+    );
+
+    return reports.slice(0, limit_clamped).map((report) => ({
+      ...report,
+      sessionTitle: sessionMeta.get(report.sessionId)?.sessionTitle,
+      sessionStartedAt: sessionMeta.get(report.sessionId)?.sessionStartedAt,
+      sessionEndedAt: sessionMeta.get(report.sessionId)?.sessionEndedAt,
+    }));
   },
 });
 
@@ -169,44 +178,88 @@ export const listByUserWithSession = query({
   handler: async (ctx, { userId, excludeSessionId }) => {
     await requireUserAccess(ctx, userId);
 
-    const userSessions = await ctx.db
-      .query('sessions')
-      .withIndex('by_user_created', (q) => q.eq('userId', userId))
-      .collect();
+    const reports: SessionReportDoc[] = [];
+    let cursor: string | null = null;
 
-    const sessionsToQuery = excludeSessionId
-      ? userSessions.filter((s) => s._id !== excludeSessionId)
-      : userSessions;
-
-    const sessionMeta = new Map(
-      sessionsToQuery.map((session) => [
-        session._id,
-        {
-          sessionTitle: session.title,
-          sessionStartedAt: session.startedAt,
-          sessionEndedAt: session.endedAt ?? null,
-        },
-      ])
-    );
-
-    const reportPromises = sessionsToQuery.map((session) =>
-      ctx.db
+    while (true) {
+      const page = await ctx.db
         .query('sessionReports')
-        .withIndex('by_session_created', (q) => q.eq('sessionId', session._id))
+        .withIndex('by_user_created', (q) => q.eq('userId', userId))
         .order('desc')
-        .collect()
+        .paginate({ numItems: QUERY_LIMITS.MAX_REPORTS_PER_REQUEST, cursor });
+
+      for (const report of page.page) {
+        if (excludeSessionId && report.sessionId === excludeSessionId) continue;
+        reports.push(report);
+      }
+
+      if (page.isDone) break;
+      cursor = page.continueCursor;
+    }
+
+    const sessionIds = [...new Set(reports.map((report) => report.sessionId))];
+    const sessions = await Promise.all(sessionIds.map((sessionId) => ctx.db.get(sessionId)));
+    const sessionMeta = new Map(
+      sessions
+        .filter((session): session is NonNullable<typeof session> => Boolean(session))
+        .map((session) => [
+          session._id,
+          {
+            sessionTitle: session.title,
+            sessionStartedAt: session.startedAt,
+            sessionEndedAt: session.endedAt ?? null,
+          },
+        ])
     );
 
-    const reportsPerSession = await Promise.all(reportPromises);
-    const allUserReports = reportsPerSession.flat();
+    return reports.map((report) => ({
+      ...report,
+      sessionTitle: sessionMeta.get(report.sessionId)?.sessionTitle,
+      sessionStartedAt: sessionMeta.get(report.sessionId)?.sessionStartedAt,
+      sessionEndedAt: sessionMeta.get(report.sessionId)?.sessionEndedAt,
+    }));
+  },
+});
 
-    return allUserReports
-      .sort((a, b) => b.createdAt - a.createdAt)
-      .map((report) => ({
-        ...report,
-        sessionTitle: sessionMeta.get(report.sessionId)?.sessionTitle,
-        sessionStartedAt: sessionMeta.get(report.sessionId)?.sessionStartedAt,
-        sessionEndedAt: sessionMeta.get(report.sessionId)?.sessionEndedAt,
-      }));
+export const _backfillReportUserIds = internalMutation({
+  args: {
+    cursor: v.optional(v.string()),
+    batchSize: v.optional(v.number()),
+  },
+  handler: async (ctx, { cursor, batchSize }) => {
+    const pageSize = Math.max(1, Math.min(batchSize ?? 200, 500));
+    const page = await ctx.db
+      .query('sessionReports')
+      .order('asc')
+      .paginate({ numItems: pageSize, cursor: cursor ?? null });
+
+    let updated = 0;
+    let skipped = 0;
+    let missingSession = 0;
+
+    for (const report of page.page) {
+      if (report.userId) {
+        skipped += 1;
+        continue;
+      }
+
+      const session = await ctx.db.get(report.sessionId);
+      if (!session) {
+        missingSession += 1;
+        continue;
+      }
+
+      await ctx.db.patch(report._id, { userId: session.userId });
+      updated += 1;
+    }
+
+    return {
+      scanned: page.page.length,
+      updated,
+      skipped,
+      missingSession,
+      continueCursor: page.continueCursor,
+      isDone: page.isDone,
+    };
   },
 });

@@ -1,7 +1,9 @@
 import { ensureUserExists } from '@/lib/repositories/user-repository';
 
+const mockMutation = jest.fn().mockResolvedValue({ ok: true });
+
 jest.mock('@/lib/convex/http-client', () => ({
-  getConvexHttpClient: () => ({ mutation: jest.fn().mockResolvedValue({ ok: true }) }),
+  getConvexHttpClient: () => ({ mutation: mockMutation }),
   api: { users: { ensureByClerkId: {} } },
 }));
 
@@ -10,6 +12,10 @@ jest.mock('@/lib/auth/user-session', () => ({
 }));
 
 describe('user-repository.ensureUserExists', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('returns true on successful ensure', async () => {
     const ok = await ensureUserExists({
       clerkId: 'clerk_legacy',
@@ -17,6 +23,14 @@ describe('user-repository.ensureUserExists', () => {
       name: 'U',
     } as any);
     expect(ok).toBe(true);
+    expect(mockMutation).toHaveBeenCalledWith(
+      {},
+      {
+        clerkId: 'clerk_legacy',
+        email: 'u@test',
+        name: 'U',
+      }
+    );
   });
 
   it('returns false when client throws', async () => {

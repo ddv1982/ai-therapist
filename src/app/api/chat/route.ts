@@ -18,6 +18,7 @@ import {
 import { createErrorResponse } from '@/lib/api/api-response';
 import { env } from '@/config/env';
 import { ChatError, MessageValidationError, getChatErrorResponse } from '@/lib/errors/chat-errors';
+import { ErrorCode } from '@/lib/errors/error-codes';
 
 import type { ConvexHttpClient } from 'convex/browser';
 import { getAuthenticatedConvexClient, anyApi } from '@/lib/convex/http-client';
@@ -52,16 +53,12 @@ export const POST = withAuthAndRateLimitStreaming(async (req: NextRequest, conte
     // Validate Content-Type header
     const contentType = req.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      return new Response(
-        JSON.stringify({
-          error: 'Content-Type must be application/json',
-          requestId: context.requestId,
-        }),
-        {
-          status: 415,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return createErrorResponse('Content-Type must be application/json', 415, {
+        code: ErrorCode.INVALID_INPUT,
+        details: 'Expected request header content-type: application/json',
+        suggestedAction: 'Set Content-Type to application/json and retry',
+        requestId: context.requestId,
+      });
     }
 
     const parsedBody = await readJsonBody(req);

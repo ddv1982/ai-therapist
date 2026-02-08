@@ -41,17 +41,45 @@ export const getByClerkId = query({
 export const ensureByClerkId = mutation({
   args: { clerkId: v.string(), email: v.string(), name: v.optional(v.string()) },
   handler: async (ctx, { clerkId, email, name }) => {
+    const normalizedEmail = email.trim();
+    const normalizedName = typeof name === 'string' ? name.trim() || undefined : undefined;
+    if (!normalizedEmail) {
+      throw new Error('Email is required to create or update a user');
+    }
+
     const existing = await ctx.db
       .query('users')
       .withIndex('by_clerkId', (q) => q.eq('clerkId', clerkId))
       .unique();
-    if (existing) return existing;
+    if (existing) {
+      const patch: Partial<{
+        email: string;
+        name: string | undefined;
+        updatedAt: number;
+      }> = {};
+
+      if (existing.email !== normalizedEmail) {
+        patch.email = normalizedEmail;
+      }
+
+      if (normalizedName && normalizedName !== existing.name) {
+        patch.name = normalizedName;
+      }
+
+      if (Object.keys(patch).length > 0) {
+        patch.updatedAt = Date.now();
+        await ctx.db.patch(existing._id, patch);
+        return await ctx.db.get(existing._id);
+      }
+
+      return existing;
+    }
 
     const now = Date.now();
     const id = await ctx.db.insert('users', {
       clerkId,
-      email,
-      name,
+      email: normalizedEmail,
+      name: normalizedName,
       createdAt: now,
       updatedAt: now,
     });

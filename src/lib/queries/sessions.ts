@@ -5,7 +5,6 @@ import type { ApiResponse, PaginatedResponse } from '@/lib/api/api-response';
 import { isApiResponse } from '@/lib/api/api-response';
 import type { Session } from '@/types';
 import { apiClient } from '@/lib/api/client';
-import { createSessionAction, deleteSessionAction } from '@/features/chat/actions/session-actions';
 
 export interface SessionData {
   id: string;
@@ -117,11 +116,8 @@ export function useCreateSessionMutation() {
 
   return useMutation({
     mutationFn: async (body: CreateSessionRequest) => {
-      const result = await createSessionAction(body);
-      if (!result.success || !result.data) {
-        throw new Error(result.error || 'Failed to create session');
-      }
-      return result.data as CreateSessionResponse;
+      const response = await apiClient.createSession(body);
+      return transformCreateSessionResponse(response);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: sessionKeys.list() });
@@ -135,11 +131,8 @@ export function useDeleteSessionMutation() {
 
   return useMutation({
     mutationFn: async (sessionId: string) => {
-      const result = await deleteSessionAction(sessionId);
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to delete session');
-      }
-      return { success: true };
+      const response = await apiClient.deleteSession(sessionId);
+      return transformDeleteSessionResponse(response);
     },
     onSuccess: (_result, sessionId) => {
       void queryClient.invalidateQueries({ queryKey: sessionKeys.list() });

@@ -67,6 +67,8 @@ export default defineSchema({
     .index('by_user', ['userId']),
 
   sessionReports: defineTable({
+    // Stage 1: optional for migration safety; backfill makes this effectively required.
+    userId: v.optional(v.id('users')),
     sessionId: v.id('sessions'),
     reportContent: v.string(),
     keyPoints: flexibleKeyPointsValidator,
@@ -84,5 +86,6 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index('by_session', ['sessionId'])
-    .index('by_session_created', ['sessionId', 'createdAt']), // PERFORMANCE: For sorted queries by session
+    .index('by_session_created', ['sessionId', 'createdAt']) // PERFORMANCE: For sorted queries by session
+    .index('by_user_created', ['userId', 'createdAt']),
 });

@@ -953,8 +953,8 @@ components:
           example: '123e4567-e89b-12d3-a456-426614174000'
         userId:
           type: string
-          description: User identifier (currently uses default user)
-          example: 'default-user-id'
+          description: Canonical authenticated user identifier (Clerk user ID)
+          example: 'user_2xYzAbCdEfGhIjKl'
         title:
           type: string
           minLength: 1

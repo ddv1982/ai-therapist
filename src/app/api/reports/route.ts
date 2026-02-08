@@ -24,7 +24,6 @@ export const GET = withAuth(async (_request: NextRequest, context) => {
           }
         >)
       : [];
-    reports.sort((a, b) => b.createdAt - a.createdAt);
     const response = reports.map((r) => ({
       ...r,
       session: r.sessionTitle

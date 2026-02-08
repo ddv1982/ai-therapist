@@ -32,6 +32,11 @@ function getDeviceTypeFromUserAgent(userAgent: string): string {
  * Get authenticated user info from Clerk
  * Used in API middleware to retrieve the authenticated user's information
  * In route handlers, Clerk's auth() function provides the current user context
+ *
+ * IMPORTANT:
+ * - This helper is intentionally request-scoped and lightweight.
+ * - `email`/`name` values are fallback display placeholders and must not be used
+ *   as authoritative identity for persistence.
  */
 export interface RequestUserInfo {
   email: string;
@@ -43,9 +48,8 @@ export function getSingleUserInfo(request: Request) {
   const userAgent = request.headers.get('user-agent') || '';
   const deviceType = getDeviceTypeFromUserAgent(userAgent);
 
-  // NOTE: In route handlers, use Clerk's auth() function directly
-  // This function is called from API middleware context
-  // The actual Clerk user ID is resolved via validateApiAuth() in api-auth.ts
+  // NOTE: In route handlers, use Clerk's auth()/clerkClient() for authoritative profile fields.
+  // This middleware helper only provides minimal request metadata.
 
   return {
     email: 'user@therapeutic-ai.local',

@@ -37,6 +37,7 @@ export interface ConvexMessage {
 
 export interface ConvexSessionReport {
   _id: string;
+  userId?: string;
   sessionId: string;
   reportContent: string;
   keyPoints?: unknown;

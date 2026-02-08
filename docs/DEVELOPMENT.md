@@ -263,9 +263,9 @@ The project uses:
 - **TypeScript** with strict mode
 - **ESLint** with Next.js and custom rules
 - **Prettier** for formatting
-- **Pre-commit hooks** (Husky + lint-staged)
+- **Git hooks** (Husky: full QA on pre-commit, full QA + build on pre-push, Conventional Commit check on commit-msg)
 
-Code is automatically formatted on commit. To manually format:
+Formatting is not auto-written by hooks. To manually format:
 
 ```bash
 bun run format

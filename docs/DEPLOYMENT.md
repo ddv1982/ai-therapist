@@ -271,6 +271,27 @@ For data-related issues:
 3. **Create fix migration** in `convex/migrations/`
 4. **Test on staging** before production
 
+### Session Report `userId` Backfill Runbook
+
+When deploying the `sessionReports.userId` index migration, run the internal backfill in batches before switching read paths to index-only behavior.
+
+```bash
+# Run first batch (default 200 docs)
+bun run reports:backfill-user-ids -- '{"batchSize":200}'
+
+# Continue with the returned cursor until isDone=true
+bun run reports:backfill-user-ids -- '{"batchSize":200,"cursor":"<continueCursor>"}'
+```
+
+Expected response fields:
+
+- `scanned`: Number of reports examined in this batch
+- `updated`: Number of reports patched with `userId`
+- `skipped`: Number already containing `userId`
+- `missingSession`: Number skipped because parent session was missing
+- `continueCursor`: Cursor for the next batch
+- `isDone`: `true` when the backfill is complete
+
 ---
 
 ## Troubleshooting

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Pre-commit hook: Full QA suite
+# Pre-commit hook: Full QA suite (validation only, no auto-formatting)
 
 # Find bun binary
 BUN=$(command -v bun 2>/dev/null || echo "$HOME/.bun/bin/bun")

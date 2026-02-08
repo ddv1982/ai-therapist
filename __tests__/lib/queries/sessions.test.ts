@@ -9,7 +9,6 @@ import {
   transformDeleteSessionResponse,
 } from '@/lib/queries/sessions';
 import { apiClient } from '@/lib/api/client';
-import { createSessionAction, deleteSessionAction } from '@/features/chat/actions/session-actions';
 import React from 'react';
 
 // Mock apiClient
@@ -19,12 +18,6 @@ jest.mock('@/lib/api/client', () => ({
     createSession: jest.fn(),
     deleteSession: jest.fn(),
   },
-}));
-
-// Mock Server Actions
-jest.mock('@/features/chat/actions/session-actions', () => ({
-  createSessionAction: jest.fn(),
-  deleteSessionAction: jest.fn(),
 }));
 
 const queryClient = new QueryClient({
@@ -186,27 +179,40 @@ describe('Sessions Queries', () => {
     });
 
     it('useCreateSessionMutation should create session', async () => {
-      const newSession = {
-        id: '2',
-        title: 'New Session',
-        createdAt: '',
-        updatedAt: '',
-        messageCount: 0,
+      const createdAt = new Date().toISOString();
+      const apiResponse = {
+        success: true,
+        data: {
+          id: '2',
+          title: 'New Session',
+          userId: 'clerk_1',
+          status: 'active',
+          createdAt,
+          updatedAt: createdAt,
+          _count: { messages: 0 },
+        },
       };
-      (createSessionAction as jest.Mock).mockResolvedValue({ success: true, data: newSession });
+      (apiClient.createSession as jest.Mock).mockResolvedValue(apiResponse);
 
       const { result } = renderHook(() => useCreateSessionMutation(), { wrapper });
 
       result.current.mutate({ title: 'New Session' });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      expect(result.current.data).toEqual(newSession);
-      expect(createSessionAction).toHaveBeenCalledWith({ title: 'New Session' });
+      expect(result.current.data).toEqual({
+        id: '2',
+        title: 'New Session',
+        createdAt,
+        updatedAt: createdAt,
+        messageCount: 0,
+      });
+      expect(apiClient.createSession).toHaveBeenCalledWith({ title: 'New Session' });
     });
 
     it('useDeleteSessionMutation should delete session', async () => {
-      (deleteSessionAction as jest.Mock).mockResolvedValue({
+      (apiClient.deleteSession as jest.Mock).mockResolvedValue({
         success: true,
+        data: { success: true },
       });
 
       const { result } = renderHook(() => useDeleteSessionMutation(), { wrapper });
@@ -214,7 +220,7 @@ describe('Sessions Queries', () => {
       result.current.mutate('1');
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      expect(deleteSessionAction).toHaveBeenCalledWith('1');
+      expect(apiClient.deleteSession).toHaveBeenCalledWith('1');
     });
   });
 });

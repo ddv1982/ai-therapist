@@ -20,7 +20,7 @@ interface SessionData {
   id: string;
   userId: string;
   title: string;
-  status: 'active' | 'inactive' | 'archived';
+  status: 'active' | 'completed';
   createdAt: Date;
   updatedAt: Date;
 }

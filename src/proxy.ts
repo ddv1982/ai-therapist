@@ -2,6 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { generateCSPNonce, getSecurityHeaders } from '@/lib/security/csp-nonce';
+import { createAuthenticationErrorResponse } from '@/lib/api/api-response';
 import { routing, type Locale } from '@/i18n/routing';
 
 // Routes that don't require authentication
@@ -25,6 +26,7 @@ const isPublicRoute = createRouteMatcher([...PUBLIC_ROUTES]);
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/proxy
  */
 export default clerkMiddleware(async (auth, req: NextRequest) => {
+  const requestId = req.headers.get('x-request-id') || crypto.randomUUID();
   // Protect non-public routes FIRST (before any other logic)
   const authResult: unknown = !isPublicRoute(req) ? await auth.protect() : null;
   const authResponse: NextResponse | undefined =
@@ -34,19 +36,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   // This ensures Clerk's session context is properly forwarded to route handlers
   if (req.nextUrl.pathname.startsWith('/api')) {
     if (authResponse) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            message: 'Authentication required',
-            code: 'UNAUTHENTICATED',
-            details: 'Authentication required',
-            suggestedAction: 'Please sign in and try again',
-          },
-          meta: { timestamp: new Date().toISOString() },
-        },
-        { status: 401 }
-      );
+      return createAuthenticationErrorResponse('Authentication required', requestId);
     }
     return NextResponse.next();
   }

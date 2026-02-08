@@ -19,6 +19,7 @@
     "format:check": "prettier --check .",
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy",
+    "reports:backfill-user-ids": "convex run reports:_backfillReportUserIds",
     "api:types": "openapi-typescript docs/api.yaml -o src/types/api.generated.ts",
     "encryption:generate": "bun scripts/encryption-generate.ts",
     "encryption:setup": "bun scripts/encryption-setup.ts",

@@ -982,8 +982,8 @@ export interface components {
              */
             id: string;
             /**
-             * @description User identifier (currently uses default user)
-             * @example default-user-id
+             * @description Canonical authenticated user identifier (Clerk user ID)
+             * @example user_2xYzAbCdEfGhIjKl
              */
             userId: string;
             /**
