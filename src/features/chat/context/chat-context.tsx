@@ -221,16 +221,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         model: settings.model,
       });
 
-      const dataObj = (result as { success?: boolean; data?: { reportContent?: unknown } }).data;
-      const legacyReport = (result as { reportContent?: unknown }).reportContent;
-      const content =
-        typeof dataObj?.reportContent === 'string'
-          ? (dataObj.reportContent as string)
-          : typeof legacyReport === 'string'
-            ? (legacyReport as string)
-            : undefined;
+      const content = result.data?.reportContent;
 
-      if (content) {
+      if (typeof content === 'string' && content.trim().length > 0) {
         const reportMessage: MessageData = {
           id: generateUUID(),
           role: 'assistant' as const,

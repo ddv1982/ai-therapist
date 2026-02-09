@@ -23,6 +23,10 @@
 import { logger } from '@/lib/utils/logger';
 import { cryptoRateLimiter } from './rate-limiter';
 
+interface ClerkWindow extends Window {
+  __clerk_user_id?: string;
+}
+
 // Encryption constants (matching server-side parameters)
 const ALGORITHM = 'AES-GCM';
 const KEY_LENGTH = 256;
@@ -182,7 +186,7 @@ function getUserIdentifier(): string {
   if (typeof window !== 'undefined') {
     try {
       // Check for Clerk user ID in the document
-      const clerkUserId = (window as any).__clerk_user_id;
+      const clerkUserId = (window as ClerkWindow).__clerk_user_id;
       if (clerkUserId) {
         return clerkUserId;
       }

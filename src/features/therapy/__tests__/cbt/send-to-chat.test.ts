@@ -108,7 +108,7 @@ describe('sendToChat', () => {
     });
     (apiClient.generateReportFromContext as jest.Mock).mockResolvedValue({
       success: true,
-      reportContent: 'analysis',
+      data: { reportContent: 'analysis' },
     });
     (apiClient.postMessage as jest.Mock).mockResolvedValue({ success: true });
     (apiClient.deleteSession as jest.Mock).mockResolvedValue({ success: true });

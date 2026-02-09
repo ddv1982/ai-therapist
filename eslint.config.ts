@@ -112,6 +112,7 @@ const config: Linter.Config[] = [
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/naming-convention': [
         'error',
         { selector: 'typeLike', format: ['PascalCase'] },
@@ -219,7 +220,7 @@ const config: Linter.Config[] = [
     },
   },
   {
-    files: ['__tests__/**/*.{ts,tsx,js}', 'e2e/**/*.{ts,tsx,js}'],
+    files: ['__tests__/**/*.{ts,tsx,js}', '**/__tests__/**/*.{ts,tsx,js}', 'e2e/**/*.{ts,tsx,js}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-require-imports': 'off',
@@ -229,9 +230,10 @@ const config: Linter.Config[] = [
     },
   },
   {
-    files: ['src/types/api.generated.ts', 'src/types/api/**'],
+    files: ['src/types/api.generated.ts', 'src/types/api/**', 'src/i18n/types.ts'],
     rules: {
       '@typescript-eslint/naming-convention': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
   {

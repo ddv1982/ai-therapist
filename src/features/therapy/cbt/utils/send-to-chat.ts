@@ -2,7 +2,6 @@ import { apiClient } from '@/lib/api/client';
 import { ANALYTICAL_MODEL_ID } from '@/features/chat/config';
 import { getApiData, type ApiResponse } from '@/lib/api/api-response';
 import { logger } from '@/lib/utils/logger';
-import type { SessionData } from '@/lib/queries/sessions';
 import { buildSessionSummaryCard, type CBTFlowState } from '@/features/therapy/cbt/flow';
 import { createBYOKHeaders, getEffectiveModelId } from '@/features/chat/lib/byok-helper';
 import type { Locale } from '@/i18n/routing';
@@ -28,24 +27,6 @@ function mapApiResponse<T>(response: ApiResponse<T>): T {
   return data;
 }
 
-function extractReportContentFlexible(resp: unknown): string {
-  if (!resp || typeof resp !== 'object') {
-    throw new Error('Failed to generate session report');
-  }
-  const r = resp as { success?: boolean; data?: unknown; reportContent?: unknown };
-  if (
-    r.success &&
-    r.data &&
-    typeof (r.data as { reportContent?: unknown }).reportContent === 'string'
-  ) {
-    return (r.data as { reportContent: string }).reportContent;
-  }
-  if (typeof r.reportContent === 'string') {
-    return r.reportContent;
-  }
-  throw new Error('Failed to generate session report');
-}
-
 export async function sendToChat({
   title,
   flowState,
@@ -69,9 +50,7 @@ export async function sendToChat({
     ];
 
   try {
-    const createdSession = mapApiResponse<any>(
-      await apiClient.createSession({ title })
-    ) as SessionData;
+    const createdSession = mapApiResponse(await apiClient.createSession({ title }));
     sessionId = createdSession.id;
 
     const reportResponse = await apiClient.generateReportFromContext(
@@ -83,7 +62,16 @@ export async function sendToChat({
       { headers }
     );
 
-    const reportContent = extractReportContentFlexible(reportResponse);
+    let reportContent: string;
+    try {
+      const reportData = mapApiResponse(reportResponse);
+      if (typeof reportData.reportContent !== 'string' || reportData.reportContent.trim() === '') {
+        throw new Error('Missing report content');
+      }
+      reportContent = reportData.reportContent;
+    } catch {
+      throw new Error('Failed to generate session report');
+    }
 
     await apiClient.postMessage(sessionId, { role: 'user', content: summaryCard });
 

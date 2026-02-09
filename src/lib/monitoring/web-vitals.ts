@@ -16,6 +16,13 @@ import { onCLS, onFCP, onINP, onLCP, onTTFB, type Metric } from 'web-vitals';
 import { logger } from '@/lib/utils/logger';
 import { isDevelopment } from '@/config/env.public';
 
+type GtagFn = (...args: unknown[]) => void;
+
+interface AnalyticsWindow extends Window {
+  webVitals?: unknown;
+  gtag?: GtagFn;
+}
+
 /**
  * Performance metric thresholds based on Web Vitals recommendations
  * Good: Green, Needs Improvement: Yellow, Poor: Red
@@ -72,14 +79,16 @@ function sendToAnalytics(metric: Metric): void {
 
   // Send to analytics service
   // Example: Vercel Analytics
-  if (typeof window !== 'undefined' && 'webVitals' in window) {
+  const analyticsWindow = window as AnalyticsWindow;
+
+  if (typeof window !== 'undefined' && 'webVitals' in analyticsWindow) {
     // Vercel Analytics automatically collects Web Vitals
     // No additional code needed if using Vercel deployment
   }
 
   // Example: Google Analytics
-  if (typeof window !== 'undefined' && 'gtag' in window) {
-    const gtag = (window as any).gtag;
+  if (typeof window !== 'undefined' && typeof analyticsWindow.gtag === 'function') {
+    const gtag = analyticsWindow.gtag;
     gtag('event', metric.name, {
       event_category: 'Web Vitals',
       event_label: metric.id,

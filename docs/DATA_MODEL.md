@@ -1,6 +1,6 @@
 # AI Therapist Application - Data Model & Entity Relationship Diagram
 
-> **⚠️ IMPORTANT (2025-11-19)**: Legacy migration fields (`legacyId`) have been removed from all tables after database audit confirmed 0% legacy data usage. Historical references to `legacyId` in this document are kept for context but no longer apply to the current schema. See `convex/README-LEGACY.md` for details.
+> **⚠️ IMPORTANT (2025-11-19)**: Legacy migration fields (`legacyId`) were removed from all tables after database audit confirmed 0% legacy data usage. This document describes the current schema only.
 
 ## Table of Contents
 
@@ -1498,19 +1498,9 @@ export const update = mutation({
 
 ---
 
-## Migration & Legacy Support
+## Migration Notes
 
-### Legacy ID Fields
-
-**Note**: As of 2025-11-19, legacy migration fields (`legacyId`) have been removed from the schema after confirming no legacy data exists in the database. For historical reference, see `convex/README-LEGACY.md`.
-
-**Migration Pattern**:
-
-1. Import data with legacy IDs
-2. Create new Convex records
-3. Map legacy IDs to new IDs
-4. Update references
-5. Maintain legacy ID lookups during transition
+Legacy ID migration is complete and no `legacyId` fields remain in production schema.
 
 ### Version Tracking
 
@@ -1556,10 +1546,16 @@ All API endpoints return standardized error responses:
 ```typescript
 {
   success: false,
-  error: string,              // Human-readable error message
-  code?: string,              // Machine-readable error code
-  requestId: string,          // Unique request identifier for debugging
-  details?: Record<string, unknown> // Additional context
+  error: {
+    message: string,          // Human-readable error message
+    code?: string,            // Machine-readable error code
+    details?: string,         // Optional details for troubleshooting
+    suggestedAction?: string  // Optional remediation guidance
+  },
+  meta: {
+    timestamp: string,        // ISO timestamp
+    requestId?: string        // Request identifier for debugging
+  }
 }
 ```
 
@@ -1568,12 +1564,15 @@ All API endpoints return standardized error responses:
 ```json
 {
   "success": false,
-  "error": "Message cannot be empty or contain only whitespace",
-  "code": "VALIDATION_ERROR",
-  "requestId": "req_abc123",
-  "details": {
-    "field": "message",
-    "received": "   \\n\\t   "
+  "error": {
+    "message": "Validation failed",
+    "code": "VALIDATION_ERROR",
+    "details": "Message cannot be empty or contain only whitespace",
+    "suggestedAction": "Please check your input data and try again"
+  },
+  "meta": {
+    "timestamp": "2026-02-10T07:22:00.000Z",
+    "requestId": "req_abc123"
   }
 }
 ```
@@ -1657,7 +1656,7 @@ This data model provides:
 ✅ **Type Safety**: Comprehensive TypeScript types throughout  
 ✅ **Scalability**: Indexed queries, pagination, caching  
 ✅ **Real-time**: Convex subscriptions for live updates  
-✅ **Flexibility**: Support for legacy data, versioning, extensions  
+✅ **Flexibility**: Versioning and extension-friendly contracts  
 ✅ **Security**: Encrypted messages, authenticated access, validated inputs  
 ✅ **Developer Experience**: Auto-generated types, clear contracts, comprehensive documentation
 
@@ -1666,4 +1665,4 @@ For implementation details, refer to:
 - Database: `convex/schema.ts` and `convex/*.ts`
 - Types: `src/types/*.ts`
 - API: `docs/api.yaml` and `src/app/api/*/route.ts`
-- State: `src/store/slices/*.ts`
+- State: `src/contexts/*.tsx`, `src/hooks/**/*.ts`, and `src/features/**/context/*.tsx`

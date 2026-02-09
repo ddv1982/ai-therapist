@@ -46,4 +46,25 @@ describe('API error envelope conformance', () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it('uses standardized error envelope helpers in middleware stack', () => {
+    const middlewareFiles = [
+      path.join(process.cwd(), 'src', 'lib', 'api', 'middleware', 'auth.ts'),
+      path.join(process.cwd(), 'src', 'lib', 'api', 'middleware', 'rate-limit.ts'),
+      path.join(process.cwd(), 'src', 'lib', 'api', 'middleware', 'streaming.ts'),
+      path.join(process.cwd(), 'src', 'lib', 'api', 'middleware', 'responses.ts'),
+    ];
+
+    for (const filePath of middlewareFiles) {
+      const content = fs.readFileSync(filePath, 'utf8');
+      expect(content).toMatch(/create(Error|Authentication|RateLimit)Response/);
+    }
+
+    const apiResponseFile = fs.readFileSync(
+      path.join(process.cwd(), 'src', 'lib', 'api', 'api-response.ts'),
+      'utf8'
+    );
+    expect(apiResponseFile).toContain('meta?:');
+    expect(apiResponseFile).toContain('timestamp: string');
+  });
 });

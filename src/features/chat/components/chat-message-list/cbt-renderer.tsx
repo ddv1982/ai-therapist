@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, type ReactNode } from 'react';
+import { createElement, useCallback, useMemo, type ReactNode } from 'react';
 import dynamic from 'next/dynamic';
 import { CheckCircle } from 'lucide-react';
 import type { MessageData } from '@/features/chat/messages/message';
@@ -322,13 +322,19 @@ function getObsessionsFlowInitialData(metadata?: Record<string, unknown>) {
   return storedData ?? sessionFlowData;
 }
 
-function renderStepComponent(
-  Component: React.ComponentType<any>,
-  onComplete?: (data: any) => void,
-  extraProps: Record<string, unknown> = {}
+type StepCompletionHandler<TData = unknown> = (data: TData) => void;
+type StepPropsWithCompletion<TData> = {
+  onComplete?: StepCompletionHandler<TData>;
+};
+
+function renderStepComponent<TData, TProps extends StepPropsWithCompletion<TData>>(
+  Component: React.ComponentType<TProps>,
+  onComplete?: StepCompletionHandler<TData>,
+  extraProps: Omit<TProps, 'onComplete'> = {} as Omit<TProps, 'onComplete'>
 ) {
   if (!onComplete) return null;
-  return <Component onComplete={onComplete} {...extraProps} />;
+  const componentProps = { ...extraProps, onComplete } as TProps;
+  return createElement(Component, componentProps);
 }
 
 function getStepContext(
